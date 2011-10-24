@@ -31,54 +31,54 @@ test("pointInAabb: point inside on x returns true", function () {
 	var aabb = new pc.shape.Aabb(),
 	point = pc.math.vec3.create(0.25, 0, 0);	
 
-	same(true, aabb.pointInAabb(point));
+	same(true, aabb.containsPoint(point));
 });
 
 test("pointInAabb: point inside on y returns true", function () {
     var aabb = new pc.shape.Aabb(),
     point = pc.math.vec3.create(0, 0.25, 0);  
 
-    same(true, aabb.pointInAabb(point));
+    same(true, aabb.containsPoint(point));
 });
 
 test("pointInAabb: point inside on y returns true", function () {
     var aabb = new pc.shape.Aabb(),
     point = pc.math.vec3.create(0, 0.25, 0);  
 
-    same(true, aabb.pointInAabb(point));
+    same(true, aabb.containsPoint(point));
 });
 
 test("pointInAabb: point outside on x returns false", function () {
     var aabb = new pc.shape.Aabb(),
     point = pc.math.vec3.create(0.6, 0, 0);
     
-    same(false, aabb.pointInAabb(point));
+    same(false, aabb.containsPoint(point));
 });
 
 test("pointInAabb: point outside on y returns false", function () {
     var aabb = new pc.shape.Aabb(),
     point = pc.math.vec3.create(0, 0.6, 0);
     
-    same(false, aabb.pointInAabb(point));
+    same(false, aabb.containsPoint(point));
 });
 
 test("pointInAabb: point outside on z returns false", function () {
     var aabb = new pc.shape.Aabb(),
     point = pc.math.vec3.create(0, 0, 0.6);
     
-    same(false, aabb.pointInAabb(point));
+    same(false, aabb.containsPoint(point));
 });
 
 test("pointInAabb: point on edge returns true", function () {
     var aabb = new pc.shape.Aabb(),
     point = pc.math.vec3.create(0.5, 0, 0);
     
-    same(true, aabb.pointInAabb(point));
+    same(true, aabb.containsPoint(point));
 });
 
 test("pointInAabb: point on corner returns true", function () {
     var aabb = new pc.shape.Aabb(),
     point = pc.math.vec3.create(0.5, 0.5, 0.5);
     
-    same(true, aabb.pointInAabb(point));
+    same(true, aabb.containsPoint(point));
 });
