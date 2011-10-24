@@ -1,0 +1,59 @@
+--------------------------
+PlayCanvas Runtime Changes 
+--------------------------
+
+------
+v0.7.0
+------
+
+* Added first pass at an animation component. Just loads/runs a single animation for now.
+* Added new render state management API, introducing the idea of global and local state.
+* Use the alpha channel in a specular map as the per-pixel shininess value.
+* Fix for Phong GLSL when no lights are activated.
+* Reworked parallax mapping. Effect now activates if an alpha channel is found in the normal map (containing a height map).
+* Updated parallax effect in shadowmap sample.
+* Updated skybox component to work with any camera clip planes. Also now just maintains a geometry instead of a mesh.
+* Fixed transparency for Maya FBX exports.
+* Added Visualizer launcher script for Maya (written in Python rather than MEL).
+* Added runtime support for emissive maps.
+
+------
+v0.6.0
+------
+
+* Added CHANGES file
+* [FIX] gizmo and pick components no longer deleted when components are updated, should be done manually for now
+* Added pc.dom namespace for DOM related code
+* Updated artwork to all use the correct system units (inches).
+* Stop deserializing entities from message as they are transferred as normal javascript object now
+* Changed reference from _id to resource_id in entity loader to support new Corazon format
+* Add resource_id to Entity to support new Corazon format
+* [FIX] Light component correctly disables light node when it is deleted
+* Added skeleton docs to pc.gfx.Texture.
+* Updated pc.gfx.Texture to be a little cleaner and more versatile (now handles canvas, video and image elements as well as byte pixel arrays).
+* Fleshed out docs for pc.gfx.Texture.
+
+
+------
+v0.5.0
+------
+
+* ScriptLoader replaces ResourceLoader object
+* Added toolsRender and toolsUpdate methods to Components
+* Better rendering for directional lights in the Designer.
+* Enable backface culling in the engine by default.
+* Model and Camera components to be deleted correctly.
+* Added support for scale in animation keyframes.
+* All artwork is now generated as 1 unit equalling 1 meter.
+* Tweaks to Ferrari demo assets.
+* Changed pc.graph.Cameras default clip planes to work better for worlds scaled to meters.
+* Stop FACT from physically loading texture images.
+* Handle relative paths which are actually absolute paths on other drives.
+* Integrated ImageMagick into FACT.
+* Upgraded some deprecated FBX functions in FACT.
+* Added backface culling option and a stats panel to Visualizer.
+* Frame loaded model with the default camera in Visualizer.
+* Update Visualizer launcher to only call FACT (Python commands stripped).
+* Fix initial camera offset in Visualizer.
+* Write PNGs instead of JPG if non-web format textures have an alpha channel.
+* Updated JSON format to split out opacity into new uniform.
