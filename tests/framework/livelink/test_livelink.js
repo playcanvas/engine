@@ -1,13 +1,13 @@
-module('pc.designer.LiveLink');
+module('pc.fw.LiveLink');
 
 test("new", function () {
-    var ll = new pc.designer.LiveLink();
+    var ll = new pc.fw.LiveLink();
     ok(ll);
     ll.detach();
 });
 
 test("addDestinationWindow", function () {
-    var ll = new pc.designer.LiveLink();
+    var ll = new pc.fw.LiveLink();
     
     ll.addDestinationWindow(window);
     
@@ -17,7 +17,7 @@ test("addDestinationWindow", function () {
 });
 
 test("removeDestinationWindow", function () {
-   var ll = new pc.designer.LiveLink();
+   var ll = new pc.fw.LiveLink();
    
    ll.addDestinationWindow(window);
    
@@ -40,10 +40,10 @@ test("send", function () {
             .whereArgument(1).is("http://origin")
             //('{"type":"NO_TYPE","content":{}}', "http://origin");
             
-        var ll = new pc.designer.LiveLink();
+        var ll = new pc.fw.LiveLink();
         ll.addDestinationWindow(window);
         
-        var msg = new pc.designer.LiveLinkMessage();
+        var msg = new pc.fw.LiveLinkMessage();
         msg.content = {};
         
         ll.send(msg);                
@@ -64,7 +64,7 @@ test("listen", function () {
     jack.expect("window.postMessage")
         .exactly("1 time");
     */
-    var ll = new pc.designer.LiveLink();
+    var ll = new pc.fw.LiveLink();
     var fn = function(msg) {
         ok(msg.type);
         ok(msg.content);
@@ -78,15 +78,15 @@ test("listen", function () {
 });
 
 asyncTest("send, 2 links, listener", 1, function () {
-    var l1 = new pc.designer.LiveLink();
-    var l2 = new pc.designer.LiveLink();
+    var l1 = new pc.fw.LiveLink();
+    var l2 = new pc.fw.LiveLink();
     l2.addDestinationWindow(window);
     
     l1.listen(function (msg) {
         equal(msg.content, "test");
     });
     
-    var msg = new pc.designer.LiveLinkMessage();
+    var msg = new pc.fw.LiveLinkMessage();
     msg.content = "test";
     l2.send(msg);
     
@@ -99,15 +99,15 @@ asyncTest("send, 2 links, listener", 1, function () {
 });
 
 asyncTest("send, 2 links, with callback", 2, function () {
-    var l1 = new pc.designer.LiveLink();
-    var l2 = new pc.designer.LiveLink();
+    var l1 = new pc.fw.LiveLink();
+    var l2 = new pc.fw.LiveLink();
     l2.addDestinationWindow(window);
     
     l1.listen(function (msg) {
         equal(msg.content, "test");
     });
     
-    var msg = new pc.designer.LiveLinkMessage();
+    var msg = new pc.fw.LiveLinkMessage();
     msg.content = "test";
     l2.send(msg, function () {
         ok(true);        
@@ -121,8 +121,8 @@ asyncTest("send, 2 links, with callback", 2, function () {
 });
 
 asyncTest("send, 2 windows, with callback", 5, function () {
-    var l1 = new pc.designer.LiveLink();
-    var l2 = new pc.designer.LiveLink();
+    var l1 = new pc.fw.LiveLink();
+    var l2 = new pc.fw.LiveLink();
     l2.addDestinationWindow(window);
     l2.addDestinationWindow(window);
     
@@ -132,7 +132,7 @@ asyncTest("send, 2 windows, with callback", 5, function () {
         count++;
     });
     
-    var msg = new pc.designer.LiveLinkMessage();
+    var msg = new pc.fw.LiveLinkMessage();
     msg.id = "test"
     msg.content = "test";
     var sent = false;

@@ -1,9 +1,9 @@
-module("pc.designer.LiveLinkUpdateComponentMessage");
+module("pc.fw.LiveLinkUpdateComponentMessage");
 
 test("new", function () {
-    var m = new pc.designer.LiveLinkUpdateComponentMessage(1, "component", "attribute", "value");
+    var m = new pc.fw.LiveLinkUpdateComponentMessage(1, "component", "attribute", "value");
     
-    equal(m.type, pc.designer.LiveLinkMessageType.UPDATE_COMPONENT);
+    equal(m.type, pc.fw.LiveLinkMessageType.UPDATE_COMPONENT);
     equal(m.content.id, 1);
     equal(m.content.component, "component");
     equal(m.content.attribute, "attribute");
@@ -11,10 +11,10 @@ test("new", function () {
 });
 
 test("serialize", function () {
-    var m = new pc.designer.LiveLinkUpdateComponentMessage(1, "component", "attribute", "value");
+    var m = new pc.fw.LiveLinkUpdateComponentMessage(1, "component", "attribute", "value");
     m.id = null;
     
-    var d = pc.designer.LiveLinkMessage.serialize(m);
+    var d = pc.fw.LiveLinkMessage.serialize(m);
     
     equal(d, '{"type":"UPDATE_COMPONENT","content":{"id":1,"component":"component","attribute":"attribute","value":"value"},"id":null,"senderid":null}');
 });
@@ -22,9 +22,9 @@ test("serialize", function () {
 test("deserialize", function () {
     var data = '{"type":"UPDATE_COMPONENT","content":{"id":1,"component":"component","attribute":"attribute","value":"value"}}';
     
-    var m = pc.designer.LiveLinkMessage.deserialize(data);
+    var m = pc.fw.LiveLinkMessage.deserialize(data);
     
-    equal(m.type, pc.designer.LiveLinkMessageType.UPDATE_COMPONENT);
+    equal(m.type, pc.fw.LiveLinkMessageType.UPDATE_COMPONENT);
     equal(m.content.id, 1);
     equal(m.content.component, "component");
     equal(m.content.attribute, "attribute");
