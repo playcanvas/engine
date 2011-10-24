@@ -1,6 +1,6 @@
-pc.extend(pc.designer, function () {
+pc.extend(pc.fw, function () {
     /**
-     * @name pc.designer.LiveLinkOpenEntityMessage
+     * @name pc.fw.LiveLinkOpenEntityMessage
      * @constructor Create a new LiveLinkOpenEntityMessage from individual attributes
      * @class Signal that an Entity should be loaded and opened
      * @param {Object} id
@@ -8,13 +8,13 @@ pc.extend(pc.designer, function () {
      * @private
      */
     var LiveLinkOpenEntityMessage = function(models) {
-        this.type = pc.designer.LiveLinkMessageType.OPEN_ENTITY
+        this.type = pc.fw.LiveLinkMessageType.OPEN_ENTITY
         this.content = {
             models: models
         };
     };
-    LiveLinkOpenEntityMessage = LiveLinkOpenEntityMessage.extendsFrom(pc.designer.LiveLinkMessage);
-    pc.designer.LiveLinkMessage.register("OPEN_ENTITY");
+    LiveLinkOpenEntityMessage = LiveLinkOpenEntityMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    pc.fw.LiveLinkMessage.register("OPEN_ENTITY");
         
     return {
         LiveLinkOpenEntityMessage: LiveLinkOpenEntityMessage

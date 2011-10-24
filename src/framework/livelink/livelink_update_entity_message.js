@@ -1,6 +1,6 @@
-pc.extend(pc.designer, function () {
+pc.extend(pc.fw, function () {
     /**
-     * @name pc.designer.LiveLinkUpdateEntityMessage
+     * @name pc.fw.LiveLinkUpdateEntityMessage
      * @constructor Create a new LiveLinkUpdateEntityMessage
      * @class An Update Entity message signals a change in the number of components in an entity
      * @param {Object} id The id of the Entity that is changed
@@ -8,26 +8,26 @@ pc.extend(pc.designer, function () {
      * @private
      */
     var LiveLinkUpdateEntityMessage = function (id, components) {
-        this.type = pc.designer.LiveLinkMessageType.UPDATE_ENTITY;
+        this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY;
         this.content = {
             id: id,
             components: components
         };
     };
-    LiveLinkUpdateEntityMessage = LiveLinkUpdateEntityMessage.extendsFrom(pc.designer.LiveLinkMessage);
-    pc.designer.LiveLinkMessage.register("UPDATE_ENTITY");
+    LiveLinkUpdateEntityMessage = LiveLinkUpdateEntityMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    pc.fw.LiveLinkMessage.register("UPDATE_ENTITY");
 
 
     var LiveLinkUpdateEntityAttributeMessage = function (id, accessor, value) {
-        this.type = pc.designer.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE;
+        this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE;
         this.content = {
             id: id,
             accessor: accessor,
             value: value
         };
     };
-    LiveLinkUpdateEntityAttributeMessage = LiveLinkUpdateEntityAttributeMessage.extendsFrom(pc.designer.LiveLinkMessage);
-    pc.designer.LiveLinkMessage.register("UPDATE_ENTITY_ATTRIBUTE");
+    LiveLinkUpdateEntityAttributeMessage = LiveLinkUpdateEntityAttributeMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_ATTRIBUTE");
     
     return {
         LiveLinkUpdateEntityMessage: LiveLinkUpdateEntityMessage,

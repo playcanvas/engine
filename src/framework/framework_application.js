@@ -40,7 +40,7 @@ pc.extend(pc.fw, function () {
     var Application = function (canvas, options) {
         this.canvas = canvas;
 
-        this._link = new pc.designer.LiveLink(window);
+        this._link = new pc.fw.LiveLink(window);
         this._link.listen(pc.callback(this, this._handleMessage));
         
         // Open the log
@@ -203,23 +203,23 @@ pc.extend(pc.fw, function () {
      * @function
      * @name pc.fw.Application#_handleMessage
      * @description Called when the LiveLink object receives a new message
-     * @param {pc.designer.LiveLiveMessage} msg The received message
+     * @param {pc.fw.LiveLiveMessage} msg The received message
      */
     Application.prototype._handleMessage = function (msg) {
         switch(msg.type) {
-            case pc.designer.LiveLinkMessageType.UPDATE_COMPONENT:
+            case pc.fw.LiveLinkMessageType.UPDATE_COMPONENT:
                 logINFO("Rec: UPDATE_COMPONENT " + msg.content.id);
                 this._updateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
                 break;
-            case pc.designer.LiveLinkMessageType.UPDATE_ENTITY:
+            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY:
                 logINFO("Rec: UPDATE_ENTITY " + msg.content.id);
                 this._updateEntity(msg.content.id, msg.content.components);
                 break;
-            case pc.designer.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE:
+            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE:
                 logINFO("Rec: UPDATE_ENTITY_ATTRIBUTE " + msg.content.id);
                 this._updateEntityAttribute(msg.content.id, msg.content.accessor, msg.content.value);
                 break;
-            case pc.designer.LiveLinkMessageType.CLOSE_ENTITY:
+            case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                 logINFO("Rec: CLOSE_ENTITY " + msg.content.id);
                 //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
                 var entity = this.context.manager.findByGuid(guid);
@@ -227,7 +227,7 @@ pc.extend(pc.fw, function () {
                     entity.close(this.context.systems);
                 }
                 break;
-            case pc.designer.LiveLinkMessageType.OPEN_ENTITY:
+            case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
                 logINFO("Rec: OPEN_ENTITY " + msg.content.id);
                 var entities = {};
                 msg.content.models.forEach(function (model) {

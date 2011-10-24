@@ -1,7 +1,7 @@
-pc.extend(pc.designer, function () {
+pc.extend(pc.fw, function () {
     var LiveLinkMessage = function (data, source) {
         data = data || {};
-        this.type = data.type || pc.designer.LiveLinkMessageType.NO_TYPE
+        this.type = data.type || pc.fw.LiveLinkMessageType.NO_TYPE
         this.content = data.content || {};
         this.id = data.id || pc.guid.create();
         this.senderid = data.senderid || null;
@@ -9,7 +9,7 @@ pc.extend(pc.designer, function () {
     };
         
     LiveLinkMessage.register = function (type) {
-        pc.designer.LiveLinkMessageType[type] = type;
+        pc.fw.LiveLinkMessageType[type] = type;
     };
     
     LiveLinkMessage.serialize = function (msg) {

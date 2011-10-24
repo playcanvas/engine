@@ -1,11 +1,11 @@
-pc.extend(pc.designer, function () {
+pc.extend(pc.fw, function () {
     // Private
     
     
     // Public Interface
     /**
      * @ignore
-     * @name pc.designer.LiveLink
+     * @name pc.fw.LiveLink
      * @class Create a link between the current window and a destination window which allows you to send messages between the two.
      * <p>Create a LiveLink object in the application you wish to send data from and a LiveLink object in the application you wish to receive data in. 
      * Then add the DOMWindow object of the receiving application to the LiveLink object of the sending application.</p>
@@ -14,7 +14,7 @@ pc.extend(pc.designer, function () {
      * // In application_a.js
      * var link;
      * function setup() {
-     *   link = new pc.designer.LiveLink();
+     *   link = new pc.fw.LiveLink();
      * 
      *   // Create Application B in new window and add it as a destination
      *   var w = window.open("http://myapp.com");
@@ -26,7 +26,7 @@ pc.extend(pc.designer, function () {
      * }
      * 
      * // In application_b.js (running on myapp.com)
-     * var link = new pc.designer.LiveLink();
+     * var link = new pc.fw.LiveLink();
      * link.listen(function (msg) {
      *   console.log(msg.content.value)
      * });
@@ -45,7 +45,7 @@ pc.extend(pc.designer, function () {
     /**
      * @ignore
      * @function
-     * @name pc.designer.LiveLink#detach
+     * @name pc.fw.LiveLink#detach
      * @description removed event handler from main window
      */
     LiveLink.prototype.detach = function () {
@@ -56,7 +56,7 @@ pc.extend(pc.designer, function () {
     /**
      * @ignore
      * @function
-     * @name pc.designer.LiveLink#addDesinationWindow
+     * @name pc.fw.LiveLink#addDesinationWindow
      * @description Add a new destination window. Messages will be sent to all destinations
      * @param {DOMWindow} window
      */
@@ -67,7 +67,7 @@ pc.extend(pc.designer, function () {
     /**
      * @ignore
      * @function
-     * @name pc.designer.LiveLink#removeDestinationWindow
+     * @name pc.fw.LiveLink#removeDestinationWindow
      * @description Remove an existing destination window.
      * @param {DOMWindow} window
      */
@@ -84,7 +84,7 @@ pc.extend(pc.designer, function () {
     /**
      * @ignore
      * @function
-     * @name pc.designer.LiveLink#send
+     * @name pc.fw.LiveLink#send
      * @description Send a message to all registered destinations
      * @param {pc.fw.LiveLinkMessage} msg The message to send
      */
@@ -109,13 +109,13 @@ pc.extend(pc.designer, function () {
                 callback:pc.callback(this, success)
             }            
         }
-        var data = pc.designer.LiveLinkMessage.serialize(msg);
+        var data = pc.fw.LiveLinkMessage.serialize(msg);
         _window.postMessage(data, origin);
     };
     /**
      * @ignore
      * @function
-     * @name pc.designer.LiveLink#listen
+     * @name pc.fw.LiveLink#listen
      * @description Start listening for messages
      * @param {Function} callback Function to handle incoming messages, will be passed a LiveLinkMessage object 
      * @param {DOMWindow} [_window] Override which window to listen on, defaults to current window
@@ -129,14 +129,14 @@ pc.extend(pc.designer, function () {
     
     LiveLink.prototype._handleMessage = function (event) {
         var msg, newmsg;
-        var data = pc.designer.LiveLinkMessage.deserialize(event.data);
+        var data = pc.fw.LiveLinkMessage.deserialize(event.data);
         
         if(!data) {
             return;
         }
-        msg = new pc.designer.LiveLinkMessage(data, event.source);
+        msg = new pc.fw.LiveLinkMessage(data, event.source);
         
-        if(msg.type == pc.designer.LiveLinkMessageType.RECEIVED) {
+        if(msg.type == pc.fw.LiveLinkMessageType.RECEIVED) {
             // If this is a receipt of a message that this LiveLink has sent
             if(msg.content.received_from == this._linkid) {
                 // Call the callback and delete it
@@ -151,8 +151,8 @@ pc.extend(pc.designer, function () {
             this._listener(msg);
             
             // send a receipt so the sender knows we received the message
-            newmsg = new pc.designer.LiveLinkMessage();
-            newmsg.type = pc.designer.LiveLinkMessageType.RECEIVED;
+            newmsg = new pc.fw.LiveLinkMessage();
+            newmsg.type = pc.fw.LiveLinkMessageType.RECEIVED;
             newmsg.content = {
                 id: msg.id,
                 received_from: msg.senderid
