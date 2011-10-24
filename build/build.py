@@ -5,7 +5,7 @@ import subprocess
 import shutil
 
 root = "."
-output = "../../sdk/build/playcanvas-latest.dev.js"
+output = "output/playcanvas-latest.dev.js"
 compilation_level = "WHITESPACE_ONLY"
 COMP_LEVELS = ["WHITESPACE_ONLY", "WHITESPACE_ONLY", "SIMPLE_OPTIMIZATIONS", "ADVANCED_OPTIMIZATIONS"];
 
@@ -50,7 +50,7 @@ def usage():
     \t-h : Display this help
     \t-l [1|2|3] : Compilation level. 1: WHITESPACE_ONLY, 2: SIMPLE_OPTIMIZATIONS, 3: ADVANCED_OPTIMIZATIONS (default 1)
     \t-d [dirname] : Set root directory (default '.')
-    \t-o [filepath] : Set output file (default '../../sdk/build/playcanvas-latest.dev.js')
+    \t-o [filepath] : Set output file (default 'output/playcanvas-latest.dev.js')
     """)
 def setup():
     try:
