@@ -2,11 +2,8 @@ pc.extend(pc.resources, function () {
 	/**
 	 * @name pc.resources.ModelResourceHandler
 	 * @description Resource Handler for creating pc.scene.Model resources
-	 * @param manager The pc.scene.GraphManager used to create the GraphNodes
 	 */
-	var ModelResourceHandler = function (manager) {
-        this._manager = manager;
-		
+	var ModelResourceHandler = function () {
         this._jsonToPrimitiveType = {
             "pointlist": pc.gfx.PrimType.POINTS,
             "linelist":  pc.gfx.PrimType.LINES,
@@ -99,7 +96,7 @@ pc.extend(pc.resources, function () {
     };
         
     ModelResourceHandler.prototype._loadNode = function (model, modelData, nodeData) {
-        var node = this._manager.create(pc.scene.GraphNode);
+        var node = new pc.scene.GraphNode();
         
         // Node properties
         node.setName(nodeData.name);
@@ -110,7 +107,7 @@ pc.extend(pc.resources, function () {
     };
     
     ModelResourceHandler.prototype._loadCamera = function (model, modelData, cameraData) {
-        var camera = this._manager.create(pc.scene.CameraNode);
+        var camera = new pc.scene.CameraNode();
 
         // Node properties
         camera.setName(cameraData.name);
@@ -134,7 +131,7 @@ pc.extend(pc.resources, function () {
     
     
     ModelResourceHandler.prototype._loadLight = function (model, modelData, lightData) {
-        var light = this._manager.create(pc.scene.LightNode);
+        var light = new pc.scene.LightNode();
             
         // Node properties
         light.setName(lightData.name);
@@ -151,7 +148,7 @@ pc.extend(pc.resources, function () {
     };
     
     ModelResourceHandler.prototype._loadMesh = function (model, modelData, meshData) {
-        var mesh = this._manager.create(pc.scene.MeshNode);
+        var mesh = new pc.scene.MeshNode();
             
         // Node properties
         mesh.setName(meshData.name);

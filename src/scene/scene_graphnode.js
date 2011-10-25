@@ -7,33 +7,13 @@ pc.extend(pc.scene, function () {
      */
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
-        this._sid = -1; // Unique sequential ID
         this._ltm = pc.math.mat4.clone(pc.math.mat4.identity);
         this._wtm = pc.math.mat4.clone(pc.math.mat4.identity);
         this._parent = null;
         this._children = [];
         this._labels = {};
     };
-    
-    /**
-     * @function
-     * @name pc.scene.GraphNode#getSequenceId
-     * @description Returns the Sequence ID. The sequence ID is a simple integer id, that is unique for each GraphNode created by the same GraphManager.
-     */
-    GraphNode.prototype.getSequenceId = function () {
-        return this._sid;
-    };
-    
-    /**
-     * @function
-     * @name pc.scene.GraphNode#setSequenceId
-     * @Description Sets the sequence ID. Note, there should be no reason for end-users to change the sequence id of a GraphNode, you may corrupt the graph if you do.
-     * @param {Object} sid
-     */
-    GraphNode.prototype.setSequenceId = function (sid) {
-        this._sid = sid;
-    };
-    
+
     /**
      * @function
      * @name pc.scene.GraphNode#addGraphId
@@ -140,23 +120,6 @@ pc.extend(pc.scene, function () {
         return null;
     };
 
-    /**
-     * @function
-     * @name pc.scene.GraphNode#findBySequenceId
-     * @description Search node and descendants for a node with a Sequence ID 
-     * @returns {pc.scene.GraphNode}
-     */
-    GraphNode.prototype.findBySequenceId = function (sid) {
-        if (this._sid === sid) return this;
-
-        for (var i = 0; i < this._children.length; i++) {
-            var found = this._children[i].findBySequenceId(sid);
-            if (found !== null) return found;
-        }
-        return null;
-
-    };
-    
     /**
      * @function
      * @name pc.scene.GraphNode#findByGraphId

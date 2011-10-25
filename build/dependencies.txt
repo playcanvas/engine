@@ -64,7 +64,6 @@
 ../src/scene/scene_meshnode.js
 ../src/scene/scene_model.js
 ../src/scene/graph_procedural.js
-../src/scene/scene_graphmanager.js
 ../src/scene/resources/resources_model.js
 ../src/scene/materialplugin/materialplugin_materialplugin.js
 ../src/scene/materialplugin/materialplugin_phong.js
