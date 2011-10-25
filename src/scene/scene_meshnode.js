@@ -62,24 +62,6 @@ pc.extend(pc.scene, function () {
         return null;
     };
 
-    /**
-     * @function
-     * @name pc.scene.MeshNode#hasAlpha
-     * @description
-     * @returns {Boolean}
-     * @author Will Eastcott
-     */
-    MeshNode.prototype.hasAlpha = function () {
-        var geom = this._geometry;
-        var subMeshes = geom.getSubMeshes();
-        for (var i = 0; i < subMeshes.length; i++) {
-            var material = subMeshes[i].getMaterial();
-            if (material.isTransparent())
-                return true;
-        }
-        return false;
-    };
-
     return {
         MeshNode: MeshNode
     }; 

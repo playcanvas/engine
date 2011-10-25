@@ -197,6 +197,23 @@ pc.extend(pc.scene, function () {
         this._volume = volume;
     };
 
+    /**
+     * @function
+     * @name pc.scene.Geometry#hasAlpha
+     * @description
+     * @returns {Boolean}
+     * @author Will Eastcott
+     */
+    Geometry.prototype.hasAlpha = function () {
+        var subMeshes = this.getSubMeshes();
+        for (var i = 0; i < subMeshes.length; i++) {
+            var material = subMeshes[i].getMaterial();
+            if (material.isTransparent())
+                return true;
+        }
+        return false;
+    };
+
     return {
         Geometry: Geometry
     }; 

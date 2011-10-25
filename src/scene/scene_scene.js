@@ -77,7 +77,7 @@ pc.extend(pc.scene, function () {
 	                }
 	            }
 	            if (true) {
-	                if (!mesh.hasAlpha()) {
+	                if (!mesh.getGeometry().hasAlpha()) {
 	                    opaqueMeshes.push(mesh);
 	                } else {
 	                    alphaMeshes.push(mesh);
