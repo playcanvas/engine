@@ -39,10 +39,8 @@ pc.extend(pc.fw, function () {
      * Doing so will corrupt the graph this Entity is in.
      * @param {Object} guid
      */
-    Entity.prototype.setGuid = function (guid, manager) {
-        manager.removeNode(this);
+    Entity.prototype.setGuid = function (guid) {
         this._guid = guid;
-        manager.addNode(this);
     };
 	
 	/**
@@ -98,9 +96,9 @@ pc.extend(pc.fw, function () {
         return null;
     };
     
-    Entity.prototype.reparentByGuid = function(parentGuid, manager) {
+    Entity.prototype.reparentByGuid = function(parentGuid, context) {
         if(parentGuid) {
-            var parent = manager.findByGuid(parentGuid);
+            var parent = context.root.findOne("getGuid", parentGuid);
             if(!parent) {
                 throw new Error("Parent Entity doesn't exist")
             }            

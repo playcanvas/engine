@@ -2,8 +2,7 @@ pc.extend(pc.resources, function () {
     /**
      * Handle requests for Entity resources
      */
-    var EntityResourceHandler = function (manager, registry, depot) {
-        this._manager = manager;
+    var EntityResourceHandler = function (registry, depot) {
         this._registry = registry
         this._depot = depot;
     
@@ -40,10 +39,10 @@ pc.extend(pc.resources, function () {
         
         logINFO("Open: " + guid);
 
-        var entity = this._manager.create(pc.fw.Entity);
+        var entity = new pc.fw.Entity();
 
         entity.setName(data.name);
-        entity.setGuid(guid, this._manager);
+        entity.setGuid(guid);
         entity.setLocalTransform(pc.math.mat4.clone(data.transform));
         
         data.labels.forEach(function (label) {

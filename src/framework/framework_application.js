@@ -73,7 +73,6 @@ pc.extend(pc.fw, function () {
         // Enable validation of each WebGL command
         this.graphicsDevice.enableValidation(false);            
 
-        var manager = new pc.scene.GraphManager();
         var registry = new pc.fw.ComponentSystemRegistry();
         
         scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
@@ -82,13 +81,13 @@ pc.extend(pc.fw, function () {
 		// Create resource loader
 		var loader = new pc.resources.ResourceLoader();
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
-        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(manager));
+        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler());
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
-        loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(manager, registry, options.depot));
+        loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
 
 		// The ApplicationContext is passed to new Components and user scripts
-        this.context = new pc.fw.ApplicationContext(manager, loader, new pc.scene.Scene(), registry, options.controller, options.keyboard, options.mouse);
+        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options.controller, options.keyboard, options.mouse);
     
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
@@ -222,7 +221,7 @@ pc.extend(pc.fw, function () {
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                 logINFO("Rec: CLOSE_ENTITY " + msg.content.id);
                 //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
-                var entity = this.context.manager.findByGuid(guid);
+                var entity = this.context.root.findOne("getGuid", guid);
                 if(entity) {
                     entity.close(this.context.systems);
                 }
@@ -290,7 +289,7 @@ pc.extend(pc.fw, function () {
             }
             
             if(pc.string.startsWith(accessor, "reparent")) {
-                entity[accessor](value, this.context.manager);                
+                entity[accessor](value, this.context);                
             } else {
                 entity[accessor](value);                
             }

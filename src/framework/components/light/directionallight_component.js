@@ -88,7 +88,7 @@ pc.extend(pc.fw, function () {
         var properties = ["enable", "color"];
         data = data || {};
 
-        componentData.light = this.context.manager.create(pc.scene.LightNode);
+        componentData.light = new pc.scene.LightNode();
         componentData.light.setType(pc.scene.LightType.DIRECTIONAL);
         entity.addChild(componentData.light);
 

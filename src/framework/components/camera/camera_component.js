@@ -159,7 +159,7 @@ pc.extend(pc.fw, function () {
         var properties = ['clearColor', 'fov', 'viewWindowX', 'viewWindowY', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
         data = data || {};
 
-        componentData.camera = this.context.manager.create(pc.scene.CameraNode);
+        componentData.camera = new pc.scene.CameraNode();
         entity.addChild(componentData.camera);
 
         this.addComponent(entity, componentData);        

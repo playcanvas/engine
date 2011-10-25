@@ -4,7 +4,6 @@ pc.extend(pc.fw, function() {
      * The context is available to all Components and all user scripts and can be used to access the EntityManager and the ComponentRegistry.
      * @constructor Create a new ApplicationContext
      * @name pc.fw.ApplicationContext
-     * @param {Object} graphManager Used to create and find nodes
      * @param {pc.resources.LoaderManager} loaders LoaderManager which is used to load resources
      * @param {Object} scene Used to manage models to render
      * @param {Object} registry ComponentSystemRegistry stores all the ComponentSystems and is used to access Component data
@@ -12,16 +11,10 @@ pc.extend(pc.fw, function() {
      * @param {Object} [keyboard] Keyboard controller for getting user input
      * @param {Object} [mouse] Mouse controller for getting user input
      */
-    var ApplicationContext = function (graphManager, loader, scene, registry, controller, keyboard, mouse) {
-        /**
-         * @name pc.fw.ApplicationContext#manager
-         * @description The GraphManager instance.
-         */
-        this.manager = graphManager;
-
+    var ApplicationContext = function (loader, scene, registry, controller, keyboard, mouse) {
         this.loader = loader;
         this.scene = scene;
-        this.root = this.manager.create(pc.scene.GraphNode);
+        this.root = new pc.scene.GraphNode();
         
         /**
          * @name pc.fw.ApplicationContext#components

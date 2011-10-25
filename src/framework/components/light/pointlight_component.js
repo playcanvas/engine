@@ -96,7 +96,7 @@ pc.extend(pc.fw, function () {
         var properties = ["enable", "color", "radius"];
         data = data || {};
 
-        componentData.light = this.context.manager.create(pc.scene.LightNode);
+        componentData.light = new pc.scene.LightNode();
         componentData.light.setType(pc.scene.LightType.POINT);
         entity.addChild(componentData.light);
 
