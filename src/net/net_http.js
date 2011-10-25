@@ -100,6 +100,7 @@ pc.net.http = function () {
          */
         request: function (method, url, options, xhr) {
             var uri, query, timestamp, postdata;
+            var errored = false;
             
             options = options || {};
             
@@ -206,7 +207,7 @@ pc.net.http = function () {
                     {
                     case 0:
                         // Request didn't complete, possibly an exception or attempt to do cross-domain request
-                        options.error(xhr.status, xhr, null);
+                        // options.error(xhr.status, xhr, null);
                         break;
                         
                     case 200:
@@ -246,12 +247,20 @@ pc.net.http = function () {
                 }
             };
             
+            xhr.onerror = function () {
+                options.error(xhr.status, xhr, null);
+                errored = true;  
+            };
+            
             try {
                 xhr.send(postdata);
             }
             catch (e) {
-                // Sending the request itself failed!
-                options.error(-1, xhr, e);
+                // DWE: Don't callback on exceptions as behaviour is inconsistent, e.g. cross-domain request errors don't throw an exception.
+                // Error callback should be called by xhr.onerror() callback instead.
+                if (!errored) {
+                    options.error(xhr.status, xhr, e);
+                }
             }
             
             // Return the request object as it can be handy for blocking calls

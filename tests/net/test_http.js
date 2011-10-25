@@ -242,7 +242,7 @@ test("request: options.async=false creates a blocking request", function () {
     });
 });
 
-test("request: send exception triggers error callback with mock object", function() {
+test("request: send exception triggers error callback with mock object", 5, function() {
     var callbackFired = false;
     
     var xhr = {
@@ -257,26 +257,39 @@ test("request: send exception triggers error callback with mock object", functio
     };
     
     var callback = function(status, _xhr, exception) {
-            equal(_xhr.status, -1);
-            notEqual(_xhr, null);
-            same(exception, "Test exception");
-            callbackFired = true;
-        
+        equal(status, 0);
+        notEqual(_xhr, null);
+        same(exception, "Test exception");
+        callbackFired = true;
     };
     
-    var r = pc.net.http.request("GET", "http://test.com", { error : callback}, xhr);
+    var r = pc.net.http.request("GET", "http://test.com", {error : callback}, xhr);
     
     ok(r === xhr);
     same(callbackFired, true);
+});
+
+asyncTest("request: cross-domain failure calls error callback", 3, function () {
+    var callback = function (status, _xhr, exception) {
+        equal(status, 0);
+        notEqual(_xhr, null);
+        same(exception, null);
+        callbackFired = true;
+        start();
+    }
+    
+    var r = pc.net.http.request("GET", "http://example.com/resource", {
+        error: callback
+    });
 });
 
 test("request: send exception triggers error callback with real XMLHttpRequest", function() {
     var callbackFired = false;
     
     var callback = function(status, xhr, exception) {
-        same(status, -1);
+        same(status, 0);
         same(xhr == null, false);
-        same(exception == null, false);
+        same(exception, null);
         callbackFired = true;
     };
     
