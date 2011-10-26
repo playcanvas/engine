@@ -12,6 +12,18 @@ pc.extend(pc.scene, function () {
         this._parent = null;
         this._children = [];
         this._labels = {};
+        this._graphId = -1;
+    };
+
+    GraphNode.prototype.clone = function () {
+        var clone = new pc.scene.GraphNode();
+
+        // GraphNode
+        clone.setName(this.getName());
+        clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
+        clone._graphId = this._graphId;
+
+        return clone;
     };
 
     /**

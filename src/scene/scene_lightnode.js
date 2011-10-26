@@ -35,6 +35,23 @@ pc.extend(pc.scene, function () {
 
     LightNode = LightNode.extendsFrom(pc.scene.GraphNode);
 
+    LightNode.prototype.clone = function () {
+        var clone = new pc.scene.LightNode();
+
+        // GraphNode
+        clone.setName(this.getName());
+        clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
+        clone._graphId = this._graphId;
+
+        // LightNode
+        clone.setType(this.getType());
+        clone.setColor(this.getColor().splice(0));
+        clone.setRadius(this.getRadius());
+//        clone.setConeAngle(this.getConeAngle());
+
+        return clone;
+    };
+
     /**
      * @function
      * @name pc.scene.LightNode#enable

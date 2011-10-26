@@ -35,6 +35,28 @@ pc.extend(pc.scene, function () {
     // A CameraNode is a specialization of a GraphNode.  So inherit...
     CameraNode = CameraNode.extendsFrom(pc.scene.GraphNode);
 
+    CameraNode.prototype.clone = function () {
+        var clone = new pc.scene.CameraNode();
+
+        // GraphNode
+        clone.setName(this.getName());
+        clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
+        clone._graphId = this._graphId;
+
+        // CameraNode
+        clone.setProjection(this.getProjection());
+        clone.setNearClip(this.getNearClip());
+        clone.setFarClip(this.getFarClip());
+        clone.setFov(this.getFov());
+        clone.setViewWindow(pc.math.vec2.clone(this.getViewWindow()));
+        clone.setLookAtNode(this.getLookAtNode());
+        clone.setUpNode(this.getUpNode());
+        clone.setRenderTarget(this.getRenderTarget());
+        clone.setClearOptions(this.getClearOptions());
+
+        return clone;
+    };
+
     /**
      * Convert a point in 3D world space to a point in 2D screen space.
      * (0,0) is top-left

@@ -72,10 +72,49 @@ pc.extend(pc.scene, function () {
 	        this._meshes[i].dispatch();
 	    }
 	};
-	
+
+	Model.prototype.clone = function () {
+        var clone = new pc.scene.Model();
+
+        var _duplicate = function (node) {
+            var newNode = node.clone();
+
+            if (node instanceof pc.scene.CameraNode)
+                clone.getCameras().push(newNode);
+            else if (node instanceof pc.scene.LightNode)
+                clone.getLights().push(newNode);
+            else if (node instanceof pc.scene.MeshNode)
+                clone.getMeshes().push(newNode);
+
+            var children = node.getChildren();
+            for (var i = 0; i < children.length; i++) {
+                newNode.addChild(_duplicate(children[i]));
+            }
+
+            return newNode;
+        }
+
+        clone.setGraph(_duplicate(this.getGraph()));
+
+        // Resolve bone IDs to actual graph nodes
+        var meshes = clone.getMeshes();
+        for (i = 0; i < meshes.length; i++) {
+            var mesh = meshes[i];
+            var geom = mesh.getGeometry();
+            if (geom._boneIds !== undefined) {
+                mesh._bones = [];
+                for (var j = 0; j < geom._boneIds.length; j++) {
+                    var id = geom._boneIds[j];
+                    var bone = clone.getGraph().findByGraphId(id);
+                    mesh._bones.push(bone);
+                }
+            }
+        }
+
+        return clone;
+    };
+
 	return {
 		Model: Model
 	};
 }());
-
-

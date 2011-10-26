@@ -595,24 +595,24 @@ pc.extend(pc.resources, function () {
             model.setGraph(graph);
 
             // Resolve bone IDs to actual graph nodes
-            var geometries = model.getGeometries();
-            for (i = 0; i < geometries.length; i++) {
-                var geometry = geometries[i];
-                if (geometry._boneIds !== undefined) {
-                    geometry._bones = [];
-                    for (var j = 0; j < geometry._boneIds.length; j++) {
-                        var id = geometry._boneIds[j];
+            var meshes = model.getMeshes();
+            for (i = 0; i < meshes.length; i++) {
+                var mesh = meshes[i];
+                var geom = mesh.getGeometry();
+                if (geom._boneIds !== undefined) {
+                    mesh._bones = [];
+                    for (var j = 0; j < geom._boneIds.length; j++) {
+                        var id = geom._boneIds[j];
                         var bone = graph.findByGraphId(id);
-                        geometry._bones.push(bone);
+                        mesh._bones.push(bone);
                     }
-                    delete geometry._boneIds;
                 }
             }
 
             // Resolve camera aim/up graph node IDs to actual graph nodes            
             _resolveCameraIds(graph);
-            
-            _clearGraphIds(graph);
+
+//            _clearGraphIds(graph);
         }
         
         return model;

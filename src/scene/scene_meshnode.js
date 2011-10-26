@@ -5,9 +5,32 @@ pc.extend(pc.scene, function () {
      */
     var MeshNode = function MeshNode() {
         this._geometry = null;
-    }
 
+        this._bones    = null; // For skinned meshes, the bones array that influences the skin
+    }
     MeshNode = MeshNode.extendsFrom(pc.scene.GraphNode);
+
+    /**
+     * @function
+     * @name pc.scene.MeshNode#clone
+     * @description Duplicates a mesh node but does not 'deep copy' the geometry. Instead,
+     * any attached geometry is referenced in the returned cloned MeshNode.
+     * @returns {pc.scene.MeshNode} A cloned MeshNode.
+     * @author Will Eastcott
+     */
+    MeshNode.prototype.clone = function () {
+        var clone = new pc.scene.MeshNode();
+
+        // GraphNode
+        clone.setName(this.getName());
+        clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
+        clone._graphId = this._graphId;
+
+        // MeshNode
+        clone.setGeometry(this.getGeometry());
+
+        return clone;
+    };
 
     /**
      * @function
@@ -16,8 +39,20 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     MeshNode.prototype.dispatch = function () {
-        if (this._geometry !== null) {
-            this._geometry.dispatch(this._geometry.isSkinned() ? this._ltm : this._wtm);
+        var geom = this._geometry;
+        if (geom !== null) {
+            var skinned = geom.isSkinned();
+            if (skinned) {
+                var numBones;
+                for (i = 0, numBones = this._bones.length; i < numBones; i++) {
+                    var matrixPalette = geom.getMatrixPalette();
+                    var invBindPose = geom.getInverseBindPose();
+                    pc.math.mat4.multiply(this._bones[i]._wtm, invBindPose[i], matrixPalette[i]);
+                }
+                geom.dispatch(this._ltm);
+            } else {
+                geom.dispatch(this._wtm);
+            }
         }
     };
 

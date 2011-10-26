@@ -4,15 +4,17 @@ pc.extend(pc.scene, function () {
      * @class A geometry.
      */
     var Geometry = function Geometry() {
-        this._vertexBuffers   = [];
-        this._subMeshes       = [];
+        this._vertexBuffers = [];
+        this._subMeshes = [];
 
         // Skinning data
-        this._bones           = null;
         this._inverseBindPose = null;
+        this._matrixPalette = null; // The raw memory buffer to hold the matrix palette
+        this._matrixPaletteF32 = null; // The matrix palette uploaded to the shader (typed as Float32Array)
+        this._matrixPaletteEntryF32 = null; // The memory buffer represented as an array of matrices to use with the pc.math.mat4 API
 
         // Object space bounding volume
-        this._volume          = null;
+        this._volume = null;
     };
 
     /**
@@ -33,13 +35,9 @@ pc.extend(pc.scene, function () {
         }
 
         // Generate the matrix palette
-        var skinned = this._inverseBindPose && this._bones;
+        var skinned = this.isSkinned();
         var poseId;
         if (skinned) {
-            var numBones;
-            for (i = 0, numBones = this._bones.length; i < numBones; i++) {
-                pc.math.mat4.multiply(this._bones[i]._wtm, this._inverseBindPose[i], this._matrixPaletteEntryF32[i]);
-            }
             poseId = scope.resolve("matrix_pose[0]"); 
             poseId.setValue(this._matrixPaletteF32);
         }
@@ -137,6 +135,10 @@ pc.extend(pc.scene, function () {
         return this._inverseBindPose;
     };
 
+    Geometry.prototype.getMatrixPalette = function () {
+        return this._matrixPaletteEntryF32;
+    };
+
     /**
      * @function
      * @name pc.scene.Geometry#isSkinned
@@ -168,9 +170,9 @@ pc.extend(pc.scene, function () {
             }
         } else {
             this._matrixPalette = null;
-            delete this._matrixPalette;
-            delete this._matrixPaletteF32;
-            delete this._matrixPaletteEntryF32;
+            this._matrixPalette = null;
+            this._matrixPaletteF32 = null;
+            this._matrixPaletteEntryF32 = null;
         }
     };
 
