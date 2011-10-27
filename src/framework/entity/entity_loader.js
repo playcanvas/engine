@@ -2,10 +2,8 @@ pc.extend(pc.fw, function () {
     /**
      * @name pc.fw.EntityLoader
      * @class Used to load and open Entity Nodes from data files or the Corazon API.
-     * @param {pc.scene.GraphManager} manager GraphManager instance used to create Nodes. 
      */
-    var EntityLoader = function (manager) {
-        this._manager = manager;
+    var EntityLoader = function () {
     };
     
     /**
@@ -66,10 +64,10 @@ pc.extend(pc.fw, function () {
         var guid = data.resource_id;
         logINFO("Open: " + guid);
 
-        var entity = this._manager.create(pc.fw.Entity);
+        var entity = new pc.fw.Entity();
 
         entity.setName(data.name);
-        entity.setGuid(guid, this._manager);
+        entity.setGuid(guid);
         entity.setLocalTransform(pc.math.mat4.clone(data.transform));
 
         // Parent and child data is stored temporarily until children are patched.
@@ -105,8 +103,7 @@ pc.extend(pc.fw, function () {
      */
     EntityLoader.prototype.close = function(guid, root, registry) {
         // Remove from tree
-        //var entity = root.findOne("getGuid", guid);
-        var entity = this._manager.findByGuid(guid);
+        var entity = root.findOne("getGuid", guid);
         var parent = entity.getParent();
         // Remove all components
         pc.fw.ComponentSystem.deleteComponents(entity, registry);

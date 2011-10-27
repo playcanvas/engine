@@ -3,9 +3,8 @@ module('pc.fw.AudioListenerComponent', {
         pc.graph.JsonLoader = function () {};
         var scene = new pc.scene.Scene();
         var registry = new pc.fw.ComponentSystemRegistry();
-        var manager = new pc.scene.GraphManager();
         var loaders = new pc.resources.LoaderManager();
-        context = new pc.fw.ApplicationContext(manager, loaders, scene, registry);
+        context = new pc.fw.ApplicationContext(loaders, scene, registry);
     },
     teardown: function () {
         delete context;
