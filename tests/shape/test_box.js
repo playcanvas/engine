@@ -59,7 +59,7 @@ test('containsPoint: translated', function () {
 });
 
 test('containsPoint: scaled', function () {
-    var t = pc.math.mat4.clone(pc.math.mat4.identity);
+    var t = pc.math.mat4.create();
 
     var b = new pc.shape.Box(t, pc.math.vec3.create(0.5,1,1.5));
     var p = pc.math.vec3.create(0,0,0);

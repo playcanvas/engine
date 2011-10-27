@@ -2,12 +2,15 @@ pc.math.mat3 = function () {
 
     // Public functions
     return {
-        create: function  (m00, m01, m02,
-                            m10, m11, m12,
-                            m20, m21, m22) {
-            return new Float32Array([m00, m01, m02,
-                                     m10, m11, m12,
-                                     m20, m21, m22]);
+        create: function () {
+            if (arguments.length === 9) {
+                var a = arguments;
+                return [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]];
+            } else {
+                return [1, 0, 0,
+                        0, 1, 0,
+                        0, 0, 1];
+            }
         },
 
         createFromMat4: function (m4, r) {
@@ -37,35 +40,27 @@ pc.math.mat4 = function () {
     // Public functions
     return {
 
-        identity: new Float32Array([1.0, 0.0, 0.0, 0.0,
-                             0.0, 1.0, 0.0, 0.0,
-                             0.0, 0.0, 1.0, 0.0,
-                             0.0, 0.0, 0.0, 1.0]),
-
         /**
          * @function
          * @name pc.math.mat4.clone
          * @description Returns an identical copy of the specified 4x4 matrix.
-         * @param {Float32Array} m A 4x4 matrix that will to be cloned and returned.
-         * @returns {Float32Array} A 4x4 matrix containing the result of the cloning.
+         * @param {Array} m A 4x4 matrix that will to be cloned and returned.
+         * @returns {Array} A 4x4 matrix containing the result of the cloning.
          * @example
          * var m = pc.math.mat4.makeTranslate(10, 20, 30);
          * var mclone = pc.math.mat4.clone(m);
          * @author Will Eastcott
          */
         clone: function (m) {
-            return new Float32Array([m[0], m[1], m[2], m[3],
-                        m[4], m[5], m[6], m[7],
-                        m[8], m[9], m[10], m[11],
-                        m[12], m[13], m[14], m[15]]);
+            return m.slice(0);
         },
 
         /**
          * @function
          * @name pc.math.mat4.copy
          * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
-         * @param {Float32Array} src A 4x4 matrix to be copied.
-         * @param {Float32Array} dst A 4x4 matrix that will receive a copy of the source matrix.
+         * @param {Array} src A 4x4 matrix to be copied.
+         * @param {Array} dst A 4x4 matrix that will receive a copy of the source matrix.
          * @example
          * var src = pc.math.mat4.makeTranslate(10, 20, 30);
          * var dst = pc.math.mat4.create();
@@ -119,7 +114,7 @@ pc.math.mat4 = function () {
          * @param {number} m42 Value for row 4, column 2.
          * @param {number} m43 Value for row 4, column 3.
          * @param {number} m44 Value for row 4, column 4.
-         * @returns {Float32Array} A new 4x4 matrix.
+         * @returns {Array} A new 4x4 matrix.
          * @example
          * // Create a 4x4 matrix with all components set to undefined
          * var m1 = pc.math.mat4.create();
@@ -130,24 +125,26 @@ pc.math.mat4 = function () {
          *                              10, 20, 30, 1);
          * @author Will Eastcott
          */
-        create: function (m11, m12, m13, m14,
-                           m21, m22, m23, m24,
-                           m31, m32, m33, m34,
-                           m41, m42, m43, m44) {
-            return new Float32Array([m11, m12, m13, m14,
-                                     m21, m22, m23, m24,
-                                     m31, m32, m33, m34,
-                                     m41, m42, m43, m44]);
+        create: function () {
+            if (arguments.length === 16) {
+                var a = arguments;
+                return [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]];
+            } else {
+                return [1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1];
+            }
         },
 
         /**
          * @function
          * @name pc.math.mat4.multiply
          * @description Returns the result of multiplying the specified 4x4 matrices together.
-         * @param {Float32Array} m0 The 4x4 matrix used as the first multiplicand of the operation.
-         * @param {Float32Array} m1 The 4x4 matrix used as the second multiplicand of the operation.
-         * @param {Float32Array} r The result of the multiplication.
-         * @returns {Float32Array} The result of the multiplication (effectively a reference to the r parameter).
+         * @param {Array} m0 The 4x4 matrix used as the first multiplicand of the operation.
+         * @param {Array} m1 The 4x4 matrix used as the second multiplicand of the operation.
+         * @param {Array} r The result of the multiplication.
+         * @returns {Array} The result of the multiplication (effectively a reference to the r parameter).
          * @example
          * var a = pc.math.mat4.makeTranslate(10, 20, 30);
          * var b = pc.math.mat4.makeRotate(Math.PI, [0, 1, 0]);
@@ -231,7 +228,7 @@ pc.math.mat4 = function () {
          * @description Multiplies a 3-dimensional vector by a 4x4 matrix. Se
          * @param {Array} v The 3-dimensional vector to be multiplied.
          * @param {Number} w The w-component of vector v.
-         * @param {Float32Array} m The matrix to which vector v is multiplied.
+         * @param {Array} m The matrix to which vector v is multiplied.
          * @param {Array} r An optional 3-dimensional vector to receive the result of the multiplication.
          * @returns {Array} The input vector v multiplied by input matrix m.
          * @example

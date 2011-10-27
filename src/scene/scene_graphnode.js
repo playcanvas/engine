@@ -7,8 +7,8 @@ pc.extend(pc.scene, function () {
      */
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
-        this._ltm = pc.math.mat4.clone(pc.math.mat4.identity);
-        this._wtm = pc.math.mat4.clone(pc.math.mat4.identity);
+        this._ltm = pc.math.mat4.create();
+        this._wtm = pc.math.mat4.create();
         this._parent = null;
         this._children = [];
         this._labels = {};
@@ -255,19 +255,6 @@ pc.extend(pc.scene, function () {
     
     /**
      * @function
-     * @name pc.scene.GraphNode#setTypedLocalTransform
-     * @description Set the local transform to the GraphNode, but convert the argument to a Float32Array before doing so
-     * @param {Object} ltm The new local transform
-     */
-    GraphNode.prototype.setTypedLocalTransform = function (ltm) {
-        if(pc.type(ltm) != "Float32Array") {
-            this._ltm = new Float32Array(ltm);
-        } else {
-            this._ltm = ltm;
-        }
-    }
-    /**
-     * @function
      * @name pc.scene.GraphNode#setName
      * @description
      * @param {String} name
@@ -395,7 +382,7 @@ pc.extend(pc.scene, function () {
             }
         }
         
-        _syncHierarchy(this, pc.math.mat4.identity);
+        _syncHierarchy(this, pc.math.mat4.create());
     };
 
     return {

@@ -1,25 +1,20 @@
-module("pc.math.Mat3");
+module("pc.math.mat4");
 	
 function approx(actual, expected, message) {
     var epsilon = 0.00001;
     var x = actual - expected;
     ok( x > -epsilon && x < epsilon, message);
 }
-
-test("identity", function() {
-	var m = pc.math.mat4.identity;
-	
-	var identity = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
-	
-	for(var i=0 ; i<16; ++i) {
-		same(m[i], identity[i]);
-	}
-});
 	
 test("create", function() {
 	var m = pc.math.mat4.create();
-    
     ok(m);	
+
+    // Check the matrix is identity
+	var identity = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+	for(var i=0 ; i<16; ++i) {
+		same(m[i], identity[i]);
+	}
 });
 
 test("clone", function() {
@@ -87,7 +82,7 @@ test("makeLookAt", function() {
 });
 
 test("makeLookAt: 90deg", function () {
-    var m = pc.math.mat4.clone(pc.math.mat4.identity);
+    var m = pc.math.mat4.create();
     pc.math.mat4.makeRotate(Math.PI * 0.5, pc.math.vec3.create(0,1,0), m);
     var r = pc.math.mat4.create();
     var heading = pc.math.vec3.create(-m[8], -m[9], -m[10]);
@@ -102,7 +97,7 @@ test("makeLookAt: 90deg", function () {
 });
 
 test("makeLookAt: 180deg", function () {
-    var m = pc.math.mat4.clone(pc.math.mat4.identity);
+    var m = pc.math.mat4.create();
     pc.math.mat4.makeRotate(Math.PI, pc.math.vec3.create(0,1,0), m);
     var r = pc.math.mat4.create();
     var heading = pc.math.vec3.create(-m[8], -m[9], -m[10]);
@@ -177,7 +172,7 @@ test("invert", function() {
     var mInvert = pc.math.mat4.invert(m);
     var result = pc.math.mat4.multiply(m, mInvert, result);
     
-    deepEqual(result, pc.math.mat4.identity);
+    deepEqual(result, pc.math.mat4.create());
 });
 
 test("invert: same matrix for both arguments", function() {
@@ -190,7 +185,7 @@ test("invert: same matrix for both arguments", function() {
     pc.math.mat4.invert(m, m);
     var result = pc.math.mat4.multiply(m, original, result);
     
-    deepEqual(result, pc.math.mat4.identity);
+    deepEqual(result, pc.math.mat4.create());
 });
 
 test("getTranslation", function() {

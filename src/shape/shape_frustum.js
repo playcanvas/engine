@@ -7,7 +7,7 @@ pc.extend(pc.shape, function () {
      */
     var Frustum = function Frustum (projectionMatrix, viewMatrix) {
         projectionMatrix = projectionMatrix || pc.math.mat4.makePerspective(90.0, 16 / 9, 0.1, 1000.0);
-        viewMatrix       = viewMatrix       || pc.math.mat4.clone(pc.math.mat4.identity);
+        viewMatrix       = viewMatrix       || pc.math.mat4.create();
 
         var viewProj = pc.math.mat4.multiply(projectionMatrix, viewMatrix);
 

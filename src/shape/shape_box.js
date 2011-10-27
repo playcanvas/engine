@@ -7,7 +7,7 @@ pc.extend(pc.shape, function () {
      */
     var Box = function Box (transform, halfExtents) {
         if(!transform) {
-            transform = pc.math.mat4.clone(pc.math.mat4.identity);
+            transform = pc.math.mat4.create();
         }
         if(!halfExtents) {
             halfExtents = pc.math.vec3.create(0.5, 0.5, 0.5);
