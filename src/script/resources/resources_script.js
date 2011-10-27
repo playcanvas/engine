@@ -135,6 +135,7 @@ pc.extend(pc.resources, function () {
     var ScriptRequest = function ScriptRequest() {
     };
     ScriptRequest = ScriptRequest.extendsFrom(pc.resources.ResourceRequest);
+    ScriptRequest.prototype.type = "script";
     
     return {
         ScriptResourceHandler: ScriptResourceHandler,

@@ -54,10 +54,10 @@ pc.resources = function () {
      */
     ResourceLoader.prototype.registerHandler = function (RequestType, handler) {
     	var request = new RequestType();    	
-    	if (request.constructor.name == "") {
-    		throw Error("ResourceRequests must not be anonymous functions");
+    	if (request.type == "") {
+    		throw Error("ResourceRequests must have a type");
     	}
-    	this._handlers[request.constructor.name] = handler;
+    	this._handlers[request.type] = handler;
     	handler.setLoader(this);
     };
     
@@ -162,7 +162,7 @@ pc.resources = function () {
 	
 	ResourceLoader.prototype.open = function (RequestType, data, success, error, progress, options) {
 	   var request = new RequestType();
-	   return this._handlers[request.constructor.name].open(data, success, error, progress, options);
+	   return this._handlers[request.type].open(data, success, error, progress, options);
 	}
 	
 	/**
@@ -212,7 +212,7 @@ pc.resources = function () {
 	    			priority: request.priority,
 	    			batch: request.batches[0].handle // pass in original batch for any sub-requests to use
 	    		};
-	    		var handler = this._handlers[request.constructor.name];
+	    		var handler = this._handlers[request.type];
 	    		
 	    		// load using handler
 	    		handler.load(request.identifier, function (response, options) {

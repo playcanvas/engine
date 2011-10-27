@@ -48,6 +48,7 @@ pc.extend(pc.resources, function () {
 	var AnimationRequest = function AnimationRequest(identifier) {
 	};
 	AnimationRequest = AnimationRequest.extendsFrom(pc.resources.ResourceRequest);
+	AnimationRequest.prototype.type = "animation";
 	
 	return {
 		AnimationResourceHandler: AnimationResourceHandler,

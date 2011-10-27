@@ -129,6 +129,7 @@ pc.extend(pc.resources, function () {
     var EntityRequest = function EntityRequest(identifier) {
     }
     EntityRequest = EntityRequest.extendsFrom(pc.resources.ResourceRequest);
+    EntityRequest.prototype.type = "entity";
     
     return {
         EntityResourceHandler: EntityResourceHandler,
