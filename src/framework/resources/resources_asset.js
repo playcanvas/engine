@@ -24,6 +24,7 @@ pc.extend(pc.resources, function () {
 		
 	};
 	AssetRequest = AssetRequest.extendsFrom(pc.resources.ResourceRequest);
+	AssetRequest.prototype.type = "asset";
 	
 	return {
 		AssetRequest: AssetRequest,

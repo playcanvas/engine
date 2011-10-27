@@ -622,6 +622,7 @@ pc.extend(pc.resources, function () {
 	var ModelRequest = function ModelRequest(identifier) {		
 	};
 	ModelRequest = ModelRequest.extendsFrom(pc.resources.ResourceRequest);
+    ModelRequest.prototype.type = "model";
 
 	var Vertex = function Vertex() {};
 	// Returns a vertex from the JSON data in the followin format:
