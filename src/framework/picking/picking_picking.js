@@ -76,9 +76,6 @@ pc.fw.picking = function() {
         options.usePick = options.usePick !== undefined ? options.usePick : true;
         options.layers = options.layers || [];
 
-        // Set renderTarget to offscreen buffer
-        device.setRenderTarget(this._offscreenRenderTarget);
-
         if (this._model) {
             renderComponents = this._model._getComponents();
         }
@@ -103,15 +100,17 @@ pc.fw.picking = function() {
             }
         }
 
-        // Render all render components in a different color and store a lookup
-        count = 1;
-        device.updateBegin();
+        // Set renderTarget to offscreen buffer
+        device.setRenderTarget(this._offscreenRenderTarget);
         device.clear({
             color: [0.0, 0.0, 0.0, 1.0],
             depth: 1.0,
             flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
         });
-        
+        device.updateBegin();
+
+        // Render all render components in a different color and store a lookup
+        count = 1;        
         if(options.useRender) {
             for (componentIndex in renderComponents) {
                 if (renderComponents.hasOwnProperty(componentIndex)) {
@@ -172,9 +171,7 @@ pc.fw.picking = function() {
 
         var pixel = new ArrayBuffer(4);
         var pixelBytes = new Uint8Array(pixel);
-        gl.readPixels(x, this._height - y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelBytes);
-
-        device.setRenderTarget(null);
+        gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixelBytes);
 
         return {
             entity: entities[pc.math.bytesToInt(pixelBytes)] ? entities[pc.math.bytesToInt(pixelBytes)].entity : null,
