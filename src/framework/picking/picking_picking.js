@@ -102,12 +102,12 @@ pc.fw.picking = function() {
 
         // Set renderTarget to offscreen buffer
         device.setRenderTarget(this._offscreenRenderTarget);
+        device.updateBegin();
         device.clear({
             color: [0.0, 0.0, 0.0, 1.0],
             depth: 1.0,
             flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
         });
-        device.updateBegin();
 
         // Render all render components in a different color and store a lookup
         count = 1;        
