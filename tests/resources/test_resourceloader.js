@@ -20,8 +20,13 @@ TestResourceHandler.prototype.open = function (response, options) {
 
 var TestRequest = function TestRequest() {};
 TestRequest = TestRequest.extendsFrom(pc.resources.ResourceRequest);
+TestRequest.type = "test";
 
 // Simulate a hierarchical asset handler
+// When a 'ChildRequest' is made the handler pushes the callbacks onto this.success, this.progress and this.error
+// Then the test can simulate the loading succeeding by calling  the callbacks from the list
+// The 'ChildRequest' simulated loading also add another request to be loaded, only this time it is added this.delayed
+// So you can simulate loading the child before or after the parent
 var ChildResourceHandler = function (depth) {
     this.success = [];
     this.delayed = []; // delayed success callbacks to simulate larger files
@@ -31,6 +36,8 @@ var ChildResourceHandler = function (depth) {
 };
 ChildResourceHandler = ChildResourceHandler.extendsFrom(pc.resources.ResourceHandler);
 ChildResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
+    // If child resource has 'delay' in the name then push it on the delay list,
+    // otherwise use the success list
     if(identifier.indexOf("delay") >= 0) {
         this.delayed.push(success);        
     } else {
@@ -57,6 +64,7 @@ ChildResourceHandler.prototype.open = function (response, options) {
 
 var ChildRequest = function ChildRequest() {};
 ChildRequest = ChildRequest.extendsFrom(pc.resources.ResourceRequest);
+ChildRequest.type = "child";
 
 test("new ResourceLoader", function () {
     ok(pc.resources.ResourceLoader);
@@ -73,7 +81,7 @@ test("ResourceLoader: registerHandler", function () {
 	
 	var request = new TestRequest();
 	
-	ok(loader._handlers[request.constructor.name]);
+	ok(loader._handlers[request.type]);
 });
 
 test("ResourceLoader: request single resource", function () {
@@ -366,4 +374,69 @@ test("ResourceLoader: cancel", function () {
 	loader.cancel(handle);
 	
 	equal(loader._pending.length, 0);
+});
+
+test("ResourceLoader: progress callback is passed to load", 1, function () {
+    var loader = new pc.resources.ResourceLoader({
+    });
+    
+    var handler = new TestResourceHandler();
+    loader.registerHandler(TestRequest, handler);
+    
+    var requests = [
+        new TestRequest("http://abc.com/directory/resource/1")
+    ];
+    
+    var handle = loader.request(requests, 1, function (resource) {
+        throw Error("Shouldn't get here.")
+    }, function (error) {
+        throw Error("Shouldn't get here.")
+    }, function (progress) {
+        equal(100,100);
+    });
+
+    // trigger progress callback that was passed into load
+    handler.progress[0](100);    
+});
+
+test("ResourceLoader: error callback is passed to load", 1, function () {
+    var loader = new pc.resources.ResourceLoader({
+    });
+    
+    var handler = new TestResourceHandler();
+    loader.registerHandler(TestRequest, handler);
+    
+    var requests = [
+        new TestRequest("http://abc.com/directory/resource/1")
+    ];
+    
+    var handle = loader.request(requests, 1, function (resource) {
+        throw Error("Shouldn't get here.")
+    }, function (error) {
+        equal(error, "Test error");
+    });
+
+    // trigger error callback that was passed into load
+    handler.error[0]("Test error");    
+});
+
+test("ResourceLoader: error in child resource causes error in parent", 1, function () {
+    var loader = new pc.resources.ResourceLoader({
+    });
+    
+    var handler = new ChildResourceHandler(1);
+    loader.registerHandler(ChildRequest, handler);
+    
+    var requests = [
+        new ChildRequest("1_0")
+    ];
+    
+    var handle = loader.request(requests, 1, function (resource) {
+        throw Error("Shouldn't get here.")
+    }, function (error) {
+        equal(error, "Test error");
+    });
+
+    // trigger error callback in child
+    handler.error[1]("Test error");    
 });
