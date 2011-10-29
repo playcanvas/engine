@@ -410,10 +410,10 @@ test("ResourceLoader: error callback is passed to load", 1, function () {
         new TestRequest("http://abc.com/directory/resource/1")
     ];
     
-    var handle = loader.request(requests, 1, function (resource) {
+    var handle = loader.request(requests, 1, function (resources) {
         throw Error("Shouldn't get here.")
-    }, function (error) {
-        equal(error, "Test error");
+    }, function (errors, resources) {
+        equal(errors["http://abc.com/directory/resource/1"], "Test error");
     });
 
     // trigger error callback that was passed into load
@@ -433,10 +433,10 @@ test("ResourceLoader: error in child resource causes error in parent", 1, functi
     
     var handle = loader.request(requests, 1, function (resource) {
         throw Error("Shouldn't get here.")
-    }, function (error) {
-        equal(error, "Test error");
+    }, function (errors, resources) {
+        equal(errors["delay_1_1"], "Test error");
     });
 
     // trigger error callback in child
-    handler.error[1]("Test error");    
+    handler.error[1]("Test error");
 });

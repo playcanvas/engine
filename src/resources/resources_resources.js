@@ -68,7 +68,7 @@ pc.resources = function () {
      * @param {ResourceRequest|Array} requests A ResourceRequest or array of ResourceRequests to fetch
      * @param {Number} [priority] Priority of download, lower is higher priority, default = 1
      * @param {Function} [success] Callback called after all requests have been successfully download and processed, it is passed a object containing all the resources keyed by their identitier.
-     * @param {Function} [error] Callback called if there are errors while requesting resources. It is passed a list of error strings
+     * @param {Function} [error] Callback called if there are errors while requesting resources. It is passed an object containing error messages keyed by their identifier, and an object containing all the resources which succeeded, keyed by their identifier
      * @param {Function} [progress] Callback called periodically during the request process to indicate the progress of the entire request. It is passed a percentage complete value 0-100.
      * @param {Object} [options]
      * @param {Number} [options.batch] Handle for parent batch of this request. If the request is made with a parent, then the parent request will not complete until the child one has.
@@ -258,14 +258,15 @@ pc.resources = function () {
                     this._completeRequest(request);
                     // Handle error operations for each batch that this request is part of
 					request.batches.forEach(function (batch, index, arr) {
+		    			/*
 		    			if (batch.error) {
 		    				batch.error(errors);	
 		    			}
 		    			if (batch.parent) {
 		    			    batch.parent.error(errors);
 		    			}
-		    			
-                        var complete = batch.addResourceError(request.identifier, resource);
+		    			*/
+                        var complete = batch.addResourceError(request.identifier, errors);
                         if(complete) {
                             this._completeBatch(batch);
                         }
@@ -388,14 +389,16 @@ pc.resources = function () {
 		this.handle = handle;
 		this.requests = requests;
 		this.count = 0;
-		this.resources = {};
+		this.resources = {}; // successfully requested resources
+		this.errors = {}; // errors strings for any failed requests
 		this.parent = null;
 		this.children = [];
 		this.priority = priority;
 		this.success = success;
 		this.error = error;
 		this.progress = progress;
-		this.completed = false;
+		this.completed = false; // Set to true once all resources have completed
+		this.errored = false; // Set to true if any resources encountered errors
     };
     
     /**
@@ -416,11 +419,12 @@ pc.resources = function () {
      * @private
      * @name RequestBatch#addResourceError
      * @description Add a resource to the error list.
-     * @param identifier The identifier of the new resource
-     * @param resource The actual resource object, this must be one of the resources requested.
+     * @param {String} identifier The identifier of the new resource
+     * @param {Array} errors Array of error strings
      */
-    RequestBatch.prototype.addResourceError = function (identifier, resource) {
-        this.errors[identifier] = resource;
+    RequestBatch.prototype.addResourceError = function (identifier, errors) {
+        this.errored = true;
+        this.errors[identifier] = errors;
         this.count += 1;
                 
         return this._update();
@@ -463,9 +467,19 @@ pc.resources = function () {
         	
 		if (this.isComplete()) {
 		    this.completed = true;
-			if (this.success) {
-				this.success(this.resources);
-			}
+		    if (!this.errored) {
+                if (this.success) {
+                    this.success(this.resources);
+                }		        
+		    } else {
+		        if (this.error) {
+		            this.error(this.errors, this.resources);
+		        }
+		        
+		        if (this.parent) {
+		            this.parent.error(this.errors, this.resources);
+		        }
+		    }
 
 			if (this.parent && !this.parent.completed) {
 				this.parent._update();
