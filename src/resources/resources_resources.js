@@ -68,7 +68,7 @@ pc.resources = function () {
      * @param {ResourceRequest|Array} requests A ResourceRequest or array of ResourceRequests to fetch
      * @param {Number} [priority] Priority of download, lower is higher priority, default = 1
      * @param {Function} [success] Callback called after all requests have been successfully download and processed, it is passed a object containing all the resources keyed by their identitier.
-     * @param {Function} [error] Callback called if there are errors while requesting resources. It is passed a list of error strings
+     * @param {Function} [error] Callback called if there are errors while requesting resources. It is passed an object containing error messages keyed by their identifier, and an object containing all the resources which succeeded, keyed by their identifier
      * @param {Function} [progress] Callback called periodically during the request process to indicate the progress of the entire request. It is passed a percentage complete value 0-100.
      * @param {Object} [options]
      * @param {Number} [options.batch] Handle for parent batch of this request. If the request is made with a parent, then the parent request will not complete until the child one has.
@@ -187,7 +187,18 @@ pc.resources = function () {
     		}	
     	}
     };
-    
+
+    ResourceLoader.prototype.getRequestBatch = function (handle) {
+        var i;
+        var length = this._batches.length;
+        for(i = 0; i < length; ++i) {
+            if(this._batches[i].handle == handle) {
+                return this._batches[i];
+            }
+        } 
+        return null;
+    };
+        
     ResourceLoader.prototype._sort = function () {
     	this._pending.sort(function (a,b) {
     		var s = this._requests[a].priority - this._requests[b].priority;
@@ -203,9 +214,8 @@ pc.resources = function () {
     ResourceLoader.prototype._update = function () {
     	while ((this._pending.length > 0) && (this._loading.length < this._maxConcurrentRequests)) {
     		(function () {
-    			// remove first request from pending list and add it to loading list
-	    		var identifier = this._pending.shift();
-	    		var request = this._requests[identifier];
+    			// remove first request identifier from pending list with shift(), fetch the request and then add it to loading list
+	    		var request = this._requests[this._pending.shift()];
                 this._loading.push(request.identifier);
                 
 	    		var options = {
@@ -216,12 +226,9 @@ pc.resources = function () {
 	    		
 	    		// load using handler
 	    		handler.load(request.identifier, function (response, options) {
-	    			// Request is now complete, remove it from map
-	    			delete this._requests[identifier];
-
-	    			// Remove request from _loading list
-	    			this._loading.splice(this._loading.indexOf(request.identifier), 1);
-	
+	    		    this._completeRequest(request);
+	    		    
+	    		    // Handle success operations for each batch that this request is part of
 					// Call open() and then postOpen() to create a new resource for each batch that requires a resource. 
 					request.batches.forEach(function (batch, index, arr) {
 					    var resource = handler.open(response, options);
@@ -229,12 +236,14 @@ pc.resources = function () {
 					        // Add new resources to all batches that requested it, and check to see if the batch is now complete
 					        var complete = batch.addResource(request.identifier, resource);
                             if (complete) {
-                                // removed completed batch
-                                this._batches.splice(this._batches.indexOf(batch), 1);
+                                this._completeBatch(batch);
                             }
 					    }.bind(this), function (errors) {
                             if (batch.error) {
                                 batch.error(errors);    
+                            }
+                            if (batch.parent) {
+                                batch.parent.error(errors);
                             }
                         }, function (progress) {
                             if (batch.progress) {
@@ -246,35 +255,62 @@ pc.resources = function () {
 					// Make any new requests
 	    			this._update();
 	    		}.bind(this), function (errors) {
+                    this._completeRequest(request);
+                    // Handle error operations for each batch that this request is part of
 					request.batches.forEach(function (batch, index, arr) {
+		    			/*
 		    			if (batch.error) {
 		    				batch.error(errors);	
 		    			}
+		    			if (batch.parent) {
+		    			    batch.parent.error(errors);
+		    			}
+		    			*/
+                        var complete = batch.addResourceError(request.identifier, errors);
+                        if(complete) {
+                            this._completeBatch(batch);
+                        }
 		    		}, this);
-	    		}, function (progress) {
+		    		
+	    		}.bind(this), function (progress) {
 					request.batches.forEach(function (batch, index, arr) {
 		    			if (batch.progress) {
 		    				batch.progress(progress);	
 		    			}
 	    			}, this);
-	    		}, options);
+	    		}.bind(this), options);
 	    		
 	    		
     		}.call(this));
     	}		        
     };
     
-    ResourceLoader.prototype.getRequestBatch = function (handle) {
-    	var i;
-    	var length = this._batches.length;
-    	for(i = 0; i < length; ++i) {
-    		if(this._batches[i].handle == handle) {
-    			return this._batches[i];
-    		}
-    	} 
-    	return null;
+    /**
+     * @name pc.resources.ResourceLoader#_completeRequest
+     * @description Called when a request is completed regardless of whether it succeeded or failed.
+     * @private
+     * @function
+     * @param {pc.resources.ResourceRequest} request The request that has just completed
+     */
+    ResourceLoader.prototype._completeRequest = function (request) {
+        // Request is now complete, remove it from map
+        delete this._requests[request.identifier];
+    
+        // Remove request from _loading list
+        this._loading.splice(this._loading.indexOf(request.identifier), 1);                
     };
     
+    /**
+     * @name pc.resources.ResourceLoader#_completeBatch
+     * @description Called when a batch is completed
+     * @private
+     * @function
+     * @param {pc.resources.RequestBatch} batch The batch that has just completed
+     */
+    ResourceLoader.prototype._completeBatch = function (batch) {
+        // Remove completed batch
+        this._batches.splice(this._batches.indexOf(batch), 1);
+    }
     /**
      * @name pc.resources.ResourceHandler
      * @class Abstract base class for ResourceHandler. The resource handler performs the request to fetch the resource from a remote location,
@@ -353,14 +389,16 @@ pc.resources = function () {
 		this.handle = handle;
 		this.requests = requests;
 		this.count = 0;
-		this.resources = {};
+		this.resources = {}; // successfully requested resources
+		this.errors = {}; // errors strings for any failed requests
 		this.parent = null;
 		this.children = [];
 		this.priority = priority;
 		this.success = success;
 		this.error = error;
 		this.progress = progress;
-		this.completed = false;
+		this.completed = false; // Set to true once all resources have completed
+		this.errored = false; // Set to true if any resources encountered errors
     };
     
     /**
@@ -375,6 +413,21 @@ pc.resources = function () {
 		this.count += 1;
 				
 		return this._update();
+    };
+    
+    /**
+     * @private
+     * @name RequestBatch#addResourceError
+     * @description Add a resource to the error list.
+     * @param {String} identifier The identifier of the new resource
+     * @param {Array} errors Array of error strings
+     */
+    RequestBatch.prototype.addResourceError = function (identifier, errors) {
+        this.errored = true;
+        this.errors[identifier] = errors;
+        this.count += 1;
+                
+        return this._update();
     };
     
     /**
@@ -414,9 +467,19 @@ pc.resources = function () {
         	
 		if (this.isComplete()) {
 		    this.completed = true;
-			if (this.success) {
-				this.success(this.resources);
-			}
+		    if (!this.errored) {
+                if (this.success) {
+                    this.success(this.resources);
+                }		        
+		    } else {
+		        if (this.error) {
+		            this.error(this.errors, this.resources);
+		        }
+		        
+		        if (this.parent) {
+		            this.parent.error(this.errors, this.resources);
+		        }
+		    }
 
 			if (this.parent && !this.parent.completed) {
 				this.parent._update();
