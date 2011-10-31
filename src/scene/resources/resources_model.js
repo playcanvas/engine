@@ -73,7 +73,9 @@ pc.extend(pc.resources, function () {
 	        } catch (e) {
 	            error(pc.string.format("An error occured while loading model from: '{0}'", url));
 	        }
-        }.bind(this), {cache:false});
+        }.bind(this), {
+            cache:false
+        });
     };
 	
 	/**

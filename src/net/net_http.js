@@ -24,6 +24,7 @@ pc.net.http = function () {
          * @param {String} url
          * @param {Function} success Callback passed response text.
          * @param {Object} [options] Additional options
+         * @param {Object} [options.params] Parameter to be encoded and added to the url as a query string
          * @param {Object} [options.error] Callback used on error called with arguments (status, xhr, exception)
          * @param {Object} [options.headers] HTTP headers to add to the request
          * @param {Object} [options.cache] If false, then add a timestamp to the request to prevent caching
@@ -32,6 +33,13 @@ pc.net.http = function () {
         get: function (url, success, options, xhr) {
             options = options || {};
             options.success = success;
+            /*if (options.params) {
+                u = pc.URI(url);
+                q = u.getQuery();
+                q = pc.extend(q, options.params);
+                u.setQuery(q);
+                url = u.toString();                
+            }*/
             return pc.net.http.request("GET", url, options, xhr);
         },
 
