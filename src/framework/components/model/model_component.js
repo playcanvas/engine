@@ -95,13 +95,17 @@ pc.extend(pc.fw, function () {
     			var url = asset.getFileUrl();
     			this.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {
     				this.set(entity, "model", resources[url]);
-    			}.bind(this), function (errors) {
-		    		logERROR(errors);
+    			}.bind(this), function (errors, resources) {
+                    Object.keys(errors).forEach(function (key) {
+                        logERROR(errors[key]);
+                    });
     			}, function (progress) {
     			}, options);
     			
-    	}.bind(this), function (errors) {
-    		logERROR(errors);
+    	}.bind(this), function (errors, resources) {
+    	    Object.keys(errors).forEach(function (key) {
+    	        logERROR(errors[key]);
+    	    });
     	}, function (progress) {
     		
     	}, options);

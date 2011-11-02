@@ -318,7 +318,7 @@ pc.extend(pc.fw, function () {
      * @function
      * @name pc.fw.CameraComponentSystem#frameBegin
      */
-    CameraComponentSystem.prototype.frameBegin = function () {
+    CameraComponentSystem.prototype.frameBegin = function (clear) {
         if (!this._camera) {
             return;
         }
@@ -336,7 +336,8 @@ pc.extend(pc.fw, function () {
         }
 */
 
-        this._camera.frameBegin();
+        clear = clear || true;
+        this._camera.frameBegin(clear);
     };
     
     /**
