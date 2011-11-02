@@ -73,7 +73,9 @@ pc.extend(pc.resources, function () {
 	        } catch (e) {
 	            error(pc.string.format("An error occured while loading model from: '{0}'", url));
 	        }
-        }.bind(this), {cache:false});
+        }.bind(this), {
+            cache:false
+        });
     };
 	
 	/**
@@ -188,8 +190,10 @@ pc.extend(pc.resources, function () {
 		// Make a new request for the Image resource at the same priority as the Model was requested.
         this._loader.request([new pc.resources.ImageRequest(url)], options.priority, function (resources) {
         	texture.setSource(resources[url]);	
-        }, function (errors) {
-        	logERROR(errors);
+        }, function (errors, resources) {
+        	Object.keys(errors).forEach(function (key) {
+        	   logERROR(errors[key]);    
+        	});
         }, function (progress) {
         	// no progress features
         }, options);

@@ -121,7 +121,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     CameraNode.prototype.frameBegin = function (clear) {
-        clear = clear || true;
+        clear = (clear === undefined) ? true : clear;
         
         var device = pc.gfx.Device.getCurrent();
         device.setRenderTarget(this._renderTarget);

@@ -96,6 +96,15 @@ test("getQuery", function () {
     equal(q.c, "something spaced");    
 });
 
+test("getQuery: emtpy", function () {
+    var s = "http://example.com/test";
+    var uri = new pc.URI(s);
+    
+    var q = uri.getQuery();
+    
+    equal(Object.keys(q).length, 0);
+});
+
 test("setQuery", function () {
     var uri = new pc.URI("http://example.com/test");
     var q = {
