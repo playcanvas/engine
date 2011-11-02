@@ -35,7 +35,10 @@ pc.extend(pc.scene, function () {
     /**
      * @function
      * @name pc.scene.MeshNode#dispatch
-     * @description
+     * @description Dispatches the mesh's assigned geometry according to the transformation
+     * properties of the mesh node. If the mesh is not skinned, the geometry is rendered with
+     * the world transformation matrix of the mesh node. If the mesh is skinned, the geometry
+     * is rendered with the local transformation matrix.
      * @author Will Eastcott
      */
     MeshNode.prototype.dispatch = function () {
@@ -59,8 +62,9 @@ pc.extend(pc.scene, function () {
     /**
      * @function
      * @name pc.scene.MeshNode#getGeometry
-     * @description
-     * @returns {pc.scene.Geometry}
+     * @description Returns the geometry assigned to this mesh node. If no geometry is assigned, then
+     * null is returned.
+     * @returns {pc.scene.Geometry} The attached geometry or null if no geometry is assigned.
      * @author Will Eastcott
      */
     MeshNode.prototype.getGeometry = function () {
@@ -70,7 +74,9 @@ pc.extend(pc.scene, function () {
     /**
      * @function
      * @name pc.scene.MeshNode#setGeometry
-     * @description
+     * @description Assigns a geometry to the specified mesh node. Note that multiple mesh nodes can
+     * reference the same geometry which effectively implements instancing. This can reduce the memory
+     * footprint and load time for any given model.
      * @param {pc.scene.Geometry} geometry
      * @author Will Eastcott
      */

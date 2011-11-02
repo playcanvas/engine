@@ -336,7 +336,7 @@ pc.extend(pc.fw, function () {
         }
 */
 
-        clear = clear || true;
+        clear = (clear === undefined) ? true : clear;
         this._camera.frameBegin(clear);
     };
     
