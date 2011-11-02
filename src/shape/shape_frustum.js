@@ -1,4 +1,6 @@
 pc.extend(pc.shape, function () {
+    pc.shape.Type.FRUSTUM = "Frustum";
+    
     /**
      * Frustum
      * @constructor
@@ -90,6 +92,8 @@ pc.extend(pc.shape, function () {
         this.planes[5][1] /= t;
         this.planes[5][2] /= t;
         this.planes[5][3] /= t;
+        
+        this.type = pc.shape.Type.FRUSTUM;
     };
     Frustum = Frustum.extendsFrom(pc.shape.Shape);
     

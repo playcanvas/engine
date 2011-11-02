@@ -1,4 +1,7 @@
 pc.extend(pc.shape, function () {
+    // Add to the enumeration of types
+    pc.shape.Type.PLANE = "Plane";
+
     /**
      * Plane
      * @constructor
@@ -7,10 +10,9 @@ pc.extend(pc.shape, function () {
         this.normal = normal || pc.math.vec3.create(0, 0, 1);
         this.point  = point  || pc.math.vec3.create(0, 0, 0);
         this.d      = -pc.math.vec3.dot(this.normal, this.point);
+        this.type = pc.shape.Type.PLANE;
     };
     Plane = Plane.extendsFrom(pc.shape.Shape);
-    // Add to the enumeration of types
-    pc.shape.Type.PLANE = "Plane";
     
     /**
      * Tests whether a point is inside the plane.
