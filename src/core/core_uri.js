@@ -144,12 +144,14 @@ pc.extend(pc, function() {
                 var vars;
                 var pair;
                 var result = {};
-
-                vars = decodeURIComponent(this.query).split("&")
-                vars.forEach(function (item, index, arr) {
-                    pair = item.split("=")
-                    result[pair[0]] = pair[1];
-                }, this);
+                
+                if (this.query) {
+                    vars = decodeURIComponent(this.query).split("&")
+                    vars.forEach(function (item, index, arr) {
+                        pair = item.split("=")
+                        result[pair[0]] = pair[1];
+                    }, this);                    
+                }
                 
                 return result;
             };
