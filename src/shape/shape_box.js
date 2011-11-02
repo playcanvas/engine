@@ -1,4 +1,7 @@
 pc.extend(pc.shape, function () {
+    // Add to the enumeration of types
+    pc.shape.Type.BOX = "Box";
+
     /**
      * Orientated Box
      * @constructor
@@ -15,10 +18,9 @@ pc.extend(pc.shape, function () {
         
         this.transform = transform;
         this.halfExtents = halfExtents;
+        this.type = pc.shape.Type.BOX;
     };
     Box = Box.extendsFrom(pc.shape.Shape);
-    // Add to the enumeration of types
-    pc.shape.Type.BOX = "Box";
     
     /**
      * Return true if point is inside the box

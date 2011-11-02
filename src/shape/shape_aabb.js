@@ -1,4 +1,7 @@
 pc.extend(pc.shape, function () {
+    // Add to enumeration of shape types
+    pc.shape.Type.AABB = "Aabb";
+    
     /**
      * @name pc.shape.Aabb
      * @constructor Create a new Axis-Aligned Bounding Box
@@ -9,9 +12,10 @@ pc.extend(pc.shape, function () {
     var Aabb = function Aabb (center, halfExtents) {
         this.center = center || pc.math.vec3.create(0, 0, 0);
         this.halfExtents = halfExtents || pc.math.vec3.create(0.5, 0.5, 0.5);
+        this.type = pc.shape.Type.AABB;
     }
     Aabb = Aabb.extendsFrom(pc.shape.Shape);
-    
+
     /**
      * @function
      * @name pc.shape.Aabb#getMin

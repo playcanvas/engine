@@ -1,4 +1,7 @@
 pc.extend(pc.shape, function () {
+    // Add to the enumeration of types
+    pc.shape.Type.SPHERE = "Sphere";
+
     /**
      * Sphere shape
      * @constructor
@@ -9,10 +12,10 @@ pc.extend(pc.shape, function () {
     var Sphere = function Sphere(center, radius) {
         this.center = center || pc.math.vec3.create(0, 0, 0);
         this.radius = radius || 1;
+        
+        this.type = pc.shape.Type.SPHERE;
     };
     Sphere = Sphere.extendsFrom(pc.shape.Shape);
-    // Add to the enumeration of types
-    pc.shape.Type.SPHERE = "Sphere";
 
     /**
      * Test whether point is inside sphere
