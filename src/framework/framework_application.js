@@ -207,19 +207,15 @@ pc.extend(pc.fw, function () {
     Application.prototype._handleMessage = function (msg) {
         switch(msg.type) {
             case pc.fw.LiveLinkMessageType.UPDATE_COMPONENT:
-                logINFO("Rec: UPDATE_COMPONENT " + msg.content.id);
                 this._updateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
                 break;
             case pc.fw.LiveLinkMessageType.UPDATE_ENTITY:
-                logINFO("Rec: UPDATE_ENTITY " + msg.content.id);
                 this._updateEntity(msg.content.id, msg.content.components);
                 break;
             case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE:
-                logINFO("Rec: UPDATE_ENTITY_ATTRIBUTE " + msg.content.id);
                 this._updateEntityAttribute(msg.content.id, msg.content.accessor, msg.content.value);
                 break;
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
-                logINFO("Rec: CLOSE_ENTITY " + msg.content.id);
                 //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
                 var entity = this.context.root.findOne("getGuid", guid);
                 if(entity) {
@@ -227,7 +223,6 @@ pc.extend(pc.fw, function () {
                 }
                 break;
             case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
-                logINFO("Rec: OPEN_ENTITY " + msg.content.id);
                 var entities = {};
                 msg.content.models.forEach(function (model) {
                     var entity = this.context.loader.open(pc.resources.EntityRequest, model);
