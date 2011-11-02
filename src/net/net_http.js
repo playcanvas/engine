@@ -2,8 +2,10 @@
  * @name pc.net.http
  * @namespace Sending and receiving data via HTTP.
  */
-pc.net.http = function () {
-    return {
+pc.extend(pc.net, function () {
+    var Http = function Http() {
+    };
+    Http.prototype = {
         /**
          * @enum {String}
          * @name pc.net.http.ContentType
@@ -40,7 +42,7 @@ pc.net.http = function () {
                 u.setQuery(q);
                 url = u.toString();                
             }*/
-            return pc.net.http.request("GET", url, options, xhr);
+            return this.request("GET", url, options, xhr);
         },
 
         /**
@@ -58,7 +60,7 @@ pc.net.http = function () {
             options = options || {};
             options.success = success;
             options.postdata = data;
-            return pc.net.http.request("POST", url, options, xhr);
+            return this.request("POST", url, options, xhr);
         },
 
         /**
@@ -76,7 +78,7 @@ pc.net.http = function () {
             options = options || {};
             options.success = success;
             options.postdata = data;
-            return pc.net.http.request("PUT", url, options, xhr);
+            return this.request("PUT", url, options, xhr);
         },
         
         /**
@@ -89,7 +91,7 @@ pc.net.http = function () {
         delete_: function (url, success, options, xhr) {
             options = options || {};
             options.success = success;
-            return pc.net.http.request("DELETE", url, options, xhr);
+            return this.request("DELETE", url, options, xhr);
         },
         
         /**
@@ -140,11 +142,11 @@ pc.net.http = function () {
                     var contentType = options.headers["Content-Type"];
                     // If there is no type then default to form-encoded
                     if(!pc.isDefined(contentType)) {
-                        options.headers["Content-Type"] = pc.net.http.ContentType.FORM_URLENCODED;
+                        options.headers["Content-Type"] = this.ContentType.FORM_URLENCODED;
                         contentType = options.headers["Content-Type"];
                     }
                     switch(contentType) {
-                        case pc.net.http.ContentType.FORM_URLENCODED:
+                        case this.ContentType.FORM_URLENCODED:
                             // Normal URL encoded form data 
                             postdata = "";
                             var bFirstItem = true;
@@ -162,7 +164,7 @@ pc.net.http = function () {
                                 }
                             }
                             break;
-                        case pc.net.http.ContentType.JSON:
+                        case this.ContentType.JSON:
                         default:
                             if (contentType == null) {
                                 options.headers["Content-Type"] = pc.net.http.ContentType.JSON;
@@ -180,10 +182,10 @@ pc.net.http = function () {
                 xhr = new XMLHttpRequest();
             }
                 
-            if( options.cache === false ) {
+            if (options.cache === false) {
                 // Add timestamp to url to prevent browser caching file
                 timestamp = pc.time.now();
-                
+
                 uri = new pc.URI(url);
                 if (!uri.query) {
                     uri.query = "ts=" + timestamp;
@@ -194,71 +196,31 @@ pc.net.http = function () {
                 url = uri.toString();
             }
             
+            if (options.query) {
+                uri = new pc.URI(url);
+                query = pc.extend(uri.getQuery(), options.query);
+                uri.setQuery(query);
+                url = uri.toString();
+            }
+            
             xhr.open(method, url, options.async);
             xhr.withCredentials = true;
-        
+
             // Set the http headers
             for (var header in options.headers) {
                 if (options.headers.hasOwnProperty(header)) {
                     xhr.setRequestHeader(header, options.headers[header]);
                 }
             }
-        
+
             xhr.onreadystatechange = function () {
-                var response;
-                var header;
-                var contentType;
-                var parameter;
-                var parts; 
-                if (xhr.readyState === 4) {
-                    switch (xhr.status)
-                    {
-                    case 0:
-                        // Request didn't complete, possibly an exception or attempt to do cross-domain request
-                        // options.error(xhr.status, xhr, null);
-                        break;
-                        
-                    case 200:
-                    case 201:
-                    case 206:
-                    case 304: {
-                        header = xhr.getResponseHeader("Content-Type");
-                        if (header) { 
-                            // Split up header into content type and parameter
-                            var parts = header.split(";");
-                            contentType = parts[0].trim();
-                            if(parts[1]) {
-                                parameter = parts[1].trim();
-                            }
-                        }
-                        // Check the content type to see if we want to parse it
-                        if (contentType == pc.net.http.ContentType.JSON || pc.string.endsWith(url, ".json")) {
-                            // It's a JSON response
-                            response = JSON.parse(xhr.responseText);
-                        }
-                        else 
-                            if (xhr.responseXML != null) {
-                                // It's an XML response
-                                response = xhr.responseXML;
-                            }
-                            else {
-                                // It's raw data
-                                response = xhr.responseText;
-                            }
-                        options.success(response, xhr.status, xhr);
-                        break;
-                    }
-                    default:
-                        options.error(xhr.status, xhr, null);
-                        break;
-                    }
-                }
-            };
+                this.onReadyStateChange(method, url, options, xhr);
+            }.bind(this);
             
             xhr.onerror = function () {
-                options.error(xhr.status, xhr, null);
-                errored = true;  
-            };
+                this.onError(method, url, options, xhr);
+                errored = true;
+            }.bind(this);
             
             try {
                 xhr.send(postdata);
@@ -273,9 +235,70 @@ pc.net.http = function () {
             
             // Return the request object as it can be handy for blocking calls
             return xhr;
+        },
+        
+        onReadyStateChange: function (method, url, options, xhr) {
+            if (xhr.readyState === 4) {
+                switch (xhr.status) {
+                    case 0: {
+                        // Request didn't complete, possibly an exception or attempt to do cross-domain request
+                        break;
+                    }
+                    case 200:
+                    case 201:
+                    case 206:
+                    case 304: {
+                        this.onSuccess(method, url, options, xhr);
+                        break;
+                    }
+                    default: {
+                        //options.error(xhr.status, xhr, null);
+                        this.onError(method, url, options, xhr);
+                        break;
+                    }
+                }
+            }
+        },
+        
+        onSuccess: function (method, url, options, xhr) {
+            var response;
+            var header;
+            var contentType;
+            var parameter;
+            var parts;
+            header = xhr.getResponseHeader("Content-Type");
+            if (header) { 
+                // Split up header into content type and parameter
+                var parts = header.split(";");
+                contentType = parts[0].trim();
+                if(parts[1]) {
+                    parameter = parts[1].trim();
+                }
+            }
+            // Check the content type to see if we want to parse it
+            if (contentType == this.ContentType.JSON || pc.string.endsWith(url, ".json")) {
+                // It's a JSON response
+                response = JSON.parse(xhr.responseText);
+            }
+            else 
+                if (xhr.responseXML != null) {
+                    // It's an XML response
+                    response = xhr.responseXML;
+                }
+                else {
+                    // It's raw data
+                    response = xhr.responseText;
+                }
+            options.success(response, xhr.status, xhr);
+        },
+        
+        onError: function (method, url, options, xhr) {
+            options.error(xhr.status, xhr, null);
         }
     };
-}();
-
-
-
+    
+    return {
+        Http: Http,
+        http: new Http()
+    }    
+}());

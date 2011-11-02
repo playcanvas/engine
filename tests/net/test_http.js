@@ -220,6 +220,23 @@ test("request: cache=false adds timestamp to url with existing query", function 
     });
 });
 
+
+test("request: options.query adds values to url query", function () {
+    jack(function() {
+        var xhr  = jack.create("xhr", ["open", "send"]);
+        jack.expect("xhr.open").withArguments("GET", "http://test.com?a=1&b=2&c=testing", true);
+        jack.expect("xhr.send").withArguments(null);
+        var r = pc.net.http.request("GET", "http://test.com", {
+            query: {
+                a: 1,
+                b: 2,
+                c: "testing"
+            }
+        }, xhr);
+        ok(r === xhr);
+    });
+});
+
 test("request: options.async=true creates a non-blocking request", function () {
     jack(function() {
         var xhr  = jack.create("xhr", ["open", "send"]);
