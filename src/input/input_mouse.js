@@ -32,13 +32,13 @@ pc.extend(pc.input, function () {
         /**
          * @field
          * @name pc.input.MouseEvent#deltaX
-         * @description Change in horizonal co-ordinate value since the last event
+         * @description Change in horizonal co-ordinate value since the last event, only valid for pc.input.EVENT_MOUSE_MOVE
          */
         this.deltaX = options.deltaX || 0;
         /**
          * @field
          * @name pc.input.MouseEvent#deltaY
-         * @description Change in vertical co-ordinate value since the last event
+         * @description Change in vertical co-ordinate value since the last event, only valid for pc.input.EVENT_MOUSE_MOVE
          */
         this.deltaY = options.deltaY || 0;
         
