@@ -444,7 +444,7 @@ pc.extend(pc.resources, function () {
             for (var i = 0; i < geomData.submeshes.length; i++) {
                 indices = indices.concat(geomData.submeshes[i].primitive.indices);
             }
-            var tangents = pc.graph.procedural.calculateTangents(positions, normals, uvs, indices);
+            var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
             geomData.attributes.push({ name: "vertex_tangent", type: "float32", components: 4, data: tangents });
         }
     
