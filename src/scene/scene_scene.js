@@ -6,7 +6,11 @@
 pc.scene = {};
 
 pc.extend(pc.scene, function () {
-	
+
+    /**
+     * @name pc.scene.Scene
+     * @class A scene.
+     */
 	var Scene = function Scene() {
 	    // List of models
 	    this._models = [];
@@ -50,12 +54,32 @@ pc.extend(pc.scene, function () {
 	    }
 	};
 	
+    /**
+     * @function
+     * @name pc.scene.Scene#update
+     * @description Queues the meshes in a scene for rendering. This function does not actually
+     * cause the meshes in the scene to be rendered. Instead, it inserts all opaque meshes into
+     * a front-to-back render queue and all transparent meshes into a back-to-front render queue.
+     * To actually render the contents of the render queues, call pc.scene.Scene#flush.
+     * @param {pc.scene.CameraNode} camera The camera rendering the scene.
+     * @author Will Eastcott
+     */
 	Scene.prototype.update = function (dt) {
 	    for (var i = 0, len = this._models.length; i < len; i++) {
 	        this._models[i].getGraph().syncHierarchy();
 	    }
 	};
-	
+
+    /**
+     * @function
+     * @name pc.scene.Scene#dispatch
+     * @description Queues the meshes in a scene for rendering. This function does not actually
+     * cause the meshes in the scene to be rendered. Instead, it inserts all opaque meshes into
+     * a front-to-back render queue and all transparent meshes into a back-to-front render queue.
+     * To actually render the contents of the render queues, call pc.scene.Scene#flush.
+     * @param {pc.scene.CameraNode} camera The camera rendering the scene.
+     * @author Will Eastcott
+     */
 	Scene.prototype.dispatch = function (camera) {
 	    var i, j, model, numModels, mesh, numMeshes;
 	    var sphereWorld = new pc.shape.Sphere();
@@ -148,6 +172,14 @@ pc.extend(pc.scene, function () {
 	    this._queues[queueName].renderFuncs.push(renderFunc);
 	};
 	
+    /**
+     * @function
+     * @name pc.scene.Scene#flush
+     * @description Calls all functions inserted into the scene's render queues. The queues are
+     * iterated in priority order (a queue with a smaller value for priority being processed before 
+     * a queue with a larger value).
+     * @author Will Eastcott
+     */
 	Scene.prototype.flush = function () {
 	    // Dispatch all enabled lights
 	    // This will be optimized to only enable point lights for meshes that 

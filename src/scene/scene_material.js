@@ -46,8 +46,8 @@ pc.extend(pc.scene, function () {
     };
     
     Material.prototype.setProgramName = function (name) {
-        if (pc.graph.materialplugin[name]) {
-            var func = pc.graph.materialplugin[name].isTransparent;
+        if (pc.scene.materialplugin[name]) {
+            var func = pc.scene.materialplugin[name].isTransparent;
             if (func) {
                 this.setTransparencyFunc(func);
             }
@@ -142,10 +142,10 @@ pc.extend(pc.scene, function () {
         if (this._programName === null) {
             return this._program;
         } else {
-            var key = pc.graph.materialplugin[this._programName].generateStateKey(geometry);
+            var key = pc.scene.materialplugin[this._programName].generateStateKey(geometry);
             var program = this._programs[key];
             if (!program) {
-                program = pc.graph.materialplugin[this._programName].getProgram(this, geometry);
+                program = pc.scene.materialplugin[this._programName].getProgram(this, geometry);
                 this._programs[key] = program;
             }
             return program;
