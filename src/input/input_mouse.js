@@ -10,7 +10,7 @@ pc.extend(pc.input, function () {
         /**
          * @field
          * @name pc.input.MouseEvent#type
-         * @description Type of the mouse event: pc.input.EVENT_MOUSE_UP, pc.input.EVENT_MOUSE_DOWN, pc.input.EVENT_MOUSE_MOVE, pc.input.EVENT_MOUSE_DRAG, pc.input.EVENT_MOUSE_WHEEL 
+         * @description Type of the mouse event: pc.input.EVENT_MOUSE_UP, pc.input.EVENT_MOUSE_DOWN, pc.input.EVENT_MOUSE_MOVE, pc.input.EVENT_MOUSE_WHEEL 
          */
         this.type = options.type || "";
         //this.positionX = options.positionX || 0;
@@ -219,15 +219,6 @@ pc.extend(pc.input, function () {
     };
     
     Mouse.prototype._handleMove = function (event) {
-        type = pc.input.EVENT_MOUSE_MOVE;
-        
-        // If button is down, change to a drag event.
-        if(this._buttons[pc.input.MOUSE_BUTTON_LEFT] || 
-                this._buttons[pc.input.MOUSE_BUTTON_MIDDLE] ||
-                this._buttons[pc.input.MOUSE_BUTTON_RIGHT]) {
-                type = pc.input.EVENT_MOUSE_DRAG;
-        }
-    
         // Calculate the mouse movement
         this._deltaX = event.clientX - this._positionX;
         this._deltaY = event.clientY - this._positionY;
@@ -239,8 +230,8 @@ pc.extend(pc.input, function () {
         this._offsetX = offset.x;
         this._offsetY = offset.y;
         
-        this.fire(type, new MouseEvent({
-            type: type,
+        this.fire(pc.input.EVENT_MOUSE_MOVE, new MouseEvent({
+            type: pc.input.EVENT_MOUSE_MOVE,
             positionX: this._positionX,
             positionY: this._positionY,
             x: this._offsetX,
@@ -276,25 +267,33 @@ pc.extend(pc.input, function () {
     
     // Public Interface
     return  {
-        /** mouseup event name */
+        /**
+         * @name pc.input.EVENT_MOUSE_UP
+         * @description Name of mouse up event
+         */
         EVENT_MOUSE_UP: "mouseup",
         EVENT_MOUSE_DOWN: "mousedown",
         EVENT_MOUSE_MOVE: "mousemove",
-        EVENT_MOUSE_DRAG: "mousedrag",
         EVENT_MOUSE_WHEEL: "mousewheel",
         
+        /**
+         * @name pc.input.MOUSE_BUTTON_NONE
+         * @description Value of pc.input.MouseEvent#button when no mouse button is pressed
+         */
         MOUSE_BUTTON_NONE: -1,
         MOUSE_BUTTON_LEFT: 0,
         MOUSE_BUTTON_MIDDLE: 1,
         MOUSE_BUTTON_RIGHT: 2,
+        
         Mouse: Mouse,
         MouseEvent: MouseEvent,
         /**
-         * offsetX/Y are not cross-browser compatible so we generate a set of offset coords here
-         * from pageX/Y which are the same on all browsers 
-         * @param {MouseEvent} event
+         * @private
          * @function
          * @name pc.input.getOffsetCoords
+         * @description offsetX/Y are not cross-browser compatible so we generate a set of offset coords here
+         * from pageX/Y which are the same on all browsers 
+         * @param {MouseEvent} event
          */
         getOffsetCoords: function getOffsetCoords(event) {
             var coords = { x: 0, y: 0};
