@@ -1,4 +1,76 @@
 pc.extend(pc.input, function () {    
+
+    /**
+     * @name pc.input.MouseEvent
+     * @class The object passed into Mouse Event handlers
+     * @params {Object} [options] Data used to initialize the fields of the Event. See the fields for details 
+     */
+    var MouseEvent = function (options) {
+        options = options || {};
+        /**
+         * @field
+         * @name pc.input.MouseEvent#type
+         * @description Type of the mouse event: pc.input.EVENT_MOUSE_UP, pc.input.EVENT_MOUSE_DOWN, pc.input.EVENT_MOUSE_MOVE, pc.input.EVENT_MOUSE_DRAG, pc.input.EVENT_MOUSE_WHEEL 
+         */
+        this.type = options.type || "";
+        //this.positionX = options.positionX || 0;
+        //this.positionY = options.positionY || 0;
+        
+        /**
+         * @field
+         * @name pc.input.MouseEvent#x
+         * @description Horizontal co-ordinate of the event, relative to the DOM Element the Mouse object is attached to, often the canvas element.
+         */
+        this.x = options.x || 0;
+        /**
+         * @field
+         * @name pc.input.MouseEvent#y
+         * @description Vertical co-ordinate of the event, relative to the DOM Element the Mouse object is attached to, often the canvas element.
+         */
+        this.y = options.y || 0;
+        
+        /**
+         * @field
+         * @name pc.input.MouseEvent#deltaX
+         * @description Change in horizonal co-ordinate value since the last event
+         */
+        this.deltaX = options.deltaX || 0;
+        /**
+         * @field
+         * @name pc.input.MouseEvent#deltaY
+         * @description Change in vertical co-ordinate value since the last event
+         */
+        this.deltaY = options.deltaY || 0;
+        
+        /**
+         * @field
+         * @name pc.input.MouseEvent#deltaWheel
+         * @description Change in value of the mouse wheel since the last event. This is a normalized value in the range -1 to 1. 
+         */
+        this.deltaWheel = options.deltaWheel || 0;
+        
+        /**
+         * @field
+         * @name pc.input.MouseEvent#button
+         * @description The individual button to which the event refers. Only valid for pc.input.EVENT_MOUSE_UP and pc.input.EVENT_MOUSE_DOWN
+         */
+        this.button = options.button || pc.input.MOUSE_BUTTON_NONE;
+        
+        /**
+         * @field
+         * @name pc.input.MouseEvent#buttons
+         * @description Boolean array of button states. A value of true indicates the button is currently pressed. 
+         * The array is in this order [pc.input.MOUSE_BUTTON_LEFT, pc.input.MOUSE_BUTTON_MIDDLE, pc.input.MOUSE_BUTTON_RIGHT] 
+         */
+        this.buttons = options.buttons || [false, false, false];
+        
+        /**
+         * @field
+         * @name pc.input.MouseEvent#event
+         * @description The original DOM MouseEvent
+         */
+        this.event = options.event || null;
+    };
     /**
      * Create a new Mouse object
      * @class Capture and respond to mouse events.
@@ -118,41 +190,42 @@ pc.extend(pc.input, function () {
         this._buttons[event.button] = false;
         
         // send 'mouseup' event
-        this.fire("mouseup", {
-            type: "mouseup",
+        this.fire(pc.input.EVENT_MOUSE_UP, new MouseEvent({
+            type: pc.input.EVENT_MOUSE_UP,
             positionX: this._positionX,
             positionY: this._positionY,
-            offsetX: this._offsetX,
-            offsetY: this._offsetY,
+            x: this._offsetX,
+            y: this._offsetY,
             button: event.button,
             buttons: this._buttons,
             event: event
-        });
+        }));
     };
     
     Mouse.prototype._handleDown = function (event) {
         // Store which button has affected
         this._buttons[event.button] = true;    
 
-        this.fire("mousedown", {
-            type: "mousedown",
+        this.fire(pc.input.EVENT_MOUSE_DOWN, new MouseEvent({
+            type: pc.input.EVENT_MOUSE_DOWN,
             positionX: this._positionX,
             positionY: this._positionY,
-            offsetX: this._offsetX,
-            offsetY: this._offsetY,
+            x: this._offsetX,
+            y: this._offsetY,
             button: event.button,
             buttons: this._buttons,
             event: event
-        });
+        }));
     };
     
     Mouse.prototype._handleMove = function (event) {
-        var type = "mousemove";
+        type = pc.input.EVENT_MOUSE_MOVE;
         
+        // If button is down, change to a drag event.
         if(this._buttons[pc.input.MOUSE_BUTTON_LEFT] || 
                 this._buttons[pc.input.MOUSE_BUTTON_MIDDLE] ||
                 this._buttons[pc.input.MOUSE_BUTTON_RIGHT]) {
-                type = "mousedrag";
+                type = pc.input.EVENT_MOUSE_DRAG;
         }
     
         // Calculate the mouse movement
@@ -166,17 +239,17 @@ pc.extend(pc.input, function () {
         this._offsetX = offset.x;
         this._offsetY = offset.y;
         
-        this.fire(type, {
+        this.fire(type, new MouseEvent({
             type: type,
             positionX: this._positionX,
             positionY: this._positionY,
-            offsetX: this._offsetX,
-            offsetY: this._offsetY,
+            x: this._offsetX,
+            y: this._offsetY,
             deltaX: this._deltaX,
             deltaY: this._deltaY,
             buttons: this._buttons,
             event: event
-        });
+        }));
     };
     
     Mouse.prototype._handleWheel = function (event) {    
@@ -187,17 +260,19 @@ pc.extend(pc.input, function () {
             this.deltaWheel = event.detail / -3; // Convert to -1 to 1
         }
         
-        this.fire("mousewheel", {
-            type: "mousewheel",
+        this.fire(pc.input.EVENT_MOUSE_WHEEL, new MouseEvent({
+            type: pc.input.EVENT_MOUSE_WHEEL,
             positionX: this._positionX,
             positionY: this._positionY,
-            offsetX: this._offsetX,
-            offsetY: this._offsetY,
+            x: this._offsetX,
+            y: this._offsetY,
             deltaWheel: this.deltaWheel,
             buttons: this._buttons,
             event: event
-        });
+        }));
     };
+    
+    
     
     // Public Interface
     return  {
@@ -213,7 +288,7 @@ pc.extend(pc.input, function () {
         MOUSE_BUTTON_MIDDLE: 1,
         MOUSE_BUTTON_RIGHT: 2,
         Mouse: Mouse,
-        
+        MouseEvent: MouseEvent,
         /**
          * offsetX/Y are not cross-browser compatible so we generate a set of offset coords here
          * from pageX/Y which are the same on all browsers 
