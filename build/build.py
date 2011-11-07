@@ -9,6 +9,28 @@ output = "output/playcanvas-latest.dev.js"
 compilation_level = "WHITESPACE_ONLY"
 COMP_LEVELS = ["WHITESPACE_ONLY", "WHITESPACE_ONLY", "SIMPLE_OPTIMIZATIONS", "ADVANCED_OPTIMIZATIONS"];
 
+def get_revision():
+    # Try and write the mercurial revision out to the file 'revision.py'
+    try:
+        import subprocess
+        process = subprocess.Popen(['hg', 'id', '-in'], shell=False, stdout=subprocess.PIPE)
+        output = process.communicate()
+        return output[0].split()
+    except Exception, e:
+        print(str(e))
+        return ("__MERCURIAL_REVISION__", "")
+
+def get_version():
+    try:
+        version_file = "../VERSION"
+        f = open(version_file, "r")
+        version = f.read()
+        f.close()
+    except Exception, e:
+        print(str(e))
+        return "__CURRENT_SDK_VERSION__"
+    return version
+
 def build():
     global compilation_level
     formatting = None
@@ -36,6 +58,7 @@ def build():
     for file in dependencies:
         cmd.append( "--js=" + os.path.join(root, file.strip()))
     retcode = subprocess.call(cmd)
+    
     # Copy output to build directory
     if not os.path.exists(os.path.dirname(output_path)):
        os.mkdir(os.path.dirname(output_path))
@@ -52,6 +75,7 @@ def usage():
     \t-d [dirname] : Set root directory (default '.')
     \t-o [filepath] : Set output file (default 'output/playcanvas-latest.dev.js')
     """)
+
 def setup():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "d:o:hl:")
@@ -79,5 +103,6 @@ def setup():
             
 if __name__ == "__main__":
     setup()
+
     retcode = build()
     sys.exit(retcode)
