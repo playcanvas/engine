@@ -1,12 +1,12 @@
 /**
  * @namespace Namespace for functionality related to procedural generation and processing of geometries
- * @name pc.graph.procedural
+ * @name pc.scene.procedural
  */
-pc.graph.procedural = {};
+pc.scene.procedural = {};
 
 /**
  * @function
- * @name pc.graph.procedural.calculateTangents
+ * @name pc.scene.procedural.calculateTangents
  * @description Generates tangent information from the specified vertices, normals, texture coordinates
  * and triangle indices.
  * @param {Array} vertices An array of 3-dimensional vertex positions.
@@ -15,12 +15,12 @@ pc.graph.procedural = {};
  * @param {Array} indices An array of triangle indices.
  * @returns {Array} An array of 3-dimensional vertex tangents.
  * @example
- * var tangents = pc.graph.procedural.calculateTangents(vertices, normals, uvs, indices);
- * var geometry = pc.graph.procedural.createGeometry(vertices, normals, tangents, uvs, indices);
- * @see pc.graph.procedural.createGeometry
+ * var tangents = pc.scene.procedural.calculateTangents(vertices, normals, uvs, indices);
+ * var geometry = pc.scene.procedural.createGeometry(vertices, normals, tangents, uvs, indices);
+ * @see pc.scene.procedural.createGeometry
  * @author Will Eastcott
  */
-pc.graph.procedural.calculateTangents = function (vertices, normals, uvs, indices) {
+pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indices) {
     var triangleCount = indices.length / 3;
     var vertexCount   = vertices.length / 3;
     var i1, i2, i3;
@@ -104,7 +104,7 @@ pc.graph.procedural.calculateTangents = function (vertices, normals, uvs, indice
 
 /**
  * @function
- * @name pc.graph.procedural.createGeometry
+ * @name pc.scene.procedural.createGeometry
  * @description <p>Creates a Geometry object from the supplied vertex information and topology.</p>
  * <p>Note that the geometry will be created with a single submesh that will be in a triangle
  * list format. This submesh will have the supplied material assigned to it.</p>
@@ -119,7 +119,7 @@ pc.graph.procedural.calculateTangents = function (vertices, normals, uvs, indice
  * @returns {pc.scene.Geometry} A new Geometry constructed from the supplied vertex and triangle data.
  * @example
  * // Create a new geometry supplying optional parameters using object literal notation
- * var geometry = pc.graph.procedural.createGeometry(positions, {
+ * var geometry = pc.scene.procedural.createGeometry(positions, {
  *         material: woodMaterial,
  *         normals: treeNormals,
  *         uvs: treeUvs,
@@ -127,7 +127,7 @@ pc.graph.procedural.calculateTangents = function (vertices, normals, uvs, indice
  *     });
  * @author Will Eastcott
  */
-pc.graph.procedural.createGeometry = function (positions, opts) {
+pc.scene.procedural.createGeometry = function (positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
     var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
@@ -199,7 +199,7 @@ pc.graph.procedural.createGeometry = function (positions, opts) {
 
 /**
  * @function
- * @name pc.graph.procedural.createTorus
+ * @name pc.scene.procedural.createTorus
  * @description <p>Creates a procedural torus-shaped geometry.</p>
  * <p>The size, shape and tesselation properties of the torus can be controlled via function parameters.
  * By default, the function will create a torus in the XZ-plane with a tube radius of 0.2, a ring radius
@@ -216,7 +216,7 @@ pc.graph.procedural.createGeometry = function (positions, opts) {
  * @returns {pc.scene.Geometry} A new torus-shaped geometry.
  * @author Will Eastcott
  */
-pc.graph.procedural.createTorus = function (opts) {
+pc.scene.procedural.createTorus = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
     var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
@@ -268,9 +268,9 @@ pc.graph.procedural.createTorus = function (opts) {
         }
     }
 
-    var tangents = pc.graph.procedural.calculateTangents(positions, normals, uvs, indices);
+    var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
 
-    return pc.graph.procedural.createGeometry(positions, {
+    return pc.scene.procedural.createGeometry(positions, {
         material:  material,
         wireframe: wireframe,
         normals:   normals,
@@ -280,7 +280,7 @@ pc.graph.procedural.createTorus = function (opts) {
     });
 }
 
-pc.graph.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments, wireframe) {
+pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments, wireframe) {
     // Variable declarations
     var i, j;
     var x, y, z, u, v;
@@ -383,7 +383,7 @@ pc.graph.procedural._createConeData = function (baseRadius, peakRadius, height, 
 
 /**
  * @function
- * @name pc.graph.procedural.createCylinder
+ * @name pc.scene.procedural.createCylinder
  * @description <p>Creates a procedural cylinder-shaped geometry.</p>
  * <p>The size, shape and tesselation properties of the cylinder can be controlled via function parameters.
  * By default, the function will create a cylinder standing vertically centred on the XZ-plane with a radius
@@ -400,7 +400,7 @@ pc.graph.procedural._createConeData = function (baseRadius, peakRadius, height, 
  * @returns {pc.scene.Geometry} A new cylinder-shaped geometry.
  * @author Will Eastcott
  */
-pc.graph.procedural.createCylinder = function (opts) {
+pc.scene.procedural.createCylinder = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
     var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
@@ -410,11 +410,11 @@ pc.graph.procedural.createCylinder = function (opts) {
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var vertexData = pc.graph.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, wireframe);
+    var vertexData = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, wireframe);
 
-    var tangents = pc.graph.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
+    var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
 
-    return pc.graph.procedural.createGeometry(vertexData.positions, {
+    return pc.scene.procedural.createGeometry(vertexData.positions, {
         material:  material,
         wireframe: wireframe,
         normals:   vertexData.normals,
@@ -426,7 +426,7 @@ pc.graph.procedural.createCylinder = function (opts) {
 
 /**
  * @function
- * @name pc.graph.procedural.createCone
+ * @name pc.scene.procedural.createCone
  * @description <p>Creates a procedural cone-shaped geometry.</p>
  * <p>The size, shape and tesselation properties of the cone can be controlled via function parameters.
  * By default, the function will create a cone standing vertically centred on the XZ-plane with a base radius
@@ -444,7 +444,7 @@ pc.graph.procedural.createCylinder = function (opts) {
  * @returns {pc.scene.Geometry} A new cone-shaped geometry.
  * @author Will Eastcott
  */
-pc.graph.procedural.createCone = function (opts) {
+pc.scene.procedural.createCone = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
     var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
@@ -454,11 +454,11 @@ pc.graph.procedural.createCone = function (opts) {
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
 
-    var vertexData = pc.graph.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, wireframe);
+    var vertexData = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, wireframe);
 
-    var tangents = pc.graph.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
+    var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
 
-    return pc.graph.procedural.createGeometry(vertexData.positions, {
+    return pc.scene.procedural.createGeometry(vertexData.positions, {
         material:  material,
         wireframe: wireframe,
         normals:   vertexData.normals,
@@ -470,7 +470,7 @@ pc.graph.procedural.createCone = function (opts) {
 
 /**
  * @function
- * @name pc.graph.procedural.createSphere
+ * @name pc.scene.procedural.createSphere
  * @description <p>Creates a procedural sphere-shaped geometry.</p>
  * <p>The size and tesselation properties of the sphere can be controlled via function parameters. By
  * default, the function will create a sphere centred on the object space origin with a radius of 0.5
@@ -485,7 +485,7 @@ pc.graph.procedural.createCone = function (opts) {
  * @returns {pc.scene.Geometry} A new sphere-shaped geometry.
  * @author Will Eastcott
  */
-pc.graph.procedural.createSphere = function (opts) {
+pc.scene.procedural.createSphere = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
     var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
@@ -541,9 +541,9 @@ pc.graph.procedural.createSphere = function (opts) {
         }
     }
 
-    var tangents = pc.graph.procedural.calculateTangents(positions, normals, uvs, indices);
+    var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
 
-    return pc.graph.procedural.createGeometry(positions, {
+    return pc.scene.procedural.createGeometry(positions, {
         material:  material,
         wireframe: wireframe,
         normals:   normals,
@@ -555,7 +555,7 @@ pc.graph.procedural.createSphere = function (opts) {
 
 /**
  * @function
- * @name pc.graph.procedural.createPlane
+ * @name pc.scene.procedural.createPlane
  * @description <p>Creates a procedural plane-shaped geometry.</p>
  * <p>The size and tesselation properties of the plane can be controlled via function parameters. By
  * default, the function will create a plane centred on the object space origin with a width and
@@ -572,7 +572,7 @@ pc.graph.procedural.createSphere = function (opts) {
  * @returns {pc.scene.Geometry} A new plane-shaped geometry.
  * @author Will Eastcott
  */
-pc.graph.procedural.createPlane = function (opts) {
+pc.scene.procedural.createPlane = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
     var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
@@ -625,9 +625,9 @@ pc.graph.procedural.createPlane = function (opts) {
         }
     }
 
-    var tangents = pc.graph.procedural.calculateTangents(positions, normals, uvs, indices);
+    var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
 
-    return pc.graph.procedural.createGeometry(positions, {
+    return pc.scene.procedural.createGeometry(positions, {
         material:  material,
         wireframe: wireframe,
         normals:   normals,
@@ -639,7 +639,7 @@ pc.graph.procedural.createPlane = function (opts) {
 
 /**
  * @function
- * @name pc.graph.procedural.createBox
+ * @name pc.scene.procedural.createBox
  * @description <p>Creates a procedural box-shaped geometry.</p>
  * <p>The size, shape and tesselation properties of the box can be controlled via function parameters. By
  * default, the function will create a box centred on the object space origin with a width, length and
@@ -656,7 +656,7 @@ pc.graph.procedural.createPlane = function (opts) {
  * @return {pc.scene.Geometry} A new box-shaped geometry.
  * @author Will Eastcott
  */
-pc.graph.procedural.createBox = function (opts) {
+pc.scene.procedural.createBox = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
     var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
@@ -755,9 +755,9 @@ pc.graph.procedural.createBox = function (opts) {
     generateFace(sides.RIGHT, ls, hs);
     generateFace(sides.LEFT, ls, hs);
 
-    var tangents = pc.graph.procedural.calculateTangents(positions, normals, uvs, indices);
+    var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
 
-    return pc.graph.procedural.createGeometry(positions, {
+    return pc.scene.procedural.createGeometry(positions, {
         material:  material,
         wireframe: wireframe,
         normals:   normals,
