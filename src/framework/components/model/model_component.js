@@ -43,14 +43,8 @@ pc.extend(pc.fw, function () {
     
     ModelComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.ModelComponentData();
-        var properties = ["asset"];
-        data = data || {asset: null};
 
-        this.addComponent(entity, componentData);
-
-        properties.forEach(function(value, index, arr) {
-            this.set(entity, value, data[value]);
-        }, this);
+        this.initialiseComponent(entity, componentData, data, ['asset']);
 
         return componentData;
     };

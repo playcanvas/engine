@@ -64,15 +64,9 @@ pc.extend(pc.fw, function () {
         
     AudioSourceComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AudioSourceComponentData();
-        var properties = ["ambient", "uri", "volume", "loop", "radius", "activate"];
-        this.addComponent(entity, componentData);
 
-        if(data) {
-            properties.forEach(function (value, index, arr) {
-                this.set(entity, value, data[value]);                
-            }, this);            
-        }
-        
+        this.initialiseComponent(entity, componentData, data, ['ambient', 'uri', 'volume', 'loop', 'radius', 'activate']);
+
         return componentData;        
     };
     

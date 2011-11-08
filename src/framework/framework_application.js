@@ -48,22 +48,6 @@ pc.extend(pc.fw, function () {
 
         // Create the graphics device
         this.graphicsDevice = new pc.gfx.Device(canvas);
-        
-        // Install the Phong shader
-        var programLib = new pc.gfx.ProgramLibrary();
-        programLib.register("basic",
-                            pc.gfx.programlib.basic.generateVertexShader,
-                            pc.gfx.programlib.basic.generateFragmentShader,
-                            pc.gfx.programlib.basic.generateKey);
-        programLib.register("phong",
-                            pc.gfx.programlib.phong.generateVertexShader,
-                            pc.gfx.programlib.phong.generateFragmentShader,
-                            pc.gfx.programlib.phong.generateKey);
-        programLib.register("pick",
-                            pc.gfx.programlib.pick.generateVertexShader,
-                            pc.gfx.programlib.pick.generateFragmentShader,
-                            pc.gfx.programlib.pick.generateKey);
-        this.graphicsDevice.setProgramLibrary(programLib);
 
         // Activate the graphics device
         this.graphicsDevice.setCurrent();        

@@ -1,12 +1,12 @@
 pc.extend(pc.fw, function () {
 
     var _cubeMapNames = [
-        "posx",
-        "negx",
-        "posy",
-        "negy",
-        "posz",
-        "negz"
+        'posx',
+        'negx',
+        'posy',
+        'negy',
+        'posz',
+        'negz'
     ];
 
     // Private    
@@ -158,13 +158,8 @@ pc.extend(pc.fw, function () {
     
     SkyboxComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.SkyboxComponentData();
-        data = data || {posx: "", negx: "", posy: "", negy: "", posz: "", negz: ""};
 
-        this.addComponent(entity, componentData);
-
-        _cubeMapNames.forEach(function(value, index, arr) {
-            this.set(entity, value, data[value]);    
-        }, this);
+        this.initialiseComponent(entity, componentData, data, _cubeMapNames);
 
         return componentData;
     };

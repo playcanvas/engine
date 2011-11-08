@@ -7,24 +7,16 @@ pc.extend(pc.fw, function () {
     
     CubeMapComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.CubeMapComponentData();
-        var properties = ["nearClip", "farClip"];
-        data = data || {};
 
         componentData.buffer = new pc.gfx.FrameBuffer(256, 256, true, true);
         componentData.cubemap = componentData.buffer.getTexture();
         componentData.cubemap.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
         componentData.cubemap.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
-        componentData.camera = this.context.manager.create(pc.scene.CameraNode);
+        componentData.camera = new pc.scene.CameraNode();
         componentData.camera.setRenderTarget(new pc.gfx.RenderTarget(componentData.buffer));
 
-        this.addComponent(entity, componentData);        
-        
-        properties.forEach(function(value, index, arr) {
-            if(pc.isDefined(data[value])) {
-                this.set(entity, value, data[value]);
-            }
-        }, this);
-        
+        this.initialiseComponent(entity, componentData, data, []);
+
         return componentData;
     };
 

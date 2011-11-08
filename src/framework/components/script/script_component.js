@@ -44,23 +44,9 @@ pc.extend(pc.fw, function () {
 
     ScriptComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.ScriptComponentData();
-        var properties = ["urls"];
-        var index;
-        var length;
-        var url;
-        var obj;
-        var instance;
-        data = data || {};
-                    
-        this.addComponent(entity, componentData);
-        
-        // Set all properties
-        properties.forEach(function (value, index, arr) {
-            if(pc.isDefined(data[value])) {
-                this.set(entity, value, data[value]);
-            }
-        }, this);
-        
+
+        this.initialiseComponent(entity, componentData, data, ['urls']);
+
         return componentData;
     };
 

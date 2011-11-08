@@ -41,7 +41,8 @@ pc.extend(pc.input, function(){
      * @name pc.input.Keyboard
      * @param {DOMElement} [element] Automatically call attach(element).
      */
-    var Keyboard = function(element) {
+    var Keyboard = function(element, options) {
+        options = options || {};
         this._element = null;
         
         this._keyDownHandler = pc.callback(this, this._handleKeyDown);
@@ -56,6 +57,9 @@ pc.extend(pc.input, function(){
         if(element) {
             this.attach(element);
         }
+        
+        this.preventDefault = options.preventDefault || false;
+        this.stopPropagation = options.stopPropagation || false;
     };
     
     Keyboard.prototype.attach = function (element) {
@@ -111,6 +115,13 @@ pc.extend(pc.input, function(){
         this.fire("keydown", {
             event: event
         });
+        
+        if (this.preventDefault) {
+            event.preventDefault();
+        }
+        if (this.stopPropagation) {
+            event.stopPropagation();
+        }
     };
     
     Keyboard.prototype._handleKeyUp = function(event){
@@ -125,6 +136,13 @@ pc.extend(pc.input, function(){
         this.fire("keyup", {
             event: event
         });
+
+        if (this.preventDefault) {
+            event.preventDefault();
+        }
+        if (this.stopPropagation) {
+            event.stopPropagation();
+        }
     };
     
     Keyboard.prototype._handleKeyPress = function(event){
@@ -137,6 +155,14 @@ pc.extend(pc.input, function(){
         this.fire("keypress", {
             event: event
         });
+
+        if (this.preventDefault) {
+            event.preventDefault();
+        }
+        if (this.stopPropagation) {
+            event.stopPropagation();
+        }
+
     };
     
     /**

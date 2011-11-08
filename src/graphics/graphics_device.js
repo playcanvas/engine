@@ -310,8 +310,11 @@ pc.extend(pc.gfx, function () {
                 self._currentState.frontFace = value;
             }
         };
-        
-        this.programLib = null;
+
+        this.programLib = new pc.gfx.ProgramLibrary();
+        for (var generator in pc.gfx.programlib) {
+            this.programLib.register(generator, pc.gfx.programlib[generator]);
+        }
 
         // Calculate a estimate of the maximum number of bones that can be uploaded to the GPU
         // based on the number of available uniforms and the number of uniforms required for non-
