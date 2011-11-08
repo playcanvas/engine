@@ -54,7 +54,7 @@ pc.extend(pc.input, function () {
          * @name pc.input.MouseEvent#button
          * @description The individual button to which the event refers. Only valid for pc.input.EVENT_MOUSE_UP and pc.input.EVENT_MOUSE_DOWN
          */
-        this.button = options.button || pc.input.MOUSE_BUTTON_NONE;
+        this.button = pc.isDefined(options.button) ? options.button : pc.input.MOUSE_BUTTON_NONE;
         
         /**
          * @field
