@@ -1,16 +1,12 @@
 pc.extend(pc.gfx, function () {
     // Public interface
     var ProgramLibrary = function () {
-        this._cache = [];
-        this._generators = [];
+        this._cache = {};
+        this._generators = {};
     };
 
-    ProgramLibrary.prototype.register = function (name, vsFunc, fsFunc, keyFunc) {
-        this._generators[name] = {
-            generateVert : vsFunc,
-            generateFrag : fsFunc, 
-            generateKey : keyFunc
-        };
+    ProgramLibrary.prototype.register = function (name, generator) {
+        this._generators[name] = generator;
     };
 
     ProgramLibrary.prototype.unregister = function (name) {
@@ -31,8 +27,8 @@ pc.extend(pc.gfx, function () {
         var key = generator.generateKey(options);
         var program = this._cache[key];
         if (program === undefined) {
-            var vsCode = generator.generateVert(options);
-            var fsCode = generator.generateFrag(options);
+            var vsCode = generator.generateVertexShader(options);
+            var fsCode = generator.generateFragmentShader(options);
             logDEBUG("\n" + key + ": vertex shader\n" + vsCode);
             logDEBUG("\n" + key + ": fragment shader\n" + fsCode);
             var vs = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, vsCode);
