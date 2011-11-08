@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.13.0
+-------
+* Added support for preventDefault and stopPropagation in pc.input.Keyboard
+* Updated components to initialize the defaults correctly
+* Auto-register all the shader generators (so the user doesn't have to)
+
+-------
 v0.12.0
 -------
 * hierarchy is synced in Application.start() before first update tick
