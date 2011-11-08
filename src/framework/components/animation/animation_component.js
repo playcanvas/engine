@@ -52,27 +52,21 @@ pc.extend(pc.fw, function () {
 
     AnimationComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AnimationComponentData();
-        var properties = ["asset", "loop"];
-        data = data || {asset: []};
 
-        this.addComponent(entity, componentData);
-
-        properties.forEach(function(value, index, arr) {
-            this.set(entity, value, data[value]);    
-        }, this);
+        this.initialiseComponent(entity, componentData, data, ['asset', 'loop']);
 
         return componentData;
     };
-    
+
     AnimationComponentSystem.prototype.deleteComponent = function (entity) {
         var componentData = this._getComponentData(entity);
 
         delete componentData.animation;
         delete componentData.skeleton;
-        
+
         this.removeComponent(entity);
     };
-    
+
     AnimationComponentSystem.prototype.update = function (dt) {
         var components = this._getComponents();
 

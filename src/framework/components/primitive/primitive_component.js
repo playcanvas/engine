@@ -17,7 +17,7 @@ pc.extend(pc.fw, function () {
     PrimitiveComponentSystem = PrimitiveComponentSystem.extendsFrom(pc.fw.ComponentSystem);
     PrimitiveComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PrimitiveComponentData();
-        
+
         this.initialiseComponent(entity, componentData, data, ['type', 'color']);
 
         return componentData;

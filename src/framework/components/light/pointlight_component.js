@@ -93,21 +93,13 @@ pc.extend(pc.fw, function () {
     
     PointLightComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PointLightComponentData();
-        var properties = ["enable", "color", "radius"];
-        data = data || {};
 
         componentData.light = new pc.scene.LightNode();
         componentData.light.setType(pc.scene.LightType.POINT);
         entity.addChild(componentData.light);
 
-        this.addComponent(entity, componentData);        
-        
-        properties.forEach(function(value, index, arr) {
-            if (pc.isDefined(data[value])) {
-                this.set(entity, value, data[value]);
-            }
-        }, this);
-        
+        this.initialiseComponent(entity, componentData, data, ['enable', 'color', 'radius']);
+
         return componentData;
     };
     

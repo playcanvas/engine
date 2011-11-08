@@ -13,14 +13,8 @@ pc.extend(pc.fw, function () {
     
     PackComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PackComponentData();
-        var properties = [];
-        data = data || {};
-               
-        this.addComponent(entity, componentData);
 
-        properties.forEach(function(value, index, arr) {
-            this.set(entity, value, data[value]);
-        }, this);
+        this.initialiseComponent(entity, componentData, data, []);
     
         return componentData;
     }
