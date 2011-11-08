@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.13.1
+-------
+* Fix mouse down event for left mouse button. 
+
+-------
 v0.13.0
 -------
 * Added support for preventDefault and stopPropagation in pc.input.Keyboard
