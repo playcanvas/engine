@@ -10,7 +10,7 @@ pc.shape.intersection = function () {
          * @function
          * @description Test whether two Axis-aligned bounding boxes intersect.
          * @param a {pc.shape.Aabb} First bounding box
-         * @param b {pc.shape.Aaabb} Second bounding box
+         * @param b {pc.shape.Aabb} Second bounding box
          * @returns {Boolean} True if there is an intersection
          */
         aabbAabb: function (a,b) {
