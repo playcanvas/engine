@@ -63,21 +63,21 @@ pc.extend(pc.fw, function () {
             switch(newValue) {
                 case pc.shape.Type.BOX: 
                     // Create a 1x1x1 Box.
-                    this.set(entity, "geometry", pc.graph.procedural.createBox({
+                    this.set(entity, "geometry", pc.scene.procedural.createBox({
                         material: data.material, 
                         halfExtents: [0.5,0.5,0.5]
                     }));
                     break;
                 case pc.shape.Type.SPHERE:
                     // Create a 1m diameter sphere
-                    this.set(entity, "geometry", pc.graph.procedural.createSphere({
+                    this.set(entity, "geometry", pc.scene.procedural.createSphere({
                         material: data.material,
                         radius: 0.5
                     }));
                     break;
                 case pc.shape.Type.CONE:
                     // Create a cone 1m high and 1m across
-                    this.set(entity, "geometry", pc.graph.procedural.createCone({
+                    this.set(entity, "geometry", pc.scene.procedural.createCone({
                         material: data.material,
                         baseRadius: 0.5,
                         peakRadius: 0,
@@ -86,7 +86,7 @@ pc.extend(pc.fw, function () {
                     break;
                 case pc.shape.Type.CYLINDER:
                     // Create a cylinder 1m high and 1m across
-                    this.set(entity, "geometry", pc.graph.procedural.createCylinder({
+                    this.set(entity, "geometry", pc.scene.procedural.createCylinder({
                         material: data.material,
                         radius: 0.5,
                         height: 1

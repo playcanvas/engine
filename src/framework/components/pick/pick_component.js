@@ -64,19 +64,19 @@ pc.extend(pc.fw, function () {
         var geometry = null;
         switch (shape.type) {
             case pc.shape.Type.BOX:
-                geometry = pc.graph.procedural.createBox({
+                geometry = pc.scene.procedural.createBox({
                     material: componentData.pickMaterial, 
                     halfExtents: shape.halfExtents
                 });
                 break;
             case pc.shape.Type.SPHERE:
-                geometry = pc.graph.procedural.createSphere({
+                geometry = pc.scene.procedural.createSphere({
                     material: componentData.pickMaterial,
                     radius: shape.radius
                 });
                 break;
             case pc.shape.Type.TORUS:
-                geometry = pc.graph.procedural.createTorus({
+                geometry = pc.scene.procedural.createTorus({
                     material: componentData.pickMaterial,
                     tubeRadius: shape.iradius,
                     ringRadius: shape.oradius

@@ -129,6 +129,7 @@ pc.extend(pc.fw, function () {
         if(entity) {
             this.context.root.addChild(entity);
         }
+        this.context.root.syncHierarchy();
         this.tick();
     };
     

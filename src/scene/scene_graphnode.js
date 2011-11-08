@@ -369,9 +369,10 @@ pc.extend(pc.scene, function () {
      * @function
      * @name pc.scene.GraphNode#syncHierarchy
      * @description
+     * @param {pc.math.mat4} [transform] Parent transform to sync hierarchy to. Defaults to identity.
      * @author Will Eastcott
      */
-    GraphNode.prototype.syncHierarchy = function () {
+    GraphNode.prototype.syncHierarchy = function (transform) {
         function _syncHierarchy(node, parentTransform) {
             // Now calculate this nodes world space transform
             pc.math.mat4.multiply(parentTransform, node._ltm, node._wtm);
@@ -381,8 +382,9 @@ pc.extend(pc.scene, function () {
                 _syncHierarchy(node._children[i], node._wtm);
             }
         }
-        
-        _syncHierarchy(this, pc.math.mat4.create());
+    
+        transform = transform || pc.math.mat4.create();
+        _syncHierarchy(this, transform);
     };
 
     return {

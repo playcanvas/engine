@@ -1,4 +1,4 @@
-pc.extend(pc.graph, function () {
+pc.extend(pc.scene, function () {
 
     var now = new Date();
     var start = new Date();
@@ -14,10 +14,6 @@ pc.extend(pc.graph, function () {
         [-0.5,  0.5]
     ];
 
-    /**
-     * @name pc.graph.ParticleEmitter
-     * @class A particle emitter.
-     */
     var ParticleEmitter = function ParticleEmitter(numParticles) {
         this.config = {
             // The number of particles to emit.
@@ -166,14 +162,8 @@ pc.extend(pc.graph, function () {
         };
     }
 
-    ParticleEmitter = ParticleEmitter.extendsFrom(pc.graph.Node);
+    ParticleEmitter = ParticleEmitter.extendsFrom(pc.scene.Node);
 
-    /**
-     * @function
-     * @name pc.graph.ParticleEmitter#dispatch
-     * @description
-     * @author Will Eastcott
-     */
     ParticleEmitter.prototype.dispatch = function () {
         var res = this.resources;
 

@@ -1,6 +1,6 @@
-pc.graph.materialplugin.phong = {};
+pc.scene.materialplugin.phong = {};
 
-pc.graph.materialplugin.phong.isTransparent = function (material) {
+pc.scene.materialplugin.phong.isTransparent = function (material) {
     var parameters = material.getParameters();
     if (parameters["material_opacity"] !== undefined) {
         if (parameters["material_opacity"]._data < 1.0)
@@ -15,7 +15,7 @@ pc.graph.materialplugin.phong.isTransparent = function (material) {
     return false;
 }
 
-pc.graph.materialplugin.phong.generateStateKey = function (geometry) {
+pc.scene.materialplugin.phong.generateStateKey = function (geometry) {
     var device = pc.gfx.Device.getCurrent();
     var currState = device.getCurrentState();
     var numDirs = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.DIRECTIONAL);
@@ -29,7 +29,7 @@ pc.graph.materialplugin.phong.generateStateKey = function (geometry) {
     return key;
 }
 
-pc.graph.materialplugin.phong.getProgram = function (material, geometry) {
+pc.scene.materialplugin.phong.getProgram = function (material, geometry) {
     var device = pc.gfx.Device.getCurrent();
     var currState = device.getCurrentState();
     var numDirs = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.DIRECTIONAL);

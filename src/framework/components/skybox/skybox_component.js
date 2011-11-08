@@ -72,7 +72,7 @@ pc.extend(pc.fw, function () {
 			
 		}, options);
 
-        return pc.graph.procedural.createBox({material: skyMat, halfExtents: [1, 1, 1]});
+        return pc.scene.procedural.createBox({material: skyMat, halfExtents: [1, 1, 1]});
     };
     
     function _onSet(entity, name, oldValue, newValue) {

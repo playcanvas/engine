@@ -1,5 +1,5 @@
 /**
  * @namespace
- * @name pc.graph.materialplugin
+ * @name pc.scene.materialplugin
  */
-pc.graph.materialplugin = {};
+pc.scene.materialplugin = {};

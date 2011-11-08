@@ -65,7 +65,7 @@ FlyCam.prototype.onMouseWheel = function (event) {
     this.dolly(distance);
 };
 
-FlyCam.prototype.onMouseDrag = function (event) {
+FlyCam.prototype.onMouseMove = function (event) {
     // We can't rely on a right click because that has a 'special function'
     // in most (all?) browsers
     if (event.buttons[pc.input.MOUSE_BUTTON_LEFT] && event.buttons[pc.input.MOUSE_BUTTON_MIDDLE]) {
