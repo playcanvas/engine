@@ -14,15 +14,9 @@ pc.extend(pc.fw, function () {
     
     BloomComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.BloomComponentData();
-        var properties = ["bloomThreshold", "blurAmount", "bloomIntensity", "baseIntensity", "bloomSaturation", "baseSaturation"];
-        data = data || {};
-        
-        this.addComponent(entity, componentData);
-        
-        properties.forEach(function(value, index, arr) {
-            this.set(entity, value, data[value]);
-        }, this);
-        
+
+        this.initialiseComponent(entity, componentData, data, ['bloomThreshold', 'blurAmount', 'bloomIntensity', 'baseIntensity', 'bloomSaturation', 'baseSaturation']);
+
         return componentData;
     };
     

@@ -156,21 +156,13 @@ pc.extend(pc.fw, function () {
     
     CameraComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.CameraComponentData();
-        var properties = ['clearColor', 'fov', 'viewWindowX', 'viewWindowY', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
-        data = data || {};
 
         componentData.camera = new pc.scene.CameraNode();
         entity.addChild(componentData.camera);
 
-        this.addComponent(entity, componentData);        
-        
-        properties.forEach(function(value, index, arr) {
-            if(pc.isDefined(data[value])) {
-                this.set(entity, value, data[value]);
-            }
-        }, this);
-        
-        if(!window.pc.apps.designer && this.get(entity, "activate") && !entity.hasLabel("pc:designer")) {
+        this.initialiseComponent(entity, componentData, data, ['clearColor', 'fov', 'viewWindowX', 'viewWindowY', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection']);
+
+        if (!window.pc.apps.designer && this.get(entity, "activate") && !entity.hasLabel("pc:designer")) {
             this.push(entity);
         }
         
@@ -215,64 +207,66 @@ pc.extend(pc.fw, function () {
         var indexBuffer = this.renderable.indexBuffer;
         
         for (id in components) {
-            if (false) { //(components.hasOwnProperty(id)) {
+            if (components.hasOwnProperty(id)) {
                 entity = components[id].entity;
-                componentData = components[id].component;
+                if (!entity.hasLabel("pc:designer")) {
+                    componentData = components[id].component;
 
-                // Retrieve the characteristics of the camera frustum
-                var cam = componentData.camera;
-                var nearClip = cam.getNearClip();
-                var farClip  = cam.getFarClip();
-                var fov      = cam.getFov() * Math.PI / 180.0;
-                var viewport = cam.getRenderTarget().getViewport();
+                    // Retrieve the characteristics of the camera frustum
+                    var cam = componentData.camera;
+                    var nearClip = cam.getNearClip();
+                    var farClip  = cam.getFarClip();
+                    var fov      = cam.getFov() * Math.PI / 180.0;
+                    var viewport = cam.getRenderTarget().getViewport();
 
-                // Write the frustum corners into a dynamic vertex buffer
-                var positions = new Float32Array(vertexBuffer.lock());
-                var y = Math.tan(fov / 2.0) * nearClip;
-                var x = y * viewport.width / viewport.height;
-                positions[0]  = x;
-                positions[1]  = -y;
-                positions[2]  = -nearClip;
-                positions[3]  = x;
-                positions[4]  = y;
-                positions[5]  = -nearClip;
-                positions[6]  = -x;
-                positions[7]  = y;
-                positions[8]  = -nearClip;
-                positions[9]  = -x;
-                positions[10] = -y;
-                positions[11] = -nearClip;
+                    // Write the frustum corners into a dynamic vertex buffer
+                    var positions = new Float32Array(vertexBuffer.lock());
+                    var y = Math.tan(fov / 2.0) * nearClip;
+                    var x = y * viewport.width / viewport.height;
+                    positions[0]  = x;
+                    positions[1]  = -y;
+                    positions[2]  = -nearClip;
+                    positions[3]  = x;
+                    positions[4]  = y;
+                    positions[5]  = -nearClip;
+                    positions[6]  = -x;
+                    positions[7]  = y;
+                    positions[8]  = -nearClip;
+                    positions[9]  = -x;
+                    positions[10] = -y;
+                    positions[11] = -nearClip;
 
-                y = Math.tan(fov / 2.0) * farClip;
-                x = y * viewport.width / viewport.height;
-                positions[12]  = x;
-                positions[13]  = -y;
-                positions[14]  = -farClip;
-                positions[15]  = x;
-                positions[16]  = y;
-                positions[17]  = -farClip;
-                positions[18]  = -x;
-                positions[19]  = y;
-                positions[20]  = -farClip;
-                positions[21]  = -x;
-                positions[22] = -y;
-                positions[23] = -farClip;                
-                vertexBuffer.unlock();
+                    y = Math.tan(fov / 2.0) * farClip;
+                    x = y * viewport.width / viewport.height;
+                    positions[12]  = x;
+                    positions[13]  = -y;
+                    positions[14]  = -farClip;
+                    positions[15]  = x;
+                    positions[16]  = y;
+                    positions[17]  = -farClip;
+                    positions[18]  = -x;
+                    positions[19]  = y;
+                    positions[20]  = -farClip;
+                    positions[21]  = -x;
+                    positions[22] = -y;
+                    positions[23] = -farClip;                
+                    vertexBuffer.unlock();
 
-                // Render the camera frustum
-                device = pc.gfx.Device.getCurrent();
-                device.setProgram(program);
-                device.setIndexBuffer(indexBuffer);
-                device.setVertexBuffer(vertexBuffer, 0);
-                
-                transform = entity.getWorldTransform();
-                device.scope.resolve("matrix_model").setValue(transform);
-                device.scope.resolve("constant_color").setValue([1,1,0,1]);
-                device.draw({
-                    primitiveType: pc.gfx.PrimType.LINES,
-                    numVertices: indexBuffer.getNumIndices(),
-                    useIndexBuffer: true
-                });
+                    // Render the camera frustum
+                    device = pc.gfx.Device.getCurrent();
+                    device.setProgram(program);
+                    device.setIndexBuffer(indexBuffer);
+                    device.setVertexBuffer(vertexBuffer, 0);
+                    
+                    transform = entity.getWorldTransform();
+                    device.scope.resolve("matrix_model").setValue(transform);
+                    device.scope.resolve("constant_color").setValue([1,1,0,1]);
+                    device.draw({
+                        primitiveType: pc.gfx.PrimType.LINES,
+                        numVertices: indexBuffer.getNumIndices(),
+                        useIndexBuffer: true
+                    });
+                }
             }
         }
     };

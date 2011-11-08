@@ -14,25 +14,22 @@ pc.extend(pc.fw, function () {
     AudioListenerComponentSystem = AudioListenerComponentSystem.extendsFrom(pc.fw.ComponentSystem);
         
     AudioListenerComponentSystem.prototype.createComponent = function (entity, data) {
-        if(this._listener) {
+        if (this._listener) {
             throw new Error("Only one Audio Listener allowed")
         }
-        
-        var componentData = new pc.fw.AudioListenerComponentData();
-        
-        for (attribute in data) {
-            if (data.hasOwnProperty(attribute)) {
-                componentData[attribute] = data[attribute];
-            }
-        }
-        
+
         this._listener = entity;
-        this.addComponent(entity, componentData);
+
+        var componentData = new pc.fw.AudioListenerComponentData();
+
+        this.initialiseComponent(entity, componentData, data, []);
+
+        return componentData;
     };
-    
-    AudioListenerComponentSystem.prototype.update = function(dt) {
+
+    AudioListenerComponentSystem.prototype.update = function (dt) {
     };
-    
+
     AudioListenerComponentSystem.prototype.getListener = function () {
         return this._listener;
     };

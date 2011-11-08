@@ -102,6 +102,9 @@ pc.extend(pc.scene, function () {
             _scopeId : device.scope.resolve(name),
             _data    : data
         };
+        // If programs for this material are being procedurally generated, then
+        // discard whatever has already been cached
+        this._programs = {};
     };
 
     /**
@@ -163,12 +166,30 @@ pc.extend(pc.scene, function () {
         this._program = program;
     };
 
-    Material.prototype.setState = function (state) {
-        this._state = state;
-    }
-
+    /**
+     * @function
+     * @name pc.scene.Material#getState
+     * @description Retrieves the block of render state set on the specified material. When the
+     * material is used to render a pc.scene.SubMesh, the render state will be set as local state. 
+     * When the submesh has been rendered, the local state will be cleared.
+     * @returns {Object} The render state assigned to the material.
+     * @author Will Eastcott
+     */
     Material.prototype.getState = function () {
         return this._state;
+    }
+
+    /**
+     * @function
+     * @name pc.scene.Material#setState
+     * @description Assigns a block of render state to the specified material. When the material
+     * is used to render a pc.scene.SubMesh, the render state will be set as local state. When
+     * the submesh has been rendered, the local state will be cleared.
+     * @param {Object} state The render state to assign to the material.
+     * @author Will Eastcott
+     */
+    Material.prototype.setState = function (state) {
+        this._state = state;
     }
     
     return {

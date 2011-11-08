@@ -85,20 +85,12 @@ pc.extend(pc.fw, function () {
     
     DirectionalLightComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.DirectionalLightComponentData();
-        var properties = ["enable", "color"];
-        data = data || {};
 
         componentData.light = new pc.scene.LightNode();
         componentData.light.setType(pc.scene.LightType.DIRECTIONAL);
         entity.addChild(componentData.light);
 
-        this.addComponent(entity, componentData);        
-        
-        properties.forEach(function(value, index, arr) {
-            if (pc.isDefined(data[value])) {
-                this.set(entity, value, data[value]);
-            }
-        }, this);
+        this.initialiseComponent(entity, componentData, data, ['enable', 'color']);
         
         return componentData;
     };

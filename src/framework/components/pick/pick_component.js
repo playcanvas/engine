@@ -17,10 +17,9 @@ pc.extend(pc.fw, function () {
     
     PickComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PickComponentData();
-        data = data || {};
-        
-        this.addComponent(entity, componentData);
-        
+
+        this.initialiseComponent(entity, componentData, data, []);
+
         return componentData;
     };
     
