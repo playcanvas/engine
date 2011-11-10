@@ -6,12 +6,10 @@ module("pc.fw.CameraComponent", {
         graphicsDevice.setCurrent();
         graphicsDevice.setProgramLibrary(programLib);
         
-        //pc.graph.JsonLoader = function () {};
-        var scene = new pc.graph.Scene();
-        var registry = new pc.fw.ComponentRegistry();
-        var manager = new pc.graph.GraphManager();
-        var loaders = new pc.resources.LoaderManager();
-        context = new pc.fw.ApplicationContext(manager, loaders, scene, registry);
+        var scene = new pc.scene.Scene();
+        var registry = new pc.fw.ComponentSystemRegistry();
+        var loader = new pc.resources.ResourceLoader();
+        context = new pc.fw.ApplicationContext(loader, scene, registry);
     },
     teardown: function () {
         delete context;
@@ -19,14 +17,14 @@ module("pc.fw.CameraComponent", {
 });
 
 test("new", function () {
-    var comp = new pc.fw.CameraComponent(context);
+    var comp = new pc.fw.CameraComponentSystem(context);
         
     ok(comp);
-    ok(context.components.camera);
+    ok(context.systems.camera);
 });
 
 test("createComponent: no data", function () {
-    var comp = new pc.fw.CameraComponent(context);
+    var comp = new pc.fw.CameraComponentSystem(context);
     var entity = new pc.fw.Entity();
     
     var componentData = comp.createComponent(entity);
@@ -35,7 +33,7 @@ test("createComponent: no data", function () {
     ok(componentData);
 });
 test("createComponent: data", function () {
-    var comp = new pc.fw.CameraComponent(context);
+    var comp = new pc.fw.CameraComponentSystem(context);
     var entity = new pc.fw.Entity();
     
     var componentData = comp.createComponent(entity, {
@@ -48,7 +46,7 @@ test("createComponent: data", function () {
 
 
 test("deleteComponent: camera node deleted", function () {
-    var comp = new pc.fw.CameraComponent(context);
+    var comp = new pc.fw.CameraComponentSystem(context);
     var entity = new pc.fw.Entity();
     
     var data = comp.createComponent(entity);

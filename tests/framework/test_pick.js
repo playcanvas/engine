@@ -13,9 +13,6 @@ module('pc.fw.PickComponent', {
 
 test("new", function () {
     jack(function () {
-        pc.graphics = {};
-        pc.graphics.user = jack.create("pc.graphics.user", ["getRenderer"]);
-        
         var hc = new pc.fw.PickComponentSystem(context);
         
         ok(hc);

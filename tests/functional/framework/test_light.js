@@ -6,11 +6,10 @@ module("pc.fw.LightComponent", {
         graphicsDevice.setCurrent();
         graphicsDevice.setProgramLibrary(programLib);
         
-        var scene = new pc.graph.Scene();
-        var registry = new pc.fw.ComponentRegistry();
-        var manager = new pc.graph.GraphManager();
-        var loaders = new pc.resources.LoaderManager();
-        context = new pc.fw.ApplicationContext(manager, loaders, scene, registry);
+        var scene = new pc.scene.Scene();
+        var registry = new pc.fw.ComponentSystemRegistry();
+        var loader = new pc.resources.ResourceLoader();
+        context = new pc.fw.ApplicationContext(loader, scene, registry);
     },
     teardown: function () {
         delete context;
@@ -18,16 +17,13 @@ module("pc.fw.LightComponent", {
 });
 
 test("new", function () {
-    var light = new pc.fw.LightComponent(context);
+    var light = new pc.fw.DirectionalLightComponentSystem(context);
     
     ok(light);
-    ok(light._ambient);
-    ok(light._diffuse);
-    ok(light._radius);
 });
 
 test("createComponent, light node created", function () {
-    var lc = new pc.fw.LightComponent(context);
+    var lc = new pc.fw.DirectionalLightComponentSystem(context);
     var entity = new pc.fw.Entity();
     var data = lc.createComponent(entity);
     
@@ -36,7 +32,7 @@ test("createComponent, light node created", function () {
     
 })
 test("delete, light node deleted", function () {
-    var lc = new pc.fw.LightComponent(context);
+    var lc = new pc.fw.DirectionalLightComponentSystem(context);
     var entity = new pc.fw.Entity();
     var data = lc.createComponent(entity);
 
