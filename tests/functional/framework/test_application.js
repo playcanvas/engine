@@ -4,7 +4,7 @@ module("pc.fw.Application", {
         application = new pc.fw.Application(canvas, {});
         
         TestComponent = function (entity) {};
-        TestComponent = TestComponent.extendsFrom(pc.fw.Component);
+        TestComponent = TestComponent.extendsFrom(pc.fw.ComponentSystem);
         TestComponent.prototype.createComponent = function (entity) {
             var data = new pc.fw.ComponentData(entity);
             
@@ -25,12 +25,12 @@ test("_updateEntity, add a component", function () {
     var entity = new pc.fw.Entity();
     application.context.root.addChild(entity);
     
-    application.context.components.add("abc", new TestComponent());
-    application.context.components.add("def", new TestComponent());
-    application.context.components.add("ghi", new TestComponent());
+    application.context.systems.add("abc", new TestComponent());
+    application.context.systems.add("def", new TestComponent());
+    application.context.systems.add("ghi", new TestComponent());
     
-    application.context.components.abc.createComponent(entity);
-    application.context.components.def.createComponent(entity);
+    application.context.systems.abc.createComponent(entity);
+    application.context.systems.def.createComponent(entity);
     
     var components = {
         "abc": {},
@@ -40,9 +40,9 @@ test("_updateEntity, add a component", function () {
     
     application._updateEntity(entity.getGuid(), components);
     
-    equal(application.context.components.abc.hasComponent(entity), true);
-    equal(application.context.components.def.hasComponent(entity), true);
-    equal(application.context.components.ghi.hasComponent(entity), true);
+    equal(application.context.systems.abc.hasComponent(entity), true);
+    equal(application.context.systems.def.hasComponent(entity), true);
+    equal(application.context.systems.ghi.hasComponent(entity), true);
     
 });
 
@@ -51,13 +51,13 @@ test("_updateEntity, remove a component", function () {
     var entity = new pc.fw.Entity();
     application.context.root.addChild(entity);
     
-    application.context.components.add("abc", new TestComponent());
-    application.context.components.add("def", new TestComponent());
-    application.context.components.add("ghi", new TestComponent());
+    application.context.systems.add("abc", new TestComponent());
+    application.context.systems.add("def", new TestComponent());
+    application.context.systems.add("ghi", new TestComponent());
     
-    application.context.components.abc.createComponent(entity);
-    application.context.components.def.createComponent(entity);
-    application.context.components.ghi.createComponent(entity);
+    application.context.systems.abc.createComponent(entity);
+    application.context.systems.def.createComponent(entity);
+    application.context.systems.ghi.createComponent(entity);
     
     var components = {
         "abc": {},
@@ -66,8 +66,8 @@ test("_updateEntity, remove a component", function () {
     
     application._updateEntity(entity.getGuid(), components);
     
-    equal(application.context.components.abc.hasComponent(entity), true);
-    equal(application.context.components.def.hasComponent(entity), true);
-    equal(application.context.components.ghi.hasComponent(entity), false);
+    equal(application.context.systems.abc.hasComponent(entity), true);
+    equal(application.context.systems.def.hasComponent(entity), true);
+    equal(application.context.systems.ghi.hasComponent(entity), false);
     
 });

@@ -43,7 +43,7 @@ pc.extend(pc.fw, function () {
             vertexBuffer: vertexBuffer
         };
     };
-    
+
     /**
      * @name pc.fw.DirectionalLightComponentSystem
      * @constructor Create a new DirectionalLightComponentSystem
@@ -79,6 +79,8 @@ pc.extend(pc.fw, function () {
         });
 
         this.renderable = _createGfxResources();
+       
+        this.bind("set_light", this.onSetLight.bind(this));
     };
         
     DirectionalLightComponentSystem = DirectionalLightComponentSystem.extendsFrom(pc.fw.ComponentSystem);
@@ -86,11 +88,11 @@ pc.extend(pc.fw, function () {
     DirectionalLightComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.DirectionalLightComponentData();
 
-        componentData.light = new pc.scene.LightNode();
-        componentData.light.setType(pc.scene.LightType.DIRECTIONAL);
-        entity.addChild(componentData.light);
+        //componentData.light = new pc.scene.LightNode();
 
-        this.initialiseComponent(entity, componentData, data, ['enable', 'color']);
+        data = data || {};
+        data['light'] = new pc.scene.LightNode();
+        this.initialiseComponent(entity, componentData, data, ['light', 'enable', 'color']);
         
         return componentData;
     };
@@ -150,6 +152,14 @@ pc.extend(pc.fw, function () {
             }
         }
     };
+    
+    DirectionalLightComponentSystem.prototype.onSetLight = function (entity, name, oldValue, newValue) {
+        newValue.setType(pc.scene.LightType.DIRECTIONAL);
+        if (oldValue) {
+            entity.removeChild(oldValue);
+        }
+        entity.addChild(newValue);
+    }
     
     return {
         DirectionalLightComponentSystem: DirectionalLightComponentSystem

@@ -1,6 +1,10 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+-------
+v0.14.0
+-------
+* Replaced pop() and push() in CameraComponentSystem with setCurrent()
 
 -------
 v0.13.1
