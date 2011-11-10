@@ -184,7 +184,8 @@ pc.extend(pc.fw, function () {
                 if (componentData.skybox) {
                     // Create a transform that will scale the skybox to always sit
                     // in between the near and far clip planes
-                    var currentCamera = this.context.systems.camera._camera;
+                    var currentCameraEntity = this.context.systems.camera.getCurrent();
+                    var currentCamera = this.context.systems.camera.get(currentCameraEntity, "camera");                   
                     var near = currentCamera.getNearClip();
                     var far = currentCamera.getFarClip();
                     var average = (near + far) / 2.0;
