@@ -1,14 +1,13 @@
-module('pc.fw.RenderComponent', {
+module('pc.fw.ModelComponent', {
     setup: function () {
-        pc.graph.JsonLoader = function () {};
         var scene = new pc.scene.Scene();
         var registry = new pc.fw.ComponentSystemRegistry();
-        var loaders = new pc.resources.LoaderManager();
-        context = new pc.fw.ApplicationContext(loaders, scene, registry);
+        var loader = new pc.resources.ResourceLoader();
+        context = new pc.fw.ApplicationContext(loader, scene, registry);
     },
+
     teardown: function () {
         delete context;
-        delete pc.graph.JsonLoader;
     }
 });
 

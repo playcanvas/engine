@@ -12,7 +12,7 @@ test("Methods exist", function() {
 test("request: adds access_token to plain url", function () {
     jack(function() {
         var oauth = new pc.net.OAuth();
-        oauth.access_token = "abc123";
+        oauth.accessToken = "abc123";
         
         var xhr  = jack.create("xhr", ["open", "send"]);
         jack.expect("xhr.open").withArguments("GET", "http://test.com?access_token=abc123", true);
@@ -25,7 +25,7 @@ test("request: adds access_token to plain url", function () {
 test("request: adds access_token to url with existing query", function () {
     jack(function() {
         var oauth = new pc.net.OAuth();
-        oauth.access_token = "abc123";
+        oauth.accessToken = "abc123";
 
         var xhr  = jack.create("xhr", ["open", "send"]);
         jack.expect("xhr.open").withArguments("GET", "http://test.com?a=1&access_token=abc123", true);
@@ -38,7 +38,7 @@ test("request: adds access_token to url with existing query", function () {
 test("request: adds access_token to url with options.query", function () {
     jack(function() {
         var oauth = new pc.net.OAuth();
-        oauth.access_token = "abc123";
+        oauth.accessToken = "abc123";
         
         var xhr  = jack.create("xhr", ["open", "send"]);
         jack.expect("xhr.open").withArguments("GET", "http://test.com?a=1&access_token=abc123", true);
@@ -56,7 +56,7 @@ test("request: 401 error calls refreshAccessToken", 1, function () {
     var oauth = new pc.net.OAuth();
     oauth.refreshAccessToken = function (success) {
         ok(true);
-        this.access_token = "refreshed" 
+        this.accessToken = "refreshed" 
         success(this.access_token);
     };
     

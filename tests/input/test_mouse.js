@@ -48,12 +48,13 @@ test("mousedown: fires", function () {
     
     m.bind("mousedown", function (event) {
         called = true;
-        equal(event.positionX, 0);
-        equal(event.positionY, 0);
-        equal(event.button, 1);
-        equal(event.buttons[0], false);
-        equal(event.buttons[1], true);
-        equal(event.buttons[2], false);
+
+        equal(event.x, 0);
+        equal(event.y, 0);
+        equal(event.button, pc.input.MOUSE_BUTTON_MIDDLE);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_LEFT], false);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_MIDDLE], true);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
         ok(event.event);
     });
     
@@ -70,12 +71,12 @@ test("mouseup: fires", function () {
     m.bind("mouseup", function (event) {
         called = true;
         
-        equal(event.positionX, 0);
-        equal(event.positionY, 0);
-        equal(event.button, 1);
-        equal(event.buttons[0], false);
-        equal(event.buttons[1], false);
-        equal(event.buttons[2], false);
+        equal(event.x, 0);
+        equal(event.y, 0);
+        equal(event.button, pc.input.MOUSE_BUTTON_MIDDLE);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_LEFT], false);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
         ok(event.event);
     });
     
@@ -92,13 +93,14 @@ test("mousemove: fires", function () {
     
     m.bind("mousemove", function (event) {
         called = true;
-        equal(event.positionX, 0);
-        equal(event.positionY, 0);
+        equal(event.x, 0);
+        equal(event.y, 0);
         equal(event.deltaX, 0);
         equal(event.deltaY, 0);
-        equal(event.buttons[0], false);
-        equal(event.buttons[1], false);
-        equal(event.buttons[2], false);
+        equal(event.button, pc.input.MOUSE_BUTTON_NONE);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_LEFT], false);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
         ok(event.event);
     });
     
@@ -114,12 +116,13 @@ test("mousewheel: fires", function () {
     
     m.bind("mousewheel", function (event) {
         called = true;
-        equal(event.positionX, 0);
-        equal(event.positionY, 0);
+        equal(event.y, 0);
+        equal(event.x, 0);
         equal(event.deltaWheel, 1);
-        equal(event.buttons[0], false);
-        equal(event.buttons[1], false);
-        equal(event.buttons[2], false);
+        equal(event.button, pc.input.MOUSE_BUTTON_NONE);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_LEFT], false);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
+        equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
     });
     
     simMouseWheel(m);
