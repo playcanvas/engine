@@ -38,7 +38,8 @@ pc.extend(pc.fw, function () {
 
                 var offscreen = this.context.systems.camera.get(entity, "offscreen");
                 var camera = this.context.systems.camera.get(entity, "camera");
-                var currentCamera = this.context.systems.camera._camera;
+                var currentEntity = this.context.systems.camera.getCurrent();
+                var currentCamera = this.context.systems.camera.get(currentEntity, "camera");
 
                 if (offscreen && (currentCamera === camera)) {
                     this.context.scene.enqueue("post", (function(data, camera) {
