@@ -1,5 +1,5 @@
 /**
- * @enum {number}
+ * @enum {Number}
  * @name pc.gfx.PrimType
  * @description Constants for primitive type.
  */
@@ -17,7 +17,7 @@ pc.gfx.PrimType = {
 };
 
 /**
- * @enum {number}
+ * @enum {Number}
  * @name pc.gfx.BlendMode
  * @description Constants for blending modes.
  */
@@ -36,7 +36,7 @@ pc.gfx.BlendMode = {
 };
 
 /**
- * @enum {number}
+ * @enum {Number}
  * @name pc.gfx.DepthFunc
  * @description Constants for blending modes.
  */
@@ -84,7 +84,7 @@ pc.extend(pc.gfx, function () {
      * for submitting render state changes and graphics primitives to the hardware. A graphics
      * device is tied to a specific canvas HTML element. It is valid to have more than one 
      * canvas element per page and create a new graphics device against each.
-     * @param {Object} canvas
+     * @param {Object} canvas The canvas to which the graphics device is tied.
      */
     var Device = function (canvas) {
         canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
@@ -335,16 +335,21 @@ pc.extend(pc.gfx, function () {
 
     /**
      * @function
-     * @name pc.gfx.Device#setCurrent
+     * @name pc.gfx.Device.setCurrent
+     * @description Sets the current graphics device. After creating a new pc.gfx.Device,
+     * it must be set as the current device before it can be used.
+     * @param {pc.gfx.Device} device The graphics device to make current.
      * @author Will Eastcott
      */
-    Device.prototype.setCurrent = function () {
-        Device._current = this;
+    Device.setCurrent = function (device) {
+        Device._current = device;
     };
 
     /**
      * @function
      * @name pc.gfx.Device.getCurrent
+     * @description Returns the current graphics device.
+     * @returns {pc.gfx.Device} The current graphics device.
      * @author Will Eastcott
      */
     Device.getCurrent = function () {
@@ -354,6 +359,8 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.Device#getProgramLibrary
+     * @description Retrieves the program library assigned to the specified graphics device.
+     * @returns {pc.gfx.ProgramLibrary} The program library assigned to the device.
      * @author Will Eastcott
      */
     Device.prototype.getProgramLibrary = function () {
@@ -363,6 +370,11 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.Device#setProgramLibrary
+     * @description Assigns a program library to the specified device. By default, a graphics
+     * device is created with a program library that manages all of the programs that are
+     * used to render any graphical primitives. However, this function allows the user to
+     * replace the existing program library with a new one.
+     * @param {pc.gfx.ProgramLibrary} programLib The program library to assign to the device.
      * @author Will Eastcott
      */
     Device.prototype.setProgramLibrary = function (programLib) {
@@ -371,20 +383,15 @@ pc.extend(pc.gfx, function () {
 
     /**
      * @function
-     * @name pc.gfx.Device#stop
-     * @author Will Eastcott
-     */
-    Device.prototype.stop = function() {
-        logINFO("Device stopped");
-    };
-
-    /**
-     * @function
      * @name pc.gfx.Device#updateBegin
+     * @description Marks the beginning of a block of rendering. Internally, this function
+     * binds the render target currently set on the device. This function should be matched
+     * with a call to pc.gfx.Device#updateEnd. Calls to pc.gfx.Device#updateBegin
+     * and pc.gfx.Device#updateEnd must not be nested.
      * @author Will Eastcott
      */
-    Device.prototype.updateBegin = function() {
-        logASSERT(this.canvas != null, "Device has not been started");
+    Device.prototype.updateBegin = function () {
+        logASSERT(this.canvas !== null, "Device has not been started");
 
         // Set the render target
         this.renderTarget.bind();
@@ -393,9 +400,12 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.Device#updateEnd
+     * @description Marks the end of a block of rendering. This function should be called
+     * after a matching call to pc.gfx.Device#updateBegin. Calls to pc.gfx.Device#updateBegin
+     * and pc.gfx.Device#updateEnd must not be nested.
      * @author Will Eastcott
      */
-    Device.prototype.updateEnd = function() {
+    Device.prototype.updateEnd = function () {
     };
 
     /**
@@ -403,8 +413,8 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Device#draw
      * @description Submits a graphical primitive to the hardware for immediate rendering.
      * @param {Object} options Optional options object that controls the behavior of the draw operation defined as follows:
-     * @param {number} options.numVertices The number of vertices to dispatch in the draw call.
-     * @param {boolean} options.useIndexBuffer True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+     * @param {Number} options.numVertices The number of vertices to dispatch in the draw call.
+     * @param {Boolean} options.useIndexBuffer True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * @param {pc.gfx.PrimType} options.primitiveType The type of primitive to render.
      * @example
      * // Render a single, unindexed triangle
@@ -415,7 +425,7 @@ pc.extend(pc.gfx, function () {
      * )};
      * @author Will Eastcott
      */
-    Device.prototype.draw = function(options) {
+    Device.prototype.draw = function (options) {
         // Check there is anything to draw
         if (options.numVertices > 0) {
             // Commit the vertex buffer inputs
@@ -445,7 +455,7 @@ pc.extend(pc.gfx, function () {
      * @description Clears the frame buffer of the currently set render target.
      * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
      * @param {Array} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
-     * @param {number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
+     * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
      * @param {pc.gfx.ClearFlag} options.flags The buffers to clear (the types being color, depth and stencil).
      * @example
      * // Clear color buffer to black and depth buffer to 1.0
@@ -465,7 +475,7 @@ pc.extend(pc.gfx, function () {
      * });
      * @author Will Eastcott
      */
-    Device.prototype.clear = function(options) {
+    Device.prototype.clear = function (options) {
         logASSERT(this.canvas != null, "Device has not been started");
 
         options = options || _defaultClearOptions;
@@ -575,6 +585,10 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.Device#setIndexBuffer
+     * @description Sets the current index buffer on the graphics device. On subsequent
+     * calls to pc.gfx.Device#draw, the specified index buffer will be used to provide
+     * index data for any indexed primitives.
+     * @param {pc.gfx.IndexBuffer} indexBuffer The index buffer to assign to the device.
      * @author Will Eastcott
      */
     Device.prototype.setIndexBuffer = function (indexBuffer) {
@@ -589,6 +603,11 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.Device#setVertexBuffer
+     * @description Sets the current vertex buffer for a specific stream index on the graphics
+     * device. On subsequent calls to pc.gfx.Device#draw, the specified vertex buffer will be 
+     * used to provide vertex data for any primitives.
+     * @param {pc.gfx.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
+     * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
      * @author Will Eastcott
      */
     Device.prototype.setVertexBuffer = function (vertexBuffer, stream) {
@@ -718,7 +737,7 @@ pc.extend(pc.gfx, function () {
      * available uniform vectors available after subtracting the number taken by a typical 
      * heavyweight shader. If a different number is required, it can be tuned via
      * pc.gfx.Device#setBoneLimit.
-     * @returns {number} The maximum number of bones that can be supported by the host hardware.
+     * @returns {Number} The maximum number of bones that can be supported by the host hardware.
      * @author Will Eastcott
      */
     Device.prototype.getBoneLimit = function () {
@@ -728,8 +747,10 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.Device#setBoneLimit
-     * @description
-     * @param {number} maxBones The maximum number of bones supported by a draw command.
+     * @description Specifies the maximum number of bones that the device can support on
+     * the current hardware. This function allows the default calculated value based on
+     * available vector uniforms to be overridden.
+     * @param {Number} maxBones The maximum number of bones supported by the host hardware.
      * @author Will Eastcott
      */
     Device.prototype.setBoneLimit = function (maxBones) {
@@ -739,6 +760,11 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.Device#enableValidation
+     * @description Activates additional validation within the engine. Internally,
+     * the WebGL error code is checked after every call to a WebGL function. If an error
+     * is detected, it will be output to the Javascript console. Note that enabling
+     * validation will have negative performance implications for the PlayCanvas runtime.
+     * @param {Boolean} enable true to activate validation and false to deactivate it.
      * @author Will Eastcott
      */
     Device.prototype.enableValidation = function (enable) {
@@ -761,9 +787,17 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.Device#validate
+     * @description Performs a one time validation on the error state of the underlying
+     * WebGL API. Note that pc.gfx.Device#enableValidation does not have to be activated
+     * for this function to operate. If an error is detected, it is output to the
+     * Javascript console and the function returns false. Otherwise, the function returns
+     * true. If an error is detected, it will have been triggered by a WebGL call between
+     * the previous and this call to pc.gfx.Device#validate. If this is the first call to
+     * pc.gfx.Device#validate, it detects errors since the device was created.
+     * @returns {Boolean} false if there was an error and true otherwise.
      * @author Will Eastcott
      */
-    Device.prototype.validate = function() {
+    Device.prototype.validate = function () {
         var gl = this.gl;
         var error = gl.getError();
 

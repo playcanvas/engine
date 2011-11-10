@@ -2,7 +2,7 @@ module("pc.gfx.ProgramLibrary", {
     setup: function () {
         canvas = document.createElement("canvas");
         device = new pc.gfx.Device(canvas);
-        device.setCurrent();
+        pc.gfx.Device.setCurrent(device);
     },
     teardown: function () {
         delete device;

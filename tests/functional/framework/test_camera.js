@@ -2,9 +2,7 @@ module("pc.fw.CameraComponent", {
     setup: function () {
         var canvas = document.getElementById("test-canvas");
         var graphicsDevice = new pc.gfx.Device(canvas);
-        var programLib = new pc.gfx.ProgramLibrary();
-        graphicsDevice.setCurrent();
-        graphicsDevice.setProgramLibrary(programLib);
+        pc.gfx.Device.setCurrent(graphicsDevice);
         
         var scene = new pc.scene.Scene();
         var registry = new pc.fw.ComponentSystemRegistry();
