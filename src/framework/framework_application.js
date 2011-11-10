@@ -152,15 +152,18 @@ pc.extend(pc.fw, function () {
     Application.prototype.render = function () {
         var inTools = !!window.pc.apps.designer;
         var context = this.context;
-        
+        var entity = context.systems.camera.getCurrent();
+        var camera = context.systems.camera.get(entity, "camera");
+
         context.root.syncHierarchy();
 
         pc.gfx.Device.setCurrent(this.graphicsDevice);
-        if(context.systems.camera._camera) {
+        
+        if(camera) {
             context.systems.camera.frameBegin();
 
             pc.fw.ComponentSystem.render(context, inTools);
-            context.scene.dispatch(context.systems.camera._camera);
+            context.scene.dispatch(camera);
             context.scene.flush();
 
             context.systems.camera.frameEnd();            
