@@ -154,9 +154,10 @@ pc.extend(pc.fw, function () {
     ComponentSystem.prototype.initialiseComponent = function (entity, componentData, data, properties) {
         this.addComponent(entity, componentData);
         
-        // Combine initialisation data with default data from new ComponentData
-        // initialisation data should overwrite default data
-        data = pc.extend(componentData, data);
+        // Copy the default data from the new ComponentData. (note, don't overwrite componentData here as that data is used for the previous value when calling set())
+        d = pc.extend({}, componentData);
+        // Overwrite defaults with initialization data
+        data = pc.extend(d, data);
         
         // initialise
         properties.forEach(function(value, index, arr) {

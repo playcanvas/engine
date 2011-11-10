@@ -55,7 +55,7 @@ pc.extend(pc.fw, function () {
      * @description Handle changes to the 'type' variable
      */
     PrimitiveComponentSystem.prototype.onSetType = function (entity, name, oldValue, newValue) {
-        var data = this._getComponentData(entity);
+        var data = this.getComponentData(entity);
         var transform;
         var scale;
         

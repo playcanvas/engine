@@ -57,6 +57,31 @@ test("deleteComponent: camera node deleted", function () {
     
 });
 
+test("setCurrent: has camera component", function () {
+    var comp = new pc.fw.CameraComponentSystem(context);
+    var entity = new pc.fw.Entity();
+    var data = comp.createComponent(entity);
+    
+    comp.setCurrent(entity);
+});
+
+test("setCurrent: doesn't have camera component", function () {
+    var comp = new pc.fw.CameraComponentSystem(context);
+    var entity = new pc.fw.Entity();
+    
+    raises(function () {
+        comp.setCurrent(entity);
+    }, "Entity must have camera component");
+});
+
+test("getCurrent", function () {
+    var comp = new pc.fw.CameraComponentSystem(context);
+    var entity = new pc.fw.Entity();
+    var data = comp.createComponent(entity);    
+    comp.setCurrent(entity);
+    
+    var entity = comp.getCurrent();
+});
 
 /*
 

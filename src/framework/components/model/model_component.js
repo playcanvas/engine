@@ -52,7 +52,6 @@ pc.extend(pc.fw, function () {
     ModelComponentSystem.prototype.deleteComponent = function (entity) {
         var component = this._getComponentData(entity);
         this.context.scene.removeModel(component.model);
-        //pc.fw.loader.json.close(component.model.getGraph().getUniqueID(), entity, this.context.components)
     
         if(component.model) {
             entity.removeChild(component.model.getGraph());
