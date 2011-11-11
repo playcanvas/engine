@@ -9,9 +9,7 @@ module('pc.fw.picking', {
 test("pick: created", function () {
     var canvas = document.getElementById("test-canvas");
     var graphicsDevice = new pc.gfx.Device(canvas);
-    var programLib = new pc.gfx.ProgramLibrary();
-    graphicsDevice.setCurrent();
-    graphicsDevice.setProgramLibrary(programLib);
+    pc.gfx.Device.setCurrent(graphicsDevice);
     var p = new pc.fw.picking.Picker(canvas, null, null);
 
     ok(p);        

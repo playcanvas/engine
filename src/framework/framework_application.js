@@ -50,7 +50,7 @@ pc.extend(pc.fw, function () {
         this.graphicsDevice = new pc.gfx.Device(canvas);
 
         // Activate the graphics device
-        this.graphicsDevice.setCurrent();        
+        pc.gfx.Device.setCurrent(this.graphicsDevice);        
 
         pc.gfx.post.initialize();
 
@@ -157,7 +157,7 @@ pc.extend(pc.fw, function () {
 
         context.root.syncHierarchy();
 
-        this.graphicsDevice.setCurrent();
+        pc.gfx.Device.setCurrent(this.graphicsDevice);
         
         if(camera) {
             context.systems.camera.frameBegin();
