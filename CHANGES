@@ -1,6 +1,14 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+
+-------
+v0.14.1
+-------
+* Fix for pc.fw.Application still referencing old _camera variable
+* Fix for Bloom Component still referencing old _camera variable
+* Fix for SkyBox Component still referencing old _camera variable 
+ 
 -------
 v0.14.0
 -------
