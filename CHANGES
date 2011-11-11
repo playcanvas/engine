@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.15.0
+-------
+* Changed pc.gfx.Device#setCurrent to a static function
+* Removed pc.gfx.Device#stop
+* Fix for Designer, Pick Components weren't working
+* Fix for Point Lights not working
+* Fix removed old code from cubemap
+
+-------
 v0.14.1
 -------
 * Fix for pc.fw.Application still referencing old _camera variable
