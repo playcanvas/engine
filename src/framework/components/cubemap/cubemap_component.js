@@ -44,9 +44,9 @@ pc.extend(pc.fw, function () {
                 transform = entity.getWorldTransform();
                 componentData = components[id].component;
 
-                this.context.components.camera.frameEnd();
+                this.context.systems.camera.frameEnd();
 
-                var model = this.context.components.model.get(entity, "model");
+                var model = this.context.systems.model.get(entity, "model");
                 if (model) {
                     this.context.scene.removeModel(model);
                 }
@@ -80,7 +80,7 @@ pc.extend(pc.fw, function () {
                     this.context.scene.addModel(model);
                 }
 
-                this.context.components.camera.frameBegin(false);
+                this.context.systems.camera.frameBegin(false);
             }
         }
 

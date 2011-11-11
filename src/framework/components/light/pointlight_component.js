@@ -87,6 +87,8 @@ pc.extend(pc.fw, function () {
         });
 
         this.renderable = _createGfxResources();
+        
+        this.bind("set_light", this.onSetLight.bind(this));
     };
         
     PointLightComponentSystem = PointLightComponentSystem.extendsFrom(pc.fw.ComponentSystem);
@@ -94,11 +96,14 @@ pc.extend(pc.fw, function () {
     PointLightComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PointLightComponentData();
 
-        componentData.light = new pc.scene.LightNode();
-        componentData.light.setType(pc.scene.LightType.POINT);
-        entity.addChild(componentData.light);
+        //componentData.light = new pc.scene.LightNode();
+        //componentData.light.setType(pc.scene.LightType.POINT);
 
-        this.initialiseComponent(entity, componentData, data, ['enable', 'color', 'radius']);
+        data = data || {};
+        data['light'] = new pc.scene.LightNode();
+        //entity.addChild(componentData.light);
+
+        this.initialiseComponent(entity, componentData, data, ['light', 'enable', 'color', 'radius']);
 
         return componentData;
     };
@@ -158,6 +163,15 @@ pc.extend(pc.fw, function () {
             }
         }
     };
+    
+    
+    PointLightComponentSystem.prototype.onSetLight = function (entity, name, oldValue, newValue) {
+        newValue.setType(pc.scene.LightType.POINT);
+        if (oldValue) {
+            entity.removeChild(oldValue);
+        }
+        entity.addChild(newValue);
+    }
     
     return {
         PointLightComponentSystem: PointLightComponentSystem

@@ -20,6 +20,18 @@ pc.extend(pc.fw, function () {
 
         this.initialiseComponent(entity, componentData, data, []);
 
+        var material = new pc.scene.Material();
+        material.setState({
+            cull: false,
+            depthTest: true,
+            depthWrite: true
+        });
+        var device = pc.gfx.Device.getCurrent();
+        var programs = device.getProgramLibrary();
+        material.setProgram(programs.getProgram("pick", { skinning: false }));
+        
+        this.set(entity, "pickMaterial", material);
+        
         return componentData;
     };
     
