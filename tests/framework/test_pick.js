@@ -20,3 +20,10 @@ test("new", function () {
     });
 });
 
+test("createComponent", function () {
+    var hc = new pc.fw.PickComponentSystem(context);
+    var en = new pc.fw.Entity();
+    var data = hc.createComponent(en);
+    
+    ok(data);
+});
