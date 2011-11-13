@@ -1,8 +1,7 @@
 pc.extend(pc.fw, function() {
     function AnimationComponentData() {
-        //this.url = null;
         this.asset = null;
-        this.animation = null;
+        this.animations = null;
         this.skeleton = null;
         this.model = null;
         this.speed = 1.0;

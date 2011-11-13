@@ -1,32 +1,39 @@
 pc.extend(pc.fw, function () {
-    // Private    
+    // Private
     function _onSet(entity, name, oldValue, newValue) {
         var component;
         var functions = {
             "asset": function (entity, name, oldValue, newValue) {
                 if (newValue) {
-                    this.loadAnimationAsset(entity, newValue);
-                }                
-            },
-            "animation": function (entity, name, oldValue, newValue) {
-                var componentData = this._getComponentData(entity);
-                if (componentData.animation) {
-                    delete componentData.animation;
-                    delete componentData.skeleton;
-                    componentData.animation = null;
-                    componentData.skeleton = null;
+                    this.loadAnimationAssets(entity, newValue);
                 }
+            },
+            "animations": function (entity, name, oldValue, newValue) {
+                var componentData = this._getComponentData(entity);
                 if (newValue) {
-                    var numAnimNodes = newValue.getNodes().length;
-                    componentData.skeleton = new pc.anim.Skeleton(numAnimNodes);
-                    componentData.skeleton.setLooping(componentData.loop);
-                    componentData.skeleton.setAnimation(newValue);
+                    componentData.animations = newValue;
+                    for (var animName in componentData.animations) {
+                        // Create skeletons
+                        var animation = componentData.animations[animName];
+                        var numNodes = animation.getNodes().length;
+                        componentData.skeleton = new pc.anim.Skeleton(numNodes);
+                        componentData.fromSkel = new pc.anim.Skeleton(numNodes);
+                        componentData.toSkel = new pc.anim.Skeleton(numNodes);
+
+                        // Set the first loaded animation as the current
+                        this.setAnimation(entity, animName);
+                        break;
+                    }
+                } else {
+                    return componentData.animations;
                 }
             },
             "loop":  function (entity, name, oldValue, newValue) {
                 var componentData = this._getComponentData(entity);
-                if (componentData.skeleton) {
-                    componentData.skeleton.setLooping(newValue);
+                if (newValue) {
+                    componentData.loop = true;
+                } else {
+                    return componentData.loop;
                 }
             }
         };
@@ -35,7 +42,7 @@ pc.extend(pc.fw, function () {
             functions[name].call(this, entity, name, oldValue, newValue);
         }
     };
-    
+
     /**
      * @name pc.fw.AnimationComponentSystem
      * @constructor Create a new AnimationComponentSystem
@@ -63,6 +70,8 @@ pc.extend(pc.fw, function () {
 
         delete componentData.animation;
         delete componentData.skeleton;
+        delete componentData.fromSkel;
+        delete componentData.toSkel;
 
         this.removeComponent(entity);
     };
@@ -78,39 +87,61 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
                     var model = this.context.systems.model.get(entity, "model");
                     if (model) {
+                        skeleton.setLooping(componentData.loop);
+
+                        // If the model changes, retarget the skeleton to drive the new
+                        // model hierarchy
                         if (model !== componentData.model) {
                             skeleton.setGraph(model.getGraph());
                             componentData.model = model;
                         }
-                        skeleton.addTime(dt * componentData.speed);
+
+                        if (componentData.blending) {
+                            componentData.blendTimeRemaining -= dt;
+                            if (componentData.blendTimeRemaining < 0.0) {
+                                componentData.blendTimeRemaining = 0.0;
+                            }
+                            skeleton.blend(componentData.fromSkel, componentData.toSkel, 1.0 - (componentData.blendTimeRemaining / componentData.blendTime));
+                        } else {
+                            // Advance the animation, interpolating keyframes at each animated node in
+                            // skeleton
+                            skeleton.addTime(dt * componentData.speed);
+                        }
+
+                        if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
+                            componentData.blending = false;
+                            skeleton.setAnimation(componentData.toSkel.getAnimation());
+                        }
+
                         skeleton.updateGraph();
                     }
                 }
             }
         }
     };
-    
-    AnimationComponentSystem.prototype.render = function (fn) {
-        // Animations are not 'rendered'
-    };
 	
-	AnimationComponentSystem.prototype.loadAnimationAsset = function (entity, guids) {
+	AnimationComponentSystem.prototype.loadAnimationAssets = function (entity, guids) {
 		var requests = guids.map(function (guid) {
 			return new pc.resources.AssetRequest(guid);
 		});
 		var options = {
     		batch: entity.getRequestBatch()
     	};
-    	
-		this.context.loader.request(requests, function (resources) {
+
+		this.context.loader.request(requests, function (assetResources) {
 			var requests = guids.map(function (guid) {
-				var asset = resources[guid];
+				var asset = assetResources[guid];
 				return new pc.resources.AnimationRequest(asset.getFileUrl());
 			});
-			this.context.loader.request(requests, function (resources) {
-				// TODO: What happens when there is more than one animation?
-				var animation = resources[requests[0].identifier];
-				this.set(entity, "animation", animation);
+			var assetNames = guids.map(function (guid) {
+				return assetResources[guid].name;
+			});
+			this.context.loader.request(requests, function (animResources) {
+                var animations = {};
+                for (var i = 0; i < requests.length; i++) {
+                    animations[assetNames[i]] = animResources[requests[i].identifier];
+                }
+                this.set(entity, "animations", animations);
 			}.bind(this), function (errors) {
 				
 			}, function (progress) {
@@ -123,8 +154,30 @@ pc.extend(pc.fw, function () {
 		}, options);		
 	}
 
-    AnimationComponentSystem.prototype.getAnimation = function (entity) {
-        return this._getComponentData(entity).animation;
+    AnimationComponentSystem.prototype.setAnimation = function (entity, name, blendTime) {
+        var componentData = this._getComponentData(entity);
+
+        componentData.prevAnim = componentData.currAnim;
+        componentData.currAnim = name;
+
+        componentData.blending = blendTime > 0;
+        if (componentData.blending) {
+            // Blend from the current time of the current animation to the start of 
+            // the newly specified animation over the specified blend time period.
+            componentData.blendTime = blendTime;
+            componentData.blendTimeRemaining = blendTime;
+            componentData.fromSkel.setAnimation(componentData.animations[componentData.prevAnim]);
+            componentData.fromSkel.addTime(componentData.skeleton.getCurrentTime());
+            componentData.toSkel.setAnimation(componentData.animations[componentData.currAnim]);
+            componentData.toSkel.addTime(0);
+        } else {
+            var animation = componentData.animations[componentData.currAnim];
+            componentData.skeleton.setAnimation(animation);
+        }
+
+        if (componentData.model) {
+            componentData.skeleton.setGraph(componentData.model.getGraph());
+        }
     };
 
     return {
