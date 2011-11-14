@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
-    var Asset = function (data) {
+    var Asset = function (prefix, data) {
+        this.prefix = prefix;
         if(data._id) {
             this._guid = data._id;
         } else {
@@ -23,11 +24,10 @@ pc.extend(pc.fw, function () {
     Asset.prototype.getFileUrl = function () {
         var url = this.file.url;
         var prefix = "";
-        // Non-exported files use the Corazon API to load, so they need an added prefix.
-        if (!this.file.exported) {
-            prefix = "/api"
+        // Non-exported files use the Corazon API to load, so they need an added prefix
+        if (this.prefix) {
+            prefix = this.prefix;
         }
-
         return pc.path.join(prefix, this.file.url);
     };
     
