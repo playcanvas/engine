@@ -23,9 +23,8 @@ pc.fw.picking = function() {
         this._pick = pick;
         
         var library = pc.gfx.Device.getCurrent().getProgramLibrary();
-        var pickProgram = library.getProgram("pick", { skinning: false });
         this._pickMaterial = new pc.scene.Material();
-        this._pickMaterial.setProgram(pickProgram);
+        this._pickMaterial.setProgramName('pick');
 
         var pickFrameBuffer = new pc.gfx.FrameBuffer(this._width, this._height, true);
         this._offscreenRenderTarget = new pc.gfx.RenderTarget(pickFrameBuffer);
