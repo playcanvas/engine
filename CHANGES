@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.17.0
+-------
+* Fixed picking for skinned geometry
+* Added guard to check of labels array is present in entity data. (It isn't in some older entities)
+
+-------
 v0.16.1
 -------
 * AssetResourceHandler supplies a url prefix so that if the code is hosted on a site other than platform.playcanvas.com it can still work
