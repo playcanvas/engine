@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.16.0
+-------
+* Added blending support to animation component.
+
+-------
 v0.15.0
 -------
 * Changed pc.gfx.Device#setCurrent to a static function
