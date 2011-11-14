@@ -17,7 +17,11 @@ pc.extend(pc.resources, function () {
 	};
 	
 	AssetResourceHandler.prototype.open = function (data, options) {
-		 return new pc.fw.Asset(data);
+	    var prefix = "";
+        if (this._depot) {
+            prefix = this._depot.assets.getServer().getBaseUrl();
+        }
+        return new pc.fw.Asset(prefix, data);
 	};
 	
 	var AssetRequest = function AssetRequest(identifier) {

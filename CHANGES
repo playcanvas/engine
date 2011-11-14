@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.16.1
+-------
+* AssetResourceHandler supplies a url prefix so that if the code is hosted on a site other than platform.playcanvas.com it can still work
+
+-------
 v0.16.0
 -------
 * Added blending support to animation component.
