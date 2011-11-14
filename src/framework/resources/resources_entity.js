@@ -45,9 +45,11 @@ pc.extend(pc.resources, function () {
         entity.setGuid(guid);
         entity.setLocalTransform(pc.math.mat4.clone(data.transform));
         
-        data.labels.forEach(function (label) {
-            entity.addLabel(label);
-        });
+        if (data.labels) {
+            data.labels.forEach(function (label) {
+                entity.addLabel(label);
+            });            
+        }
         
         // Parent and child data is stored temporarily until children are patched.
         entity.__parent = data.parent;
