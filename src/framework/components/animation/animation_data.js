@@ -1,12 +1,21 @@
 pc.extend(pc.fw, function() {
     function AnimationComponentData() {
-        //this.url = null;
-        this.asset = null;
-        this.animation = null;
-        this.skeleton = null;
-        this.model = null;
+        // Serialized
+        this.assets = null;
         this.speed = 1.0;
         this.loop = true;
+
+        // Non-serialized
+        this.animations = null;
+        this.skeleton = null;
+        this.model = null;
+        this.prevAnim = null;
+        this.currAnim = null;
+        this.fromSkel = null;
+        this.toSkel = null;
+        this.blending = false;
+        this.blendTime = 0;
+        this.blendTimeRemaining = 0;
     }
     AnimationComponentData = AnimationComponentData.extendsFrom(pc.fw.ComponentData);
 
@@ -18,7 +27,7 @@ editor.link.addComponentType("animation");
 
 editor.link.expose({
     system: "animation",
-    variable: "asset",
+    variable: "assets",
     displayName: "Asset",
     description: "Animation Asset",
     type: "asset",

@@ -1,41 +1,4 @@
 pc.extend(pc.fw, function () {
-    // Private    
-    function _onSet(entity, name, oldValue, newValue) {
-        var component;
-        var functions = {
-            "asset": function (entity, name, oldValue, newValue) {
-                if (newValue) {
-                    this.loadAnimationAsset(entity, newValue);
-                }                
-            },
-            "animation": function (entity, name, oldValue, newValue) {
-                var componentData = this._getComponentData(entity);
-                if (componentData.animation) {
-                    delete componentData.animation;
-                    delete componentData.skeleton;
-                    componentData.animation = null;
-                    componentData.skeleton = null;
-                }
-                if (newValue) {
-                    var numAnimNodes = newValue.getNodes().length;
-                    componentData.skeleton = new pc.anim.Skeleton(numAnimNodes);
-                    componentData.skeleton.setLooping(componentData.loop);
-                    componentData.skeleton.setAnimation(newValue);
-                }
-            },
-            "loop":  function (entity, name, oldValue, newValue) {
-                var componentData = this._getComponentData(entity);
-                if (componentData.skeleton) {
-                    componentData.skeleton.setLooping(newValue);
-                }
-            }
-        };
-
-        if(functions[name]) {
-            functions[name].call(this, entity, name, oldValue, newValue);
-        }
-    };
-    
     /**
      * @name pc.fw.AnimationComponentSystem
      * @constructor Create a new AnimationComponentSystem
@@ -46,27 +9,70 @@ pc.extend(pc.fw, function () {
     var AnimationComponentSystem = function AnimationComponentSystem (context) {
         context.systems.add("animation", this);
 
-        this.bind("set", pc.callback(this, _onSet));
+        // Handle changes to the 'animations' value
+        this.bind("set_animations", this.onSetAnimations.bind(this));
+        // Handle changes to the 'assets' value
+        this.bind("set_assets", this.onSetAssets.bind(this));
+        // Handle changes to the 'loop' value
+        this.bind("set_loop", this.onSetLoop.bind(this));
     };
     AnimationComponentSystem = AnimationComponentSystem.extendsFrom(pc.fw.ComponentSystem);
 
     AnimationComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AnimationComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['asset', 'loop']);
+        this.initialiseComponent(entity, componentData, data, ['assets', 'loop', 'speed']);
 
         return componentData;
     };
 
     AnimationComponentSystem.prototype.deleteComponent = function (entity) {
-        var componentData = this._getComponentData(entity);
+        var componentData = this.getComponentData(entity);
 
         delete componentData.animation;
         delete componentData.skeleton;
+        delete componentData.fromSkel;
+        delete componentData.toSkel;
 
         this.removeComponent(entity);
     };
 
+    AnimationComponentSystem.prototype.onSetAnimations = function (entity, name, oldValue, newValue) {
+        if (newValue) {
+            var componentData = this.getComponentData(entity);
+            for (var animName in componentData.animations) {
+                // Create skeletons
+                var animation = componentData.animations[animName];
+                var numNodes = animation.getNodes().length;
+                componentData.skeleton = new pc.anim.Skeleton(numNodes);
+                componentData.fromSkel = new pc.anim.Skeleton(numNodes);
+                componentData.toSkel = new pc.anim.Skeleton(numNodes);
+
+                componentData.skeleton.setLooping(componentData.loop);
+
+                // Set the first loaded animation as the current
+                this.setAnimation(entity, animName);
+                break;
+            }
+        }
+    };
+
+    AnimationComponentSystem.prototype.onSetAssets = function (entity, name, oldValue, newValue) {
+        if (newValue) {
+            this.loadAnimationAssets(entity, newValue);
+        }
+    };
+    
+    AnimationComponentSystem.prototype.onSetLoop = function (entity, name, oldValue, newValue) {
+        if (newValue) {
+            var componentData = this.getComponentData(entity);
+
+            if (componentData.skeleton) {
+                componentData.skeleton.setLooping(componentData.loop);
+            }
+        }
+    };
+    
     AnimationComponentSystem.prototype.update = function (dt) {
         var components = this._getComponents();
 
@@ -76,41 +82,62 @@ pc.extend(pc.fw, function () {
                 var skeleton = componentData.skeleton;
                 if (skeleton !== null) {
                     var entity = components[id].entity;
-                    var model = this.context.systems.model.get(entity, "model");
+                    var model = this.context.systems.model.get(entity, 'model');
                     if (model) {
+                        // If the model changes, retarget the skeleton to drive the new
+                        // model hierarchy
                         if (model !== componentData.model) {
                             skeleton.setGraph(model.getGraph());
                             componentData.model = model;
                         }
-                        skeleton.addTime(dt * componentData.speed);
+
+                        if (componentData.blending) {
+                            componentData.blendTimeRemaining -= dt;
+                            if (componentData.blendTimeRemaining < 0.0) {
+                                componentData.blendTimeRemaining = 0.0;
+                            }
+                            var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
+                            skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
+                        } else {
+                            // Advance the animation, interpolating keyframes at each animated node in
+                            // skeleton
+                            skeleton.addTime(dt * componentData.speed);
+                        }
+
+                        if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
+                            componentData.blending = false;
+                            skeleton.setAnimation(componentData.toSkel.getAnimation());
+                        }
+
                         skeleton.updateGraph();
                     }
                 }
             }
         }
     };
-    
-    AnimationComponentSystem.prototype.render = function (fn) {
-        // Animations are not 'rendered'
-    };
 	
-	AnimationComponentSystem.prototype.loadAnimationAsset = function (entity, guids) {
+	AnimationComponentSystem.prototype.loadAnimationAssets = function (entity, guids) {
 		var requests = guids.map(function (guid) {
 			return new pc.resources.AssetRequest(guid);
 		});
 		var options = {
     		batch: entity.getRequestBatch()
     	};
-    	
-		this.context.loader.request(requests, function (resources) {
+
+		this.context.loader.request(requests, function (assetResources) {
 			var requests = guids.map(function (guid) {
-				var asset = resources[guid];
+				var asset = assetResources[guid];
 				return new pc.resources.AnimationRequest(asset.getFileUrl());
 			});
-			this.context.loader.request(requests, function (resources) {
-				// TODO: What happens when there is more than one animation?
-				var animation = resources[requests[0].identifier];
-				this.set(entity, "animation", animation);
+			var assetNames = guids.map(function (guid) {
+				return assetResources[guid].name;
+			});
+			this.context.loader.request(requests, function (animResources) {
+                var animations = {};
+                for (var i = 0; i < requests.length; i++) {
+                    animations[assetNames[i]] = animResources[requests[i].identifier];
+                }
+                this.set(entity, "animations", animations);
 			}.bind(this), function (errors) {
 				
 			}, function (progress) {
@@ -123,8 +150,39 @@ pc.extend(pc.fw, function () {
 		}, options);		
 	}
 
-    AnimationComponentSystem.prototype.getAnimation = function (entity) {
-        return this._getComponentData(entity).animation;
+    /**
+     * @function 
+     * @name pc.fw.AnimationComponentSystem#setAnimation
+     * @description Sets the currently playing animation on the specified entity.
+     * @param {pc.fw.Entity} entity An Entity with a camera Component.
+     * @param {String} name The name of the animation asset to set.
+     * @param {Number} blendTime (Optional) The time in seconds to blend from the current
+     * animation state to the start of the animation being set.
+     */
+    AnimationComponentSystem.prototype.setAnimation = function (entity, name, blendTime) {
+        var componentData = this.getComponentData(entity);
+
+        componentData.prevAnim = componentData.currAnim;
+        componentData.currAnim = name;
+
+        componentData.blending = blendTime > 0;
+        if (componentData.blending) {
+            // Blend from the current time of the current animation to the start of 
+            // the newly specified animation over the specified blend time period.
+            componentData.blendTime = blendTime;
+            componentData.blendTimeRemaining = blendTime;
+            componentData.fromSkel.setAnimation(componentData.animations[componentData.prevAnim]);
+            componentData.fromSkel.addTime(componentData.skeleton.getCurrentTime());
+            componentData.toSkel.setAnimation(componentData.animations[componentData.currAnim]);
+            componentData.toSkel.addTime(0);
+        } else {
+            var animation = componentData.animations[componentData.currAnim];
+            componentData.skeleton.setAnimation(animation);
+        }
+
+        if (componentData.model) {
+            componentData.skeleton.setGraph(componentData.model.getGraph());
+        }
     };
 
     return {
