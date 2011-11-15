@@ -120,12 +120,17 @@ pc.extend(pc.fw, function () {
     };
     
     /**
+     * @function
      * @name pc.fw.ScriptComponentSystem#message
-     * @description Send a message (i.e. call a function) on the a script attached to a specific entity
+     * @description Send a message on the a script attached to a specific entity
+     * Sending a message to a script is equivalent to calling method of a specific script object
      * @param {pc.fw.Entity} entity The entity to send the message to
      * @param {String} name The name of the script to send the message to
      * @param {String} functionName The name of the function to call on the script
      * @returns The result of the function call
+     * @example
+     * // Call doDamage(10) on the script object called 'enemy' attached to enemy_entity.
+     * context.systems.script.message(enemy_entity, "enemy", "doDamage", 10);
      */
     ScriptComponentSystem.prototype.message = function (entity, name, functionName) {
         var args = pc.makeArray(arguments).slice(3);

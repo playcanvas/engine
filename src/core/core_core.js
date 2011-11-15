@@ -37,7 +37,8 @@ var pc = function () {
         },
              
         /**
-         * Convert an array-like object ( e.g. the Arguments object ) into a normal array
+         * Convert an array-like object into a normal array.
+         * For example, this is useful for converting the arguments object into an array. 
          * @param {Object} arr The array to convert
          * @return {Array} An array
          * @function
@@ -56,7 +57,7 @@ var pc = function () {
         },
 
         /**
-         * Call fn(index, arrayItem) for each item in the array
+         * [deprecated] Call fn(index, arrayItem) for each item in the array
          * @deprecated There is a built in function Array.map which should perform this task
          * @param {Array} arr The array to iterate over
          * @param {Function} fn The function to execute on each array item
@@ -73,7 +74,8 @@ var pc = function () {
         },
 
         /**
-         * Create a callback function which maintains the correct value for 'this'
+         * [deprecated] Create a callback function which maintains the correct value for 'this'
+         * @deprecated Use the built in function bind() on the Function object
          * @param {Object} self The object to use as 'this' for the callback
          * @param {Object} fn The function to callback
          * @function
@@ -144,7 +146,7 @@ var pc = function () {
         },
         
         /**
-         * Return true if the Object is undefined
+         * Return true if the Object is not undefined
          * @param {Object} o The Object to test
          * @function
          * @name pc.isDefined

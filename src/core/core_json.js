@@ -2,7 +2,10 @@ pc.extend(pc, function () {
     /**
      * @namespace
      * @name pc.json
-     * @description Extend versions of built-in json parsingenvironment 
+     * @description Extend versions of built-in json parsing environment
+     * pc.json.parse() is identical to JSON.parse()
+     * pc.json.stringify() will behave identically to the built in JSON.stringify() function expcet it will correctly handle Float32Arrays by converting them into standard arrays
+     * before encoding. 
      */
     var json = {
         /**
@@ -18,7 +21,7 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.json.stringify
-         * @description extend version of JSON.stringify which converts any Float32Arrays into normal Arrays before encoding
+         * @description Extended version of JSON.stringify which converts any Float32Arrays into normal Arrays before encoding
          * @param {Object} value
          * @param {Object} replacer
          * @param {Object} space
