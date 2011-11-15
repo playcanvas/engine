@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.17.1
+-------
+* Fixed GLSL picking broken in v0.17.0
+
+-------
 v0.17.0
 -------
 * Fixed picking for skinned geometry
