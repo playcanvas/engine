@@ -17,8 +17,7 @@ pc.gfx.programlib.pick = {
         code += "\n";
 
         // VERTEX SHADER INPUTS: UNIFORMS
-        code += "uniform mat4 matrix_projection;\n";
-        code += "uniform mat4 matrix_view;\n";
+        code += "uniform mat4 matrix_viewProjection;\n";
         code += "uniform mat4 matrix_model;\n";
         if (options.skin) {
             var numBones = pc.gfx.Device.getCurrent().getBoneLimit();
