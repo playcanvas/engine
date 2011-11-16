@@ -1,122 +1,91 @@
-/**
- * @namespace Contains logging methods.
- */
-var Log = {};
+pc.extend(pc, function () {
+    /**
+     * @namespace
+     * @name pc.log
+     * @description Provides logging services for PlayCanvas apps.
+     */
+    var log = {
+        /**
+         * Write text to the console
+         * @param {String} text
+         */
+        write: function (text) {
+            console.log(text);
+        },
 
-/**
- * Write text to the console
- * @param {String} text
- */
-Log.write = function (text) {
+        /**
+         * Starting logging to the console
+         * @param {String} text
+         */
+        open: function (text) {
+            pc.log.write(Date());
+            pc.log.info("Log opened");
+        },
 
-    console.log(text);
-};
+        /**
+         * Write text to the log preceded by 'INFO:'
+         * @param {String} text
+         */
+        info: function (text) {
+            pc.log.write("INFO:    " + text);
+        },
 
-/**
- * Starting logging to the console
- * @param {String} text
- */
-Log.open = function (text) {
+        /**
+         * Write text to the log preceded by 'DEBUG:'
+         * @param {String} text
+         */
+        debug: function (text) {
+            pc.log.write("DEBUG:   " + text);
+        },
 
-    Log.write(Date());
-    Log.info("Log opened");
-};
+        /**
+         * Write text to the log preceded by 'ERROR:'
+         * @param {String} text
+         */
+        error: function (text) {
+            pc.log.write("ERROR:   " + text);
+        },
 
-/**
- * Write text to the log preceded by 'INFO:'
- * @param {String} text
- */
-Log.info = function (text) {
+        /**
+         * Write text to the log preceded by 'WARNING:'
+         * @param {String} text
+         */
+        warning: function (text) {
+            pc.log.write("WARNING: " + text);
+        },
 
-    Log.write("INFO:    " + text);
-};
+        /**
+         * Write text to the log preceded by 'ALERT:' and pop up an alert dialog box with the text
+         * @param {String} text
+         */
+        alert: function (text) {
+            pc.log.write("ALERT:   " + text);
+            alert(text);
+        },
 
-/**
- * Write text to the log preceded by 'ERROR:'
- * @param {String} text
- */
-Log.error = function (text) {
+        /**
+         * If condition is false, then write text to the log preceded by 'ASSERT:' and pop up a dialog box.
+         * @param {Boolean} condition
+         * @param {String} text
+         */
+        assert: function (condition, text) {
+            if (condition === false) {
+                pc.log.write("ASSERT:  " + text);
+                alert("ASSERT failed: " + text);
+            }
+        }
+    };
 
-    Log.write("ERROR:   " + text);
-};
+    return {
+        log: log
+    };
+}());
 
-/**
- * Write text to the log preceded by 'WARNING:'
- * @param {String} text
- */
-Log.warning = function (text) {
+// Shortcuts to logging functions
+var logINFO = pc.log.info;
+var logDEBUG = pc.log.debug;
+var logWARNING = pc.log.warning;
+var logERROR = pc.log.error;
 
-    Log.write("WARNING: " + text);
-};
-
-/**
- * Write text to the log preceded by 'DEBUG:'
- * @param {String} text
- */
-Log.debug = function (text) {
-
-    Log.write("DEBUG:   " + text);
-};
-
-/**
- * Write text to the log preceded by 'ALERT:' and pop up an alert dialog box with the text
- * @param {String} text
- */
-Log.alert = function (text) {
-
-    Log.write("ALERT:   " + text);
-    alert(text);
-};
-
-/**
- * If condition is false, then write text to the log preceded by 'ASSERT:' and pop up a dialog box.
- * @param {Boolean} condition
- * @param {String} text
- */
-Log.assert = function (condition, text) {
-
-    if (condition === false) {
-
-        Log.write("ASSERT:  " + text);
-        alert("ASSERT failed: " + text);
-    }
-};
-
-// These function are designed so they can be optionally
-// 'compiled out' in release builds, like a CPP macro
-/**
- * @see Log.info
- */
-function logINFO(text) { 
-    Log.info(text); 
-}
-/**
- * @see Log.info
- */
-function logERROR(text) { 
-    Log.error(text); 
-}
-/**
- * @see Log.error
- */
-function logWARNING(text) { 
-    Log.warning(text); 
-}
-/**
- * @see Log.warning
- */
-function logDEBUG(text) { 
-    //Log.debug(text); 
-}
-/**
- * @see Log.debug
- */
-function logALERT(text) { 
-    Log.alert(text); 
-}
-/**
- * @see Log.alert
- */
-function logASSERT(condition, text) { 
-    Log.assert(condition, text); 
-}
+var logALERT = pc.log.alert;
+var logASSERT = pc.log.assert;
