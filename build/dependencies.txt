@@ -62,6 +62,7 @@
 ../src/scene/scene_geometry.js
 ../src/scene/scene_meshnode.js
 ../src/scene/scene_model.js
+../src/scene/scene_pick.js
 ../src/scene/procedural/scene_procedural.js
 ../src/scene/resources/resources_model.js
 ../src/scene/materialplugin/materialplugin_materialplugin.js

@@ -44,7 +44,7 @@ pc.extend(pc.fw, function () {
         this._link.listen(pc.callback(this, this._handleMessage));
         
         // Open the log
-        Log.open();
+        pc.log.open();
 
         // Create the graphics device
         this.graphicsDevice = new pc.gfx.Device(canvas);
