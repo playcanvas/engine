@@ -3,10 +3,9 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.RenderTarget
      * @class A render target is a viewport onto a frame buffer.
      * @constructor Creates a new render target. A render target is a viewport onto a frame
-     * buffer. If no frame buffer is passed to the constructor, the back buffer is assumed.
-     * If no viewport is specified, it is assumed that the entire frame buffer is rendered to.
-     * @param {pc.gfx.FrameBuffer} frameBuffer (Optional) The frame buffer bound to this render
-     * target.
+     * buffer. If no viewport is specified, it is assumed that the entire frame buffer is 
+     * rendered to.
+     * @param {pc.gfx.FrameBuffer} frameBuffer The frame buffer bound to this render target.
      * @param {Object} viewport (Optional) The viewport to set with the following members:
      * @param {Number} viewport.x The top left corner x coordinate in pixel space.
      * @param {Number} viewport.y The top left corner y coordinate in pixel space.
@@ -14,8 +13,10 @@ pc.extend(pc.gfx, function () {
      * @param {Number} viewport.height The viewport height in pixels.
      */
     var RenderTarget = function (frameBuffer, viewport) {
-        this._frameBuffer = frameBuffer || pc.gfx.FrameBuffer.getBackBuffer();
-        this._viewport = viewport;
+        this._frameBuffer = frameBuffer;
+        if (viewport) {
+            this._viewport = viewport;
+        }
     };
 
     /**

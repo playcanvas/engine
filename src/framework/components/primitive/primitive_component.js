@@ -101,11 +101,14 @@ pc.extend(pc.fw, function () {
         if (oldValue) {
             entity.removeChild(oldValue.getGraph());
             this.context.scene.removeModel(oldValue);
+            delete oldValue._entity;
         }
         
         if (newValue) {
             entity.addChild(newValue.getGraph());
             this.context.scene.addModel(newValue);
+            // Store the entity that owns this model
+            newValue._entity = entity;
         }
     };
     

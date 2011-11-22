@@ -11,48 +11,52 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.Scene
      * @class A scene.
      */
-	var Scene = function Scene() {
-	    // List of models
-	    this._models = [];
-	    this._tempVec = pc.math.vec3.create(0, 0, 0);
-	    
-	    // Initialize dispatch queues
-	    this._queues = {};
-	    this._priorities = [];
-	    this.addQueue({ name: "first", priority: 1.0 });
-	    this.addQueue({ name: "opaque", priority: 2.0 });
-	    this.addQueue({ name: "transparent", priority: 3.0 });
-	    this.addQueue({ name: "last", priority: 4.0 });
-	    this.addQueue({ name: "post", priority: 5.0 });
-	    this.addQueue({ name: "overlay", priority: 6.0 });
-	};
-	
-	Scene.prototype.addQueue = function (queue) {
-	    var sortQueuesOnPriority = function (queueA, queueB) {
-	        var priorityA = queueA.priority;
-	        var priorityB = queueB.priority;
-	        return priorityA > priorityB;
-	    }
-	
-	    this._queues[queue.name] = { renderFuncs: [], priority: queue.priority };
-	    this._priorities.push(queue);
-	    this._priorities.sort(sortQueuesOnPriority);
-	};
-	
-	Scene.prototype.getQueuePriority = function (queueName) {
-	    return this._queues[queueName].priority;
-	};
-	
-	Scene.prototype.addModel = function (model) {
-	    this._models.push(model);
-	};
-	
-	Scene.prototype.removeModel = function (model) {
-	    var index = this._models.indexOf(model);
-	    if (index !== -1) {
-	        this._models.splice(index, 1);
-	    }
-	};
+    var Scene = function Scene() {
+        // List of models
+        this._models = [];
+        this._tempVec = pc.math.vec3.create(0, 0, 0);
+
+        // Initialize dispatch queues
+        this._queues = {};
+        this._priorities = [];
+        this.addQueue({ name: "first", priority: 1.0 });
+        this.addQueue({ name: "opaque", priority: 2.0 });
+        this.addQueue({ name: "transparent", priority: 3.0 });
+        this.addQueue({ name: "last", priority: 4.0 });
+        this.addQueue({ name: "post", priority: 5.0 });
+        this.addQueue({ name: "overlay", priority: 6.0 });
+    };
+
+    Scene.prototype.addQueue = function (queue) {
+        var sortQueuesOnPriority = function (queueA, queueB) {
+            var priorityA = queueA.priority;
+            var priorityB = queueB.priority;
+            return priorityA > priorityB;
+        }
+
+        this._queues[queue.name] = { renderFuncs: [], priority: queue.priority };
+        this._priorities.push(queue);
+        this._priorities.sort(sortQueuesOnPriority);
+    };
+
+    Scene.prototype.getQueuePriority = function (queueName) {
+        return this._queues[queueName].priority;
+    };
+
+    Scene.prototype.getModels = function () {
+        return this._models;
+    };
+
+    Scene.prototype.addModel = function (model) {
+        this._models.push(model);
+    };
+
+    Scene.prototype.removeModel = function (model) {
+        var index = this._models.indexOf(model);
+        if (index !== -1) {
+            this._models.splice(index, 1);
+        }
+    };
 	
     /**
      * @function

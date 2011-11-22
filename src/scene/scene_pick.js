@@ -50,8 +50,7 @@ pc.extend(pc.scene, function () {
         this._pickMaterial = new pc.scene.Material();
         this._pickMaterial.setProgramName('pick');
 
-        // Look up table: pixel -> picked model
-        this._colorToModel = [];
+        this._models = null;
 
         this._clearOptions = {
             color: [1.0, 1.0, 1.0, 1.0],
@@ -106,8 +105,7 @@ pc.extend(pc.scene, function () {
             var index = pixel[0] << 16 | pixel[1] << 8 | pixel[2];
             // White is 'no selection'
             if (index !== 0xffffff) {
-                index = index >> 8;
-                var selectedModel = this._colorToModel[index];
+                var selectedModel = this._models[index];
                 if (selection.indexOf(selectedModel) === -1) {
                     selection.push(selectedModel);
                 }
@@ -138,6 +136,8 @@ pc.extend(pc.scene, function () {
      * @param {Array} models Array of models that are to be pickable.
      */
     Picker.prototype.prepare = function (camera, models) {
+        this._models = models;
+
         // Set the pick material on all models in the scene
         _setPickMaterial(models, this._pickMaterial);
 
@@ -154,10 +154,14 @@ pc.extend(pc.scene, function () {
         var count = 0;
         for (var i = 0; i < models.length; i++) {
             var model = models[i];
-            var pickColor = [(count >> 16) & 0xff, (count >> 8) & 0xff, count & 0xff, 1.0];
+            var pickColor = [
+                ((count >> 16) & 0xff) / 255.0, 
+                ((count >> 8) & 0xff) / 255.0, 
+                (count & 0xff) / 255.0, 
+                1.0
+            ];
             this._pickMaterial.setParameter("pick_color", pickColor);
             model.dispatch();
-            this._colorToModel[count] = model;
             count++;
         }
 

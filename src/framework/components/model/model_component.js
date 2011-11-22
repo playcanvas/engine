@@ -19,6 +19,8 @@ pc.extend(pc.fw, function () {
                 if(newValue) {
                     entity.addChild(newValue.getGraph());
                     this.context.scene.addModel(newValue);
+                    // Store the entity that owns this model
+                    newValue._entity = entity;
                 }
             }
         };
