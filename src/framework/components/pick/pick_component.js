@@ -97,7 +97,7 @@ pc.extend(pc.fw, function () {
 
         var model = new pc.scene.Model();
         model.getGeometries().push(geometry);
-        model.getMaterials().push(data.material);
+        model.getMaterials().push(componentData.material);
         model.getMeshes().push(mesh);
         model.setGraph(mesh);
 

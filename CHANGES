@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.18.1
+-------
+* [FIX] PickComponentSystem.addShape was referencing an undefined variable 'data'
+* [FIX] Missing var definitions were assigning to globals
+
+-------
 v0.18.0
 -------
 * Namespace logging functions
