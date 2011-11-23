@@ -120,7 +120,6 @@
 ../src/framework/livelink/livelink_open_entity_message.js
 ../src/framework/entity/entity_entity.js
 ../src/framework/asset/asset_asset.js
-../src/framework/picking/picking_picking.js
 ../src/framework/components/component_data.js
 ../src/framework/components/animation/animation_data.js
 ../src/framework/components/bloom/bloom_data.js
