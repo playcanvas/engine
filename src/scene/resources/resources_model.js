@@ -143,8 +143,7 @@ pc.extend(pc.resources, function () {
         // Light properties
         var type = this._jsonToLightType[lightData.light_type];
         light.setType(type);
-        light.setAmbient(lightData.ambient);
-        light.setDiffuse(lightData.diffuse);
+        light.setColor(lightData.color);
     
         return light;
     };
