@@ -1,17 +1,12 @@
 pc.extend(pc.fw, function () {
     function PrimitiveComponentData() {
+        // Serialized
         this.type = pc.shape.Type.BOX;
         this.color = "0xffffff";
-        this.material = new pc.scene.Material();
-        this.material.setState({
-            cull: false,
-            depthTest: true,
-            depthWrite: true
-        });
-        var device = pc.gfx.Device.getCurrent();
-        var programs = device.getProgramLibrary();
-        this.material.setProgramName('phong');
-        this.geometry = null;
+
+        // Non-serialized
+        this.material = null;
+        this.model = null;
     };
     
     PrimitiveComponentData = PrimitiveComponentData.extendsFrom(pc.fw.ComponentData);

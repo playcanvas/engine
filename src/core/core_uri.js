@@ -12,6 +12,7 @@ pc.extend(pc, function() {
          * @param {String} [options.hostpath] Combination of scheme, authority and path (e.g. http://www.example.com/users/example)
          * @param {String} [options.query] The query section, after the ?(e.g. http://example.com?<b>key=value&another=123</b>)
          * @param {String} [options.fragment] The fragment section, after the # (e.g. http://example.com#<b>fragment/data</b>)
+         * @returns {String} A URI string
          */
         createURI: function (options) {
             var s = "";

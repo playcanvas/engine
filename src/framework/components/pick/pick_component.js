@@ -10,6 +10,10 @@ pc.extend(pc.fw, function () {
     var PickComponentSystem = function PickComponentSystem(context) {
         context.systems.add("pick", this);    
 
+        // Dictionary of layers: name -> array of models
+        this.layers = {
+            'default': []
+        };
         this.display = false;
     };
     
@@ -18,97 +22,119 @@ pc.extend(pc.fw, function () {
     PickComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PickComponentData();
 
+        // This material is swapped out for a pick material by the pc.scene.Picker. However,
+        // since it's useful to debug the pick shapes visually, we'll put a default phong
+        // material on the pick shapes.
+        var material = new pc.scene.Material();
+        material.setProgramName('phong');
+        material.setParameter('material_diffuse', [1,1,1]);
+        material.setParameter('material_ambient', [1,1,1]);
+        material.setParameter('material_specular', [0,0,0]);
+        material.setParameter('material_emissive', [0,0,0]);
+        material.setParameter('material_shininess', 0);
+        material.setParameter('material_opacity', 1)
+        componentData.material = material;
+
         this.initialiseComponent(entity, componentData, data, []);
 
-        var material = new pc.scene.Material();
-        material.setState({
-            cull: false,
-            depthTest: true,
-            depthWrite: true
-        });
-        var device = pc.gfx.Device.getCurrent();
-        var programs = device.getProgramLibrary();
-        material.setProgram(programs.getProgram("pick", { skinning: false }));
-        
-        this.set(entity, "pickMaterial", material);
-        
         return componentData;
     };
     
     PickComponentSystem.prototype.deleteComponent = function (entity) {
-        var componentData = this._getComponentData(entity);        
-        componentData.shapes = [];
-        componentData.geometries = [];
-        
+        var componentData = this.getComponentData(entity);        
+
+        this.deleteShapes(entity);
+
         this.removeComponent(entity);
     };
     
     PickComponentSystem.prototype.render = function () {
         if (this.display) {
-            this.draw();
-        }
-    };
-    
-    PickComponentSystem.prototype.draw = function (prefunc) {
-        var components = this._getComponents();
-        
-        for (var id in components) {
-            if (components.hasOwnProperty(id)) {
-                var entity = components[id].entity;
-                var componentData = components[id].component;
-                var numGeometries = componentData.geometries.length;
-
-                for (var index = 0; index < numGeometries; index++) {
-                    if (prefunc) {
-                        prefunc(entity, componentData, index);
+            // Render the pick shapes here
+            var componentData;
+            var components = this._getComponents();
+            for (var id in components) {
+                if (components.hasOwnProperty(id)) {
+                    var entity = components[id].entity;
+                    componentData = components[id].component;
+                    for (var i = 0; i < componentData.shapes.length; i++) {
+                        var model = componentData.shapes[i].model;
+                        model.dispatch();
                     }
-                    var transform = componentData.shapes[index].transform;
-                    componentData.geometries[index].dispatch(transform);
                 }
             }
         }
     };
-    
-    PickComponentSystem.prototype.addShape = function(entity, shape) {
-        var componentData = this._getComponentData(entity);
+
+    PickComponentSystem.prototype.addShape = function (entity, shape, shapeName) {
+        var componentData = this.getComponentData(entity);
 
         var geometry = null;
         switch (shape.type) {
             case pc.shape.Type.BOX:
                 geometry = pc.scene.procedural.createBox({
-                    material: componentData.pickMaterial, 
+                    material: componentData.material, 
                     halfExtents: shape.halfExtents
                 });
                 break;
             case pc.shape.Type.SPHERE:
                 geometry = pc.scene.procedural.createSphere({
-                    material: componentData.pickMaterial,
+                    material: componentData.material,
                     radius: shape.radius
                 });
                 break;
             case pc.shape.Type.TORUS:
                 geometry = pc.scene.procedural.createTorus({
-                    material: componentData.pickMaterial,
+                    material: componentData.material,
                     tubeRadius: shape.iradius,
                     ringRadius: shape.oradius
                 });
                 break;
         }
-        componentData.shapes.push(shape);
-        componentData.geometries.push(geometry);
-    };
-    
-    PickComponentSystem.prototype.getShape = function(entity, index) {
-        return this._getComponentData(entity).shapes[index];
+
+        var mesh = new pc.scene.MeshNode();
+        mesh.setGeometry(geometry);
+
+        var model = new pc.scene.Model();
+        model.getGeometries().push(geometry);
+        model.getMaterials().push(data.material);
+        model.getMeshes().push(mesh);
+        model.setGraph(mesh);
+
+        model._entity = entity;
+
+        componentData.shapes.push({
+            shape: shape,
+            shapeName: shapeName,
+            model: model
+        });
+
+        if (this.layers[componentData.layer] === undefined) {
+            this.layers[componentData.layer] = [];
+        }
+        this.layers[componentData.layer].push(model);
     };
 
-    PickComponentSystem.prototype.setRenderColor = function (entity, color) {
-        var componentData = this._getComponentData(entity);
-        componentData.pickMaterial.setParameter("pick_color", color);
+    PickComponentSystem.prototype.deleteShapes = function (entity) {
+        var componentData = this.getComponentData(entity);
+
+        var layerModels = this.layers[componentData.layer];
+        for (var i = 0; i < componentData.shapes.length; i++) {
+            var model = componentData.shapes[i].model;
+            var index = layerModels.indexOf(model);
+            if (index !== -1) {
+                layerModels.splice(index, 1);
+            }
+        }
+
+        componentData.shapes = [];
     };
-    
+
+    PickComponentSystem.prototype.getLayerModels = function (layerName) {
+        return this.layers[layerName];
+    };
+
     return {
         PickComponentSystem: PickComponentSystem
     };
-    
 }());

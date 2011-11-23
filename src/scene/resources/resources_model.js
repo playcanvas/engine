@@ -143,8 +143,7 @@ pc.extend(pc.resources, function () {
         // Light properties
         var type = this._jsonToLightType[lightData.light_type];
         light.setType(type);
-        light.setAmbient(lightData.ambient);
-        light.setDiffuse(lightData.diffuse);
+        light.setColor(lightData.color);
     
         return light;
     };
@@ -406,6 +405,11 @@ pc.extend(pc.resources, function () {
             var device = pc.gfx.Device.getCurrent();
             var maxBones = device.getBoneLimit();
             if (geomData.inverse_bind_pose.length > maxBones) {
+                // FIXME!!: This is here to duplicate the incoming JSON because requests to
+                // the same URL passes in the same data, making the assumption it is read
+                // only.  Unfortunately, the skin partition code writes to this data.  A
+                // good fix would be to make skin partitioning a geometry utility library.
+                geomData = pc.extend({}, geomData);
                 this._partitionSkinnedGeometry(geomData, maxBones);
             }
     

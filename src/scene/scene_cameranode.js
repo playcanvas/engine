@@ -22,7 +22,7 @@ pc.extend(pc.scene, function () {
         this._viewProjMat = pc.math.mat4.create();
 
         // Create a full size viewport onto the backbuffer
-        this._renderTarget = new pc.gfx.RenderTarget();
+        this._renderTarget = new pc.gfx.RenderTarget(pc.gfx.FrameBuffer.getBackBuffer());
 
         // Create the clear options
         this._clearOptions = {

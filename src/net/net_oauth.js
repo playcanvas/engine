@@ -28,10 +28,10 @@ pc.extend(pc.net, function () {
                 this.accessToken = msg.data['access_token'];
                 success(msg.data['access_token']);
             } else {
-                if (msg.data.error) {
-                    logERROR(msg.data.error);
+                if (msg.data['error']) {
+                    logERROR(msg.data['error']);
                 } else {
-                    logWARN("Invalid message posted to Corazon API");
+                    logWARNING("Invalid message posted to Corazon API");
                 }
             }
             
