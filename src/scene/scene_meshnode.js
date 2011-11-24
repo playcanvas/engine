@@ -52,10 +52,9 @@ pc.extend(pc.scene, function () {
                     var invBindPose = geom.getInverseBindPose();
                     pc.math.mat4.multiply(this._bones[i]._wtm, invBindPose[i], matrixPalette[i]);
                 }
-                geom.dispatch(this._ltm);
-            } else {
-                geom.dispatch(this._wtm);
-            }
+            } 
+
+            geom.dispatch(this._wtm);
         }
     };
 
