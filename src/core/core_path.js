@@ -65,7 +65,16 @@ pc.path = function () {
             var parts = path.split(pc.path.delimiter);
             return parts.slice(0,parts.length-1).join(pc.path.delimiter);
         },
-
+        
+        getExtension: function (path) {
+            var ext = path.split(".").pop();
+            if (ext !== path) {
+                return "." + ext;
+            } else {
+                return "";
+            }
+        },
+        
         isRelativePath: function (s) {
             return s.charAt(0) !== "/" && s.match(/:\/\//) === null;
         },

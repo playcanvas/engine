@@ -18,7 +18,10 @@ pc.extend(pc.net, function () {
             JSON : "application/json",
             PNG : "image/png",
             TEXT : "text/plain",
-            XML : "application/xml"
+            XML : "application/xml",
+            WAV : "audio/x-wav",
+            OGG : "application/ogg",
+            MP3 : "audio/mpeg"
         },
         
         /**
@@ -205,7 +208,8 @@ pc.extend(pc.net, function () {
             
             xhr.open(method, url, options.async);
             xhr.withCredentials = true;
-
+            xhr.responseType = options.responseType || this.guessResponseType(url);
+            
             // Set the http headers
             for (var header in options.headers) {
                 if (options.headers.hasOwnProperty(header)) {
@@ -235,6 +239,25 @@ pc.extend(pc.net, function () {
             
             // Return the request object as it can be handy for blocking calls
             return xhr;
+        },
+        
+        guessResponseType: function (url) {
+            var arraybuffer = ['.wav', '.ogg', '.mp3'];
+            var ext = pc.path.getExtension(url);
+            
+            if(arraybuffer.indexOf(ext) >= 0) {
+                return "arraybuffer";
+            }
+            
+            return "text";
+        },
+        
+        isBinaryContentType: function (contentType) {
+            if ([this.ContentType.WAV, this.ContentType.OGG, this.ContentType.MP3].indexOf(contentType) >= 0) {
+                return true;
+            }
+            
+            return false;            
         },
         
         onReadyStateChange: function (method, url, options, xhr) {
@@ -279,8 +302,9 @@ pc.extend(pc.net, function () {
             if (contentType == this.ContentType.JSON || pc.string.endsWith(url, ".json")) {
                 // It's a JSON response
                 response = JSON.parse(xhr.responseText);
-            }
-            else 
+            } else if (this.isBinaryContentType(contentType)) {
+                response = xhr.response;
+            } else {
                 if (xhr.responseXML != null) {
                     // It's an XML response
                     response = xhr.responseXML;
@@ -289,6 +313,7 @@ pc.extend(pc.net, function () {
                     // It's raw data
                     response = xhr.responseText;
                 }
+            }
             options.success(response, xhr.status, xhr);
         },
         
