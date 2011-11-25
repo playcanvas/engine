@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.20.0
+-------
+[FIX] Skinning should now work in all cases.
+[FIX] Fix for some keys (e.g. 'n' and 'z') not working in input handler.
+
+-------
 v0.19.0
 -------
 * Added support for fetching binary data in pc.net.http

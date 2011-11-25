@@ -132,12 +132,11 @@ pc.gfx.programlib.phong = {
         code += "void main(void)\n";
         code += "{\n";
         // Prepare attribute values into the right formats for the vertex shader
-        // and transform into world space
-        code += "    vec4 positionW = matrix_model * vec4(vertex_position, 1.0);\n";
+        code += "    vec4 position = vec4(vertex_position, 1.0);\n";
         if (lighting || options.cubeMap || options.sphereMap) {
-            code += "    vec4 normalW   = matrix_model * vec4(vertex_normal, 0.0);\n";
+            code += "    vec4 normal   = vec4(vertex_normal, 0.0);\n";
             if (options.bumpMap || options.normalMap || options.parallaxMap) {
-                code += "    vec4 tangentW  = matrix_model * vec4(vertex_tangent.xyz, 0.0);\n";
+                code += "    vec4 tangent  = vec4(vertex_tangent.xyz, 0.0);\n";
             }
         }
         code += "\n";
@@ -145,30 +144,36 @@ pc.gfx.programlib.phong = {
         // Skinning is performed in world space
         if (options.skin) {
             // Skin the necessary vertex attributes
-            code += "    vec4 skinned_position;\n";
-            code += "    skinned_position  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * positionW;\n";
-            code += "    skinned_position += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * positionW;\n";
-            code += "    skinned_position += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * positionW;\n";
-            code += "    skinned_position += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * positionW;\n";
-            code += "    positionW = skinned_position;\n\n";
+            code += "    vec4 positionW;\n";
+            code += "    positionW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * position;\n";
+            code += "    positionW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * position;\n";
+            code += "    positionW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * position;\n";
+            code += "    positionW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * position;\n\n";
 
             if (lighting || options.cubeMap || options.sphereMap) {
-                code += "    vec4 skinned_normal;\n";
-                code += "    skinned_normal  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * normalW;\n";
-                code += "    skinned_normal += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * normalW;\n";
-                code += "    skinned_normal += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * normalW;\n";
-                code += "    skinned_normal += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * normalW;\n";
-                code += "    normalW = skinned_normal;\n\n";
+                code += "    vec4 normalW;\n";
+                code += "    normalW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * normal;\n";
+                code += "    normalW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * normal;\n";
+                code += "    normalW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * normal;\n";
+                code += "    normalW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * normal;\n\n";
 
                 if (options.bumpMap || options.normalMap || options.parallaxMap) {
-                    code += "    vec4 skinned_tangent;\n";
-                    code += "    skinned_tangent  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * tangentW;\n";
-                    code += "    skinned_tangent += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * tangentW;\n";
-                    code += "    skinned_tangent += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * tangentW;\n";
-                    code += "    skinned_tangent += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * tangentW;\n";
-                    code += "    tangentW = skinned_tangent;\n\n";
+                    code += "    vec4 tangentW;\n";
+                    code += "    tangentW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * tangent;\n\n";
                 }
             }
+        } else {
+            code += "    vec4 positionW = matrix_model * position;\n";
+            if (lighting || options.cubeMap || options.sphereMap) {
+                code += "    vec4 normalW   = matrix_model * normal;\n";
+                if (options.bumpMap || options.normalMap || options.parallaxMap) {
+                    code += "    vec4 tangentW  = matrix_model * tangent;\n";
+                }
+            }
+            code += "\n";
         }
 
         // Transform to vertex position to screen
