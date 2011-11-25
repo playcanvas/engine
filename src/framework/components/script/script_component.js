@@ -51,12 +51,12 @@ pc.extend(pc.fw, function () {
     };
 
     ScriptComponentSystem.prototype.update = function (dt) {
-        var instance;
-        var i;
+        var id;
         var entity;
         var component;
         var components = this._getComponents();
-        var length = components.length;
+        var data;
+	var length = components.length;
         
         for (id in components) {
             if (components.hasOwnProperty(id)) {

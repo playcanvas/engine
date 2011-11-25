@@ -3,6 +3,30 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.19.0
+-------
+* Added support for fetching binary data in pc.net.http
+* Added pc.path.getExtension(filename) function
+
+-------
+v0.18.1
+-------
+* [FIX] PickComponentSystem.addShape was referencing an undefined variable 'data'
+* [FIX] Missing var definitions were assigning to globals
+
+-------
+v0.18.0
+-------
+* Namespace logging functions
+* Update primitive component to create models and add them to the scene to render
+* Move picking functionality into the Scene API
+* Picking API is removed from pc.fw, use pc.scene.Picker
+* Enable picking of primitives
+* [FIX] bug when loading multiple copies of the same skin when skin partitioning is active
+* [FIX] Viewport of back buffer render targets now automatically resize
+* [FIX] Updated references to old light API on model load
+
+-------
 v0.17.1
 -------
 * Fixed GLSL picking broken in v0.17.0

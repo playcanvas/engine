@@ -94,7 +94,7 @@ pc.extend(pc.input, function(){
         }
         
         // Convert to hex and add leading 0's
-        hex = keyCode.toString(16);
+        hex = keyCode.toString(16).toUpperCase();
         length = hex.length;
         for (count = 0; count < (4 - length); count++) {
             hex = '0' + hex;
