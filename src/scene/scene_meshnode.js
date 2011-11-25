@@ -35,18 +35,15 @@ pc.extend(pc.scene, function () {
     /**
      * @function
      * @name pc.scene.MeshNode#dispatch
-     * @description Dispatches the mesh's assigned geometry according to the transformation
-     * properties of the mesh node. If the mesh is not skinned, the geometry is rendered with
-     * the world transformation matrix of the mesh node. If the mesh is skinned, the geometry
-     * is rendered with the local transformation matrix.
+     * @description Dispatches the mesh's assigned geometry with the mesh's world transformation
+     * matrix.
      * @author Will Eastcott
      */
     MeshNode.prototype.dispatch = function () {
         var geom = this._geometry;
         if (geom !== null) {
-            var skinned = geom.isSkinned();
-            if (skinned) {
-                var numBones;
+            if (geom.isSkinned()) {
+                var i, numBones;
                 for (i = 0, numBones = this._bones.length; i < numBones; i++) {
                     var matrixPalette = geom.getMatrixPalette();
                     var invBindPose = geom.getInverseBindPose();
