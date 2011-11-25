@@ -40,6 +40,11 @@ function createWebKitStyleKeyboardEvent(ch, type) {
     };    
 }
 
+function triggerKeyEvent() {
+    var e = document.createEvent("KeyboardEvent");
+    e.initKeyboardEvent
+    
+}
 function simFullKeyPressAndRelease(k, ch) {
     simKeyDown(k, ch);
     simKeyPress(k, ch);
@@ -190,6 +195,12 @@ test("isPressed: special character", function () {
    
    ok(k.isPressed(39));
 
+});
+
+test("toKeyIdentifier: output is uppercase", function () {
+    var k = new pc.input.Keyboard(document.body);
+    var id = k.toKeyIdentifier(pc.input.KEY_N);
+    equal(id, "U+004E");
 });
 
 test("toKeyIdentifier: Upper and lowercase", function () {
