@@ -122,7 +122,7 @@ pc.extend(pc.fw, function () {
     /**
      * @function
      * @name pc.fw.ScriptComponentSystem#send
-     * @description Send a message to a script attached to a specific entity
+     * @description Send a message to a script attached to a specific entity.
      * Sending a message to a script is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present.
      * @param {pc.fw.Entity} entity The entity to send the message to
      * @param {String} name The name of the script to send the message to
@@ -152,7 +152,7 @@ pc.extend(pc.fw, function () {
     /**
      * @function
      * @name pc.fw.ScriptComponentSystem#broadcast
-     * @description Send a message to all Script Objects with a specific name
+     * @description Send a message to all Script Objects with a specific name.
      * Sending a message is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present
      * @param {String} name The name of the script to send the message to
      * @param {String} functionName The name of the functio nto call on the Script Object
