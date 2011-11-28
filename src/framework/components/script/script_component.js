@@ -1,31 +1,4 @@
 pc.extend(pc.fw, function () {
-    
-    function _onSet (entity, name, oldValue, newValue) {
-        var component;
-        var functions = {
-            "urls": function(entity, name, oldValue, newValue){
-                var urls = newValue;
-                var prefix = pc.content.source || "";
-                if(pc.type(urls) == "string") {
-                    urls = urls.split(",");
-                }
-                // Load and register new scripts and instances
-                urls.forEach(function (url, index, arr) {
-                    var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
-                    this.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
-                        var ScriptType = resources[url];
-                        instance = new ScriptType(entity);
-                        this.registerInstance(entity, url, ScriptType._pcScriptName, instance);                        
-                    }.bind(this));
-                }, this);
-            }
-        };
-        
-        if(functions[name]) {
-            functions[name].call(this, entity, name, oldValue, newValue);
-        }
-    }
-    
     /**
      * @name pc.fw.ScriptComponentSystem
      * @constructor Create a new ScriptComponentSystem
@@ -37,8 +10,8 @@ pc.extend(pc.fw, function () {
         this._name = "script";
         context.systems.add(this._name, this);
         pc.extend(this, pc.events);
-
-        this.bind("set", pc.callback(this, _onSet));
+        
+        this.bind("set_urls", this.onSetUrls.bind(this));
     }
     ScriptComponentSystem = ScriptComponentSystem.extendsFrom(pc.fw.ComponentSystem);
 
@@ -56,7 +29,7 @@ pc.extend(pc.fw, function () {
         var component;
         var components = this._getComponents();
         var data;
-	var length = components.length;
+        var length = components.length;
         
         for (id in components) {
             if (components.hasOwnProperty(id)) {
@@ -102,10 +75,37 @@ pc.extend(pc.fw, function () {
                 }
             }
         }
-    }
-   
-    ScriptComponentSystem.prototype.registerInstance = function(entity, url, name, instance) {
-        var data = this._getComponentData(entity);
+    };
+    
+    ScriptComponentSystem.prototype.onSetUrls = function(entity, name, oldValue, newValue) {
+        var urls = newValue;
+        var prefix = pc.content.source || "";
+        if(pc.type(urls) == "string") {
+            urls = urls.split(",");
+        }
+        // Load and register new scripts and instances
+        urls.forEach(function (url, index, arr) {
+            var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
+            this.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
+                var ScriptType = resources[url];
+                instance = new ScriptType(entity);
+                this._registerInstance(entity, url, ScriptType._pcScriptName, instance);                        
+            }.bind(this));
+        }, this);
+    };
+    
+    /**
+     * @name pc.fw.ScriptComponentSystem#_registerInstance
+     * @function
+     * @private
+     * @description Register an instance of a Script Object to an entity.
+     * @param {pc.fw.Entity} entity The entity to register the instance to
+     * @param {String} url The url the script was downloaded from
+     * @param {String} name Then name declared in the script
+     * @param {Object} instance An instance of the Script Object declared in the downloaded script
+     */
+    ScriptComponentSystem.prototype._registerInstance = function(entity, url, name, instance) {
+        var data = this.getComponentData(entity);
         var instances = this.get(entity, "instances");
         if (instances[name]) {
             throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, instances[name].url, entity.getGuid()));
