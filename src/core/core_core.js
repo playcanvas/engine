@@ -18,9 +18,7 @@ var pc = function () {
          * Storage for exported entity data
          */
         data: {},
-        
-        content: {},
-        
+                
         /**
          * @private
          * @function

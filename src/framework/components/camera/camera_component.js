@@ -41,7 +41,7 @@ pc.extend(pc.fw, function () {
      * The CameraComponentSystem allows access to all individual Camera Components. 
      * It also manages the currently active Camera, using setCurrent() and getCurrent() and controls the rendering part of the frame 
      * with beginFrame()/endFrame().
-     * @see {pc.fw.CameraComponentData} for properties of the Camera Component
+     * See {@link pc.fw.CameraComponentData} for properties of the Camera Component
      * @constructor Create a new CameraComponentSystem
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
