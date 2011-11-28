@@ -1,14 +1,61 @@
 pc.extend(pc.fw, function () {
+    /**
+     * @name pc.fw.CameraComponentData
+     * @class ComponentData structure for Camera components.
+     * @extends pc.fw.ComponentData
+     */
     CameraComponentData = function () {
+        /**
+         * @name pc.fw.CameraComponentData#camera
+         * @description The {pc.scene.CameraNode} used to render the scene
+         */
         this.camera = null;        
+        /**
+         * @name pc.fw.CameraComponentData#clearColor
+         * @description The color used to clear the canvas to before the camera starts to render
+         */
         this.clearColor = "0xbabab1ff";
+        /**
+         * @name pc.fw.CameraComponentData#nearClip
+         * @description The distance from the camera before which no rendering will take place
+         */
         this.nearClip = 1;
+        /**
+         * @name pc.fw.CameraComponentData#farClip
+         * @description The distance from the camera after which no rendering will take place
+         */
         this.farClip = 100000;
+        /**
+         * @name pc.fw.CameraComponentData#fov
+         * @description The Y-axis field of view of the camera, in degrees. Used for {pc.scene.Projection.PERSPECTIVE} cameras only.
+         */
         this.fov = 45;
+        /**
+         * @name pc.fw.CameraComponentData#viewWindowX
+         * @description The size of the view window in the X-axis. Used for {pc.scene.Projection.ORTHOGRAPHIC} cameras only.
+         */
         this.viewWindowX = 1.0;
+        /**
+         * @name pc.fw.CameraComponentData#viewWindowY
+         * @description The size of the view window in the Y-axis. Used for {pc.scene.Projection.ORTHOGRAPHIC} cameras only.
+         */
         this.viewWindowY = 1.0;
+        /**
+         * @name pc.fw.CameraComponentData#projection
+         * @description The type of projection used to render the camera.
+         */
         this.projection = pc.scene.Projection.PERSPECTIVE;
+        /**
+         * @name pc.fw.CameraComponentData#activate
+         * @description If true the {pc.fw.CameraComponentSystem} will setCurrent() for this camera as soon as it is loaded.
+         * @type Boolean
+         */
         this.activate = true;
+        /**
+         * @name pc.fw.CameraComponentData#offscreen
+         * @description If true, the camera will render to an offscreen buffer.
+         * @type Boolean
+         */
         this.offscreen = false;
     };
     CameraComponentData.extendsFrom(pc.fw.ComponentData);

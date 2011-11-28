@@ -37,17 +37,12 @@ pc.extend(pc.fw, function () {
     
     /**
      * @name pc.fw.CameraComponentSystem
+     * @class A Camera Component is used to render the scene.
+     * The CameraComponentSystem allows access to all individual Camera Components. 
+     * It also manages the currently active Camera, using setCurrent() and getCurrent() and controls the rendering part of the frame 
+     * with beginFrame()/endFrame().
+     * @see {pc.fw.CameraComponentData} for properties of the Camera Component
      * @constructor Create a new CameraComponentSystem
-     * @class A Camera Component is used to render the scene. The CameraComponentSystem contains
-     * a stack of cameras and the top camera is the one in use. Add and remove cameras to the stack
-     * using push() and pop()
-     * <h3 class="heading">Component Properties</h3>
-     * <ul>
-     * <li>fov : Field of view</li>
-     * <li>nearClip : Near clipping distance</li>
-     * <li>farClip : Far clipping distance</li>
-     * <li>activate : Activate when Component is loaded</li>
-     * </ul>
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
      */
