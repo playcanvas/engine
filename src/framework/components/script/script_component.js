@@ -5,13 +5,13 @@ pc.extend(pc.fw, function () {
         var functions = {
             "urls": function(entity, name, oldValue, newValue){
                 var urls = newValue;
+                var prefix = pc.content.source || "";
                 if(pc.type(urls) == "string") {
                     urls = urls.split(",");
                 }
-               
                 // Load and register new scripts and instances
                 urls.forEach(function (url, index, arr) {
-                    var url = new pc.URI(pc.path.join(pc.content.source, urls[index].trim())).toString();
+                    var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
                     this.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
                         var ScriptType = resources[url];
                         instance = new ScriptType(entity);
@@ -121,21 +121,20 @@ pc.extend(pc.fw, function () {
     
     /**
      * @function
-     * @name pc.fw.ScriptComponentSystem#message
-     * @description Send a message on the a script attached to a specific entity
-     * Sending a message to a script is equivalent to calling method of a specific script object
+     * @name pc.fw.ScriptComponentSystem#send
+     * @description Send a message to a script attached to a specific entity
+     * Sending a message to a script is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present.
      * @param {pc.fw.Entity} entity The entity to send the message to
      * @param {String} name The name of the script to send the message to
      * @param {String} functionName The name of the function to call on the script
      * @returns The result of the function call
      * @example
      * // Call doDamage(10) on the script object called 'enemy' attached to enemy_entity.
-     * context.systems.script.message(enemy_entity, "enemy", "doDamage", 10);
+     * context.systems.script.message(enemy_entity, 'enemy', 'doDamage', 10);
      */
-    ScriptComponentSystem.prototype.message = function (entity, name, functionName) {
+    ScriptComponentSystem.prototype.send = function (entity, name, functionName) {
         var args = pc.makeArray(arguments).slice(3);
         var instances = this.get(entity, "instances");
-        var i, length = Object.keys(instances).length;
         var fn;        
         
         if(instances[name]) {
@@ -146,7 +145,42 @@ pc.extend(pc.fw, function () {
             
         }
     };
-     
+    
+    // Compatibility
+    ScriptComponentSystem.prototype.message = ScriptComponentSystem.prototype.send;
+    
+    /**
+     * @function
+     * @name pc.fw.ScriptComponentSystem#broadcast
+     * @description Send a message to all Script Objects with a specific name
+     * Sending a message is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present
+     * @param {String} name The name of the script to send the message to
+     * @param {String} functionName The name of the functio nto call on the Script Object
+     * @example
+     * // Call doDamage(10) on all 'enemy' scripts
+     * context.systems.script.broadcast('enemy', 'doDamage', 10);
+     */
+    ScriptComponentSystem.prototype.broadcast = function (name, functionName) {
+        var args = pc.makeArray(arguments).slice(2);
+        
+        var id, entity, componentData, fn;
+        var components = this.getComponents();
+        var results = [];
+        
+        for (id in components) {
+            if (components.hasOwnProperty(id)) {
+                entity = components[id].entity;
+                componentData = components[id].component;
+                if (componentData.instances[name]) {
+                    fn = componentData.instances[name].instance[functionName];
+                    if(fn) {
+                        fn.apply(componentData.instances[name].instance, args);
+                    }
+                }
+            }
+        }
+    };
+      
     return {
         ScriptComponentSystem: ScriptComponentSystem
     };

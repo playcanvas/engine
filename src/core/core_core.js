@@ -19,6 +19,8 @@ var pc = function () {
          */
         data: {},
         
+        content: {},
+        
         /**
          * @private
          * @function
