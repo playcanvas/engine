@@ -205,7 +205,7 @@ pc.extend(pc.fw, function () {
                 break;
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                 //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
-                var entity = this.context.root.findOne("getGuid", guid);
+                var entity = this.context.root.findOne("getGuid", msg.content.id);
                 if(entity) {
                     entity.close(this.context.systems);
                 }
@@ -215,9 +215,7 @@ pc.extend(pc.fw, function () {
                 msg.content.models.forEach(function (model) {
                     var entity = this.context.loader.open(pc.resources.EntityRequest, model);
                     entities[entity.getGuid()] = entity;
-                    
                 }, this);
-                
                 
                 // create a temporary handler to patch children
                 var handler = new pc.resources.EntityResourceHandler();
@@ -225,7 +223,6 @@ pc.extend(pc.fw, function () {
                 for (guid in entities) {
                     if (entities.hasOwnProperty(guid)) {
                         handler.patchChildren(entities[guid], entities);
-                        // Added top level entity to the root
                         if(!entities[guid].__parent) {
                             root = entities[guid];
                         }
