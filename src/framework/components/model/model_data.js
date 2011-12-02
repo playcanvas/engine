@@ -1,7 +1,10 @@
 pc.extend(pc.fw, function() {
+    
     function ModelComponentData() {
-        //this.url = null;
+        // serialized
         this.asset = null;
+        
+        // non-serialized
         this.model = null;
     }
     ModelComponentData = ModelComponentData.extendsFrom(pc.fw.ComponentData);

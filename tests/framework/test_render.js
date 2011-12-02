@@ -35,7 +35,7 @@ test("deleteComponent: model and entity removed", function () {
         mc.set(entity, "model", model);
         var data = mc._getComponentData(entity);
         
-        equal(data.model, model);
+        //equal(data.model, model);
     
         mc.deleteComponent(entity);
         
