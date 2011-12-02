@@ -37,22 +37,22 @@ pc.scene.materialplugin.phong.getProgram = function (material, geometry) {
     var skinned = geometry.isSkinned();
     var parameters = material.getParameters();
     var options = {
-        alphaTest:       currState.alphaTest,
-        fog:             currState.fog,
-        skin:            skinned,
-        numDirectionals: numDirs,
-        numPoints:       numPnts,
-        diffuseMap:      (parameters["texture_diffuseMap"] !== undefined),
-        specularMap:     (parameters["texture_specularMap"] !== undefined),
-        emissiveMap:     (parameters["texture_emissiveMap"] !== undefined),
-        opacityMap:      (parameters["texture_opacityMap"] !== undefined),
-        bumpMap:         (parameters["texture_bumpMap"] !== undefined),
-        normalMap:       (parameters["texture_normalMap"] !== undefined),
-        parallaxMap:     (parameters["texture_parallaxMap"] !== undefined),
-        sphereMap:       (parameters["texture_sphereMap"] !== undefined),
-        cubeMap:         (parameters["texture_cubeMap"] !== undefined),
-        lightMap:        (parameters["texture_lightMap"] !== undefined),
-        shadowMap:       (parameters["texture_shadowMap"] !== undefined)
+        alphaTest:         currState.alphaTest,
+        fog:               currState.fog,
+        skin:              skinned,
+        numDirectionals:   numDirs,
+        numPoints:         numPnts,
+        diffuseMap:        (parameters["texture_diffuseMap"] !== undefined),
+        specularMap:       (parameters["texture_specularMap"] !== undefined),
+        specularFactorMap: (parameters["texture_specularFactorMap"] !== undefined),
+        emissiveMap:       (parameters["texture_emissiveMap"] !== undefined),
+        opacityMap:        (parameters["texture_opacityMap"] !== undefined),
+        normalMap:         (parameters["texture_normalMap"] !== undefined),
+        parallaxMap:       (parameters["texture_parallaxMap"] !== undefined),
+        sphereMap:         (parameters["texture_sphereMap"] !== undefined),
+        cubeMap:           (parameters["texture_cubeMap"] !== undefined),
+        lightMap:          (parameters["texture_lightMap"] !== undefined),
+        shadowMap:         (parameters["texture_shadowMap"] !== undefined)
     };
     var library = device.getProgramLibrary();
     var program = library.getProgram("phong", options);

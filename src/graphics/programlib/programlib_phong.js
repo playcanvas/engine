@@ -9,11 +9,11 @@ pc.gfx.programlib.phong = {
         if (options.vertexColors)        key += "_vcol";
         if (options.diffuseMap)          key += "_diff";
         if (options.specularMap)         key += "_spec";
+        if (options.specularFactorMap)   key += "_spcf";
         if (options.emissiveMap)         key += "_emis";
         if (options.opacityMap)          key += "_opac";
         if (options.sphereMap)           key += "_sphr";
         if (options.cubeMap)             key += "_cube";
-        if (options.bumpMap)             key += "_bump";
         if (options.normalMap)           key += "_norm";
         if (options.parallaxMap)         key += "_prlx";
         if (options.lightMap)            key += "_lght";
@@ -83,6 +83,9 @@ pc.gfx.programlib.phong = {
         if (options.specularMap) {
             code += "uniform mat4 texture_specularMapTransform;\n";
         }
+        if (options.specularFactorMap) {
+            code += "uniform mat4 texture_specularFactorMapTransform;\n";
+        }
         if (options.emissiveMap) {
             code += "uniform mat4 texture_emissiveMapTransform;\n";
         }
@@ -103,6 +106,9 @@ pc.gfx.programlib.phong = {
         }
         if (options.specularMap) {
             code += "varying vec2 vUvSpecularMap;\n";
+        }
+        if (options.specularFactorMap) {
+            code += "varying vec2 vUvSpecularFactorMap;\n";
         }
         if (options.emissiveMap) {
             code += "varying vec2 vUvEmissiveMap;\n";
@@ -238,6 +244,9 @@ pc.gfx.programlib.phong = {
         if (options.specularMap) {
             code += "    vUvSpecularMap = (texture_specularMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
         }
+        if (options.specularFactorMap) {
+            code += "    vUvSpecularFactorMap = (texture_specularFactorMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
+        }
         if (options.emissiveMap) {
             code += "    vUvEmissiveMap = (texture_emissiveMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
         }
@@ -274,6 +283,9 @@ pc.gfx.programlib.phong = {
         if (options.specularMap) {
             code += "varying vec2 vUvSpecularMap;\n";
         }
+        if (options.specularFactorMap) {
+            code += "varying vec2 vUvSpecularFactorMap;\n";
+        }
         if (options.emissiveMap) {
             code += "varying vec2 vUvEmissiveMap;\n";
         }
@@ -306,6 +318,9 @@ pc.gfx.programlib.phong = {
                 code += "uniform sampler2D texture_specularMap;\n";
             } else {
                 code += "uniform vec3 material_specular;\n";
+            }
+            if (options.specularFactorMap) {
+                code += "uniform sampler2D texture_specularFactorMap;\n";
             }
             code += "uniform float material_shininess;\n";
         }
@@ -379,6 +394,9 @@ pc.gfx.programlib.phong = {
         if (options.specularMap) {
             code += "    vec2 uvSpecularMap = vUvSpecularMap;\n";
         }
+        if (options.specularFactorMap) {
+            code += "    vec2 uvSpecularFactorMap = vUvSpecularFactorMap;\n";
+        }
         
         // Read the map texels that the shader needs
         if (options.bumpMap) {
@@ -404,6 +422,9 @@ pc.gfx.programlib.phong = {
         }
         if (options.specularMap && lighting) {
             code += "    vec4 specMapPixel = texture2D(texture_specularMap, uvSpecularMap);\n";
+        }
+        if (options.specularFactorMap && lighting) {
+            code += "    vec4 specFacMapPixel = texture2D(texture_specularFactorMap, uvSpecularFactorMap);\n";
         }
         if (options.lightMap) {
             code += "    vec4 lghtMapPixel = texture2D(texture_lightMap, vUvLightMap);\n";
@@ -497,9 +518,17 @@ pc.gfx.programlib.phong = {
                 code += "    specular = texture2D(texture_sphereMap, sphereMapUv).rgb * lambertContrib * material_reflectionFactor;\n";
                 code += "    specularContrib = 1.0;\n";
             } else if (options.specularMap) {
-                code += "    specular = specMapPixel.rgb;\n";
+                if (options.specularFactorMap) {
+                    code += "    specular = specMapPixel.rgb * specFacMapPixel.rgb;\n";
+                } else {
+                    code += "    specular = specMapPixel.rgb;\n";
+                }
             } else {
-                code += "    specular = material_specular;\n";
+                if (options.specularFactorMap) {
+                    code += "    specular = material_specular * specFacMapPixel.rgb;\n";
+                } else {
+                    code += "    specular = material_specular;\n";
+                }
             }
 
             // Shadows should only affect diffuse and specular contribution
