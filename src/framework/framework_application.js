@@ -42,6 +42,8 @@ pc.extend(pc.fw, function () {
 
         this._link = new pc.fw.LiveLink(window);
         this._link.listen(pc.callback(this, this._handleMessage));
+           
+        this._inTools = false;
         
         // Open the log
         pc.log.open();
@@ -127,11 +129,10 @@ pc.extend(pc.fw, function () {
      * @param {Number} dt The time delta since the last frame.
      */
     Application.prototype.update = function (dt) {
-        var inTools = !!window.pc.apps.designer;
         var context = this.context;
 
         // Perform ComponentSystem update
-        pc.fw.ComponentSystem.update(dt, context, inTools);
+        pc.fw.ComponentSystem.update(dt, context, this._inTools);
 
         // fire update event
         this.fire("update", dt);
@@ -150,7 +151,6 @@ pc.extend(pc.fw, function () {
      * @description Application specific render method. Override this if you have a custom Application
      */
     Application.prototype.render = function () {
-        var inTools = !!window.pc.apps.designer;
         var context = this.context;
         var entity = context.systems.camera.getCurrent();
         var camera = context.systems.camera.get(entity, "camera");
@@ -162,7 +162,7 @@ pc.extend(pc.fw, function () {
         if(camera) {
             context.systems.camera.frameBegin();
 
-            pc.fw.ComponentSystem.render(context, inTools);
+            pc.fw.ComponentSystem.render(context, this._inTools);
             context.scene.dispatch(camera);
             context.scene.flush();
 
@@ -205,7 +205,7 @@ pc.extend(pc.fw, function () {
                 break;
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                 //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
-                var entity = this.context.root.findOne("getGuid", guid);
+                var entity = this.context.root.findOne("getGuid", msg.content.id);
                 if(entity) {
                     entity.close(this.context.systems);
                 }
@@ -215,22 +215,25 @@ pc.extend(pc.fw, function () {
                 msg.content.models.forEach(function (model) {
                     var entity = this.context.loader.open(pc.resources.EntityRequest, model);
                     entities[entity.getGuid()] = entity;
-                    
                 }, this);
-                
                 
                 // create a temporary handler to patch children
                 var handler = new pc.resources.EntityResourceHandler();
+                var root = null;
                 for (guid in entities) {
                     if (entities.hasOwnProperty(guid)) {
                         handler.patchChildren(entities[guid], entities);
-                        // Added top level entity to the root
-                        if(!entities[guid].getParent()) {
-                            this.context.root.addChild(entities[guid]);
+                        if(!entities[guid].__parent) {
+                            root = entities[guid];
                         }
                     }
                 }
                 
+                // Once all children are patched, if there is a root then add it 
+                if(root) {
+                    this.context.root.addChild(root);    
+                }
+
                 break;
         }
     };

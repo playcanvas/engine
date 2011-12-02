@@ -3,10 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.21.0
+-------
+* The Blinn-Phong program now uses the standard Phong lighting equation.
+* [FIX] Fixed probable bug in CLOSE_ENTITY message which could be closing the wrong entity.
+* Added send() and broadcast() methods to ScriptComponentSystem.
+* Added runtime support for specular factor maps which multiply either the specular material color or the assigned specular map.
+
+-------
 v0.20.0
 -------
-[FIX] Skinning should now work in all cases.
-[FIX] Fix for some keys (e.g. 'n' and 'z') not working in input handler.
+* [FIX] Skinning should now work in all cases.
+* [FIX] Fix for some keys (e.g. 'n' and 'z') not working in input handler.
 
 -------
 v0.19.0
