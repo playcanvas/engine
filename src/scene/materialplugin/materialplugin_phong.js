@@ -9,8 +9,9 @@ pc.scene.materialplugin.phong.isTransparent = function (material) {
     if (parameters["texture_opacityMap"] !== undefined) {
         return true;
     }
-    if (parameters["texture_diffuseOpacityMap"] !== undefined) {
-        return true;
+    if (parameters["texture_diffuseMap"] !== undefined) {
+        if (parameters["texture_diffuseMap"]._data.getFormat() === pc.gfx.TextureFormat.RGBA)
+            return true;
     }
     return false;
 }

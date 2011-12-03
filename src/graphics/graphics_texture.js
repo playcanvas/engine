@@ -345,7 +345,12 @@ pc.extend(pc.gfx, function () {
 
         this._width  = source.width;
         this._height = source.height;
-        this._format = pc.gfx.TextureFormat.RGBA;
+
+        function _endsWith(str, suffix) {
+            return str.indexOf(suffix, str.length - suffix.length) !== -1;
+        }
+        var srcLower = source.src.toLowerCase();
+        this._format = (_endsWith(srcLower, '.jpg') || _endsWith(srcLower, '.gif')) ? pc.gfx.TextureFormat.RGB : pc.gfx.TextureFormat.RGBA;
         this._source = source;
 
         this.upload();
