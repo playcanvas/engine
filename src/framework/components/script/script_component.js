@@ -50,6 +50,33 @@ pc.extend(pc.fw, function () {
         }
     };
 
+    ScriptComponentSystem.prototype.updateFixed = function (dt) {
+        var id;
+        var entity;
+        var component;
+        var components = this._getComponents();
+        var data;
+        var length = components.length;
+        
+        for (id in components) {
+            if (components.hasOwnProperty(id)) {
+                entity = components[id].entity;
+                component = components[id].component;
+                
+                data = this._getComponentData(entity);
+                length = data.instances.length;
+                
+                for(name in data.instances) {
+                    if(data.instances.hasOwnProperty(name)) {
+                        if(data.instances[name].instance.updateFixed) {
+                            data.instances[name].instance.updateFixed(dt);
+                        }                        
+                    }
+                }
+            }
+        }
+    };
+
     ScriptComponentSystem.prototype.render = function () {
         var instance;
         var i;

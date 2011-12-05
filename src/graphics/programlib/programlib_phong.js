@@ -361,7 +361,7 @@ pc.gfx.programlib.phong = {
             code += "uniform vec4 fog_color;\n";
             code += "uniform float fog_density;\n";
         }
-        if (options.alphatest) {
+        if (options.alphaTest) {
             code += "uniform float alpha_ref;\n";
         }
 
@@ -429,7 +429,7 @@ pc.gfx.programlib.phong = {
         } else {
             code += "    gl_FragColor.a = material_opacity;\n";
         }
-        if (options.alphatest) {
+        if (options.alphaTest) {
             code += "    if (gl_FragColor.a <= alpha_ref)\n"; 
             code += "    {\n";
             code += "        discard;\n";

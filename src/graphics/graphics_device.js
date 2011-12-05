@@ -247,6 +247,7 @@ pc.extend(pc.gfx, function () {
             self._currentState.alphaTest = value;
         };
         this._stateFuncs["alphaRef"] = function (value) {
+            self.scope.resolve("alpha_ref").setValue(value);
             self._currentState.alphaRef = value;
         };
         this._stateFuncs["blend"] = function (value) {
