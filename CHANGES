@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.22.0
+-------
+* Added a fixed time step update function to the framework.
+* Only override format of image elements in Texture2D.prototype.setSource.
+* Added a variable rate delta time for application.
+* [FIX] Alpha test now actually works as a render state.
+
+-------
 v0.21.0
 -------
 * The Blinn-Phong program now uses the standard Phong lighting equation.
