@@ -116,7 +116,7 @@ pc.resources = function () {
 		// If a batch handle is passed in as an option, we use it as a 'parent' to the new batch. 
 		// The parent batch won't be complete until all it's children are complete.
 		if (options.batch) {
-			parent = this.getRequestBatch(options.batch);
+			var parent = this.getRequestBatch(options.batch);
 			if (!parent) {
 				throw new Error(pc.string.format("Cannot find batch with handle '{0}'", options.batch));
 			}
