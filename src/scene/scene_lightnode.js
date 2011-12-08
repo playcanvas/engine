@@ -26,11 +26,15 @@ pc.extend(pc.scene, function () {
      */
     var LightNode = function LightNode() {
         // LightNode properties (defaults)
-        this._type      = pc.scene.LightType.DIRECTIONAL;
-        this._color     = [0.8, 0.8, 0.8];
-        this._radius    = 1.0;
-        this._coneAngle = Math.PI * 0.5;
-        this._enabled   = false;
+        this._type = pc.scene.LightType.DIRECTIONAL;
+        this._color = [0.8, 0.8, 0.8];
+        this._castShadows = false;
+        this._enabled = false;
+
+        this._attenuationStart = 1.0;
+        this._attenuationEnd = 1.0;
+        this._innerConeAngle = Math.PI * 0.5;
+        this._outerConeAngle = Math.PI * 0.5;
     };
 
     LightNode = LightNode.extendsFrom(pc.scene.GraphNode);
@@ -54,12 +58,12 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.LightNode#enable
+     * @name pc.scene.LightNode#setEnabled
      * @description Marks the specified light as enabled or disabled.
      * @param {boolean} enable true to enable the light and false to disable it.
      * @author Will Eastcott
      */
-    LightNode.prototype.enable = function (enable) {
+    LightNode.prototype.setEnabled = function (enable) {
         if (enable && !this._enabled) {
             switch (this._type) {
                 case pc.scene.LightType.DIRECTIONAL:
@@ -86,6 +90,10 @@ pc.extend(pc.scene, function () {
         }
     };
 
+    LightNode.prototype.getEnabled = function () {
+        return this._enabled;
+    };
+
     /**
      * @function
      * @name pc.scene.LightNode#getColor
@@ -101,13 +109,13 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.LightNode#getRadius
+     * @name pc.scene.LightNode#getAttenuationEnd
      * @description Queries the radius of the point or spot light.
      * @returns {Array} The diffuse color of the light, represented by a 3 dimensional array (RGB components ranging 0..1).
      * @author Will Eastcott
      */
-    LightNode.prototype.getRadius = function () {
-        return this._radius;
+    LightNode.prototype.getAttenuationEnd = function () {
+        return this._attenuationEnd;
     };
 
     /**
@@ -134,13 +142,14 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.LightNode#setRadius
-     * @description
-     * @param {number} radius
+     * @name pc.scene.LightNode#setAttenuationEnd
+     * @description Specifies the radius from the light position where the light's
+     * contribution falls to zero.
+     * @param {number} radius The radius of influence of the light.
      * @author Will Eastcott
      */
-    LightNode.prototype.setRadius = function (radius) {
-        this._radius = radius;
+    LightNode.prototype.setAttenuationEnd = function (radius) {
+        this._attenuationEnd = radius;
     }
 
     /**
@@ -216,6 +225,7 @@ pc.extend(pc.scene, function () {
             var wtm = point.getWorldTransform();
             var light = "light" + (numDirs + i);
 
+            scope.resolve(light + "_radius").setValue(point._attenuationEnd);
             scope.resolve(light + "_color").setValue(point._color);
             scope.resolve(light + "_position").setValue([wtm[12], wtm[13], wtm[14]]);
         }
