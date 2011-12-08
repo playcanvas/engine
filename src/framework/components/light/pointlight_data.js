@@ -1,10 +1,15 @@
 pc.extend(pc.fw, function () {
-    PointLightComponentData = function () {
-        this.light = null;
+    function PointLightComponentData() {
+        // Serialized
         this.enable = true;
         this.color = "0xffffff";
-        this.radius = 1.0;
+        this.castShadows = false;
+        this.attenuationEnd = 1;
+
+        // Non-serialized
+        this.light = null;
     };
+
     PointLightComponentData.extendsFrom(pc.fw.ComponentData);
 
     return {
@@ -33,9 +38,18 @@ editor.link.expose({
 
 editor.link.expose({
     system: "pointlight",
-    variable: "radius",
-    displayName: "Radius",
-    description: "Light radius",
+    variable: "castShadows",
+    displayName: "Cast shadows",
+    description: "Cast shadows from this light",
+    type: "boolean",
+    defaultValue: false
+});
+
+editor.link.expose({
+    system: "pointlight",
+    variable: "attenuationEnd",
+    displayName: "Attenuation End",
+    description: "The distance from the light where its contribution falls to zero",
     type: "number",
-    defaultValue: 1.0
+    defaultValue: 1
 });

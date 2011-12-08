@@ -1,9 +1,14 @@
 pc.extend(pc.fw, function () {
-    DirectionalLightComponentData = function () {
-        this.light = null;
+    function DirectionalLightComponentData() {
+        // Serialized
         this.enable = true;
         this.color = "0xffffff";
+        this.castShadows = false;
+
+        // Non-serialized
+        this.light = null;
     };
+
     DirectionalLightComponentData.extendsFrom(pc.fw.ComponentData);
 
     return {
@@ -28,4 +33,13 @@ editor.link.expose({
     description: "Light color",
     type: "string",
     defaultValue: "0xffffff"
+});
+
+editor.link.expose({
+    system: "directionallight",
+    variable: "castShadows",
+    displayName: "Cast shadows",
+    description: "Cast shadows from this light",
+    type: "boolean",
+    defaultValue: false
 });

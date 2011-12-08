@@ -131,6 +131,17 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.LightNode#setCastShadows
+     * @description Toggles the casting of shadows from this light.
+     * @param {Boolean} castShadows True to enabled shadow casting, false otherwise.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.setCastShadows = function (castShadows) {
+        this._castShadows = castShadows;
+    };
+
+    /**
+     * @function
      * @name pc.scene.LightNode#setColor
      * @description
      * @param {Array} color
