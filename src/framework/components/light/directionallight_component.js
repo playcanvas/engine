@@ -58,7 +58,7 @@ pc.extend(pc.fw, function () {
             _enable: function (componentData, enable) {
                 if (enable !== undefined) {
                     componentData.enable = enable;
-                    componentData.light.enable(enable);
+                    componentData.light.setEnabled(enable);
                 } else {
                     return componentData.enable;
                 }
@@ -100,7 +100,7 @@ pc.extend(pc.fw, function () {
     DirectionalLightComponentSystem.prototype.deleteComponent = function (entity) {
         var data = this._getComponentData(entity);
         entity.removeChild(data.light);
-        data.light.enable(false);
+        data.light.setEnabled(false);
         delete data.light;
 
         this.removeComponent(entity);
