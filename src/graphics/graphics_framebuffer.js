@@ -2,9 +2,12 @@ pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.FrameBuffer
      * @class A frame buffer is a rectangular rendering surface. It can be rendered to via a pc.gfx.RenderTarget.
-     * @param {number} width The width of the frame buffer in pixels.
-     * @param {number} height The height of the frame buffer in pixels.
-     * @param {boolean} depth True if the frame buffer is to include a depth buffer and false otherwise.
+     * @description Creates a new FrameBuffer object.
+     * @param {Number} width The width of the frame buffer in pixels.
+     * @param {Number} height The height of the frame buffer in pixels.
+     * @param {Boolean} depth True if the frame buffer is to include a depth buffer and false otherwise.
+     * @param {Boolean} isCube True if the frame buffer is represented as a cube map and false if it is
+     * represented as a 2D surface.
      */
     var FrameBuffer = function (width, height, depth, isCube) {
         if ((width !== undefined) && (height !== undefined)) {
@@ -14,7 +17,6 @@ pc.extend(pc.gfx, function () {
             if (depth) {
                 this._depthBuffers = [];
             }
-            this._activeBuffer = 0;
 
             var device = pc.gfx.Device.getCurrent();
             var gl = device.gl;
@@ -25,6 +27,7 @@ pc.extend(pc.gfx, function () {
             }
 
             var numBuffers = isCube ? 6 : 1;
+            this._activeBuffer = 0;
 
             for (var i = 0; i < numBuffers; i++) {
                 // Create a new WebGL frame buffer object
@@ -86,7 +89,7 @@ pc.extend(pc.gfx, function () {
     /**
      * @function
      * @name pc.gfx.FrameBuffer#bind
-     * @description Activates the framebuffer to receive the rasterization of all subsequent draw commands issues by
+     * @description Activates the framebuffer to receive the rasterization of all subsequent draw commands issued by
      * the graphics device.
      * @author Will Eastcott
      */
@@ -95,9 +98,18 @@ pc.extend(pc.gfx, function () {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers ? this._colorBuffers[this._activeBuffer] : null);
     };
 
-    FrameBuffer.prototype.setActiveBuffer = function (index) {
-        this._activeBuffer = index;
-    };
+    /**
+     * @function
+     * @name pc.gfx.FrameBuffer#setActiveBuffer
+     * @description Marks a specific buffer of a framebuffer as active. If the framebuffer is a cube map, this 
+     * buffer index must be in the range 0 to 5 representing each face of the cube. If the framebuffer is the
+     * back buffer or a 2D framebuffer, this function has no effect.
+     * @param {Number} bufferIndex The index of the buffer to write to.
+     * @author Will Eastcott
+     */
+    FrameBuffer.prototype.setActiveBuffer = function (bufferIndex) {
+        this._activeBuffer = bufferIndex;
+    }
 
     /**
      * @function

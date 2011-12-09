@@ -356,6 +356,9 @@ pc.gfx.programlib.phong = {
         code += "uniform vec3 light_globalAmbient;\n";
         for (var i = 0; i < options.numDirectionals + options.numPoints; i++) {
             code += "uniform vec3 light" + i + "_color;\n";
+            if (i >= options.numDirectionals) {
+                code += "uniform float light" + i + "_radius;\n";
+            }
         }
         if (options.fog) {
             code += "uniform vec4 fog_color;\n";
@@ -437,11 +440,11 @@ pc.gfx.programlib.phong = {
         }
 
         if (lighting) {
-            code += "    vec3 lightDir, halfVec;\n";
+            code += "    vec3 lightDir;\n";
             code += "    vec3 ambient, diffuse, specular;\n";
             code += "    vec3 diffuseContrib = vec3(0.0);\n";
             code += "    float specularContrib = 0.0;\n";
-            code += "    float nDotL, nDotH, rDotV;\n";
+            code += "    float nDotL, rDotV, d;\n";
             if (options.cubeMap || options.sphereMap) {
                 code += "    float lambertContrib = 0.0;\n";
             }
@@ -455,23 +458,56 @@ pc.gfx.programlib.phong = {
             }
 
             for (var i = 0; i < options.numDirectionals + options.numPoints; i++) {
-                code += "    lightDir = normalize(vLight" + i + "Dir);\n";
-                code += "    nDotL = max(0.0, dot(N, lightDir));\n";
-                code += "    if (nDotL > 0.0)\n";
-                code += "    {\n";
-                code += "        diffuseContrib  += light" + i + "_color * nDotL;\n";
-                if (options.cubeMap || options.sphereMap) {
-                    code += "        lambertContrib  += nDotL;\n";
-                } else {
-                    code += "        vec3 R = normalize(-reflect(lightDir, N));\n";
-                    code += "        rDotV = max(0.0, dot(R, viewDir));\n";
-                    if (options.specularMap) {
-                        code += "        specularContrib += pow(rDotV, specMapPixel.a * 100.0);\n";
+                if (i < options.numDirectionals) {
+                    code += "    lightDir = normalize(vLight" + i + "Dir);\n";
+                    code += "    nDotL = max(0.0, dot(N, lightDir));\n";
+                    code += "    if (nDotL > 0.0)\n";
+                    code += "    {\n";
+                    code += "        diffuseContrib += light" + i + "_color * nDotL;\n";
+                    if (options.cubeMap || options.sphereMap) {
+                        code += "        lambertContrib += nDotL;\n";
                     } else {
-                        code += "        specularContrib += pow(rDotV, material_shininess);\n";
+                        if (options.specularMap) {
+                            code += "            float shininess = specMapPixel.a * 100.0;\n";
+                        } else {
+                            code += "            float shininess = material_shininess;\n";
+                        }
+                        code += "            if (shininess > 0.0)\n";
+                        code += "            {\n";
+                        code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
+                        code += "                rDotV = max(0.0, dot(R, viewDir));\n";
+                        code += "                specularContrib += pow(rDotV, shininess);\n";
+                        code += "            }\n";
                     }
+                    code += "    }\n";
+                } else {
+                    code += "    d = length(vLight" + i + "Dir);\n";
+                    code += "    if (d < light" + i + "_radius)\n";
+                    code += "    {\n";
+                    code += "        lightDir = normalize(vLight" + i + "Dir);\n";
+                    code += "        nDotL = max(0.0, dot(N, lightDir));\n";
+                    code += "        if (nDotL > 0.0)\n";
+                    code += "        {\n";
+                    code += "            float att = ((light" + i + "_radius - d) / light" + i + "_radius);\n";
+                    code += "            diffuseContrib += light" + i + "_color * nDotL * att;\n";
+                    if (options.cubeMap || options.sphereMap) {
+                        code += "            lambertContrib += nDotL;\n";
+                    } else {
+                        if (options.specularMap) {
+                            code += "            float shininess = specMapPixel.a * 100.0;\n";
+                        } else {
+                            code += "            float shininess = material_shininess;\n";
+                        }
+                        code += "            if (shininess > 0.0)\n";
+                        code += "            {\n";
+                        code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
+                        code += "                rDotV = max(0.0, dot(R, viewDir));\n";
+                        code += "                specularContrib += pow(rDotV, shininess) * att;\n";
+                        code += "            }\n";
+                    }
+                    code += "        }\n";
+                    code += "    }\n";
                 }
-                code += "    }\n";
             }
 
             // Select the sources for material color
