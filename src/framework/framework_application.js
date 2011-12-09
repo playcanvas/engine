@@ -136,6 +136,7 @@ pc.extend(pc.fw, function () {
 
         // Perform ComponentSystem update
         pc.fw.ComponentSystem.update(dt, context, this._inTools);
+        pc.fw.ComponentSystem.updateFixed(1.0 / 60.0, context, this._inTools);
 
         // fire update event
         this.fire("update", dt);
@@ -180,7 +181,10 @@ pc.extend(pc.fw, function () {
      * the next tick. Override this if you have a custom Application.
      */
     Application.prototype.tick = function () {
-        var dt = 1.0 / 60.0;
+        this.lastTime = this.currTime || Date.now();
+        this.currTime = Date.now();
+
+        var dt = (this.currTime - this.lastTime) * 0.001;
 
     	this.update(dt);
     	this.render();

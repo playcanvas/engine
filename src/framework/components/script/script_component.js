@@ -24,25 +24,36 @@ pc.extend(pc.fw, function () {
     };
 
     ScriptComponentSystem.prototype.update = function (dt) {
-        var id;
-        var entity;
-        var component;
-        var components = this._getComponents();
-        var data;
-        var length = components.length;
-        
-        for (id in components) {
+        var components = this.getComponents();
+
+        for (var id in components) {
             if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
-                component = components[id].component;
-                
-                data = this._getComponentData(entity);
-                length = data.instances.length;
-                
-                for(name in data.instances) {
-                    if(data.instances.hasOwnProperty(name)) {
-                        if(data.instances[name].instance.update) {
-                            data.instances[name].instance.update(dt);
+                var entity = components[id].entity;
+                var componentData = this.getComponentData(entity);
+
+                for (name in componentData.instances) {
+                    if (componentData.instances.hasOwnProperty(name)) {
+                        if (componentData.instances[name].instance.update) {
+                            componentData.instances[name].instance.update(dt);
+                        }                        
+                    }
+                }
+            }
+        }
+    };
+
+    ScriptComponentSystem.prototype.updateFixed = function (dt) {
+        var components = this.getComponents();
+
+        for (var id in components) {
+            if (components.hasOwnProperty(id)) {
+                var entity = components[id].entity;
+                var componentData = this.getComponentData(entity);
+
+                for (name in componentData.instances) {
+                    if (componentData.instances.hasOwnProperty(name)) {
+                        if (componentData.instances[name].instance.updateFixed) {
+                            componentData.instances[name].instance.updateFixed(dt);
                         }                        
                     }
                 }
@@ -51,25 +62,17 @@ pc.extend(pc.fw, function () {
     };
 
     ScriptComponentSystem.prototype.render = function () {
-        var instance;
-        var i;
-        var entity;
-        var component;
-        var components = this._getComponents();
-        var length = components.length;
-        
-        for (id in components) {
+        var components = this.getComponents();
+
+        for (var id in components) {
             if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
-                component = components[id].component;
-                
-                data = this._getComponentData(entity);
-                length = data.instances.length;
-                
-                for(name in data.instances) {
-                    if(data.instances.hasOwnProperty(name)) {
-                        if(data.instances[name].instance.render) {
-                            data.instances[name].instance.render();
+                var entity = components[id].entity;
+                var componentData = this.getComponentData(entity);
+
+                for (name in componentData.instances) {
+                    if (componentData.instances.hasOwnProperty(name)) {
+                        if (componentData.instances[name].instance.render) {
+                            componentData.instances[name].instance.render();
                         }                        
                     }
                 }

@@ -243,6 +243,13 @@ pc.extend(pc.gfx, function () {
         this._localState = {};
 
         this._stateFuncs = {};
+        this._stateFuncs["alphaTest"] = function (value) {
+            self._currentState.alphaTest = value;
+        };
+        this._stateFuncs["alphaRef"] = function (value) {
+            self.scope.resolve("alpha_ref").setValue(value);
+            self._currentState.alphaRef = value;
+        };
         this._stateFuncs["blend"] = function (value) {
             if (self._currentState.blend !== value) {
                 if (value) {

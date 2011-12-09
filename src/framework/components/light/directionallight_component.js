@@ -3,12 +3,12 @@ pc.extend(pc.fw, function () {
         // Create the graphical resources required to render a light
         var device = pc.gfx.Device.getCurrent();
         var library = device.getProgramLibrary();
-        var program = library.getProgram("basic", { vertexColors: false, diffuseMapping: false });
+        var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
         var format = new pc.gfx.VertexFormat();
         format.begin();
         format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 32, pc.gfx.VertexBufferUsage.DYNAMIC);
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 32, pc.gfx.VertexBufferUsage.STATIC);
         // Generate the directional light arrow vertex data
         vertexData = [ 
             // Center arrow
@@ -54,71 +54,41 @@ pc.extend(pc.fw, function () {
     var DirectionalLightComponentSystem = function (context) {
         context.systems.add("directionallight", this);
 
-        pc.extend(this, {
-            _enable: function (componentData, enable) {
-                if (enable !== undefined) {
-                    componentData.enable = enable;
-                    componentData.light.enable(enable);
-                } else {
-                    return componentData.enable;
-                }
-            },
-            _color: function (componentData, color) {
-                if (color) {
-                    var rgb = parseInt(color);
-                    componentData.color = [
-                        ((rgb >> 16) & 0xff) / 255.0,
-                        ((rgb >> 8) & 0xff) / 255.0,
-                        ((rgb) & 0xff) / 255.0
-                    ];
-                    componentData.light.setColor(componentData.color);
-                } else {
-                    return componentData.color;
-                }
-            }
-        });
-
         this.renderable = _createGfxResources();
-       
+
+        // Handle changes to the 'castShadows' value
+        this.bind("set_castShadows", this.onSetCastShadows.bind(this));
+        // Handle changes to the 'color' value
+        this.bind("set_color", this.onSetColor.bind(this));
+        // Handle changes to the 'enable' value
+        this.bind("set_enable", this.onSetEnable.bind(this));
+        // Handle changes to the 'light' value
         this.bind("set_light", this.onSetLight.bind(this));
     };
         
     DirectionalLightComponentSystem = DirectionalLightComponentSystem.extendsFrom(pc.fw.ComponentSystem);
-    
+
     DirectionalLightComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.DirectionalLightComponentData();
 
-        //componentData.light = new pc.scene.LightNode();
+        var light = new pc.scene.LightNode();
+        light.setType(pc.scene.LightType.DIRECTIONAL);
 
         data = data || {};
-        data['light'] = new pc.scene.LightNode();
-        this.initialiseComponent(entity, componentData, data, ['light', 'enable', 'color']);
-        
+        data.light = light;
+
+        this.initialiseComponent(entity, componentData, data, ['light', 'color', 'enable']);
+
         return componentData;
     };
     
     DirectionalLightComponentSystem.prototype.deleteComponent = function (entity) {
-        var data = this._getComponentData(entity);
-        entity.removeChild(data.light);
-        data.light.enable(false);
-        delete data.light;
+        var componentData = this.getComponentData(entity);
+        entity.removeChild(componentData.light);
+        componentData.light.setEnabled(false);
+        delete componentData.light;
 
         this.removeComponent(entity);
-    };
-    
-    DirectionalLightComponentSystem.prototype.update = function (dt) {
-        var id;
-        var entity;
-        var component;
-        var components = this._getComponents();
-        var transform;
-        
-        for (id in components) {
-            if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
-                component = components[id].component;
-            }
-        }
     };
 
     DirectionalLightComponentSystem.prototype.toolsRender = function (fn) {
@@ -152,14 +122,43 @@ pc.extend(pc.fw, function () {
             }
         }
     };
+
+    DirectionalLightComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            componentData.light.setCastShadows(newValue);
+        }
+    };
     
+    DirectionalLightComponentSystem.prototype.onSetColor = function (entity, name, oldValue, newValue) {
+        if (newValue) {
+            var componentData = this.getComponentData(entity);
+            var rgb = parseInt(newValue);
+            rgb = pc.math.intToBytes24(rgb);
+            var color = [
+                rgb[0] / 255,
+                rgb[1] / 255,
+                rgb[2] / 255
+            ];
+            componentData.light.setColor(color);
+        }
+    };
+
+    DirectionalLightComponentSystem.prototype.onSetEnable = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            componentData.light.setEnabled(newValue);
+        }
+    };
+
     DirectionalLightComponentSystem.prototype.onSetLight = function (entity, name, oldValue, newValue) {
-        newValue.setType(pc.scene.LightType.DIRECTIONAL);
         if (oldValue) {
             entity.removeChild(oldValue);
         }
-        entity.addChild(newValue);
-    }
+        if (newValue) {
+            entity.addChild(newValue);
+        }
+    };
     
     return {
         DirectionalLightComponentSystem: DirectionalLightComponentSystem

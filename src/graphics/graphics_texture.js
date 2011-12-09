@@ -61,19 +61,6 @@ pc.extend(pc.gfx, function () {
     _formatSize[pc.gfx.TextureFormat.RGBA] = 4;
     _formatSize[pc.gfx.TextureFormat.LUMINANCE] = 1;
 
-    var _addressLookup = [];
-    _addressLookup[pc.gfx.TextureAddress.REPEAT] = WebGLRenderingContext.REPEAT;
-    _addressLookup[pc.gfx.TextureAddress.CLAMP_TO_EDGE] = WebGLRenderingContext.CLAMP_TO_EDGE;
-    _addressLookup[pc.gfx.TextureAddress.MIRRORED_REPEAT] = WebGLRenderingContext.MIRRORED_REPEAT;
-
-    var _filterLookup = [];
-    _filterLookup[pc.gfx.TextureFilter.NEAREST] = WebGLRenderingContext.NEAREST;
-    _filterLookup[pc.gfx.TextureFilter.LINEAR] = WebGLRenderingContext.LINEAR;
-    _filterLookup[pc.gfx.TextureFilter.NEAREST_MIPMAP_NEAREST] = WebGLRenderingContext.NEAREST_MIPMAP_NEAREST;
-    _filterLookup[pc.gfx.TextureFilter.NEAREST_MIPMAP_LINEAR] = WebGLRenderingContext.NEAREST_MIPMAP_LINEAR;
-    _filterLookup[pc.gfx.TextureFilter.LINEAR_MIPMAP_NEAREST] = WebGLRenderingContext.LINEAR_MIPMAP_NEAREST;
-    _filterLookup[pc.gfx.TextureFilter.LINEAR_MIPMAP_LINEAR] = WebGLRenderingContext.LINEAR_MIPMAP_LINEAR;
-
     /**
      * @name pc.gfx.Texture
      * @class A texture is a container for texel data that can be manipulated in a fragment shader.
@@ -214,6 +201,7 @@ pc.extend(pc.gfx, function () {
         }
         this.bind();
         var gl = pc.gfx.Device.getCurrent().gl;
+        var _addressLookup = [gl.REPEAT, gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT];
         gl.texParameteri(this._target, gl.TEXTURE_WRAP_S, _addressLookup[addressu]);
         gl.texParameteri(this._target, gl.TEXTURE_WRAP_T, _addressLookup[addressv]);
         this._addressu = addressu;
@@ -237,6 +225,7 @@ pc.extend(pc.gfx, function () {
         }
         this.bind();
         var gl = pc.gfx.Device.getCurrent().gl;
+        var _filterLookup = [gl.NEAREST, gl.NEAREST, gl.LINEAR, gl.NEAREST_MIPMAP_NEAREST, gl.NEAREST_MIPMAP_LINEAR, gl.LINEAR_MIPMAP_NEAREST, gl.LINEAR_MIPMAP_LINEAR];
         gl.texParameteri(this._target, gl.TEXTURE_MIN_FILTER, _filterLookup[minFilter]);
         gl.texParameteri(this._target, gl.TEXTURE_MAG_FILTER, _filterLookup[magFilter]);
         this._minFilter = minFilter;
@@ -282,11 +271,6 @@ pc.extend(pc.gfx, function () {
 }());
 
 pc.extend(pc.gfx, function () {
-    var _formatLookup = [];
-    _formatLookup[pc.gfx.TextureFormat.RGB] = WebGLRenderingContext.RGB;
-    _formatLookup[pc.gfx.TextureFormat.RGBA] = WebGLRenderingContext.RGBA;
-    _formatLookup[pc.gfx.TextureFormat.LUMINANCE] = WebGLRenderingContext.LUMINANCE;
-    
     /**
      * @name pc.gfx.Texture2D
      * @class A 2D texture is a container for texel data that can be manipulated in a fragment shader.
@@ -345,7 +329,13 @@ pc.extend(pc.gfx, function () {
 
         this._width  = source.width;
         this._height = source.height;
-        this._format = pc.gfx.TextureFormat.RGBA;
+        if (source instanceof HTMLImageElement) {
+            function _endsWith(str, suffix) {
+                return str.indexOf(suffix, str.length - suffix.length) !== -1;
+            }
+            var srcLower = source.src.toLowerCase();
+            this._format = (_endsWith(srcLower, '.jpg') || _endsWith(srcLower, '.gif')) ? pc.gfx.TextureFormat.RGB : pc.gfx.TextureFormat.RGBA;
+        }
         this._source = source;
 
         this.upload();
@@ -362,6 +352,7 @@ pc.extend(pc.gfx, function () {
      */
     Texture2D.prototype.upload = function () {
         var gl = pc.gfx.Device.getCurrent().gl;
+        var _formatLookup = [gl.RGB, gl.RGBA, gl.LUMINANCE];
         var glFormat = _formatLookup[this._format];
 
         this.bind();
@@ -391,11 +382,6 @@ pc.extend(pc.gfx, function () {
 }());
 
 pc.extend(pc.gfx, function () {
-    var _formatLookup = [];
-    _formatLookup[pc.gfx.TextureFormat.RGB] = WebGLRenderingContext.RGB;
-    _formatLookup[pc.gfx.TextureFormat.RGBA] = WebGLRenderingContext.RGBA;
-    _formatLookup[pc.gfx.TextureFormat.LUMINANCE] = WebGLRenderingContext.LUMINANCE;
-
     /**
      * @name pc.gfx.TextureCube
      * @class A cube texture is a container for texel data that can be manipulated in a fragment shader.
@@ -493,6 +479,7 @@ pc.extend(pc.gfx, function () {
      */
     TextureCube.prototype.upload = function () {
         var gl = pc.gfx.Device.getCurrent().gl;
+        var _formatLookup = [gl.RGB, gl.RGBA, gl.LUMINANCE];
         var glFormat = _formatLookup[this._format];
 
         this.bind();

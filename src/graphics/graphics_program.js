@@ -1,42 +1,4 @@
 pc.extend(pc.gfx, function () {
-    var _typeToString = {};
-    _typeToString[WebGLRenderingContext.BOOL]         = "bool";
-    _typeToString[WebGLRenderingContext.INT]          = "int";
-    _typeToString[WebGLRenderingContext.FLOAT]        = "float";
-    _typeToString[WebGLRenderingContext.FLOAT_VEC2]   = "vec2";
-    _typeToString[WebGLRenderingContext.FLOAT_VEC3]   = "vec3";
-    _typeToString[WebGLRenderingContext.FLOAT_VEC4]   = "vec4";
-    _typeToString[WebGLRenderingContext.INT_VEC2]     = "ivec2";
-    _typeToString[WebGLRenderingContext.INT_VEC3]     = "ivec3";
-    _typeToString[WebGLRenderingContext.INT_VEC4]     = "ivec4";
-    _typeToString[WebGLRenderingContext.BOOL_VEC2]    = "bvec2";
-    _typeToString[WebGLRenderingContext.BOOL_VEC3]    = "bvec3";
-    _typeToString[WebGLRenderingContext.BOOL_VEC4]    = "bvec4";
-    _typeToString[WebGLRenderingContext.FLOAT_MAT2]   = "mat2";
-    _typeToString[WebGLRenderingContext.FLOAT_MAT3]   = "mat3";
-    _typeToString[WebGLRenderingContext.FLOAT_MAT4]   = "mat4";
-    _typeToString[WebGLRenderingContext.SAMPLER_2D]   = "sampler2D";
-    _typeToString[WebGLRenderingContext.SAMPLER_CUBE] = "samplerCube";
-
-    var _typeToPc = {};
-    _typeToPc[WebGLRenderingContext.BOOL]         = pc.gfx.ShaderInputType.BOOL;
-    _typeToPc[WebGLRenderingContext.INT]          = pc.gfx.ShaderInputType.INT;
-    _typeToPc[WebGLRenderingContext.FLOAT]        = pc.gfx.ShaderInputType.FLOAT;
-    _typeToPc[WebGLRenderingContext.FLOAT_VEC2]   = pc.gfx.ShaderInputType.VEC2;
-    _typeToPc[WebGLRenderingContext.FLOAT_VEC3]   = pc.gfx.ShaderInputType.VEC3;
-    _typeToPc[WebGLRenderingContext.FLOAT_VEC4]   = pc.gfx.ShaderInputType.VEC4;
-    _typeToPc[WebGLRenderingContext.INT_VEC2]     = pc.gfx.ShaderInputType.IVEC2;
-    _typeToPc[WebGLRenderingContext.INT_VEC3]     = pc.gfx.ShaderInputType.IVEC3;
-    _typeToPc[WebGLRenderingContext.INT_VEC4]     = pc.gfx.ShaderInputType.IVEC4;
-    _typeToPc[WebGLRenderingContext.BOOL_VEC2]    = pc.gfx.ShaderInputType.BVEC2;
-    _typeToPc[WebGLRenderingContext.BOOL_VEC3]    = pc.gfx.ShaderInputType.BVEC3;
-    _typeToPc[WebGLRenderingContext.BOOL_VEC4]    = pc.gfx.ShaderInputType.BVEC4;
-    _typeToPc[WebGLRenderingContext.FLOAT_MAT2]   = pc.gfx.ShaderInputType.MAT2;
-    _typeToPc[WebGLRenderingContext.FLOAT_MAT3]   = pc.gfx.ShaderInputType.MAT3;
-    _typeToPc[WebGLRenderingContext.FLOAT_MAT4]   = pc.gfx.ShaderInputType.MAT4;
-    _typeToPc[WebGLRenderingContext.SAMPLER_2D]   = pc.gfx.ShaderInputType.TEXTURE2D;
-    _typeToPc[WebGLRenderingContext.SAMPLER_CUBE] = pc.gfx.ShaderInputType.TEXTURECUBE;
-    
     /**
      * @name pc.gfx.Program
      * @class A program representing a compiled and linked vertex and fragment shader pair.
@@ -49,6 +11,45 @@ pc.extend(pc.gfx, function () {
         
         // Create the WebGL program ID
         var gl = pc.gfx.Device.getCurrent().gl;
+
+        var _typeToString = {};
+        _typeToString[gl.BOOL]         = "bool";
+        _typeToString[gl.INT]          = "int";
+        _typeToString[gl.FLOAT]        = "float";
+        _typeToString[gl.FLOAT_VEC2]   = "vec2";
+        _typeToString[gl.FLOAT_VEC3]   = "vec3";
+        _typeToString[gl.FLOAT_VEC4]   = "vec4";
+        _typeToString[gl.INT_VEC2]     = "ivec2";
+        _typeToString[gl.INT_VEC3]     = "ivec3";
+        _typeToString[gl.INT_VEC4]     = "ivec4";
+        _typeToString[gl.BOOL_VEC2]    = "bvec2";
+        _typeToString[gl.BOOL_VEC3]    = "bvec3";
+        _typeToString[gl.BOOL_VEC4]    = "bvec4";
+        _typeToString[gl.FLOAT_MAT2]   = "mat2";
+        _typeToString[gl.FLOAT_MAT3]   = "mat3";
+        _typeToString[gl.FLOAT_MAT4]   = "mat4";
+        _typeToString[gl.SAMPLER_2D]   = "sampler2D";
+        _typeToString[gl.SAMPLER_CUBE] = "samplerCube";
+
+        var _typeToPc = {};
+        _typeToPc[gl.BOOL]         = pc.gfx.ShaderInputType.BOOL;
+        _typeToPc[gl.INT]          = pc.gfx.ShaderInputType.INT;
+        _typeToPc[gl.FLOAT]        = pc.gfx.ShaderInputType.FLOAT;
+        _typeToPc[gl.FLOAT_VEC2]   = pc.gfx.ShaderInputType.VEC2;
+        _typeToPc[gl.FLOAT_VEC3]   = pc.gfx.ShaderInputType.VEC3;
+        _typeToPc[gl.FLOAT_VEC4]   = pc.gfx.ShaderInputType.VEC4;
+        _typeToPc[gl.INT_VEC2]     = pc.gfx.ShaderInputType.IVEC2;
+        _typeToPc[gl.INT_VEC3]     = pc.gfx.ShaderInputType.IVEC3;
+        _typeToPc[gl.INT_VEC4]     = pc.gfx.ShaderInputType.IVEC4;
+        _typeToPc[gl.BOOL_VEC2]    = pc.gfx.ShaderInputType.BVEC2;
+        _typeToPc[gl.BOOL_VEC3]    = pc.gfx.ShaderInputType.BVEC3;
+        _typeToPc[gl.BOOL_VEC4]    = pc.gfx.ShaderInputType.BVEC4;
+        _typeToPc[gl.FLOAT_MAT2]   = pc.gfx.ShaderInputType.MAT2;
+        _typeToPc[gl.FLOAT_MAT3]   = pc.gfx.ShaderInputType.MAT3;
+        _typeToPc[gl.FLOAT_MAT4]   = pc.gfx.ShaderInputType.MAT4;
+        _typeToPc[gl.SAMPLER_2D]   = pc.gfx.ShaderInputType.TEXTURE2D;
+        _typeToPc[gl.SAMPLER_CUBE] = pc.gfx.ShaderInputType.TEXTURECUBE;
+    
         this.programId = gl.createProgram();
 
         // Link together the vertex and fragment shaders

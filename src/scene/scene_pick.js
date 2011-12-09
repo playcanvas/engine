@@ -46,7 +46,6 @@ pc.extend(pc.scene, function () {
      * @param {Number} height The height of the pick buffer in pixels.
      */
     var Picker = function(width, height) {
-        var library = pc.gfx.Device.getCurrent().getProgramLibrary();
         this._pickMaterial = new pc.scene.Material();
         this._pickMaterial.setProgramName('pick');
 
