@@ -2,7 +2,7 @@
  * @name pc.audio
  * @namespace Functionality for playing audio files.
  */
-pc.audio = function () {
+pc.extend(pc.audio, function () {
     /**
      * @name pc.audio.AudioBase
      * @class Base class for Audio objects
@@ -103,5 +103,5 @@ pc.audio = function () {
     return {
         AudioBase: AudioBase
     }
-}();
+}());
 

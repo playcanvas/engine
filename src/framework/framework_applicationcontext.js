@@ -14,7 +14,7 @@ pc.extend(pc.fw, function() {
     var ApplicationContext = function (loader, scene, registry, controller, keyboard, mouse) {
         this.loader = loader;
         this.scene = scene;
-        this.root = new pc.scene.GraphNode();
+        this.root = new pc.fw.Entity();
         
         /**
          * @name pc.fw.ApplicationContext#components

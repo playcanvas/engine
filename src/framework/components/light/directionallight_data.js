@@ -1,8 +1,9 @@
 pc.extend(pc.fw, function () {
     DirectionalLightComponentData = function () {
-        this.light = null;
         this.enable = true;
         this.color = "0xffffff";
+
+        this.light = null;
     };
     DirectionalLightComponentData.extendsFrom(pc.fw.ComponentData);
 

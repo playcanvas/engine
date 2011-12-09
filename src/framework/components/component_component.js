@@ -161,7 +161,12 @@ pc.extend(pc.fw, function () {
         
         // initialise
         properties.forEach(function(value, index, arr) {
-            this.set(entity, value, data[value]);
+            if (data[value]) {
+                this.set(entity, value, data[value]);
+            } else {
+                this.set(entity, value, componentData[value]);                
+            }
+            
         }, this);
         
     };
