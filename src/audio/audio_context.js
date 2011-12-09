@@ -30,7 +30,7 @@ pc.extend(pc.audio, function () {
     } else {
         
         var AudioContext = function () {
-            this.destination= new AudioDestinationNode();            
+            this.destination= new AudioDestinationNode(this);            
         };
         
         AudioContext.prototype.createBufferSource = function () {
@@ -38,7 +38,7 @@ pc.extend(pc.audio, function () {
         };
         
         AudioContext.prototype.createGainNode = function () {
-            
+            return new AudioGainNode(this);
         };
         
         AudioContext.prototype.decodeAudioData = function (data, success, error) {
@@ -83,7 +83,7 @@ pc.extend(pc.audio, function () {
         
         AudioNode.prototype.connect = function (node) {
             // setup output node to match input node
-            node._audio.mozSetup(this._audio.mozChannels, this._audio.mozSampleRate);  
+            // node._audio.mozSetup(this._audio.mozChannels, this._audio.mozSampleRate);  
             
             // Add to lists
             node.inputs.push(this);
@@ -114,6 +114,11 @@ pc.extend(pc.audio, function () {
         }
         AudioDestinationNode = AudioDestinationNode.extendsFrom(AudioNode);
 
+    
+        var AudioGainNode = function (context) {
+        }
+        AudioGainNode  = AudioGainNode.extendsFrom(AudioNode);
+        
         function _mozLoadAudio(url, context, success, error) {
             var audio = new Audio(src=url);
             audio.addEventListener("loadeddata", function () {
@@ -122,7 +127,6 @@ pc.extend(pc.audio, function () {
                 success(source);
             });    
         };
-        
         
         var AudioBuffer = function (data) {
         }

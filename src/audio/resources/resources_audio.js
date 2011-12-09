@@ -8,19 +8,23 @@ pc.extend(pc.resources, function () {
     AudioResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
         var url = identifier;
         
-        pc.net.http.get(url, function (response) {
-            try {
-                this.audioContext.decodeAudioData(response, function(buffer) {
-                    var source = this.audioContext.createBufferSource(); // creates a sound source
-                    source.buffer = buffer;                              // set the source buffer 
-                    success(source);
-                }.bind(this), function (error) {
-                    console.log(error)
-                }.bind(this));
-            } catch (e) {
-                error(pc.string.format("An error occured while loading audio file from: '{0}'", url));
-            }
-        }.bind(this), {cache:false});
+        if(window.AudioContext) {
+            pc.net.http.get(url, function (response) {
+                try {
+                    this.audioContext.decodeAudioData(response, function(buffer) {
+                        var source = this.audioContext.createBufferSource(); // creates a sound source
+                        source.buffer = buffer;                              // set the source buffer 
+                        success(source);
+                    }.bind(this), function (error) {
+                        console.log(error)
+                    }.bind(this));
+                } catch (e) {
+                    error(pc.string.format("An error occured while loading audio file from: '{0}'", url));
+                }
+            }.bind(this), {cache:false});            
+        } else {
+            error("This browser doesn't support AudioContext");
+        }
     };
     
     AudioResourceHandler.prototype.open = function (data, options) {
