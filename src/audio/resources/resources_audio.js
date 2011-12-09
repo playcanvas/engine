@@ -8,7 +8,7 @@ pc.extend(pc.resources, function () {
     AudioResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
         var url = identifier;
         
-        if(window.AudioContext) {
+        if(window.AudioContext || window.webkitAudioContext) {
             pc.net.http.get(url, function (response) {
                 try {
                     this.audioContext.decodeAudioData(response, function(buffer) {
