@@ -467,13 +467,17 @@ pc.gfx.programlib.phong = {
                     if (options.cubeMap || options.sphereMap) {
                         code += "        lambertContrib += nDotL;\n";
                     } else {
-                        code += "        vec3 R = normalize(-reflect(lightDir, N));\n";
-                        code += "        rDotV = max(0.0, dot(R, viewDir));\n";
                         if (options.specularMap) {
-                            code += "        specularContrib += pow(rDotV, specMapPixel.a * 100.0);\n";
+                            code += "            float shininess = specMapPixel.a * 100.0;\n";
                         } else {
-                            code += "        specularContrib += pow(rDotV, material_shininess);\n";
+                            code += "            float shininess = material_shininess;\n";
                         }
+                        code += "            if (shininess > 0.0)\n";
+                        code += "            {\n";
+                        code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
+                        code += "                rDotV = max(0.0, dot(R, viewDir));\n";
+                        code += "                specularContrib += pow(rDotV, shininess);\n";
+                        code += "            }\n";
                     }
                     code += "    }\n";
                 } else {
@@ -489,13 +493,17 @@ pc.gfx.programlib.phong = {
                     if (options.cubeMap || options.sphereMap) {
                         code += "            lambertContrib += nDotL;\n";
                     } else {
-                        code += "            vec3 R = normalize(-reflect(lightDir, N));\n";
-                        code += "            rDotV = max(0.0, dot(R, viewDir));\n";
                         if (options.specularMap) {
-                            code += "            specularContrib += pow(rDotV, specMapPixel.a * 100.0) * att;\n";
+                            code += "            float shininess = specMapPixel.a * 100.0;\n";
                         } else {
-                            code += "            specularContrib += pow(rDotV, material_shininess) * att;\n";
+                            code += "            float shininess = material_shininess;\n";
                         }
+                        code += "            if (shininess > 0.0)\n";
+                        code += "            {\n";
+                        code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
+                        code += "                rDotV = max(0.0, dot(R, viewDir));\n";
+                        code += "                specularContrib += pow(rDotV, shininess) * att;\n";
+                        code += "            }\n";
                     }
                     code += "        }\n";
                     code += "    }\n";
