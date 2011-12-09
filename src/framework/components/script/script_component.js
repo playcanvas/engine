@@ -86,15 +86,18 @@ pc.extend(pc.fw, function () {
         if(pc.type(urls) == "string") {
             urls = urls.split(",");
         }
-        // Load and register new scripts and instances
-        urls.forEach(function (url, index, arr) {
-            var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
-            this.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
-                var ScriptType = resources[url];
-                instance = new ScriptType(entity);
-                this._registerInstance(entity, url, ScriptType._pcScriptName, instance);                        
-            }.bind(this));
-        }, this);
+        
+        if(!this._inTools) {
+            // Load and register new scripts and instances
+            urls.forEach(function (url, index, arr) {
+                var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
+                this.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
+                    var ScriptType = resources[url];
+                    instance = new ScriptType(entity);
+                    this._registerInstance(entity, url, ScriptType._pcScriptName, instance);                        
+                }.bind(this));
+            }, this);            
+        }
     };
     
     /**

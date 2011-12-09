@@ -38,12 +38,12 @@ pc.extend(pc.fw, function () {
      * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
      */
     var Application = function (canvas, options) {
+        this._inTools = false;
+
         this.canvas = canvas;
 
         this._link = new pc.fw.LiveLink(window);
         this._link.listen(pc.callback(this, this._handleMessage));
-           
-        this._inTools = false;
         
         // Open the log
         pc.log.open();
@@ -61,6 +61,8 @@ pc.extend(pc.fw, function () {
 
         var registry = new pc.fw.ComponentSystemRegistry();
         
+        var audioContext = new pc.audio.AudioContext();
+        
         scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
         //pc.string.format("{0}/code/{1}/{2}", options.api.url, options.api.username, options.api.project);
 
@@ -71,6 +73,7 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
+        loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioContext));
 
 		// The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options.controller, options.keyboard, options.mouse);
@@ -94,16 +97,18 @@ pc.extend(pc.fw, function () {
         var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
         var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
-        var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context);
-        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context);
+        var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, audioContext);
+        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioContext);
         
         skyboxsys.setDataDir(options.dataDir);
         staticcubemapsys.setDataDir(options.dataDir);
         
         // Add event support
         pc.extend(this, pc.events);
-        
-        this.init();        
+               
+    };
+    
+    Application.prototype._init = function () {
     };
     
     /**
@@ -119,8 +124,6 @@ pc.extend(pc.fw, function () {
         this.tick();
     };
     
-    Application.prototype.init = function () {
-    };
     
     /**
      * @function

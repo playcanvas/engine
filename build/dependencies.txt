@@ -73,9 +73,9 @@
 ../src/anim/anim_animation.js
 ../src/anim/anim_skeleton.js
 ../src/anim/resources/resources_animation.js
-../src/audio/audio_base.js
-../src/audio/audio_ambient.js
-../src/audio/audio_point.js
+../src/audio/audio_audio.js
+../src/audio/audio_context.js
+../src/audio/resources/resources_audio.js
 ../src/input/input_input.js
 ../src/input/input_mouse.js
 ../src/input/input_keyboard.js
@@ -110,8 +110,9 @@
 ../src/framework/components/pack/pack_component.js
 ../src/framework/components/pick/pick_component.js
 ../src/framework/components/header/header_component.js
-../src/framework/components/audio/audiosource_component.js
-../src/framework/components/audio/audiolistener_component.js
+../src/framework/components/audiosource/audiosource_component.js
+../src/framework/components/audiolistener/audiolistener_component.js
+../src/framework/components/audiozone/audiozone_component.js
 ../src/framework/components/primitive/primitive_component.js
 ../src/framework/livelink/livelink_livelink.js
 ../src/framework/livelink/livelink_message.js
@@ -136,6 +137,7 @@
 ../src/framework/components/header/header_data.js
 ../src/framework/components/pack/pack_data.js
 ../src/framework/components/pick/pick_data.js
-../src/framework/components/audio/audiosource_data.js
-../src/framework/components/audio/audiolistener_data.js
+../src/framework/components/audiosource/audiosource_data.js
+../src/framework/components/audiolistener/audiolistener_data.js
+../src/framework/components/audiozone/audiozone_data.js
 ../src/framework/components/primitive/primitive_data.js

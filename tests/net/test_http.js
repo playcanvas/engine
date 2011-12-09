@@ -583,3 +583,21 @@ test("request: send FormData", 1, function () {
     
     pc.net.http.request("POST", "http://test.com", {postdata: new FormData()}, xhr);
 });
+
+test("guessResponseType: wav", function () {
+    equal(pc.net.http.guessResponseType("/url/path/file.wav"), pc.net.http.ResponseType.ARRAY_BUFFER);
+    equal(pc.net.http.guessResponseType("/url/path/file.wav?key=value"), pc.net.http.ResponseType.ARRAY_BUFFER, 'url with query');    
+    equal(pc.net.http.guessResponseType("/url/path/file.wav#resource"), pc.net.http.ResponseType.ARRAY_BUFFER, 'url with fragment');    
+});
+
+test("guessResponseType: wav", function () {
+    equal(pc.net.http.guessResponseType("/url/path/file.ogg"), pc.net.http.ResponseType.ARRAY_BUFFER);
+    equal(pc.net.http.guessResponseType("/url/path/file.ogg?key=value"), pc.net.http.ResponseType.ARRAY_BUFFER, 'url with query');    
+    equal(pc.net.http.guessResponseType("/url/path/file.ogg#resource"), pc.net.http.ResponseType.ARRAY_BUFFER, 'url with fragment');    
+});
+
+test("guessResponseType: mp3", function () {
+    equal(pc.net.http.guessResponseType("/url/path/file.mp3"), pc.net.http.ResponseType.ARRAY_BUFFER);
+    equal(pc.net.http.guessResponseType("/url/path/file.mp3?key=value"), pc.net.http.ResponseType.ARRAY_BUFFER, 'url with query');    
+    equal(pc.net.http.guessResponseType("/url/path/file.mp3#resource"), pc.net.http.ResponseType.ARRAY_BUFFER, 'url with fragment');    
+});

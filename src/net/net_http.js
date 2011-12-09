@@ -5,24 +5,43 @@
 pc.extend(pc.net, function () {
     var Http = function Http() {
     };
+    
+    /**
+     * @enum {String}
+     * @name pc.net.http.ContentType
+     * @description An enum of the most common content types 
+     */
+     Http.ContentType = {
+        FORM_URLENCODED : "application/x-www-form-urlencoded",
+        GIF : "image/gif",
+        JPEG : "image/jpeg",
+        JSON : "application/json",
+        PNG : "image/png",
+        TEXT : "text/plain",
+        XML : "application/xml",
+        WAV : "audio/x-wav",
+        OGG : "audio/ogg",
+        MP3 : "audio/mpeg"
+    };
+    
+    Http.ResponseType = {
+        TEXT: 'text',
+        ARRAY_BUFFER: 'arraybuffer',
+        BLOB: 'blob',
+        DOCUMENT: 'document'
+    };
+    
+    Http.binaryExtensions = [
+        '.wav',
+        '.ogg',
+        '.mp3'
+    ];
+    
     Http.prototype = {
-        /**
-         * @enum {String}
-         * @name pc.net.http.ContentType
-         * @description An enum of the most common content types 
-         */
-        ContentType: {
-            FORM_URLENCODED : "application/x-www-form-urlencoded",
-            GIF : "image/gif",
-            JPEG : "image/jpeg",
-            JSON : "application/json",
-            PNG : "image/png",
-            TEXT : "text/plain",
-            XML : "application/xml",
-            WAV : "audio/x-wav",
-            OGG : "application/ogg",
-            MP3 : "audio/mpeg"
-        },
+        
+        ContentType: Http.ContentType,
+        ResponseType: Http.ResponseType,
+        binaryExtensions: Http.binaryExtensions,
         
         /**
          * Perform an HTTP GET request to the given url.
@@ -145,11 +164,11 @@ pc.extend(pc.net, function () {
                     var contentType = options.headers["Content-Type"];
                     // If there is no type then default to form-encoded
                     if(!pc.isDefined(contentType)) {
-                        options.headers["Content-Type"] = this.ContentType.FORM_URLENCODED;
+                        options.headers["Content-Type"] = Http.ContentType.FORM_URLENCODED;
                         contentType = options.headers["Content-Type"];
                     }
                     switch(contentType) {
-                        case this.ContentType.FORM_URLENCODED:
+                        case Http.ContentType.FORM_URLENCODED:
                             // Normal URL encoded form data 
                             postdata = "";
                             var bFirstItem = true;
@@ -167,10 +186,10 @@ pc.extend(pc.net, function () {
                                 }
                             }
                             break;
-                        case this.ContentType.JSON:
+                        case Http.ContentType.JSON:
                         default:
                             if (contentType == null) {
-                                options.headers["Content-Type"] = pc.net.http.ContentType.JSON;
+                                options.headers["Content-Type"] = Http.ContentType.JSON;
                             }
                             postdata = JSON.stringify(options.postdata);
                             break;
@@ -242,18 +261,18 @@ pc.extend(pc.net, function () {
         },
         
         guessResponseType: function (url) {
-            var arraybuffer = ['.wav', '.ogg', '.mp3'];
-            var ext = pc.path.getExtension(url);
+            var uri = new pc.URI(url)
+            var ext = pc.path.getExtension(uri.path);
             
-            if(arraybuffer.indexOf(ext) >= 0) {
-                return "arraybuffer";
+            if(Http.binaryExtensions.indexOf(ext) >= 0) {
+                return Http.ResponseType.ARRAY_BUFFER;
             }
             
-            return "text";
+            return Http.ResponseType.TEXT;
         },
         
         isBinaryContentType: function (contentType) {
-            if ([this.ContentType.WAV, this.ContentType.OGG, this.ContentType.MP3].indexOf(contentType) >= 0) {
+            if ([Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3].indexOf(contentType) >= 0) {
                 return true;
             }
             
