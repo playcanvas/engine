@@ -38,12 +38,12 @@ pc.extend(pc.fw, function () {
      * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
      */
     var Application = function (canvas, options) {
+        this._inTools = false;
+
         this.canvas = canvas;
 
         this._link = new pc.fw.LiveLink(window);
         this._link.listen(pc.callback(this, this._handleMessage));
-           
-        this._inTools = false;
         
         // Open the log
         pc.log.open();
@@ -105,8 +105,10 @@ pc.extend(pc.fw, function () {
         
         // Add event support
         pc.extend(this, pc.events);
-        
-        this.init();        
+               
+    };
+    
+    Application.prototype._init = function () {
     };
     
     /**
@@ -122,8 +124,6 @@ pc.extend(pc.fw, function () {
         this.tick();
     };
     
-    Application.prototype.init = function () {
-    };
     
     /**
      * @function

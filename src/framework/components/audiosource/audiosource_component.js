@@ -11,8 +11,13 @@ pc.extend(pc.fw, function () {
         
         this.audioContext = audioContext;
         
+        this.postGain = audioContext.createGainNode();
+        this.postGain.connect(audioContext.destination);
+        
         this.bind("set_assets", this.onSetAssets);
         this.bind("set_sources", this.onSetSources);
+        this.bind("set_loop", this.onSetLoop);
+        this.bind("set_volume", this.onSetVolume);
     };
     AudioSourceComponentSystem = AudioSourceComponentSystem.extendsFrom(pc.fw.ComponentSystem);
         
@@ -28,22 +33,7 @@ pc.extend(pc.fw, function () {
     };
     
     AudioSourceComponentSystem.prototype.update = function(dt) {
-        /*
-        var l= this.context.systems.audiodestination.getCurrentDestination();
         
-        if(destinationEntity) {
-            destinationPosition = pc.math.mat4.getTranslation(listenerEntity.getLocalTransform());
-            
-            for(id in components) {
-                if(components.hasOwnProperty(id)) {
-                    entity = components[id].entity;
-                    component = components[id].component;
-                    
-                    position = pc.math.mat4.getTranslation(entity.getLocalTransform());                    
-                }
-            }            
-        }
-        */
     };
     
     AudioSourceComponentSystem.prototype.setSource = function (entity, name) {
@@ -53,7 +43,7 @@ pc.extend(pc.fw, function () {
 
         // Set current audioNode
         if (sources[name]) {
-            sources[name].connect(this.audioContext.destination);
+            this._connectToOutput(sources[name]);
             this.set(entity, "audioNode", sources[name]);
         }
         
@@ -63,6 +53,8 @@ pc.extend(pc.fw, function () {
         var audioNode = this.get(entity, 'audioNode');
         this.set(entity, 'paused', false);
         if(audioNode) {
+            audioNode.gain.value = this.get(entity, 'volume');
+            audioNode.loop = this.get(entity, 'loop');
             audioNode.noteOn(0);
         }
     };
@@ -74,7 +66,11 @@ pc.extend(pc.fw, function () {
             audioNode.noteOff(0);    
         }
     };
-        
+    
+    AudioSourceComponentSystem.prototype.setVolume = function(value) {
+        this.postGain.gain.value = value;
+    };
+    
     AudioSourceComponentSystem.prototype.onSetAssets = function (entity, name, oldValue, newValue) {
         var componentData = this.getComponentData(entity);
         var newAssets = [];
@@ -87,7 +83,8 @@ pc.extend(pc.fw, function () {
                 }
             }
         }
-        if(newAssets.length) {
+        
+        if(!this._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
             this._loadAudioSourceAssets(entity, newAssets);   
         }
     };
@@ -103,6 +100,28 @@ pc.extend(pc.fw, function () {
             }
             
         }
+    };
+
+    AudioSourceComponentSystem.prototype.onSetLoop = function (entity, name, oldValue, newValue) {
+        if (oldValue != newValue) {
+            var node = this.get(entity, 'audioNode');
+            if(node) {
+                node.loop = newValue;    
+            }
+        }
+    };
+
+    AudioSourceComponentSystem.prototype.onSetVolume = function (entity, name, oldValue, newValue) {
+        if (oldValue != newValue) {
+            var node = this.get(entity, 'audioNode');
+            if(node) {
+                node.gain.value = newValue;    
+            }
+        }
+    };
+        
+    AudioSourceComponentSystem.prototype._connectToOutput = function (node) {
+        node.connect(this.postGain);    
     };
     
     AudioSourceComponentSystem.prototype._loadAudioSourceAssets = function (entity, guids) {
