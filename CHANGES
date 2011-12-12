@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.24.0
+-------
+Fix audio in Firefox, remove setSource() method. Use play(entity, name) now.
+Added audionode.js shim for Firefox
+[FIX] Skeleton nodes with one keyframe now work properly with addTime function.
+Added pc.math.quat.copy.
+Add the ability to deactivate an animation on load. The animation component can additionally be queried to see if an animation is actually currently playing.
+[FIX] Fix the case where an entity's serialized boolean false value causes the value to be incorrectly read from the component data.
+Add support for looping and volume for audio sources
+[FIX] guessResponseType method correctly handles urls with queries and fragments
+
+-------
 v0.23.0
 -------
 * Fixes to allow PlayCanvas to run in Opera 12
