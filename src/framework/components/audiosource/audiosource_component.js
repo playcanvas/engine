@@ -35,7 +35,7 @@ pc.extend(pc.fw, function () {
     AudioSourceComponentSystem.prototype.update = function(dt) {
         
     };
-    
+
     AudioSourceComponentSystem.prototype.setSource = function (entity, name) {
         this.set(entity, 'currentSource', name);
 
@@ -43,16 +43,20 @@ pc.extend(pc.fw, function () {
 
         // Set current audioNode
         if (sources[name]) {
+            var audioNode = this.get(entity, 'audioNode');
+            if(audioNode) {
+                audioNode.disconnect(0);
+            }
             this._connectToOutput(sources[name]);
             this.set(entity, "audioNode", sources[name]);
         }
-        
     };
-    
-    AudioSourceComponentSystem.prototype.play = function(entity, name) {
+
+    AudioSourceComponentSystem.prototype.play = function(entity) {
         var audioNode = this.get(entity, 'audioNode');
         this.set(entity, 'paused', false);
         if(audioNode) {
+            
             audioNode.gain.value = this.get(entity, 'volume');
             audioNode.loop = this.get(entity, 'loop');
             audioNode.noteOn(0);
@@ -67,6 +71,13 @@ pc.extend(pc.fw, function () {
         }
     };
     
+    /**
+     * @private
+     * @name pc.fw.AudioSourceComponentSystem#setVolume()
+     * @function
+     * @description Set the volume for the entire AudioSource system. All sources will have their volume limited to this value
+     * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
+     */
     AudioSourceComponentSystem.prototype.setVolume = function(value) {
         this.postGain.gain.value = value;
     };
@@ -121,6 +132,7 @@ pc.extend(pc.fw, function () {
     };
         
     AudioSourceComponentSystem.prototype._connectToOutput = function (node) {
+        //this.postGain.disconnect(0);
         node.connect(this.postGain);    
     };
     

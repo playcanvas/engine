@@ -9,21 +9,30 @@ pc.extend(pc.resources, function () {
         var url = identifier;
         
         if(window.AudioContext || window.webkitAudioContext) {
-            pc.net.http.get(url, function (response) {
-                try {
-                    this.audioContext.decodeAudioData(response, function(buffer) {
-                        var source = this.audioContext.createBufferSource(); // creates a sound source
-                        source.buffer = buffer;                              // set the source buffer 
-                        success(source);
-                    }.bind(this), function (error) {
-                        console.log(error)
-                    }.bind(this));
-                } catch (e) {
-                    error(pc.string.format("An error occured while loading audio file from: '{0}'", url));
-                }
-            }.bind(this), {cache:false});            
-        } else {
-            error("This browser doesn't support AudioContext");
+            if(window.AudioContext && window.AudioContext.__type) {
+                // shim
+                pc.audio.loadAudio(url, this.audioContext, function (source) {
+                    setTimeout(function () {
+                        success(source);    
+                    }, 500);
+                }, function (msg) {
+                    error(msg);
+                });
+            } else {
+                pc.net.http.get(url, function (response) {
+                    try {
+                        this.audioContext.decodeAudioData(response, function(buffer) {
+                            var source = this.audioContext.createBufferSource(); // creates a sound source
+                            source.buffer = buffer;                              // set the source buffer 
+                            success(source);
+                        }.bind(this), function (error) {
+                            console.log(error)
+                        }.bind(this));
+                    } catch (e) {
+                        error(pc.string.format("An error occured while loading audio file from: '{0}'", url));
+                    }
+                }.bind(this), {cache:false});
+            }
         }
     };
     
