@@ -46,6 +46,12 @@ pc.extend(pc.anim, function () {
      */
     Skeleton.prototype.addTime = function (delta) {
         if (this._animation !== null) {
+            // Check if we can early out
+            if ((this._time === duration) && !this.looping) {
+                return;
+            }
+
+            // Step the current time and work out if we need to jump ahead, clamp or wrap around
             this._time += delta;
             var duration = this._animation.getDuration();
             if (this._time > duration) {
