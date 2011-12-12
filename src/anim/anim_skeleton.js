@@ -63,16 +63,22 @@ pc.extend(pc.anim, function () {
                 var keys = nodes[i];
 
                 // Find keyframe pair
-                for (var currKeyIndex = 0; currKeyIndex < keys.length-1; currKeyIndex++) {
-                    var k1 = keys[currKeyIndex];
-                    var k2 = keys[currKeyIndex + 1];
+                if (keys.length === 1) {
+                    pc.math.quat.copy(keys[0]._quat, this._interpolatedKeys[i]._quat);
+                    pc.math.vec3.copy(keys[0]._pos, this._interpolatedKeys[i]._pos);
+                    pc.math.vec3.copy(keys[0]._scale, this._interpolatedKeys[i]._scale);
+                } else {
+                    for (var currKeyIndex = 0; currKeyIndex < keys.length-1; currKeyIndex++) {
+                        var k1 = keys[currKeyIndex];
+                        var k2 = keys[currKeyIndex + 1];
 
-                    if ((k1._time <= this._time) && (k2._time >= this._time)) {
-                        var alpha = (this._time - k1._time) / (k2._time - k1._time);
+                        if ((k1._time <= this._time) && (k2._time >= this._time)) {
+                            var alpha = (this._time - k1._time) / (k2._time - k1._time);
 
-                        pc.math.quat.slerp(k1._quat, k2._quat, alpha, this._interpolatedKeys[i]._quat);
-                        pc.math.vec3.lerp(k1._pos, k2._pos, alpha, this._interpolatedKeys[i]._pos);
-                        pc.math.vec3.lerp(k1._scale, k2._scale, alpha, this._interpolatedKeys[i]._scale);
+                            pc.math.quat.slerp(k1._quat, k2._quat, alpha, this._interpolatedKeys[i]._quat);
+                            pc.math.vec3.lerp(k1._pos, k2._pos, alpha, this._interpolatedKeys[i]._pos);
+                            pc.math.vec3.lerp(k1._scale, k2._scale, alpha, this._interpolatedKeys[i]._scale);
+                        }
                     }
                 }
             }
