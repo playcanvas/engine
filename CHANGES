@@ -3,6 +3,17 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.23.0
+-------
+* Fixes to allow PlayCanvas to run in Opera 12
+* Added support for point light attenuation
+* Light enable -> setEnabled
+* Improved point light handling in the framework
+* Added material plugin for shadowmap program generation
+* New AudioSource Component using webkitAudioContext to play sounds (audio is disabled on unsupported browsers)
+* [FIX] Fix problem where material shininess can be zero giving undefined results
+
+-------
 v0.22.0
 -------
 * Added a fixed time step update function to the framework.
