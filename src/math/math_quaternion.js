@@ -26,6 +26,27 @@ pc.math.quat = function () {
 
         /**
          * @function
+         * @name pc.math.quat.copy
+         * @description Copies the contents of a source quaternion to a destination quaternion.
+         * @param {Array} src The quaternion to be copied.
+         * @param {Array} dst The quaternion that will receive a copy of the source vector.
+         * @example
+         * var src = pc.math.quat.create(0, 0, 0, 1);
+         * var dst = pc.math.quat.create();
+         * pc.math.quat.copy(src, dst);
+         * var same = ((src[0] === dst[0]) && (src[1] === dst[1]) && (src[2] === dst[2]) && (src[3] === dst[3]));
+         * console.log("The two quaternions are " + (same ? "equal" : "different"));
+         * @author Will Eastcott
+         */
+        copy: function (src, dst) {
+            src[0] = dst[0];
+            src[1] = dst[1];
+            src[2] = dst[2];
+            src[3] = dst[3];
+        },
+
+        /**
+         * @function
          * @name pc.math.quat.create
          * @description Creates a new quaternion set to the specified values.
          * @param {number} x The value of the x component of the quaternion.
@@ -51,7 +72,7 @@ pc.math.quat = function () {
          * a quaternion is purely a representation for orientation, only the rotational part
          * of the matrix is set.
          * @param {Array} q The quaternion to convert.
-         * @param {Array} r An optional 4x4 matrix that will recieve the result of the conversion. If
+         * @param {Array} r An optional 4x4 matrix that will receive the result of the conversion. If
          * this parameter is omitted, the function will create a new 4x4 matrix internally and return it.
          * @returns {Array} A 4x4 matrix corresponding to the specified quaternion. If the r parameter is
          * specified, the return value will be equal to r. Otherwise, it will be a newly created matrix.
@@ -61,7 +82,7 @@ pc.math.quat = function () {
          * // Allow toMat4 to create a new matrix internally
          * var m = pc.math.quat.toMat4(q);
          *
-         * // Supply a 4x4 matrix to recieve the result of the conversion
+         * // Supply a 4x4 matrix to receive the result of the conversion
          * var m = pc.math.mat4.create();
          * pc.math.quat.toMat4(q, m);
          * @author Will Eastcott
@@ -116,7 +137,7 @@ pc.math.quat = function () {
          * @param {number} alpha The value controlling the interpolation in relation to the two input
          * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
          * in between generating a spherical interpolation between the two.
-         * @param {Array} r An optional quaternion that will recieve the result of the interpolation. If
+         * @param {Array} r An optional quaternion that will receive the result of the interpolation. If
          * this parameter is omitted, the function will create a new quaternion internally and return it.
          * @returns {Array} A quaterion holding the result of the interpolation. If the r parameter is
          * specified, the return value will be equal to r. Otherwise, it will be a newly created quaternion.
@@ -129,7 +150,7 @@ pc.math.quat = function () {
          * result = pc.math.quat.slerp(q1, q2, 0.5); // Return the midpoint interpolant 
          * result = pc.math.quat.slerp(q1, q2, 1); // Return q2
          *
-         * // Supply a quaternion to recieve the result of the interpolation
+         * // Supply a quaternion to receive the result of the interpolation
          * result = pc.math.quat.create();
          * pc.math.quat.slerp(q1, q2, 0.5, result);
          * @author Will Eastcott
