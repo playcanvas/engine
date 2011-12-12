@@ -21,18 +21,21 @@ pc.extend(pc.audio, function () {
         var buffer = null;
         var position = 0;
         audio.addEventListener("loadeddata", function () {
-            //source = new AudioElementSourceNode(context, audio);
+            // Create a buffer large enough for the entire decoded sound file
             var length = Math.ceil(audio.duration * audio.mozSampleRate * audio.mozChannels / audio.mozFrameBufferLength) * audio.mozFrameBufferLength;
-            buffer = new Float32Array(length);
-            
+            buffer = new window.AudioBuffer(new Float32Array(length), audio.mozChannels, audio.mozSampleRate);
+            // play through the audio to decode it into the buffer
+            audio.volume = 0;
+            audio.play();
             success(buffer);
         }, false);
         
         audio.addEventListener("MozAudioAvailable", function (event) {
-            buffer.set(event.frameBuffer, position);
+            // as the data is decoded copy it into the AudioBuffer
+            buffer.__data.set(event.frameBuffer, position);
             position += event.frameBuffer.length;
         }.bind(this), false);
-        
+
         audio.src = url;
     };
 

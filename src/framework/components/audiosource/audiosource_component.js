@@ -35,10 +35,10 @@ pc.extend(pc.fw, function () {
     AudioSourceComponentSystem.prototype.update = function(dt) {
         
     };
-
+    
+    /*
     AudioSourceComponentSystem.prototype.setSource = function (entity, name) {
         this.set(entity, 'currentSource', name);
-
         var sources = this.get(entity, 'sources');
 
         // Set current audioNode
@@ -51,7 +51,8 @@ pc.extend(pc.fw, function () {
             this.set(entity, "audioNode", sources[name]);
         }
     };
-    
+    */
+   
     AudioSourceComponentSystem.prototype.play = function(entity, name) {
         this.set(entity, 'paused', false);
         var sources = this.get(entity, 'sources');
@@ -60,6 +61,7 @@ pc.extend(pc.fw, function () {
         audioNode.buffer = sources[name];
         audioNode.gain.value = this.get(entity, 'volume');
         audioNode.loop = this.get(entity, 'loop');
+        this._connectToOutput(audioNode);
         audioNode.noteOn(0);
          
     };
@@ -133,7 +135,6 @@ pc.extend(pc.fw, function () {
     };
         
     AudioSourceComponentSystem.prototype._connectToOutput = function (node) {
-        //this.postGain.disconnect(0);
         node.connect(this.postGain);    
     };
     
@@ -161,10 +162,9 @@ pc.extend(pc.fw, function () {
                     sources[names[i]] = audioResources[requests[i].identifier];
                 }
                 // set the current source the first entry (before calling set, so that it can play if needed)
-                if(names.length) {
-                    this.setSource(entity, names[0]);
-                }
-
+                // if(names.length) {
+                    //this.setSource(entity, names[0]);
+                // }
                 this.set(entity, 'sources', sources);
             }.bind(this), function (errors) {
                 
