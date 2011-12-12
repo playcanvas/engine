@@ -26,9 +26,8 @@ pc.extend(pc.fw, function () {
 
         this.initialiseComponent(entity, componentData, data, ['assets', 'volume', 'loop', 'activate']);
     
-        if(data['activate']) {
-            this.play(entity);
-        }
+        this.set(entity, 'paused', !data['activate']);
+        
         return componentData;        
     };
     
@@ -108,7 +107,7 @@ pc.extend(pc.fw, function () {
         
         // If the currentSource was set before the asset was loaded and should be playing, we should start playback 
         if(currentSource && !oldValue[currentSource]) {
-            this.setSource(entity, currentSource);
+            //this.setSource(entity, currentSource);
             if (!this.get(entity, 'paused')) {
                 this.play(entity, currentSource);    
             }
@@ -161,10 +160,10 @@ pc.extend(pc.fw, function () {
                 for (var i = 0; i < requests.length; i++) {
                     sources[names[i]] = audioResources[requests[i].identifier];
                 }
-                // set the current source the first entry (before calling set, so that it can play if needed)
-                // if(names.length) {
-                    //this.setSource(entity, names[0]);
-                // }
+                // set the current source to the first entry (before calling set, so that it can play if needed)
+                if(names.length) {
+                    this.set(entity, 'currentSource', names[0]);
+                }
                 this.set(entity, 'sources', sources);
             }.bind(this), function (errors) {
                 
