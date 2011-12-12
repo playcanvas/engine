@@ -51,16 +51,17 @@ pc.extend(pc.fw, function () {
             this.set(entity, "audioNode", sources[name]);
         }
     };
-
-    AudioSourceComponentSystem.prototype.play = function(entity) {
-        var audioNode = this.get(entity, 'audioNode');
+    
+    AudioSourceComponentSystem.prototype.play = function(entity, name) {
         this.set(entity, 'paused', false);
-        if(audioNode) {
-            
-            audioNode.gain.value = this.get(entity, 'volume');
-            audioNode.loop = this.get(entity, 'loop');
-            audioNode.noteOn(0);
-        }
+        var sources = this.get(entity, 'sources');
+        
+        var audioNode = this.audioContext.createBufferSource();
+        audioNode.buffer = sources[name];
+        audioNode.gain.value = this.get(entity, 'volume');
+        audioNode.loop = this.get(entity, 'loop');
+        audioNode.noteOn(0);
+         
     };
     
     AudioSourceComponentSystem.prototype.pause = function(entity) {

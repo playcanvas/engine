@@ -7,13 +7,12 @@ pc.extend(pc.resources, function () {
         
     AudioResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
         var url = identifier;
-        
         if(window.AudioContext || window.webkitAudioContext) {
             if(window.AudioContext && window.AudioContext.__type) {
                 // shim
-                pc.audio.loadAudio(url, this.audioContext, function (source) {
+                pc.audio.loadAudio(url, this.audioContext, function (buffer) {
                     setTimeout(function () {
-                        success(source);    
+                        success(buffer);
                     }, 500);
                 }, function (msg) {
                     error(msg);
@@ -22,9 +21,9 @@ pc.extend(pc.resources, function () {
                 pc.net.http.get(url, function (response) {
                     try {
                         this.audioContext.decodeAudioData(response, function(buffer) {
-                            var source = this.audioContext.createBufferSource(); // creates a sound source
-                            source.buffer = buffer;                              // set the source buffer 
-                            success(source);
+                            //var source = this.audioContext.createBufferSource(); // creates a sound source
+                            //source.buffer = buffer;                              // set the source buffer 
+                            success(buffer);
                         }.bind(this), function (error) {
                             console.log(error)
                         }.bind(this));

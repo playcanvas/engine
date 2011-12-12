@@ -19,28 +19,20 @@ pc.extend(pc.audio, function () {
         var audio = new Audio();
         var source = null;
         var buffer = null;
+        var position = 0;
         audio.addEventListener("loadeddata", function () {
-            source = new AudioElementSourceNode(context, audio);
-    
-            //var length = Math.ceil(audio.duration * audio.mozSampleRate * audio.mozChannels / audio.mozFrameBufferLength) * audio.mozFrameBufferLength;
-            //buffer = new Float32Array(length);
-            success(source);
+            //source = new AudioElementSourceNode(context, audio);
+            var length = Math.ceil(audio.duration * audio.mozSampleRate * audio.mozChannels / audio.mozFrameBufferLength) * audio.mozFrameBufferLength;
+            buffer = new Float32Array(length);
+            
+            success(buffer);
         }, false);
-        /*
+        
         audio.addEventListener("MozAudioAvailable", function (event) {
-            if (buffer) {
-                // Create new buffer concatenating the new data on the end
-                var len = this.buffer.__data.length;
-                var buffer = new Float32Array(len + event.frameBuffer.length);
-    
-                buffer.set(this.buffer.__data);
-                buffer.set(event.frameBuffer, len);
-                //this.buffer = new window.AudioBuffer(buffer, 2, 44100);
-            } else {
-                buffer = new Float32Array(event.frameBuffer); //new window.AudioBuffer(, 2, 44100);    
-            }
+            buffer.set(event.frameBuffer, position);
+            position += event.frameBuffer.length;
         }.bind(this), false);
-        */
+        
         audio.src = url;
     };
 
