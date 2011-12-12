@@ -21,7 +21,7 @@ pc.extend(pc.fw, function () {
     AnimationComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AnimationComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['assets', 'loop', 'speed']);
+        this.initialiseComponent(entity, componentData, data, ['activate', 'loop', 'speed', 'assets']);
 
         return componentData;
     };
@@ -38,7 +38,7 @@ pc.extend(pc.fw, function () {
     };
 
     AnimationComponentSystem.prototype.onSetAnimations = function (entity, name, oldValue, newValue) {
-        if (newValue) {
+        if (typeof newValue !== 'undefined') {
             var componentData = this.getComponentData(entity);
             for (var animName in componentData.animations) {
                 // Create skeletons
@@ -51,20 +51,22 @@ pc.extend(pc.fw, function () {
                 componentData.skeleton.setLooping(componentData.loop);
 
                 // Set the first loaded animation as the current
-                this.setAnimation(entity, animName);
+                if (componentData.activate) {
+                    this.setAnimation(entity, animName);
+                }
                 break;
             }
         }
     };
 
     AnimationComponentSystem.prototype.onSetAssets = function (entity, name, oldValue, newValue) {
-        if (newValue) {
+        if (typeof newValue !== 'undefined') {
             this.loadAnimationAssets(entity, newValue);
         }
     };
-    
+
     AnimationComponentSystem.prototype.onSetLoop = function (entity, name, oldValue, newValue) {
-        if (newValue) {
+        if (typeof newValue !== 'undefined') {
             var componentData = this.getComponentData(entity);
 
             if (componentData.skeleton) {
@@ -79,37 +81,43 @@ pc.extend(pc.fw, function () {
         for (var id in components) {
             if (components.hasOwnProperty(id)) {
                 var componentData = components[id].component;
-                var skeleton = componentData.skeleton;
-                if (skeleton !== null) {
-                    var entity = components[id].entity;
-                    var model = this.context.systems.model.get(entity, 'model');
-                    if (model) {
-                        // If the model changes, retarget the skeleton to drive the new
-                        // model hierarchy
-                        if (model !== componentData.model) {
-                            skeleton.setGraph(model.getGraph());
-                            componentData.model = model;
-                        }
-
-                        if (componentData.blending) {
-                            componentData.blendTimeRemaining -= dt;
-                            if (componentData.blendTimeRemaining < 0.0) {
-                                componentData.blendTimeRemaining = 0.0;
+                if (componentData.playing) {
+                    var skeleton = componentData.skeleton;
+                    if (skeleton !== null) {
+                        var entity = components[id].entity;
+                        var model = this.context.systems.model.get(entity, 'model');
+                        if (model) {
+                            // If the model changes, retarget the skeleton to drive the new
+                            // model hierarchy
+                            if (model !== componentData.model) {
+                                skeleton.setGraph(model.getGraph());
+                                componentData.model = model;
                             }
-                            var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
-                            skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
-                        } else {
-                            // Advance the animation, interpolating keyframes at each animated node in
-                            // skeleton
-                            skeleton.addTime(dt * componentData.speed);
-                        }
 
-                        if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
-                            componentData.blending = false;
-                            skeleton.setAnimation(componentData.toSkel.getAnimation());
-                        }
+                            if (componentData.blending) {
+                                componentData.blendTimeRemaining -= dt;
+                                if (componentData.blendTimeRemaining < 0.0) {
+                                    componentData.blendTimeRemaining = 0.0;
+                                }
+                                var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
+                                skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
+                            } else {
+                                // Advance the animation, interpolating keyframes at each animated node in
+                                // skeleton
+                                var delta = dt * componentData.speed;
+                                skeleton.addTime(delta);
+                                if ((skeleton.getCurrentTime() === skeleton.getAnimation().getDuration()) && !componentData.loop) {
+                                    componentData.playing = false;
+                                }
+                            }
 
-                        skeleton.updateGraph();
+                            if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
+                                componentData.blending = false;
+                                skeleton.setAnimation(componentData.toSkel.getAnimation());
+                            }
+
+                            skeleton.updateGraph();
+                        }
                     }
                 }
             }
@@ -183,6 +191,8 @@ pc.extend(pc.fw, function () {
         if (componentData.model) {
             componentData.skeleton.setGraph(componentData.model.getGraph());
         }
+
+        componentData.playing = true;
     };
 
     return {
