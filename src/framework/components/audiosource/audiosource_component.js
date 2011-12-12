@@ -26,9 +26,8 @@ pc.extend(pc.fw, function () {
 
         this.initialiseComponent(entity, componentData, data, ['assets', 'volume', 'loop', 'activate']);
     
-        if(data['activate']) {
-            this.play(entity);
-        }
+        this.set(entity, 'paused', !data['activate']);
+        
         return componentData;        
     };
     
@@ -36,27 +35,34 @@ pc.extend(pc.fw, function () {
         
     };
     
+    /*
     AudioSourceComponentSystem.prototype.setSource = function (entity, name) {
         this.set(entity, 'currentSource', name);
-
         var sources = this.get(entity, 'sources');
 
         // Set current audioNode
         if (sources[name]) {
+            var audioNode = this.get(entity, 'audioNode');
+            if(audioNode) {
+                audioNode.disconnect(0);
+            }
             this._connectToOutput(sources[name]);
             this.set(entity, "audioNode", sources[name]);
         }
-        
     };
-    
+    */
+   
     AudioSourceComponentSystem.prototype.play = function(entity, name) {
-        var audioNode = this.get(entity, 'audioNode');
         this.set(entity, 'paused', false);
-        if(audioNode) {
-            audioNode.gain.value = this.get(entity, 'volume');
-            audioNode.loop = this.get(entity, 'loop');
-            audioNode.noteOn(0);
-        }
+        var sources = this.get(entity, 'sources');
+        
+        var audioNode = this.audioContext.createBufferSource();
+        audioNode.buffer = sources[name];
+        audioNode.gain.value = this.get(entity, 'volume');
+        audioNode.loop = this.get(entity, 'loop');
+        this._connectToOutput(audioNode);
+        audioNode.noteOn(0);
+         
     };
     
     AudioSourceComponentSystem.prototype.pause = function(entity) {
@@ -67,6 +73,13 @@ pc.extend(pc.fw, function () {
         }
     };
     
+    /**
+     * @private
+     * @name pc.fw.AudioSourceComponentSystem#setVolume()
+     * @function
+     * @description Set the volume for the entire AudioSource system. All sources will have their volume limited to this value
+     * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
+     */
     AudioSourceComponentSystem.prototype.setVolume = function(value) {
         this.postGain.gain.value = value;
     };
@@ -94,7 +107,7 @@ pc.extend(pc.fw, function () {
         
         // If the currentSource was set before the asset was loaded and should be playing, we should start playback 
         if(currentSource && !oldValue[currentSource]) {
-            this.setSource(entity, currentSource);
+            //this.setSource(entity, currentSource);
             if (!this.get(entity, 'paused')) {
                 this.play(entity, currentSource);    
             }
@@ -147,11 +160,10 @@ pc.extend(pc.fw, function () {
                 for (var i = 0; i < requests.length; i++) {
                     sources[names[i]] = audioResources[requests[i].identifier];
                 }
-                // set the current source the first entry (before calling set, so that it can play if needed)
+                // set the current source to the first entry (before calling set, so that it can play if needed)
                 if(names.length) {
-                    this.setSource(entity, names[0]);
+                    this.set(entity, 'currentSource', names[0]);
                 }
-
                 this.set(entity, 'sources', sources);
             }.bind(this), function (errors) {
                 

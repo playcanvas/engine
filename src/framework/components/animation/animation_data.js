@@ -4,6 +4,7 @@ pc.extend(pc.fw, function() {
         this.assets = null;
         this.speed = 1.0;
         this.loop = true;
+        this.activate = true;
 
         // Non-serialized
         this.animations = null;
@@ -16,6 +17,7 @@ pc.extend(pc.fw, function() {
         this.blending = false;
         this.blendTime = 0;
         this.blendTimeRemaining = 0;
+        this.playing = false;
     }
     AnimationComponentData = AnimationComponentData.extendsFrom(pc.fw.ComponentData);
 
@@ -55,6 +57,15 @@ editor.link.expose({
     variable: "loop",
     displayName: "Loop",
     description: "Loop the animation back to the start on completion",
+    type: "boolean",
+    defaultValue: true
+});
+
+editor.link.expose({
+    system: "animation",
+    variable: "activate",
+    displayName: "Activate",
+    description: "Play the configured animation on load",
     type: "boolean",
     defaultValue: true
 });
