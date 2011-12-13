@@ -11,8 +11,8 @@ pc.extend(pc.fw, function () {
         
         this.audioContext = audioContext;
         
-        this.postGain = audioContext.createGainNode();
-        this.postGain.connect(audioContext.destination);
+        //this.postGain = audioContext.createGainNode();
+        //this.postGain.connect(audioContext.destination);
         
         this.bind("set_assets", this.onSetAssets);
         this.bind("set_sources", this.onSetSources);
@@ -134,7 +134,9 @@ pc.extend(pc.fw, function () {
     };
         
     AudioSourceComponentSystem.prototype._connectToOutput = function (node) {
-        node.connect(this.postGain);    
+        //node.connect(this.postGain);
+        node.connect(this.audioContext.destination);
+            
     };
     
     AudioSourceComponentSystem.prototype._loadAudioSourceAssets = function (entity, guids) {
