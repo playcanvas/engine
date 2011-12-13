@@ -35,6 +35,18 @@ pc.extend(pc.fw, function () {
         return componentData;
     };      
     
+    PrimitiveComponentSystem.prototype.deleteComponent = function (entity, data) {
+        var component = this.getComponentData(entity);
+    
+        if(component.model) {
+            this.context.scene.removeModel(component.model);
+            entity.removeChild(component.model.getGraph());
+            component.model = null;
+        }
+    
+        this.removeComponent(entity);
+    };
+    
     /**
      * @function
      * @private
