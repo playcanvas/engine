@@ -22,7 +22,22 @@ pc.extend(pc.fw, function () {
 
         return componentData;
     };
-
+    
+    /*
+    ScriptComponentSystem.prototype.deleteComponent = function (entity) {
+        var componentData = this.getComponentData(entity);
+        
+        for (name in componentData.instances) {
+            if (componentData.instances.hasOwnProperty(name)) {
+                if(componentData.instances[name].instance.destroy) {
+                    componentData.instances[name].instance.destroy();
+                }
+            }
+        }
+    
+        this.removeComponent(entity);
+    };*/
+    
     ScriptComponentSystem.prototype.update = function (dt) {
         var components = this.getComponents();
 
@@ -86,6 +101,9 @@ pc.extend(pc.fw, function () {
         if(pc.type(urls) == "string") {
             urls = urls.split(",");
         }
+        var options = {
+            batch: entity.getRequestBatch()
+        };
         
         if(!this._inTools) {
             // Load and register new scripts and instances
@@ -95,7 +113,13 @@ pc.extend(pc.fw, function () {
                     var ScriptType = resources[url];
                     instance = new ScriptType(entity);
                     this._registerInstance(entity, url, ScriptType._pcScriptName, instance);                        
-                }.bind(this));
+                }.bind(this), function (errors) {
+                    Object.keys(errors).forEach(function (key) {
+                        logERROR(errors[key]);
+                    });
+                }, function (progress) {
+                    
+                }, options);
             }, this);            
         }
     };
@@ -136,7 +160,7 @@ pc.extend(pc.fw, function () {
      * @returns The result of the function call
      * @example
      * // Call doDamage(10) on the script object called 'enemy' attached to enemy_entity.
-     * context.systems.script.message(enemy_entity, 'enemy', 'doDamage', 10);
+     * context.systems.script.send(enemy_entity, 'enemy', 'doDamage', 10);
      */
     ScriptComponentSystem.prototype.send = function (entity, name, functionName) {
         var args = pc.makeArray(arguments).slice(3);
