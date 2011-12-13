@@ -52,7 +52,7 @@ pc.extend(pc.fw, function () {
     };
     
     ModelComponentSystem.prototype.deleteComponent = function (entity) {
-        var component = this._getComponentData(entity);
+        var component = this.getComponentData(entity);
         this.context.scene.removeModel(component.model);
     
         if(component.model) {

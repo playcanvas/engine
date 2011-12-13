@@ -3,16 +3,28 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.25.0
+-------
+* [FIX] Scripts are loaded as part of the entity requestBatch now, so callback fires after script instance is created
+* [FIX] Entity.close() properly closes child entities
+* [FIX] Primitive components clear away their model when deleted
+* Replaced some more calls to _getComponentData with getComponentData
+* [FIX] Removed calls to pc.extend in initialiseComponent() which cause infinite recursion when the data passed in is self-referential
+* [FIX] AudioSourceComponentSystem.play() and AudioSourceComponentSystem.pause() check that the entity has a AudioSource component before doing anything
+* Added pc.math.random(min, max) to create random numbers in a range
+* The delta time (dt) value passed in to Update methods is clamped to a max of 0.1s to prevent it getting very large (especially while debugging)
+
+-------
 v0.24.0
 -------
-Fix audio in Firefox, remove setSource() method. Use play(entity, name) now.
-Added audionode.js shim for Firefox
-[FIX] Skeleton nodes with one keyframe now work properly with addTime function.
-Added pc.math.quat.copy.
-Add the ability to deactivate an animation on load. The animation component can additionally be queried to see if an animation is actually currently playing.
-[FIX] Fix the case where an entity's serialized boolean false value causes the value to be incorrectly read from the component data.
-Add support for looping and volume for audio sources
-[FIX] guessResponseType method correctly handles urls with queries and fragments
+* Fix audio in Firefox, remove setSource() method. Use play(entity, name) now.
+* Added audionode.js shim for Firefox
+* [FIX] Skeleton nodes with one keyframe now work properly with addTime function.
+* Added pc.math.quat.copy.
+* Add the ability to deactivate an animation on load. The animation component can additionally be queried to see if an animation is actually currently playing.
+* [FIX] Fix the case where an entity's serialized boolean false value causes the value to be incorrectly read from the component data.
+* Add support for looping and volume for audio sources
+* [FIX] guessResponseType method correctly handles urls with queries and fragments
 
 -------
 v0.23.0

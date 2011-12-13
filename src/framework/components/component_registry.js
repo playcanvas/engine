@@ -31,6 +31,7 @@ pc.extend(pc.fw, function () {
         if(!this[name]) {
             throw new Error(pc.string.format("No ComponentSystem named '{0}' registered", name));
         }
+        
         delete this[name];
     };
     
