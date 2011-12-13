@@ -118,18 +118,19 @@ pc.extend(pc.fw, function () {
         var childGuids;
         
         // Remove all components
-        pc.fw.ComponentSystem.deleteComponents(entity, registry);
+        pc.fw.ComponentSystem.deleteComponents(this, registry);
 
         // Detach from parent
         if(parent) {
             parent.removeChild(this);
         }
-    
-        this.getChildren().forEach(function (child) {
-            if(child.close) {
-                child.close(registry);
-            }
-        }, this);
+        
+        var children = this.getChildren();
+        var length = children.length;
+        var child;
+        while(child = children.shift()) {
+            child.close(registry);
+        }
     };
     
     Entity.deserialize = function (data) {
