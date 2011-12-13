@@ -143,6 +143,16 @@ pc.math = {
         worldCoord[1] = outvec[1] * outvec[3];
         worldCoord[2] = outvec[2] * outvec[3];
         return worldCoord;
+    },
+    
+    /**
+     * @function
+     * @name pc.math.random
+     * @description Return a pseudo-random number between min and max
+     */
+    random: function (min, max) {
+        var diff = max - min;
+        return Math.random() * diff + min;        
     }
 };
 
