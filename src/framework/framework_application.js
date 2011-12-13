@@ -185,7 +185,8 @@ pc.extend(pc.fw, function () {
         this.currTime = Date.now();
 
         var dt = (this.currTime - this.lastTime) * 0.001;
-
+        dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
+        
     	this.update(dt);
     	this.render();
 
