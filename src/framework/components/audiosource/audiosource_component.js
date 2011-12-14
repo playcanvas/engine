@@ -41,8 +41,8 @@ pc.extend(pc.fw, function () {
             var sources = this.get(entity, 'sources');
             if(sources[name]) {
                 if (sources[name] instanceof HTMLAudioElement) {
-                    sources[name].volume = this.get(entity, 'volume');
-                    sources[name].loop = this.get(entity, 'loop');
+                    sources[name].setAttribute('volume', this.get(entity, 'volume'));
+                    sources[name].setAttribute('loop', this.get(entity, 'loop'));
                     sources[name].play();
                 } else {
                     var audioNode = this.audioContext.createBufferSource();
