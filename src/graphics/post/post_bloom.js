@@ -242,7 +242,8 @@ pc.gfx.post.bloom = function () {
                 device.setProgram(program);
                 device.draw({
                     primitiveType: pc.gfx.PrimType.TRIANGLE_STRIP,
-                    numVertices: 4,
+                    base: 0,
+                    count: 4,
                     useIndexBuffer: false
                 });
                 device.clearLocalState();

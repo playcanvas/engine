@@ -130,8 +130,7 @@ pc.extend(pc.resources, function () {
         }
         return camera;
     };
-    
-    
+
     ModelResourceHandler.prototype._loadLight = function (model, modelData, lightData) {
         var light = new pc.scene.LightNode();
             
@@ -231,25 +230,17 @@ pc.extend(pc.resources, function () {
     };
     
     ModelResourceHandler.prototype._loadSubMesh = function (model, modelData, subMeshData) {
-        // Translate the primitive type
-        var primitiveType = this._jsonToPrimitiveType[subMeshData.primitive.type];
-        
-        // Create the index buffer
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, subMeshData.primitive.indices.length);
-        var dst = new Uint16Array(indexBuffer.lock());
-        dst.set(subMeshData.primitive.indices);
-        indexBuffer.unlock();
-    
         // Look up the material
         var material = model.getMaterials()[subMeshData.material];
         if (material === undefined) {
             logERROR("Material " + subMeshData.material + " not found in model's material dictionary.");
         }
-    
+
         var subMesh = new pc.scene.SubMesh();
         subMesh.setMaterial(material);
-        subMesh.setIndexBuffer(indexBuffer);
-        subMesh.setPrimitiveType(primitiveType);
+        subMesh.setIndexBase(subMeshData.base);
+        subMesh.setIndexCount(subMeshData.count);
+        subMesh.setPrimitiveType(this._jsonToPrimitiveType[subMeshData.primType]);
         if (subMeshData.boneIndices) {
             subMesh._boneIndices = subMeshData.boneIndices;
             subMesh._subPalette = new Float32Array(subMesh._boneIndices.length * 16);
@@ -257,146 +248,148 @@ pc.extend(pc.resources, function () {
         return subMesh;
     };
 
-	ModelResourceHandler.prototype._partitionSkinnedGeometry = function (geometryData, maxBonesPerPartition) {
-	    var partitions = [];
-	    var partitionedVertices = [];
-	    var partitionedIndices = [];
-	    var partitionedBones = [];
+    ModelResourceHandler.prototype._partitionSkinnedGeometry = function (geometryData, maxBonesPerPartition) {
+        var partitions = [];
+        var partitionedVertices = [];
+        var partitionedIndices = [];
+        var partitionedBones = [];
+
+        // Phase 1:  
+        // Build the skin partitions
+        var primitiveVertices = [];
+        var primitiveVertexIndices = [];
+        var primitiveVertexCount = 3; // Assume only triangle list support for now
+
+        // Go through index list and extract primitives and add them to bone partitions  
+        // Since we are working with a single triangle list, everything is a triangle
+        var basePartition = 0;
+        var indexList = geometryData.indices.data;
+        for (iSubMesh = 0; iSubMesh < geometryData.submeshes.length; iSubMesh++) {
+            var submesh = geometryData.submeshes[iSubMesh];
+            for (var iIndex = submesh.base; iIndex < submesh.count; ) {  
+                // Extact primitive  
+                // Convert vertices  
+                // There is a little bit of wasted time here if the vertex was already added previously  
+                var index;  
+
+                index = indexList[iIndex++];
+                primitiveVertices[0] = new Vertex();  
+                primitiveVertices[0].extract(geometryData, index);  
+                primitiveVertexIndices[0] = index;
+
+                index = indexList[iIndex++];  
+                primitiveVertices[1] = new Vertex();  
+                primitiveVertices[1].extract(geometryData, index);  
+                primitiveVertexIndices[1] = index; 
+
+                index = indexList[iIndex++];  
+                primitiveVertices[2] = new Vertex();  
+                primitiveVertices[2].extract(geometryData, index);  
+                primitiveVertexIndices[2] = index;  
+
+                // Attempt to add the primitive to an existing bone partition  
+                var added = false;
+                for (var iBonePartition = basePartition; iBonePartition < partitions.length; iBonePartition++) {
+                    var partition = partitions[iBonePartition];  
+                    if (partition.addPrimitive(primitiveVertexCount, primitiveVertices, primitiveVertexIndices, maxBonesPerPartition)) {  
+                        added = true;  
+                        break;  
+                    }
+                }
+
+                // If the primitive was not added to an existing bone partition, we need to make a new bone partition and add the primitive to it  
+                if (!added) {
+                    var partition = new SkinPartition();
+                    partition.material = submesh.material;
+                    partitions.push(partition);
+                    partition.addPrimitive(primitiveVertexCount, primitiveVertices, primitiveVertexIndices, maxBonesPerPartition);  
+                }
+            }  
+
+            basePartition = partitions.length;
+        }
+
+        // Phase 2:
+        // Gather vertex and index lists from all the partitions, then upload to GPU  
+        for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
+            var partition = partitions[iPartition];  
 	
-	    // Phase 1:  
-	    // Build the skin partitions
-	    var primitiveVertices = [];
-	    var primitiveVertexIndices = [];
-	    var primitiveVertexCount = 3; // Assume only triangle list support for now
+            if (partition.vertices.length && partition.indices.length) {
+                // this bone partition contains vertices and indices  
 	
-	    // Go through index list and extract primitives and add them to bone partitions  
-	    // Since we are working with a single triangle list, everything is a triangle
-	    var basePartition = 0;
-	    for (iSubMesh = 0; iSubMesh < geometryData.submeshes.length; iSubMesh++) {
-	        var subMesh = geometryData.submeshes[iSubMesh];
-	        var indexList = subMesh.primitive.indices;
-	        var indexEnd = indexList.length;
-	        for (var iIndex = 0; iIndex < indexEnd; ) {  
-	            // Extact primitive  
-	            // Convert vertices  
-	            // There is a little bit of wasted time here if the vertex was already added previously  
-	            var index;  
+                // Find offsets  
+                var vertexStart = partitionedVertices.length;  
+                var vertexCount = partition.vertices.length;  
+                var indexStart = partitionedIndices.length;  
+                var indexCount = partition.indices.length;  
+
+                // Make a new sub set  
+                partition.partition = iPartition;  
+                partition.vertexStart = vertexStart;  
+                partition.vertexCount = vertexCount;  
+                partition.indexStart = indexStart;  
+                partition.indexCount = indexCount;  
+
+                // Copy buffers  
+                var iSour;  
+                var iDest;  
+
+                // Copy vertices to final list  
+                iSour = 0;  
+                iDest = vertexStart;
+                while (iSour < vertexCount) {
+                    partitionedVertices[iDest++] = partition.vertices[iSour++];  
+                }
 	
-	            index = indexList[iIndex++];
-	            primitiveVertices[0] = new Vertex();  
-	            primitiveVertices[0].extract(geometryData, index);  
-	            primitiveVertexIndices[0] = index;
-	
-	            index = indexList[iIndex++];  
-	            primitiveVertices[1] = new Vertex();  
-	            primitiveVertices[1].extract(geometryData, index);  
-	            primitiveVertexIndices[1] = index; 
-	
-	            index = indexList[iIndex++];  
-	            primitiveVertices[2] = new Vertex();  
-	            primitiveVertices[2].extract(geometryData, index);  
-	            primitiveVertexIndices[2] = index;  
-	
-	            // Attempt to add the primitive to an existing bone partition  
-	            var added = false;
-	            for (var iBonePartition = basePartition; iBonePartition < partitions.length; iBonePartition++) {
-	                var partition = partitions[iBonePartition];  
-	                if (partition.addPrimitive(primitiveVertexCount, primitiveVertices, primitiveVertexIndices, maxBonesPerPartition)) {  
-	                    added = true;  
-	                    break;  
-	                }
-	            }
-	
-	            // If the primitive was not added to an existing bone partition, we need to make a new bone partition and add the primitive to it  
-	            if (!added) {
-	                var partition = new SkinPartition();
-	                partition.material = subMesh.material;
-	                partitions.push(partition);
-	                partition.addPrimitive(primitiveVertexCount, primitiveVertices, primitiveVertexIndices, maxBonesPerPartition);  
-	            }
-	        }  
-	        
-	        basePartition = partitions.length;
-	    }
-	    
-	    // Phase 2:
-	    // Gather vertex and index lists from all the partitions, then upload to GPU  
-	    for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-	        var partition = partitions[iPartition];  
-	
-	        if (partition.vertices.length && partition.indices.length) {
-	            // this bone partition contains vertices and indices  
-	
-	            // Find offsets  
-	            var vertexStart = partitionedVertices.length;  
-	            var vertexCount = partition.vertices.length;  
-	            var indexStart = partitionedIndices.length;  
-	            var indexCount = partition.indices.length;  
-	
-	            // Make a new sub set  
-	            partition.partition = iPartition;  
-	            partition.vertexStart = vertexStart;  
-	            partition.vertexCount = vertexCount;  
-	            partition.indexStart = indexStart;  
-	            partition.indexCount = indexCount;  
-	
-	            // Copy buffers  
-	            var iSour;  
-	            var iDest;  
-	
-	            // Copy vertices to final list  
-	            iSour = 0;  
-	            iDest = vertexStart;
-	            while (iSour < vertexCount) {
-	                partitionedVertices[iDest++] = partition.vertices[iSour++];  
-	            }  
-	
-	            // Copy indices to final list  
-	            iSour = 0;  
-	            iDest = indexStart;
-	            while (iSour < indexCount) {
-	                partitionedIndices[iDest++] = partition.indices[iSour++] + vertexStart;    // adjust so they reference into flat vertex list  
-	            }
-	
-	            // Clean up  
-	            partition.clear();  
-	        }  
-	    }
-	    
-	    // Phase 3:
-	    // Update geometry data to reflect partitions
-	    
-	    // Blank data arrays
-	    for (var i = 0; i < partitionedVertices.length; i++) {
-	        for (var j = 0; j < geometryData.attributes.length; j++) {
-	            geometryData.attributes[j].data = [];
-	        }
-	    }
-	    // Copy partitioned verts back to JSON structure
-	    for (var i = 0; i < partitionedVertices.length; i++) {
-	        for (var j = 0; j < geometryData.attributes.length; j++) {
-	            var attribute = geometryData.attributes[j];
-	            for (var k = 0; k < attribute.components; k++) {
-	                attribute.data.push(partitionedVertices[i][attribute.name][k]);
-	            }
-	        }
-	    }
-	    // Copy partitioned indices back to geometry submesh indices
-	    var subMeshes = [];
-	    for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-	        var subMesh = {};
-	        var partition = partitions[iPartition];
-	        subMesh.material = partition.material;
-	        subMesh.primitive = {
-	            "type": "trilist",
-	            "indices": partitionedIndices.splice(0, partition.indexCount)
-	        };
-	        subMesh.boneIndices = partition.boneIndices;
-	        subMeshes.push(subMesh);
-	    }
-	    geometryData.submeshes = subMeshes;
-	};
-	
+                // Copy indices to final list  
+                iSour = 0;  
+                iDest = indexStart;
+                while (iSour < indexCount) {
+                    partitionedIndices[iDest++] = partition.indices[iSour++] + vertexStart;    // adjust so they reference into flat vertex list  
+                }
+
+                // Clean up  
+                partition.clear();  
+            }  
+        }
+
+        // Phase 3:
+        // Update geometry data to reflect partitions
+
+        // Blank data arrays
+        for (var i = 0; i < partitionedVertices.length; i++) {
+            for (var j = 0; j < geometryData.attributes.length; j++) {
+                geometryData.attributes[j].data = [];
+            }
+        }
+        // Copy partitioned verts back to JSON structure
+        for (var i = 0; i < partitionedVertices.length; i++) {
+            for (var j = 0; j < geometryData.attributes.length; j++) {
+                var attribute = geometryData.attributes[j];
+                for (var k = 0; k < attribute.components; k++) {
+                    attribute.data.push(partitionedVertices[i][attribute.name][k]);
+                }
+            }
+        }
+        // Copy partitioned indices back to geometry submesh indices
+        var subMeshes = [];
+        var indices = [];
+        for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
+            var subMesh = {};
+            var partition = partitions[iPartition];
+            subMesh.material = partition.material;
+            subMesh.primType = "trilist";
+            subMesh.base = indices.length;
+            subMesh.count = partition.indexCount;
+            subMesh.boneIndices = partition.boneIndices;
+            subMeshes.push(subMesh);
+
+            indices = indices.concat(partitionedIndices.splice(0, partition.indexCount));
+        }
+        geometryData.indices.data = indices;
+        geometryData.submeshes = subMeshes;
+    };
+
     ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData) {
         var geometry = new pc.scene.Geometry();
     
@@ -444,11 +437,7 @@ pc.extend(pc.resources, function () {
         }
     
         if (positions && normals && uvs) {
-            var indices = [];
-            for (var i = 0; i < geomData.submeshes.length; i++) {
-                indices = indices.concat(geomData.submeshes[i].primitive.indices);
-            }
-            var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
+            var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, geomData.indices.data);
             geomData.attributes.push({ name: "vertex_tangent", type: "float32", components: 4, data: tangents });
         }
     
@@ -492,7 +481,14 @@ pc.extend(pc.resources, function () {
         iterator.end();
     
         geometry.getVertexBuffers().push(vertexBuffer);
-    
+
+        // Create the index buffer
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, geomData.indices.data.length);
+        var dst = new Uint16Array(indexBuffer.lock());
+        dst.set(geomData.indices.data);
+        indexBuffer.unlock();
+        geometry.setIndexBuffer(indexBuffer);
+
         // Create and read each submesh
         for (var i = 0; i < geomData.submeshes.length; i++) {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);

@@ -420,13 +420,14 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Device#draw
      * @description Submits a graphical primitive to the hardware for immediate rendering.
      * @param {Object} options Optional options object that controls the behavior of the draw operation defined as follows:
-     * @param {Number} options.numVertices The number of vertices to dispatch in the draw call.
+     * @param {Number} options.base The offset of the first vertex to dispatch in the draw call.
+     * @param {Number} options.count The number of vertices to dispatch in the draw call.
      * @param {Boolean} options.useIndexBuffer True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * @param {pc.gfx.PrimType} options.primitiveType The type of primitive to render.
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
-     *     numVertices: 3,
+     *     count: 3,
      *     useIndexBuffer: false,
      *     primitiveType: pc.gfx.PrimType.TRIANGLES
      * )};
@@ -434,9 +435,9 @@ pc.extend(pc.gfx, function () {
      */
     Device.prototype.draw = function (options) {
         // Check there is anything to draw
-        if (options.numVertices > 0) {
+        if (options.count > 0) {
             // Commit the vertex buffer inputs
-            this.commitAttributes(options.startVertex || 0);
+            this.commitAttributes(0);
 
             // Commit the shader program variables
             this.commitUniforms();
@@ -445,13 +446,13 @@ pc.extend(pc.gfx, function () {
             if (options.useIndexBuffer) {
                 var glFormat = (this.indexBuffer.getFormat() === pc.gfx.IndexFormat.UINT8) ? gl.UNSIGNED_BYTE : gl.UNSIGNED_SHORT;
                 gl.drawElements(this.lookup.prim[options.primitiveType],
-                                options.numVertices,
+                                options.count,
                                 glFormat,
-                                0);
+                                options.base * 2);
             } else {
                 gl.drawArrays(this.lookup.prim[options.primitiveType],
                               0,
-                              options.numVertices);
+                              options.count);
             }
         }
     };
