@@ -82,7 +82,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.SubMesh#getIndexBase
+     * @name pc.scene.SubMesh#getIndexCount
      * @description 
      * @returns {Number} .
      * @author Will Eastcott
