@@ -22,23 +22,24 @@ pc.extend(pc.audio, function () {
         var position = 0;
         audio.addEventListener("loadeddata", function () {
             // Create a buffer large enough for the entire decoded sound file
-            var length = Math.ceil(audio.duration * audio.mozSampleRate * audio.mozChannels / audio.mozFrameBufferLength) * audio.mozFrameBufferLength;
-            buffer = new window.AudioBuffer(new Float32Array(length), audio.mozChannels, audio.mozSampleRate);
+            //var length = Math.ceil(audio.duration * audio.mozSampleRate * audio.mozChannels / audio.mozFrameBufferLength) * audio.mozFrameBufferLength;
+            //buffer = new window.AudioBuffer(new Float32Array(length), audio.mozChannels, audio.mozSampleRate);
             // play through the audio to decode it into the buffer
-            audio.volume = 0;
-            audio.play();
-            success(buffer);
+            //audio.volume = 0;
+            //audio.play();
+            //success(buffer);
+            success(audio);
         }, false);
         
         audio.addEventListener("MozAudioAvailable", function (event) {
             // as the data is decoded copy it into the AudioBuffer
-            buffer.__data.set(event.frameBuffer, position);
-            position += event.frameBuffer.length;
+            //buffer.__data.set(event.frameBuffer, position);
+            //position += event.frameBuffer.length;
         }.bind(this), false);
 
         audio.src = url;
     };
-
+    
     function AudioElementSourceNode(context, audio) {
       AudioSourceNode.call(this, context, 1);
 
