@@ -11,8 +11,8 @@ pc.extend(pc.fw, function () {
         
         this.audioContext = audioContext;
         
-        //this.postGain = audioContext.createGainNode();
-        //this.postGain.connect(audioContext.destination);
+        this.postGain = audioContext.createGainNode();
+        this.postGain.connect(audioContext.destination);
         
         this.bind("set_assets", this.onSetAssets);
         this.bind("set_sources", this.onSetSources);
@@ -39,13 +39,20 @@ pc.extend(pc.fw, function () {
         if(this.hasComponent(entity)) {
             this.set(entity, 'paused', false);
             var sources = this.get(entity, 'sources');
-            
-            var audioNode = this.audioContext.createBufferSource();
-            audioNode.buffer = sources[name];
-            audioNode.gain.value = this.get(entity, 'volume');
-            audioNode.loop = this.get(entity, 'loop');
-            this._connectToOutput(audioNode);
-            audioNode.noteOn(0);            
+            if(sources[name]) {
+                if (sources[name] instanceof HTMLAudioElement) {
+                    sources[name].volume = this.get(entity, 'volume');
+                    sources[name].loop = this.get(entity, 'loop');
+                    sources[name].play();
+                } else {
+                    var audioNode = this.audioContext.createBufferSource();
+                    audioNode.buffer = sources[name];
+                    audioNode.gain.value = this.get(entity, 'volume');
+                    audioNode.loop = this.get(entity, 'loop');
+                    this._connectToOutput(audioNode);
+                    audioNode.noteOn(0);                    
+                }
+            }
         }
     };
     
@@ -54,7 +61,7 @@ pc.extend(pc.fw, function () {
             var audioNode = this.get(entity, 'audioNode');
             this.set(entity, 'paused', true);
             if(audioNode) {
-                audioNode.noteOff(0);    
+                audioNode.noteOff(0);
             }            
         }
     };
@@ -120,8 +127,8 @@ pc.extend(pc.fw, function () {
     };
         
     AudioSourceComponentSystem.prototype._connectToOutput = function (node) {
-        //node.connect(this.postGain);
-        node.connect(this.audioContext.destination);
+        node.connect(this.postGain);
+        //node.connect(this.audioContext.destination);
             
     };
     

@@ -21,8 +21,6 @@ pc.extend(pc.resources, function () {
                 pc.net.http.get(url, function (response) {
                     try {
                         this.audioContext.decodeAudioData(response, function(buffer) {
-                            //var source = this.audioContext.createBufferSource(); // creates a sound source
-                            //source.buffer = buffer;                              // set the source buffer 
                             success(buffer);
                         }.bind(this), function (error) {
                             console.log(error)
