@@ -5,7 +5,7 @@ import subprocess
 import shutil
 
 root = "."
-output = "output/playcanvas-latest.dev.js"
+output = "output/playcanvas-%s.js"
 compilation_level = "WHITESPACE_ONLY"
 COMP_LEVELS = ["WHITESPACE_ONLY", "WHITESPACE_ONLY", "SIMPLE_OPTIMIZATIONS", "ADVANCED_OPTIMIZATIONS"];
 
@@ -15,6 +15,8 @@ def get_revision():
         import subprocess
         process = subprocess.Popen(['hg', 'id', '-in'], shell=False, stdout=subprocess.PIPE)
         output = process.communicate()
+        #parts = output[0].split()
+        #return "%s-%s" % (parts[1], parts[0])
         return output[0].split()
     except Exception, e:
         print(str(e))
@@ -31,7 +33,7 @@ def get_version():
         return "__CURRENT_SDK_VERSION__"
     return version
 
-def build():
+def build(dst):
     global compilation_level
     formatting = None
     # Set options
@@ -45,7 +47,6 @@ def build():
     dependency_file = os.path.join(root, "dependencies.txt")
     compiler_path = os.path.join(root, "closure/compiler.jar")
     temp_path = os.path.join(root, "out.js")
-    output_path = os.path.join(root, output)
 
     dependencies = open(dependency_file, "r");
     
@@ -60,9 +61,9 @@ def build():
     retcode = subprocess.call(cmd)
     
     # Copy output to build directory
-    if not os.path.exists(os.path.dirname(output_path)):
-       os.mkdir(os.path.dirname(output_path))
-    shutil.move(temp_path, output_path)
+    if not os.path.exists(os.path.dirname(dst)):
+       os.mkdir(os.path.dirname(dst))
+    shutil.move(temp_path, dst)
     
     return retcode
 
@@ -100,9 +101,38 @@ def setup():
             except Exception, e:
                 print(e)
                 compilation_level = "WHITESPACE_ONLY"
-            
+
+def insert_versions(src):
+    '''.. ::insert_versions(src,dst)
+    Insert the version and revision numbers into the src file.
+    '''
+    
+    # open source, read in data and replace with version and revision numbers
+    sf = open(src, 'r')
+    text = sf.read()
+    text = text.replace("__CURRENT_SDK_VERSION__", get_version())
+    text = text.replace("__MERCURIAL_REVISION__", get_revision()[0])
+    
+    # Open a temporary destination file
+    dst = src + '.tmp'
+    df = open(dst, 'w')
+    df.write(text)
+    
+    # close files
+    sf.close()
+    df.close()
+    
+    # replace src with dst, delete temporary file
+    shutil.copy(dst, src)
+    os.remove(dst)
+    
 if __name__ == "__main__":
+    output_path =  os.path.join(root, output) % ('latest')
     setup()
 
-    retcode = build()
-    sys.exit(retcode)
+    retcode = build(output_path)
+    if retcode:
+        sys.exit(retcode)
+    
+    insert_versions(output_path)
+    
