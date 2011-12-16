@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.26.0
+-------
+* [BREAKING] Change to json model format. Index buffers are now per geometry rather than per sub-mesh
+* Simplified full screen quad vertex shader a little for Bloom component
+* Replace audio buffers with audio element for Firefox
+
+-------
 v0.25.0
 -------
 * [FIX] Scripts are loaded as part of the entity requestBatch now, so callback fires after script instance is created
