@@ -5,7 +5,7 @@ import subprocess
 import shutil
 
 root = "."
-output = "output/playcanvas-%s.js"
+output = "output/playcanvas-%s.js" % ('latest')
 compilation_level = "WHITESPACE_ONLY"
 COMP_LEVELS = ["WHITESPACE_ONLY", "WHITESPACE_ONLY", "SIMPLE_OPTIMIZATIONS", "ADVANCED_OPTIMIZATIONS"];
 
@@ -127,8 +127,8 @@ def insert_versions(src):
     os.remove(dst)
     
 if __name__ == "__main__":
-    output_path =  os.path.join(root, output) % ('latest')
     setup()
+    output_path =  os.path.join(root, output)
 
     retcode = build(output_path)
     if retcode:
