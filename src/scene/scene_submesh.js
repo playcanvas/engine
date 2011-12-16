@@ -4,34 +4,11 @@ pc.extend(pc.scene, function () {
      * @class A submesh.
      */
     var SubMesh = function SubMesh() {
-        this._indexBuffer = null;
-        this._material    = null;
-        this._primType    = pc.gfx.PrimType.TRIANGLES;
+        this._material = null;
+        this._primType = pc.gfx.PrimType.TRIANGLES;
+        this._base     = 0;
+        this._count    = 0;
     }
-
-    /**
-     * @function
-     * @name pc.scene.SubMesh#getIndexBuffer
-     * @description Returns the index buffer assigned to the submesh. The index buffer indexes
-     * into the parent geometry's vertex buffer(s).
-     * @returns {pc.gfx.IndexBuffer} The index buffer assigned to the submesh.
-     * @author Will Eastcott
-     */
-    SubMesh.prototype.getIndexBuffer = function () {
-        return this._indexBuffer;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.SubMesh#setIndexBuffer
-     * @description Assigns an index buffer to the specified submesh. The index buffer indexes
-     * into the parent geometry's vertex buffer(s).
-     * @param {pc.gfx.IndexBuffer} indexBuffer The index buffer to assign to the submesh.
-     * @author Will Eastcott
-     */
-    SubMesh.prototype.setIndexBuffer = function (indexBuffer) {
-        this._indexBuffer = indexBuffer;
-    };
 
     /**
      * @function
@@ -79,6 +56,50 @@ pc.extend(pc.scene, function () {
      */
     SubMesh.prototype.setPrimitiveType = function (type) {
         this._primType = type;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.SubMesh#getIndexBase
+     * @description 
+     * @returns {Number} The offset into the geometry's index buffer if indexed, the vertex buffer otherwise.
+     * @author Will Eastcott
+     */
+    SubMesh.prototype.getIndexBase = function () {
+        return this._base;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.SubMesh#setIndexBase
+     * @description
+     * @param {Number} base The offset into the geometry's index buffer if indexed, the vertex buffer otherwise.
+     * @author Will Eastcott
+     */
+    SubMesh.prototype.setIndexBase = function (base) {
+        this._base = base;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.SubMesh#getIndexCount
+     * @description 
+     * @returns {Number} .
+     * @author Will Eastcott
+     */
+    SubMesh.prototype.getIndexCount = function () {
+        return this._count;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.SubMesh#setIndexCount
+     * @description
+     * @param {Number} count.
+     * @author Will Eastcott
+     */
+    SubMesh.prototype.setIndexCount = function (count) {
+        this._count = count;
     };
 
     return {

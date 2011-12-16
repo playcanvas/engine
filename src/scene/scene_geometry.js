@@ -5,6 +5,7 @@ pc.extend(pc.scene, function () {
      */
     var Geometry = function Geometry() {
         this._vertexBuffers = [];
+        this._indexBuffer = null;
         this._subMeshes = [];
 
         // Skinning data
@@ -29,10 +30,11 @@ pc.extend(pc.scene, function () {
         var device = pc.gfx.Device.getCurrent();
         var scope = device.scope;
 
-        // Set each vertex buffer
+        // Set the vertex and index buffers
         for (i = 0, numVertBuffers = this._vertexBuffers.length; i < numVertBuffers; i++) {
             device.setVertexBuffer(this._vertexBuffers[i], i);
         }
+        device.setIndexBuffer(this._indexBuffer);
 
         // Generate the matrix palette
         var skinned = this.isSkinned();
@@ -46,33 +48,30 @@ pc.extend(pc.scene, function () {
 
         // Dispatch each submesh
         for (i = 0, numMeshes = this._subMeshes.length; i < numMeshes; i++) {
-            var subMesh = this._subMeshes[i];
+            var submesh = this._subMeshes[i];
 
             // Set the skinning matrix palette
-            if (skinned && subMesh._boneIndices) {
-                var boneIndices = subMesh._boneIndices;
+            if (skinned && submesh._boneIndices) {
+                var boneIndices = submesh._boneIndices;
                 var numBones = boneIndices.length;
                 for (j = 0; j < numBones; j++) {
-                    subMesh._subPalette.set(this._matrixPaletteEntryF32[boneIndices[j]], j * 16);
+                    submesh._subPalette.set(this._matrixPaletteEntryF32[boneIndices[j]], j * 16);
                 }
-                poseId.setValue(subMesh._subPalette);
+                poseId.setValue(submesh._subPalette);
             }
 
             // Set all state related to the material
-            var material = subMesh.getMaterial();
+            var material = submesh.getMaterial();
             material.setParameters();
             device.updateLocalState(material.getState());
-
-            // Set the index buffer and program
-            var indexBuffer = subMesh.getIndexBuffer();
-            device.setIndexBuffer(indexBuffer);
             device.setProgram(material.getProgram(this));
 
             // Now draw the submesh
             device.draw({
-                useIndexBuffer: indexBuffer !== null,
-                primitiveType: subMesh.getPrimitiveType(),
-                numVertices: (indexBuffer !== null) ? indexBuffer.getNumIndices() : this._vertexBuffers[0].getNumVertices()
+                useIndexBuffer: this._indexBuffer !== null,
+                primitiveType: submesh._primType,
+                base: submesh._base,
+                count: submesh._count
             });
 
             // Pop the submesh's local state
@@ -100,6 +99,30 @@ pc.extend(pc.scene, function () {
      */
     Geometry.prototype.setVertexBuffers = function (buffers) {
         this._vertexBuffers = buffers;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.Geometry#getIndexBuffer
+     * @description Returns the index buffer assigned to the geometry. The index buffer indexes
+     * into the parent geometry's vertex buffer(s).
+     * @returns {pc.gfx.IndexBuffer} The index buffer assigned to the geometry.
+     * @author Will Eastcott
+     */
+    Geometry.prototype.getIndexBuffer = function () {
+        return this._indexBuffer;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.Geometry#setIndexBuffer
+     * @description Assigns an index buffer to the specified geometry. The index buffer indexes
+     * into the parent geometry's vertex buffer(s).
+     * @param {pc.gfx.IndexBuffer} indexBuffer The index buffer to assign to the geometry.
+     * @author Will Eastcott
+     */
+    Geometry.prototype.setIndexBuffer = function (indexBuffer) {
+        this._indexBuffer = indexBuffer;
     };
 
     /**

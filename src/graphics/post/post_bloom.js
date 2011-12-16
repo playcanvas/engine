@@ -57,15 +57,14 @@ pc.gfx.post.bloom = function () {
     return {
         initialize: function () {
             var passThroughVert = [
-                "attribute vec3 vertex_position;",
-                "attribute vec2 vertex_texCoord0;",
+                "attribute vec3 aPosition;",
                 "",
                 "varying vec2 vUv0;",
                 "",
                 "void main(void)",
                 "{",
-                "    gl_Position = vec4(vertex_position, 1.0);",
-                "    vUv0 = vertex_texCoord0;",
+                "    gl_Position = vec4(aPosition, 1.0);",
+                "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
                 "}"
             ].join("\n");
 
@@ -74,20 +73,20 @@ pc.gfx.post.bloom = function () {
             var bloomExtractFrag = [
                 "#ifdef GL_ES\n",
                 "precision highp float;",
-                "#endif\n\n",
+                "#endif",
                 "",
                 "varying vec2 vUv0;",
                 "",
-                "uniform sampler2D base_texture;",
-                "uniform float bloom_threshold;",
+                "uniform sampler2D uBaseTexture;",
+                "uniform float uBloomThreshold;",
                 "",
                 "void main(void)",
                 "{",
                      // Look up the original image color.
-                "    vec4 color = texture2D(base_texture, vUv0);",
+                "    vec4 color = texture2D(uBaseTexture, vUv0);",
                 "",
                      // Adjust it to keep only values brighter than the specified threshold.
-                "    gl_FragColor = clamp((color - bloom_threshold) / (1.0 - bloom_threshold), 0.0, 1.0);",
+                "    gl_FragColor = clamp((color - uBloomThreshold) / (1.0 - uBloomThreshold), 0.0, 1.0);",
                 "}"
             ].join("\n");
 
@@ -97,15 +96,15 @@ pc.gfx.post.bloom = function () {
             var gaussianBlurFrag = [
                 "#ifdef GL_ES\n",
                 "precision highp float;",
-                "#endif\n\n",
+                "#endif",
                 "",
                 "#define SAMPLE_COUNT 15",
                 "",
                 "varying vec2 vUv0;",
                 "",
-                "uniform sampler2D bloom_texture;",
-                "uniform vec2 blur_offsets[SAMPLE_COUNT];",
-                "uniform float blur_weights[SAMPLE_COUNT];",
+                "uniform sampler2D uBloomTexture;",
+                "uniform vec2 uBlurOffsets[SAMPLE_COUNT];",
+                "uniform float uBlurWeights[SAMPLE_COUNT];",
                 "",
                 "void main(void)",
                 "{",
@@ -113,7 +112,7 @@ pc.gfx.post.bloom = function () {
                      // Combine a number of weighted image filter taps.
                 "    for (int i = 0; i < SAMPLE_COUNT; i++)",
                 "    {",
-                "        color += texture2D(bloom_texture, vUv0 + blur_offsets[i]) * blur_weights[i];",
+                "        color += texture2D(uBloomTexture, vUv0 + uBlurOffsets[i]) * uBlurWeights[i];",
                 "    }",
                 "",
                 "    gl_FragColor = color;",
@@ -126,16 +125,16 @@ pc.gfx.post.bloom = function () {
             var bloomCombineFrag = [
                 "#ifdef GL_ES\n",
                 "precision highp float;",
-                "#endif\n\n",
+                "#endif",
                 "",
                 "varying vec2 vUv0;",
                 "",
-                "uniform sampler2D base_texture;",
-                "uniform sampler2D bloom_texture;",
-                "uniform float bloom_intensity;",
-                "uniform float base_intensity;",
-                "uniform float bloom_saturation;",
-                "uniform float base_saturation;",
+                "uniform sampler2D uBaseTexture;",
+                "uniform sampler2D uBloomTexture;",
+                "uniform float uBloomIntensity;",
+                "uniform float uBaseIntensity;",
+                "uniform float uBloomSaturation;",
+                "uniform float uBaseSaturation;",
                 "",
                 // Helper for modifying the saturation of a color.
                 "vec4 adjust_saturation(vec4 color, float saturation)",
@@ -150,12 +149,12 @@ pc.gfx.post.bloom = function () {
                 "void main(void)",
                 "{",
                      // Look up the bloom and original base image colors.
-                "    vec4 bloom = texture2D(bloom_texture, vUv0);",
-                "    vec4 base = texture2D(base_texture, vUv0);",
+                "    vec4 bloom = texture2D(uBloomTexture, vUv0);",
+                "    vec4 base = texture2D(uBaseTexture, vUv0);",
                 "",
                      // Adjust color saturation and intensity.
-                "    bloom = adjust_saturation(bloom, bloom_saturation) * bloom_intensity;",
-                "    base = adjust_saturation(base, base_saturation) * base_intensity;",
+                "    bloom = adjust_saturation(bloom, uBloomSaturation) * uBloomIntensity;",
+                "    base = adjust_saturation(base, uBaseSaturation) * uBaseIntensity;",
                 "",
                      // Darken down the base image in areas where there is a lot of bloom,
                      // to prevent things looking excessively burned-out.
@@ -188,8 +187,7 @@ pc.gfx.post.bloom = function () {
             // Create the vertex format
             var vertexFormat = new pc.gfx.VertexFormat();
             vertexFormat.begin();
-            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position",  3, pc.gfx.VertexElementType.FLOAT32));
-            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord0", 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexFormat.addElement(new pc.gfx.VertexElement("aPosition", 3, pc.gfx.VertexElementType.FLOAT32));
             vertexFormat.end();
 
             // Create a vertex buffer
@@ -197,17 +195,13 @@ pc.gfx.post.bloom = function () {
 
             // Fill the vertex buffer
             var iterator = new pc.gfx.VertexIterator(vertexBuffer);
-            iterator.element.vertex_position.set(-1.0, -1.0, 0.0);
-            iterator.element.vertex_texCoord0.set(0.0, 0.0);
+            iterator.element.aPosition.set(-1.0, -1.0, 0.0);
             iterator.next();
-            iterator.element.vertex_position.set(1.0, -1.0, 0.0);
-            iterator.element.vertex_texCoord0.set(1.0, 0.0);
+            iterator.element.aPosition.set(1.0, -1.0, 0.0);
             iterator.next();
-            iterator.element.vertex_position.set(-1.0, 1.0, 0.0);
-            iterator.element.vertex_texCoord0.set(0.0, 1.0);
+            iterator.element.aPosition.set(-1.0, 1.0, 0.0);
             iterator.next();
-            iterator.element.vertex_position.set(1.0, 1.0, 0.0);
-            iterator.element.vertex_texCoord0.set(1.0, 1.0);
+            iterator.element.aPosition.set(1.0, 1.0, 0.0);
             iterator.end();
         },
 
@@ -242,7 +236,8 @@ pc.gfx.post.bloom = function () {
                 device.setProgram(program);
                 device.draw({
                     primitiveType: pc.gfx.PrimType.TRIANGLE_STRIP,
-                    numVertices: 4,
+                    base: 0,
+                    count: 4,
                     useIndexBuffer: false
                 });
                 device.clearLocalState();
@@ -251,36 +246,36 @@ pc.gfx.post.bloom = function () {
 
             // Pass 1: draw the scene into rendertarget 1, using a
             // shader that extracts only the brightest parts of the image.
-            scope.resolve("bloom_threshold").setValue(options.bloomThreshold);
-            scope.resolve("base_texture").setValue(inputTarget.getFrameBuffer().getTexture());
+            scope.resolve("uBloomThreshold").setValue(options.bloomThreshold);
+            scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
             _drawFullscreenQuad(targets[0], programs["extract"]);
             
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
             var blurValues;
             blurValues = getBlurValues(1.0 / targets[1].getFrameBuffer().getWidth(), 0, options.blurAmount);
-            scope.resolve("blur_weights[0]").setValue(blurValues.weights);
-            scope.resolve("blur_offsets[0]").setValue(blurValues.offsets);
-            scope.resolve("bloom_texture").setValue(targets[0].getFrameBuffer().getTexture());
+            scope.resolve("uBlurWeights[0]").setValue(blurValues.weights);
+            scope.resolve("uBlurOffsets[0]").setValue(blurValues.offsets);
+            scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
             _drawFullscreenQuad(targets[1], programs["blur"]);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
             blurValues = getBlurValues(0, 1.0 / targets[0].getFrameBuffer().getHeight(), options.blurAmount);
-            scope.resolve("blur_weights[0]").setValue(blurValues.weights);
-            scope.resolve("blur_offsets[0]").setValue(blurValues.offsets);
-            scope.resolve("bloom_texture").setValue(targets[1].getFrameBuffer().getTexture());
+            scope.resolve("uBlurWeights[0]").setValue(blurValues.weights);
+            scope.resolve("uBlurOffsets[0]").setValue(blurValues.offsets);
+            scope.resolve("uBloomTexture").setValue(targets[1].getFrameBuffer().getTexture());
             _drawFullscreenQuad(targets[0], programs["blur"]);
             
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
-            scope.resolve("bloom_intensity").setValue(options.bloomIntensity);
-            scope.resolve("base_intensity").setValue(options.baseIntensity);
-            scope.resolve("bloom_saturation").setValue(options.bloomSaturation);
-            scope.resolve("base_saturation").setValue(options.baseSaturation);
-            scope.resolve("bloom_texture").setValue(targets[0].getFrameBuffer().getTexture());
-            scope.resolve("base_texture").setValue(inputTarget.getFrameBuffer().getTexture());
+            scope.resolve("uBloomIntensity").setValue(options.bloomIntensity);
+            scope.resolve("uBaseIntensity").setValue(options.baseIntensity);
+            scope.resolve("uBloomSaturation").setValue(options.bloomSaturation);
+            scope.resolve("uBaseSaturation").setValue(options.baseSaturation);
+            scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
+            scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
             _drawFullscreenQuad(outputTarget, programs["combine"]);
         }
     };
