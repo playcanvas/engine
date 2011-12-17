@@ -99,7 +99,7 @@ pc.extend(pc.gfx, function () {
         // Upload the new vertex data
         var gl = pc.gfx.Device.getCurrent().gl;
         gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferId);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.storage), this.usage);
+        gl.bufferData(gl.ARRAY_BUFFER, this.storage, this.usage);
     };
 
     return {

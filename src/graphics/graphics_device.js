@@ -419,40 +419,40 @@ pc.extend(pc.gfx, function () {
      * @function
      * @name pc.gfx.Device#draw
      * @description Submits a graphical primitive to the hardware for immediate rendering.
-     * @param {Object} options Optional options object that controls the behavior of the draw operation defined as follows:
-     * @param {Number} options.base The offset of the first vertex to dispatch in the draw call.
-     * @param {Number} options.count The number of vertices to dispatch in the draw call.
-     * @param {Boolean} options.useIndexBuffer True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
-     * @param {pc.gfx.PrimType} options.primitiveType The type of primitive to render.
+     * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
+     * @param {pc.gfx.PrimType} primitive.type The type of primitive to render.
+     * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
+     * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
+     * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
+     *     type: pc.gfx.PrimType.TRIANGLES,
+     *     base: 0,
      *     count: 3,
-     *     useIndexBuffer: false,
-     *     primitiveType: pc.gfx.PrimType.TRIANGLES
+     *     indexed: false
      * )};
      * @author Will Eastcott
      */
-    Device.prototype.draw = function (options) {
+    Device.prototype.draw = function (primitive) {
         // Check there is anything to draw
-        if (options.count > 0) {
+        if (primitive.count > 0) {
             // Commit the vertex buffer inputs
-            this.commitAttributes(0);
+            this.commitAttributes();
 
             // Commit the shader program variables
             this.commitUniforms();
 
             var gl = this.gl;
-            if (options.useIndexBuffer) {
-                var glFormat = (this.indexBuffer.getFormat() === pc.gfx.IndexFormat.UINT8) ? gl.UNSIGNED_BYTE : gl.UNSIGNED_SHORT;
-                gl.drawElements(this.lookup.prim[options.primitiveType],
-                                options.count,
-                                glFormat,
-                                options.base * 2);
+            if (primitive.indexed) {
+                gl.drawElements(this.lookup.prim[primitive.type],
+                                primitive.count,
+                                this.indexBuffer.glFormat,
+                                primitive.base * 2);
             } else {
-                gl.drawArrays(this.lookup.prim[options.primitiveType],
-                              0,
-                              options.count);
+                gl.drawArrays(this.lookup.prim[primitive.type],
+                              primitive.base,
+                              primitive.count);
             }
         }
     };
@@ -601,7 +601,7 @@ pc.extend(pc.gfx, function () {
      */
     Device.prototype.setIndexBuffer = function (indexBuffer) {
         // Store the index buffer
-        this.indexBuffer = indexBuffer
+        this.indexBuffer = indexBuffer;
 
         // Set the active index buffer object
         var gl = this.gl;
@@ -655,7 +655,7 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Device#commitAttributes
      * @author Will Eastcott
      */
-    Device.prototype.commitAttributes = function (startVertex) {
+    Device.prototype.commitAttributes = function () {
         var i, len, attribute, element, vertexBuffer;
         var attributes = this.program.attributes;
         var gl = this.gl;
@@ -684,7 +684,7 @@ pc.extend(pc.gfx, function () {
                                        this.lookup.elementType[element.dataType], 
                                        gl.FALSE,
                                        element.stride,
-                                       startVertex * element.stride + element.offset);
+                                       element.offset);
             }
         }
     };

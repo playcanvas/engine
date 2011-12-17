@@ -1,4 +1,9 @@
 pc.extend(pc.scene, function () {
+    var RenderStyle = {
+        NORMAL: 0,
+        WIREFRAME: 1
+    };
+
     /**
      * @name pc.scene.MeshNode
      * @class A mesh.
@@ -100,6 +105,7 @@ pc.extend(pc.scene, function () {
     };
 
     return {
+        RenderStyle: RenderStyle,
         MeshNode: MeshNode
     }; 
 }());

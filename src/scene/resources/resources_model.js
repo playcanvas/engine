@@ -5,13 +5,13 @@ pc.extend(pc.resources, function () {
 	 */
 	var ModelResourceHandler = function () {
         this._jsonToPrimitiveType = {
-            "pointlist": pc.gfx.PrimType.POINTS,
-            "linelist":  pc.gfx.PrimType.LINES,
-            "linestrip": pc.gfx.PrimType.LINE_STRIP,
-            "trilist":   pc.gfx.PrimType.TRIANGLES,
-            "tristrip":  pc.gfx.PrimType.TRIANGLE_STRIP
+            "points":         pc.gfx.PrimType.POINTS,
+            "lines":          pc.gfx.PrimType.LINES,
+            "linestrip":      pc.gfx.PrimType.LINE_STRIP,
+            "triangles":      pc.gfx.PrimType.TRIANGLES,
+            "trianglestrip":  pc.gfx.PrimType.TRIANGLE_STRIP
         }
-        
+
         this._jsonToVertexElementType = {
             "int8":     pc.gfx.VertexElementType.INT8,
             "uint8":    pc.gfx.VertexElementType.UINT8,
@@ -21,7 +21,7 @@ pc.extend(pc.resources, function () {
             "uint32":   pc.gfx.VertexElementType.UINT32,
             "float32":  pc.gfx.VertexElementType.FLOAT32
         }
-        
+
         this._jsonToLightType = {
             "directional": pc.scene.LightType.DIRECTIONAL,
             "point":       pc.scene.LightType.POINT,
@@ -29,9 +29,9 @@ pc.extend(pc.resources, function () {
         }
         
         this._jsonToAddressMode = {
-            "repeat":          pc.gfx.TextureAddress.REPEAT,
-            "clamp":           pc.gfx.TextureAddress.CLAMP_TO_EDGE,
-            "mirrored_repeat": pc.gfx.TextureAddress.MIRRORED_REPEAT
+            "repeat": pc.gfx.TextureAddress.REPEAT,
+            "clamp":  pc.gfx.TextureAddress.CLAMP_TO_EDGE,
+            "mirror": pc.gfx.TextureAddress.MIRRORED_REPEAT
         }
         
         this._jsonToFilterMode = {
@@ -236,15 +236,21 @@ pc.extend(pc.resources, function () {
             logERROR("Material " + subMeshData.material + " not found in model's material dictionary.");
         }
 
-        var subMesh = new pc.scene.SubMesh();
-        subMesh.setMaterial(material);
-        subMesh.setIndexBase(subMeshData.base);
-        subMesh.setIndexCount(subMeshData.count);
-        subMesh.setPrimitiveType(this._jsonToPrimitiveType[subMeshData.primType]);
+        var subMesh = {
+            material: material,
+            primitive: {
+                type: this._jsonToPrimitiveType[subMeshData.primitive.type],
+                base: subMeshData.primitive.base,
+                count: subMeshData.primitive.count,
+                indexed: subMeshData.primitive.indexed
+            }
+        };
+
         if (subMeshData.boneIndices) {
             subMesh._boneIndices = subMeshData.boneIndices;
             subMesh._subPalette = new Float32Array(subMesh._boneIndices.length * 16);
         }
+
         return subMesh;
     };
 
@@ -266,7 +272,7 @@ pc.extend(pc.resources, function () {
         var indexList = geometryData.indices.data;
         for (iSubMesh = 0; iSubMesh < geometryData.submeshes.length; iSubMesh++) {
             var submesh = geometryData.submeshes[iSubMesh];
-            for (var iIndex = submesh.base; iIndex < submesh.count; ) {  
+            for (var iIndex = submesh.primitive.base; iIndex < submesh.primitive.count; ) {  
                 // Extact primitive  
                 // Convert vertices  
                 // There is a little bit of wasted time here if the vertex was already added previously  
@@ -375,12 +381,16 @@ pc.extend(pc.resources, function () {
         var subMeshes = [];
         var indices = [];
         for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-            var subMesh = {};
             var partition = partitions[iPartition];
-            subMesh.material = partition.material;
-            subMesh.primType = "trilist";
-            subMesh.base = indices.length;
-            subMesh.count = partition.indexCount;
+            var subMesh = {
+                material: partition.material,
+                primitive: {
+                    type: "triangles",
+                    base: indices.length,
+                    count: partition.indexCount,
+                    indexed: true
+                }
+            };
             subMesh.boneIndices = partition.boneIndices;
             subMeshes.push(subMesh);
 
