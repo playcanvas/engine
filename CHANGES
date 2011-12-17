@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.27.0
+-------
+* [FIX] pc.math.mat4.invert() works now
+* [FIX] Fix camera frustum rendering and direction light rendering
+
+-------
 v0.26.1
 -------
 * [FIX] build script -o support was broken

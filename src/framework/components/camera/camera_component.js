@@ -245,7 +245,8 @@ pc.extend(pc.fw, function () {
                     device.scope.resolve("constant_color").setValue([1,1,0,1]);
                     device.draw({
                         primitiveType: pc.gfx.PrimType.LINES,
-                        numVertices: indexBuffer.getNumIndices(),
+                        base: 0,
+                        count: indexBuffer.getNumIndices(),
                         useIndexBuffer: true
                     });
                 }
