@@ -118,14 +118,15 @@ pc.extend(pc.gfx, function () {
         logINFO("WebGL max fshader vectors: " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
         logINFO("WebGL max varying vectors: " + gl.getParameter(gl.MAX_VARYING_VECTORS));
 
+        this.lookupPrim = [
+            gl.POINTS, 
+            gl.LINES, 
+            gl.LINE_STRIP, 
+            gl.TRIANGLES, 
+            gl.TRIANGLE_STRIP 
+        ];
+
         this.lookup = {
-            prim: [ 
-                gl.POINTS, 
-                gl.LINES, 
-                gl.LINE_STRIP, 
-                gl.TRIANGLES, 
-                gl.TRIANGLE_STRIP 
-            ],
             blendMode: [
                 gl.ZERO,
                 gl.ONE,
@@ -435,25 +436,22 @@ pc.extend(pc.gfx, function () {
      * @author Will Eastcott
      */
     Device.prototype.draw = function (primitive) {
-        // Check there is anything to draw
-        if (primitive.count > 0) {
-            // Commit the vertex buffer inputs
-            this.commitAttributes();
+        // Commit the vertex buffer inputs
+        this.commitAttributes();
 
-            // Commit the shader program variables
-            this.commitUniforms();
+        // Commit the shader program variables
+        this.commitUniforms();
 
-            var gl = this.gl;
-            if (primitive.indexed) {
-                gl.drawElements(this.lookup.prim[primitive.type],
-                                primitive.count,
-                                this.indexBuffer.glFormat,
-                                primitive.base * 2);
-            } else {
-                gl.drawArrays(this.lookup.prim[primitive.type],
-                              primitive.base,
-                              primitive.count);
-            }
+        var gl = this.gl;
+        if (primitive.indexed) {
+            gl.drawElements(this.lookupPrim[primitive.type],
+                            primitive.count,
+                            this.indexBuffer.glFormat,
+                            primitive.base * 2);
+        } else {
+            gl.drawArrays(this.lookupPrim[primitive.type],
+                          primitive.base,
+                          primitive.count);
         }
     };
 
@@ -626,7 +624,7 @@ pc.extend(pc.gfx, function () {
         var vertexFormat = vertexBuffer.getFormat();
         var i = 0;
         var elements = vertexFormat.elements;
-        var numElements = vertexFormat.numElements;
+        var numElements = elements.length;
         while (i < numElements) {
             var vertexElement = elements[i++];
             vertexElement.stream = stream;
