@@ -21,7 +21,8 @@ pc.extend(pc.net, function () {
         XML : "application/xml",
         WAV : "audio/x-wav",
         OGG : "audio/ogg",
-        MP3 : "audio/mpeg"
+        MP3 : "audio/mpeg",
+        BIN : "application/octet-stream"
     };
     
     Http.ResponseType = {
@@ -272,10 +273,11 @@ pc.extend(pc.net, function () {
         },
         
         isBinaryContentType: function (contentType) {
-            if ([Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3].indexOf(contentType) >= 0) {
+            var binTypes = [Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN];
+            if (binTypes.indexOf(contentType) >= 0) {
                 return true;
             }
-            
+
             return false;            
         },
         
