@@ -65,10 +65,11 @@ pc.extend(pc.resources, function () {
     	var url = identifier;
     	options = options || {};
         options.directory = pc.path.getDirectory(url);
-
+/*
         pbinUrl = url.substr(0, url.lastIndexOf('.')) + '.bin';
         pc.net.http.get(pbinUrl, function (response) {
             options.bin = response;
+*/
             pc.net.http.get(url, function (response) {
                 try {
                     success(response, options);
@@ -78,10 +79,11 @@ pc.extend(pc.resources, function () {
             }.bind(this), {
                 cache:false
             });
+            /*
         }.bind(this), {
             responseType: 'arraybuffer',
             cache:false
-        });
+        });*/
     };
 	
 	/**
@@ -431,13 +433,87 @@ pc.extend(pc.resources, function () {
             geometry._boneIds = geomData.bone_ids;
         }
 
+        // Calculate tangents if we have positions, normals and texture coordinates
+        var positions = null, normals = null, uvs = null;
+        for (var i = 0; i < geomData.attributes.length; i++) {
+            var entry = geomData.attributes[i];
+    
+            if (entry.name === "vertex_position") {
+                // Calculate a bounding sphere for the geometry
+                var sphere = new pc.shape.Sphere();
+                sphere.compute(entry.data);
+                geometry.setVolume(sphere);
+    
+                positions = entry.data;
+            }
+            if (entry.name === "vertex_normal") {
+                normals = entry.data;
+            }
+            if (entry.name === "vertex_texCoord0") {
+                uvs = entry.data;
+            }
+        }
+    
+        if (positions && normals && uvs) {
+            var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, geomData.indices.data);
+            geomData.attributes.push({ name: "vertex_tangent", type: "float32", components: 4, data: tangents });
+        }
+    
+        // Generate the vertex format for the geometry's vertex buffer
+        var vertexFormat = new pc.gfx.VertexFormat();
+        vertexFormat.begin();
+        for (var i = 0; i < geomData.attributes.length; i++) {
+            var attribute = geomData.attributes[i];
+    
+            // Create the vertex format for this buffer
+            var attributeType = this._jsonToVertexElementType[attribute.type];
+            vertexFormat.addElement(new pc.gfx.VertexElement(attribute.name, attribute.components, attributeType));
+        }
+        vertexFormat.end();
+    
+        // Create the vertex buffer
+        var numVertices = geomData.attributes[0].data.length / geomData.attributes[0].components;
+        var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
+
+        var iterator = new pc.gfx.VertexIterator(vertexBuffer);
+        for (var i = 0; i < numVertices; i++) {
+            for (var j = 0; j < geomData.attributes.length; j++) {
+               var attribute = geomData.attributes[j];
+                switch (attribute.components) {
+                    case 1:
+                        iterator.element[attribute.name].set(attribute.data[i]);
+                        break;
+                    case 2:
+                        iterator.element[attribute.name].set(attribute.data[i * 2], attribute.data[i * 2 + 1]);
+                        break;
+                    case 3:
+                        iterator.element[attribute.name].set(attribute.data[i * 3], attribute.data[i * 3 + 1], attribute.data[i * 3 + 2]);
+                        break;
+                    case 4:
+                        iterator.element[attribute.name].set(attribute.data[i * 4], attribute.data[i * 4 + 1], attribute.data[i * 4 + 2], attribute.data[i * 4 + 3]);
+                        break;
+                }
+            }
+            iterator.next();
+        }
+        iterator.end();
+    
+        geometry.getVertexBuffers().push(vertexBuffer);
+
+        // Create the index buffer
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, geomData.indices.data.length);
+        var dst = new Uint16Array(indexBuffer.lock());
+        dst.set(geomData.indices.data);
+        indexBuffer.unlock();
+        geometry.setIndexBuffer(indexBuffer);
+/*
         geometry.getVertexBuffers().push(buffers.vb);
         geometry.setIndexBuffer(buffers.ib);
 
         var sphere = new pc.shape.Sphere();
         sphere.radius = 30;
         geometry.setVolume(sphere);
-
+*/
         // Create and read each submesh
         for (var i = 0; i < geomData.submeshes.length; i++) {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
@@ -709,12 +785,13 @@ pc.extend(pc.resources, function () {
             var materialData = json.materials[i];
             materials.push(this._loadMaterial(model, json, materialData));
         }
-    
+/*    
         var buffers = parseBin(options.bin);
+*/
         var geometries = model.getGeometries();
         for (i = 0; i < json.geometries.length; i++) {
             var geomData = json.geometries[i];
-            geometries.push(this._loadGeometry(model, json, geomData, buffers[i]));
+            geometries.push(this._loadGeometry(model, json, geomData/*, buffers[i]*/));
         }
     
         var _jsonToLoader = {
