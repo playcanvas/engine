@@ -259,9 +259,7 @@ pc.gfx.programlib.phong = {
 
         var lighting = (options.numDirectionals > 0) || (options.numPoints > 0);
 
-        code += "#ifdef GL_ES\n";
-        code += "precision highp float;\n";
-        code += "#endif\n\n";
+        code += "precision mediump float;\n\n";
 
         // FRAGMENT SHADER INPUTS: VARYINGS
         if (lighting) {

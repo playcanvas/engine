@@ -53,9 +53,7 @@ pc.gfx.programlib.basic.generateVertexShader = function (options) {
 pc.gfx.programlib.basic.generateFragmentShader = function (options) {
     var code = "";
 
-    code += "#ifdef GL_ES\n";
-    code += "precision highp float;\n";
-    code += "#endif\n\n";
+    code += "precision mediump float;\n\n";
 
     // FRAGMENT SHADER INPUTS: VARYINGS
     if (options.vertexColors) {

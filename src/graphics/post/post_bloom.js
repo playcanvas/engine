@@ -73,9 +73,7 @@ pc.gfx.post.bloom = function () {
             // Pixel shader extracts the brighter areas of an image.
             // This is the first step in applying a bloom postprocess.
             var bloomExtractFrag = [
-                "#ifdef GL_ES",
-                "precision highp float;",
-                "#endif",
+                "precision mediump float;",
                 "",
                 "varying vec2 vUv0;",
                 "",
@@ -96,9 +94,7 @@ pc.gfx.post.bloom = function () {
             // This is used twice by the bloom postprocess, first to
             // blur horizontally, and then again to blur vertically.
             var gaussianBlurFrag = [
-                "#ifdef GL_ES",
-                "precision highp float;",
-                "#endif",
+                "precision mediump float;",
                 "",
                 "#define SAMPLE_COUNT 15",
                 "",
@@ -125,9 +121,7 @@ pc.gfx.post.bloom = function () {
             // scene, using tweakable intensity levels and saturation.
             // This is the final step in applying a bloom postprocess.
             var bloomCombineFrag = [
-                "#ifdef GL_ES",
-                "precision highp float;",
-                "#endif",
+                "precision mediump float;",
                 "",
                 "varying vec2 vUv0;",
                 "",
