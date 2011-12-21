@@ -359,7 +359,7 @@ pc.gfx.programlib.phong = {
             }
         }
         if (options.fog) {
-            code += "uniform vec4 fog_color;\n";
+            code += "uniform vec3 fog_color;\n";
             code += "uniform float fog_density;\n";
         }
         if (options.alphaTest) {
@@ -586,7 +586,7 @@ pc.gfx.programlib.phong = {
             code += "    float z = gl_FragCoord.z / gl_FragCoord.w;\n";
             code += "    float fogFactor = exp2(-fog_density * fog_density * z * z * LOG2);\n";
             code += "    fogFactor = clamp(fogFactor, 0.0, 1.0);\n";
-            code += "    gl_FragColor = mix(fog_color, gl_FragColor, fogFactor );\n";
+            code += "    gl_FragColor.rgb = mix(fog_color, gl_FragColor.rgb, fogFactor);\n";
         }
         code += "}";
 

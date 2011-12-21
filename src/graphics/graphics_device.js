@@ -217,7 +217,7 @@ pc.extend(pc.gfx, function () {
 
         gl.enable(gl.SCISSOR_TEST);
 
-        this.scope.resolve("fog_color").setValue([0.0, 0.0, 0.0, 1.0]);
+        this.scope.resolve("fog_color").setValue([0.0, 0.0, 0.0]);
         this.scope.resolve("fog_density").setValue(0.0);
         this.scope.resolve("alpha_ref").setValue(0.0);
 
@@ -234,8 +234,8 @@ pc.extend(pc.gfx, function () {
                 depthWrite: true,
                 depthFunc: pc.gfx.DepthFunc.LEQUAL,
                 fog: false,
-                fogColor: [ 0, 0, 0 ],
-                fogDensity: 0,
+                fogColor: [0, 0, 0],
+                fogDensity: 0.0,
                 frontFace: pc.gfx.FrontFace.CCW
             };
         };
