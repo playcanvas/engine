@@ -99,7 +99,13 @@ pc.extend(pc.resources, function () {
         }
     };
     
-    EntityResourceHandler.prototype.patchChildren = function (entity, children) {
+    /**
+     * @name pc.fw.Entity.patchChildren
+     * @description Final step when loading an entity, to add child Entities to parent 
+     * Convert a Entity that has been loaded from serialized data (which has it's child resource_ids stored in the __children property)
+     * into an proper tree by adding the entities from the supplied list as children and removing the temporary __children property.
+     */
+    EntityResourceHandler.patchChildren = function (entity, children) {
         var child;
         for(i = 0 ; i < entity.__children.length; ++i) {
             child = children[entity.__children[i]]
@@ -107,26 +113,6 @@ pc.extend(pc.resources, function () {
         }    	
         delete entity.__children;
     };
-    
-    EntityResourceHandler.prototype.patchChildren2 = function (entity, children) {
-        // patch up children list now that all entities are loaded
-        var i;
-        var child;
-        function _get(guid) {
-            var result = null;
-            children.forEach(function(child) {
-                if(child.getGuid() == guid) {
-                    result = child;
-                }
-            }, this);
-            return result;
-        }
-
-        for(i = 0 ; i < entity.__children.length; ++i) {
-            child = _get(entity.__children[i]);
-            entity.addChild(child);
-        }
-    };    
     
     var EntityRequest = function EntityRequest(identifier) {
     }

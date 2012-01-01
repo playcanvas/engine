@@ -220,33 +220,31 @@ pc.extend(pc.fw, function () {
                 break;
             case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
                 var entities = {};
+                var guid = null;
+                
                 msg.content.models.forEach(function (model) {
                     var entity = this.context.loader.open(pc.resources.EntityRequest, model);
                     entities[entity.getGuid()] = entity;
                 }, this);
                 
-                // create a temporary handler to patch children
-                var handler = new pc.resources.EntityResourceHandler();
-                var root = null;
                 for (guid in entities) {
                     if (entities.hasOwnProperty(guid)) {
-                        handler.patchChildren(entities[guid], entities);
-                        if(!entities[guid].__parent) {
-                            root = entities[guid];
+                        pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
+                        if (!entities[guid].__parent) {
+                            // If entity has no parent add to the root
+                            this.context.root.addChild(entities[guid]);
+                        } else if (!entities[entities[guid].__parent]) {
+                            // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
+                            var parent = this.context.root.findByGuid(entities[guid].__parent);
+                            parent.addChild(entities[guid]);
                         }
                     }
                 }
-                
-                // Once all children are patched, if there is a root then add it 
-                if(root) {
-                    this.context.root.addChild(root);    
-                }
-
                 break;
         }
     };
 
-/**
+    /**
      * @function
      * @name pc.fw.Application#_updateComponent
      * @description Update a value on a component, 

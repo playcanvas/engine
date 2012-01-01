@@ -50,7 +50,7 @@ pc.extend(pc.shape, function () {
 
         return true;
     };
-    
+ 
     /**
      * Get the half extents as Vec3 [x,y,z]
      */
