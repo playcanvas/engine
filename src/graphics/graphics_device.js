@@ -50,6 +50,19 @@ pc.gfx.FrontFace = {
 };
 
 pc.extend(pc.gfx, function () {
+    // Exceptions
+    function UnsupportedBrowserError(message) {
+        this.name = "UnsupportedBrowserError";
+        this.message = (message || "");
+    }
+    UnsupportedBrowserError.prototype = Error.prototype;
+
+    function ContextCreationError(message) {
+        this.name = "ContextCreationError";
+        this.message = (message || "");
+    }
+    ContextCreationError.prototype = Error.prototype;
+
     var _defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
@@ -87,11 +100,20 @@ pc.extend(pc.gfx, function () {
      * @param {Object} canvas The canvas to which the graphics device is tied.
      */
     var Device = function (canvas) {
-        canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
-        canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
+        if (!window.WebGLRenderingContext) {
+            throw new pc.gfx.UnsupportedBrowserError();
+        }
 
         // Retrieve the WebGL context
         this.gl = _createContext(canvas);
+
+        if (!this.gl) {
+            throw new pc.gfx.ContextCreationError();
+        }
+
+        canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
+        canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
+
         this.canvas        = canvas;
         this.program       = null;
         this.indexBuffer   = null;
@@ -104,12 +126,14 @@ pc.extend(pc.gfx, function () {
         logINFO("WebGL vendor:              " + gl.getParameter(gl.VENDOR));
         logINFO("WebGL renderer:            " + gl.getParameter(gl.RENDERER));
         // Note that gl.getSupportedExtensions is not actually available in Chrome 9.
+        var extensions;
         try {
-            logINFO("WebGL extensions:          " + gl.getSupportedExtensions());
+            extensions = gl.getSupportedExtensions();
         }
         catch (e) {
-            logINFO("WebGL extensions:          Extensions unavailable");
+            extensions = 'Extensions unavailable';
         }
+        logINFO("WebGL extensions:          " + extensions);
         logINFO("WebGL num texture units:   " + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
         logINFO("WebGL max texture size:    " + gl.getParameter(gl.MAX_TEXTURE_SIZE));
         logINFO("WebGL max cubemap size:    " + gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE));
@@ -816,6 +840,8 @@ pc.extend(pc.gfx, function () {
     };
 
     return {
+        UnsupportedBrowserError: UnsupportedBrowserError,
+        ContextCreationError: ContextCreationError,
         Device: Device
     }; 
 }());

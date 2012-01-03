@@ -1,14 +1,4 @@
-
-WebGLValidator.ErrorString = {};
-WebGLValidator.ErrorString[WebGLRenderingContext.NO_ERROR         ] = "NO_ERROR";
-WebGLValidator.ErrorString[WebGLRenderingContext.INVALID_ENUM     ] = "INVALID_ENUM";
-WebGLValidator.ErrorString[WebGLRenderingContext.INVALID_VALUE    ] = "INVALID_VALUE";
-WebGLValidator.ErrorString[WebGLRenderingContext.INVALID_OPERATION] = "INVALID_OPERATION";
-WebGLValidator.ErrorString[WebGLRenderingContext.OUT_OF_MEMORY    ] = "OUT_OF_MEMORY";
-WebGLValidator.ErrorString[WebGLRenderingContext.INVALID_FRAMEBUFFER_OPERATION] = "INVALID_FRAMEBUFFER_OPERATION";
-
 function WebGLValidator(gl) {
-
     // Store the real WebGL context
     this.gl = gl;
 
@@ -37,15 +27,22 @@ function WebGLValidator(gl) {
             this[member] = gl[member];
         }
     }
+
+    this.errorString = {};
+    this.errorString[gl.NO_ERROR         ] = "NO_ERROR";
+    this.errorString[gl.INVALID_ENUM     ] = "INVALID_ENUM";
+    this.errorString[gl.INVALID_VALUE    ] = "INVALID_VALUE";
+    this.errorString[gl.INVALID_OPERATION] = "INVALID_OPERATION";
+    this.errorString[gl.OUT_OF_MEMORY    ] = "OUT_OF_MEMORY";
+    this.errorString[gl.INVALID_FRAMEBUFFER_OPERATION] = "INVALID_FRAMEBUFFER_OPERATION";
 }
 
 WebGLValidator.prototype.validate = function (functionName) {
+    var gl = this.gl;
+    var error = gl.getError();
 
-    var error = this.gl.getError();
-
-    if (error !== WebGLRenderingContext.NO_ERROR) {
-
-        Log.error("WebGL error from " + functionName + ": " + WebGLValidator.ErrorString[error]);
+    if (error !== gl.NO_ERROR) {
+        pc.log.error("WebGL error from " + functionName + ": " + this.errorString[error]);
         return false;
     }
 
