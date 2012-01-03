@@ -5,13 +5,13 @@ pc.extend(pc.resources, function () {
 	 */
 	var ModelResourceHandler = function () {
         this._jsonToPrimitiveType = {
-            "pointlist": pc.gfx.PrimType.POINTS,
-            "linelist":  pc.gfx.PrimType.LINES,
-            "linestrip": pc.gfx.PrimType.LINE_STRIP,
-            "trilist":   pc.gfx.PrimType.TRIANGLES,
-            "tristrip":  pc.gfx.PrimType.TRIANGLE_STRIP
+            "points":         pc.gfx.PrimType.POINTS,
+            "lines":          pc.gfx.PrimType.LINES,
+            "linestrip":      pc.gfx.PrimType.LINE_STRIP,
+            "triangles":      pc.gfx.PrimType.TRIANGLES,
+            "trianglestrip":  pc.gfx.PrimType.TRIANGLE_STRIP
         }
-        
+
         this._jsonToVertexElementType = {
             "int8":     pc.gfx.VertexElementType.INT8,
             "uint8":    pc.gfx.VertexElementType.UINT8,
@@ -21,7 +21,7 @@ pc.extend(pc.resources, function () {
             "uint32":   pc.gfx.VertexElementType.UINT32,
             "float32":  pc.gfx.VertexElementType.FLOAT32
         }
-        
+
         this._jsonToLightType = {
             "directional": pc.scene.LightType.DIRECTIONAL,
             "point":       pc.scene.LightType.POINT,
@@ -29,9 +29,9 @@ pc.extend(pc.resources, function () {
         }
         
         this._jsonToAddressMode = {
-            "repeat":          pc.gfx.TextureAddress.REPEAT,
-            "clamp":           pc.gfx.TextureAddress.CLAMP_TO_EDGE,
-            "mirrored_repeat": pc.gfx.TextureAddress.MIRRORED_REPEAT
+            "repeat": pc.gfx.TextureAddress.REPEAT,
+            "clamp":  pc.gfx.TextureAddress.CLAMP_TO_EDGE,
+            "mirror": pc.gfx.TextureAddress.MIRRORED_REPEAT
         }
         
         this._jsonToFilterMode = {
@@ -65,17 +65,25 @@ pc.extend(pc.resources, function () {
     	var url = identifier;
     	options = options || {};
         options.directory = pc.path.getDirectory(url);
-
-        pc.net.http.get(url, function (response) {
-	        try {
-    	    	//var model = this.open(response, options)
-    	    	success(response, options);
-	        } catch (e) {
-	            error(pc.string.format("An error occured while loading model from: '{0}'", url));
-	        }
+/*
+        pbinUrl = url.substr(0, url.lastIndexOf('.')) + '.bin';
+        pc.net.http.get(pbinUrl, function (response) {
+            options.bin = response;
+*/
+            pc.net.http.get(url, function (response) {
+                try {
+                    success(response, options);
+                } catch (e) {
+                    error(pc.string.format("An error occured while loading model from: '{0}'", url));
+                }
+            }.bind(this), {
+                cache:false
+            });
+            /*
         }.bind(this), {
+            responseType: 'arraybuffer',
             cache:false
-        });
+        });*/
     };
 	
 	/**
@@ -236,15 +244,21 @@ pc.extend(pc.resources, function () {
             logERROR("Material " + subMeshData.material + " not found in model's material dictionary.");
         }
 
-        var subMesh = new pc.scene.SubMesh();
-        subMesh.setMaterial(material);
-        subMesh.setIndexBase(subMeshData.base);
-        subMesh.setIndexCount(subMeshData.count);
-        subMesh.setPrimitiveType(this._jsonToPrimitiveType[subMeshData.primType]);
+        var subMesh = {
+            material: material,
+            primitive: {
+                type: this._jsonToPrimitiveType[subMeshData.primitive.type],
+                base: subMeshData.primitive.base,
+                count: subMeshData.primitive.count,
+                indexed: subMeshData.primitive.indexed
+            }
+        };
+
         if (subMeshData.boneIndices) {
             subMesh._boneIndices = subMeshData.boneIndices;
             subMesh._subPalette = new Float32Array(subMesh._boneIndices.length * 16);
         }
+
         return subMesh;
     };
 
@@ -266,7 +280,7 @@ pc.extend(pc.resources, function () {
         var indexList = geometryData.indices.data;
         for (iSubMesh = 0; iSubMesh < geometryData.submeshes.length; iSubMesh++) {
             var submesh = geometryData.submeshes[iSubMesh];
-            for (var iIndex = submesh.base; iIndex < submesh.count; ) {  
+            for (var iIndex = submesh.primitive.base; iIndex < submesh.primitive.count; ) {  
                 // Extact primitive  
                 // Convert vertices  
                 // There is a little bit of wasted time here if the vertex was already added previously  
@@ -375,12 +389,16 @@ pc.extend(pc.resources, function () {
         var subMeshes = [];
         var indices = [];
         for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-            var subMesh = {};
             var partition = partitions[iPartition];
-            subMesh.material = partition.material;
-            subMesh.primType = "trilist";
-            subMesh.base = indices.length;
-            subMesh.count = partition.indexCount;
+            var subMesh = {
+                material: partition.material,
+                primitive: {
+                    type: "triangles",
+                    base: indices.length,
+                    count: partition.indexCount,
+                    indexed: true
+                }
+            };
             subMesh.boneIndices = partition.boneIndices;
             subMeshes.push(subMesh);
 
@@ -390,7 +408,7 @@ pc.extend(pc.resources, function () {
         geometryData.submeshes = subMeshes;
     };
 
-    ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData) {
+    ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData, buffers) {
         var geometry = new pc.scene.Geometry();
     
         // Skinning data
@@ -414,7 +432,7 @@ pc.extend(pc.resources, function () {
     
             geometry._boneIds = geomData.bone_ids;
         }
-    
+
         // Calculate tangents if we have positions, normals and texture coordinates
         var positions = null, normals = null, uvs = null;
         for (var i = 0; i < geomData.attributes.length; i++) {
@@ -456,11 +474,11 @@ pc.extend(pc.resources, function () {
         // Create the vertex buffer
         var numVertices = geomData.attributes[0].data.length / geomData.attributes[0].components;
         var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
-    
+
         var iterator = new pc.gfx.VertexIterator(vertexBuffer);
         for (var i = 0; i < numVertices; i++) {
             for (var j = 0; j < geomData.attributes.length; j++) {
-                var attribute = geomData.attributes[j];
+               var attribute = geomData.attributes[j];
                 switch (attribute.components) {
                     case 1:
                         iterator.element[attribute.name].set(attribute.data[i]);
@@ -488,7 +506,14 @@ pc.extend(pc.resources, function () {
         dst.set(geomData.indices.data);
         indexBuffer.unlock();
         geometry.setIndexBuffer(indexBuffer);
+/*
+        geometry.getVertexBuffers().push(buffers.vb);
+        geometry.setIndexBuffer(buffers.ib);
 
+        var sphere = new pc.shape.Sphere();
+        sphere.radius = 30;
+        geometry.setVolume(sphere);
+*/
         // Create and read each submesh
         for (var i = 0; i < geomData.submeshes.length; i++) {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
@@ -498,6 +523,243 @@ pc.extend(pc.resources, function () {
     
         return geometry;
     };
+
+    var attribs = {
+        POSITION: 1 << 0,
+        NORMAL: 1 << 1,
+        BONEINDICES: 1 << 5,
+        BONEWEIGHTS: 1 << 6,
+        UV0: 1 << 7,
+        UV1: 1 << 8
+    };
+
+    function getChunkHeaderId(id) {
+        var str = "";
+        str += String.fromCharCode(id & 0xff);
+        str += String.fromCharCode((id >> 8) & 0xff);
+        str += String.fromCharCode((id >> 16) & 0xff);
+        str += String.fromCharCode((id >> 24) & 0xff);
+        return str;
+    }
+
+    function copyToBuffer(dstBuffer, srcBuffer, srcAttribs, srcStride) {
+        var hasPositions = (srcAttribs & attribs.POSITION) !== 0;
+        var hasNormals = (srcAttribs & attribs.POSITION) !== 0;
+        var hasUvs = (srcAttribs & attribs.POSITION) !== 0;
+        var addTangents = hasPositions && hasNormals && hasUvs;
+
+        if (addTangents) {
+            var preSize = 0;
+            // Only positions and normals can occur before tangents in a vertex buffer
+            if (srcAttribs & attribs.POSITION) {
+                preSize += 12;
+            }
+            if (srcAttribs & attribs.NORMAL) {
+                preSize += 12;
+            }
+            var postSize = srcStride - preSize; // Everything else
+            
+            var numVerts = srcBuffer.length / srcStride;
+            var srcIndex = 0;
+            var dstIndex = 0;
+            var i, j;
+            for (i = 0; i < numVerts; i++) {
+                for (j = 0; j < preSize; j++) {
+                    dstBuffer[dstIndex++] = srcBuffer[srcIndex++];
+                }
+                for (j = 0; j < 16; j++) {
+                    dstBuffer[dstIndex++] = 0;
+                }
+                for (j = 0; j < postSize; j++) {
+                    dstBuffer[dstIndex++] = srcBuffer[srcIndex++];
+                }
+            }
+        } else {
+            dstBuffer.set(srcBuffer);
+        }
+    }
+
+    function translateFormat(attributes) {
+        var vertexFormat = new pc.gfx.VertexFormat();
+
+        vertexFormat.begin();
+        if (attributes & attribs.POSITION) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.NORMAL) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_normal", 3, pc.gfx.VertexElementType.FLOAT32));
+        }
+        // If we've got positions, normals and uvs, add tangents which will be auto-generated
+        if ((attributes & attribs.POSITION) && (attributes & attribs.NORMAL) && (attributes & attribs.UV0)) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_tangent", 4, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.BONEINDICES) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_boneIndices", 4, pc.gfx.VertexElementType.UINT8));
+        }
+        if (attributes & attribs.BONEWEIGHTS) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_boneWeights", 4, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.UV0) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord0", 2, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.UV1) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord1", 2, pc.gfx.VertexElementType.FLOAT32));
+        }
+        vertexFormat.end();
+
+        return vertexFormat;
+    }
+
+    function generateTangentsInPlace(vertexFormat, vertices, indices) {
+        var stride = vertexFormat.size;
+        var positions, normals, tangents, uvs;
+        for (var el = 0; el < vertexFormat.elements.length; el++) {
+            var element = vertexFormat.elements[el];
+            if (element.scopeId.name === 'vertex_position') {
+                positions = new Float32Array(vertices, element.offset);
+            } else if (element.scopeId.name === 'vertex_normal') {
+                normals = new Float32Array(vertices, element.offset);
+            } else if (element.scopeId.name === 'vertex_tangent') {
+                tangents = new Float32Array(vertices, element.offset);
+            } else if (element.scopeId.name === 'vertex_texCoord0') {
+                uvs = new Float32Array(vertices, element.offset);
+            }
+        }
+
+        var triangleCount = indices.length / 3;
+        var vertexCount   = vertices.byteLength / stride;
+        var i1, i2, i3;
+        var v1, v2, v3;
+        var w1, w2, w3;
+        var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
+        var temp  = pc.math.vec3.create(0, 0, 0);
+        var i; // Loop counter
+        var tan1 = [];
+        var tan2 = [];
+        for (var i = 0; i < vertexCount; i++) {
+            tan1[i] = pc.math.vec3.create(0, 0, 0);
+            tan2[i] = pc.math.vec3.create(0, 0, 0);
+        }
+        var sdir, tdir;
+
+        for (i = 0; i < triangleCount; i++) {
+            i1 = indices[i * 3];
+            i2 = indices[i * 3 + 1];
+            i3 = indices[i * 3 + 2];
+
+            v1 = pc.math.vec3.create(positions[i1 * (stride / 4)], positions[i1 * (stride / 4) + 1], positions[i1 * (stride / 4) + 2]);
+            v2 = pc.math.vec3.create(positions[i2 * (stride / 4)], positions[i2 * (stride / 4) + 1], positions[i2 * (stride / 4) + 2]);
+            v3 = pc.math.vec3.create(positions[i3 * (stride / 4)], positions[i3 * (stride / 4) + 1], positions[i3 * (stride / 4) + 2]);
+
+            w1 = pc.math.vec2.create(uvs[i1 * (stride / 4)], uvs[i1 * (stride / 4) + 1]);
+            w2 = pc.math.vec2.create(uvs[i2 * (stride / 4)], uvs[i2 * (stride / 4) + 1]);
+            w3 = pc.math.vec2.create(uvs[i3 * (stride / 4)], uvs[i3 * (stride / 4) + 1]);
+
+            x1 = v2[0] - v1[0];
+            x2 = v3[0] - v1[0];
+            y1 = v2[1] - v1[1];
+            y2 = v3[1] - v1[1];
+            z1 = v2[2] - v1[2];
+            z2 = v3[2] - v1[2];
+
+            s1 = w2[0] - w1[0];
+            s2 = w3[0] - w1[0];
+            t1 = w2[1] - w1[1];
+            t2 = w3[1] - w1[1];
+
+            r = 1.0 / (s1 * t2 - s2 * t1);
+            sdir = pc.math.vec3.create((t2 * x1 - t1 * x2) * r, 
+                                       (t2 * y1 - t1 * y2) * r,
+                                       (t2 * z1 - t1 * z2) * r);
+            tdir = pc.math.vec3.create((s1 * x2 - s2 * x1) * r,
+                                       (s1 * y2 - s2 * y1) * r,
+                                       (s1 * z2 - s2 * z1) * r);
+            
+            pc.math.vec3.add(tan1[i1], sdir, tan1[i1]);
+            pc.math.vec3.add(tan1[i2], sdir, tan1[i2]);
+            pc.math.vec3.add(tan1[i3], sdir, tan1[i3]);
+            
+            pc.math.vec3.add(tan2[i1], tdir, tan2[i1]);
+            pc.math.vec3.add(tan2[i2], tdir, tan2[i2]);
+            pc.math.vec3.add(tan2[i3], tdir, tan2[i3]);
+        }
+
+        for (i = 0; i < vertexCount; i++) {
+            var n = pc.math.vec3.create(normals[i * (stride / 4)], normals[i * (stride / 4) + 1], normals[i * (stride / 4) + 2]);
+            var t = tan1[i];
+            
+            // Gram-Schmidt orthogonalize
+            var ndott = pc.math.vec3.dot(n, t);
+            pc.math.vec3.scale(n, ndott, temp);
+            pc.math.vec3.subtract(t, temp, temp);
+            pc.math.vec3.normalize(temp, temp);
+
+            tangents[i * (stride / 4)]     = temp[0];
+            tangents[i * (stride / 4) + 1] = temp[1];
+            tangents[i * (stride / 4) + 2] = temp[2];
+
+            // Calculate handedness
+            pc.math.vec3.cross(n, t, temp);
+            tangents[i * (stride / 4) + 3] = (pc.math.vec3.dot(temp, tan2[i]) < 0.0) ? -1.0 : 1.0;
+        }
+    }
+
+    function parseBin(bin) {
+        // Parse file header
+        var fileHeader = new Uint32Array(bin, 0, 3);
+        if(getChunkHeaderId(fileHeader[0]) !== "pbin") {
+            throw new Error("BIN file has invalid file header id.");
+        }
+        if (fileHeader[1] !== 1) {
+            throw new Error("BIN file version is unsupported.");
+        }
+        var numChunks = fileHeader[2];
+        var buffers = [];
+
+        // Parse chunks
+        for (i = 0; i < numChunks; i+=2) {
+            // Extract vertex/index buffer data from the BIN file
+            var chunkHeader = new Uint32Array(bin, (3 + (i * 3)) * 4, 3);
+            if (getChunkHeaderId(chunkHeader[0]) !== "vbuf") {
+                throw new Error("Expected to find a vertex buffer in BIN stream.");
+            }
+            var vbuffInfo = new Uint32Array(bin, chunkHeader[1], 2);
+            var vbuffFormat = vbuffInfo[0];
+            var vbuffStride = vbuffInfo[1];
+            var vbuffNumVerts = (chunkHeader[2] - 8) / vbuffStride;
+            var vbuffData = new Uint8Array(bin, chunkHeader[1] + 8, chunkHeader[2] - 8);
+
+            chunkHeader = new Uint32Array(bin, (3 + ((i + 1) * 3)) * 4, 3);
+            if (getChunkHeaderId(chunkHeader[0]) !== "ibuf") {
+                throw new Error("Expected to find an index buffer in BIN stream.");
+            }
+            var ibuffNumInds = chunkHeader[2] / 2;
+            var ibuffData = new Uint16Array(bin, chunkHeader[1], ibuffNumInds);
+
+            // Construct vertex/index buffers
+            var ib = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, ibuffNumInds);
+            var dst = new Uint16Array(ib.lock());
+            dst.set(ibuffData);
+            ib.unlock();
+
+            // Create the vertex buffer
+            var vertexFormat = translateFormat(vbuffFormat);
+
+            var vb = new pc.gfx.VertexBuffer(vertexFormat, vbuffNumVerts);
+            var dst = vb.lock();
+            var dstBuffer = new Uint8Array(dst);
+            copyToBuffer(dstBuffer, vbuffData, vbuffFormat, vbuffStride);
+            generateTangentsInPlace(vertexFormat, dst, ibuffData);
+            vb.unlock();
+
+            buffers.push({
+                vb: vb,
+                ib: ib
+            });
+        }
+        
+        return buffers;
+    }
     
     /**
     * @function
@@ -508,7 +770,7 @@ pc.extend(pc.resources, function () {
     ModelResourceHandler.prototype._loadModel = function (json, options) {
         var model = new pc.scene.Model();
         var i;
-    
+
         // Load in the shared resources of the model (textures, materials and geometries)
         if (json.textures) {
             var textures = model.getTextures();
@@ -517,17 +779,19 @@ pc.extend(pc.resources, function () {
                 textures.push(this._loadTexture(model, json, textureData, options));
             }
         }
-        
+
         var materials = model.getMaterials();
         for (i = 0; i < json.materials.length; i++) {
             var materialData = json.materials[i];
             materials.push(this._loadMaterial(model, json, materialData));
         }
-    
+/*    
+        var buffers = parseBin(options.bin);
+*/
         var geometries = model.getGeometries();
         for (i = 0; i < json.geometries.length; i++) {
             var geomData = json.geometries[i];
-            geometries.push(this._loadGeometry(model, json, geomData));
+            geometries.push(this._loadGeometry(model, json, geomData/*, buffers[i]*/));
         }
     
         var _jsonToLoader = {

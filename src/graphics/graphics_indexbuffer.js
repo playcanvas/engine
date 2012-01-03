@@ -18,25 +18,22 @@ pc.extend(pc.gfx, function () {
      * @param {Number} numIndices The number of indices to be stored in the index buffer.
      */
     var IndexBuffer = function (format, numIndices) {
+        var gl = pc.gfx.Device.getCurrent().gl;
+
         // Store the index format
         this.format = format;
+        this.glFormat = (format === pc.gfx.IndexFormat.UINT8) ? gl.UNSIGNED_BYTE : gl.UNSIGNED_SHORT;
 
         // Store the number of indicies
         this.numIndices = numIndices;
 
-        // Calculate the size
-        var bytesPerIndex = (format === pc.gfx.IndexFormat.UINT8) ? 1 : 2;
-        this.numBytes = this.numIndices * bytesPerIndex;
-
-        // Create the WebGL program ID
-        var gl = pc.gfx.Device.getCurrent().gl;
+        // Create the WebGL buffer
         this.bufferId = gl.createBuffer();
 
         // Allocate the storage
-        this.storage = new ArrayBuffer(this.numBytes);
-        this.typedStorage = (format === pc.gfx.IndexFormat.UINT8) ?
-                                new Uint8Array(this.storage) :
-                                new Uint16Array(this.storage);
+        var bytesPerIndex = (format === pc.gfx.IndexFormat.UINT8) ? 1 : 2;
+        var numBytes = this.numIndices * bytesPerIndex;
+        this.storage = new ArrayBuffer(numBytes);
     };
 
     /**
@@ -84,7 +81,7 @@ pc.extend(pc.gfx, function () {
         // Upload the new index data
         var gl = pc.gfx.Device.getCurrent().gl;
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.typedStorage, gl.STATIC_DRAW);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, gl.STATIC_DRAW);
     };
 
     return {

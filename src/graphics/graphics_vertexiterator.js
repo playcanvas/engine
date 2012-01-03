@@ -69,7 +69,7 @@ pc.gfx.VertexIterator = function VertexIterator(vertexBuffer) {
 
     // Add a new 'setter' function for each element
     var vertexFormat = this.vertexBuffer.getFormat();
-    for (var i = 0; i < vertexFormat.numElements; i++) {
+    for (var i = 0; i < vertexFormat.elements.length; i++) {
         var vertexElement = vertexFormat.elements[i];
         this.setters[i] = new VertexIteratorSetter(this.buffer, vertexElement);
         this.element[vertexElement.scopeId.name] = this.setters[i];

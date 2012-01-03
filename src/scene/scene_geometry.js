@@ -23,10 +23,11 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.Geometry#dispatch
      * @description Submits a geometry for rendering.
      * @param {Array} transform A 4x4 world transformation matrix.
+     * @param {pc.scene.RenderStyle} style (Optional) .
      * @author Will Eastcott
      */
-    Geometry.prototype.dispatch = function (transform) {
-        var i, j, numVertBuffers, numMeshes, numBoneIndices, material;
+    Geometry.prototype.dispatch = function (transform, style) {
+        var i, j, numVertBuffers, numSubmeshes, numBoneIndices, material;
         var device = pc.gfx.Device.getCurrent();
         var scope = device.scope;
 
@@ -47,7 +48,7 @@ pc.extend(pc.scene, function () {
         scope.resolve("matrix_model").setValue(transform);
 
         // Dispatch each submesh
-        for (i = 0, numMeshes = this._subMeshes.length; i < numMeshes; i++) {
+        for (i = 0, numSubmeshes = this._subMeshes.length; i < numSubmeshes; i++) {
             var submesh = this._subMeshes[i];
 
             // Set the skinning matrix palette
@@ -61,18 +62,13 @@ pc.extend(pc.scene, function () {
             }
 
             // Set all state related to the material
-            var material = submesh.getMaterial();
+            var material = submesh.material;
             material.setParameters();
             device.updateLocalState(material.getState());
             device.setProgram(material.getProgram(this));
 
             // Now draw the submesh
-            device.draw({
-                useIndexBuffer: this._indexBuffer !== null,
-                primitiveType: submesh._primType,
-                base: submesh._base,
-                count: submesh._count
-            });
+            device.draw(submesh.primitive);
 
             // Pop the submesh's local state
             device.clearLocalState();
@@ -232,7 +228,7 @@ pc.extend(pc.scene, function () {
     Geometry.prototype.hasAlpha = function () {
         var subMeshes = this.getSubMeshes();
         for (var i = 0; i < subMeshes.length; i++) {
-            var material = subMeshes[i].getMaterial();
+            var material = subMeshes[i].material;
             if (material.isTransparent())
                 return true;
         }

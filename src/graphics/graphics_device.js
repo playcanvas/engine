@@ -50,6 +50,19 @@ pc.gfx.FrontFace = {
 };
 
 pc.extend(pc.gfx, function () {
+    // Exceptions
+    function UnsupportedBrowserError(message) {
+        this.name = "UnsupportedBrowserError";
+        this.message = (message || "");
+    }
+    UnsupportedBrowserError.prototype = Error.prototype;
+
+    function ContextCreationError(message) {
+        this.name = "ContextCreationError";
+        this.message = (message || "");
+    }
+    ContextCreationError.prototype = Error.prototype;
+
     var _defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
@@ -87,11 +100,20 @@ pc.extend(pc.gfx, function () {
      * @param {Object} canvas The canvas to which the graphics device is tied.
      */
     var Device = function (canvas) {
-        canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
-        canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
+        if (!window.WebGLRenderingContext) {
+            throw new pc.gfx.UnsupportedBrowserError();
+        }
 
         // Retrieve the WebGL context
         this.gl = _createContext(canvas);
+
+        if (!this.gl) {
+            throw new pc.gfx.ContextCreationError();
+        }
+
+        canvas.addEventListener("webglcontextlost", _contextLostHandler, false);
+        canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
+
         this.canvas        = canvas;
         this.program       = null;
         this.indexBuffer   = null;
@@ -104,12 +126,14 @@ pc.extend(pc.gfx, function () {
         logINFO("WebGL vendor:              " + gl.getParameter(gl.VENDOR));
         logINFO("WebGL renderer:            " + gl.getParameter(gl.RENDERER));
         // Note that gl.getSupportedExtensions is not actually available in Chrome 9.
+        var extensions;
         try {
-            logINFO("WebGL extensions:          " + gl.getSupportedExtensions());
+            extensions = gl.getSupportedExtensions();
         }
         catch (e) {
-            logINFO("WebGL extensions:          Extensions unavailable");
+            extensions = 'Extensions unavailable';
         }
+        logINFO("WebGL extensions:          " + extensions);
         logINFO("WebGL num texture units:   " + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
         logINFO("WebGL max texture size:    " + gl.getParameter(gl.MAX_TEXTURE_SIZE));
         logINFO("WebGL max cubemap size:    " + gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE));
@@ -118,14 +142,15 @@ pc.extend(pc.gfx, function () {
         logINFO("WebGL max fshader vectors: " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
         logINFO("WebGL max varying vectors: " + gl.getParameter(gl.MAX_VARYING_VECTORS));
 
+        this.lookupPrim = [
+            gl.POINTS, 
+            gl.LINES, 
+            gl.LINE_STRIP, 
+            gl.TRIANGLES, 
+            gl.TRIANGLE_STRIP 
+        ];
+
         this.lookup = {
-            prim: [ 
-                gl.POINTS, 
-                gl.LINES, 
-                gl.LINE_STRIP, 
-                gl.TRIANGLES, 
-                gl.TRIANGLE_STRIP 
-            ],
             blendMode: [
                 gl.ZERO,
                 gl.ONE,
@@ -216,7 +241,7 @@ pc.extend(pc.gfx, function () {
 
         gl.enable(gl.SCISSOR_TEST);
 
-        this.scope.resolve("fog_color").setValue([0.0, 0.0, 0.0, 1.0]);
+        this.scope.resolve("fog_color").setValue([0.0, 0.0, 0.0]);
         this.scope.resolve("fog_density").setValue(0.0);
         this.scope.resolve("alpha_ref").setValue(0.0);
 
@@ -233,8 +258,8 @@ pc.extend(pc.gfx, function () {
                 depthWrite: true,
                 depthFunc: pc.gfx.DepthFunc.LEQUAL,
                 fog: false,
-                fogColor: [ 0, 0, 0 ],
-                fogDensity: 0,
+                fogColor: [0, 0, 0],
+                fogDensity: 0.0,
                 frontFace: pc.gfx.FrontFace.CCW
             };
         };
@@ -419,41 +444,38 @@ pc.extend(pc.gfx, function () {
      * @function
      * @name pc.gfx.Device#draw
      * @description Submits a graphical primitive to the hardware for immediate rendering.
-     * @param {Object} options Optional options object that controls the behavior of the draw operation defined as follows:
-     * @param {Number} options.base The offset of the first vertex to dispatch in the draw call.
-     * @param {Number} options.count The number of vertices to dispatch in the draw call.
-     * @param {Boolean} options.useIndexBuffer True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
-     * @param {pc.gfx.PrimType} options.primitiveType The type of primitive to render.
+     * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
+     * @param {pc.gfx.PrimType} primitive.type The type of primitive to render.
+     * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
+     * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
+     * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
+     *     type: pc.gfx.PrimType.TRIANGLES,
+     *     base: 0,
      *     count: 3,
-     *     useIndexBuffer: false,
-     *     primitiveType: pc.gfx.PrimType.TRIANGLES
+     *     indexed: false
      * )};
      * @author Will Eastcott
      */
-    Device.prototype.draw = function (options) {
-        // Check there is anything to draw
-        if (options.count > 0) {
-            // Commit the vertex buffer inputs
-            this.commitAttributes(0);
+    Device.prototype.draw = function (primitive) {
+        // Commit the vertex buffer inputs
+        this.commitAttributes();
 
-            // Commit the shader program variables
-            this.commitUniforms();
+        // Commit the shader program variables
+        this.commitUniforms();
 
-            var gl = this.gl;
-            if (options.useIndexBuffer) {
-                var glFormat = (this.indexBuffer.getFormat() === pc.gfx.IndexFormat.UINT8) ? gl.UNSIGNED_BYTE : gl.UNSIGNED_SHORT;
-                gl.drawElements(this.lookup.prim[options.primitiveType],
-                                options.count,
-                                glFormat,
-                                options.base * 2);
-            } else {
-                gl.drawArrays(this.lookup.prim[options.primitiveType],
-                              0,
-                              options.count);
-            }
+        var gl = this.gl;
+        if (primitive.indexed) {
+            gl.drawElements(this.lookupPrim[primitive.type],
+                            primitive.count,
+                            this.indexBuffer.glFormat,
+                            primitive.base * 2);
+        } else {
+            gl.drawArrays(this.lookupPrim[primitive.type],
+                          primitive.base,
+                          primitive.count);
         }
     };
 
@@ -601,7 +623,7 @@ pc.extend(pc.gfx, function () {
      */
     Device.prototype.setIndexBuffer = function (indexBuffer) {
         // Store the index buffer
-        this.indexBuffer = indexBuffer
+        this.indexBuffer = indexBuffer;
 
         // Set the active index buffer object
         var gl = this.gl;
@@ -626,7 +648,7 @@ pc.extend(pc.gfx, function () {
         var vertexFormat = vertexBuffer.getFormat();
         var i = 0;
         var elements = vertexFormat.elements;
-        var numElements = vertexFormat.numElements;
+        var numElements = elements.length;
         while (i < numElements) {
             var vertexElement = elements[i++];
             vertexElement.stream = stream;
@@ -655,7 +677,7 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Device#commitAttributes
      * @author Will Eastcott
      */
-    Device.prototype.commitAttributes = function (startVertex) {
+    Device.prototype.commitAttributes = function () {
         var i, len, attribute, element, vertexBuffer;
         var attributes = this.program.attributes;
         var gl = this.gl;
@@ -684,7 +706,7 @@ pc.extend(pc.gfx, function () {
                                        this.lookup.elementType[element.dataType], 
                                        gl.FALSE,
                                        element.stride,
-                                       startVertex * element.stride + element.offset);
+                                       element.offset);
             }
         }
     };
@@ -818,6 +840,8 @@ pc.extend(pc.gfx, function () {
     };
 
     return {
+        UnsupportedBrowserError: UnsupportedBrowserError,
+        ContextCreationError: ContextCreationError,
         Device: Device
     }; 
 }());

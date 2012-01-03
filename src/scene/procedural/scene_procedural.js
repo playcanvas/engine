@@ -173,7 +173,8 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
 
     // Create the index buffer
     var indexBuffer = null;
-    if (indices !== null) {
+    var indexed = (indices !== null);
+    if (indexed) {
         indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, indices.length);
 
         // Read the indicies into the index buffer
@@ -182,12 +183,16 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
         indexBuffer.unlock();
     }
 
-    var submesh = new pc.scene.SubMesh();
-    submesh.setPrimitiveType(wireframe ? pc.gfx.PrimType.LINES : pc.gfx.PrimType.TRIANGLES);
-    submesh.setMaterial(material);
-    submesh.setIndexBase(0);
-    submesh.setIndexCount((indices !== null) ? indices.length : numVertices);
-    
+    var submesh = {
+        material: material,
+        primitive: {
+            type: wireframe ? pc.gfx.PrimType.LINES : pc.gfx.PrimType.TRIANGLES,
+            base: 0,
+            count: indexed ? indices.length : numVertices,
+            indexed: indexed
+        }
+    };
+
     var boundingSphere = new pc.shape.Sphere();
     boundingSphere.compute(positions);
     

@@ -39,10 +39,10 @@ pc.math.quat = function () {
          * @author Will Eastcott
          */
         copy: function (src, dst) {
-            src[0] = dst[0];
-            src[1] = dst[1];
-            src[2] = dst[2];
-            src[3] = dst[3];
+            dst[0] = src[0];
+            dst[1] = src[1];
+            dst[2] = src[2];
+            dst[3] = src[3];
         },
 
         /**
