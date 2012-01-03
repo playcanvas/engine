@@ -42,8 +42,9 @@ pc.extend(pc.fw, function () {
 
         this.canvas = canvas;
 
-        this._link = new pc.fw.LiveLink(window);
-        this._link.listen(pc.callback(this, this._handleMessage));
+        this._link = new pc.fw.LiveLink("application");
+        this._link.addDestinationWindow(window);
+        this._link.listen(this._handleMessage.bind(this));
         
         // Open the log
         pc.log.open();

@@ -32,11 +32,14 @@ pc.extend(pc.fw, function () {
      * });
      * </pre></code>
      * @constructor Create a new LiveLink object
+     * @param {String} [senderIdPrefix] This string is used as a prefix to the unique senderId, to assist in debugging where messages came from
      */
-    var LiveLink = function () {
+    var LiveLink = function (senderIdPrefix) {
+        senderIdPrefix = senderIdPrefix || '';
+         
         this._destinations = [];
         this._callbacks = {};
-        this._linkid = pc.guid.create();
+        this._linkid = senderIdPrefix + '-' + pc.guid.create();
         this._listener = null;
         this._handler = pc.callback(this, this._handleMessage);
         window.addEventListener("message", this._handler, false);
@@ -135,6 +138,10 @@ pc.extend(pc.fw, function () {
             return;
         }
         msg = new pc.fw.LiveLinkMessage(data, event.source);
+        
+        if(this._linkid === msg.senderid) {
+            return; // Don't send messages to ourself
+        }
         
         if(msg.type == pc.fw.LiveLinkMessageType.RECEIVED) {
             // If this is a receipt of a message that this LiveLink has sent
