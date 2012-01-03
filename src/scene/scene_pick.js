@@ -7,11 +7,11 @@ pc.extend(pc.scene, function () {
             var geometries = model.getGeometries();
             for (var j = 0; j < geometries.length; j++) {
                 var geometry = geometries[j];
-                var subMeshes = geometry.getSubMeshes();
-                for (var k = 0; k < subMeshes.length; k++) {
-                    var subMesh = subMeshes[k];
-                    subMesh._cachedMaterial = subMesh.getMaterial();
-                    subMesh.setMaterial(material);
+                var submeshes = geometry.getSubMeshes();
+                for (var k = 0; k < submeshes.length; k++) {
+                    var submesh = submeshes[k];
+                    submesh._cachedMaterial = submesh.material;
+                    submesh.material = material;
                 }
             }
         }
@@ -24,11 +24,11 @@ pc.extend(pc.scene, function () {
             var geometries = model.getGeometries();
             for (var j = 0; j < geometries.length; j++) {
                 var geometry = geometries[j];
-                var subMeshes = geometry.getSubMeshes();
-                for (var k = 0; k < subMeshes.length; k++) {
-                    var subMesh = subMeshes[k];
-                    subMesh.setMaterial(subMesh._cachedMaterial);
-                    delete subMesh._cachedMaterial;
+                var submeshes = geometry.getSubMeshes();
+                for (var k = 0; k < submeshes.length; k++) {
+                    var submesh = submeshes[k];
+                    submesh.material = submesh._cachedMaterial;
+                    delete submesh._cachedMaterial;
                 }
             }
         }
