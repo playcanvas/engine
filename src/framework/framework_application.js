@@ -282,7 +282,7 @@ pc.extend(pc.fw, function () {
             }
             
             if(pc.string.startsWith(accessor, "reparent")) {
-                entity[accessor](value, this.context);                
+                entity[accessor](value, this.context);
             } else {
                 entity[accessor](value);                
             }
