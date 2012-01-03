@@ -3,6 +3,23 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.28.0
+-------
+* Prevent livelink sending messages to itself.
+* [FIX] Picking code updated following deletion of SubMesh API.
+* Handler for OPEN_ENTITY messages correctly handles new entities which have their parent id set, by inserting them _if_ the parent is not in the new entity list but is in the hierarchy.
+* Added exception throwing for device creation which allows app code to handle problems with WebGL.
+* [FIX] Fix quaternion copy function.
+* [FIX] Fog no longer interpolates alpha component of a fragment.
+* [FIX] pc.shape.Box.containsPoint() works now.
+
+-------
+v0.27.0
+-------
+* [FIX] pc.math.mat4.invert() works now
+* [FIX] Fix camera frustum rendering and direction light rendering
+
+-------
 v0.26.1
 -------
 * [FIX] build script -o support was broken
