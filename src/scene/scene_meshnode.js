@@ -10,6 +10,7 @@ pc.extend(pc.scene, function () {
      */
     var MeshNode = function MeshNode() {
         this._geometry = null;
+        this._style    = RenderStyle.NORMAL;
 
         this._bones    = null; // For skinned meshes, the bones array that influences the skin
     }
@@ -56,7 +57,7 @@ pc.extend(pc.scene, function () {
                 }
             } 
 
-            geom.dispatch(this._wtm);
+            geom.dispatch(this._wtm, this._style);
         }
     };
 
@@ -103,6 +104,32 @@ pc.extend(pc.scene, function () {
         }
         return null;
     };
+
+    /**
+     * @function
+     * @name pc.scene.MeshNode#getRenderStyle
+     * @description Return the render style for the specified mesh node. The style signifies
+     * either a 'normal' style or a 'wireframe' style.
+     * @returns {pc.scene.RenderStyle} The current render style for the mesh node.
+     * @author Will Eastcott
+     */
+    MeshNode.prototype.getRenderStyle = function () {
+        return this._style;
+    }
+
+    /**
+     * @function
+     * @name pc.scene.MeshNode#setRenderStyle
+     * @description Sets the render style for the specified mesh node. The style can be
+     * either a 'normal' style or a 'wireframe' style. For a wireframe style to be set,
+     * the mesh node's geometry have previously had pc.scene.Geometry#generateWireframe
+     * called on it.
+     * @param {pc.scene.RenderStyle} style The current render style for the mesh node.
+     * @author Will Eastcott
+     */
+    MeshNode.prototype.setRenderStyle = function (style) {
+        this._style = style;
+    }
 
     return {
         RenderStyle: RenderStyle,

@@ -4,9 +4,12 @@ pc.extend(pc.scene, function () {
      * @class A geometry.
      */
     var Geometry = function Geometry() {
-        this._vertexBuffers = [];
-        this._indexBuffer = null;
-        this._subMeshes = [];
+        this._vertexBuffers = []; // A geometry can have multiple vertex buffers/streams
+        this._indexBuffers = []; // A geometry can have multiple index buffers (1 per style)
+        this._submeshes = [
+            [], // Normal render style
+            []  // Wireframe render style
+        ];
 
         // Skinning data
         this._inverseBindPose = null;
@@ -15,6 +18,7 @@ pc.extend(pc.scene, function () {
         this._matrixPaletteEntryF32 = null; // The memory buffer represented as an array of matrices to use with the pc.math.mat4 API
 
         // Object space bounding volume
+        this._aabb = null;
         this._volume = null;
     };
 
@@ -23,10 +27,12 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.Geometry#dispatch
      * @description Submits a geometry for rendering.
      * @param {Array} transform A 4x4 world transformation matrix.
-     * @param {pc.scene.RenderStyle} style (Optional) .
+     * @param {pc.scene.RenderStyle} style (Optional) The render style of the geometry.
      * @author Will Eastcott
      */
     Geometry.prototype.dispatch = function (transform, style) {
+        style = style || 0; // Default to normal render style
+
         var i, j, numVertBuffers, numSubmeshes, numBoneIndices, material;
         var device = pc.gfx.Device.getCurrent();
         var scope = device.scope;
@@ -35,30 +41,33 @@ pc.extend(pc.scene, function () {
         for (i = 0, numVertBuffers = this._vertexBuffers.length; i < numVertBuffers; i++) {
             device.setVertexBuffer(this._vertexBuffers[i], i);
         }
-        device.setIndexBuffer(this._indexBuffer);
+        device.setIndexBuffer(this._indexBuffers[style]);
 
         // Generate the matrix palette
         var skinned = this.isSkinned();
         var poseId;
         if (skinned) {
             poseId = scope.resolve("matrix_pose[0]"); 
-            poseId.setValue(this._matrixPaletteF32);
+            if (!this._partitionedBoneIndices) {
+                poseId.setValue(this._matrixPaletteF32);
+            }
         }
 
         scope.resolve("matrix_model").setValue(transform);
 
         // Dispatch each submesh
-        for (i = 0, numSubmeshes = this._subMeshes.length; i < numSubmeshes; i++) {
-            var submesh = this._subMeshes[i];
+        var submeshes = this._submeshes[style];
+        for (i = 0, numSubmeshes = submeshes.length; i < numSubmeshes; i++) {
+            var submesh = submeshes[i];
 
             // Set the skinning matrix palette
-            if (skinned && submesh._boneIndices) {
-                var boneIndices = submesh._boneIndices;
-                var numBones = boneIndices.length;
-                for (j = 0; j < numBones; j++) {
-                    submesh._subPalette.set(this._matrixPaletteEntryF32[boneIndices[j]], j * 16);
+            if (skinned && this._partitionedBoneIndices) {
+                var boneIndices = this._partitionedBoneIndices[i];
+                var palette = this._partitionedPalettes[i];
+                for (j = 0; j < boneIndices.length; j++) {
+                    palette.set(this._matrixPaletteEntryF32[boneIndices[j]], j * 16);
                 }
-                poseId.setValue(submesh._subPalette);
+                poseId.setValue(palette);
             }
 
             // Set all state related to the material
@@ -105,8 +114,9 @@ pc.extend(pc.scene, function () {
      * @returns {pc.gfx.IndexBuffer} The index buffer assigned to the geometry.
      * @author Will Eastcott
      */
-    Geometry.prototype.getIndexBuffer = function () {
-        return this._indexBuffer;
+    Geometry.prototype.getIndexBuffer = function (style) {
+        style = style || 0; // Default to querying normal style index buffer
+        return this._indexBuffers[style];
     };
 
     /**
@@ -117,8 +127,9 @@ pc.extend(pc.scene, function () {
      * @param {pc.gfx.IndexBuffer} indexBuffer The index buffer to assign to the geometry.
      * @author Will Eastcott
      */
-    Geometry.prototype.setIndexBuffer = function (indexBuffer) {
-        this._indexBuffer = indexBuffer;
+    Geometry.prototype.setIndexBuffer = function (indexBuffer, style) {
+        style = style || 0; // Default to setting normal style index buffer
+        this._indexBuffers[style] = indexBuffer;
     };
 
     /**
@@ -128,19 +139,21 @@ pc.extend(pc.scene, function () {
      * @returns {Array} The geometry's submesh array.
      * @author Will Eastcott
      */
-    Geometry.prototype.getSubMeshes = function () {
-        return this._subMeshes;
+    Geometry.prototype.getSubMeshes = function (style) {
+        style = style || 0; // Default to querying normal style index buffer
+        return this._submeshes[style];
     };
 
     /**
      * @function
      * @name pc.scene.Geometry#setSubMeshes
      * @description Assigns an array of pc.scene.SubMesh objects to the specified geometry.
-     * @param {Array} subMeshes An array of pc.scene.SubMesh objects.
+     * @param {Array} submeshes An array of pc.scene.SubMesh objects.
      * @author Will Eastcott
      */
-    Geometry.prototype.setSubMeshes = function (subMeshes) {
-        this._subMeshes = subMeshes;
+    Geometry.prototype.setSubMeshes = function (submeshes, style) {
+        style = style || 0; // Default to setting normal style submeshes
+        this._submeshes[style] = submeshes;
     };
 
     /**
@@ -226,13 +239,86 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     Geometry.prototype.hasAlpha = function () {
-        var subMeshes = this.getSubMeshes();
-        for (var i = 0; i < subMeshes.length; i++) {
-            var material = subMeshes[i].material;
+        var submeshes = this.getSubMeshes();
+        for (var i = 0; i < submeshes.length; i++) {
+            var material = submeshes[i].material;
             if (material.isTransparent())
                 return true;
         }
         return false;
+    };
+
+    Geometry.prototype.generateWireframe = function () {
+        var i, i1, i2, submesh, base, count;
+
+        var indexBuffer = this.getIndexBuffer(pc.scene.RenderStyle.NORMAL);
+        var submeshes = this.getSubMeshes(pc.scene.RenderStyle.NORMAL);
+
+        var srcIndices = new Uint16Array(indexBuffer.lock());
+        var wireIndices = [];
+
+        for (i = 0; i < submeshes.length; i++) {
+            submesh = submeshes[i];
+
+            base = submesh.primitive.base;
+            count = submesh.primitive.count;
+
+            var uniqueLineIndices = {};
+            for (j = base; j < base + count; j+=3) {
+                for (var k = 0; k < 2; k++) {
+                    i1 = srcIndices[j + k];
+                    i2 = srcIndices[j + k + 1];
+                    var line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
+                    uniqueLineIndices[line] = 0;
+                }
+            }
+
+            var lines = [];
+            for (lineIndexPair in uniqueLineIndices) {
+                i1 = (lineIndexPair >> 16) & 0xFFFF;
+                i2 = lineIndexPair & 0xFFFF;
+                lines.push(i1, i2);
+            }
+            wireIndices.push(lines);
+        }
+        indexBuffer.unlock();
+
+        var numIndices = 0;
+        for (i = 0; i < wireIndices.length; i++) {
+            numIndices += wireIndices[i].length;
+        }
+
+        var wireBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, numIndices);
+        // Copy indices into index buffer
+        var dstIndices = new Uint16Array(wireBuffer.lock());
+        var index = 0;
+        for (i = 0; i < wireIndices.length; i++) {
+            var wireSubmesh = wireIndices[i];
+            for (j = 0; j < wireSubmesh.length; j++) {
+                dstIndices[index++] = wireSubmesh[j];
+            }
+        }
+        wireBuffer.unlock();
+
+        // Generate a set of wireframe submeshes
+        var wireSubmeshes = [];
+        base = 0;
+        for (i = 0; i < submeshes.length; i++) {
+            submesh = submeshes[i];
+            wireSubmeshes.push({
+                material: submesh.material,
+                primitive: {
+                    type: pc.gfx.PrimType.LINES,
+                    base: base,
+                    count: wireIndices[i].length,
+                    indexed: true
+                }
+            });
+            base += wireIndices[i].length;
+        }
+
+        this.setIndexBuffer(wireBuffer, pc.scene.RenderStyle.WIREFRAME);
+        this.setSubMeshes(wireSubmeshes, pc.scene.RenderStyle.WIREFRAME);
     };
 
     return {
