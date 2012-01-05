@@ -254,11 +254,6 @@ pc.extend(pc.resources, function () {
             }
         };
 
-        if (subMeshData.boneIndices) {
-            subMesh._boneIndices = subMeshData.boneIndices;
-            subMesh._subPalette = new Float32Array(subMesh._boneIndices.length * 16);
-        }
-
         return subMesh;
     };
 
@@ -388,6 +383,7 @@ pc.extend(pc.resources, function () {
         // Copy partitioned indices back to geometry submesh indices
         var subMeshes = [];
         var indices = [];
+        geometryData.partitionedBoneIndices = [];
         for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
             var partition = partitions[iPartition];
             var subMesh = {
@@ -399,11 +395,14 @@ pc.extend(pc.resources, function () {
                     indexed: true
                 }
             };
-            subMesh.boneIndices = partition.boneIndices;
+
             subMeshes.push(subMesh);
+
+            geometryData.partitionedBoneIndices.push(partition.boneIndices);
 
             indices = indices.concat(partitionedIndices.splice(0, partition.indexCount));
         }
+
         geometryData.indices.data = indices;
         geometryData.submeshes = subMeshes;
     };
@@ -422,6 +421,15 @@ pc.extend(pc.resources, function () {
                 // good fix would be to make skin partitioning a geometry utility library.
                 geomData = pc.extend({}, geomData);
                 this._partitionSkinnedGeometry(geomData, maxBones);
+
+                geometry._partitionedBoneIndices = [];
+                geometry._partitionedPalettes = [];
+                if (geomData.partitionedBoneIndices) {
+                    for (var i = 0; i < geomData.partitionedBoneIndices.length; i++) {
+                        geometry._partitionedBoneIndices.push(geomData.partitionedBoneIndices[i].slice(0));
+                        geometry._partitionedPalettes.push(new Float32Array(geomData.partitionedBoneIndices[i].length * 16));
+                    }
+                }
             }
     
             var inverseBindPose = [];
@@ -429,7 +437,7 @@ pc.extend(pc.resources, function () {
                 inverseBindPose[i] = pc.math.mat4.clone(geomData.inverse_bind_pose[i]);
             }
             geometry.setInverseBindPose(inverseBindPose);
-    
+
             geometry._boneIds = geomData.bone_ids;
         }
 
@@ -520,7 +528,7 @@ pc.extend(pc.resources, function () {
     
             geometry.getSubMeshes().push(subMesh);
         }
-    
+
         return geometry;
     };
 
