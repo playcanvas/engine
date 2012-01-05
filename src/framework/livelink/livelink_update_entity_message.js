@@ -18,6 +18,21 @@ pc.extend(pc.fw, function () {
     pc.fw.LiveLinkMessage.register("UPDATE_ENTITY");
 
 
+    var LiveLinkUpdateEntityTransformMessage = function (id, transform, undoable, previous) {
+        this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM;
+        undoable = pc.isDefined(undoable) ? undoable : false;
+        previous = pc.isDefined(previous) ? previous : null;
+        
+        this.content = {
+            id: id,
+            transform: transform,
+            previous: previous,
+            undoable: undoable
+        }
+    };
+    LiveLinkUpdateEntityTransformMessage = LiveLinkUpdateEntityTransformMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_TRANSFORM");
+
     var LiveLinkUpdateEntityAttributeMessage = function (id, accessor, value) {
         this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE;
         this.content = {
@@ -31,6 +46,7 @@ pc.extend(pc.fw, function () {
     
     return {
         LiveLinkUpdateEntityMessage: LiveLinkUpdateEntityMessage,
+        LiveLinkUpdateEntityTransformMessage: LiveLinkUpdateEntityTransformMessage,
         LiveLinkUpdateEntityAttributeMessage: LiveLinkUpdateEntityAttributeMessage
     };
 }());

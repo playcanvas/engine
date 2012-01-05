@@ -212,6 +212,9 @@ pc.extend(pc.fw, function () {
             case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE:
                 this._updateEntityAttribute(msg.content.id, msg.content.accessor, msg.content.value);
                 break;
+            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
+                this._updateEntityTransform(msg.content.id, msg.content.transform, msg.content.undoable);
+                break;
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                 //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
                 var entity = this.context.root.findOne("getGuid", msg.content.id);
@@ -270,6 +273,13 @@ pc.extend(pc.fw, function () {
                 // set value on node
                 entity[attributeName] = value;
             }
+        }
+    };
+
+    Application.prototype._updateEntityTransform = function (guid, transform) {
+        var entity = this.context.root.findByGuid(guid);
+        if(entity) {
+            entity.setLocalTransform(transform);
         }
     };
     

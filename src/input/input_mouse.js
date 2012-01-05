@@ -33,9 +33,10 @@ pc.extend(pc.input, function () {
     /**
      * @name pc.input.MouseEvent
      * @class The object passed into Mouse Event handlers
-     * @params {Object} [options] Data used to initialize the fields of the Event. See the fields for details 
+     * @params {Object} [options] Data used to initialize the fields of the Event. See the fields for details
+     * @deprecated 
      */
-    var MouseEvent2 = function (options) {
+    var MouseEvent = function (options) {
         options = options || {};
         /**
          * @field
@@ -102,12 +103,13 @@ pc.extend(pc.input, function () {
         this.event = options.event || null;
     };
     /**
-     * Create a new Mouse object
+     * @name pc.input.Mouse
+     * @description Create a new Mouse object
      * @class Capture and respond to mouse events.
      * @param {DOMElement} [element] The DOMElement that the mouse events are attached to
-     * @name pc.input.Mouse
+     * @param {Boolean} [_new] Use new mouse events (to be removed with old designer)
      */
-    var Mouse = function(element) {
+    var Mouse = function (element, _new) {
             // Clear the mouse state
             this._positionY    = 0;
             this._positionX    = 0;
@@ -118,11 +120,19 @@ pc.extend(pc.input, function () {
             this._buttons      = [false,false,false];
             this._lastbuttons  = [];
             
-            this._upHandler = pc.callback(this, this._handleUp);
-            this._downHandler = pc.callback(this, this._handleDown);
-            this._moveHandler = pc.callback(this, this._handleMove);
-            this._wheelHandler = pc.callback(this, this._handleWheel);
-            this._contextMenuHandler = function (event) { event.preventDefault(); };
+            if(_new) {
+                this._upHandler = pc.callback(this, this._handleUp);
+                this._downHandler = pc.callback(this, this._handleDown);
+                this._moveHandler = pc.callback(this, this._handleMove);
+                this._wheelHandler = pc.callback(this, this._handleWheel);
+                this._contextMenuHandler = function (event) { event.preventDefault(); };                
+            } else {
+                this._upHandler = pc.callback(this, this.__handleUp);
+                this._downHandler = pc.callback(this, this.__handleDown);
+                this._moveHandler = pc.callback(this, this.__handleMove);
+                this._wheelHandler = pc.callback(this, this.__handleWheel);
+                this._contextMenuHandler = function (event) { event.preventDefault(); };                
+            }
             
             this._element = null;
             
@@ -235,6 +245,23 @@ pc.extend(pc.input, function () {
         */
     };
     
+    Mouse.prototype.__handleUp = function (event) {
+        // disable released button
+        this._buttons[event.button] = false;
+        
+        // send 'mouseup' event
+        this.fire(pc.input.EVENT_MOUSE_UP, new MouseEvent({
+            type: pc.input.EVENT_MOUSE_UP,
+            positionX: this._positionX,
+            positionY: this._positionY,
+            x: this._offsetX,
+            y: this._offsetY,
+            button: event.button,
+            buttons: this._buttons,
+            event: event
+        }));
+    }
+    
     Mouse.prototype._handleDown = function (event) {
         // Store which button has affected
         this._buttons[event.button] = true;    
@@ -250,6 +277,22 @@ pc.extend(pc.input, function () {
             buttons: this._buttons,
             event: event
         }));*/
+    };
+
+    Mouse.prototype.__handleDown = function (event) {
+        // Store which button has affected
+        this._buttons[event.button] = true;    
+
+        this.fire(pc.input.EVENT_MOUSE_DOWN, new MouseEvent({
+            type: pc.input.EVENT_MOUSE_DOWN,
+            positionX: this._positionX,
+            positionY: this._positionY,
+            x: this._offsetX,
+            y: this._offsetY,
+            button: event.button,
+            buttons: this._buttons,
+            event: event
+        }));
     };
     
     Mouse.prototype._handleMove = function (event) {
@@ -277,6 +320,31 @@ pc.extend(pc.input, function () {
             event: event
         }));*/
     };
+
+    Mouse.prototype.__handleMove = function (event) {
+        // Calculate the mouse movement
+        this._deltaX = event.clientX - this._positionX;
+        this._deltaY = event.clientY - this._positionY;
+    
+        // Update the current position
+        this._positionX = event.clientX;
+        this._positionY = event.clientY;
+        offset = pc.input.getOffsetCoords(event);
+        this._offsetX = offset.x;
+        this._offsetY = offset.y;
+        
+        this.fire(pc.input.EVENT_MOUSE_MOVE, new MouseEvent({
+            type: pc.input.EVENT_MOUSE_MOVE,
+            positionX: this._positionX,
+            positionY: this._positionY,
+            x: this._offsetX,
+            y: this._offsetY,
+            deltaX: this._deltaX,
+            deltaY: this._deltaY,
+            buttons: this._buttons,
+            event: event
+        }));
+    };    
     
     Mouse.prototype._handleWheel = function (event) {    
         // Store the wheel movement
@@ -297,6 +365,26 @@ pc.extend(pc.input, function () {
             buttons: this._buttons,
             event: event
         }));*/
+    };
+
+    Mouse.prototype.__handleWheel = function (event) {    
+        // Store the wheel movement
+        if(event.wheelDelta) {
+            this.deltaWheel = event.wheelDelta / 120; // Convert to -1 to 1
+        } else {
+            this.deltaWheel = event.detail / -3; // Convert to -1 to 1
+        }
+        
+        this.fire(pc.input.EVENT_MOUSE_WHEEL, new MouseEvent({
+            type: pc.input.EVENT_MOUSE_WHEEL,
+            positionX: this._positionX,
+            positionY: this._positionY,
+            x: this._offsetX,
+            y: this._offsetY,
+            deltaWheel: this.deltaWheel,
+            buttons: this._buttons,
+            event: event
+        }));
     };
     
     
@@ -322,6 +410,7 @@ pc.extend(pc.input, function () {
         MOUSE_BUTTON_RIGHT: 2,
         
         Mouse: Mouse,
+        MouseEvent: MouseEvent,
         createMouseEvent: createMouseEvent,
         /**
          * @private
@@ -351,5 +440,3 @@ pc.extend(pc.input, function () {
         }
     };
 } ());
-
-
