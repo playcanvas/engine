@@ -1,11 +1,41 @@
 pc.extend(pc.input, function () {    
 
     /**
+     * @function
+     * @name pc.input.createMouseEvent
+     * @description Extend the browser mouse event with some additional cross-browser values.
+     * This identical to a DOM MouseEvent with some additional values
+     * event.targetX - The X coordinate relative to the event target element
+     * event.targetY - The Y coordinate relative to the event target element
+     * event.wheelDelta - The change in mouse wheel value (if there is one) Normalized between -1 and 1
+     * @param {MouseEvent} event The mouse event to extend
+     */
+    var createMouseEvent = function (event) {
+        // Copy event values
+        //pc.extend(this, event);
+        
+        var offset = pc.input.getOffsetCoords(event);
+
+        event.targetX = offset.x;
+        event.targetY = offset.y;
+
+        if(event.wheelDelta) {
+            event.wheelDelta = event.wheelDelta / 120; // Convert to -1 to 1
+        } else if (event.detail) {
+            event.wheelDelta = event.detail / -3; // Convert to -1 to 1
+        } else {
+            event.wheelDelta = 0;
+        }
+        
+        return event;
+    };
+        
+    /**
      * @name pc.input.MouseEvent
      * @class The object passed into Mouse Event handlers
      * @params {Object} [options] Data used to initialize the fields of the Event. See the fields for details 
      */
-    var MouseEvent = function (options) {
+    var MouseEvent2 = function (options) {
         options = options || {};
         /**
          * @field
@@ -190,7 +220,9 @@ pc.extend(pc.input, function () {
         this._buttons[event.button] = false;
         
         // send 'mouseup' event
-        this.fire(pc.input.EVENT_MOUSE_UP, new MouseEvent({
+        this.fire(pc.input.EVENT_MOUSE_UP, new MouseEvent(event));
+        /*
+        {
             type: pc.input.EVENT_MOUSE_UP,
             positionX: this._positionX,
             positionY: this._positionY,
@@ -200,13 +232,15 @@ pc.extend(pc.input, function () {
             buttons: this._buttons,
             event: event
         }));
+        */
     };
     
     Mouse.prototype._handleDown = function (event) {
         // Store which button has affected
         this._buttons[event.button] = true;    
 
-        this.fire(pc.input.EVENT_MOUSE_DOWN, new MouseEvent({
+        this.fire(pc.input.EVENT_MOUSE_DOWN, new MouseEvent(event));
+        /*{
             type: pc.input.EVENT_MOUSE_DOWN,
             positionX: this._positionX,
             positionY: this._positionY,
@@ -215,7 +249,7 @@ pc.extend(pc.input, function () {
             button: event.button,
             buttons: this._buttons,
             event: event
-        }));
+        }));*/
     };
     
     Mouse.prototype._handleMove = function (event) {
@@ -230,7 +264,8 @@ pc.extend(pc.input, function () {
         this._offsetX = offset.x;
         this._offsetY = offset.y;
         
-        this.fire(pc.input.EVENT_MOUSE_MOVE, new MouseEvent({
+        this.fire(pc.input.EVENT_MOUSE_MOVE, new MouseEvent(event));
+        /*{
             type: pc.input.EVENT_MOUSE_MOVE,
             positionX: this._positionX,
             positionY: this._positionY,
@@ -240,7 +275,7 @@ pc.extend(pc.input, function () {
             deltaY: this._deltaY,
             buttons: this._buttons,
             event: event
-        }));
+        }));*/
     };
     
     Mouse.prototype._handleWheel = function (event) {    
@@ -251,7 +286,8 @@ pc.extend(pc.input, function () {
             this.deltaWheel = event.detail / -3; // Convert to -1 to 1
         }
         
-        this.fire(pc.input.EVENT_MOUSE_WHEEL, new MouseEvent({
+        this.fire(pc.input.EVENT_MOUSE_WHEEL, new MouseEvent(event));
+        /*{
             type: pc.input.EVENT_MOUSE_WHEEL,
             positionX: this._positionX,
             positionY: this._positionY,
@@ -260,7 +296,7 @@ pc.extend(pc.input, function () {
             deltaWheel: this.deltaWheel,
             buttons: this._buttons,
             event: event
-        }));
+        }));*/
     };
     
     
@@ -286,7 +322,7 @@ pc.extend(pc.input, function () {
         MOUSE_BUTTON_RIGHT: 2,
         
         Mouse: Mouse,
-        MouseEvent: MouseEvent,
+        createMouseEvent: createMouseEvent,
         /**
          * @private
          * @function
