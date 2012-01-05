@@ -528,8 +528,6 @@ pc.extend(pc.resources, function () {
     
             geometry.getSubMeshes().push(subMesh);
         }
-    
-        geometry.generateWireframe();
 
         return geometry;
     };
