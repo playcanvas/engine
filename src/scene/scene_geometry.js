@@ -257,6 +257,7 @@ pc.extend(pc.scene, function () {
         var srcIndices = new Uint16Array(indexBuffer.lock());
         var wireIndices = [];
 
+        var offsets = [[0, 1], [1, 2], [2, 0]];
         for (i = 0; i < submeshes.length; i++) {
             submesh = submeshes[i];
 
@@ -265,9 +266,9 @@ pc.extend(pc.scene, function () {
 
             var uniqueLineIndices = {};
             for (j = base; j < base + count; j+=3) {
-                for (var k = 0; k < 2; k++) {
-                    i1 = srcIndices[j + k];
-                    i2 = srcIndices[j + k + 1];
+                for (var k = 0; k < 3; k++) {
+                    i1 = srcIndices[j + offsets[k][0]];
+                    i2 = srcIndices[j + offsets[k][1]];
                     var line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
                     uniqueLineIndices[line] = 0;
                 }
