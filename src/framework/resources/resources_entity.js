@@ -86,7 +86,7 @@ pc.extend(pc.resources, function () {
 
             entity.setRequestBatch(options.batch);
             this._loader.request(requests, options.priority, function (resources) {
-                this.patchChildren(entity, resources);
+                EntityResourceHandler.patchChildren(entity, resources);
                 success(entity);
             }.bind(this), function (errors) {
                 error(errors);
