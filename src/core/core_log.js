@@ -27,7 +27,7 @@ pc.extend(pc, function () {
          * @param {String} text
          */
         info: function (text) {
-            pc.log.write("INFO:    " + text);
+            console.info("INFO:    " + text);
         },
 
         /**
@@ -35,7 +35,7 @@ pc.extend(pc, function () {
          * @param {String} text
          */
         debug: function (text) {
-            pc.log.write("DEBUG:   " + text);
+            console.debug("DEBUG:   " + text);
         },
 
         /**
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
          * @param {String} text
          */
         error: function (text) {
-            pc.log.write("ERROR:   " + text);
+            console.error("ERROR:   " + text);
         },
 
         /**
@@ -51,7 +51,7 @@ pc.extend(pc, function () {
          * @param {String} text
          */
         warning: function (text) {
-            pc.log.write("WARNING: " + text);
+            console.warn("WARNING: " + text);
         },
 
         /**
