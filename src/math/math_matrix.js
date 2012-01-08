@@ -735,26 +735,18 @@ pc.math.mat4 = function () {
                                        pc.math.vec3.length(pc.math.vec3.create(m[4], m[5], m[6])),
                                        pc.math.vec3.length(pc.math.vec3.create(m[8], m[9], m[10])));
         },
-
+        
         fromEulerXYZ: function (x, y, z, r) {
             if (r === undefined) {
                 r = pc.math.mat4.create();
             }
-
-            var xm, ym, zm,
-            cx = Math.cos(x),
-            sx = Math.sin(x),
-            cy = Math.cos(y),
-            sy = Math.sin(y),
-            cz = Math.cos(z),
-            sz = Math.sin(z);
             
-            xm = pc.math.mat4.create(1,0,0,0, 0,cx,-sx,0, 0,sx,cx,0, 0,0,0,1);
-            ym = pc.math.mat4.create(cy,0,sy,0, 0,1,0,0, -sy,0,cy,0, 0,0,0,1);
-            zm = pc.math.mat4.create(cz,-sz,0,0, sz,cz,0,0, 0,0,1,0, 0,0,0,1);
+            var xm = pc.math.mat4.makeRotate(-x, [1,0,0]);
+            var ym = pc.math.mat4.makeRotate(-y, [0,1,0]);
+            var zm = pc.math.mat4.makeRotate(-z, [0,0,1]);
             
-            var yzm = pc.math.mat4.multiply(ym, zm);
-            pc.math.mat4.multiply(xm, yzm, r);
+            pc.math.mat4.multiply(ym, xm, r);
+            pc.math.mat4.multiply(zm, r, r);
 
             return r;
         },
@@ -784,7 +776,7 @@ pc.math.mat4 = function () {
             }
             
             r[0] = x;
-            r[1] = -y;
+            r[1] = y;
             r[2] = z;
             
             return r;
@@ -890,6 +882,22 @@ pc.math.mat4 = function () {
             }
 
             return r;
+        },
+        
+        compose: function (t, r, s, result) {
+            var mat = pc.math.mat4;
+            if (result === undefined) {
+                result = mat.create();
+            }
+            result = mat.makeTranslate(t[0],t[1],t[2], result);
+            var rm = mat.fromEulerXYZ(r[0],r[1],r[2]);
+            var sm = mat.makeScale(s[0],s[1],s[2]);
+            
+            // multiplied in order: translate * rotate * scale 
+            mat.multiply(rm, sm, rm);
+            mat.multiply(result, rm, result);
+            
+            return result;
         }
     }
 } ();
