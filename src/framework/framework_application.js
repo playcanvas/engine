@@ -213,7 +213,8 @@ pc.extend(pc.fw, function () {
                 this._updateEntityAttribute(msg.content.id, msg.content.accessor, msg.content.value);
                 break;
             case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
-                this._updateEntityTransform(msg.content.id, msg.content.transform, msg.content.undoable);
+                var transform = pc.math.mat4.compose(msg.content.translate, msg.content.rotate, msg.content.scale);
+                this._updateEntityTransform(msg.content.id, transform);
                 break;
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                 //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
