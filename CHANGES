@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.29.0
+-------
+* [FIX] Fixed up EntityResourceHandler function call to be static.
+* [FIX] Fixed directionallight/camera components to render correctly using updated Device#draw function.
+* Added Update Entity Transform message to livelink.
+* Replace MouseEvent object with createMouseEvent call to wrap extra data onto native MouseEvent
+* Updated JSON format again. Models are enclosed in an object called 'model' and animations are enclosed in an object called 'animation'.
+* Added support for wireframe rendering. Call pc.scene.Geometry#generateWireframe on a geometry and then call pc.scene.MeshNode#setRenderStyle(pc.scene.RenderStyle.WIREFRAME)
+
+-------
 v0.28.0
 -------
 * Prevent livelink sending messages to itself.

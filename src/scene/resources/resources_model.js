@@ -775,31 +775,33 @@ pc.extend(pc.resources, function () {
     * @description Load a pc.scene.Model from data in the PlayCanvas JSON format
     * @param {Object} json The data
     */
-    ModelResourceHandler.prototype._loadModel = function (json, options) {
+    ModelResourceHandler.prototype._loadModel = function (data, options) {
+        var modelData = data.model;
+
         var model = new pc.scene.Model();
         var i;
 
         // Load in the shared resources of the model (textures, materials and geometries)
-        if (json.textures) {
+        if (modelData.textures) {
             var textures = model.getTextures();
-            for (i = 0; i < json.textures.length; i++) {
-                var textureData = json.textures[i];
-                textures.push(this._loadTexture(model, json, textureData, options));
+            for (i = 0; i < modelData.textures.length; i++) {
+                var textureData = modelData.textures[i];
+                textures.push(this._loadTexture(model, modelData, textureData, options));
             }
         }
 
         var materials = model.getMaterials();
-        for (i = 0; i < json.materials.length; i++) {
-            var materialData = json.materials[i];
-            materials.push(this._loadMaterial(model, json, materialData));
+        for (i = 0; i < modelData.materials.length; i++) {
+            var materialData = modelData.materials[i];
+            materials.push(this._loadMaterial(model, modelData, materialData));
         }
 /*    
         var buffers = parseBin(options.bin);
 */
         var geometries = model.getGeometries();
-        for (i = 0; i < json.geometries.length; i++) {
-            var geomData = json.geometries[i];
-            geometries.push(this._loadGeometry(model, json, geomData/*, buffers[i]*/));
+        for (i = 0; i < modelData.geometries.length; i++) {
+            var geomData = modelData.geometries[i];
+            geometries.push(this._loadGeometry(model, modelData, geomData/*, buffers[i]*/));
         }
     
         var _jsonToLoader = {
@@ -813,7 +815,7 @@ pc.extend(pc.resources, function () {
             var node = null;
             var loadFunc = _jsonToLoader[nodeData.type];
             if (loadFunc !== undefined) {
-                node = loadFunc(model, json, nodeData);
+                node = loadFunc(model, modelData, nodeData);
     
                 if (node instanceof pc.scene.CameraNode)
                     model.getCameras().push(node);
@@ -866,8 +868,8 @@ pc.extend(pc.resources, function () {
             }, this);
         };
         
-        if (json.graph !== undefined) {
-            var graph = _loadHierarchy(json.graph);
+        if (modelData.graph !== undefined) {
+            var graph = _loadHierarchy(modelData.graph);
             model.setGraph(graph);
 
             // Resolve bone IDs to actual graph nodes
