@@ -756,23 +756,25 @@ pc.math.mat4 = function () {
                 r = pc.math.vec3.create();
             }
             
+            var scale = pc.math.mat4.getScale(m);
+            
             var x; 
-            var y = Math.asin(m[2]);
+            var y = Math.asin(m[2] / scale[0]);
             var z;
             var HALF_PI = Math.PI / 2;
             if (y < HALF_PI) {
                 if (y > -HALF_PI) {
-                    x = Math.atan2(-m[6], m[10]);
-                    z = Math.atan2(-m[1], m[0]);
+                    x = Math.atan2(-m[6] / scale[1], m[10] / scale[2]);
+                    z = Math.atan2(-m[1] / scale[0], m[0] / scale[0]);
                 } else {
                     // Not a unique solution
                     z = 0;
-                    x = -Math.atan2(m[4], m[5]);
+                    x = -Math.atan2(m[4] / scale[1], m[5] / scale[1]);
                 }
             } else {
                 // Not a unique solution
                 z = 0;
-                x = Math.atan2(m[4], m[5]);        
+                x = Math.atan2(m[4] / scale[1], m[5] / scale[1]);        
             }
             
             r[0] = x;
