@@ -217,7 +217,6 @@ pc.extend(pc.fw, function () {
                 this._updateEntityTransform(msg.content.id, transform);
                 break;
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
-                //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
                 var entity = this.context.root.findOne("getGuid", msg.content.id);
                 if(entity) {
                     entity.close(this.context.systems);
