@@ -18,15 +18,15 @@ pc.extend(pc.fw, function () {
     ScriptComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.ScriptComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['urls']);
+        this.initialiseComponent(entity, componentData, data, ['runInTools', 'urls']);
 
         return componentData;
     };
-    
-    /*
+
+/*
     ScriptComponentSystem.prototype.deleteComponent = function (entity) {
         var componentData = this.getComponentData(entity);
-        
+
         for (name in componentData.instances) {
             if (componentData.instances.hasOwnProperty(name)) {
                 if(componentData.instances[name].instance.destroy) {
@@ -36,8 +36,9 @@ pc.extend(pc.fw, function () {
         }
     
         this.removeComponent(entity);
-    };*/
-    
+    };
+*/
+
     ScriptComponentSystem.prototype.update = function (dt) {
         var components = this.getComponents();
 
@@ -96,6 +97,7 @@ pc.extend(pc.fw, function () {
     };
     
     ScriptComponentSystem.prototype.onSetUrls = function(entity, name, oldValue, newValue) {
+        var componentData = this.getComponentData(entity);
         var urls = newValue;
         var prefix = pc.content.source || "";
         if(pc.type(urls) == "string") {
@@ -105,7 +107,7 @@ pc.extend(pc.fw, function () {
             batch: entity.getRequestBatch()
         };
         
-        if(!this._inTools) {
+        if (!this._inTools || (this._inTools && componentData.runInTools)) {
             // Load and register new scripts and instances
             urls.forEach(function (url, index, arr) {
                 var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
