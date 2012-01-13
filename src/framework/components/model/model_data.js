@@ -22,7 +22,8 @@ editor.link.expose({
     description: "Model Asset to render",
     type: "asset",
     options: {
-        max: 1
+        max: 1,
+        type: 'model'
     },
     defaultValue: null
 });

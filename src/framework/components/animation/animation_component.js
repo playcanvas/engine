@@ -125,6 +125,10 @@ pc.extend(pc.fw, function () {
     };
 	
 	AnimationComponentSystem.prototype.loadAnimationAssets = function (entity, guids) {
+	    if (!guids || !guids.length) {
+	        return;
+	    }
+	    
 		var requests = guids.map(function (guid) {
 			return new pc.resources.AssetRequest(guid);
 		});
