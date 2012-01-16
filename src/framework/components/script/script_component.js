@@ -23,7 +23,6 @@ pc.extend(pc.fw, function () {
         return componentData;
     };
 
-/*
     ScriptComponentSystem.prototype.deleteComponent = function (entity) {
         var componentData = this.getComponentData(entity);
 
@@ -37,7 +36,6 @@ pc.extend(pc.fw, function () {
     
         this.removeComponent(entity);
     };
-*/
 
     ScriptComponentSystem.prototype.update = function (dt) {
         var components = this.getComponents();
