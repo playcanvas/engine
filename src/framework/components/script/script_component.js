@@ -113,7 +113,7 @@ pc.extend(pc.fw, function () {
                 var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
                 this.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
                     var ScriptType = resources[url];
-                    instance = new ScriptType(entity);
+                    var instance = new ScriptType(entity);
                     this._registerInstance(entity, url, ScriptType._pcScriptName, instance);                        
                 }.bind(this), function (errors) {
                     Object.keys(errors).forEach(function (key) {
