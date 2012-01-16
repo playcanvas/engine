@@ -83,11 +83,9 @@ pc.gfx.VertexIterator.prototype.next = function () {
     var vertexFormat = this.vertexBuffer.getFormat();
     while (i < numSetters) {
         var setter = setters[i++];
-        if (setter.array.BYTES_PER_ELEMENT) {
-            setter.index += vertexFormat.size / setter.array.BYTES_PER_ELEMENT;
-        } else { // Opera!!
-            setter.index += vertexFormat.size / setter.array.constructor.BYTES_PER_ELEMENT;
-        }
+        // BYTES_PER_ELEMENT is on the instance and constructor for Chrome, Safari and Firefox
+        // but just the constructor for Opera
+        setter.index += vertexFormat.size / setter.array.constructor.BYTES_PER_ELEMENT;
     }
 }
 
