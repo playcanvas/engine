@@ -736,14 +736,17 @@ pc.math.mat4 = function () {
                                        pc.math.vec3.length(pc.math.vec3.create(m[8], m[9], m[10])));
         },
         
+        // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
+        // The 3D space is right-handed, so the rotation around each axis will be counterclockwise 
+        // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
         fromEulerXYZ: function (x, y, z, r) {
             if (r === undefined) {
                 r = pc.math.mat4.create();
             }
             
-            var xm = pc.math.mat4.makeRotate(-x, [1,0,0]);
-            var ym = pc.math.mat4.makeRotate(-y, [0,1,0]);
-            var zm = pc.math.mat4.makeRotate(-z, [0,0,1]);
+            var xm = pc.math.mat4.makeRotate(x, [1,0,0]);
+            var ym = pc.math.mat4.makeRotate(y, [0,1,0]);
+            var zm = pc.math.mat4.makeRotate(z, [0,0,1]);
             
             pc.math.mat4.multiply(ym, xm, r);
             pc.math.mat4.multiply(zm, r, r);
@@ -759,13 +762,13 @@ pc.math.mat4 = function () {
             var scale = pc.math.mat4.getScale(m);
             
             var x; 
-            var y = Math.asin(m[2] / scale[0]);
+            var y = Math.asin(-m[2] / scale[0]);
             var z;
             var HALF_PI = Math.PI / 2;
             if (y < HALF_PI) {
                 if (y > -HALF_PI) {
-                    x = Math.atan2(-m[6] / scale[1], m[10] / scale[2]);
-                    z = Math.atan2(-m[1] / scale[0], m[0] / scale[0]);
+                    x = Math.atan2(m[6] / scale[1], m[10] / scale[2]);
+                    z = Math.atan2(m[1] / scale[0], m[0] / scale[0]);
                 } else {
                     // Not a unique solution
                     z = 0;
