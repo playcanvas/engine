@@ -73,7 +73,6 @@
 ../src/anim/anim_skeleton.js
 ../src/anim/resources/resources_animation.js
 ../src/audio/audio_audio.js
-../src/audio/audionode.js
 ../src/audio/audio_context.js
 ../src/audio/resources/resources_audio.js
 ../src/input/input_input.js

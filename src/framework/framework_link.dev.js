@@ -1,9 +1,9 @@
 pc.extend(editor, function () {
     var LinkInterface = function () {
-        this.exposed = {};
-        this.added = {};
-        this.scripts =  {};
-        this.systems = [];
+        this.exposed = {}; // dictionary of exposed variables by system type
+        this.added = {}; // dictionary of added variables, deprecated...
+        this.scripts =  {}; // dictionary of exposed script variables, not used
+        this.systems = []; // list of registered system names
     };
 
     /** 

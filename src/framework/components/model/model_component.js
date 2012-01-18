@@ -38,6 +38,8 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var ModelComponentSystem = function ModelComponentSystem (context) {
+        this.context = context;
+
         context.systems.add("model", this);
         this.bind("set", pc.callback(this, _onSet));
     }
@@ -86,17 +88,23 @@ pc.extend(pc.fw, function () {
     	};
 		
     	this.context.loader.request(request, function (resources) {
-    			var asset = resources[guid];
-    			var url = asset.getFileUrl();
-    			this.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {
-    				this.set(entity, "model", resources[url]);
-    			}.bind(this), function (errors, resources) {
-                    Object.keys(errors).forEach(function (key) {
-                        logERROR(errors[key]);
-                    });
-    			}, function (progress) {
-    			}, options);
-    			
+            var asset = resources[guid];
+            var url = asset.getFileUrl();
+            this.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {
+                var model = resources[url];
+                if (this.context.designer) {
+                    var geometries = model.getGeometries();
+                    for (var i = 0; i < geometries.length; i++) {
+                        geometries[i].generateWireframe();
+                    }
+                }
+                this.set(entity, "model", model);
+            }.bind(this), function (errors, resources) {
+                Object.keys(errors).forEach(function (key) {
+                    logERROR(errors[key]);
+                });
+            }, function (progress) {
+            }, options);
     	}.bind(this), function (errors, resources) {
     	    Object.keys(errors).forEach(function (key) {
     	        logERROR(errors[key]);

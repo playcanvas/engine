@@ -1,6 +1,7 @@
 pc.extend(pc.fw, function () {
     function ScriptComponentData() {
         this.urls = [];
+        this.runInTools = false;
         this.instances = {};
         this._scripts = [];
     }

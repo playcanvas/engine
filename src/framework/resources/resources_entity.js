@@ -14,20 +14,15 @@ pc.extend(pc.resources, function () {
         
         var guid = identifier;
         if(guid in pc.content.data) {
-            //_loaded.call(this, pc.content.data[guid], options);
             success(pc.content.data[guid], options) 
         } else {
             this._depot.entities.getOne(guid, function (entity) {
-                //_loaded.call(this, entity, options);
+                
                 success(entity, options);
             }.bind(this), function (errors) {
                 error(errors);
             });
         }
-
-        //function _loaded (entity, options) {
-        //    var entity = this.open(entity, options);
-        //}
     };
     
     EntityResourceHandler.prototype.open = function (data, options) {
@@ -43,7 +38,12 @@ pc.extend(pc.resources, function () {
 
         entity.setName(data.name);
         entity.setGuid(guid);
-        entity.setLocalTransform(pc.math.mat4.clone(data.transform));
+        if (data.transform) {
+            entity.setLocalTransform(pc.math.mat4.clone(data.transform));    
+        } else {
+            entity.setLocalTransform(pc.math.mat4.clone(pc.math.mat4.compose(data['translate'], data['rotate'], data['scale'])));
+        }
+        
         
         if (data.labels) {
             data.labels.forEach(function (label) {

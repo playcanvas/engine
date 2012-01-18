@@ -63,6 +63,7 @@ pc.extend(pc.scene, function () {
         var children = this.getChildren();
         var length = children.length;
         var results = [];
+        var testValue;
         if(this[attr]) {
             if(this[attr] instanceof Function) {
                 testValue = this[attr]();    
@@ -94,6 +95,7 @@ pc.extend(pc.scene, function () {
         var children = this.getChildren();
         var length = children.length;
         var result = null;
+        var testValue;
         if(this[attr]) {
             if(this[attr] instanceof Function) {
                 testValue = this[attr]();    
