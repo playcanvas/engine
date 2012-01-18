@@ -23,7 +23,22 @@ editor.link.expose({
     variable: "type",
     displayName: "Type",
     description: "Type of primitive",
-    type: "string",
+    type: "enumeration",
+    options: {
+        enumerations: [{
+            name: 'Box',
+            value: pc.shape.Type.BOX
+        }, {
+            name: 'Sphere',
+            value: pc.shape.Type.SPHERE
+        }, {
+            name: 'Cylinder',
+            value: pc.shape.Type.CYLINDER
+        }, {
+            name: 'Cone',
+            value: pc.shape.Type.CONE
+        }]
+    },
     defaultValue: "Box"
 });
 

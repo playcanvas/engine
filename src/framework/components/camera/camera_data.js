@@ -161,6 +161,15 @@ editor.link.expose({
     variable: "projection",
     displayName: "Projection",
     description: "Projection type of camera",
-    type: "number",
+    type: "enumeration",
+    options: {
+        enumerations: [{
+            name: 'Perspective',
+            value: 0
+        }, {
+            name: 'Orthographic',
+            value: 1
+        }]
+    },
     defaultValue: 0
 });
