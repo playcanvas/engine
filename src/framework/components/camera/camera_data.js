@@ -92,7 +92,7 @@ editor.link.expose({
     defaultValue: 45,
     options: {
         min: 0,
-        max: 180
+        max: 90
     }
 });
 
