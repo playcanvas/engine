@@ -51,5 +51,8 @@ editor.link.expose({
     displayName: "Attenuation End",
     description: "The distance from the light where its contribution falls to zero",
     type: "number",
-    defaultValue: 1
+    defaultValue: 1,
+    options: {
+        min: 0
+    }
 });

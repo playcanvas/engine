@@ -93,11 +93,23 @@ pc.extend(pc.fw, function () {
      */
     LiveLink.prototype.send = function (msg, success) {
         success = success || function () {};
-
-        this._destinations.forEach( function (w, index, arr) {
-            var origin = w.location.protocol + "//" + w.location.host;
-            this._send(msg, success, w, origin);
-        }, this);
+        
+        var i, length = this._destinations.length;
+        var closed = []; // 
+        for(i = 0; i < length; i++) {
+            var w = this._destinations[i];
+            if (!w.closed) {
+                var origin = w.location.protocol + "//" + w.location.host;
+                this._send(msg, success, w, origin);                
+            } else {
+                closed.push(w);
+            }        
+        }
+        
+        length = closed.length;
+        for(i = 0; i < length; i++) {
+            this.removeDestinationWindow(closed[i]);
+        }
     }
     
     LiveLink.prototype._send = function(msg, success, _window, origin) {
