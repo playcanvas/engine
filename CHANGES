@@ -3,6 +3,27 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.30.0
+-------
+* Change max camera FOV to 90.
+* Added support for 'enumeration' type when exposing vars to the Designer.
+* [FIX] a couple of leaked globals in graphnode and script_component.
+* Reinstated the deleteComponent function for the script component system.
+* [FIX] Final fix for Opera. Now it's just a matter of waiting for next Opera 12.x (for the typed array offset fix).
+* [FIX] Animation component can handle empty guid list.
+* Generate wireframe data for models/primitives when the Designer is present.
+* Remove audio context from non-webkit browsers.
+* Remove audionode dependency.
+* Remove upper limit on animation speed.
+* Updated script component to allow scripts to be tagged as runnable only in 'tools' (i.e. the Designer for the Designer camera script).
+* Logging levels work in console.
+* Support for transform in entity data if it's present (loading exported data).
+* Support for new entity data format with no transform only components.
+* [FIX] Euler functions were rotating the wrong direction around each axis.
+* [FIX] toEulerXYZ handles scaled matrices.
+* [FIX] toEulerXYZ and fromEulerXYZ perform updates in the 'correct' order and are compatible now.
+
+-------
 v0.29.0
 -------
 * [FIX] Fixed up EntityResourceHandler function call to be static.
