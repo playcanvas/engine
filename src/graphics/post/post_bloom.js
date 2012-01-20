@@ -2,6 +2,8 @@ pc.gfx.post.bloom = function () {
     var targets = [];
     var programs = {};
     var vertexBuffer = null;
+    var quadDrawOptions = null;
+    var quadState = null;
     
     var getBlurValues = function (dx, dy, blurAmount) {
 
@@ -71,9 +73,7 @@ pc.gfx.post.bloom = function () {
             // Pixel shader extracts the brighter areas of an image.
             // This is the first step in applying a bloom postprocess.
             var bloomExtractFrag = [
-                "#ifdef GL_ES\n",
-                "precision highp float;",
-                "#endif",
+                "precision mediump float;",
                 "",
                 "varying vec2 vUv0;",
                 "",
@@ -94,9 +94,7 @@ pc.gfx.post.bloom = function () {
             // This is used twice by the bloom postprocess, first to
             // blur horizontally, and then again to blur vertically.
             var gaussianBlurFrag = [
-                "#ifdef GL_ES\n",
-                "precision highp float;",
-                "#endif",
+                "precision mediump float;",
                 "",
                 "#define SAMPLE_COUNT 15",
                 "",
@@ -123,18 +121,17 @@ pc.gfx.post.bloom = function () {
             // scene, using tweakable intensity levels and saturation.
             // This is the final step in applying a bloom postprocess.
             var bloomCombineFrag = [
-                "#ifdef GL_ES\n",
-                "precision highp float;",
-                "#endif",
+                "precision mediump float;",
                 "",
                 "varying vec2 vUv0;",
                 "",
+                "#define uBloomIntensity uCombineParams.x",
+                "#define uBaseIntensity uCombineParams.y",
+                "#define uBloomSaturation uCombineParams.z",
+                "#define uBaseSaturation uCombineParams.w",
+                "uniform vec4 uCombineParams;",
                 "uniform sampler2D uBaseTexture;",
                 "uniform sampler2D uBloomTexture;",
-                "uniform float uBloomIntensity;",
-                "uniform float uBaseIntensity;",
-                "uniform float uBloomSaturation;",
-                "uniform float uBaseSaturation;",
                 "",
                 // Helper for modifying the saturation of a color.
                 "vec4 adjust_saturation(vec4 color, float saturation)",
@@ -203,6 +200,18 @@ pc.gfx.post.bloom = function () {
             iterator.next();
             iterator.element.aPosition.set(1.0, 1.0, 0.0);
             iterator.end();
+            
+            quadPrimitive = {
+                type: pc.gfx.PrimType.TRIANGLE_STRIP,
+                base: 0,
+                count: 4,
+                indexed: false
+            };
+            
+            quadState = {
+                depthTest: false,
+                depthWrite: false
+            };
         },
 
         render: function (inputTarget, outputTarget, options) {
@@ -228,18 +237,10 @@ pc.gfx.post.bloom = function () {
             var _drawFullscreenQuad = function (dst, program) {
                 device.setRenderTarget(dst);
                 device.updateBegin();
-                device.updateLocalState({
-                    depthTest: false,
-                    depthWrite: false
-                });
+                device.updateLocalState(quadState);
                 device.setVertexBuffer(vertexBuffer, 0);
                 device.setProgram(program);
-                device.draw({
-                    primitiveType: pc.gfx.PrimType.TRIANGLE_STRIP,
-                    base: 0,
-                    count: 4,
-                    useIndexBuffer: false
-                });
+                device.draw(quadPrimitive);
                 device.clearLocalState();
                 device.updateEnd();
             }
@@ -270,10 +271,9 @@ pc.gfx.post.bloom = function () {
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
-            scope.resolve("uBloomIntensity").setValue(options.bloomIntensity);
-            scope.resolve("uBaseIntensity").setValue(options.baseIntensity);
-            scope.resolve("uBloomSaturation").setValue(options.bloomSaturation);
-            scope.resolve("uBaseSaturation").setValue(options.baseSaturation);
+            scope.resolve("uCombineParams").setValue([
+                options.bloomIntensity, options.baseIntensity, options.bloomSaturation, options.baseSaturation
+            ]);
             scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
             scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
             _drawFullscreenQuad(outputTarget, programs["combine"]);

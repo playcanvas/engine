@@ -54,12 +54,10 @@ pc.gfx.programlib.pick = {
     generateFragmentShader: function (options) {
         var code = "";
 
-        code += "#ifdef GL_ES\n";
-        code += "precision highp float;\n";
-        code += "#endif\n\n";
+        code += "precision mediump float;\n\n";
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
-        code += "uniform vec4 pick_color;\n";
+        code += "uniform vec4 pick_color;\n\n";
 
         code += "void main(void)\n";
         code += "{\n";

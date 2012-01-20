@@ -24,7 +24,8 @@ editor.link.expose({
     type: "number",
     options: {
         max: 1,
-        min: 0
+        min: 0,
+        step: 0.1
     },
     defaultValue: 1
 });

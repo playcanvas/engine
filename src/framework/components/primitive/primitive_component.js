@@ -6,8 +6,10 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.ApplicationContext} context The ApplicationContext for the active application
      */
     var PrimitiveComponentSystem = function PrimitiveComponentSystem(context) {
+        this.context = context;
+
         context.systems.add("primitive", this);
-        
+
         // Handle changes to the 'model' value
         this.bind("set_model", this.onSetModel.bind(this));
         // Handle changes to the 'type' value
@@ -37,8 +39,8 @@ pc.extend(pc.fw, function () {
     
     PrimitiveComponentSystem.prototype.deleteComponent = function (entity, data) {
         var component = this.getComponentData(entity);
-    
-        if(component.model) {
+
+        if (component.model) {
             this.context.scene.removeModel(component.model);
             entity.removeChild(component.model.getGraph());
             component.model = null;
@@ -95,6 +97,10 @@ pc.extend(pc.fw, function () {
                     throw new Error("Unknown shape type: " + newValue);
                     break;
             };
+
+            if (this.context.designer) {
+                geometry.generateWireframe();
+            }
 
             var mesh = new pc.scene.MeshNode();
             mesh.setGeometry(geometry);

@@ -42,8 +42,9 @@ pc.extend(pc.fw, function () {
 
         this.canvas = canvas;
 
-        this._link = new pc.fw.LiveLink(window);
-        this._link.listen(pc.callback(this, this._handleMessage));
+        this._link = new pc.fw.LiveLink("application");
+        this._link.addDestinationWindow(window);
+        this._link.listen(this._handleMessage.bind(this));
         
         // Open the log
         pc.log.open();
@@ -60,8 +61,10 @@ pc.extend(pc.fw, function () {
         this.graphicsDevice.enableValidation(false);            
 
         var registry = new pc.fw.ComponentSystemRegistry();
-        
-        var audioContext = new pc.audio.AudioContext();
+    
+        if (pc.audio.AudioContext) {
+            var audioContext = new pc.audio.AudioContext();
+        }        
         
         scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
         //pc.string.format("{0}/code/{1}/{2}", options.api.url, options.api.username, options.api.project);
@@ -73,7 +76,9 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
-        loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioContext));
+        if (audioContext) {
+            loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioContext));
+        }
 
 		// The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options.controller, options.keyboard, options.mouse);
@@ -97,8 +102,10 @@ pc.extend(pc.fw, function () {
         var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
         var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
-        var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, audioContext);
-        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioContext);
+        if (audioContext) {
+            var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, audioContext);
+            var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioContext);            
+        }
         
         skyboxsys.setDataDir(options.dataDir);
         staticcubemapsys.setDataDir(options.dataDir);
@@ -211,8 +218,11 @@ pc.extend(pc.fw, function () {
             case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE:
                 this._updateEntityAttribute(msg.content.id, msg.content.accessor, msg.content.value);
                 break;
+            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
+                var transform = pc.math.mat4.compose(msg.content.translate, msg.content.rotate, msg.content.scale);
+                this._updateEntityTransform(msg.content.id, transform);
+                break;
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
-                //this.context.loaders.entity.close(msg.content.id, this.context.root, this.context.systems);
                 var entity = this.context.root.findOne("getGuid", msg.content.id);
                 if(entity) {
                     entity.close(this.context.systems);
@@ -220,33 +230,31 @@ pc.extend(pc.fw, function () {
                 break;
             case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
                 var entities = {};
+                var guid = null;
+                
                 msg.content.models.forEach(function (model) {
                     var entity = this.context.loader.open(pc.resources.EntityRequest, model);
                     entities[entity.getGuid()] = entity;
                 }, this);
                 
-                // create a temporary handler to patch children
-                var handler = new pc.resources.EntityResourceHandler();
-                var root = null;
                 for (guid in entities) {
                     if (entities.hasOwnProperty(guid)) {
-                        handler.patchChildren(entities[guid], entities);
-                        if(!entities[guid].__parent) {
-                            root = entities[guid];
+                        pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
+                        if (!entities[guid].__parent) {
+                            // If entity has no parent add to the root
+                            this.context.root.addChild(entities[guid]);
+                        } else if (!entities[entities[guid].__parent]) {
+                            // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
+                            var parent = this.context.root.findByGuid(entities[guid].__parent);
+                            parent.addChild(entities[guid]);
                         }
                     }
                 }
-                
-                // Once all children are patched, if there is a root then add it 
-                if(root) {
-                    this.context.root.addChild(root);    
-                }
-
                 break;
         }
     };
 
-/**
+    /**
      * @function
      * @name pc.fw.Application#_updateComponent
      * @description Update a value on a component, 
@@ -273,6 +281,13 @@ pc.extend(pc.fw, function () {
             }
         }
     };
+
+    Application.prototype._updateEntityTransform = function (guid, transform) {
+        var entity = this.context.root.findByGuid(guid);
+        if(entity) {
+            entity.setLocalTransform(transform);
+        }
+    };
     
     Application.prototype._updateEntityAttribute = function (guid, accessor, value) {
         var entity = this.context.root.findOne("getGuid", guid);
@@ -283,7 +298,7 @@ pc.extend(pc.fw, function () {
             }
             
             if(pc.string.startsWith(accessor, "reparent")) {
-                entity[accessor](value, this.context);                
+                entity[accessor](value, this.context);
             } else {
                 entity[accessor](value);                
             }

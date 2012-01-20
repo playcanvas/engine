@@ -55,7 +55,7 @@ pc.extend(pc.fw, function () {
             _renderable: null, // gfx resources for rendering frustum in tools
             
             _clearColor: function (componentData, clearColor) {
-                if (clearColor) {
+                if (pc.isDefined(clearColor)) {
                     var color = parseInt(clearColor);
                     componentData.camera.getClearOptions().color = [
                         ((color >> 24) & 0xff) / 255.0,
@@ -69,7 +69,7 @@ pc.extend(pc.fw, function () {
             },
 
             _fov: function (componentData, fov) {
-                if (fov) {
+                if (pc.isDefined(fov)) {
                     componentData.fov = fov;
                     componentData.camera.setFov(fov);
                 } else {
@@ -78,7 +78,7 @@ pc.extend(pc.fw, function () {
             },
 
             _viewWindowX: function (componentData, vwx) {
-                if (vwx) {
+                if (pc.isDefined(vwx)) {
                     componentData.viewWindowX = vwx;
                     var vw = componentData.camera.getViewWindow();
                     componentData.camera.setViewWindow(pc.math.vec2.create(vwx, vw[1]));
@@ -88,7 +88,7 @@ pc.extend(pc.fw, function () {
             },
 
             _viewWindowY: function (componentData, vwy) {
-                if (vwy) {
+                if (pc.isDefined(vwy)) {
                     componentData.viewWindowY = vwy;
                     var vw = componentData.camera.getViewWindow();
                     componentData.camera.setViewWindow(pc.math.vec2.create(vw[0], vwy));
@@ -98,7 +98,7 @@ pc.extend(pc.fw, function () {
             },
 
             _nearClip: function (componentData, nearClip) {
-                if (nearClip) {
+                if (pc.isDefined(nearClip)) {
                     componentData.nearClip = nearClip;
                     componentData.camera.setNearClip(nearClip);
                 } else {
@@ -107,7 +107,7 @@ pc.extend(pc.fw, function () {
             },
 
             _farClip: function (componentData, farClip) {
-                if (farClip) {
+                if (pc.isDefined(farClip)) {
                     componentData.farClip = farClip;
                     componentData.camera.setFarClip(farClip);
                 } else {
@@ -116,7 +116,7 @@ pc.extend(pc.fw, function () {
             },
 
             _offscreen: function (componentData, offscreen) {
-                if (offscreen !== undefined) {
+                if (pc.isDefined(offscreen)) {
                     if (offscreen) {
                         componentData.offscreen = offscreen;
                         var offscreenBuffer = _createOffscreenBuffer();
@@ -131,7 +131,7 @@ pc.extend(pc.fw, function () {
             },
 
             _projection: function (componentData, projection) {
-                if (projection) {
+                if (pc.isDefined(projection)) {
                     componentData.projection = projection;
                     componentData.camera.setProjection(projection);
                 } else {
@@ -244,10 +244,10 @@ pc.extend(pc.fw, function () {
                     device.scope.resolve("matrix_model").setValue(transform);
                     device.scope.resolve("constant_color").setValue([1,1,0,1]);
                     device.draw({
-                        primitiveType: pc.gfx.PrimType.LINES,
+                        type: pc.gfx.PrimType.LINES,
                         base: 0,
                         count: indexBuffer.getNumIndices(),
-                        useIndexBuffer: true
+                        indexed: true
                     });
                 }
             }

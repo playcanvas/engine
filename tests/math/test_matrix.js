@@ -202,46 +202,94 @@ test("toEulerXYZ", function () {
     
     m = pc.math.mat4.create(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
     e = pc.math.mat4.toEulerXYZ(m);
-    
     equal(e[0], 0);
     equal(e[1], 0);
     equal(e[2], 0);
 
     m = pc.math.mat4.create(1,0,0,0, 0,0,1,0, 0,-1,0,0, 0,0,0,1);
     e = pc.math.mat4.toEulerXYZ(m);
-    
     approx(e[0], -Math.PI / 2);
     equal(e[1], 0);
     equal(e[2], 0);
 
     m = pc.math.mat4.create(1,0,0,0 ,0,1,0,0, 0,0,1,0, 0,0,0,1);
     e = pc.math.mat4.toEulerXYZ(m);
-    
     equal(e[0], 0);
     equal(e[1], 0);
     equal(e[2], 0);
+    
+    m = [0.7071067811865476,0,0.7071067811865476,0,0,1,0,0,-0.7071067811865476,0,0.7071067811865476,0,0,0,0,1]
+    e = pc.math.mat4.toEulerXYZ(m);
+    equal(e[0], 0);
+    approx(e[1], Math.PI / 4, e[1].toString() + " ~= " + Math.PI/4);
+    equal(e[2], 0);
+
+    m = [1,0,0,0, 0,0.7071067811865476,-0.7071067811865476,0, 0,0.7071067811865476,0.7071067811865476,0, 0,0,0,1]
+    e = pc.math.mat4.toEulerXYZ(m);
+    approx(e[0], Math.PI / 4, e[0].toString() + " ~= " + Math.PI/4);
+    equal(e[1], 0);
+    equal(e[2], 0);
+
+    m = [0.7071067811865476,-0.7071067811865476,0,0, 0.7071067811865476,0.7071067811865476,0,0, 0,0,1,0, 0,0,0,1]
+    e = pc.math.mat4.toEulerXYZ(m);
+    equal(e[0], 0);
+    equal(e[1], 0);
+    approx(e[2], Math.PI / 4, e[2].toString() + " ~= " + Math.PI/4);
 
 });
 
 test("fromEulerXYZ", function () {
     var m, x, y, z;
     
+    var clip = function (m) {
+        var i,l = m.length;
+        for(i = 0;i < l; i++) {
+            m[i] = parseFloat(m[i].toFixed(3));
+        }
+        
+        return m;
+    };
+    
+    // no rotation -> identity
     x = y = z = 0;
     m = pc.math.mat4.fromEulerXYZ(x,y,z);
-    
-    equal(m[0], 1);
-    equal(m[1], 0);
-    equal(m[2], 0);
-    equal(m[3], 0);
-    equal(m[5], 1);
-    equal(m[10], 1);
-    equal(m[15], 1);
-    
-    x = Math.PI / 2;
+    deepEqual(m, [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+
+    // Rotate 45 around y
+    y = Math.PI / 4;
+    x = z = 0;
     m = pc.math.mat4.fromEulerXYZ(x,y,z);
+    deepEqual(clip(m), [0.707,0,0.707,0,0,1,0,0,-0.707,0,0.707,0, 0,0,0,1]);
+
+    // Rotate 45 around x
+    x = Math.PI / 4;
+    y = z = 0;
+    m = pc.math.mat4.fromEulerXYZ(x,y,z);
+    deepEqual(clip(m), [1,0,0,0, 0,0.707,-0.707,0, 0,0.707,0.707,0, 0,0,0,1]);
+
+    // Rotate 45 around z
+    z = Math.PI / 4;
+    y = x = 0;
+    m = pc.math.mat4.fromEulerXYZ(x,y,z);
+    deepEqual(clip(m), [0.707,-0.707,0,0, 0.707,0.707,0,0, 0,0,1,0, 0,0,0,1]);
+
+});
+
+test("fromEuler and back", function () {
+    var clip = function (m) {
+        var i,l = m.length;
+        for(i = 0;i < l; i++) {
+            m[i] = parseFloat(m[i].toFixed(3));
+        }
+        
+        return m;
+    };
     
-    equal(m[0], 1);
-    equal(m[6], -1);
-    equal(m[9], 1);
-    equal(m[15], 1);
+    var m1 = [0.7071067811865476,0,0.7071067811865476,0,0,1,0,0,-0.7071067811865476,0,0.7071067811865476,0, 0,0,0,1];
+    var m2
+
+    var r = pc.math.mat4.toEulerXYZ(m1);
+    m2 = pc.math.mat4.fromEulerXYZ(r[0], r[1], r[2]);
+    
+    deepEqual(clip(m1),clip(m2));
 });

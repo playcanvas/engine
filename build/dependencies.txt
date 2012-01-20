@@ -58,7 +58,6 @@
 ../src/scene/scene_cameranode.js
 ../src/scene/scene_lightnode.js
 ../src/scene/scene_material.js
-../src/scene/scene_submesh.js
 ../src/scene/scene_geometry.js
 ../src/scene/scene_meshnode.js
 ../src/scene/scene_model.js
@@ -74,7 +73,6 @@
 ../src/anim/anim_skeleton.js
 ../src/anim/resources/resources_animation.js
 ../src/audio/audio_audio.js
-../src/audio/audionode.js
 ../src/audio/audio_context.js
 ../src/audio/resources/resources_audio.js
 ../src/input/input_input.js

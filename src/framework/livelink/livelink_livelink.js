@@ -32,11 +32,14 @@ pc.extend(pc.fw, function () {
      * });
      * </pre></code>
      * @constructor Create a new LiveLink object
+     * @param {String} [senderIdPrefix] This string is used as a prefix to the unique senderId, to assist in debugging where messages came from
      */
-    var LiveLink = function () {
+    var LiveLink = function (senderIdPrefix) {
+        senderIdPrefix = senderIdPrefix || '';
+         
         this._destinations = [];
         this._callbacks = {};
-        this._linkid = pc.guid.create();
+        this._linkid = senderIdPrefix + '-' + pc.guid.create();
         this._listener = null;
         this._handler = pc.callback(this, this._handleMessage);
         window.addEventListener("message", this._handler, false);
@@ -90,16 +93,28 @@ pc.extend(pc.fw, function () {
      */
     LiveLink.prototype.send = function (msg, success) {
         success = success || function () {};
-
-        this._destinations.forEach( function (w, index, arr) {
-            var origin = w.location.protocol + "//" + w.location.host;
-            this._send(msg, success, w, origin);
-        }, this);
+        
+        var i, length = this._destinations.length;
+        var closed = []; // 
+        for(i = 0; i < length; i++) {
+            var w = this._destinations[i];
+            if (!w.closed) {
+                var origin = w.location.protocol + "//" + w.location.host;
+                this._send(msg, success, w, origin);                
+            } else {
+                closed.push(w);
+            }        
+        }
+        
+        length = closed.length;
+        for(i = 0; i < length; i++) {
+            this.removeDestinationWindow(closed[i]);
+        }
     }
     
     LiveLink.prototype._send = function(msg, success, _window, origin) {
         //msg.id = pc.guid.create();
-        logDEBUG("Send: " + msg.type);
+        //logDEBUG("Send: " + msg.type);
         msg.senderid = this._linkid;
         if(this._callbacks[msg.id]) {
             this._callbacks[msg.id].count++;
@@ -135,6 +150,10 @@ pc.extend(pc.fw, function () {
             return;
         }
         msg = new pc.fw.LiveLinkMessage(data, event.source);
+        
+        if(this._linkid === msg.senderid) {
+            return; // Don't send messages to ourself
+        }
         
         if(msg.type == pc.fw.LiveLinkMessageType.RECEIVED) {
             // If this is a receipt of a message that this LiveLink has sent

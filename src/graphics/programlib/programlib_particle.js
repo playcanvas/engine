@@ -77,9 +77,7 @@ pc.gfx.programlib.particle.generateVertexShader = function (options) {
 pc.gfx.programlib.particle.generateFragmentShader = function (options) {
     var code = "";
 
-    code += "#ifdef GL_ES\n";
     code += "precision mediump float;\n";
-    code += "#endif\n\n";
 
     // FRAGMENT SHADER INPUTS: VARYINGS
     code += "varying vec2 vUv0;\n";

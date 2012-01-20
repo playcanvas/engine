@@ -14,20 +14,15 @@ pc.extend(pc.resources, function () {
         
         var guid = identifier;
         if(guid in pc.content.data) {
-            //_loaded.call(this, pc.content.data[guid], options);
             success(pc.content.data[guid], options) 
         } else {
             this._depot.entities.getOne(guid, function (entity) {
-                //_loaded.call(this, entity, options);
+                
                 success(entity, options);
             }.bind(this), function (errors) {
                 error(errors);
             });
         }
-
-        //function _loaded (entity, options) {
-        //    var entity = this.open(entity, options);
-        //}
     };
     
     EntityResourceHandler.prototype.open = function (data, options) {
@@ -43,7 +38,12 @@ pc.extend(pc.resources, function () {
 
         entity.setName(data.name);
         entity.setGuid(guid);
-        entity.setLocalTransform(pc.math.mat4.clone(data.transform));
+        if (data.transform) {
+            entity.setLocalTransform(pc.math.mat4.clone(data.transform));    
+        } else {
+            entity.setLocalTransform(pc.math.mat4.clone(pc.math.mat4.compose(data['translate'], data['rotate'], data['scale'])));
+        }
+        
         
         if (data.labels) {
             data.labels.forEach(function (label) {
@@ -86,7 +86,7 @@ pc.extend(pc.resources, function () {
 
             entity.setRequestBatch(options.batch);
             this._loader.request(requests, options.priority, function (resources) {
-                this.patchChildren(entity, resources);
+                EntityResourceHandler.patchChildren(entity, resources);
                 success(entity);
             }.bind(this), function (errors) {
                 error(errors);
@@ -99,7 +99,13 @@ pc.extend(pc.resources, function () {
         }
     };
     
-    EntityResourceHandler.prototype.patchChildren = function (entity, children) {
+    /**
+     * @name pc.fw.Entity.patchChildren
+     * @description Final step when loading an entity, to add child Entities to parent 
+     * Convert a Entity that has been loaded from serialized data (which has it's child resource_ids stored in the __children property)
+     * into an proper tree by adding the entities from the supplied list as children and removing the temporary __children property.
+     */
+    EntityResourceHandler.patchChildren = function (entity, children) {
         var child;
         for(i = 0 ; i < entity.__children.length; ++i) {
             child = children[entity.__children[i]]
@@ -107,26 +113,6 @@ pc.extend(pc.resources, function () {
         }    	
         delete entity.__children;
     };
-    
-    EntityResourceHandler.prototype.patchChildren2 = function (entity, children) {
-        // patch up children list now that all entities are loaded
-        var i;
-        var child;
-        function _get(guid) {
-            var result = null;
-            children.forEach(function(child) {
-                if(child.getGuid() == guid) {
-                    result = child;
-                }
-            }, this);
-            return result;
-        }
-
-        for(i = 0 ; i < entity.__children.length; ++i) {
-            child = _get(entity.__children[i]);
-            entity.addChild(child);
-        }
-    };    
     
     var EntityRequest = function EntityRequest(identifier) {
     }

@@ -21,7 +21,9 @@ pc.extend(pc.resources, function () {
     	return animation;
     };
 	
-	AnimationResourceHandler.prototype._loadAnimation = function (animData) {
+	AnimationResourceHandler.prototype._loadAnimation = function (data) {
+        var animData = data.animation;
+
 	    var nodes = [];
 	    for (var i = 0; i < animData.nodes.length; i++) {
 	        var keys = [];

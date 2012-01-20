@@ -10,9 +10,10 @@ pc.extend(pc.fw, function () {
     AudioListenerComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AudioDestinationComponentData();
 
+        data = data || {};
         this.initialiseComponent(entity, componentData, data, []);
 
-        if (data.activate) {
+        if (data['activate']) {
             this.setCurrentDestination(entity);   
         }
 

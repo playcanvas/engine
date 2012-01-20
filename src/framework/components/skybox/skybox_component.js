@@ -29,7 +29,8 @@ pc.extend(pc.fw, function () {
         ].join("\n");
 
         var fragSrc = [
-            "precision highp float;",
+            "precision mediump float;",
+            "",
             "varying vec3 vViewDir;",
             "uniform samplerCube texture_cubeMap;",
             "",

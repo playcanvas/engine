@@ -8,7 +8,6 @@ pc.extend(pc.gfx, function () {
      */
     var VertexFormat = function () {
         this.size = 0;
-        this.numElements = 0;
         this.elements = [];
     };
 
@@ -26,7 +25,6 @@ pc.extend(pc.gfx, function () {
      */
     VertexFormat.prototype.begin = function () {
         this.size = 0;
-        this.numElements = 0;
         this.elements = [];
     };
 
@@ -49,7 +47,7 @@ pc.extend(pc.gfx, function () {
         // offset and stride of each vertex element
         var i = 0;
         var elements = this.elements;
-        var numElements = this.numElements;
+        var numElements = elements.length;
         while (i < numElements) {
             var vertexElement = elements[i++];
 
@@ -76,7 +74,6 @@ pc.extend(pc.gfx, function () {
      */
     VertexFormat.prototype.addElement = function (vertexElement) {
         this.size += vertexElement.size;
-        this.numElements++;
         this.elements.push(vertexElement);
     };
 

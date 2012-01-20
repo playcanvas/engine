@@ -3,6 +3,61 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.30.1
+-------
+* Added 'step' option to number attributes that are exposed to the designer.
+* Prevent livelink crashing if window has been closed by user.
+* [FIX] Creating audio components works.
+
+-------
+v0.30.0
+-------
+* Change max camera FOV to 90.
+* Added support for 'enumeration' type when exposing vars to the Designer.
+* [FIX] a couple of leaked globals in graphnode and script_component.
+* Reinstated the deleteComponent function for the script component system.
+* [FIX] Final fix for Opera. Now it's just a matter of waiting for next Opera 12.x (for the typed array offset fix).
+* [FIX] Animation component can handle empty guid list.
+* Generate wireframe data for models/primitives when the Designer is present.
+* Remove audio context from non-webkit browsers.
+* Remove audionode dependency.
+* Remove upper limit on animation speed.
+* Updated script component to allow scripts to be tagged as runnable only in 'tools' (i.e. the Designer for the Designer camera script).
+* Logging levels work in console.
+* Support for transform in entity data if it's present (loading exported data).
+* Support for new entity data format with no transform only components.
+* [FIX] Euler functions were rotating the wrong direction around each axis.
+* [FIX] toEulerXYZ handles scaled matrices.
+* [FIX] toEulerXYZ and fromEulerXYZ perform updates in the 'correct' order and are compatible now.
+
+-------
+v0.29.0
+-------
+* [FIX] Fixed up EntityResourceHandler function call to be static.
+* [FIX] Fixed directionallight/camera components to render correctly using updated Device#draw function.
+* Added Update Entity Transform message to livelink.
+* Replace MouseEvent object with createMouseEvent call to wrap extra data onto native MouseEvent
+* Updated JSON format again. Models are enclosed in an object called 'model' and animations are enclosed in an object called 'animation'.
+* Added support for wireframe rendering. Call pc.scene.Geometry#generateWireframe on a geometry and then call pc.scene.MeshNode#setRenderStyle(pc.scene.RenderStyle.WIREFRAME)
+
+-------
+v0.28.0
+-------
+* Prevent livelink sending messages to itself.
+* [FIX] Picking code updated following deletion of SubMesh API.
+* Handler for OPEN_ENTITY messages correctly handles new entities which have their parent id set, by inserting them _if_ the parent is not in the new entity list but is in the hierarchy.
+* Added exception throwing for device creation which allows app code to handle problems with WebGL.
+* [FIX] Fix quaternion copy function.
+* [FIX] Fog no longer interpolates alpha component of a fragment.
+* [FIX] pc.shape.Box.containsPoint() works now.
+
+-------
+v0.27.0
+-------
+* [FIX] pc.math.mat4.invert() works now
+* [FIX] Fix camera frustum rendering and direction light rendering
+
+-------
 v0.26.1
 -------
 * [FIX] build script -o support was broken

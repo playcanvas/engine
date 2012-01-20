@@ -153,18 +153,21 @@ pc.extend(pc.audio, function () {
       };
     }
 
-    if (window.AudioContext) {
-        return {
-            loadAudio: _mozLoadAudio2,
-            AudioContext: window.AudioContext
-        };        
-    }
+//    if (window.AudioContext) {
+//        return {
+//            loadAudio: _mozLoadAudio2,
+//            AudioContext: window.AudioContext
+//        };        
+//    }
     if(window.webkitAudioContext) {
         return {
             loadAudio: _httpLoadAudio,
             AudioContext: window.webkitAudioContext
         };
     } else {
+        return {
+            AudioContext: null
+        };
         
         /**
          * @name pc.audio.AudioContext

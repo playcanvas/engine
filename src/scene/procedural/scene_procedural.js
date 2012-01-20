@@ -111,7 +111,6 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
  * @param {Array} positions An array of 3-dimensional vertex positions.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {pc.scene.Material} opts.material The material to assign to the generated geometry's submesh.
- * @param {Boolean} opts.wireframe true to generate a wireframe representation, false for solid.
  * @param {Array} opts.normals An array of 3-dimensional vertex normals.
  * @param {Array} opts.tangents An array of 3-dimensional vertex tangents.
  * @param {Array} opts.uvs An array of 2-dimensional vertex texture coordinates.
@@ -130,7 +129,6 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
 pc.scene.procedural.createGeometry = function (positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
-    var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
     var normals = opts && opts.normals !== undefined ? opts.normals : null;
     var tangents = opts && opts.tangents !== undefined ? opts.tangents : null;
     var uvs = opts && opts.uvs !== undefined ? opts.uvs : null;
@@ -173,7 +171,8 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
 
     // Create the index buffer
     var indexBuffer = null;
-    if (indices !== null) {
+    var indexed = (indices !== null);
+    if (indexed) {
         indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, indices.length);
 
         // Read the indicies into the index buffer
@@ -182,19 +181,23 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
         indexBuffer.unlock();
     }
 
-    var submesh = new pc.scene.SubMesh();
-    submesh.setPrimitiveType(wireframe ? pc.gfx.PrimType.LINES : pc.gfx.PrimType.TRIANGLES);
-    submesh.setMaterial(material);
-    submesh.setIndexBase(0);
-    submesh.setIndexCount((indices !== null) ? indices.length : numVertices);
-    
+    var submesh = {
+        material: material,
+        primitive: {
+            type: pc.gfx.PrimType.TRIANGLES,
+            base: 0,
+            count: indexed ? indices.length : numVertices,
+            indexed: indexed
+        }
+    };
+
     var boundingSphere = new pc.shape.Sphere();
     boundingSphere.compute(positions);
     
     var geometry = new pc.scene.Geometry();
-    geometry.getVertexBuffers().push(vertexBuffer);
+    geometry.setVertexBuffers([vertexBuffer]);
     geometry.setIndexBuffer(indexBuffer);
-    geometry.getSubMeshes().push(submesh);
+    geometry.setSubMeshes([submesh]);
     geometry.setVolume(boundingSphere);
     return geometry;
 }
@@ -210,7 +213,6 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
  * is generated into the vertex buffer of the torus's geometry.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {pc.scene.Material} opts.material The material to assign to the generated torus's submesh.
- * @param {Boolean} opts.wireframe true for a wireframe torus and false otherwise.
  * @param {Number} opts.tubeRadius The radius of the tube forming the body of the torus (defaults to 0.2).
  * @param {Number} opts.ringRadius The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
  * @param {Number} opts.segments The number of radial divisions forming cross-sections of the torus ring (defaults to 20).
@@ -221,7 +223,6 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
 pc.scene.procedural.createTorus = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
-    var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
     var rc = opts && opts.tubeRadius !== undefined ? opts.tubeRadius : 0.2;
     var rt = opts && opts.ringRadius !== undefined ? opts.ringRadius : 0.3;
     var segments = opts && opts.segments !== undefined ? opts.segments : 30;
@@ -258,14 +259,9 @@ pc.scene.procedural.createTorus = function (opts) {
                 second  = ((i + 1)) * (segments + 1) + ((j));
                 third   = ((i))     * (segments + 1) + ((j + 1));
                 fourth  = ((i + 1)) * (segments + 1) + ((j + 1));
-                if (wireframe) {
-                    indices.push(first, second);
-                    indices.push(second, third);
-                    indices.push(third, first);
-                } else {
-                    indices.push(first, second, third); 
-                    indices.push(second, fourth, third); 
-                }
+
+                indices.push(first, second, third); 
+                indices.push(second, fourth, third); 
             }
         }
     }
@@ -274,7 +270,6 @@ pc.scene.procedural.createTorus = function (opts) {
 
     return pc.scene.procedural.createGeometry(positions, {
         material:  material,
-        wireframe: wireframe,
         normals:   normals,
         tangents:  tangents,
         uvs:       uvs,
@@ -282,7 +277,7 @@ pc.scene.procedural.createTorus = function (opts) {
     });
 }
 
-pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments, wireframe) {
+pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments) {
     // Variable declarations
     var i, j;
     var x, y, z, u, v;
@@ -322,13 +317,9 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
                 second  = ((i))     * (capSegments + 1) + ((j + 1));
                 third   = ((i + 1)) * (capSegments + 1) + ((j));
                 fourth  = ((i + 1)) * (capSegments + 1) + ((j + 1));
-                if (wireframe) {
-                    indices.push(first, second, second, third, third, first);
-                    indices.push(second, fourth, fourth, third, third, second); 
-                } else {
-                    indices.push(first, second, third); 
-                    indices.push(second, fourth, third); 
-                }
+
+                indices.push(first, second, third); 
+                indices.push(second, fourth, third); 
             }
         }
     }
@@ -394,7 +385,6 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
  * is generated into the vertex buffer of the cylinder's geometry.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {pc.scene.Material} opts.material The material to assign to the generated cylinder's submesh.
- * @param {Boolean} opts.wireframe true for a wireframe cone and false otherwise.
  * @param {Number} opts.radius The radius of the tube forming the body of the cylinder (defaults to 0.5).
  * @param {Number} opts.height The length of the body of the cylinder (defaults to 1.0).
  * @param {Number} opts.heightSegments The number of divisions along the length of the cylinder (defaults to 5).
@@ -405,20 +395,18 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
 pc.scene.procedural.createCylinder = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
-    var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
     var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var vertexData = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, wireframe);
+    var vertexData = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments);
 
     var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
 
     return pc.scene.procedural.createGeometry(vertexData.positions, {
         material:  material,
-        wireframe: wireframe,
         normals:   vertexData.normals,
         tangents:  tangents,
         uvs:       vertexData.uvs,
@@ -436,7 +424,6 @@ pc.scene.procedural.createCylinder = function (opts) {
  * <p>Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the cone's geometry.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
- * @param {Boolean} opts.wireframe true for a wireframe cone and false otherwise.
  * @param {pc.scene.Material} opts.material The material to assign to the generated cone's submesh.
  * @param {Number} opts.baseRadius The base radius of the cone (defaults to 0.5).
  * @param {Number} opts.peakRadius The peak radius of the cone (defaults to 0.0).
@@ -449,20 +436,18 @@ pc.scene.procedural.createCylinder = function (opts) {
 pc.scene.procedural.createCone = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
-    var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
     var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
     var peakRadius = opts && opts.peakRadius !== undefined ? opts.peakRadius : 0.0;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
 
-    var vertexData = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, wireframe);
+    var vertexData = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments);
 
     var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
 
     return pc.scene.procedural.createGeometry(vertexData.positions, {
         material:  material,
-        wireframe: wireframe,
         normals:   vertexData.normals,
         tangents:  tangents,
         uvs:       vertexData.uvs,
@@ -480,7 +465,6 @@ pc.scene.procedural.createCone = function (opts) {
  * <p>Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the sphere's geometry.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
- * @param {Boolean} opts.wireframe true for a wireframe sphere and false otherwise.
  * @param {pc.scene.Material} opts.material The material to assign to the generated sphere's submesh.
  * @param {Number} opts.radius The radius of the sphere (defaults to 0.5).
  * @param {Number} opts.segments The number of divisions along the longitudinal and latitudinal axes of the sphere (defaults to 16).
@@ -490,7 +474,6 @@ pc.scene.procedural.createCone = function (opts) {
 pc.scene.procedural.createSphere = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
-    var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
     var latitudeBands = opts && opts.latitudeBands !== undefined ? opts.latitudeBands : 16;
     var longitudeBands = opts && opts.longitudeBands !== undefined ? opts.longitudeBands : 16;
@@ -532,14 +515,8 @@ pc.scene.procedural.createSphere = function (opts) {
             first  = (lat * (longitudeBands+1)) + lon;
             second = first + longitudeBands + 1;
 
-            if (wireframe) {
-                indices.push(first + 1, second);
-                indices.push(second, first);
-                indices.push(first, first + 1);
-            } else {
-                indices.push(first + 1, second, first);
-                indices.push(first + 1, second + 1, second);
-            }
+            indices.push(first + 1, second, first);
+            indices.push(first + 1, second + 1, second);
         }
     }
 
@@ -547,7 +524,6 @@ pc.scene.procedural.createSphere = function (opts) {
 
     return pc.scene.procedural.createGeometry(positions, {
         material:  material,
-        wireframe: wireframe,
         normals:   normals,
         tangents:  tangents,
         uvs:       uvs,
@@ -566,7 +542,6 @@ pc.scene.procedural.createSphere = function (opts) {
  * <p>Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the plane's geometry.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
- * @param {Boolean} opts.wireframe true for a wireframe plane and false otherwise.
  * @param {pc.scene.Material} opts.material The material to assign to the generated plane's submesh.
  * @param {Array} opts.halfExtents The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the plane (defaults to 5).
@@ -577,7 +552,6 @@ pc.scene.procedural.createSphere = function (opts) {
 pc.scene.procedural.createPlane = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
-    var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
     var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : [0.5, 0.5];
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
@@ -612,17 +586,8 @@ pc.scene.procedural.createPlane = function (opts) {
             uvs.push(u, v);
 
             if ((i < ws) && (j < ls)) {
-                if (wireframe) {
-                    indices.push(j + i * (ws + 1),       j + (i + 1) * (ws + 1));
-                    indices.push(j + (i + 1) * (ws + 1), j + i * (ws + 1) + 1);
-                    indices.push(j + i * (ws + 1) + 1,   j + i * (ws + 1));
-                    indices.push(j + (i + 1) * (ws + 1),     j + (i + 1) * (ws + 1) + 1);
-                    indices.push(j + (i + 1) * (ws + 1) + 1, j + i * (ws + 1) + 1);
-                    indices.push(j + i * (ws + 1) + 1,       j + (i + 1) * (ws + 1));
-                } else {
-                    indices.push(j + i * (ws + 1),       j + (i + 1) * (ws + 1),     j + i * (ws + 1) + 1);
-                    indices.push(j + (i + 1) * (ws + 1), j + (i + 1) * (ws + 1) + 1, j + i * (ws + 1) + 1);
-                }
+                indices.push(j + i * (ws + 1),       j + (i + 1) * (ws + 1),     j + i * (ws + 1) + 1);
+                indices.push(j + (i + 1) * (ws + 1), j + (i + 1) * (ws + 1) + 1, j + i * (ws + 1) + 1);
             }
         }
     }
@@ -631,7 +596,6 @@ pc.scene.procedural.createPlane = function (opts) {
 
     return pc.scene.procedural.createGeometry(positions, {
         material:  material,
-        wireframe: wireframe,
         normals:   normals,
         tangents:  tangents,
         uvs:       uvs,
@@ -649,7 +613,6 @@ pc.scene.procedural.createPlane = function (opts) {
  * <p>Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent 
  * information is generated into the vertex buffer of the box's geometry.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
- * @param {Boolean} opts.wireframe true for a wireframe box and false otherwise.
  * @param {pc.scene.Material} opts.material The material to assign to the generated plane's submesh.
  * @param {Array} opts.halfExtents The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the box (defaults to 5).
@@ -661,7 +624,6 @@ pc.scene.procedural.createPlane = function (opts) {
 pc.scene.procedural.createBox = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var material = opts && opts.material !== undefined ? opts.material : null;
-    var wireframe = opts && opts.wireframe !== undefined ? opts.wireframe : false;
     var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : [0.5, 0.5, 0.5];
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
@@ -734,17 +696,8 @@ pc.scene.procedural.createBox = function (opts) {
                 uvs.push(u, v);
 
                 if ((i < uSegments) && (j < vSegments)) {
-                    if (wireframe) {
-                        indices.push(offset + j + i * (uSegments + 1),       offset + j + (i + 1) * (uSegments + 1));
-                        indices.push(offset + j + (i + 1) * (uSegments + 1), offset + j + i * (uSegments + 1) + 1);
-                        indices.push(offset + j + i * (uSegments + 1) + 1,   offset + j + i * (uSegments + 1));
-                        indices.push(offset + j + (i + 1) * (uSegments + 1),     offset + j + (i + 1) * (uSegments + 1) + 1);
-                        indices.push(offset + j + (i + 1) * (uSegments + 1) + 1, offset + j + i * (uSegments + 1) + 1);
-                        indices.push(offset + j + i * (uSegments + 1) + 1,       offset + j + (i + 1) * (uSegments + 1));
-                    } else {
-                        indices.push(offset + j + i * (uSegments + 1),       offset + j + (i + 1) * (uSegments + 1),     offset + j + i * (uSegments + 1) + 1);
-                        indices.push(offset + j + (i + 1) * (uSegments + 1), offset + j + (i + 1) * (uSegments + 1) + 1, offset + j + i * (uSegments + 1) + 1);
-                    }
+                    indices.push(offset + j + i * (uSegments + 1),       offset + j + (i + 1) * (uSegments + 1),     offset + j + i * (uSegments + 1) + 1);
+                    indices.push(offset + j + (i + 1) * (uSegments + 1), offset + j + (i + 1) * (uSegments + 1) + 1, offset + j + i * (uSegments + 1) + 1);
                 }
             }
         }
@@ -761,7 +714,6 @@ pc.scene.procedural.createBox = function (opts) {
 
     return pc.scene.procedural.createGeometry(positions, {
         material:  material,
-        wireframe: wireframe,
         normals:   normals,
         tangents:  tangents,
         uvs:       uvs,

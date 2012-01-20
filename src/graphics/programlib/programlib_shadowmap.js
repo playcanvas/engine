@@ -54,9 +54,7 @@ pc.gfx.programlib.shadowmap = {
     generateFragmentShader: function (options) {
         var code = "";
 
-        code += "#ifdef GL_ES\n";
-        code += "precision highp float;\n";
-        code += "#endif\n\n";
+        code += "precision mediump float;\n\n";
 
         code += "vec4 pack_depth(const in float depth)\n";
         code += "{\n";

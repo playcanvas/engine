@@ -225,7 +225,7 @@ pc.extend(pc.gfx, function () {
         }
         this.bind();
         var gl = pc.gfx.Device.getCurrent().gl;
-        var _filterLookup = [gl.NEAREST, gl.NEAREST, gl.LINEAR, gl.NEAREST_MIPMAP_NEAREST, gl.NEAREST_MIPMAP_LINEAR, gl.LINEAR_MIPMAP_NEAREST, gl.LINEAR_MIPMAP_LINEAR];
+        var _filterLookup = [gl.NEAREST, gl.LINEAR, gl.NEAREST_MIPMAP_NEAREST, gl.NEAREST_MIPMAP_LINEAR, gl.LINEAR_MIPMAP_NEAREST, gl.LINEAR_MIPMAP_LINEAR];
         gl.texParameteri(this._target, gl.TEXTURE_MIN_FILTER, _filterLookup[minFilter]);
         gl.texParameteri(this._target, gl.TEXTURE_MAG_FILTER, _filterLookup[magFilter]);
         this._minFilter = minFilter;

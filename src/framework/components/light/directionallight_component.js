@@ -115,10 +115,10 @@ pc.extend(pc.fw, function () {
                 device.scope.resolve("matrix_model").setValue(transform);
                 device.scope.resolve("constant_color").setValue([1,1,0,1]);
                 device.draw({
-                    primitiveType: pc.gfx.PrimType.LINES,
+                    type: pc.gfx.PrimType.LINES,
                     base: 0,
                     count: vertexBuffer.getNumVertices(),
-                    useIndexBuffer: false
+                    indexed: false
                 });
             }
         }

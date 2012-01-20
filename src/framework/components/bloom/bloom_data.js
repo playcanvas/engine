@@ -23,7 +23,8 @@ editor.link.expose({
     type: "number",
     options: {
         max: 1,
-        min: 0
+        min: 0,
+        step: 0.05
     },
     defaultValue: 0.25
 });
@@ -36,7 +37,8 @@ editor.link.expose({
     type: "number",
     options: {
         max: 10,
-        min: 1
+        min: 1,
+        step: 0.5
     },
     defaultValue: 4
 });
@@ -49,7 +51,8 @@ editor.link.expose({
     type: "number",
     options: {
         max: 3,
-        min: 0
+        min: 0,
+        step: 0.05
     },
     defaultValue: 1.25
 });
@@ -62,7 +65,8 @@ editor.link.expose({
     type: "number",
     options: {
         max: 3,
-        min: 0
+        min: 0,
+        step: 0.05
     },
     defaultValue: 1
 });
@@ -75,7 +79,8 @@ editor.link.expose({
     type: "number",
     options: {
         max: 3,
-        min: 0
+        min: 0,
+        step: 0.05
     },
     defaultValue: 1
 });
@@ -88,7 +93,8 @@ editor.link.expose({
     type: "number",
     options: {
         max: 3,
-        min: 0
+        min: 0,
+        step: 0.05
     },
     defaultValue: 1
 });

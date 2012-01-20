@@ -46,8 +46,8 @@ editor.link.expose({
     description: "Scale the animation playback speed",
     type: "number",
     options: {
-        max: 2.0,
-        min: 0.0
+        min: 0.0,
+        step: 0.1
     },
     defaultValue: 1.0
 });
