@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.30.1
+-------
+* Added 'step' option to number attributes that are exposed to the designer.
+* Prevent livelink crashing if window has been closed by user.
+* [FIX] Creating audio components works.
+
+-------
 v0.30.0
 -------
 * Change max camera FOV to 90.
