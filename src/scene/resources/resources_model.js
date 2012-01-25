@@ -442,7 +442,7 @@ pc.extend(pc.resources, function () {
         }
 
         // Calculate tangents if we have positions, normals and texture coordinates
-        var positions = null, normals = null, uvs = null;
+        var positions = null, normals = null, uvs = null, tangents = null;
         for (var i = 0; i < geomData.attributes.length; i++) {
             var entry = geomData.attributes[i];
     
@@ -457,12 +457,15 @@ pc.extend(pc.resources, function () {
             if (entry.name === "vertex_normal") {
                 normals = entry.data;
             }
+            if (entry.name === "vertex_tangent") {
+                tangents = entry.data;
+            }
             if (entry.name === "vertex_texCoord0") {
                 uvs = entry.data;
             }
         }
-    
-        if (positions && normals && uvs) {
+
+        if (!tangents && positions && normals && uvs) {
             var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, geomData.indices.data);
             geomData.attributes.push({ name: "vertex_tangent", type: "float32", components: 4, data: tangents });
         }

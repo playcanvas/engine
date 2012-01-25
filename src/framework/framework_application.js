@@ -215,12 +215,16 @@ pc.extend(pc.fw, function () {
             case pc.fw.LiveLinkMessageType.UPDATE_ENTITY:
                 this._updateEntity(msg.content.id, msg.content.components);
                 break;
-            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE:
-                this._updateEntityAttribute(msg.content.id, msg.content.accessor, msg.content.value);
-                break;
             case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
                 var transform = pc.math.mat4.compose(msg.content.translate, msg.content.rotate, msg.content.scale);
                 this._updateEntityTransform(msg.content.id, transform);
+                break;
+            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME:
+                var entity = this.context.root.findOne("getGuid", msg.content.id);
+                entity.setName(msg.content.name);
+                break;
+            case pc.fw.LiveLinkMessageType.REPARENT_ENTITY:
+                this._reparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
                 break;
             case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                 var entity = this.context.root.findOne("getGuid", msg.content.id);
@@ -304,6 +308,12 @@ pc.extend(pc.fw, function () {
             }
         }
     };
+    Application.prototype._reparentEntity = function (guid, parentId, index) {
+        var entity = this.context.root.findByGuid(guid);
+        var parent = this.context.root.findByGuid(parentId);
+        // TODO: use index to insert child into child list
+        entity.reparent(parent);    
+    },
     
     /**
      * @function

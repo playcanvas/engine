@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.31.0
+-------
+* Added LiveLinkReparentEntityMessage and LiveLinkUpdateEntityNameMessage.
+* Replaced pc.fw.Entity.reparentByGuid() with pc.fw.Entity.reparent().
+
+-------
 v0.30.1
 -------
 * Added 'step' option to number attributes that are exposed to the designer.

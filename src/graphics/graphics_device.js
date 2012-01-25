@@ -221,9 +221,9 @@ pc.extend(pc.gfx, function () {
         this.commitFunction[pc.gfx.ShaderInputType.BVEC3] = function (locationId, value) { self.gl.uniform3iv(locationId, value); };
         this.commitFunction[pc.gfx.ShaderInputType.IVEC4] = function (locationId, value) { self.gl.uniform4iv(locationId, value); };
         this.commitFunction[pc.gfx.ShaderInputType.BVEC4] = function (locationId, value) { self.gl.uniform4iv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT2 ] = function (locationId, value) { self.gl.uniformMatrix2fv(locationId, self.gl.FALSE, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT3 ] = function (locationId, value) { self.gl.uniformMatrix3fv(locationId, self.gl.FALSE, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT4 ] = function (locationId, value) { self.gl.uniformMatrix4fv(locationId, self.gl.FALSE, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT2 ] = function (locationId, value) { self.gl.uniformMatrix2fv(locationId, false, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT3 ] = function (locationId, value) { self.gl.uniformMatrix3fv(locationId, false, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT4 ] = function (locationId, value) { self.gl.uniformMatrix4fv(locationId, false, value); };
 
         // Set the default render state
         var gl = this.gl;
@@ -704,7 +704,7 @@ pc.extend(pc.gfx, function () {
                 gl.vertexAttribPointer(attribute.locationId, 
                                        element.numComponents, 
                                        this.lookup.elementType[element.dataType], 
-                                       gl.FALSE,
+                                       false,
                                        element.stride,
                                        element.offset);
             }

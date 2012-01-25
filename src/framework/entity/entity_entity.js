@@ -96,14 +96,12 @@ pc.extend(pc.fw, function () {
         return null;
     };
     
-    Entity.prototype.reparentByGuid = function(parentGuid, context) {
-        if(parentGuid) {
-            var parent = context.root.findOne("getGuid", parentGuid);
-            if(!parent) {
-                throw new Error("Parent Entity doesn't exist")
-            }            
-        }
-        
+    /**
+     * @name pc.fw.Entity#reparent
+     * @description Remove Entity from current parent and add as child to new parent
+     * @param {pc.scene.GraphNode} parent New parent to attach Entity to 
+     */
+    Entity.prototype.reparent = function(parent) {
         var current = this.getParent();
         if(current) {
             current.removeChild(this);

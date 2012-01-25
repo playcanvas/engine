@@ -30,38 +30,34 @@ pc.extend(pc.fw, function () {
     };
     LiveLinkUpdateEntityTransformMessage = LiveLinkUpdateEntityTransformMessage.extendsFrom(pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_TRANSFORM");
-
-    var LiveLinkUpdateEntityTransformComponentMessage = function (id, name, value, undoable, previous) {
-        this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM_COMPONENT;
-        undoable = pc.isDefined(undoable) ? undoable : false;
-        previous = pc.isDefined(previous) ? previous : null;
+    
+    var LiveLinkUpdateEntityNameMessage = function (id, name) {
+        this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME;
+        this.content = {
+            id: id,
+            name: name
+        };
+    };
+    LiveLinkUpdateEntityNameMessage = LiveLinkUpdateEntityNameMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_NAME");
+    
+    var LiveLinkReparentEntityMessage = function (id, oldParentId, newParentId, index) {
+        this.type = pc.fw.LiveLinkMessageType.REPARENT_ENTITY;
         
         this.content = {
             id: id,
-            name: name,
-            value: value,
-            previous: previous,
-            undoable: undoable
-        }
-    };
-    LiveLinkUpdateEntityTransformComponentMessage = LiveLinkUpdateEntityTransformComponentMessage.extendsFrom(pc.fw.LiveLinkMessage);
-    pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_TRANSFORM_COMPONENT");
-
-    var LiveLinkUpdateEntityAttributeMessage = function (id, accessor, value) {
-        this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ATTRIBUTE;
-        this.content = {
-            id: id,
-            accessor: accessor,
-            value: value
+            oldParentId: oldParentId,
+            newParentId: newParentId,
+            index: index
         };
     };
-    LiveLinkUpdateEntityAttributeMessage = LiveLinkUpdateEntityAttributeMessage.extendsFrom(pc.fw.LiveLinkMessage);
-    pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_ATTRIBUTE");
+    LiveLinkReparentEntityMessage = LiveLinkReparentEntityMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    pc.fw.LiveLinkMessage.register("REPARENT_ENTITY");
     
     return {
         LiveLinkUpdateEntityMessage: LiveLinkUpdateEntityMessage,
+        LiveLinkUpdateEntityNameMessage: LiveLinkUpdateEntityNameMessage,
         LiveLinkUpdateEntityTransformMessage: LiveLinkUpdateEntityTransformMessage,
-        LiveLinkUpdateEntityTransformComponentMessage: LiveLinkUpdateEntityTransformComponentMessage,
-        LiveLinkUpdateEntityAttributeMessage: LiveLinkUpdateEntityAttributeMessage
+        LiveLinkReparentEntityMessage: LiveLinkReparentEntityMessage
     };
 }());
