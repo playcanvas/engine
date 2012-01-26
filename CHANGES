@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.31.1
+-------
+* Added first pass at device orientation input handler.
+* Don't generate tangents on load if the geometry already has them.
+
+-------
 v0.31.0
 -------
 * Added LiveLinkReparentEntityMessage and LiveLinkUpdateEntityNameMessage.

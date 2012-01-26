@@ -221,9 +221,9 @@ pc.extend(pc.gfx, function () {
         this.commitFunction[pc.gfx.ShaderInputType.BVEC3] = function (locationId, value) { self.gl.uniform3iv(locationId, value); };
         this.commitFunction[pc.gfx.ShaderInputType.IVEC4] = function (locationId, value) { self.gl.uniform4iv(locationId, value); };
         this.commitFunction[pc.gfx.ShaderInputType.BVEC4] = function (locationId, value) { self.gl.uniform4iv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT2 ] = function (locationId, value) { self.gl.uniformMatrix2fv(locationId, self.gl.FALSE, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT3 ] = function (locationId, value) { self.gl.uniformMatrix3fv(locationId, self.gl.FALSE, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT4 ] = function (locationId, value) { self.gl.uniformMatrix4fv(locationId, self.gl.FALSE, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT2 ] = function (locationId, value) { self.gl.uniformMatrix2fv(locationId, false, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT3 ] = function (locationId, value) { self.gl.uniformMatrix3fv(locationId, false, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT4 ] = function (locationId, value) { self.gl.uniformMatrix4fv(locationId, false, value); };
 
         // Set the default render state
         var gl = this.gl;
@@ -623,11 +623,13 @@ pc.extend(pc.gfx, function () {
      */
     Device.prototype.setIndexBuffer = function (indexBuffer) {
         // Store the index buffer
-        this.indexBuffer = indexBuffer;
+        if (this.indexBuffer !== indexBuffer) {
+            this.indexBuffer = indexBuffer;
 
-        // Set the active index buffer object
-        var gl = this.gl;
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer ? indexBuffer.bufferId : null);
+            // Set the active index buffer object
+            var gl = this.gl;
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer ? indexBuffer.bufferId : null);
+        }
     };
 
     /**
@@ -704,7 +706,7 @@ pc.extend(pc.gfx, function () {
                 gl.vertexAttribPointer(attribute.locationId, 
                                        element.numComponents, 
                                        this.lookup.elementType[element.dataType], 
-                                       gl.FALSE,
+                                       false,
                                        element.stride,
                                        element.offset);
             }

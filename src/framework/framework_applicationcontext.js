@@ -4,7 +4,7 @@ pc.extend(pc.fw, function() {
      * The context is available to all Components and all user scripts and can be used to access the EntityManager and the ComponentRegistry.
      * @constructor Create a new ApplicationContext
      * @name pc.fw.ApplicationContext
-     * @param {pc.resources.LoaderManager} loaders LoaderManager which is used to load resources
+     * @param {pc.resources.ResourceLoader} loaders LoaderManager which is used to load resources
      * @param {Object} scene Used to manage models to render
      * @param {Object} registry ComponentSystemRegistry stores all the ComponentSystems and is used to access Component data
      * @param {Object} [controller] Generic controller for getting user input
