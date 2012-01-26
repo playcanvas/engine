@@ -623,11 +623,13 @@ pc.extend(pc.gfx, function () {
      */
     Device.prototype.setIndexBuffer = function (indexBuffer) {
         // Store the index buffer
-        this.indexBuffer = indexBuffer;
+        if (this.indexBuffer !== indexBuffer) {
+            this.indexBuffer = indexBuffer;
 
-        // Set the active index buffer object
-        var gl = this.gl;
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer ? indexBuffer.bufferId : null);
+            // Set the active index buffer object
+            var gl = this.gl;
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer ? indexBuffer.bufferId : null);
+        }
     };
 
     /**
