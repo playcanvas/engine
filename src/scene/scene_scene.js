@@ -16,6 +16,9 @@ pc.extend(pc.scene, function () {
         this._models = [];
         this._tempVec = pc.math.vec3.create(0, 0, 0);
 
+        this._alphaMeshes = [];
+        this._opaqueMeshes = [];
+
         // Initialize dispatch queues
         this._queues = {};
         this._priorities = [];
@@ -86,11 +89,14 @@ pc.extend(pc.scene, function () {
      */
 	Scene.prototype.dispatch = function (camera) {
 	    var i, j, model, numModels, mesh, numMeshes;
-	
-	    var alphaMeshes = [];
-	    var opaqueMeshes = [];
-	
-	    var frustum = camera.getFrustum();
+        
+        var alphaMeshes = this._alphaMeshes;
+        var opaqueMeshes = this._opaqueMeshes;
+        
+        alphaMeshes.length = 0;
+        opaqueMeshes.length = 0;
+		
+//	    var frustum = camera.getFrustum();
 	    for (i = 0, numModels = this._models.length; i < numModels; i++) {
 	        model = this._models[i];
 	        meshes = model.getMeshes();
@@ -201,7 +207,7 @@ pc.extend(pc.scene, function () {
 	            var func = funcs[j];
 	            func();
 	        }
-	        queue.renderFuncs = [];
+	        queue.renderFuncs.length = 0;
 	    }
 	};	
 	

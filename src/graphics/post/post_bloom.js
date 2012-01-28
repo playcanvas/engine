@@ -1,10 +1,13 @@
 pc.gfx.post.bloom = function () {
+    // Render targets
     var targets = [];
-    var programs = {};
-    var vertexBuffer = null;
+    
+    // Bloom programs
+    var extractProg = null;
+    var blurProg = null;
+    var combineProg = null;
 
-    var sampleCount = 15;
-
+    // Effect defaults
     var defaults = {
         bloomThreshold: 0.25, 
         blurAmount: 4,
@@ -13,7 +16,11 @@ pc.gfx.post.bloom = function () {
         bloomSaturation: 1,
         baseSaturation: 1
     };
+    var sampleCount = 15;
     var combineParams = [0, 0, 0, 0];
+
+    // Full screen quad rendering
+    var vertexBuffer = null;
 
     var quadPrimitive = {
         type: pc.gfx.PrimType.TRIANGLE_STRIP,
@@ -200,9 +207,9 @@ pc.gfx.post.bloom = function () {
             var extractShader = new pc.gfx.Shader(pc.gfx.ShaderType.FRAGMENT, bloomExtractFrag);
             var blurShader = new pc.gfx.Shader(pc.gfx.ShaderType.FRAGMENT, gaussianBlurFrag);
             var combineShader = new pc.gfx.Shader(pc.gfx.ShaderType.FRAGMENT, bloomCombineFrag);
-            programs["extract"] = new pc.gfx.Program(passThroughShader, extractShader);
-            programs["blur"] = new pc.gfx.Program(passThroughShader, blurShader);
-            programs["combine"] = new pc.gfx.Program(passThroughShader, combineShader);
+            extractProg = new pc.gfx.Program(passThroughShader, extractShader);
+            blurProg = new pc.gfx.Program(passThroughShader, blurShader);
+            combineProg = new pc.gfx.Program(passThroughShader, combineShader);
 
             var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
             width = backBuffer.getWidth();
@@ -252,7 +259,7 @@ pc.gfx.post.bloom = function () {
             // shader that extracts only the brightest parts of the image.
             scope.resolve("uBloomThreshold").setValue(options.bloomThreshold);
             scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
-            drawFullscreenQuad(device, targets[0], programs["extract"]);
+            drawFullscreenQuad(device, targets[0], extractProg);
             
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
@@ -260,7 +267,7 @@ pc.gfx.post.bloom = function () {
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
             scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
-            drawFullscreenQuad(device, targets[1], programs["blur"]);
+            drawFullscreenQuad(device, targets[1], blurProg);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
@@ -268,7 +275,7 @@ pc.gfx.post.bloom = function () {
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
             scope.resolve("uBloomTexture").setValue(targets[1].getFrameBuffer().getTexture());
-            drawFullscreenQuad(device, targets[0], programs["blur"]);
+            drawFullscreenQuad(device, targets[0], blurProg);
             
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
@@ -280,7 +287,7 @@ pc.gfx.post.bloom = function () {
             scope.resolve("uCombineParams").setValue(combineParams);
             scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
             scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
-            drawFullscreenQuad(device, outputTarget, programs["combine"]);
+            drawFullscreenQuad(device, outputTarget, combineProg);
         }
     };
 } ();

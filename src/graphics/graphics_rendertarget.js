@@ -17,6 +17,12 @@ pc.extend(pc.gfx, function () {
         if (viewport) {
             this._viewport = viewport;
         }
+        this._defaultViewport = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        };
     };
 
     /**
@@ -46,12 +52,9 @@ pc.extend(pc.gfx, function () {
         if (this._viewport) {
             return this._viewport;
         } else {
-            return {
-                x: 0,
-                y: 0,
-                width: this._frameBuffer.getWidth(),
-                height: this._frameBuffer.getHeight()
-            };
+            this._defaultViewport.width = this._frameBuffer.getWidth(),
+            this._defaultViewport.height = this._frameBuffer.getHeight()
+            return this._defaultViewport;
         }
     };
 

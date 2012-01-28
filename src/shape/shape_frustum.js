@@ -4,6 +4,7 @@ pc.extend(pc.shape, function () {
     var identity = pc.math.mat4.create();
     var defaultProjection = pc.math.mat4.makePerspective(90.0, 16 / 9, 0.1, 1000.0);
     var viewProj = pc.math.mat4.create();
+
     /**
      * Frustum
      * @constructor
@@ -12,11 +13,17 @@ pc.extend(pc.shape, function () {
      */
     var Frustum = function Frustum (projectionMatrix, viewMatrix) {
         projectionMatrix = projectionMatrix || defaultProjection;
-        viewMatrix       = viewMatrix || identity;
-
-        pc.math.mat4.multiply(projectionMatrix, viewMatrix, viewProj);
+        viewMatrix = viewMatrix || identity;
 
         this.planes = [];
+        this.update(projectionMatrix, viewMatrix);
+
+        this.type = pc.shape.Type.FRUSTUM;
+    };
+    Frustum = Frustum.extendsFrom(pc.shape.Shape);
+
+    Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
+        pc.math.mat4.multiply(projectionMatrix, viewMatrix, viewProj);
 
         // Extract the numbers for the RIGHT plane
         this.planes[0] = [];
@@ -95,11 +102,8 @@ pc.extend(pc.shape, function () {
         this.planes[5][1] /= t;
         this.planes[5][2] /= t;
         this.planes[5][3] /= t;
-        
-        this.type = pc.shape.Type.FRUSTUM;
     };
-    Frustum = Frustum.extendsFrom(pc.shape.Shape);
-    
+
     /**
      * Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
      * considered to be outside the frustum.
