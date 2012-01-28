@@ -86,7 +86,6 @@ pc.extend(pc.scene, function () {
      */
 	Scene.prototype.dispatch = function (camera) {
 	    var i, j, model, numModels, mesh, numMeshes;
-	    var sphereWorld = new pc.shape.Sphere();
 	
 	    var alphaMeshes = [];
 	    var opaqueMeshes = [];
@@ -98,6 +97,7 @@ pc.extend(pc.scene, function () {
 	        for (j = 0, numMeshes = meshes.length; j < numMeshes; j++) {
 	            var visible = true;
 	            mesh = meshes[j];
+                /*
 	            var volume = mesh.getVolume();
 	            if (volume) {
 	                if (volume instanceof pc.shape.Sphere) {
@@ -105,11 +105,14 @@ pc.extend(pc.scene, function () {
 	                }
 	            }
 	            if (true) {
+                */
 	                if (!mesh.getGeometry().hasAlpha()) {
 	                    opaqueMeshes.push(mesh);
 	                } else {
 	                    alphaMeshes.push(mesh);
+                /*
 	                }
+                */
 	            }
 	        }
 	    }

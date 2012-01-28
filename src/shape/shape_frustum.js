@@ -1,6 +1,9 @@
 pc.extend(pc.shape, function () {
     pc.shape.Type.FRUSTUM = "Frustum";
-    
+
+    var identity = pc.math.mat4.create();
+    var defaultProjection = pc.math.mat4.makePerspective(90.0, 16 / 9, 0.1, 1000.0);
+    var viewProj = pc.math.mat4.create();
     /**
      * Frustum
      * @constructor
@@ -8,10 +11,10 @@ pc.extend(pc.shape, function () {
      * @param {pc.math.mat4} viewMatrix The inverse of the world transformation matrix for the frustum.
      */
     var Frustum = function Frustum (projectionMatrix, viewMatrix) {
-        projectionMatrix = projectionMatrix || pc.math.mat4.makePerspective(90.0, 16 / 9, 0.1, 1000.0);
-        viewMatrix       = viewMatrix       || pc.math.mat4.create();
+        projectionMatrix = projectionMatrix || defaultProjection;
+        viewMatrix       = viewMatrix || identity;
 
-        var viewProj = pc.math.mat4.multiply(projectionMatrix, viewMatrix);
+        pc.math.mat4.multiply(projectionMatrix, viewMatrix, viewProj);
 
         this.planes = [];
 

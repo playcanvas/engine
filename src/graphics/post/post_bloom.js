@@ -2,22 +2,57 @@ pc.gfx.post.bloom = function () {
     var targets = [];
     var programs = {};
     var vertexBuffer = null;
-    var quadDrawOptions = null;
-    var quadState = null;
-    
-    var getBlurValues = function (dx, dy, blurAmount) {
+
+    var sampleCount = 15;
+
+    var defaults = {
+        bloomThreshold: 0.25, 
+        blurAmount: 4,
+        bloomIntensity: 1.25, 
+        baseIntensity: 1,
+        bloomSaturation: 1,
+        baseSaturation: 1
+    };
+    var combineParams = [0, 0, 0, 0];
+
+    var quadPrimitive = {
+        type: pc.gfx.PrimType.TRIANGLE_STRIP,
+        base: 0,
+        count: 4,
+        indexed: false
+    };
+    var quadState = {
+        depthTest: false,
+        depthWrite: false
+    };
+
+    var drawFullscreenQuad = function (device, target, program) {
+        device.setRenderTarget(target);
+        device.updateBegin();
+        device.updateLocalState(quadState);
+        device.setVertexBuffer(vertexBuffer, 0);
+        device.setProgram(program);
+        device.draw(quadPrimitive);
+        device.clearLocalState();
+        device.updateEnd();
+    }
+
+    var sampleWeights = [];
+    var sampleOffsets = [];
+
+    var calculateBlurValues = function (dx, dy, blurAmount) {
 
         var _computeGaussian = function (n, theta) {
             return ((1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta)));
         };
         
         // Look up how many samples our gaussian blur effect supports.
-        var sampleCount = 15;
 
         // Create temporary arrays for computing our filter settings.
         // The first sample always has a zero offset.
-        var sampleWeights = [ _computeGaussian(0, blurAmount) ];
-        var sampleOffsets = [ 0, 0 ];
+        sampleWeights[0] = _computeGaussian(0, blurAmount);
+        sampleOffsets[0] = 0;
+        sampleOffsets[1] = 0;
 
         // Maintain a sum of all the weighting values.
         var totalWeights = sampleWeights[0];
@@ -28,7 +63,8 @@ pc.gfx.post.bloom = function () {
         for (i = 0, len = Math.floor(sampleCount / 2); i < len; i++) {
             // Store weights for the positive and negative taps.
             var weight = _computeGaussian(i + 1, blurAmount);
-            sampleWeights.push(weight, weight);
+            sampleWeights[i*2] = weight;
+            sampleWeights[i*2+1] = weight;
             totalWeights += weight * 2;
 
             // To get the maximum amount of blurring from a limited number of
@@ -42,18 +78,16 @@ pc.gfx.post.bloom = function () {
             var sampleOffset = i * 2 + 1.5;
 
             // Store texture coordinate offsets for the positive and negative taps.
-            sampleOffsets.push(dx * sampleOffset, dy * sampleOffset, -dx * sampleOffset, -dy * sampleOffset);
+            sampleOffsets[i*4] = dx * sampleOffset;
+            sampleOffsets[i*4+1] = dy * sampleOffset;
+            sampleOffsets[i*4+2] = -dx * sampleOffset;
+            sampleOffsets[i*4+3] = -dy * sampleOffset;
         }
 
         // Normalize the list of sample weightings, so they will always sum to one.
         for (i = 0, len = sampleWeights.length; i < len; i++) {
             sampleWeights[i] /= totalWeights;
         }
-
-        return {
-            weights: sampleWeights,
-            offsets: sampleOffsets
-        };
     };
     
     return {
@@ -96,7 +130,7 @@ pc.gfx.post.bloom = function () {
             var gaussianBlurFrag = [
                 "precision mediump float;",
                 "",
-                "#define SAMPLE_COUNT 15",
+                "#define SAMPLE_COUNT " + sampleCount,
                 "",
                 "varying vec2 vUv0;",
                 "",
@@ -200,29 +234,9 @@ pc.gfx.post.bloom = function () {
             iterator.next();
             iterator.element.aPosition.set(1.0, 1.0, 0.0);
             iterator.end();
-            
-            quadPrimitive = {
-                type: pc.gfx.PrimType.TRIANGLE_STRIP,
-                base: 0,
-                count: 4,
-                indexed: false
-            };
-            
-            quadState = {
-                depthTest: false,
-                depthWrite: false
-            };
         },
 
         render: function (inputTarget, outputTarget, options) {
-            var defaults = {
-                bloomThreshold: 0.25, 
-                blurAmount: 4,
-                bloomIntensity: 1.25, 
-                baseIntensity: 1,
-                bloomSaturation: 1,
-                baseSaturation: 1
-            };
             if (options === undefined) {
                 options = options || defaults;
             } else {
@@ -234,49 +248,39 @@ pc.gfx.post.bloom = function () {
             var device = pc.gfx.Device.getCurrent();
             var scope = device.scope;
 
-            var _drawFullscreenQuad = function (dst, program) {
-                device.setRenderTarget(dst);
-                device.updateBegin();
-                device.updateLocalState(quadState);
-                device.setVertexBuffer(vertexBuffer, 0);
-                device.setProgram(program);
-                device.draw(quadPrimitive);
-                device.clearLocalState();
-                device.updateEnd();
-            }
-
             // Pass 1: draw the scene into rendertarget 1, using a
             // shader that extracts only the brightest parts of the image.
             scope.resolve("uBloomThreshold").setValue(options.bloomThreshold);
             scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
-            _drawFullscreenQuad(targets[0], programs["extract"]);
+            drawFullscreenQuad(device, targets[0], programs["extract"]);
             
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
-            var blurValues;
-            blurValues = getBlurValues(1.0 / targets[1].getFrameBuffer().getWidth(), 0, options.blurAmount);
-            scope.resolve("uBlurWeights[0]").setValue(blurValues.weights);
-            scope.resolve("uBlurOffsets[0]").setValue(blurValues.offsets);
+            calculateBlurValues(1.0 / targets[1].getFrameBuffer().getWidth(), 0, options.blurAmount);
+            scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
+            scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
             scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
-            _drawFullscreenQuad(targets[1], programs["blur"]);
+            drawFullscreenQuad(device, targets[1], programs["blur"]);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
-            blurValues = getBlurValues(0, 1.0 / targets[0].getFrameBuffer().getHeight(), options.blurAmount);
-            scope.resolve("uBlurWeights[0]").setValue(blurValues.weights);
-            scope.resolve("uBlurOffsets[0]").setValue(blurValues.offsets);
+            calculateBlurValues(0, 1.0 / targets[0].getFrameBuffer().getHeight(), options.blurAmount);
+            scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
+            scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
             scope.resolve("uBloomTexture").setValue(targets[1].getFrameBuffer().getTexture());
-            _drawFullscreenQuad(targets[0], programs["blur"]);
+            drawFullscreenQuad(device, targets[0], programs["blur"]);
             
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
-            scope.resolve("uCombineParams").setValue([
-                options.bloomIntensity, options.baseIntensity, options.bloomSaturation, options.baseSaturation
-            ]);
+            combineParams[0] = options.bloomIntensity;
+            combineParams[1] = options.baseIntensity;
+            combineParams[2] = options.bloomSaturation;
+            combineParams[3] = options.baseSaturation;
+            scope.resolve("uCombineParams").setValue(combineParams);
             scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
             scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
-            _drawFullscreenQuad(outputTarget, programs["combine"]);
+            drawFullscreenQuad(device, outputTarget, programs["combine"]);
         }
     };
 } ();
