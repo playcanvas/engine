@@ -16,6 +16,10 @@ pc.extend(pc.shape, function () {
         viewMatrix = viewMatrix || identity;
 
         this.planes = [];
+        for (var i = 0; i < 6; i++) {
+            this.planes[i] = [];
+        }
+
         this.update(projectionMatrix, viewMatrix);
 
         this.type = pc.shape.Type.FRUSTUM;
@@ -26,7 +30,6 @@ pc.extend(pc.shape, function () {
         pc.math.mat4.multiply(projectionMatrix, viewMatrix, viewProj);
 
         // Extract the numbers for the RIGHT plane
-        this.planes[0] = [];
         this.planes[0][0] = viewProj[ 3] - viewProj[ 0];
         this.planes[0][1] = viewProj[ 7] - viewProj[ 4];
         this.planes[0][2] = viewProj[11] - viewProj[ 8];
@@ -39,7 +42,6 @@ pc.extend(pc.shape, function () {
         this.planes[0][3] /= t;
 
         // Extract the numbers for the LEFT plane
-        this.planes[1] = [];
         this.planes[1][0] = viewProj[ 3] + viewProj[ 0];
         this.planes[1][1] = viewProj[ 7] + viewProj[ 4];
         this.planes[1][2] = viewProj[11] + viewProj[ 8];
@@ -52,7 +54,6 @@ pc.extend(pc.shape, function () {
         this.planes[1][3] /= t;
 
         // Extract the BOTTOM plane
-        this.planes[2] = [];
         this.planes[2][0] = viewProj[ 3] + viewProj[ 1];
         this.planes[2][1] = viewProj[ 7] + viewProj[ 5];
         this.planes[2][2] = viewProj[11] + viewProj[ 9];
@@ -65,7 +66,6 @@ pc.extend(pc.shape, function () {
         this.planes[2][3] /= t;
         
         // Extract the TOP plane
-        this.planes[3] = [];
         this.planes[3][0] = viewProj[ 3] - viewProj[ 1];
         this.planes[3][1] = viewProj[ 7] - viewProj[ 5];
         this.planes[3][2] = viewProj[11] - viewProj[ 9];
@@ -78,7 +78,6 @@ pc.extend(pc.shape, function () {
         this.planes[3][3] /= t;
         
         // Extract the FAR plane
-        this.planes[4] = [];
         this.planes[4][0] = viewProj[ 3] - viewProj[ 2];
         this.planes[4][1] = viewProj[ 7] - viewProj[ 6];
         this.planes[4][2] = viewProj[11] - viewProj[10];
@@ -91,7 +90,6 @@ pc.extend(pc.shape, function () {
         this.planes[4][3] /= t;
 
         // Extract the NEAR plane
-        this.planes[5] = [];
         this.planes[5][0] = viewProj[ 3] + viewProj[ 2];
         this.planes[5][1] = viewProj[ 7] + viewProj[ 6];
         this.planes[5][2] = viewProj[11] + viewProj[10];
