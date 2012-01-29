@@ -4,6 +4,9 @@ pc.scene.Projection = {
 }
 
 pc.extend(pc.scene, function () {
+    var v3 = pc.math.vec3;
+    var m4 = pc.math.mat4;
+
     /**
      * @name pc.scene.CameraNode
      * @class A camera.
@@ -16,10 +19,21 @@ pc.extend(pc.scene, function () {
         this._viewWindow = pc.math.vec2.create(1.0, 1.0);
         this._lookAtNode = null;
         this._upNode = null;
-        
-        this._projMat = pc.math.mat4.create();
-        this._viewMat = pc.math.mat4.create();
-        this._viewProjMat = pc.math.mat4.create();
+        this._viewPosition = [0, 0, 0];
+
+        // Uniforms that are automatically set by a camera at the start of a scene render
+        var scope = pc.gfx.Device.getCurrent().scope;
+        this._projId = scope.resolve("matrix_projection");
+        this._viewId = scope.resolve("matrix_view");
+        this._viewInvId = scope.resolve("matrix_viewInverse");
+        this._viewProjId = scope.resolve("matrix_viewProjection");
+        this._viewPosId = scope.resolve("view_position");
+
+        this._projMat = m4.create();
+        this._viewMat = m4.create();
+        this._viewProjMat = m4.create();
+
+        this._frustum = new pc.shape.Frustum(this._projMat, this._viewMat);
 
         // Create a full size viewport onto the backbuffer
         this._renderTarget = new pc.gfx.RenderTarget(pc.gfx.FrameBuffer.getBackBuffer());
@@ -129,16 +143,16 @@ pc.extend(pc.scene, function () {
         if (clear) {
             device.clear(this._clearOptions);
         }
-        
+
         // Set the projection matrix
         if (this._projection === pc.scene.Projection.PERSPECTIVE) {
             var viewport = this._renderTarget.getViewport();
             var aspect = viewport.width / viewport.height;
-            pc.math.mat4.makePerspective(this._fov, aspect, this._nearClip, this._farClip, this._projMat);
+            m4.makePerspective(this._fov, aspect, this._nearClip, this._farClip, this._projMat);
         } else {
-            pc.math.mat4.makeOrtho(-this._viewWindow[0], this._viewWindow[0], 
-                                   -this._viewWindow[1], this._viewWindow[1],
-                                    this._nearClip, this._farClip, this._projMat);
+            m4.makeOrtho(-this._viewWindow[0], this._viewWindow[0], 
+                         -this._viewWindow[1], this._viewWindow[1],
+                          this._nearClip, this._farClip, this._projMat);
         }
         
         // Set the view related matrices
@@ -156,16 +170,20 @@ pc.extend(pc.scene, function () {
             }
             wtm = pc.math.mat4.makeLookAt(eye, target, up);
         }
-        pc.math.mat4.invert(wtm, this._viewMat);
-        pc.math.mat4.multiply(this._projMat, this._viewMat, this._viewProjMat);
+        m4.invert(wtm, this._viewMat);
+        m4.multiply(this._projMat, this._viewMat, this._viewProjMat);
+        this._frustum.update(this._projMat, this._viewMat);
 
-        device.scope.resolve("matrix_projection").setValue(this._projMat);
-        device.scope.resolve("matrix_view").setValue(this._viewMat);
-        device.scope.resolve("matrix_viewInverse").setValue(wtm);
-        device.scope.resolve("matrix_viewProjection").setValue(this._viewProjMat);
+        this._projId.setValue(this._projMat);
+        this._viewId.setValue(this._viewMat);
+        this._viewInvId.setValue(wtm);
+        this._viewProjId.setValue(this._viewProjMat);
 
         // Set the eye position in world coordinates
-        device.scope.resolve("view_position").setValue([wtm[12], wtm[13], wtm[14]]);
+        this._viewPosition[0] = wtm[12];
+        this._viewPosition[1] = wtm[13];
+        this._viewPosition[2] = wtm[14];
+        this._viewPosId.setValue(this._viewPosition);
     };
 
     /**
@@ -213,7 +231,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     CameraNode.prototype.getFrustum = function () {
-        return new pc.shape.Frustum(this._projMat, this._viewMat);
+        return this._frustum;
     };
 
     /**

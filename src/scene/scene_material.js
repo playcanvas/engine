@@ -70,6 +70,10 @@ pc.extend(pc.scene, function () {
     // Parameter management
     Material.prototype.clearParameters = function () {
         this._parameters = {};
+        
+        // If programs for this material are being procedurally generated, then
+        // discard whatever has already been cached
+        this._programs = {};
     };
 
     Material.prototype.getParameters = function () {
@@ -98,13 +102,19 @@ pc.extend(pc.scene, function () {
      */
     Material.prototype.setParameter = function (name, data) {
         var device = pc.gfx.Device.getCurrent();
-        this._parameters[name] = {
-            _scopeId : device.scope.resolve(name),
-            _data    : data
-        };
-        // If programs for this material are being procedurally generated, then
-        // discard whatever has already been cached
-        this._programs = {};
+        var param = this._parameters[name];
+        if (param) {
+            param._data = data;
+        } else {
+            this._parameters[name] = {
+                _scopeId : device.scope.resolve(name),
+                _data    : data
+            };
+
+            // If programs for this material are being procedurally generated, then
+            // discard whatever has already been cached
+            this._programs = {};
+        }
     };
 
     /**
@@ -117,6 +127,10 @@ pc.extend(pc.scene, function () {
     Material.prototype.deleteParameter = function (name) {
         if (this._parameters[name]) {
             delete this._parameters[name];
+
+            // If programs for this material are being procedurally generated, then
+            // discard whatever has already been cached
+            this._programs = {};
         }
     };
 

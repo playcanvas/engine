@@ -28,6 +28,7 @@ pc.extend(pc.scene, function () {
         // LightNode properties (defaults)
         this._type = pc.scene.LightType.DIRECTIONAL;
         this._color = [0.8, 0.8, 0.8];
+        this._position = []; // Holds the 'lightX_position' uniform value taken from the light's wtm
         this._castShadows = false;
         this._enabled = false;
 
@@ -228,7 +229,10 @@ pc.extend(pc.scene, function () {
             var light = "light" + i;
 
             scope.resolve(light + "_color").setValue(directional._color);
-            scope.resolve(light + "_position").setValue([-wtm[4], -wtm[5], -wtm[6]]);
+            directional._position[0] = -wtm[4];
+            directional._position[1] = -wtm[5];
+            directional._position[2] = -wtm[6];
+            scope.resolve(light + "_position").setValue(directional._position);
         }
 
         for (var i = 0; i < numPnts; i++) {
@@ -238,7 +242,10 @@ pc.extend(pc.scene, function () {
 
             scope.resolve(light + "_radius").setValue(point._attenuationEnd);
             scope.resolve(light + "_color").setValue(point._color);
-            scope.resolve(light + "_position").setValue([wtm[12], wtm[13], wtm[14]]);
+            point._position[0] = wtm[12];
+            point._position[1] = wtm[13];
+            point._position[2] = wtm[14];
+            scope.resolve(light + "_position").setValue(point._position);
         }
     };
 

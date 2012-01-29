@@ -581,8 +581,8 @@ pc.extend(pc.gfx, function () {
         for (var key in this._localState) {
             // Reset to global state
             this._stateFuncs[key](this._globalState[key]);
+            delete this._localState.key;
         }
-        this._localState = {};
     };
 
     /**

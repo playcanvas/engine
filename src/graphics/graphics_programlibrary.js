@@ -6,18 +6,22 @@ pc.extend(pc.gfx, function () {
     };
 
     ProgramLibrary.prototype.register = function (name, generator) {
-        this._generators[name] = generator;
+        if (!this.isRegistered(name)) {
+            this._generators[name] = generator;
+        }
     };
 
     ProgramLibrary.prototype.unregister = function (name) {
-        this._generators[name] = undefined;
+        if (this.isRegistered(name)) {
+            delete this._generators[name];
+        }
     };
 
     ProgramLibrary.prototype.isRegistered = function (name) {
         var generator = this._generators[name];
         return (generator !== undefined);
     };
-        
+
     ProgramLibrary.prototype.getProgram = function (name, options) {
         var generator = this._generators[name];
         if (generator === undefined) {
@@ -26,7 +30,7 @@ pc.extend(pc.gfx, function () {
         }
         var key = generator.generateKey(options);
         var program = this._cache[key];
-        if (program === undefined) {
+        if (!program) {
             var vsCode = generator.generateVertexShader(options);
             var fsCode = generator.generateFragmentShader(options);
             logDEBUG("\n" + key + ": vertex shader\n" + vsCode);

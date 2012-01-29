@@ -1,5 +1,7 @@
 pc.extend(pc.scene, function () {
-    
+
+    var identity = pc.math.mat4.create();
+
     /**
      * @name pc.scene.GraphNode
      * @class A node.
@@ -385,7 +387,7 @@ pc.extend(pc.scene, function () {
             }
         }
     
-        transform = transform || pc.math.mat4.create();
+        transform = transform || identity;
         _syncHierarchy(this, transform);
     };
 
