@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.31.2
+-------
+* Some optimizations mainly based around pre-creating objects/arrays to avoid garbage collection.
+
+-------
 v0.31.1
 -------
 * Added first pass at device orientation input handler.
