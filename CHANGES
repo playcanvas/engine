@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.31.3
+-------
+* Switched vector, matrix and quaternion code to use Float32Array instead of Array.
+
+-------
 v0.31.2
 -------
 * Some optimizations mainly based around pre-creating objects/arrays to avoid garbage collection.
