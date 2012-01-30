@@ -102,8 +102,11 @@ pc.extend(pc.fw, function () {
         };
 		
     	this.context.loader.request(assetRequests, function (assetResources) {
+    	    var assets = [];
             var fileRequests = guids.map(function (guid) {
                 var asset = assetResources[guid];
+                assets.push(asset);
+                
                 return new pc.resources.ModelRequest(asset.getFileUrl());
             });
             var assetNames = guids.map(function (guid) {
@@ -125,7 +128,8 @@ pc.extend(pc.fw, function () {
                         }
                     }
                 }
-                this.set(entity, "models", models);
+                this.set(entity, 'models', models);
+                this.set(entity, 'assetList', assets);
             }.bind(this), function (errors, resources) {
                 Object.keys(errors).forEach(function (key) {
                     logERROR(errors[key]);
@@ -141,8 +145,21 @@ pc.extend(pc.fw, function () {
     	}, options);
 	};
 
-    ModelComponentSystem.prototype.getModel = function (entity) {
-        return this.getComponentData(entity).model;
+    /**
+     * @name pc.fw.ModelComponentSystem#getModel()
+     * @description Get a model instance from the entity, referenced either by index into the model list or name of the asset
+     * @param {Number|String} index If a number it's the index into the model list, if a string it's the name of the asset the model was created from
+     * @returns {pc.scene.Model} 
+     */
+    ModelComponentSystem.prototype.getModel = function (entity, index) {
+        var componentData = this.getComponentData(entity);
+        
+        if (pc.type(index) == 'number') {
+            var asset = componentData.assetList[index];
+            return componentData.models[asset.name]
+        } else {
+            return componentData.models[index];
+        }
     };
     
     ModelComponentSystem.prototype.onSetAssets = function (entity, name, oldValue, newValue) {

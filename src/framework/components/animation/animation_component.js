@@ -85,7 +85,8 @@ pc.extend(pc.fw, function () {
                     var skeleton = componentData.skeleton;
                     if (skeleton !== null) {
                         var entity = components[id].entity;
-                        var model = this.context.systems.model.get(entity, 'model');
+                        // Get the first model in the model list
+                        var model = this.context.systems.model.getModel(entity, 0);
                         if (model) {
                             // If the model changes, retarget the skeleton to drive the new
                             // model hierarchy

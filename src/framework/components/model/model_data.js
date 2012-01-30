@@ -2,10 +2,11 @@ pc.extend(pc.fw, function() {
     
     function ModelComponentData() {
         // serialized
-        this.assets = null;
+        this.assets = [];
         
         // non-serialized
-        this.models = null;
+        this.models = [];
+        this.assetList = [];
     }
     ModelComponentData = ModelComponentData.extendsFrom(pc.fw.ComponentData);
     
@@ -25,5 +26,5 @@ editor.link.expose({
         max: 100,
         type: 'model'
     },
-    defaultValue: null
+    defaultValue: []
 });
