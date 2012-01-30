@@ -383,7 +383,7 @@ pc.math.vec3 = function () {
          * @author Will Eastcott
          */
         clone: function (v0) {
-            return v0.slice(0, 3);
+            return new Float32Array(v0);
         },
 
         /**
