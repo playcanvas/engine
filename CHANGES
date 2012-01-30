@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.31.4
+-------
+* Fixed pc.math.vec3.clone.
+
+-------
 v0.31.3
 -------
 * Switched vector, matrix and quaternion code to use Float32Array instead of Array.
