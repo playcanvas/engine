@@ -24,7 +24,7 @@ pc.extend(pc.scene, function () {
      * @function
      * @name pc.scene.Material#getName
      * @description Returns the string name of the specified material. This name is not
-     * necessarily unique. Material names set by artist's within the modelling application
+     * necessarily unique. Material names set by an artist within the modelling application
      * should be preserved in the PlayCanvas runtime.
      * @return {string} The name of the material.
      * @author Will Eastcott
