@@ -422,7 +422,11 @@ pc.math.vec3 = function () {
          * @author Will Eastcott
          */
         create: function (x, y, z) {
-            return [x, y, z];
+            var v = new Float32Array(3);
+            v[0] = x;
+            v[1] = y;
+            v[2] = z;
+            return v;
         },
 
         /**

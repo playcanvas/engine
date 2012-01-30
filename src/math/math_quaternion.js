@@ -21,7 +21,7 @@ pc.math.quat = function () {
          * @author Will Eastcott
          */
         clone: function (q) {
-            return q.slice(0, 4);
+            return new Float32Array(q);
         },
 
         /**
@@ -62,7 +62,12 @@ pc.math.quat = function () {
          * @author Will Eastcott
          */
         create: function (x, y, z, w) {
-            return [x, y, z, w];
+            var q = new Float32Array(4);
+            q[0] = x;
+            q[1] = y;
+            q[2] = z;
+            q[3] = w;
+            return q;
         },
 
         /**

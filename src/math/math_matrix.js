@@ -52,7 +52,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         clone: function (m) {
-            return m.slice(0);
+            return new Float32Array(m);
         },
 
         /**
@@ -126,15 +126,24 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         create: function () {
-            if (arguments.length === 16) {
-                var a = arguments;
-                return [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]];
-            } else {
-                return [1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1];
-            }
+            var m = new Float32Array(16);
+            m[0] = 1;
+            m[1] = 0;
+            m[2] = 0;
+            m[3] = 0;
+            m[4] = 0;
+            m[5] = 1;
+            m[6] = 0;
+            m[7] = 0;
+            m[8] = 0;
+            m[9] = 0;
+            m[10] = 1;
+            m[11] = 0;
+            m[12] = 0;
+            m[13] = 0;
+            m[14] = 0;
+            m[15] = 1;
+            return m;
         },
 
         /**
