@@ -29,6 +29,23 @@ pc.extend(pc.fw, function () {
         this.removeComponent(entity);
     };
     
+    ModelComponentSystem.prototype.getModel = function (entity) {
+        return this.getComponentData(entity).model;
+    };
+
+    ModelComponentSystem.prototype.setVisible = function (entity, visible) {
+        var model = this.getModel(entity);
+        if (model) {
+            var inScene = this.context.scene.containsModel(model);
+            
+            if (visible && !inScene) {
+                this.context.scene.addModel(model);
+            } else if (!visible && inScene) {
+                this.context.scene.removeModel(model);
+            }
+        }
+    };
+
     ModelComponentSystem.prototype.loadModelAsset = function(entity, guid) {
     	var request = new pc.resources.AssetRequest(guid);
     	var options = {
@@ -61,10 +78,6 @@ pc.extend(pc.fw, function () {
     		
     	}, options);
 	};
-
-    ModelComponentSystem.prototype.getModel = function (entity) {
-        return this._getComponentData(entity).model;
-    };
     
     ModelComponentSystem.prototype.onSetAsset = function (entity, name, oldValue, newValue) {
         if(newValue) {
@@ -87,6 +100,7 @@ pc.extend(pc.fw, function () {
             newValue._entity = entity;
         }
     };    
+
     return {
         ModelComponentSystem: ModelComponentSystem
     }
