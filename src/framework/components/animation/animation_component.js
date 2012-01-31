@@ -7,17 +7,37 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var AnimationComponentSystem = function AnimationComponentSystem (context) {
-        context.systems.add("animation", this);
+        context.systems.add('animation', this);
 
         // Handle changes to the 'animations' value
-        this.bind("set_animations", this.onSetAnimations.bind(this));
+        this.bind('set_animations', this.onSetAnimations.bind(this));
         // Handle changes to the 'assets' value
-        this.bind("set_assets", this.onSetAssets.bind(this));
+        this.bind('set_assets', this.onSetAssets.bind(this));
         // Handle changes to the 'loop' value
-        this.bind("set_loop", this.onSetLoop.bind(this));
+        this.bind('set_loop', this.onSetLoop.bind(this));
+        
+        // Define accessor functions for animation properties
+        this._currentTime = function (componentData, currentTime) {
+            if (pc.isDefined(currentTime)) {
+                componentData.skeleton.setCurrentTime(currentTime);
+                componentData.skeleton.addTime(0); // update
+                componentData.skeleton.updateGraph();
+            } else {
+                return componentData.skeleton.getCurrentTime();
+            }
+        }
+        
+        this._duration = function (componentData, duration) {
+            if (pc.isDefined(duration)) {
+                throw Error("'duration' is read only");
+            } else {
+                return componentData.animations[componentData.currAnim].getDuration();
+            }
+            
+        }
     };
     AnimationComponentSystem = AnimationComponentSystem.extendsFrom(pc.fw.ComponentSystem);
-
+    
     AnimationComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AnimationComponentData();
 
@@ -119,7 +139,7 @@ pc.extend(pc.fw, function () {
                             skeleton.updateGraph();
                         }
                     }
-                }
+                }            
             }
         }
     };
@@ -149,7 +169,7 @@ pc.extend(pc.fw, function () {
                 for (var i = 0; i < requests.length; i++) {
                     animations[assetNames[i]] = animResources[requests[i].identifier];
                 }
-                this.set(entity, "animations", animations);
+                this.set(entity, 'animations', animations);
 			}.bind(this), function (errors) {
 				
 			}, function (progress) {
@@ -173,7 +193,7 @@ pc.extend(pc.fw, function () {
      */
     AnimationComponentSystem.prototype.setAnimation = function (entity, name, blendTime) {
         var componentData = this.getComponentData(entity);
-
+        
         componentData.prevAnim = componentData.currAnim;
         componentData.currAnim = name;
 
@@ -195,8 +215,13 @@ pc.extend(pc.fw, function () {
         if (componentData.model) {
             componentData.skeleton.setGraph(componentData.model.getGraph());
         }
-
+        
         componentData.playing = true;
+    };
+    
+    AnimationComponentSystem.prototype.getAnimation = function (entity, name) {
+        var componentData = this.getComponentData(entity);
+        return componentData.animations[name];
     };
 
     return {

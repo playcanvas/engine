@@ -164,7 +164,7 @@ pc.extend(pc.anim, function () {
         this._animation = animation;
         this._time = 0;
     };
-
+    
     /**
      * @function
      * @name pc.anim.Skeleton#setGraph
