@@ -1,38 +1,7 @@
 pc.extend(pc.fw, function () {
-    // Private    
-    function _onSet(entity, name, oldValue, newValue) {
         /*
-        var component;
-        var functions = {
-            "asset": function (entity, name, oldValue, newValue) {
-                var componentData = this._getComponentData(entity);
-                if(componentData.model) {
-                    this.context.scene.removeModel(componentData.model);
-                    entity.removeChild(componentData.model.getGraph());
-                    delete componentData.model;
-                    componentData.model = null;
-                }
-                if(newValue) {
-                    this.loadModelAsset(entity, newValue);
-                }
-            },
-            "model": function(entity, name, oldValue, newValue) {
-                if(newValue) {
-                    entity.addChild(newValue.getGraph());
-                    this.context.scene.addModel(newValue);
-                    // Store the entity that owns this model
-                    newValue._entity = entity;
-                }
-            }
-        };
-        
-        if(functions[name]) {
-            functions[name].call(this, entity, name, oldValue, newValue);
-        }
         */
         
-    }
-    
     /**
      * @name pc.fw.ModelComponentSystem
      * @constructor Create a new ModelComponentSystem
@@ -44,7 +13,9 @@ pc.extend(pc.fw, function () {
         this.context = context;
 
         context.systems.add("model", this);
-        //this.bind("set", pc.callback(this, _onSet));
+        
+        this.bind("set_asset", this.onSetAsset.bind(this));
+        this.bind("set", pc.callback(this, _onSet));
         this.bind('set_assets', this.onSetAssets.bind(this));
         this.bind('set_models', this.onSetModels.bind(this));
     }
@@ -63,28 +34,28 @@ pc.extend(pc.fw, function () {
         this.set(entity, 'assets', []);
         
         /*
-        var component = this.getComponentData(entity);
+        this.set(entity, 'asset', null);
         var i, len = component.models.length;
         for (i = 0; i < len; i++) {
-            this.context.scene.removeModel(component.models[i]);
-            entity.removeChild(component.models[i].getGraph());
-        }
+        this.context.scene.removeModel(component.model);
+            entity.removeChild(component.model.getGraph());
         */
         this.removeComponent(entity);
     };
 
-    ModelComponentSystem.prototype.render = function (fn) {
-        var id;
-        var entity;
-        var component;
-        var position;
-        var components = this._getComponents();
-        var transform;
-        
-        for (id in components) {
-            if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
-                component = components[id].component;
+    ModelComponentSystem.prototype.getModel = function (entity) {
+        return this.getComponentData(entity).model;
+    };
+
+    ModelComponentSystem.prototype.setVisible = function (entity, visible) {
+        var model = this.getModel(entity);
+        if (model) {
+            var inScene = this.context.scene.containsModel(model);
+            
+            if (visible && !inScene) {
+                this.context.scene.addModel(model);
+            } else if (!visible && inScene) {
+                this.context.scene.removeModel(model);
             }
         }
     };
@@ -144,32 +115,28 @@ pc.extend(pc.fw, function () {
     		
     	}, options);
 	};
-
+    
     /**
      * @name pc.fw.ModelComponentSystem#getModel()
      * @description Get a model instance from the entity, referenced either by index into the model list or name of the asset
      * @param {Number|String} index If a number it's the index into the model list, if a string it's the name of the asset the model was created from
      * @returns {pc.scene.Model} 
      */
-    ModelComponentSystem.prototype.getModel = function (entity, index) {
-        var componentData = this.getComponentData(entity);
+    ModelComponentSystem.prototype.getModel = function (entity) {
+        if(newValue) {
+        return this._getComponentData(entity).model;
         
         if (pc.type(index) == 'number') {
             var asset = componentData.assetList[index];
             return componentData.models[asset.name]
         } else {
-            return componentData.models[index];
         }
-    };
+    }; 
     
-    ModelComponentSystem.prototype.onSetAssets = function (entity, name, oldValue, newValue) {
-        if(newValue && newValue.length > 0) {
-            this.loadModelAssets(entity, newValue);
-        } else {
             this.set(entity, 'models', {});
         }
     };
-    
+
     ModelComponentSystem.prototype.onSetModels = function (entity, name, oldValue, newValue) {
         var componentData = this.getComponentData(entity);
         var model;
@@ -189,15 +156,9 @@ pc.extend(pc.fw, function () {
                 if (newValue.hasOwnProperty(modelName)) {
                     model = newValue[modelName];
                     
-                    entity.addChild(model.getGraph());
-                    this.context.scene.addModel(model);
                     // Store the entity that owns this model
-                    model._entity = entity;
-                }
-            }
         }
     };
-    
     return {
         ModelComponentSystem: ModelComponentSystem
     }

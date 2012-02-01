@@ -79,6 +79,7 @@ pc.extend(pc.gfx, function () {
         this._minFilter = pc.gfx.TextureFilter.NEAREST_MIPMAP_LINEAR;
         this._magFilter = pc.gfx.TextureFilter.LINEAR;
     };
+
     
     /**
      * @function

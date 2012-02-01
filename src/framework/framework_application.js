@@ -67,7 +67,6 @@ pc.extend(pc.fw, function () {
         }        
         
         scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
-        //pc.string.format("{0}/code/{1}/{2}", options.api.url, options.api.username, options.api.project);
 
 		// Create resource loader
 		var loader = new pc.resources.ResourceLoader();
@@ -85,6 +84,7 @@ pc.extend(pc.fw, function () {
     
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
+        loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot, this.context));
         
         // Create systems
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
@@ -112,10 +112,6 @@ pc.extend(pc.fw, function () {
         
         // Add event support
         pc.extend(this, pc.events);
-               
-    };
-    
-    Application.prototype._init = function () {
     };
     
     /**
@@ -123,11 +119,9 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.Application#start
      * @description Start the Application updating
      */
-    Application.prototype.start = function (entity) {
-        if(entity) {
-            this.context.root.addChild(entity);
-        }
+    Application.prototype.start = function () {
         this.context.root.syncHierarchy();
+
         this.tick();
     };
     
