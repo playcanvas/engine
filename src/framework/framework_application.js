@@ -67,7 +67,6 @@ pc.extend(pc.fw, function () {
         }        
         
         scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
-        //pc.string.format("{0}/code/{1}/{2}", options.api.url, options.api.username, options.api.project);
 
 		// Create resource loader
 		var loader = new pc.resources.ResourceLoader();
@@ -115,7 +114,20 @@ pc.extend(pc.fw, function () {
                
     };
     
-    Application.prototype._init = function () {
+    /**
+     * 
+     */
+    Application.prototype.loadPack = function (guid, success, error, progress) {
+        this.context.loader.request(new pc.resources.EntityRequest(guid), function (resources) {
+            // success
+            success(resources);
+        }.bind(this), function (errors) {
+            // error
+            error(errors);
+        }.bind(this), function (value) {
+            // progress
+            progress(value)
+        }.bind(this));
     };
     
     /**
@@ -128,6 +140,9 @@ pc.extend(pc.fw, function () {
             this.context.root.addChild(entity);
         }
         this.context.root.syncHierarchy();
+
+        this.context.systems.script.initialize();
+
         this.tick();
     };
     

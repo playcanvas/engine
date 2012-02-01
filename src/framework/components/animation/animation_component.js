@@ -58,7 +58,7 @@ pc.extend(pc.fw, function () {
     };
 
     AnimationComponentSystem.prototype.onSetAnimations = function (entity, name, oldValue, newValue) {
-        if (typeof newValue !== 'undefined') {
+        if (pc.isDefined(newValue)) {
             var componentData = this.getComponentData(entity);
             for (var animName in componentData.animations) {
                 // Create skeletons
@@ -80,13 +80,13 @@ pc.extend(pc.fw, function () {
     };
 
     AnimationComponentSystem.prototype.onSetAssets = function (entity, name, oldValue, newValue) {
-        if (typeof newValue !== 'undefined') {
+        if (pc.isDefined(newValue)) {
             this.loadAnimationAssets(entity, newValue);
         }
     };
 
     AnimationComponentSystem.prototype.onSetLoop = function (entity, name, oldValue, newValue) {
-        if (typeof newValue !== 'undefined') {
+        if (pc.isDefined(newValue)) {
             var componentData = this.getComponentData(entity);
 
             if (componentData.skeleton) {
@@ -96,7 +96,7 @@ pc.extend(pc.fw, function () {
     };
     
     AnimationComponentSystem.prototype.update = function (dt) {
-        var components = this._getComponents();
+        var components = this.getComponents();
 
         for (var id in components) {
             if (components.hasOwnProperty(id)) {
@@ -104,40 +104,29 @@ pc.extend(pc.fw, function () {
                 if (componentData.playing) {
                     var skeleton = componentData.skeleton;
                     if (skeleton !== null) {
-                        var entity = components[id].entity;
-                        var model = this.context.systems.model.get(entity, 'model');
-                        if (model) {
-                            // If the model changes, retarget the skeleton to drive the new
-                            // model hierarchy
-                            if (model !== componentData.model) {
-                                skeleton.setGraph(model.getGraph());
-                                componentData.model = model;
+                        if (componentData.blending) {
+                            componentData.blendTimeRemaining -= dt;
+                            if (componentData.blendTimeRemaining < 0.0) {
+                                componentData.blendTimeRemaining = 0.0;
                             }
-
-                            if (componentData.blending) {
-                                componentData.blendTimeRemaining -= dt;
-                                if (componentData.blendTimeRemaining < 0.0) {
-                                    componentData.blendTimeRemaining = 0.0;
-                                }
-                                var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
-                                skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
-                            } else {
-                                // Advance the animation, interpolating keyframes at each animated node in
-                                // skeleton
-                                var delta = dt * componentData.speed;
-                                skeleton.addTime(delta);
-                                if ((skeleton.getCurrentTime() === skeleton.getAnimation().getDuration()) && !componentData.loop) {
-                                    componentData.playing = false;
-                                }
+                            var alpha = 1.0 - (componentData.blendTimeRemaining / componentData.blendTime);
+                            skeleton.blend(componentData.fromSkel, componentData.toSkel, alpha);
+                        } else {
+                            // Advance the animation, interpolating keyframes at each animated node in
+                            // skeleton
+                            var delta = dt * componentData.speed;
+                            skeleton.addTime(delta);
+                            if ((skeleton.getCurrentTime() === skeleton.getAnimation().getDuration()) && !componentData.loop) {
+                                componentData.playing = false;
                             }
-
-                            if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
-                                componentData.blending = false;
-                                skeleton.setAnimation(componentData.toSkel.getAnimation());
-                            }
-
-                            skeleton.updateGraph();
                         }
+
+                        if (componentData.blending && (componentData.blendTimeRemaining === 0.0)) {
+                            componentData.blending = false;
+                            skeleton.setAnimation(componentData.toSkel.getAnimation());
+                        }
+
+                        skeleton.updateGraph();
                     }
                 }            
             }
@@ -223,7 +212,17 @@ pc.extend(pc.fw, function () {
         var componentData = this.getComponentData(entity);
         return componentData.animations[name];
     };
-
+    
+    AnimationComponentSystem.prototype.setModel = function (entity, model) {
+        var componentData = this.getComponentData(entity);
+        if (componentData) {
+            if (model && componentData.skeleton) {
+                componentData.skeleton.setGraph(model.getGraph());    
+            }
+            componentData.model = model;
+        }    
+    };
+    
     return {
         AnimationComponentSystem: AnimationComponentSystem
     };

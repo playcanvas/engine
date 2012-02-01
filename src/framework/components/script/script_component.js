@@ -37,6 +37,24 @@ pc.extend(pc.fw, function () {
         this.removeComponent(entity);
     };
 
+    ScriptComponentSystem.prototype.initialize = function () {
+        var components = this.getComponents();
+
+        for (var id in components) {
+            if (components.hasOwnProperty(id)) {
+                var entity = components[id].entity;
+                var componentData = this.getComponentData(entity);
+                for (name in componentData.instances) {
+                    if (componentData.instances.hasOwnProperty(name)) {
+                        if (componentData.instances[name].instance.initialize) {
+                            componentData.instances[name].instance.initialize();
+                        }                        
+                    }
+                }
+            }
+        }
+    };
+
     ScriptComponentSystem.prototype.update = function (dt) {
         var components = this.getComponents();
 

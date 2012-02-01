@@ -98,6 +98,8 @@ pc.extend(pc.fw, function () {
             this.context.scene.addModel(newValue);
             // Store the entity that owns this model
             newValue._entity = entity;
+            // Update any animation component
+            this.context.systems.animation.setModel(entity, newValue);
         }
     };    
 
