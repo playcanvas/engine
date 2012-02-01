@@ -1,6 +1,7 @@
 pc.extend(pc.resources, function () {
     /**
-     * Handle requests for Entity resources
+     * @name pc.resources.EntityResourceHandler
+     * @class Handle requests for Entity resources
      */
     var EntityResourceHandler = function (registry, depot) {
         this._registry = registry
@@ -32,8 +33,6 @@ pc.extend(pc.resources, function () {
     	options.priority = options.priority || 1; // default priority of 1
         options.batch = options.batch || null;
         
-        logINFO("Open: " + guid);
-
         var entity = new pc.fw.Entity();
 
         entity.setName(data.name);

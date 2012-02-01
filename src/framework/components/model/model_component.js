@@ -1,35 +1,4 @@
 pc.extend(pc.fw, function () {
-    // Private    
-    function _onSet(entity, name, oldValue, newValue) {
-        var component;
-        var functions = {
-            "asset": function (entity, name, oldValue, newValue) {
-                var componentData = this._getComponentData(entity);
-                if(componentData.model) {
-                    this.context.scene.removeModel(componentData.model);
-                    entity.removeChild(componentData.model.getGraph());
-                    delete componentData.model;
-                    componentData.model = null;
-                }
-                if(newValue) {
-                    this.loadModelAsset(entity, newValue);
-                }
-            },
-            "model": function(entity, name, oldValue, newValue) {
-                if(newValue) {
-                    entity.addChild(newValue.getGraph());
-                    this.context.scene.addModel(newValue);
-                    // Store the entity that owns this model
-                    newValue._entity = entity;
-                }
-            }
-        };
-        
-        if(functions[name]) {
-            functions[name].call(this, entity, name, oldValue, newValue);
-        }
-    }
-    
     /**
      * @name pc.fw.ModelComponentSystem
      * @constructor Create a new ModelComponentSystem
@@ -41,7 +10,9 @@ pc.extend(pc.fw, function () {
         this.context = context;
 
         context.systems.add("model", this);
-        this.bind("set", pc.callback(this, _onSet));
+        
+        this.bind("set_asset", this.onSetAsset.bind(this));
+        this.bind("set_model", this.onSetModel.bind(this));
     }
     ModelComponentSystem = ModelComponentSystem.extendsFrom(pc.fw.ComponentSystem);
     
@@ -54,33 +25,27 @@ pc.extend(pc.fw, function () {
     };
     
     ModelComponentSystem.prototype.deleteComponent = function (entity) {
-        var component = this.getComponentData(entity);
-        this.context.scene.removeModel(component.model);
-    
-        if(component.model) {
-            entity.removeChild(component.model.getGraph());
-            component.model = null;
-        }
-    
+        this.set(entity, 'asset', null);
         this.removeComponent(entity);
     };
     
-    ModelComponentSystem.prototype.render = function (fn) {
-        var id;
-        var entity;
-        var component;
-        var position;
-        var components = this._getComponents();
-        var transform;
-        
-        for (id in components) {
-            if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
-                component = components[id].component;
+    ModelComponentSystem.prototype.getModel = function (entity) {
+        return this.getComponentData(entity).model;
+    };
+
+    ModelComponentSystem.prototype.setVisible = function (entity, visible) {
+        var model = this.getModel(entity);
+        if (model) {
+            var inScene = this.context.scene.containsModel(model);
+            
+            if (visible && !inScene) {
+                this.context.scene.addModel(model);
+            } else if (!visible && inScene) {
+                this.context.scene.removeModel(model);
             }
         }
     };
-    
+
     ModelComponentSystem.prototype.loadModelAsset = function(entity, guid) {
     	var request = new pc.resources.AssetRequest(guid);
     	var options = {
@@ -113,12 +78,31 @@ pc.extend(pc.fw, function () {
     		
     	}, options);
 	};
+    
+    ModelComponentSystem.prototype.onSetAsset = function (entity, name, oldValue, newValue) {
+        if(newValue) {
+            this.loadModelAsset(entity, newValue);
+        } else {
+            this.set(entity, 'model', null);
+        }
+    }; 
+    
+    ModelComponentSystem.prototype.onSetModel = function (entity, name, oldValue, newValue) {
+        if(oldValue) {
+            this.context.scene.removeModel(oldValue);
+            entity.removeChild(oldValue.getGraph());
+        }
 
-    ModelComponentSystem.prototype.getModel = function (entity) {
-        return this._getComponentData(entity).model;
-    };
-    
-    
+        if(newValue) {
+            entity.addChild(newValue.getGraph());
+            this.context.scene.addModel(newValue);
+            // Store the entity that owns this model
+            newValue._entity = entity;
+            // Update any animation component
+            this.context.systems.animation.setModel(entity, newValue);
+        }
+    };    
+
     return {
         ModelComponentSystem: ModelComponentSystem
     }

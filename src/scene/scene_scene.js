@@ -60,6 +60,11 @@ pc.extend(pc.scene, function () {
             this._models.splice(index, 1);
         }
     };
+    
+    Scene.prototype.containsModel = function (model) {
+        return this._models.indexOf(model) >= 0;
+    };
+    
 	
     /**
      * @function

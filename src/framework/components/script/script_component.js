@@ -36,6 +36,33 @@ pc.extend(pc.fw, function () {
     
         this.removeComponent(entity);
     };
+    
+    /**
+     * @function
+     * @name pc.fw.ScriptComponentSystem#initialize
+     * @description Initialize scripts on a portion of an Entity hierarchy. Calls the initialise() method on any instances of script objects that are on the hierarchy that starts at root.
+     * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
+     */
+    ScriptComponentSystem.prototype.initialize = function (root) {
+        var componentData = this.getComponentData(root);
+        if (componentData) {
+            for (name in componentData.instances) {
+                if (componentData.instances.hasOwnProperty(name)) {
+                    if (componentData.instances[name].instance.initialize) {
+                        componentData.instances[name].instance.initialize();
+                    }                        
+                }
+            }
+        }
+        
+        var children = root.getChildren();
+        var i, len = children.length;
+        for (i = 0; i < len; i++) {
+            if (children[i] instanceof pc.fw.Entity) {
+                this.initialize(children[i]);    
+            }
+        } 
+    };
 
     ScriptComponentSystem.prototype.update = function (dt) {
         var components = this.getComponents();
@@ -112,7 +139,13 @@ pc.extend(pc.fw, function () {
                 this.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
                     var ScriptType = resources[url];
                     var instance = new ScriptType(entity);
-                    this._registerInstance(entity, url, ScriptType._pcScriptName, instance);                        
+                    this.preRegisterInstance(entity, url, ScriptType._pcScriptName, instance);
+                    
+                    // If there is no request batch, then this is not part of a load request and so we need 
+                    // to register the instances immediately to call the initialize function
+                    if (!options.batch ) {
+                        this.registerInstances(entity);
+                    }
                 }.bind(this), function (errors) {
                     Object.keys(errors).forEach(function (key) {
                         logERROR(errors[key]);
@@ -125,28 +158,42 @@ pc.extend(pc.fw, function () {
     };
     
     /**
-     * @name pc.fw.ScriptComponentSystem#_registerInstance
      * @function
      * @private
-     * @description Register an instance of a Script Object to an entity.
-     * @param {pc.fw.Entity} entity The entity to register the instance to
-     * @param {String} url The url the script was downloaded from
-     * @param {String} name Then name declared in the script
-     * @param {Object} instance An instance of the Script Object declared in the downloaded script
+     * @name pc.fw.ScriptComponentSystem#preRegisterInstance
+     * @description Store a copy of a new script object instance on the component but do not register them to receive updates.
      */
-    ScriptComponentSystem.prototype._registerInstance = function(entity, url, name, instance) {
+    ScriptComponentSystem.prototype.preRegisterInstance = function (entity, url, name, instance) {
         var data = this.getComponentData(entity);
-        var instances = this.get(entity, "instances");
-        if (instances[name]) {
+        data._instances = data._instances || {};
+        if (data._instances[name]) {
             throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, instances[name].url, entity.getGuid()));
         }
-        
-        instances[name] = {
+        data._instances[name] = {
             url: url,
             name: name,
             instance: instance
         };
-        this.set(entity, "instances", instances);
+    };
+    
+    ScriptComponentSystem.prototype.registerInstances = function (entity) {
+        var data = this.getComponentData(entity);
+        if (data) {
+            if (data._instances) {
+                this.set(entity, 'instances', data._instances);                                
+                // Remove temp storage
+                delete data._instances;            
+            }
+            
+        }
+
+        var children = entity.getChildren()
+        var i, len = children.length;
+        for (i = 0; i < len; i++) {
+            if (children[i] instanceof pc.fw.Entity) {
+                this.registerInstances(children[i]);    
+            }
+        }    
     };
     
     /**

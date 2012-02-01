@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.32.0
+-------
+* Added ModelComponentSystem.setVisible() to show/hide models
+* Added currentTime and duration accessors to AnimationComponentSystem
+* initialise() method is called on all script objects after loading, before first update
+* [FIX] Script update() is no longer called before the resource loading callback is called
+
+-------
 v0.31.4
 -------
 * Fixed pc.math.vec3.clone.

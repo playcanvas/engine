@@ -204,6 +204,7 @@ pc.extend(pc.resources, function () {
         	// no progress features
         }, options);
         
+        texture.setName(textureData.name);
         texture.setAddressMode(addressu, addressv);
         texture.setFilterMode(minFilter, magFilter);
         texture.transform = textureData.transform;

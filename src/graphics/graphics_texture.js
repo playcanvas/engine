@@ -71,12 +71,39 @@ pc.extend(pc.gfx, function () {
     var Texture = function () {
         var gl = pc.gfx.Device.getCurrent().gl;
 
+        this._name = null;
         this._textureId = gl.createTexture();
         // These values are the defaults as specified by the WebGL spec
         this._addressu  = pc.gfx.TextureAddress.REPEAT;
         this._addressv  = pc.gfx.TextureAddress.REPEAT;
         this._minFilter = pc.gfx.TextureFilter.NEAREST_MIPMAP_LINEAR;
         this._magFilter = pc.gfx.TextureFilter.LINEAR;
+    };
+
+    
+    /**
+     * @function
+     * @name pc.gfx.Texture#getName
+     * @description Returns the string name of the specified texture. This name is not
+     * necessarily unique. Texture names set by an artist within the modelling application
+     * should be preserved in the PlayCanvas runtime.
+     * @return {string} The name of the texture.
+     * @author Will Eastcott
+     */
+    Texture.prototype.getName = function () {
+        return this._name;
+    };
+
+    /**
+     * @function
+     * @name pc.gfx.Texture#setName
+     * @description Sets the string name of the specified texture. This name does not
+     * have to be unique.
+     * @param {string} name The name of the texture.
+     * @author Will Eastcott
+     */
+    Texture.prototype.setName = function (name) {
+        this._name = name;
     };
 
     /**
