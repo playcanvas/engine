@@ -104,8 +104,6 @@ pc.extend(pc.fw, function () {
                 if (componentData.playing) {
                     var skeleton = componentData.skeleton;
                     if (skeleton !== null) {
-                        // Get the first model in the model list
-                        var model = this.context.systems.model.get(entity, 'model');
                         if (componentData.blending) {
                             componentData.blendTimeRemaining -= dt;
                             if (componentData.blendTimeRemaining < 0.0) {
