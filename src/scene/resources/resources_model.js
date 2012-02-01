@@ -188,11 +188,11 @@ pc.extend(pc.resources, function () {
         var addressv  = this._jsonToAddressMode[textureData.addressv];
         var minFilter = this._jsonToFilterMode[textureData.minfilter];
         var magFilter = this._jsonToFilterMode[textureData.magfilter];
-        
+
         var texture = new pc.gfx.Texture2D();
-        
+
         var url = options.directory + "/" + textureData.uri;
-		
+
 		// Make a new request for the Image resource at the same priority as the Model was requested.
         this._loader.request([new pc.resources.ImageRequest(url)], options.priority, function (resources) {
         	texture.setSource(resources[url]);	
@@ -203,7 +203,7 @@ pc.extend(pc.resources, function () {
         }, function (progress) {
         	// no progress features
         }, options);
-        
+
         texture.setName(textureData.name);
         texture.setAddressMode(addressu, addressv);
         texture.setFilterMode(minFilter, magFilter);

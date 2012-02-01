@@ -2,10 +2,11 @@ pc.extend(pc.fw, function() {
     
     function ModelComponentData() {
         // serialized
-        this.asset = null;
+        this.assets = [];
         
         // non-serialized
-        this.model = null;
+        this.models = [];
+        this.assetList = [];
     }
     ModelComponentData = ModelComponentData.extendsFrom(pc.fw.ComponentData);
     
@@ -17,13 +18,13 @@ editor.link.addComponentType("model");
 
 editor.link.expose({
     system: "model",
-    variable: "asset",
+    variable: "assets",
     displayName: "Asset",
     description: "Model Asset to render",
     type: "asset",
     options: {
-        max: 1,
+        max: 100,
         type: 'model'
     },
-    defaultValue: null
+    defaultValue: []
 });
