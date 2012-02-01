@@ -84,6 +84,7 @@ pc.extend(pc.fw, function () {
     
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
+        loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot, this.context));
         
         // Create systems
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
@@ -111,23 +112,6 @@ pc.extend(pc.fw, function () {
         
         // Add event support
         pc.extend(this, pc.events);
-               
-    };
-    
-    /**
-     * 
-     */
-    Application.prototype.loadPack = function (guid, success, error, progress) {
-        this.context.loader.request(new pc.resources.EntityRequest(guid), function (resources) {
-            // success
-            success(resources);
-        }.bind(this), function (errors) {
-            // error
-            error(errors);
-        }.bind(this), function (value) {
-            // progress
-            progress(value)
-        }.bind(this));
     };
     
     /**
@@ -135,13 +119,8 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.Application#start
      * @description Start the Application updating
      */
-    Application.prototype.start = function (entity) {
-        if(entity) {
-            this.context.root.addChild(entity);
-        }
+    Application.prototype.start = function () {
         this.context.root.syncHierarchy();
-
-        this.context.systems.script.initialize();
 
         this.tick();
     };
