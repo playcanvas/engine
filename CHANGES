@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.33.0
+-------
+* New pc.audio.AudioManager
+* New pc.audio.Sound, pc.audio.Channel, pc.audio.Channel3d, pc.audio.Listener
+
+-------
 v0.32.0
 -------
 * Added ModelComponentSystem.setVisible() to show/hide models
