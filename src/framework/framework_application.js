@@ -62,9 +62,7 @@ pc.extend(pc.fw, function () {
 
         var registry = new pc.fw.ComponentSystemRegistry();
     
-        if (pc.audio.AudioContext) {
-            var audioContext = new pc.audio.AudioContext();
-        }        
+        var audioManager = new pc.audio.AudioManager();
         
         scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
 
@@ -75,9 +73,7 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
-        if (audioContext) {
-            loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioContext));
-        }
+        loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioManager));
 
 		// The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options.controller, options.keyboard, options.mouse);
@@ -102,10 +98,8 @@ pc.extend(pc.fw, function () {
         var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
         var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
-        if (audioContext) {
-            var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, audioContext);
-            var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioContext);            
-        }
+        var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, audioManager);
+        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioManager);            
         
         skyboxsys.setDataDir(options.dataDir);
         staticcubemapsys.setDataDir(options.dataDir);

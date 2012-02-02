@@ -59,7 +59,7 @@ pc.math.vec2 = function () {
          * console.log("The two vectors are " + (same ? "equal" : "different"));
          * @author Will Eastcott
          */
-        copy: function (src, dst) {
+        copy: function (v0, r) {
             r[0] = v0[0];
             r[1] = v0[1];
         },

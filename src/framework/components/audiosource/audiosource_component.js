@@ -6,13 +6,10 @@ pc.extend(pc.fw, function () {
      * @param {pc.audio.AudioContext} audioContext AudioContext object used to create sources and filters
      * @extends pc.fw.ComponentSystem
      */
-    var AudioSourceComponentSystem = function (context, audioContext) {
+    var AudioSourceComponentSystem = function (context, manager) {
         context.systems.add("audiosource", this);
         
-        this.audioContext = audioContext;
-        
-        this.postGain = audioContext.createGainNode();
-        this.postGain.connect(audioContext.destination);
+        this.manager = manager;
         
         this.bind("set_assets", this.onSetAssets);
         this.bind("set_sources", this.onSetSources);
@@ -29,11 +26,24 @@ pc.extend(pc.fw, function () {
     
         this.set(entity, 'paused', !data['activate']);
         
-        return componentData;        
+        return componentData;
     };
     
     AudioSourceComponentSystem.prototype.update = function(dt) {
-        
+        var components = this.getComponents();
+        var components = this.getComponents();
+
+        for (var id in components) {
+            if (components.hasOwnProperty(id)) {
+                var entity = components[id].entity;
+                var componentData = this.getComponentData(entity);
+                
+                if (componentData.channel) {
+                    var pos = pc.math.mat4.getTranslation(entity.getWorldTransform());
+                    componentData.channel.setPosition(pos);
+                }
+            }
+        }
     };
    
     AudioSourceComponentSystem.prototype.play = function(entity, name) {
@@ -41,29 +51,16 @@ pc.extend(pc.fw, function () {
             this.set(entity, 'paused', false);
             var sources = this.get(entity, 'sources');
             if(sources[name]) {
-                if (sources[name] instanceof HTMLAudioElement) {
-                    sources[name].setAttribute('volume', this.get(entity, 'volume'));
-                    sources[name].setAttribute('loop', this.get(entity, 'loop'));
-                    sources[name].play();
-                } else {
-                    var audioNode = this.audioContext.createBufferSource();
-                    audioNode.buffer = sources[name];
-                    audioNode.gain.value = this.get(entity, 'volume');
-                    audioNode.loop = this.get(entity, 'loop');
-                    this._connectToOutput(audioNode);
-                    audioNode.noteOn(0);                    
-                }
+                var pos = pc.math.mat4.getTranslation(entity.getWorldTransform());
+                var channel = this.manager.playSound3d(sources[name], pos);
+                this.set(entity, 'currentSource', name);
+                this.set(entity, 'channel', channel);
             }
         }
     };
     
     AudioSourceComponentSystem.prototype.pause = function(entity) {
         if(this.hasComponent(entity)) {
-            var audioNode = this.get(entity, 'audioNode');
-            this.set(entity, 'paused', true);
-            if(audioNode) {
-                audioNode.noteOff(0);
-            }            
         }
     };
     
@@ -75,7 +72,7 @@ pc.extend(pc.fw, function () {
      * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
      */
     AudioSourceComponentSystem.prototype.setVolume = function(value) {
-        this.postGain.gain.value = value;
+        this.manager.setVolume(value);
     };
     
     AudioSourceComponentSystem.prototype.onSetAssets = function (entity, name, oldValue, newValue) {
@@ -101,7 +98,6 @@ pc.extend(pc.fw, function () {
         
         // If the currentSource was set before the asset was loaded and should be playing, we should start playback 
         if(currentSource && !oldValue[currentSource]) {
-            //this.setSource(entity, currentSource);
             if (!this.get(entity, 'paused')) {
                 this.play(entity, currentSource);    
             }
@@ -127,12 +123,6 @@ pc.extend(pc.fw, function () {
         }
     };
         
-    AudioSourceComponentSystem.prototype._connectToOutput = function (node) {
-        node.connect(this.postGain);
-        //node.connect(this.audioContext.destination);
-            
-    };
-    
     AudioSourceComponentSystem.prototype._loadAudioSourceAssets = function (entity, guids) {
         var requests = guids.map(function (guid) {
             return new pc.resources.AssetRequest(guid);

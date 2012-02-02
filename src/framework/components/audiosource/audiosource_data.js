@@ -7,9 +7,10 @@ pc.fw.AudioSourceComponentData = function AudioSourceComponentData() {
     
     // not serialized
     this.paused = true;
-    this.audioNode = null;
+
     this.sources = {};
     this.currentSource = null;
+    this.channel = null;
 };
 editor.link.addComponentType("audiosource");
 
