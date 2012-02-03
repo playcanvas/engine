@@ -21,7 +21,13 @@ pc.audio = function () {
         options = options || {};
         var channel = null;
         if (pc.audio.Channel) {
-            channel = new pc.audio.Channel(this, sound, options);   
+            channel = new pc.audio.Channel(this, sound, options);
+            if (options.volume) {
+                channel.setVolume(options.volume);
+            }
+            if (options.loop) {
+                channel.setLoop(options.loop);
+            }
             channel.play();
         }
         return channel;
@@ -33,6 +39,21 @@ pc.audio = function () {
         if (pc.audio.Channel3d) {
             channel = new pc.audio.Channel3d(this, sound, options);
             channel.setPosition(position);
+            if (options.volume) {
+                channel.setVolume(options.volume);
+            }
+            if (options.loop) {
+                channel.setLoop(options.loop);
+            }
+            if (options.maxDistance) {
+                channel.setMaxDistance(options.maxDistance);
+            }
+            if (options.minDistance) {
+                channel.setMinDistance(options.minDistance);
+            }
+            if (options.rollOffFactor) {
+                channel.setRollOffFactor(options.rollOffFactor);
+            }
             channel.play();
         }
         
@@ -44,7 +65,8 @@ pc.audio = function () {
     };
     
     AudioManager.prototype.setVolume = function (volume) {
-        this.volume = volume;    
+        this.volume = volume;
+        // TODO set all channel volumes here
     };
     
 /*
