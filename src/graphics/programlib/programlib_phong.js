@@ -549,12 +549,18 @@ pc.gfx.programlib.phong = {
 
             // Shadows should only affect diffuse and specular contribution
             if (options.shadowMap) {
-                code += "    vec3 shadow_coord = vShadowCoord.xyz / vShadowCoord.w;\n";
-                code += "    vec4 rgba_depth   = texture2D(texture_shadowMap, shadow_coord.xy);\n";
-                code += "    float depth       = unpack_depth(rgba_depth);\n";
-                code += "    float visibility  = ((depth - shadow_coord.z) > -0.01) ? (1.0) : (0.3);\n";
-                code += "    diffuse           = diffuse * visibility;\n";
-                code += "    specular          = specular * visibility;\n";
+                code += "    vec3 shadowCoord = vShadowCoord.xyz / vShadowCoord.w;\n";
+                code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
+                code += "    {\n";
+                code += "        vec4 rgbaDepth = texture2D(texture_shadowMap, shadowCoord.xy);\n";
+                code += "        float depth = unpack_depth(rgbaDepth);\n";
+                code += "        float depthBias = 0.000007 / (shadowCoord.z * shadowCoord.z - (0.07 * shadowCoord.z));";
+                code += "        if (depth + depthBias < shadowCoord.z)\n";
+                code += "        {\n";
+                code += "            diffuse = diffuse * 0.3;\n";
+                code += "            specular = specular * 0.3;\n";
+                code += "        }\n";
+                code += "    }\n";
             }
 
             // Add ambient + diffuse + specular
