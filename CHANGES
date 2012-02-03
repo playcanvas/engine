@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.34.0
+-------
+* Added support for distance model parameters in Audio Components
+
+-------
 v0.33.0
 -------
 * New pc.audio.AudioManager
