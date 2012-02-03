@@ -196,23 +196,15 @@ pc.extend(pc.fw, function () {
 
                     // Retrieve the characteristics of the camera frustum
                     var cam = componentData.camera;
-                    var nearClip   = cam.getNearClip();
-                    var farClip    = cam.getFarClip();
-                    var fov        = cam.getFov() * Math.PI / 180.0;
-                    var viewWindow = cam.getViewWindow();
-                    var viewport   = cam.getRenderTarget().getViewport();
-                    var projection = cam.getProjection();
+                    var nearClip = cam.getNearClip();
+                    var farClip  = cam.getFarClip();
+                    var fov      = cam.getFov() * Math.PI / 180.0;
+                    var viewport = cam.getRenderTarget().getViewport();
 
-                    var x, y;
-                    if (projection === pc.scene.Projection.PERSPECTIVE) {
-                        y = Math.tan(fov / 2.0) * nearClip;
-                        x = y * viewport.width / viewport.height;
-                    } else {
-                        x = viewWindow[0];
-                        y = viewWindow[1];
-                    }
-
+                    // Write the frustum corners into a dynamic vertex buffer
                     var positions = new Float32Array(vertexBuffer.lock());
+                    var y = Math.tan(fov / 2.0) * nearClip;
+                    var x = y * viewport.width / viewport.height;
                     positions[0]  = x;
                     positions[1]  = -y;
                     positions[2]  = -nearClip;
@@ -226,10 +218,8 @@ pc.extend(pc.fw, function () {
                     positions[10] = -y;
                     positions[11] = -nearClip;
 
-                    if (projection === pc.scene.Projection.PERSPECTIVE) {
-                        y = Math.tan(fov / 2.0) * farClip;
-                        x = y * viewport.width / viewport.height;
-                    }
+                    y = Math.tan(fov / 2.0) * farClip;
+                    x = y * viewport.width / viewport.height;
                     positions[12]  = x;
                     positions[13]  = -y;
                     positions[14]  = -farClip;
@@ -249,7 +239,7 @@ pc.extend(pc.fw, function () {
                     device.setProgram(program);
                     device.setIndexBuffer(indexBuffer);
                     device.setVertexBuffer(vertexBuffer, 0);
-
+                    
                     transform = entity.getWorldTransform();
                     device.scope.resolve("matrix_model").setValue(transform);
                     device.scope.resolve("constant_color").setValue([1,1,0,1]);
