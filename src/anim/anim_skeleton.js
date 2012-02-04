@@ -27,8 +27,10 @@ pc.extend(pc.anim, function () {
         this._animation = null;
         this._time = 0;
         this._interpolatedKeys = [];
+        this._currKeyIndices = [];
         for (var i = 0; i < numNodes; i++) {
             this._interpolatedKeys[i] = new pc.anim.InterpolatedKey();
+            this._currKeyIndices[i] = 0;
         }
         this.looping = true;
     };
@@ -51,15 +53,23 @@ pc.extend(pc.anim, function () {
                 return;
             }
 
+            var i;
+            var vlerp = pc.math.vec3.lerp;
+            var qslerp = pc.math.quat.slerp;
+            
+            var nodes = this._animation.getNodes();
+
             // Step the current time and work out if we need to jump ahead, clamp or wrap around
             this._time += delta;
             var duration = this._animation.getDuration();
             if (this._time > duration) {
                 this._time = this.looping ? 0.0 : duration;
+                for (i = 0; i < nodes.length; i++) {
+                    this._currKeyIndices[i] = 0;
+                }
             }
 
-            var nodes = this._animation.getNodes();
-            for (var i = 0; i < nodes.length; i++) {
+            for (i = 0; i < nodes.length; i++) {
                 var keys = nodes[i];
 
                 // Find keyframe pair
@@ -68,16 +78,19 @@ pc.extend(pc.anim, function () {
                     pc.math.vec3.copy(keys[0]._pos, this._interpolatedKeys[i]._pos);
                     pc.math.vec3.copy(keys[0]._scale, this._interpolatedKeys[i]._scale);
                 } else {
-                    for (var currKeyIndex = 0; currKeyIndex < keys.length-1; currKeyIndex++) {
+                    for (var currKeyIndex = this._currKeyIndices[i]; currKeyIndex < keys.length-1; currKeyIndex++) {
                         var k1 = keys[currKeyIndex];
                         var k2 = keys[currKeyIndex + 1];
 
                         if ((k1._time <= this._time) && (k2._time >= this._time)) {
                             var alpha = (this._time - k1._time) / (k2._time - k1._time);
 
-                            pc.math.quat.slerp(k1._quat, k2._quat, alpha, this._interpolatedKeys[i]._quat);
-                            pc.math.vec3.lerp(k1._pos, k2._pos, alpha, this._interpolatedKeys[i]._pos);
-                            pc.math.vec3.lerp(k1._scale, k2._scale, alpha, this._interpolatedKeys[i]._scale);
+                            qslerp(k1._quat, k2._quat, alpha, this._interpolatedKeys[i]._quat);
+                            vlerp(k1._pos, k2._pos, alpha, this._interpolatedKeys[i]._pos);
+                            vlerp(k1._scale, k2._scale, alpha, this._interpolatedKeys[i]._scale);
+
+                            this._currKeyIndices[i] = currKeyIndex;
+                            continue;
                         }
                     }
                 }
@@ -140,6 +153,10 @@ pc.extend(pc.anim, function () {
      */
     Skeleton.prototype.setCurrentTime = function (time) {
         this._time = time;
+        var numNodes = this._interpolatedKeys.length;
+        for (var i = 0; i < numNodes; i++) {
+            this._currKeyIndices[i] = 0;
+        }
     }
 
     /**
@@ -162,7 +179,7 @@ pc.extend(pc.anim, function () {
      */
     Skeleton.prototype.setAnimation = function (animation) {
         this._animation = animation;
-        this._time = 0;
+        this.setCurrentTime(0);
     };
     
     /**
