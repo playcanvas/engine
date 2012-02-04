@@ -349,6 +349,7 @@ pc.gfx.programlib.phong = {
             code += "uniform float material_opacity;\n";
         }
         if (options.shadowMap) {
+            code += "uniform vec3 shadow_params;\n"; // Width, height, bias
             code += "uniform sampler2D texture_shadowMap;\n";
         }
         code += "uniform vec3 light_globalAmbient;\n";
@@ -549,12 +550,39 @@ pc.gfx.programlib.phong = {
 
             // Shadows should only affect diffuse and specular contribution
             if (options.shadowMap) {
-                code += "    vec3 shadow_coord = vShadowCoord.xyz / vShadowCoord.w;\n";
-                code += "    vec4 rgba_depth   = texture2D(texture_shadowMap, shadow_coord.xy);\n";
-                code += "    float depth       = unpack_depth(rgba_depth);\n";
-                code += "    float visibility  = ((depth - shadow_coord.z) > -0.01) ? (1.0) : (0.3);\n";
-                code += "    diffuse           = diffuse * visibility;\n";
-                code += "    specular          = specular * visibility;\n";
+                if (false) {
+                    code += "    vec3 shadowCoord = vShadowCoord.xyz / vShadowCoord.w;\n";
+                    code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
+                    code += "    {\n";
+                    code += "        float depthBias = shadow_params[2];\n";
+                    code += "        vec4 rgbaDepth = texture2D(texture_shadowMap, shadowCoord.xy);\n";
+                    code += "        float depth     = unpack_depth(rgbaDepth);\n";
+                    code += "        float shadowFactor = (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
+                    code += "        diffuse         = diffuse * shadowFactor;\n";
+                    code += "        specular        = specular * shadowFactor;\n";
+                    code += "    }\n";
+                } else {
+                    code += "    vec3 shadowCoord = vShadowCoord.xyz / vShadowCoord.w;\n";
+                    code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
+                    code += "    {\n";
+                    code += "        float xoffset = 1.0 / shadow_params[0];\n"; // 1/shadow map width
+                    code += "        float yoffset = 1.0 / shadow_params[1];\n"; // 1/shadow map height
+                    code += "        float depthBias = shadow_params[2];\n";
+                    code += "        float shadowFactor = 0.0;\n";
+                    code += "        for (float x = -1.25; x <= 1.25; x += 1.25)\n";
+                    code += "        {\n";
+                    code += "            for (float y = -1.25; y <= 1.25; y += 1.25)\n";
+                    code += "            {\n";
+                    code += "                vec4 rgbaDepth = texture2D(texture_shadowMap, shadowCoord.xy + vec2(x * xoffset, y * yoffset));\n";
+                    code += "                float depth = unpack_depth(rgbaDepth);\n";
+                    code += "                shadowFactor += (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
+                    code += "            }\n";
+                    code += "        }\n";
+                    code += "        shadowFactor *= 1.0 / 9.0;\n";
+                    code += "        diffuse = diffuse * shadowFactor;\n";
+                    code += "        specular = specular * shadowFactor;\n";
+                    code += "    }\n";
+                }
             }
 
             // Add ambient + diffuse + specular
