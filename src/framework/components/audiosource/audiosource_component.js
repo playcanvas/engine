@@ -15,6 +15,9 @@ pc.extend(pc.fw, function () {
         this.bind("set_sources", this.onSetSources);
         this.bind("set_loop", this.onSetLoop);
         this.bind("set_volume", this.onSetVolume);
+        this.bind("set_minDistance", this.onSetMinDistance);
+        this.bind("set_maxDistance", this.onSetMaxDistance);
+        this.bind("set_rollOffFactor", this.onSetRollOffFactor);
     };
     AudioSourceComponentSystem = AudioSourceComponentSystem.extendsFrom(pc.fw.ComponentSystem);
         
@@ -22,7 +25,7 @@ pc.extend(pc.fw, function () {
         var componentData = new pc.fw.AudioSourceComponentData();
 
         data = data || {};
-        this.initialiseComponent(entity, componentData, data, ['assets', 'volume', 'loop', 'activate']);
+        this.initialiseComponent(entity, componentData, data, ['assets', 'volume', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor']);
     
         this.set(entity, 'paused', !data['activate']);
         
@@ -38,7 +41,8 @@ pc.extend(pc.fw, function () {
                 var entity = components[id].entity;
                 var componentData = this.getComponentData(entity);
                 
-                if (componentData.channel) {
+                // Update channel position if this is a 3d sound
+                if (componentData.channel instanceof pc.audio.Channel3d) {
                     var pos = pc.math.mat4.getTranslation(entity.getWorldTransform());
                     componentData.channel.setPosition(pos);
                 }
@@ -49,21 +53,41 @@ pc.extend(pc.fw, function () {
     AudioSourceComponentSystem.prototype.play = function(entity, name) {
         if(this.hasComponent(entity)) {
             this.set(entity, 'paused', false);
-            var sources = this.get(entity, 'sources');
-            if(sources[name]) {
-                var pos = pc.math.mat4.getTranslation(entity.getWorldTransform());
-                var channel = this.manager.playSound3d(sources[name], pos);
-                this.set(entity, 'currentSource', name);
-                this.set(entity, 'channel', channel);
+            var componentData = this.getComponentData(entity);
+            if(componentData['sources'][name]) {
+                if (!componentData['3d']) {
+                    var channel = this.manager.playSound(componentData['sources'][name], componentData);
+                    this.set(entity, 'currentSource', name);
+                    this.set(entity, 'channel', channel);
+                } else {
+                    var pos = pc.math.mat4.getTranslation(entity.getWorldTransform());
+                    var channel = this.manager.playSound3d(componentData['sources'][name], pos, componentData);
+                    this.set(entity, 'currentSource', name);
+                    this.set(entity, 'channel', channel);
+                }
             }
         }
     };
     
     AudioSourceComponentSystem.prototype.pause = function(entity) {
         if(this.hasComponent(entity)) {
+            var channel = this.get(entity, 'channel');
+            if (channel) {
+                channel.pause();    
+            }
         }
     };
-    
+
+    AudioSourceComponentSystem.prototype.stop = function(entity) {
+        if(this.hasComponent(entity)) {
+            var channel = this.get(entity, 'channel');
+            if(channel) {
+                channel.stop();    
+            }
+            
+        }
+    };
+        
     /**
      * @private
      * @name pc.fw.AudioSourceComponentSystem#setVolume()
@@ -99,7 +123,7 @@ pc.extend(pc.fw, function () {
         // If the currentSource was set before the asset was loaded and should be playing, we should start playback 
         if(currentSource && !oldValue[currentSource]) {
             if (!this.get(entity, 'paused')) {
-                this.play(entity, currentSource);    
+                this.play(entity, currentSource);
             }
             
         }
@@ -107,22 +131,50 @@ pc.extend(pc.fw, function () {
 
     AudioSourceComponentSystem.prototype.onSetLoop = function (entity, name, oldValue, newValue) {
         if (oldValue != newValue) {
-            var node = this.get(entity, 'audioNode');
-            if(node) {
-                node.loop = newValue;    
+            var channel = this.get(entity, 'channel');
+            if (channel) {
+                channel.setLoop(newValue);
             }
         }
     };
 
     AudioSourceComponentSystem.prototype.onSetVolume = function (entity, name, oldValue, newValue) {
         if (oldValue != newValue) {
-            var node = this.get(entity, 'audioNode');
-            if(node) {
-                node.gain.value = newValue;    
+            var channel = this.get(entity, 'channel');
+            if (channel) {
+                channel.setVolume(newValue);
             }
         }
     };
-        
+
+    AudioSourceComponentSystem.prototype.onSetMaxDistance = function (entity, name, oldValue, newValue) {
+        if (oldValue != newValue) {
+            var channel = this.get(entity, 'channel');
+            if (channel instanceof pc.audio.Channel3d) {
+                channel.setMaxDistance(newValue);
+            }
+        }
+    };
+
+
+    AudioSourceComponentSystem.prototype.onSetMinDistance = function (entity, name, oldValue, newValue) {
+        if (oldValue != newValue) {
+            var channel = this.get(entity, 'channel');
+            if (channel instanceof pc.audio.Channel3d) {
+                channel.setMinDistance(newValue);
+            }
+        }
+    };
+
+    AudioSourceComponentSystem.prototype.onSetRollOffFactor = function (entity, name, oldValue, newValue) {
+        if (oldValue != newValue) {
+            var channel = this.get(entity, 'channel');
+            if (channel instanceof pc.audio.Channel3d) {
+                channel.setRollOffFactor(newValue);
+            }
+        }
+    };
+     
     AudioSourceComponentSystem.prototype._loadAudioSourceAssets = function (entity, guids) {
         var requests = guids.map(function (guid) {
             return new pc.resources.AssetRequest(guid);

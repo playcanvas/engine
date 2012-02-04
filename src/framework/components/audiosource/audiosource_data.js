@@ -4,6 +4,11 @@ pc.fw.AudioSourceComponentData = function AudioSourceComponentData() {
     this.activate = true;
     this.volume = 1;
     this.loop = false;
+    this['3d'] = true;
+    
+    this.minDistance = 1;
+    this.maxDistance = 10000;
+    this.rollOffFactor = 1;
     
     // not serialized
     this.paused = true;
@@ -56,4 +61,50 @@ editor.link.expose({
     description: "Play first audio sample when scene loads",
     type: "boolean",
     defaultValue: true
+});
+
+editor.link.expose({
+    system: "audiosource",
+    variable: "3d",
+    displayName: "3d",
+    description: "3d sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-3d sounds are uniform aross space",
+    type: "boolean",
+    defaultValue: true
+});
+
+editor.link.expose({
+    system: "audiosource",
+    variable: "minDistance",
+    displayName: "Min Distance",
+    description: "Distance from listener under which the sound is at full volume",
+    type: "number",
+    defaultValue: 1,
+    options: {
+        min: 0
+    }
+});
+
+editor.link.expose({
+    system: "audiosource",
+    variable: "maxDistance",
+    displayName: "Max Distance",
+    description: "Distance from listener over which the sound cannot be heard",
+    type: "number",
+    defaultValue: 10000,
+    options: {
+        min: 0
+    }
+});
+
+
+editor.link.expose({
+    system: "audiosource",
+    variable: "rollOffFactor",
+    displayName: "Roll-off factor",
+    description: "Strength of the roll off",
+    type: "number",
+    defaultValue: 1,
+    options: {
+        min: 0
+    }
 });
