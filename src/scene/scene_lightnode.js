@@ -344,7 +344,7 @@ pc.extend(pc.scene, function () {
             spot._direction[0] = -wtm[4];
             spot._direction[1] = -wtm[5];
             spot._direction[2] = -wtm[6];
-            scope.resolve(light + "_direction").setValue(spot._direction);
+            scope.resolve(light + "_spotDirection").setValue(spot._direction);
         }
     };
 
