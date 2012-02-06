@@ -61,7 +61,10 @@ pc.gfx.programlib.phong = {
         if (options.shadowMap) {
             code += "uniform mat4 matrix_shadow;\n";
         }
-        for (var i = 0; i < options.numDirectionals + options.numPoints; i++) {
+        for (var i = 0; i < options.numDirectionals; i++) {
+            code += "uniform vec3 light" + i + "_direction;\n";
+        }
+        for (var i = options.numDirectionals; i < options.numDirectionals + options.numPoints; i++) {
             code += "uniform vec3 light" + i + "_position;\n";
         }
         if ((options.cubeMap) || (options.sphereMap)) {
@@ -198,7 +201,7 @@ pc.gfx.programlib.phong = {
                 code += "    vec3 positionE = vec3(matrix_view * positionW);\n";
                 code += "    vViewDir = tbnMatrix * -positionE;\n";
                 for (var i = 0; i < options.numDirectionals; i++) {
-                    code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(-light" + i + "_position, 0.0));\n";
+                    code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(-light" + i + "_direction, 0.0));\n";
                     code += "    vLight" + i + "Dir = tbnMatrix * light" + i + "DirE;\n";
                 }
                 for (var i = options.numDirectionals; i < options.numDirectionals + options.numPoints; i++) {
@@ -210,7 +213,7 @@ pc.gfx.programlib.phong = {
                 code += "    vec3 positionE = vec3(matrix_view * positionW);\n";
                 code += "    vViewDir = -positionE;\n";
                 for (var i = 0; i < options.numDirectionals; i++) {
-                    code += "    vLight" + i + "Dir = vec3(matrix_view * vec4(-light" + i + "_position, 0.0));\n";
+                    code += "    vLight" + i + "Dir = vec3(matrix_view * vec4(-light" + i + "_direction, 0.0));\n";
                 }
                 for (var i = options.numDirectionals; i < options.numDirectionals + options.numPoints; i++) {
                     code += "    vLight" + i + "Dir = vec3(matrix_view * vec4(light" + i + "_position - positionW.xyz, 0.0));\n";

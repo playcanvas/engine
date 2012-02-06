@@ -109,6 +109,7 @@
 ../src/framework/components/staticcubemap/staticcubemap_component.js
 ../src/framework/components/light/directionallight_component.js
 ../src/framework/components/light/pointlight_component.js
+../src/framework/components/light/spotlight_component.js
 ../src/framework/components/script/script_component.js
 ../src/framework/components/simplebody/simplebody_component.js
 ../src/framework/components/pack/pack_component.js
@@ -136,6 +137,7 @@
 ../src/framework/components/staticcubemap/staticcubemap_data.js
 ../src/framework/components/light/directionallight_data.js
 ../src/framework/components/light/pointlight_data.js
+../src/framework/components/light/spotlight_data.js
 ../src/framework/components/model/model_data.js
 ../src/framework/components/skybox/skybox_data.js
 ../src/framework/components/header/header_data.js
