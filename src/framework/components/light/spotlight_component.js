@@ -28,8 +28,6 @@ pc.extend(pc.fw, function () {
         this.bind("set_attenuationEnd", this.onSetAttenuationEnd.bind(this));
         // Handle changes to the 'castShadows' value
         this.bind("set_castShadows", this.onSetCastShadows.bind(this));
-        // Handle changes to the 'outerConeAngle' value
-        this.bind("set_outerConeAngle", this.onSetConeAngle.bind(this));
         // Handle changes to the 'enable' value
         this.bind("set_color", this.onSetColor.bind(this));
         // Handle changes to the 'enable' value
@@ -38,8 +36,10 @@ pc.extend(pc.fw, function () {
         this.bind("set_intensity", this.onSetIntensity.bind(this));
         // Handle changes to the 'light' value
         this.bind("set_light", this.onSetLight.bind(this));
+        // Handle changes to the 'outerConeAngle' value
+        this.bind("set_outerConeAngle", this.onSetConeAngle.bind(this));
     };
-        
+
     SpotLightComponentSystem = SpotLightComponentSystem.extendsFrom(pc.fw.ComponentSystem);
 
     SpotLightComponentSystem.prototype.createComponent = function (entity, data) {
@@ -51,7 +51,7 @@ pc.extend(pc.fw, function () {
         data = data || {};
         data.light = light;
 
-        this.initialiseComponent(entity, componentData, data, ['light', 'enable', 'color', 'intensity', 'attenuationEnd', 'outerConeAngle']);
+        this.initialiseComponent(entity, componentData, data, ['light', 'color', 'intensity', 'attenuationEnd', 'outerConeAngle', 'enable']);
 
         return componentData;
     };

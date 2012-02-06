@@ -47,7 +47,8 @@ editor.link.expose({
     defaultValue: 1,
     options: {
         min: 0,
-        max: 10
+        max: 10,
+        step: 0.05
     }
 });
 

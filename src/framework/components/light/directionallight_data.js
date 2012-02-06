@@ -3,6 +3,7 @@ pc.extend(pc.fw, function () {
         // Serialized
         this.enable = true;
         this.color = "0xffffff";
+        this.intensity = 1;
         this.castShadows = false;
 
         // Non-serialized
@@ -33,6 +34,20 @@ editor.link.expose({
     description: "Light color",
     type: "string",
     defaultValue: "0xffffff"
+});
+
+editor.link.expose({
+    system: "directionallight",
+    variable: "intensity",
+    displayName: "Intensity",
+    description: "Factors the light color",
+    type: "number",
+    defaultValue: 1,
+    options: {
+        min: 0,
+        max: 10,
+        step: 0.05
+    }
 });
 
 editor.link.expose({
