@@ -62,6 +62,8 @@ pc.extend(pc.fw, function () {
         this.bind("set_color", this.onSetColor.bind(this));
         // Handle changes to the 'enable' value
         this.bind("set_enable", this.onSetEnable.bind(this));
+        // Handle changes to the 'intensity' value
+        this.bind("set_intensity", this.onSetIntensity.bind(this));
         // Handle changes to the 'light' value
         this.bind("set_light", this.onSetLight.bind(this));
     };
@@ -77,7 +79,7 @@ pc.extend(pc.fw, function () {
         data = data || {};
         data.light = light;
 
-        this.initialiseComponent(entity, componentData, data, ['light', 'color', 'enable']);
+        this.initialiseComponent(entity, componentData, data, ['light', 'color', 'intensity', 'enable']);
 
         return componentData;
     };
@@ -149,6 +151,13 @@ pc.extend(pc.fw, function () {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
             componentData.light.setEnabled(newValue);
+        }
+    };
+
+    DirectionalLightComponentSystem.prototype.onSetIntensity = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            componentData.light.setIntensity(newValue);
         }
     };
 

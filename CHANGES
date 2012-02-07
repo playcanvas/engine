@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.35.0
+-------
+* Correctly render orthographic frustum in Designer
+* Optimized animation addTime function by caching keyframe indices
+* Enable PCF filtering of shadow maps
+* Added spotlight component
+* Update the orientation of listener in audiolistener components so that supported platforms have correct panning.  
+
+-------
 v0.34.0
 -------
 * Added support for distance model parameters in Audio Components

@@ -45,7 +45,7 @@ pc.extend(pc.fw, function () {
         this._link = new pc.fw.LiveLink("application");
         this._link.addDestinationWindow(window);
         this._link.listen(this._handleMessage.bind(this));
-        
+
         // Open the log
         pc.log.open();
 
@@ -81,7 +81,7 @@ pc.extend(pc.fw, function () {
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot, this.context));
-        
+
         // Create systems
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
         var bloomsys = new pc.fw.BloomComponentSystem(this.context);
@@ -92,6 +92,7 @@ pc.extend(pc.fw, function () {
         var staticcubemapsys = new pc.fw.StaticCubeMapComponentSystem(this.context);
         var dlightsys = new pc.fw.DirectionalLightComponentSystem(this.context);
         var plightsys = new pc.fw.PointLightComponentSystem(this.context);
+        var slightsys = new pc.fw.SpotLightComponentSystem(this.context);
         var primitivesys = new pc.fw.PrimitiveComponentSystem(this.context);
         var packsys = new pc.fw.PackComponentSystem(this.context);
         var skyboxsys = new pc.fw.SkyboxComponentSystem(this.context);
@@ -100,14 +101,14 @@ pc.extend(pc.fw, function () {
         var picksys = new pc.fw.PickComponentSystem(this.context);
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioManager);            
-        
+
         skyboxsys.setDataDir(options.dataDir);
         staticcubemapsys.setDataDir(options.dataDir);
-        
+
         // Add event support
         pc.extend(this, pc.events);
     };
-    
+
     /**
      * @function
      * @name pc.fw.Application#start
@@ -151,17 +152,17 @@ pc.extend(pc.fw, function () {
      */
     Application.prototype.render = function () {
         var context = this.context;
-        var entity = context.systems.camera.getCurrent();
-        var camera = context.systems.camera.get(entity, "camera");
 
         context.root.syncHierarchy();
 
         pc.gfx.Device.setCurrent(this.graphicsDevice);
-        
-        if(camera) {
+
+        var currentCamera = context.systems.camera.getCurrent();
+        if (currentCamera) {
             context.systems.camera.frameBegin();
 
             pc.fw.ComponentSystem.render(context, this._inTools);
+            var camera = context.systems.camera.get(currentCamera, 'camera');
             context.scene.dispatch(camera);
             context.scene.flush();
 

@@ -21,12 +21,13 @@ pc.scene.materialplugin.phong.generateStateKey = function (geometry) {
     var currState = device.getCurrentState();
     var numDirs = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.DIRECTIONAL);
     var numPnts = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.POINT);
+    var numSpts = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.SPOT);
     var skinned = geometry.isSkinned();
-    var key = "";
-    if (skinned) key += "skin_";
-    if (currState.fog) key += "fog_";
-    if (currState.alphaTest) key += "atst_";
-    key += numDirs + "dir_" + numPnts + "pnt";
+    var key = '';
+    if (skinned) key += 'skin_';
+    if (currState.fog) key += 'fog_';
+    if (currState.alphaTest) key += 'atst_';
+    key += numDirs + 'dir_' + numPnts + 'pnt_' + numSpts + 'spt';
     return key;
 }
 
@@ -35,6 +36,7 @@ pc.scene.materialplugin.phong.getProgram = function (material, geometry) {
     var currState = device.getCurrentState();
     var numDirs = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.DIRECTIONAL);
     var numPnts = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.POINT);
+    var numSpts = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.SPOT);
     var skinned = geometry.isSkinned();
     var parameters = material.getParameters();
     var options = {
@@ -43,6 +45,7 @@ pc.scene.materialplugin.phong.getProgram = function (material, geometry) {
         skin:              skinned,
         numDirectionals:   numDirs,
         numPoints:         numPnts,
+        numSpots:          numSpts,
         diffuseMap:        (parameters["texture_diffuseMap"] !== undefined),
         specularMap:       (parameters["texture_specularMap"] !== undefined),
         specularFactorMap: (parameters["texture_specularFactorMap"] !== undefined),

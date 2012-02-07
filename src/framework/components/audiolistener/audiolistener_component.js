@@ -20,8 +20,10 @@ pc.extend(pc.fw, function () {
 
     AudioListenerComponentSystem.prototype.update = function (dt) {
         if (this.current) {
-            var pos = pc.math.mat4.getTranslation(this.current.getWorldTransform());
+            var wtm = this.current.getWorldTransform();
+            var pos = pc.math.mat4.getTranslation(wtm);
             this.manager.listener.setPosition(pos);
+            this.manager.listener.setOrientation(wtm);
         }
     };
     
