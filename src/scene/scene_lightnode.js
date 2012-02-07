@@ -35,7 +35,9 @@ pc.extend(pc.scene, function () {
 
         // Spot properties
         this._innerConeAngle = Math.PI * 0.5;
+        this._innerConeAngleCos = Math.cos(this._innerConeAngle);
         this._outerConeAngle = Math.PI * 0.5;
+        this._outerConeAngleCos = Math.cos(this._outerConeAngle);
 
         // Preallocated arrays for uploading vector uniforms
         this._position = [];
@@ -214,6 +216,20 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.LightNode#setInnerConeAngle
+     * @description Sets the inner cone angle of the light. Note that this
+     * function only affects spotlights. The contribution of the spotlight is
+     * zero outside the cone defined by this angle.
+     * @param {Number} angle The inner cone angle of the spotlight in degrees.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.setInnerConeAngle = function (angle) {
+        this._innerConeAngle = angle;
+        this._innerConeAngleCos = Math.cos(angle * Math.PI / 180);
+    };
+
+    /**
+     * @function
      * @name pc.scene.LightNode#setIntensity
      * @description Sets the intensity of the light. The intensity is used to
      * scale the color of the light. Note that this makes it possible to take
@@ -236,8 +252,8 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     LightNode.prototype.setOuterConeAngle = function (angle) {
-        // Convert the angle from degrees to radians
-        this._outerConeAngle = angle * Math.PI / 180;
+        this._outerConeAngle = angle;
+        this._outerConeAngleCos = Math.cos(angle * Math.PI / 180);
     };
 
     /**
@@ -333,7 +349,8 @@ pc.extend(pc.scene, function () {
             wtm = spot.getWorldTransform();
             light = "light" + (numDirs + numPnts + i);
 
-            scope.resolve(light + "_coneAngle").setValue(spot._outerConeAngle);
+            scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
+            scope.resolve(light + "_outerConeAngle").setValue(spot._outerConeAngleCos);
             scope.resolve(light + "_radius").setValue(spot._attenuationEnd);
             scope.resolve(light + "_color").setValue(spot._finalColor);
             spot._position[0] = wtm[12];

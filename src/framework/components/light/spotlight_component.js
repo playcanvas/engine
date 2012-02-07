@@ -109,6 +109,7 @@ pc.extend(pc.fw, function () {
     SpotLightComponentSystem.prototype.onSetConeAngle = function (entity, name, oldValue, newValue) {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
+            componentData.light.setInnerConeAngle(newValue - 5);
             componentData.light.setOuterConeAngle(newValue);
         }
     };
