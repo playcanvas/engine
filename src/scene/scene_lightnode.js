@@ -34,9 +34,9 @@ pc.extend(pc.scene, function () {
         this._attenuationEnd = 1.0;
 
         // Spot properties
-        this._innerConeAngle = Math.PI * 0.5;
+        this._innerConeAngle = 40;
         this._innerConeAngleCos = Math.cos(this._innerConeAngle);
-        this._outerConeAngle = Math.PI * 0.5;
+        this._outerConeAngle = 45;
         this._outerConeAngleCos = Math.cos(this._outerConeAngle);
 
         // Preallocated arrays for uploading vector uniforms
