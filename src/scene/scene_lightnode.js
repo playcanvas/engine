@@ -12,9 +12,6 @@ pc.scene.LightType = {
 };
 
 pc.extend(pc.scene, function () {
-    // TODO: This won't work for multiple PlayCanvas canvases.
-    var _globalAmbient = [0.0, 0.0, 0.0];
-
     /**
      * @name pc.scene.LightNode
      * @class A light.
@@ -254,38 +251,6 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setType = function (type) {
         this._type = type;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.LightNode.getGlobalAmbient
-     * @description Queries the current global ambient color. This color is uploaded to a
-     * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
-     * value by multiplying it by the material color of a mesh's material and adding it to
-     * the total light contribution.
-     * @returns {Array} The global ambient color represented by a 3 dimensional array (RGB components ranging 0..1).
-     * @author Will Eastcott
-     */
-    LightNode.getGlobalAmbient = function () {
-        return _globalAmbient;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.LightNode.setGlobalAmbient
-     * @description Sets the current global ambient color. This color is uploaded to a
-     * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
-     * value by multiplying it by the material color of a mesh's material and adding it to
-     * the total light contribution.
-     * @returns {Array} The global ambient color represented by a 3 dimensional array (RGB components ranging 0..1).
-     * @author Will Eastcott
-     */
-    LightNode.setGlobalAmbient = function (color) {
-        _globalAmbient = color;
-
-        var device = pc.gfx.Device.getCurrent();
-        var scope = device.scope;
-        scope.resolve("light_globalAmbient").setValue(_globalAmbient);
     };
 
     return {

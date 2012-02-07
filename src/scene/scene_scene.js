@@ -14,12 +14,15 @@ pc.extend(pc.scene, function () {
      * @class A scene.
      */
     var Scene = function Scene() {
+        // Models
         this._models = [];
-        this._lights = [];
-        this._activeLights = [[], [], []];
-
         this._alphaMeshes = [];
         this._opaqueMeshes = [];
+
+        // Lights
+        this._lights = [];
+        this._activeLights = [[], [], []];
+        this._globalAmbient = [0.0, 0.0, 0.0];
 
         // Initialize dispatch queues
         this._queues = {};
@@ -210,6 +213,34 @@ pc.extend(pc.scene, function () {
 	    this._queues[queueName].renderFuncs.push(renderFunc);
 	};
 
+    /**
+     * @function
+     * @name pc.scene.Scene#getGlobalAmbient
+     * @description Queries the current global ambient color. This color is uploaded to a
+     * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
+     * value by multiplying it by the material color of a mesh's material and adding it to
+     * the total light contribution.
+     * @returns {Array} The global ambient color represented by a 3 dimensional array (RGB components ranging 0..1).
+     * @author Will Eastcott
+     */
+    Scene.prototype.getGlobalAmbient = function () {
+        return this._globalAmbient;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.Scene#setGlobalAmbient
+     * @description Sets the current global ambient color. This color is uploaded to a
+     * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
+     * value by multiplying it by the material color of a mesh's material and adding it to
+     * the total light contribution.
+     * @returns {Array} The global ambient color represented by a 3 dimensional array (RGB components ranging 0..1).
+     * @author Will Eastcott
+     */
+    Scene.prototype.setGlobalAmbient = function (color) {
+        this._globalAmbient = color;
+    };
+
     Scene.prototype.getEnabledLights = function (type) {
         if (type === undefined) {
             return this._activeLights[pc.scene.LightType.DIRECTIONAL].length + 
@@ -234,6 +265,8 @@ pc.extend(pc.scene, function () {
 
         var device = pc.gfx.Device.getCurrent();
         var scope = device.scope;
+
+        scope.resolve("light_globalAmbient").setValue(this._globalAmbient);
 
         for (i = 0; i < numDirs; i++) {
             directional = dirs[i];
