@@ -7,14 +7,14 @@ pc.scene = {};
 
 pc.extend(pc.scene, function () {
 
+    var _tempVec = pc.math.vec3.create(0, 0, 0);
+
     /**
      * @name pc.scene.Scene
      * @class A scene.
      */
     var Scene = function Scene() {
-        // List of models
         this._models = [];
-        this._tempVec = pc.math.vec3.create(0, 0, 0);
 
         this._alphaMeshes = [];
         this._opaqueMeshes = [];
@@ -60,23 +60,18 @@ pc.extend(pc.scene, function () {
             this._models.splice(index, 1);
         }
     };
-    
+
     Scene.prototype.containsModel = function (model) {
         return this._models.indexOf(model) >= 0;
     };
-    
-	
+
     /**
      * @function
      * @name pc.scene.Scene#update
-     * @description Queues the meshes in a scene for rendering. This function does not actually
-     * cause the meshes in the scene to be rendered. Instead, it inserts all opaque meshes into
-     * a front-to-back render queue and all transparent meshes into a back-to-front render queue.
-     * To actually render the contents of the render queues, call pc.scene.Scene#flush.
-     * @param {pc.scene.CameraNode} camera The camera rendering the scene.
+     * @description Synchronizes the graph node hierarchy of every model in the scene.
      * @author Will Eastcott
      */
-	Scene.prototype.update = function (dt) {
+	Scene.prototype.update = function () {
 	    for (var i = 0, len = this._models.length; i < len; i++) {
 	        this._models[i].getGraph().syncHierarchy();
 	    }
@@ -153,14 +148,14 @@ pc.extend(pc.scene, function () {
 	        var wtmB = meshB.getWorldTransform();
 	        var camMat = camera.getWorldTransform();
 	
-	        self._tempVec[0] = wtmA[12]-camMat[12];
-	        self._tempVec[1] = wtmA[13]-camMat[13];
-	        self._tempVec[2] = wtmA[14]-camMat[14];
-	        var distSqrA = pc.math.vec3.dot(self._tempVec, self._tempVec);
-	        self._tempVec[0] = wtmB[12]-camMat[12];
-	        self._tempVec[1] = wtmB[13]-camMat[13];
-	        self._tempVec[2] = wtmB[14]-camMat[14];
-	        var distSqrB = pc.math.vec3.dot(self._tempVec, self._tempVec);
+	        _tempVec[0] = wtmA[12]-camMat[12];
+	        _tempVec[1] = wtmA[13]-camMat[13];
+	        _tempVec[2] = wtmA[14]-camMat[14];
+	        var distSqrA = pc.math.vec3.dot(_tempVec, _tempVec);
+	        _tempVec[0] = wtmB[12]-camMat[12];
+	        _tempVec[1] = wtmB[13]-camMat[13];
+	        _tempVec[2] = wtmB[14]-camMat[14];
+	        var distSqrB = pc.math.vec3.dot(_tempVec, _tempVec);
 	    
 	        return distSqrA < distSqrB;
 	    }
@@ -189,7 +184,7 @@ pc.extend(pc.scene, function () {
 	Scene.prototype.enqueue = function (queueName, renderFunc) {
 	    this._queues[queueName].renderFuncs.push(renderFunc);
 	};
-	
+
     /**
      * @function
      * @name pc.scene.Scene#flush
@@ -203,7 +198,7 @@ pc.extend(pc.scene, function () {
 	    // This will be optimized to only enable point lights for meshes that 
 	    // fall within their influence
 	    pc.scene.LightNode.dispatch();
-	
+
 	    for (var i = 0; i < this._priorities.length; i++) {
 	        var queueName = this._priorities[i].name;
 	        var queue = this._queues[queueName];
@@ -215,7 +210,7 @@ pc.extend(pc.scene, function () {
 	        queue.renderFuncs.length = 0;
 	    }
 	};	
-	
+
 	return {
 		Scene: Scene,
 		/**

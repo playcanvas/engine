@@ -13,8 +13,8 @@ pc.scene.LightType = {
 
 pc.extend(pc.scene, function () {
     // TODO: This won't work for multiple PlayCanvas canvases.
-    var _activeLights = [[], [], []];
     var _globalAmbient = [0.0, 0.0, 0.0];
+    var _activeLights = [[], [], []];
 
     /**
      * @name pc.scene.LightNode
@@ -35,9 +35,9 @@ pc.extend(pc.scene, function () {
 
         // Spot properties
         this._innerConeAngle = 40;
-        this._innerConeAngleCos = Math.cos(this._innerConeAngle);
+        this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngle = 45;
-        this._outerConeAngleCos = Math.cos(this._outerConeAngle);
+        this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
         // Preallocated arrays for uploading vector uniforms
         this._position = [];
@@ -112,6 +112,18 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.LightNode#getInnerConeAngle
+     * @description Queries the inner cone angle of the specified spot light. Note
+     * that this function is only valid for spotlights.
+     * @returns {Number} The inner cone angle of the specified light in degrees.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.getInnerConeAngle = function () {
+        return this._innerConeAngle;
+    };
+
+    /**
+     * @function
      * @name pc.scene.LightNode#getIntensity
      * @description Queries the intensity of the specified light.
      * @returns {Number} The intensity of the specified light.
@@ -130,7 +142,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     LightNode.prototype.getOuterConeAngle = function () {
-        return this._outerConeAngle * 180 / Math.PI;
+        return this._outerConeAngle;
     };
 
     /**
