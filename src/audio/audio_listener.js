@@ -61,7 +61,7 @@ pc.extend(pc.audio, function () {
         };
 
         Listener.prototype.setOrientation = function (orientation) {
-            pc.math.mat4.copy(m, this.orientation);
+            pc.math.mat4.copy(orientation, this.orientation);
         }
         
         Listener.prototype.getOrientation = function () {
