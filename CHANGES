@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.35.1
+-------
+* [FIX] pc.audio.Listener setVelocity crash on Firefox
+
+-------
 v0.35.0
 -------
 * Correctly render orthographic frustum in Designer
