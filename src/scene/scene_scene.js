@@ -15,6 +15,8 @@ pc.extend(pc.scene, function () {
      */
     var Scene = function Scene() {
         this._models = [];
+        this._lights = [];
+        this._activeLights = [[], [], []];
 
         this._alphaMeshes = [];
         this._opaqueMeshes = [];
@@ -52,17 +54,40 @@ pc.extend(pc.scene, function () {
 
     Scene.prototype.addModel = function (model) {
         this._models.push(model);
+
+        // Add all model lights to the scene
+        var lights = model.getLights();
+        for (var i = 0, len = lights.length; i < len; i++) {
+            this.addLight(lights[i]);
+        }
     };
 
     Scene.prototype.removeModel = function (model) {
         var index = this._models.indexOf(model);
         if (index !== -1) {
             this._models.splice(index, 1);
+
+            // Remove all model lights from the scene
+            var lights = model.getLights();
+            for (var i = 0, len = lights.length; i < len; i++) {
+                this.removeLight(lights[i]);
+            }
         }
     };
 
     Scene.prototype.containsModel = function (model) {
         return this._models.indexOf(model) >= 0;
+    };
+
+    Scene.prototype.addLight = function (light) {
+        this._lights.push(light);
+    };
+
+    Scene.prototype.removeLight = function (light) {
+        var index = this._lights.indexOf(light);
+        if (index !== -1) {
+            this._lights.splice(index, 1);
+        }
     };
 
     /**
@@ -185,6 +210,78 @@ pc.extend(pc.scene, function () {
 	    this._queues[queueName].renderFuncs.push(renderFunc);
 	};
 
+    Scene.prototype.getEnabledLights = function (type) {
+        if (type === undefined) {
+            return this._activeLights[pc.scene.LightType.DIRECTIONAL].length + 
+                   this._activeLights[pc.scene.LightType.POINT].length + 
+                   this._activeLights[pc.scene.LightType.SPOT].length;
+        } else {
+            return this._activeLights[type].length;
+        }
+    }
+
+    Scene.prototype.dispatchLights = function () {
+        var i, wtm;
+        var directional, point, spot;
+    
+        var dirs = this._activeLights[pc.scene.LightType.DIRECTIONAL];
+        var pnts = this._activeLights[pc.scene.LightType.POINT];
+        var spts = this._activeLights[pc.scene.LightType.SPOT];
+
+        var numDirs = dirs.length;
+        var numPnts = pnts.length;
+        var numSpts = spts.length;
+
+        var device = pc.gfx.Device.getCurrent();
+        var scope = device.scope;
+
+        for (i = 0; i < numDirs; i++) {
+            directional = dirs[i];
+            wtm = directional.getWorldTransform();
+            light = "light" + i;
+
+            scope.resolve(light + "_color").setValue(directional._finalColor);
+            // Directionals shine down the negative Y axis
+            directional._direction[0] = -wtm[4];
+            directional._direction[1] = -wtm[5];
+            directional._direction[2] = -wtm[6];
+            scope.resolve(light + "_direction").setValue(directional._direction);
+        }
+
+        for (i = 0; i < numPnts; i++) {
+            point = pnts[i];
+            wtm = point.getWorldTransform();
+            light = "light" + (numDirs + i);
+
+            scope.resolve(light + "_radius").setValue(point._attenuationEnd);
+            scope.resolve(light + "_color").setValue(point._finalColor);
+            point._position[0] = wtm[12];
+            point._position[1] = wtm[13];
+            point._position[2] = wtm[14];
+            scope.resolve(light + "_position").setValue(point._position);
+        }
+
+        for (i = 0; i < numSpts; i++) {
+            spot = spts[i];
+            wtm = spot.getWorldTransform();
+            light = "light" + (numDirs + numPnts + i);
+
+            scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
+            scope.resolve(light + "_outerConeAngle").setValue(spot._outerConeAngleCos);
+            scope.resolve(light + "_radius").setValue(spot._attenuationEnd);
+            scope.resolve(light + "_color").setValue(spot._finalColor);
+            spot._position[0] = wtm[12];
+            spot._position[1] = wtm[13];
+            spot._position[2] = wtm[14];
+            scope.resolve(light + "_position").setValue(spot._position);
+            // Spots shine down the negative Y axis
+            spot._direction[0] = -wtm[4];
+            spot._direction[1] = -wtm[5];
+            spot._direction[2] = -wtm[6];
+            scope.resolve(light + "_spotDirection").setValue(spot._direction);
+        }
+    };
+
     /**
      * @function
      * @name pc.scene.Scene#flush
@@ -194,10 +291,20 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
 	Scene.prototype.flush = function () {
+        pc.scene.Scene.current = this;
+
 	    // Dispatch all enabled lights
 	    // This will be optimized to only enable point lights for meshes that 
 	    // fall within their influence
-	    pc.scene.LightNode.dispatch();
+        var i, len;
+        var lights = this._lights;
+        for (i = 0, len = lights.length; i < len; i++) {
+            var light = lights[i];
+            if (light.getEnabled(light)) {
+                this._activeLights[light.getType()].push(light);
+            }
+        }
+	    this.dispatchLights();
 
 	    for (var i = 0; i < this._priorities.length; i++) {
 	        var queueName = this._priorities[i].name;
@@ -209,6 +316,12 @@ pc.extend(pc.scene, function () {
 	        }
 	        queue.renderFuncs.length = 0;
 	    }
+
+        this._activeLights[0].length = 0;
+        this._activeLights[1].length = 0;
+        this._activeLights[2].length = 0;
+
+        pc.scene.Scene.current = null;
 	};	
 
 	return {

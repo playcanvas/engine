@@ -19,9 +19,13 @@ pc.scene.materialplugin.phong.isTransparent = function (material) {
 pc.scene.materialplugin.phong.generateStateKey = function (geometry) {
     var device = pc.gfx.Device.getCurrent();
     var currState = device.getCurrentState();
-    var numDirs = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.DIRECTIONAL);
-    var numPnts = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.POINT);
-    var numSpts = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.SPOT);
+    var numDirs = 0, numPnts = 0, numSpts = 0;
+    var scene = pc.scene.Scene.current;
+    if (scene) {
+        numDirs = scene.getEnabledLights(pc.scene.LightType.DIRECTIONAL);
+        numPnts = scene.getEnabledLights(pc.scene.LightType.POINT);
+        numSpts = scene.getEnabledLights(pc.scene.LightType.SPOT);
+    }
     var skinned = geometry.isSkinned();
     var key = '';
     if (skinned) key += 'skin_';
@@ -34,9 +38,13 @@ pc.scene.materialplugin.phong.generateStateKey = function (geometry) {
 pc.scene.materialplugin.phong.getProgram = function (material, geometry) {
     var device = pc.gfx.Device.getCurrent();
     var currState = device.getCurrentState();
-    var numDirs = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.DIRECTIONAL);
-    var numPnts = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.POINT);
-    var numSpts = pc.scene.LightNode.getNumEnabled(pc.scene.LightType.SPOT);
+    var numDirs = 0, numPnts = 0, numSpts = 0;
+    var scene = pc.scene.Scene.current;
+    if (scene) {
+        numDirs = scene.getEnabledLights(pc.scene.LightType.DIRECTIONAL);
+        numPnts = scene.getEnabledLights(pc.scene.LightType.POINT);
+        numSpts = scene.getEnabledLights(pc.scene.LightType.SPOT);
+    }
     var skinned = geometry.isSkinned();
     var parameters = material.getParameters();
     var options = {

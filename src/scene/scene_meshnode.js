@@ -11,6 +11,7 @@ pc.extend(pc.scene, function () {
     var MeshNode = function MeshNode() {
         this._geometry = null;
         this._style    = RenderStyle.NORMAL;
+        this._localLights = [];
 
         this._bones    = null; // For skinned meshes, the bones array that influences the skin
     }

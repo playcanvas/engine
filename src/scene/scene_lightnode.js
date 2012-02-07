@@ -14,7 +14,6 @@ pc.scene.LightType = {
 pc.extend(pc.scene, function () {
     // TODO: This won't work for multiple PlayCanvas canvases.
     var _globalAmbient = [0.0, 0.0, 0.0];
-    var _activeLights = [[], [], []];
 
     /**
      * @name pc.scene.LightNode
@@ -25,7 +24,6 @@ pc.extend(pc.scene, function () {
         this._type = pc.scene.LightType.DIRECTIONAL;
         this._color = pc.math.vec3.create(0.8, 0.8, 0.8);
         this._intensity = 1;
-        this._finalColor = pc.math.vec3.create(0.8, 0.8, 0.8);
         this._castShadows = false;
         this._enabled = false;
 
@@ -35,13 +33,14 @@ pc.extend(pc.scene, function () {
 
         // Spot properties
         this._innerConeAngle = 40;
-        this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngle = 45;
-        this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
-        // Preallocated arrays for uploading vector uniforms
+        // Cache of light property data in a format more friendly for shader uniforms
+        this._finalColor = pc.math.vec3.create(0.8, 0.8, 0.8);
         this._position = [];
         this._direction = [];
+        this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
+        this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
     };
 
     LightNode = LightNode.extendsFrom(pc.scene.GraphNode);
@@ -148,8 +147,9 @@ pc.extend(pc.scene, function () {
     /**
      * @function
      * @name pc.scene.LightNode#getType
-     * @description
-     * @returns {pc.scene.LightType}
+     * @description Queries the type of the light. The light can be a directional light,
+     * a point light or a spotlight.
+     * @returns {pc.scene.LightType} The type of the specified light.
      * @author Will Eastcott
      */
     LightNode.prototype.getType = function () {
@@ -200,30 +200,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     LightNode.prototype.setEnabled = function (enable) {
-        if (enable && !this._enabled) {
-            switch (this._type) {
-                case pc.scene.LightType.DIRECTIONAL:
-                case pc.scene.LightType.POINT:
-                case pc.scene.LightType.SPOT:
-                    _activeLights[this._type].push(this);
-                    _activeLights.dirty = true;
-                    break;
-            }
-            this._enabled = true;
-        } else if (!enable && this._enabled) {
-            switch (this._type) {
-                case pc.scene.LightType.DIRECTIONAL:
-                case pc.scene.LightType.POINT:
-                case pc.scene.LightType.SPOT:
-                    var index = _activeLights[this._type].indexOf(this);
-                    if (index !== -1) {
-                        _activeLights[this._type].splice(index, 1);
-                        _activeLights.dirty = true;
-                    }
-                    break;
-            }
-            this._enabled = false;
-        }
+        this._enabled = enable;
     };
 
     /**
@@ -305,97 +282,11 @@ pc.extend(pc.scene, function () {
      */
     LightNode.setGlobalAmbient = function (color) {
         _globalAmbient = color;
-    };
 
-    /**
-     * @function
-     * @name pc.scene.LightNode.dispatch
-     * @description
-     * @author Will Eastcott
-     */
-    LightNode.dispatch = function () {
-        var dirs = _activeLights[pc.scene.LightType.DIRECTIONAL];
-        var pnts = _activeLights[pc.scene.LightType.POINT];
-        var spts = _activeLights[pc.scene.LightType.SPOT];
-        
-        var numDirs = dirs.length;
-        var numPnts = pnts.length;
-        var numSpts = spts.length;
-        
         var device = pc.gfx.Device.getCurrent();
         var scope = device.scope;
-
         scope.resolve("light_globalAmbient").setValue(_globalAmbient);
-
-        var i, wtm, light;
-        var directional, point, spot;
-
-        for (i = 0; i < numDirs; i++) {
-            directional = dirs[i];
-            wtm = directional.getWorldTransform();
-            light = "light" + i;
-
-            scope.resolve(light + "_color").setValue(directional._finalColor);
-            // Directionals shine down the negative Y axis
-            directional._direction[0] = -wtm[4];
-            directional._direction[1] = -wtm[5];
-            directional._direction[2] = -wtm[6];
-            scope.resolve(light + "_direction").setValue(directional._direction);
-        }
-
-        for (i = 0; i < numPnts; i++) {
-            point = pnts[i];
-            wtm = point.getWorldTransform();
-            light = "light" + (numDirs + i);
-
-            scope.resolve(light + "_radius").setValue(point._attenuationEnd);
-            scope.resolve(light + "_color").setValue(point._finalColor);
-            point._position[0] = wtm[12];
-            point._position[1] = wtm[13];
-            point._position[2] = wtm[14];
-            scope.resolve(light + "_position").setValue(point._position);
-        }
-
-        for (i = 0; i < numSpts; i++) {
-            spot = spts[i];
-            wtm = spot.getWorldTransform();
-            light = "light" + (numDirs + numPnts + i);
-
-            scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
-            scope.resolve(light + "_outerConeAngle").setValue(spot._outerConeAngleCos);
-            scope.resolve(light + "_radius").setValue(spot._attenuationEnd);
-            scope.resolve(light + "_color").setValue(spot._finalColor);
-            spot._position[0] = wtm[12];
-            spot._position[1] = wtm[13];
-            spot._position[2] = wtm[14];
-            scope.resolve(light + "_position").setValue(spot._position);
-            // Spots shine down the negative Y axis
-            spot._direction[0] = -wtm[4];
-            spot._direction[1] = -wtm[5];
-            spot._direction[2] = -wtm[6];
-            scope.resolve(light + "_spotDirection").setValue(spot._direction);
-        }
     };
-
-    /**
-     * @function
-     * @name pc.scene.LightNode.getNumEnabled
-     * @description Queries the number of enabled lights. A optional bitfield
-     * can be passed which specifies which particular light types are being 
-     * queried. If no types are specified, the function return the total number
-     * of lights that are enabled.
-     * @param {pc.scene.LightType} type The light type(s) to query.
-     * @author Will Eastcott
-     */
-    LightNode.getNumEnabled = function (type) {
-        if (type === undefined) {
-            return _activeLights[pc.scene.LightType.DIRECTIONAL].length + 
-                   _activeLights[pc.scene.LightType.POINT].length + 
-                   _activeLights[pc.scene.LightType.SPOT].length;
-        } else {
-            return _activeLights[type].length;
-        }
-    }
 
     return {
         LightNode: LightNode
