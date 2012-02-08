@@ -470,7 +470,7 @@ pc.gfx.programlib.phong = {
             code += "    vec3 ambient, diffuse, specular;\n";
             code += "    vec3 diffuseContrib = vec3(0.0);\n";
             code += "    float specularContrib = 0.0;\n";
-            code += "    float d;\n";
+            code += "    float d, nDotL;\n";
             if (options.cubeMap || options.sphereMap) {
                 code += "    float lambertContrib = 0.0;\n";
             }
@@ -486,7 +486,7 @@ pc.gfx.programlib.phong = {
             for (i = 0; i < numLights; i++) {
                 if (i < options.numDirectionals) {
                     code += "    lightDir = normalize(vLight" + i + "Dir);\n";
-                    code += "    float nDotL = max(0.0, dot(N, lightDir));\n";
+                    code += "    nDotL = max(0.0, dot(N, lightDir));\n";
                     code += "    if (nDotL > 0.0)\n";
                     code += "    {\n";
                     code += "        diffuseContrib += light" + i + "_color * nDotL;\n";
@@ -511,7 +511,7 @@ pc.gfx.programlib.phong = {
                     code += "    if (d < light" + i + "_radius)\n";
                     code += "    {\n";
                     code += "        lightDir = normalize(vLight" + i + "Dir);\n";
-                    code += "        float nDotL = max(0.0, dot(N, lightDir));\n";
+                    code += "        nDotL = max(0.0, dot(N, lightDir));\n";
                     code += "        if (nDotL > 0.0)\n";
                     code += "        {\n";
                     code += "            float att = ((light" + i + "_radius - d) / light" + i + "_radius);\n";
