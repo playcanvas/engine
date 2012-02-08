@@ -20,6 +20,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var SpotLightComponentSystem = function (context) {
+        this.context = context;
         context.systems.add("spotlight", this);
 
         this.renderable = _createGfxResources();
@@ -140,9 +141,11 @@ pc.extend(pc.fw, function () {
     SpotLightComponentSystem.prototype.onSetLight = function (entity, name, oldValue, newValue) {
         if (oldValue) {
             entity.removeChild(oldValue);
+            this.context.scene.removeLight(oldValue);
         }
         if (newValue) {
             entity.addChild(newValue);
+            this.context.scene.addLight(newValue);
         }
     };
     

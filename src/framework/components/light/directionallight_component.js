@@ -52,6 +52,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var DirectionalLightComponentSystem = function (context) {
+        this.context = context;
         context.systems.add("directionallight", this);
 
         this.renderable = _createGfxResources();
@@ -164,9 +165,11 @@ pc.extend(pc.fw, function () {
     DirectionalLightComponentSystem.prototype.onSetLight = function (entity, name, oldValue, newValue) {
         if (oldValue) {
             entity.removeChild(oldValue);
+            this.context.scene.removeLight(oldValue);
         }
         if (newValue) {
             entity.addChild(newValue);
+            this.context.scene.addLight(newValue);
         }
     };
     
