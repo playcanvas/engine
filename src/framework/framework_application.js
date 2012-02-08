@@ -80,7 +80,6 @@ pc.extend(pc.fw, function () {
     
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
-        loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot, this.context));
 
         // Create systems
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
@@ -108,7 +107,7 @@ pc.extend(pc.fw, function () {
         // Add event support
         pc.extend(this, pc.events);
     };
-
+    
     /**
      * @function
      * @name pc.fw.Application#start

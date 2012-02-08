@@ -96,7 +96,6 @@
 ../src/framework/framework_application.js
 ../src/framework/framework_pack.js
 ../src/framework/resources/resources_entity.js
-../src/framework/resources/resources_pack.js
 ../src/framework/resources/resources_asset.js
 ../src/framework/components/component_registry.js
 ../src/framework/components/component_component.js
