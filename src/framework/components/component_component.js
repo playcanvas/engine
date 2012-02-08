@@ -288,7 +288,30 @@ pc.extend(pc.fw, function () {
                 return componentData[name];
             } 
         }
-    }
+    };
+    
+    /**
+     * @function
+     * @name pc.fw.ComponentSystem#initialize
+     * @description Initialize Components for a particular hierarchy of Entities. This is called after an Entity hierarchy has been loaded.
+     * @param {pc.fw.Entity} root The root of the hierarchy to initialize 
+     */
+    ComponentSystem.prototype.initialize = null;
+    
+    /**
+     * @function
+     * @name pc.fw.ComponentSystem#update
+     * @description Update all Components for one time step
+     * @param {Number} dt The time since the last update
+     */
+    ComponentSystem.prototype.update = null;
+    
+    /**
+     * @function
+     * @name pc.fw.ComponentSystem#render
+     * @description Do any specialized rendering for this Component System
+     */
+    ComponentSystem.prototype.render = null;
     
     return {
         ComponentSystem: ComponentSystem

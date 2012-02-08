@@ -6,6 +6,7 @@ pc.extend(pc.fw, function () {
         this.intensity = 1;
         this.castShadows = false;
         this.attenuationEnd = 1;
+        this.innerConeAngle = 40;
         this.outerConeAngle = 45;
 
         // Non-serialized
@@ -75,9 +76,21 @@ editor.link.expose({
 
 editor.link.expose({
     system: "spotlight",
+    variable: "innerConeAngle",
+    displayName: "Inner Cone Angle",
+    description: "Spotlight inner cone angle",
+    type: "number",
+    defaultValue: 40,
+    options: {
+        min: 0,
+        max: 90
+    }
+});
+editor.link.expose({
+    system: "spotlight",
     variable: "outerConeAngle",
-    displayName: "Cone Angle",
-    description: "Spotlight cone angle",
+    displayName: "Outer Cone Angle",
+    description: "Spotlight outer cone angle",
     type: "number",
     defaultValue: 45,
     options: {

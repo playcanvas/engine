@@ -12,7 +12,6 @@ pc.extend(pc.fw, function () {
         this.manager = manager;
         
         this.bind("set_assets", this.onSetAssets);
-        this.bind("set_sources", this.onSetSources);
         this.bind("set_loop", this.onSetLoop);
         this.bind("set_volume", this.onSetVolume);
         this.bind("set_minDistance", this.onSetMinDistance);
@@ -30,6 +29,23 @@ pc.extend(pc.fw, function () {
         this.set(entity, 'paused', !data['activate']);
         
         return componentData;
+    };
+
+    AudioSourceComponentSystem.prototype.initialize = function(root) {
+        var componentData = this.getComponentData(root);
+        if (componentData) {
+            if (componentData['activate']) {
+                this.play(root, componentData['currentSource']);
+            }
+        }
+        
+        var children = root.getChildren();
+        var i, len = children.length;
+        for (i = 0; i < len; i++) {
+            if (children[i] instanceof pc.fw.Entity) {
+                this.initialize(children[i]);    
+            }
+        } 
     };
     
     AudioSourceComponentSystem.prototype.update = function(dt) {
@@ -117,18 +133,6 @@ pc.extend(pc.fw, function () {
         }
     };
     
-    AudioSourceComponentSystem.prototype.onSetSources = function (entity, name, oldValue, newValue) {
-        var currentSource = this.get(entity, 'currentSource');
-        
-        // If the currentSource was set before the asset was loaded and should be playing, we should start playback 
-        if(currentSource && !oldValue[currentSource]) {
-            if (!this.get(entity, 'paused')) {
-                this.play(entity, currentSource);
-            }
-            
-        }
-    };
-
     AudioSourceComponentSystem.prototype.onSetLoop = function (entity, name, oldValue, newValue) {
         if (oldValue != newValue) {
             var channel = this.get(entity, 'channel');

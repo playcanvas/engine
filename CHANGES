@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.36.0
+-------
+* All ComponentSystems can implement an initialize() method which is passed the root entity of a loaded Pack after the Pack is loaded, but before any updates are called
+* Exposed both inner and outer spotlight cone angles in Designer
+* Moved light management into pc.scene.Scene. Lighting requires a Scene object to work now
+* Removed functions pc.scene.LightNode#getNumEnabled() and pc.scene.LightNode#dispatch. 
+* Moved static global lighting functions onto Scene instance
+
+-------
 v0.35.1
 -------
 * [FIX] pc.audio.Listener setVelocity crash on Firefox

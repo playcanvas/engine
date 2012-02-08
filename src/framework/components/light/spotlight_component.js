@@ -20,6 +20,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var SpotLightComponentSystem = function (context) {
+        this.context = context;
         context.systems.add("spotlight", this);
 
         this.renderable = _createGfxResources();
@@ -32,12 +33,14 @@ pc.extend(pc.fw, function () {
         this.bind("set_color", this.onSetColor.bind(this));
         // Handle changes to the 'enable' value
         this.bind("set_enable", this.onSetEnable.bind(this));
+        // Handle changes to the 'innerConeAngle' value
+        this.bind("set_innerConeAngle", this.onSetInnerConeAngle.bind(this));
         // Handle changes to the 'intensity' value
         this.bind("set_intensity", this.onSetIntensity.bind(this));
         // Handle changes to the 'light' value
         this.bind("set_light", this.onSetLight.bind(this));
         // Handle changes to the 'outerConeAngle' value
-        this.bind("set_outerConeAngle", this.onSetConeAngle.bind(this));
+        this.bind("set_outerConeAngle", this.onSetOuterConeAngle.bind(this));
     };
 
     SpotLightComponentSystem = SpotLightComponentSystem.extendsFrom(pc.fw.ComponentSystem);
@@ -51,7 +54,8 @@ pc.extend(pc.fw, function () {
         data = data || {};
         data.light = light;
 
-        this.initialiseComponent(entity, componentData, data, ['light', 'color', 'intensity', 'attenuationEnd', 'outerConeAngle', 'enable']);
+        var attribs = ['light', 'color', 'intensity', 'attenuationEnd', 'innerConeAngle', 'outerConeAngle', 'enable'];
+        this.initialiseComponent(entity, componentData, data, attribs);
 
         return componentData;
     };
@@ -106,10 +110,16 @@ pc.extend(pc.fw, function () {
         }
     };
 
-    SpotLightComponentSystem.prototype.onSetConeAngle = function (entity, name, oldValue, newValue) {
+    SpotLightComponentSystem.prototype.onSetInnerConeAngle = function (entity, name, oldValue, newValue) {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
-            componentData.light.setInnerConeAngle(newValue - 5);
+            componentData.light.setInnerConeAngle(newValue);
+        }
+    };
+
+    SpotLightComponentSystem.prototype.onSetOuterConeAngle = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
             componentData.light.setOuterConeAngle(newValue);
         }
     };
@@ -131,9 +141,11 @@ pc.extend(pc.fw, function () {
     SpotLightComponentSystem.prototype.onSetLight = function (entity, name, oldValue, newValue) {
         if (oldValue) {
             entity.removeChild(oldValue);
+            this.context.scene.removeLight(oldValue);
         }
         if (newValue) {
             entity.addChild(newValue);
+            this.context.scene.addLight(newValue);
         }
     };
     

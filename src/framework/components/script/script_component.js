@@ -44,6 +44,8 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
      */
     ScriptComponentSystem.prototype.initialize = function (root) {
+        this.registerInstances(root);
+        
         var componentData = this.getComponentData(root);
         if (componentData) {
             for (name in componentData.instances) {
@@ -143,7 +145,7 @@ pc.extend(pc.fw, function () {
                     
                     // If there is no request batch, then this is not part of a load request and so we need 
                     // to register the instances immediately to call the initialize function
-                    if (!options.batch ) {
+                    if (!options.batch) {
                         this.registerInstances(entity);
                     }
                 }.bind(this), function (errors) {

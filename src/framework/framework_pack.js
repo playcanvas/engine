@@ -11,13 +11,23 @@ pc.extend(pc.fw, function () {
          * @param {Function} progress Callback fired on each progress event, usually when a file or Entity is loaded, passed a percentage complete value
          */
         loadPack: function (guid, context, success, error, progress) {
-            context.loader.request(new pc.resources.PackRequest(guid), function (resources) {
-                // success
+            context.loader.request(new pc.resources.EntityRequest(guid), function (resources) {
                 var pack = resources[guid];
+
                 // add to hierarchy
                 context.root.addChild(pack);
-                // initialise new scripts
-                context.systems.script.initialize(pack);
+                
+                // Initialise any systems with an initialize() method after pack is loaded
+                var system;
+                for (system in context.systems) {
+                    if (context.systems.hasOwnProperty(system)) {
+                        if (context.systems[system].initialize) {
+                            context.systems[system].initialize(pack);
+                        }
+                        
+                    }
+                }
+                
                 // callback
                 if (success) {
                     success(pack);    
