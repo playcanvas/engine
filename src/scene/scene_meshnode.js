@@ -10,11 +10,10 @@ pc.extend(pc.scene, function () {
      */
     var MeshNode = function MeshNode() {
         this._geometry = null;
-        this._style = RenderStyle.NORMAL;
-        this._castShadows = false;
-        this._receiveShadows = false;
+        this._style    = RenderStyle.NORMAL;
+        this._localLights = [];
 
-        this._bones = null; // For skinned meshes, the bones array that influences the skin
+        this._bones    = null; // For skinned meshes, the bones array that influences the skin
     }
     MeshNode = MeshNode.extendsFrom(pc.scene.GraphNode);
 
@@ -65,28 +64,6 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.MeshNode#getCastShadows
-     * @description Queries whether the specified mesh cast shadows onto other meshes.
-     * @returns {Boolean} True if the specified mesh cast shadows, false otherwise.
-     * @author Will Eastcott
-     */
-    MeshNode.prototype.getCastShadows = function () {
-        return this._castShadows;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.MeshNode#getReceiveShadows
-     * @description Queries whether the specified mesh cast shadows onto other meshes.
-     * @returns {Boolean} True if the specified mesh cast shadows, false otherwise.
-     * @author Will Eastcott
-     */
-    MeshNode.prototype.getReceiveShadows = function () {
-        return this._receiveShadows;
-    };
-
-    /**
-     * @function
      * @name pc.scene.MeshNode#getGeometry
      * @description Returns the geometry assigned to this mesh node. If no geometry is assigned, then
      * null is returned.
@@ -99,15 +76,16 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.MeshNode#getRenderStyle
-     * @description Return the render style for the specified mesh node. The style signifies
-     * either a 'normal' style or a 'wireframe' style.
-     * @returns {pc.scene.RenderStyle} The current render style for the mesh node.
+     * @name pc.scene.MeshNode#setGeometry
+     * @description Assigns a geometry to the specified mesh node. Note that multiple mesh nodes can
+     * reference the same geometry which effectively implements instancing. This can reduce the memory
+     * footprint and load time for any given model.
+     * @param {pc.scene.Geometry} geometry
      * @author Will Eastcott
      */
-    MeshNode.prototype.getRenderStyle = function () {
-        return this._style;
-    }
+    MeshNode.prototype.setGeometry = function (geometry) {
+        this._geometry = geometry;
+    };
 
     /**
      * @function
@@ -130,41 +108,15 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.MeshNode#setCastShadows
-     * @description Toggles the casting of shadows from this mesh. In other words, if true
-     * is passed to this function, the mesh will be treated as an occluder.
-     * @param {Boolean} castShadows True to cast shadows from this mesh, false otherwise.
+     * @name pc.scene.MeshNode#getRenderStyle
+     * @description Return the render style for the specified mesh node. The style signifies
+     * either a 'normal' style or a 'wireframe' style.
+     * @returns {pc.scene.RenderStyle} The current render style for the mesh node.
      * @author Will Eastcott
      */
-    MeshNode.prototype.setCastShadows = function (castShadows) {
-        this._castShadows = castShadows;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.MeshNode#setReceiveShadows
-     * @description Toggles the receiving of shadows for the specified mesh. In other words, 
-     * if true is passed to this function, the mesh will be mapped with the shadows cast from
-     * occluding meshes via shadow casting light sources.
-     * @param {Boolean} receiveShadows True to receive shadows on this mesh, false otherwise.
-     * @author Will Eastcott
-     */
-    MeshNode.prototype.setReceiveShadows = function (receiveShadows) {
-        this._receiveShadows = receiveShadows;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.MeshNode#setGeometry
-     * @description Assigns a geometry to the specified mesh node. Note that multiple mesh nodes can
-     * reference the same geometry which effectively implements instancing. This can reduce the memory
-     * footprint and load time for any given model.
-     * @param {pc.scene.Geometry} geometry
-     * @author Will Eastcott
-     */
-    MeshNode.prototype.setGeometry = function (geometry) {
-        this._geometry = geometry;
-    };
+    MeshNode.prototype.getRenderStyle = function () {
+        return this._style;
+    }
 
     /**
      * @function
