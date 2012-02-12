@@ -100,7 +100,6 @@ pc.extend(pc.fw, function () {
             if(channel) {
                 channel.stop();    
             }
-            
         }
     };
         
