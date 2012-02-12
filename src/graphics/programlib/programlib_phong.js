@@ -197,44 +197,49 @@ pc.gfx.programlib.phong = {
 
         // Transform to vertex position to screen
         code += "    gl_Position = matrix_viewProjection * positionW;\n\n";
-        if (options.shadowMap) {
-            code += "    vShadowCoord = matrix_shadow * positionW;\n";
-        }
 
         // Transform vectors required for lighting to eye space
         if (lighting) {
-            if (options.normalMap || options.parallaxMap) {
-                code += "    vec3 normalE   = normalize((matrix_view * normalW).xyz);\n";
+            // Calculate position, normal and light direction in eye space
+            code += "    vec3 positionE = vec3(matrix_view * positionW);\n";
+            code += "    vec3 normalE   = normalize((matrix_view * normalW).xyz);\n";
+            for (i = 0; i < options.numDirectionals; i++) {
+                code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(-light" + i + "_direction, 0.0));\n";
+            }
+            for (i = options.numDirectionals; i < numLights; i++) {
+                code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(light" + i + "_position - positionW.xyz, 0.0));\n";
+                if (i >= options.numDirectionals + options.numPoints) {
+                    code += "    vec3 light" + i + "SpotDirE = vec3(matrix_view * vec4(light" + i + "_spotDirection, 0.0));\n";
+                }
+            }
+
+            var tangentSpaceLighting = (options.normalMap || options.parallaxMap);
+            if (tangentSpaceLighting) {
+                // Calculate the tangent space basis vectors
                 code += "    vec3 tangentE  = normalize((matrix_view * tangentW).xyz);\n";
                 code += "    vec3 binormalE = cross(normalE, tangentE) * vertex_tangent.w;\n";
                 code += "    mat3 tbnMatrix = mat3(tangentE.x, binormalE.x, normalE.x,\n";
                 code += "                          tangentE.y, binormalE.y, normalE.y,\n";
                 code += "                          tangentE.z, binormalE.z, normalE.z);\n";
-                code += "    vec3 positionE = vec3(matrix_view * positionW);\n";
-                code += "    vViewDir = tbnMatrix * -positionE;\n";
-                for (i = 0; i < options.numDirectionals; i++) {
-                    code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(-light" + i + "_direction, 0.0));\n";
-                    code += "    vLight" + i + "Dir = tbnMatrix * light" + i + "DirE;\n";
-                }
-                for (i = options.numDirectionals; i < numLights; i++) {
-                    code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(light" + i + "_position - positionW.xyz, 0.0));\n";
-                    code += "    vLight" + i + "Dir = tbnMatrix * light" + i + "DirE;\n";
-                }
             } else {
-                code += "    vNormalE   = normalize((matrix_view * normalW).xyz);\n";
-                code += "    vec3 positionE = vec3(matrix_view * positionW);\n";
-                code += "    vViewDir = -positionE;\n";
-                for (i = 0; i < options.numDirectionals; i++) {
-                    code += "    vLight" + i + "Dir = vec3(matrix_view * vec4(-light" + i + "_direction, 0.0));\n";
-                }
-                for (i = options.numDirectionals; i < numLights; i++) {
-                    code += "    vLight" + i + "Dir = vec3(matrix_view * vec4(light" + i + "_position - positionW.xyz, 0.0));\n";
-                    if (i >= options.numDirectionals + options.numPoints) {
-                        code += "    vLight" + i + "SpotDir = vec3(matrix_view * vec4(light" + i + "_spotDirection, 0.0));\n";
-                    }
+                // Just pass on the vertex normal to the fragment shader
+                code += "    vNormalE = normalE;\n";
+            }
+
+            // Transform vertex-view and vertex-light vectors to eye space
+            var tbnMult = tangentSpaceLighting ? "tbnMatrix * " : "";
+            code += "    vViewDir = " + tbnMult + "-positionE;\n";
+            for (i = 0; i < numLights; i++) {
+                code += "    vLight" + i + "Dir = " + tbnMult + "light" + i + "DirE;\n";
+                if (i >= options.numDirectionals + options.numPoints) {
+                    code += "    vLight" + i + "SpotDir = " + tbnMult + "light" + i + "SpotDirE;\n";
                 }
             }
             code += "\n";
+        }
+
+        if (options.shadowMap) {
+            code += "    vShadowCoord = matrix_shadow * positionW;\n";
         }
 
         // Calculate world space vector from eye point to vertex for reflection mapping
