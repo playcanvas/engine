@@ -74,7 +74,7 @@ pc.extend(pc.scene, function () {
             var material = submesh.material;
             material.setParameters();
             device.updateLocalState(material.getState());
-            device.setProgram(material.getProgram(this));
+            device.setProgram(material.getProgram(pc.scene.MeshNode._current));
 
             // Now draw the submesh
             device.draw(submesh.primitive);

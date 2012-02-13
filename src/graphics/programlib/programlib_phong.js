@@ -4,9 +4,12 @@ pc.gfx.programlib.phong = {
         if (options.skin)                key += "_skin";
         if (options.fog)                 key += "_fog";
         if (options.alphaTest)           key += "_atst";
-        if (options.numDirectionals > 0) key += "_" + options.numDirectionals + "dir";
-        if (options.numPoints > 0)       key += "_" + options.numPoints + "pnt";
-        if (options.numSpots > 0)        key += "_" + options.numSpots + "spt";
+        if (options.numDirs > 0)         key += "_" + options.numDirs + "dir";
+        if (options.numPnts > 0)         key += "_" + options.numPnts + "pnt";
+        if (options.numSpts > 0)         key += "_" + options.numSpts + "spt";
+        if (options.numSDirs > 0)        key += "_" + options.numSDirs + "sdir";
+        if (options.numSPnts > 0)        key += "_" + options.numSPnts + "spnt";
+        if (options.numSSpts > 0)        key += "_" + options.numSSpts + "sspt";
         if (options.vertexColors)        key += "_vcol";
         if (options.diffuseMap)          key += "_diff";
         if (options.specularMap)         key += "_spec";
@@ -18,7 +21,6 @@ pc.gfx.programlib.phong = {
         if (options.normalMap)           key += "_norm";
         if (options.parallaxMap)         key += "_prlx";
         if (options.lightMap)            key += "_lght";
-        if (options.shadowMap)           key += "_shdw";
         return key;
     },
 
@@ -26,9 +28,15 @@ pc.gfx.programlib.phong = {
         var code = "";
 
         var i;
-        var numLights = options.numDirectionals + options.numPoints + options.numSpots;
-        var lighting = numLights > 0;
-        
+
+        var numNormalLights = options.numDirs + options.numPnts + options.numSpts;
+        var numShadowLights = options.numSDirs + options.numSPnts + options.numSSpts;
+        var totalDirs = options.numDirs + options.numSDirs;
+        var totalPnts = options.numPnts + options.numSPnts;
+        var totalSpts = options.numSpts + options.numSSpts;
+        var totalLights = numNormalLights + numShadowLights;
+        var lighting = totalLights > 0;
+
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec3 vertex_position;\n";
         if (lighting || options.cubeMap || options.sphereMap) {
@@ -61,18 +69,20 @@ pc.gfx.programlib.phong = {
             var numBones = pc.gfx.Device.getCurrent().getBoneLimit();
             code += "uniform mat4 matrix_pose[" + numBones + "];\n";
         }
-        if (options.shadowMap) {
-            code += "uniform mat4 matrix_shadow;\n";
-        }
-        for (i = 0; i < numLights; i++) {
-            if (i < options.numDirectionals) {
+        for (i = 0; i < totalLights; i++) {
+            if (i < totalDirs) {
                 code += "uniform vec3 light" + i + "_direction;\n";
             }
-            if (i >= options.numDirectionals) {
+            if (i >= totalDirs) {
                 code += "uniform vec3 light" + i + "_position;\n";
             }
-            if (i >= options.numDirectionals + options.numPoints) {
+            if (i >= totalDirs + totalPnts) {
                 code += "uniform vec3 light" + i + "_spotDirection;\n";
+            }
+            if ((i >= options.numDirs && i < totalDirs) || 
+                (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
+                (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
+                code += "uniform mat4 light" + i + "_shadowMatrix;\n";
             }
         }
         if ((options.cubeMap) || (options.sphereMap)) {
@@ -103,12 +113,16 @@ pc.gfx.programlib.phong = {
         // VERTEX SHADER OUTPUTS
         if (lighting) {
             code += "varying vec3 vViewDir;\n";
-            var numLights = options.numDirectionals + options.numPoints + options.numSpots;
-            for (i = 0; i < numLights; i++) {
+            for (i = 0; i < totalLights; i++) {
                 code += "varying vec3 vLight" + i + "Dir;\n";
-                if (i >= options.numDirectionals + options.numPoints) {
+                if (i >= options.totalDirs + options.totalPnts) {
                     code += "varying vec3 vLight" + i + "SpotDir;\n";
-                } 
+                }
+                if ((i >= options.numDirs && i < totalDirs) || 
+                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
+                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
+                    code += "varying vec4 vLight" + i + "ShadowCoord;\n";
+                }
             }
             if (!(options.normalMap || options.parallaxMap)) {
                 code += "varying vec3 vNormalE;\n";
@@ -141,9 +155,6 @@ pc.gfx.programlib.phong = {
         }
         if (options.vertexColors) {
             code += "varying vec4 vVertexColor;\n";
-        }
-        if (options.shadowMap) {
-            code += "varying vec4 vShadowCoord;\n";
         }
         code += "\n";
 
@@ -203,12 +214,12 @@ pc.gfx.programlib.phong = {
             // Calculate position, normal and light direction in eye space
             code += "    vec3 positionE = vec3(matrix_view * positionW);\n";
             code += "    vec3 normalE   = normalize((matrix_view * normalW).xyz);\n";
-            for (i = 0; i < options.numDirectionals; i++) {
+            for (i = 0; i < totalDirs; i++) {
                 code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(-light" + i + "_direction, 0.0));\n";
             }
-            for (i = options.numDirectionals; i < numLights; i++) {
+            for (i = totalDirs; i < totalLights; i++) {
                 code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(light" + i + "_position - positionW.xyz, 0.0));\n";
-                if (i >= options.numDirectionals + options.numPoints) {
+                if (i >= totalDirs + totalPnts) {
                     code += "    vec3 light" + i + "SpotDirE = vec3(matrix_view * vec4(light" + i + "_spotDirection, 0.0));\n";
                 }
             }
@@ -229,17 +240,18 @@ pc.gfx.programlib.phong = {
             // Transform vertex-view and vertex-light vectors to eye space
             var tbnMult = tangentSpaceLighting ? "tbnMatrix * " : "";
             code += "    vViewDir = " + tbnMult + "-positionE;\n";
-            for (i = 0; i < numLights; i++) {
+            for (i = 0; i < totalLights; i++) {
                 code += "    vLight" + i + "Dir = " + tbnMult + "light" + i + "DirE;\n";
-                if (i >= options.numDirectionals + options.numPoints) {
+                if (i >= totalDirs + totalPnts) {
                     code += "    vLight" + i + "SpotDir = " + tbnMult + "light" + i + "SpotDirE;\n";
+                }
+                if ((i >= options.numDirs && i < totalDirs) || 
+                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
+                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
+                    code += "    vLight" + i + "ShadowCoord = light" + i + "_shadowMatrix * positionW;\n";
                 }
             }
             code += "\n";
-        }
-
-        if (options.shadowMap) {
-            code += "    vShadowCoord = matrix_shadow * positionW;\n";
         }
 
         // Calculate world space vector from eye point to vertex for reflection mapping
@@ -281,18 +293,29 @@ pc.gfx.programlib.phong = {
         var code = "";
 
         var i;
-        var numLights = options.numDirectionals + options.numPoints + options.numSpots;
-        var lighting = numLights > 0;
+
+        var numNormalLights = options.numDirs + options.numPnts + options.numSpts;
+        var numShadowLights = options.numSDirs + options.numSPnts + options.numSSpts;
+        var totalDirs = options.numDirs + options.numSDirs;
+        var totalPnts = options.numPnts + options.numSPnts;
+        var totalSpts = options.numSpts + options.numSSpts;
+        var totalLights = numNormalLights + numShadowLights;
+        var lighting = totalLights > 0;
 
         code += "precision mediump float;\n\n";
 
         // FRAGMENT SHADER INPUTS: VARYINGS
         if (lighting) {
             code += "varying vec3 vViewDir;\n";
-            for (i = 0; i < numLights; i++) {
+            for (i = 0; i < totalLights; i++) {
                 code += "varying vec3 vLight" + i + "Dir;\n";
-                if (i >= options.numDirectionals + options.numPoints) {
+                if (i >= options.totalDirs + options.totalPnts) {
                     code += "varying vec3 vLight" + i + "SpotDir;\n";
+                }
+                if ((i >= options.numDirs && i < totalDirs) || 
+                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
+                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
+                    code += "varying vec4 vLight" + i + "ShadowCoord;\n";
                 }
             }
             if (!(options.normalMap || options.parallaxMap)) {
@@ -326,9 +349,6 @@ pc.gfx.programlib.phong = {
         }
         if (options.vertexColors) {
             code += "varying vec4 vVertexColor;\n";
-        }
-        if (options.shadowMap) {
-            code += "varying vec4 vShadowCoord;\n";
         }
         code += "\n";
 
@@ -376,19 +396,21 @@ pc.gfx.programlib.phong = {
         } else {
             code += "uniform float material_opacity;\n";
         }
-        if (options.shadowMap) {
-            code += "uniform vec3 shadow_params;\n"; // Width, height, bias
-            code += "uniform sampler2D texture_shadowMap;\n";
-        }
         code += "uniform vec3 light_globalAmbient;\n";
-        for (i = 0; i < numLights; i++) {
+        for (i = 0; i < totalLights; i++) {
             code += "uniform vec3 light" + i + "_color;\n";
-            if (i >= options.numDirectionals) {
+            if (i >= totalDirs) {
                 code += "uniform float light" + i + "_radius;\n";
-                if (i >= options.numDirectionals + options.numPoints) {
+                if (i >= totalDirs + totalPnts) {
                     code += "uniform float light" + i + "_innerConeAngle;\n";
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
+            }
+            if ((i >= options.numDirs && i < totalDirs) || 
+                (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
+                (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
+                code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
+                code += "uniform sampler2D light" + i + "_shadowMap;\n";
             }
         }
         if (options.fog) {
@@ -399,7 +421,7 @@ pc.gfx.programlib.phong = {
             code += "uniform float alpha_ref;\n";
         }
 
-        if (options.shadowMap) {
+        if (numShadowLights > 0) {
             code += "\n";
             code += "float unpack_depth(const in vec4 rgba_depth)\n";
             code += "{\n";
@@ -488,8 +510,8 @@ pc.gfx.programlib.phong = {
                 code += "    vec3 N = vNormalE;\n";
             }
 
-            for (i = 0; i < numLights; i++) {
-                if (i < options.numDirectionals) {
+            for (i = 0; i < totalLights; i++) {
+                if (i < totalDirs) {
                     code += "    lightDir = normalize(vLight" + i + "Dir);\n";
                     code += "    nDotL = max(0.0, dot(N, lightDir));\n";
                     code += "    if (nDotL > 0.0)\n";
@@ -520,7 +542,7 @@ pc.gfx.programlib.phong = {
                     code += "        if (nDotL > 0.0)\n";
                     code += "        {\n";
                     code += "            float att = ((light" + i + "_radius - d) / light" + i + "_radius);\n";
-                    if (i >= options.numDirectionals + options.numPoints) {
+                    if (i >= totalDirs + totalPnts) {
                         code += "            float cosAngle = dot(-lightDir, vLight" + i + "SpotDir);\n";
                         code += "            float cosInnerAngle = light" + i + "_innerConeAngle;\n";
                         code += "            float cosOuterAngle = light" + i + "_outerConeAngle;\n";
@@ -544,6 +566,42 @@ pc.gfx.programlib.phong = {
                     }
                     code += "        }\n";
                     code += "    }\n";
+                }
+
+                if ((i >= options.numDirs && i < totalDirs) || 
+                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
+                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
+                    if (false) {
+                        code += "    vec3 shadowCoord = vLight" + i + "ShadowCoord.xyz / vLight" + i + "ShadowCoord.w;\n";
+                        code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
+                        code += "    {\n";
+                        code += "        float depthBias = light" + i + "_shadowParams[2];\n";
+                        code += "        vec4 rgbaDepth = texture2D(light" + i + "_shadowMap, shadowCoord.xy);\n";
+                        code += "        float depth     = unpack_depth(rgbaDepth);\n";
+                        code += "        float shadowFactor = (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
+                        code += "        diffuse         = diffuse * shadowFactor;\n";
+                        code += "        specular        = specular * shadowFactor;\n";
+                        code += "    }\n";
+                    } else {
+                        code += "    float shadowFactor = 0.0;\n";
+                        code += "    vec3 shadowCoord = vLight" + i + "ShadowCoord.xyz / vLight" + i + "ShadowCoord.w;\n";
+                        code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
+                        code += "    {\n";
+                        code += "        float xoffset = 1.0 / light" + i + "_shadowParams[0];\n"; // 1/shadow map width
+                        code += "        float yoffset = 1.0 / light" + i + "_shadowParams[1];\n"; // 1/shadow map height
+                        code += "        float depthBias = light" + i + "_shadowParams[2];\n";
+                        code += "        for (float x = -1.25; x <= 1.25; x += 1.25)\n";
+                        code += "        {\n";
+                        code += "            for (float y = -1.25; y <= 1.25; y += 1.25)\n";
+                        code += "            {\n";
+                        code += "                vec4 rgbaDepth = texture2D(light" + i + "_shadowMap, shadowCoord.xy + vec2(x * xoffset, y * yoffset));\n";
+                        code += "                float depth = unpack_depth(rgbaDepth);\n";
+                        code += "                shadowFactor += (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
+                        code += "            }\n";
+                        code += "        }\n";
+                        code += "        shadowFactor *= 1.0 / 9.0;\n";
+                        code += "    }\n";
+                    }
                 }
             }
 
@@ -586,48 +644,17 @@ pc.gfx.programlib.phong = {
                 }
             }
 
-            // Shadows should only affect diffuse and specular contribution
-            if (options.shadowMap) {
-                if (false) {
-                    code += "    vec3 shadowCoord = vShadowCoord.xyz / vShadowCoord.w;\n";
-                    code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
-                    code += "    {\n";
-                    code += "        float depthBias = shadow_params[2];\n";
-                    code += "        vec4 rgbaDepth = texture2D(texture_shadowMap, shadowCoord.xy);\n";
-                    code += "        float depth     = unpack_depth(rgbaDepth);\n";
-                    code += "        float shadowFactor = (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
-                    code += "        diffuse         = diffuse * shadowFactor;\n";
-                    code += "        specular        = specular * shadowFactor;\n";
-                    code += "    }\n";
-                } else {
-                    code += "    vec3 shadowCoord = vShadowCoord.xyz / vShadowCoord.w;\n";
-                    code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
-                    code += "    {\n";
-                    code += "        float xoffset = 1.0 / shadow_params[0];\n"; // 1/shadow map width
-                    code += "        float yoffset = 1.0 / shadow_params[1];\n"; // 1/shadow map height
-                    code += "        float depthBias = shadow_params[2];\n";
-                    code += "        float shadowFactor = 0.0;\n";
-                    code += "        for (float x = -1.25; x <= 1.25; x += 1.25)\n";
-                    code += "        {\n";
-                    code += "            for (float y = -1.25; y <= 1.25; y += 1.25)\n";
-                    code += "            {\n";
-                    code += "                vec4 rgbaDepth = texture2D(texture_shadowMap, shadowCoord.xy + vec2(x * xoffset, y * yoffset));\n";
-                    code += "                float depth = unpack_depth(rgbaDepth);\n";
-                    code += "                shadowFactor += (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
-                    code += "            }\n";
-                    code += "        }\n";
-                    code += "        shadowFactor *= 1.0 / 9.0;\n";
-                    code += "        diffuse = diffuse * shadowFactor;\n";
-                    code += "        specular = specular * shadowFactor;\n";
-                    code += "    }\n";
-                }
-            }
-
             // Add ambient + diffuse + specular
             code += "    gl_FragColor.rgb  = ambient * light_globalAmbient;\n";
             if (options.lightMap) {
                 code += "    diffuseContrib += lghtMapPixel.rgb;\n";
             }
+
+            if (numShadowLights > 0) {
+                code += "        diffuse = diffuse * shadowFactor;\n";
+                code += "        specular = specular * shadowFactor;\n";
+            }
+
             code += "    gl_FragColor.rgb += diffuse * diffuseContrib;\n";
             code += "    gl_FragColor.rgb += specular * specularContrib;\n";
         } else if (options.lightMap) {
