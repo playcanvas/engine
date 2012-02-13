@@ -130,6 +130,11 @@ pc.extend(pc.resources, function () {
         camera.setNearClip(cameraData.nearClip);
         camera.setFarClip(cameraData.farClip);
         camera.setFov(cameraData.fov);
+        camera.setClearOptions({
+            color: cameraData.clearColor || [0, 0, 0, 1],
+            depth: 1,
+            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+        });
         if (cameraData.lookAt) {
             camera._lookAtId = cameraData.lookAt;
         }
