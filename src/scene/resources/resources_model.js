@@ -166,7 +166,7 @@ pc.extend(pc.resources, function () {
                 light.setType(type);
                 light.setEnabled(lightData.enabled);
                 light.setColor(lightData.color);
-                light.setInensity(lightData.intensity || 1);
+                light.setIntensity(lightData.intensity || 1);
                 light.setCastShadows(lightData.castShadows);
         }
 

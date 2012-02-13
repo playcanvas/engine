@@ -216,7 +216,7 @@ pc.extend(pc.fw, function () {
         var instances = this.get(entity, "instances");
         var fn;        
         
-        if(instances[name]) {
+        if(instances && instances[name]) {
             fn = instances[name].instance[functionName];
             if (fn) {
                 return fn.apply(instances[name].instance, args);    
