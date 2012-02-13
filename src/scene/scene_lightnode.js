@@ -50,11 +50,20 @@ pc.extend(pc.scene, function () {
         clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
         clone._graphId = this._graphId;
 
-        // LightNode
+        // LightNode properties
         clone.setType(this.getType());
         clone.setColor(this.getColor().splice(0));
-        clone.setRadius(this.getRadius());
-//        clone.setConeAngle(this.getConeAngle());
+        clone.setIntensity(this.getIntensity());
+        clone.setEnabled(this.getEnabled());
+        clone.setCastShadows(this.getCastShadows());
+
+        // Point and spot properties
+        clone.setAttenuationStart(this.getAttenuationStart());
+        clone.setAttenuationEnd(this.getAttenuationEnd());
+
+        // Spot properties
+        clone.setInnerConeAngle(this.getInnerConeAngle());
+        clone.setOuterConeAngle(this.getOuterConeAngle());
 
         return clone;
     };
@@ -62,12 +71,24 @@ pc.extend(pc.scene, function () {
     /**
      * @function
      * @name pc.scene.LightNode#getAttenuationEnd
-     * @description Queries the radius of the point or spot light.
-     * @returns {Array} The diffuse color of the light, represented by a 3 dimensional array (RGB components ranging 0..1).
+     * @description Queries the radius of the point or spot light. In other words, this is
+     * the distance at which the light's contribution falls to zero.
+     * @returns {Number} The radius of the point or spot light.
      * @author Will Eastcott
      */
     LightNode.prototype.getAttenuationEnd = function () {
         return this._attenuationEnd;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.LightNode#getAttenuationStart
+     * @description Queries the distance from the point or spot light that attenuation begins.
+     * @returns {Number} The radius from the light position where attenuation starts.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.getAttenuationStart = function () {
+        return this._attenuationStart;
     };
 
     /**
@@ -163,6 +184,18 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setAttenuationEnd = function (radius) {
         this._attenuationEnd = radius;
+    }
+
+    /**
+     * @function
+     * @name pc.scene.LightNode#setAttenuationStart
+     * @description Specifies the radius from the light position where the light
+     * contribution begins to attenuate.
+     * @param {number} radius The radius at which the light begins to attenuate.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.setAttenuationStart = function (radius) {
+        this._attenuationStart = radius;
     }
 
     /**
