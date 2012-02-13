@@ -54,7 +54,7 @@ pc.extend(pc.fw, function () {
         data = data || {};
         data.light = light;
 
-        var attribs = ['light', 'color', 'intensity', 'attenuationEnd', 'innerConeAngle', 'outerConeAngle', 'enable'];
+        var attribs = ['light', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd', 'innerConeAngle', 'outerConeAngle'];
         this.initialiseComponent(entity, componentData, data, attribs);
 
         return componentData;
