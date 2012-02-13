@@ -99,7 +99,8 @@ pc.extend(pc.fw, function () {
         var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, audioManager);
-        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioManager);            
+        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioManager);
+        var designersys = new pc.fw.DesignerComponentSystem(this.context);
 
         skyboxsys.setDataDir(options.dataDir);
         staticcubemapsys.setDataDir(options.dataDir);
@@ -118,7 +119,6 @@ pc.extend(pc.fw, function () {
 
         this.tick();
     };
-    
     
     /**
      * @function
