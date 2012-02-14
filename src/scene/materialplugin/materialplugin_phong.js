@@ -50,7 +50,7 @@ pc.scene.materialplugin.phong.generateStateKey = function (mesh) {
     if (skinned) key += 'skin_';
     if (currState.fog) key += 'fog_';
     if (currState.alphaTest) key += 'atst_';
-    key += numDirs + 'dir_' + numPnts + 'pnt_' + numSpts + 'spt';
+    key += numDirs + 'dir_' + numPnts + 'pnt_' + numSpts + 'spt' + numSDirs + 'sdir_' + numSPnts + 'spnt_' + numSSpts + 'sspt';
     return key;
 }
 

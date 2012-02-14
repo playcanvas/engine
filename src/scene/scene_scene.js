@@ -139,10 +139,12 @@ pc.extend(pc.scene, function () {
         var lights = this._lights;
         for (i = 0, len = lights.length; i < len; i++) {
             var light = lights[i];
-            if (light.getEnabled() && light.getType() === pc.scene.LightType.DIRECTIONAL) {
-                this._globalLights.push(light);
-            } else {
-                this._localLights[light.getType() === pc.scene.LightType.POINT ? 0 : 1].push(light);
+            if (light.getEnabled()) {
+                if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
+                    this._globalLights.push(light);
+                } else {
+                    this._localLights[light.getType() === pc.scene.LightType.POINT ? 0 : 1].push(light);
+                }
             }
         }
 
