@@ -423,7 +423,7 @@ pc.extend(pc.input, function () {
         getOffsetCoords: function getOffsetCoords(event) {
             var coords = { x: 0, y: 0};
     
-            var element = event.target ;
+            var element = event.currentTarget;
             var totalOffsetLeft = 0;
             var totalOffsetTop = 0 ;
     
