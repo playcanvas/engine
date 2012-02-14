@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.37.0
+-------
+* [FIX] context.systems.script.send() no longer crashes if you send to an entity that doesn't have a script component
+* Improved light loading and support for loading distinct light intensity attribute
+* Added MeshNode API for setting, casting and receiving shadows
+* Added pc.fw.AppData where application data is loaded into
+
+-------
 v0.36.0
 -------
 * All ComponentSystems can implement an initialize() method which is passed the root entity of a loaded Pack after the Pack is loaded, but before any updates are called
