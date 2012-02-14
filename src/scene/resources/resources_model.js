@@ -147,11 +147,24 @@ pc.extend(pc.resources, function () {
         light.addGraphId(lightData.uid);
         light.setLocalTransform(pc.math.mat4.clone(lightData.transform));
     
-        // Light properties
+        // Translate the light type
         var type = this._jsonToLightType[lightData.light_type];
-        light.setType(type);
-        light.setColor(lightData.color);
-    
+
+        switch (type) {
+            case pc.scene.LightType.SPOT:
+                light.setInnerConeAngle(lightData.innerConeAngle || 40);
+                light.setOuterConeAngle(lightData.outerConeAngle || 45);
+            case pc.scene.LightType.POINT:
+                light.setAttenuationStart(lightData.start || 0);
+                light.setAttenuationEnd(lightData.end || 1);
+            default: // All lights
+                light.setType(type);
+                light.setEnabled(lightData.enabled);
+                light.setColor(lightData.color);
+                light.setIntensity(lightData.intensity || 1);
+                light.setCastShadows(lightData.castShadows);
+        }
+
         return light;
     };
     
