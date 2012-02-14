@@ -501,7 +501,10 @@ pc.gfx.programlib.phong = {
             if (options.cubeMap || options.sphereMap) {
                 code += "    float lambertContrib = 0.0;\n";
             }
-
+            if (numShadowLights > 0) {
+                code += "    float shadowFactor = 0.0;\n";
+                code += "    vec3 shadowCoord;\n";
+            }
             if ((options.normalMap) || (options.parallaxMap)) {
                 // Use a normal extracted from the supplied normal map
                 code += "    vec3 N = normalize(normMapPixel * 2.0 - 1.0);\n";
@@ -572,7 +575,7 @@ pc.gfx.programlib.phong = {
                     (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
                     (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
                     if (false) {
-                        code += "    vec3 shadowCoord = vLight" + i + "ShadowCoord.xyz / vLight" + i + "ShadowCoord.w;\n";
+                        code += "    shadowCoord = vLight" + i + "ShadowCoord.xyz / vLight" + i + "ShadowCoord.w;\n";
                         code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
                         code += "    {\n";
                         code += "        float depthBias = light" + i + "_shadowParams[2];\n";
@@ -583,8 +586,8 @@ pc.gfx.programlib.phong = {
                         code += "        specular        = specular * shadowFactor;\n";
                         code += "    }\n";
                     } else {
-                        code += "    float shadowFactor = 0.0;\n";
-                        code += "    vec3 shadowCoord = vLight" + i + "ShadowCoord.xyz / vLight" + i + "ShadowCoord.w;\n";
+                        code += "    shadowFactor = 0.0;\n";
+                        code += "    shadowCoord = vLight" + i + "ShadowCoord.xyz / vLight" + i + "ShadowCoord.w;\n";
                         code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
                         code += "    {\n";
                         code += "        float xoffset = 1.0 / light" + i + "_shadowParams[0];\n"; // 1/shadow map width
@@ -599,7 +602,6 @@ pc.gfx.programlib.phong = {
                         code += "                shadowFactor += (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
                         code += "            }\n";
                         code += "        }\n";
-                        code += "        shadowFactor *= 1.0 / 9.0;\n";
                         code += "    }\n";
                     }
                 }
@@ -651,8 +653,9 @@ pc.gfx.programlib.phong = {
             }
 
             if (numShadowLights > 0) {
-                code += "        diffuse = diffuse * shadowFactor;\n";
-                code += "        specular = specular * shadowFactor;\n";
+                code += "    shadowFactor *= 1.0 / (9.0 * " + numShadowLights + ".0;\n";
+                code += "    diffuse = diffuse * shadowFactor;\n";
+                code += "    specular = specular * shadowFactor;\n";
             }
 
             code += "    gl_FragColor.rgb += diffuse * diffuseContrib;\n";
