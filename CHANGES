@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.38.1
+-------
+* [FIX] Crash in Firefox when loading an exported game with a large number of Entity/Assets.
+
+-------
 v0.38.0
 -------
 * [FIX] Use event.currentTarget instead of target to calculate mouse offset co-ords in pc.input.Mouse
