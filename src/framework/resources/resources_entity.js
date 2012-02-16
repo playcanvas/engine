@@ -15,10 +15,11 @@ pc.extend(pc.resources, function () {
         
         var guid = identifier;
         if(guid in pc.content.data) {
-            success(pc.content.data[guid], options) 
+            setTimeout( function () {
+                success(pc.content.data[guid], options) 
+            }, 0);
         } else {
             this._depot.entities.getOne(guid, function (entity) {
-                
                 success(entity, options);
             }.bind(this), function (errors) {
                 error(errors);

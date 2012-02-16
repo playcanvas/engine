@@ -1,7 +1,6 @@
 pc.extend(pc.fw, function () {
     // Private
-    
-    
+
     // Public Interface
     /**
      * @ignore
@@ -113,8 +112,8 @@ pc.extend(pc.fw, function () {
     }
     
     LiveLink.prototype._send = function(msg, success, _window, origin) {
-        //msg.id = pc.guid.create();
         //logDEBUG("Send: " + msg.type);
+
         msg.senderid = this._linkid;
         if(this._callbacks[msg.id]) {
             this._callbacks[msg.id].count++;
