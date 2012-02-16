@@ -29,8 +29,7 @@ pc.extend(pc.scene, function () {
         this._shadowMaterial = new pc.scene.Material();
         this._shadowMaterial.setProgramName('shadowmap');
         this._shadowState = {
-                blend: false,
-                cull: true
+                blend: false
         };
 
         // Initialize dispatch queues
@@ -141,7 +140,11 @@ pc.extend(pc.scene, function () {
             var light = lights[i];
             if (light.getEnabled()) {
                 if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
-                    this._globalLights.push(light);
+                    if (light.getCastShadows()) {
+                        this._globalLights.push(light);
+                    } else {
+                        this._globalLights.unshift(light);
+                    }
                 } else {
                     this._localLights[light.getType() === pc.scene.LightType.POINT ? 0 : 1].push(light);
                 }
@@ -235,21 +238,27 @@ pc.extend(pc.scene, function () {
                 }
             };
 
+            camera.frameEnd();
+
+            // Disable blending
+            var device = pc.gfx.Device.getCurrent();
+            var oldBlend = device.getGlobalState().blend;
+            device.updateGlobalState(self._shadowState);
+
             setShadowMapMaterial();
             for (i = 0; i < self._lights.length; i++) {
                 var light = self._lights[i];
                 if (light.getCastShadows()) {
-                    // Disable blending
-                    var device = pc.gfx.Device.getCurrent();
-                    var oldBlend = device.getGlobalState().blend;
-                    device.updateGlobalState(self._shadowState);
-
+                    var near = 0;
+                    var far = 50;
+                    var extent = 10;
+                    
                     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
                     var shadowCamLtm = pc.math.mat4.makeRotate(-Math.PI / 2.0, [1, 0, 0]);
                     var lightWtm = light.getWorldTransform();
                     var shadowCamWtm = pc.math.mat4.multiply(lightWtm, shadowCamLtm);
                     var shadowCamView = pc.math.mat4.invert(shadowCamWtm);
-                    var shadowCamProj = pc.math.mat4.makeOrtho(-100, 100, -100, 100, 0, 200);
+                    var shadowCamProj = pc.math.mat4.makeOrtho(-extent, extent, -extent, extent, near, far);
                     var shadowViewProj = pc.math.mat4.multiply(shadowCamProj, shadowCamView);
                     var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
                     var shift = pc.math.mat4.makeTranslate(0.5, 0.5, 0.5);
@@ -258,8 +267,6 @@ pc.extend(pc.scene, function () {
 
                     light._shadowCamera.setLocalTransform(shadowCamWtm);
                     light._shadowCamera.syncHierarchy();
-
-                    camera.frameEnd();
                     light._shadowCamera.frameBegin();
 
                     // Render both alpha and opaque meshes front to back
@@ -275,13 +282,14 @@ pc.extend(pc.scene, function () {
                     }
 
                     light._shadowCamera.frameEnd();
-                    camera.frameBegin(false);
-
-                    // Restore previous blend state
-                    device.updateGlobalState({blend: oldBlend});
                 }
             }
             restoreMaterials();
+
+            // Restore previous blend state
+            device.updateGlobalState({blend: oldBlend});
+
+            camera.frameBegin(false);
 
             self.dispatchGlobalLights();
         });
@@ -363,8 +371,8 @@ pc.extend(pc.scene, function () {
             if (directional.getCastShadows()) {
                 var shadowMap = directional._shadowBuffer.getTexture();
                 scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
-                scope.resolve(light + "_shadowMap", shadowMap);
-                scope.resolve(light + "_shadowParams", [shadowMap.getWidth(), shadowMap.getHeight(), 0.04]);
+                scope.resolve(light + "_shadowMap").setValue(shadowMap);
+                scope.resolve(light + "_shadowParams").setValue([shadowMap.getWidth(), shadowMap.getHeight(), 0.0001]);
             }
         }
     };

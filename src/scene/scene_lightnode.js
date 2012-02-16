@@ -220,8 +220,8 @@ pc.extend(pc.scene, function () {
             shadowTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
 
             var near = 0;
-            var far = 200;
-            var extent = 100;
+            var far = 50;
+            var extent = 10;
             this._shadowCamera = new pc.scene.CameraNode();
             this._shadowCamera.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
             this._shadowCamera.setViewWindow(pc.math.vec2.create(extent, extent));
