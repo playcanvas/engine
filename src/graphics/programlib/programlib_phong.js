@@ -115,7 +115,7 @@ pc.gfx.programlib.phong = {
             code += "varying vec3 vViewDir;\n";
             for (i = 0; i < totalLights; i++) {
                 code += "varying vec3 vLight" + i + "Dir;\n";
-                if (i >= options.totalDirs + options.totalPnts) {
+                if (i >= totalDirs + totalPnts) {
                     code += "varying vec3 vLight" + i + "SpotDir;\n";
                 }
                 if ((i >= options.numDirs && i < totalDirs) || 
@@ -309,7 +309,7 @@ pc.gfx.programlib.phong = {
             code += "varying vec3 vViewDir;\n";
             for (i = 0; i < totalLights; i++) {
                 code += "varying vec3 vLight" + i + "Dir;\n";
-                if (i >= options.totalDirs + options.totalPnts) {
+                if (i >= totalDirs + totalPnts) {
                     code += "varying vec3 vLight" + i + "SpotDir;\n";
                 }
                 if ((i >= options.numDirs && i < totalDirs) || 

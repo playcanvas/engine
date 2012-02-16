@@ -249,7 +249,7 @@ pc.extend(pc.scene, function () {
             for (i = 0; i < self._lights.length; i++) {
                 var light = self._lights[i];
                 if (light.getCastShadows()) {
-                    var near = 0;
+                    var near = 0.1;
                     var far = 50;
                     var extent = 10;
                     
@@ -258,7 +258,12 @@ pc.extend(pc.scene, function () {
                     var lightWtm = light.getWorldTransform();
                     var shadowCamWtm = pc.math.mat4.multiply(lightWtm, shadowCamLtm);
                     var shadowCamView = pc.math.mat4.invert(shadowCamWtm);
-                    var shadowCamProj = pc.math.mat4.makeOrtho(-extent, extent, -extent, extent, near, far);
+                    var shadowCamProj;
+                    if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
+                        shadowCamProj = pc.math.mat4.makeOrtho(-extent, extent, -extent, extent, near, far);
+                    } else {
+                        shadowCamProj = pc.math.mat4.makePerspective(light._outerConeAngle * 2, 1, near, far);
+                    }
                     var shadowViewProj = pc.math.mat4.multiply(shadowCamProj, shadowCamView);
                     var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
                     var shift = pc.math.mat4.makeTranslate(0.5, 0.5, 0.5);
@@ -422,6 +427,13 @@ pc.extend(pc.scene, function () {
             spot._direction[1] = -wtm[5];
             spot._direction[2] = -wtm[6];
             scope.resolve(light + "_spotDirection").setValue(spot._direction);
+
+            if (spot.getCastShadows()) {
+                var shadowMap = spot._shadowBuffer.getTexture();
+                scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
+                scope.resolve(light + "_shadowMap").setValue(shadowMap);
+                scope.resolve(light + "_shadowParams").setValue([shadowMap.getWidth(), shadowMap.getHeight(), 0.0001]);
+            }
         }
     };
 

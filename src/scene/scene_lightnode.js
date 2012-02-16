@@ -211,6 +211,12 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setCastShadows = function (castShadows) {
         this._castShadows = castShadows;
+
+        if (this._type === pc.scene.LightType.POINT) {
+            // No support for point lights yet
+            return;
+        }
+
         if (castShadows && !this._shadowBuffer) {
             // SHADOW TODO: Make the shadowmap dimensions controllable
             // Also, it may be better to keep shadow algorithm implementation details out of the light class
@@ -219,12 +225,17 @@ pc.extend(pc.scene, function () {
             shadowTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
             shadowTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
 
-            var near = 0;
+            var near = 0.1;
             var far = 50;
             var extent = 10;
             this._shadowCamera = new pc.scene.CameraNode();
-            this._shadowCamera.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
-            this._shadowCamera.setViewWindow(pc.math.vec2.create(extent, extent));
+            if (this._type === pc.scene.LightType.DIRECTIONAL) {
+                this._shadowCamera.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
+                this._shadowCamera.setViewWindow(pc.math.vec2.create(extent, extent));
+            } else {
+                this._shadowCamera.setProjection(pc.scene.Projection.PERSPECTIVE);
+                this._shadowCamera.setFov(this._outerConeAngle * 2);
+            }
             this._shadowCamera.setNearClip(near);
             this._shadowCamera.setFarClip(far);
             this._shadowCamera.setRenderTarget(new pc.gfx.RenderTarget(this._shadowBuffer));
