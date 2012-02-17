@@ -1,4 +1,5 @@
 pc.extend(pc.net, function () {
+    var refreshCounter = 0;
     var OAuth = function OAuth(endpoint, redirectUrl, origin, clientId, scope) {
         this.clientId = clientId;
         this.endpoint = endpoint;
@@ -7,12 +8,12 @@ pc.extend(pc.net, function () {
         this.scope = scope;
         this.responseType = "token";
         this.accessToken = null;
-        this._refreshCounter = 0;
+        //this._refreshCounter = 0;
     };
     OAuth = OAuth.extendsFrom(pc.net.Http);
     
     OAuth.prototype.refreshAccessToken = function (success) {
-        var id = "pc-corazon-auth-token-" + this._refreshCounter++;
+        var id = "pc-corazon-auth-token-" + refreshCounter++;
         
         // Create a message handler to receive message from iframe.
         var handleMessage = function handleMessage (msg) {
@@ -59,7 +60,7 @@ pc.extend(pc.net, function () {
         }
         iframe = document.createElement("iframe");
         iframe.src = url.toString();
-        iframe.id = 'pc-oauth-access-token';
+        iframe.id = id;
         iframe.style.display = "none";
         document.body.appendChild(iframe);
     };

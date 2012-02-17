@@ -14,9 +14,13 @@ pc.extend(pc.scene, function () {
         this._castShadows = false;
         this._receiveShadows = false;
 
+        this._localLights = [[], []]; // All currently enabled point and spots
+
         this._bones = null; // For skinned meshes, the bones array that influences the skin
     }
     MeshNode = MeshNode.extendsFrom(pc.scene.GraphNode);
+
+    MeshNode._current = null;
 
     /**
      * @function
@@ -48,6 +52,8 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     MeshNode.prototype.dispatch = function () {
+        MeshNode._current = this;
+
         var geom = this._geometry;
         if (geom !== null) {
             if (geom.isSkinned()) {
@@ -61,6 +67,8 @@ pc.extend(pc.scene, function () {
 
             geom.dispatch(this._wtm, this._style);
         }
+        
+        MeshNode._current = null;
     };
 
     /**

@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.39.0
+-------
+* Shadow casting enabled in the pc.scene API for directional and spot lights.
+* Support multiple simultaneous shadow casting lights.
+* Render spotlight cone in tools.
+* Hide cast shadows attribute on point light component for now since this functionality is currently unimplemented.
+* [FIX] pc.net.OAuth clears away iframes correctly
+
+-------
 v0.38.1
 -------
 * [FIX] Crash in Firefox when loading an exported game with a large number of Entity/Assets.

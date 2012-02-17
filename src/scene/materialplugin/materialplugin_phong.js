@@ -16,44 +16,86 @@ pc.scene.materialplugin.phong.isTransparent = function (material) {
     return false;
 }
 
-pc.scene.materialplugin.phong.generateStateKey = function (geometry) {
-    var device = pc.gfx.Device.getCurrent();
-    var currState = device.getCurrentState();
-    var numDirs = 0, numPnts = 0, numSpts = 0;
+pc.scene.materialplugin.phong.generateStateKey = function (mesh) {
     var scene = pc.scene.Scene.current;
+    var i;
+    var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
+    var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
     if (scene) {
-        numDirs = scene.getEnabledLights(pc.scene.LightType.DIRECTIONAL);
-        numPnts = scene.getEnabledLights(pc.scene.LightType.POINT);
-        numSpts = scene.getEnabledLights(pc.scene.LightType.SPOT);
+        for (i = 0; i < scene._globalLights.length; i++) {
+            if (scene._globalLights[i].getCastShadows()) {
+                numSDirs++;
+            } else {
+                numDirs++;
+            }
+        }
+        for (i = 0; i < mesh._localLights[0].length; i++) {
+            if (mesh._localLights[0][i].getCastShadows()) {
+                numSPnts++;
+            } else {
+                numPnts++;
+            }
+        }
+        for (i = 0; i < mesh._localLights[1].length; i++) {
+            if (mesh._localLights[1][i].getCastShadows()) {
+                numSSpts++;
+            } else {
+                numSpts++;
+            }
+        }
     }
-    var skinned = geometry.isSkinned();
+    var skinned = mesh.getGeometry().isSkinned();
+    var currState = pc.gfx.Device.getCurrent().getCurrentState();
     var key = '';
     if (skinned) key += 'skin_';
     if (currState.fog) key += 'fog_';
     if (currState.alphaTest) key += 'atst_';
-    key += numDirs + 'dir_' + numPnts + 'pnt_' + numSpts + 'spt';
+    key += numDirs + 'dir_' + numPnts + 'pnt_' + numSpts + 'spt' + numSDirs + 'sdir_' + numSPnts + 'spnt_' + numSSpts + 'sspt';
     return key;
 }
 
-pc.scene.materialplugin.phong.getProgram = function (material, geometry) {
+pc.scene.materialplugin.phong.getProgram = function (material, mesh) {
+    var scene = pc.scene.Scene.current;
+    var i;
+    var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
+    var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
+    if (scene) {
+        for (i = 0; i < scene._globalLights.length; i++) {
+            if (scene._globalLights[i].getCastShadows()) {
+                numSDirs++;
+            } else {
+                numDirs++;
+            }
+        }
+        for (i = 0; i < mesh._localLights[0].length; i++) {
+            if (mesh._localLights[0][i].getCastShadows()) {
+                numSPnts++;
+            } else {
+                numPnts++;
+            }
+        }
+        for (i = 0; i < mesh._localLights[1].length; i++) {
+            if (mesh._localLights[1][i].getCastShadows()) {
+                numSSpts++;
+            } else {
+                numSpts++;
+            }
+        }
+    }
+    var skinned = mesh.getGeometry().isSkinned();
     var device = pc.gfx.Device.getCurrent();
     var currState = device.getCurrentState();
-    var numDirs = 0, numPnts = 0, numSpts = 0;
-    var scene = pc.scene.Scene.current;
-    if (scene) {
-        numDirs = scene.getEnabledLights(pc.scene.LightType.DIRECTIONAL);
-        numPnts = scene.getEnabledLights(pc.scene.LightType.POINT);
-        numSpts = scene.getEnabledLights(pc.scene.LightType.SPOT);
-    }
-    var skinned = geometry.isSkinned();
     var parameters = material.getParameters();
     var options = {
         alphaTest:         currState.alphaTest,
         fog:               currState.fog,
         skin:              skinned,
-        numDirectionals:   numDirs,
-        numPoints:         numPnts,
-        numSpots:          numSpts,
+        numDirs:           numDirs,
+        numSDirs:          numSDirs,
+        numPnts:           numPnts,
+        numSPnts:          numSPnts,
+        numSpts:           numSpts,
+        numSSpts:          numSSpts,
         diffuseMap:        (parameters["texture_diffuseMap"] !== undefined),
         specularMap:       (parameters["texture_specularMap"] !== undefined),
         specularFactorMap: (parameters["texture_specularFactorMap"] !== undefined),
@@ -63,10 +105,8 @@ pc.scene.materialplugin.phong.getProgram = function (material, geometry) {
         parallaxMap:       (parameters["texture_parallaxMap"] !== undefined),
         sphereMap:         (parameters["texture_sphereMap"] !== undefined),
         cubeMap:           (parameters["texture_cubeMap"] !== undefined),
-        lightMap:          (parameters["texture_lightMap"] !== undefined),
-        shadowMap:         (parameters["texture_shadowMap"] !== undefined)
+        lightMap:          (parameters["texture_lightMap"] !== undefined)
     };
     var library = device.getProgramLibrary();
-    var program = library.getProgram("phong", options);
-    return program;
+    return library.getProgram("phong", options);
 }
