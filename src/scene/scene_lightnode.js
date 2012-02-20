@@ -246,7 +246,7 @@ pc.extend(pc.scene, function () {
             });
 
             this._shadowMatrix = pc.math.mat4.create();
-        } else {
+        } else if (!castShadows && this._shadowBuffer) {
             this._shadowBuffer = null;
             this._shadowCamera = null;
             this._shadowMatrix = null;
