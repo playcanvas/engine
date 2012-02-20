@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.39.3
+-------
+[FIX] If a spotlight's outer cone angle changes, update the shadow camera's FOV.
+
+-------
 v0.39.2
 -------
 [FIX] Fixed logic for enabling shadow casting on a light more than once.

@@ -317,6 +317,10 @@ pc.extend(pc.scene, function () {
     LightNode.prototype.setOuterConeAngle = function (angle) {
         this._outerConeAngle = angle;
         this._outerConeAngleCos = Math.cos(angle * Math.PI / 180);
+
+        if (this._castShadows && this._type === pc.scene.LightType.SPOT) {
+            this._shadowCamera.setFov(this._outerConeAngle * 2);
+        }
     };
 
     /**
