@@ -3,7 +3,7 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
-v0.39.1
+v0.39.2
 -------
 [FIX] Fixed logic for enabling shadow casting on a light more than once.
 
