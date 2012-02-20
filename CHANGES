@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.39.1
+-------
+[FIX] Fixed logic for enabling shadow casting on a light more than once.
+
+-------
 v0.39.0
 -------
 * Shadow casting enabled in the pc.scene API for directional and spot lights.
