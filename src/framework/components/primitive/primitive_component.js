@@ -10,12 +10,16 @@ pc.extend(pc.fw, function () {
 
         context.systems.add("primitive", this);
 
-        // Handle changes to the 'model' value
-        this.bind("set_model", this.onSetModel.bind(this));
-        // Handle changes to the 'type' value
-        this.bind("set_type", this.onSetType.bind(this));
+        // Handle changes to the 'castShadows' value
+        this.bind("set_castShadows", this.onSetCastShadows.bind(this));
         // Handle changes to the 'color' value
         this.bind("set_color", this.onSetColor.bind(this));
+        // Handle changes to the 'model' value
+        this.bind("set_model", this.onSetModel.bind(this));
+        // Handle changes to the 'receiveShadows' value
+        this.bind("set_receiveShadows", this.onSetReceiveShadows.bind(this));
+        // Handle changes to the 'type' value
+        this.bind("set_type", this.onSetType.bind(this));
     };
     
     PrimitiveComponentSystem = PrimitiveComponentSystem.extendsFrom(pc.fw.ComponentSystem);
@@ -32,7 +36,8 @@ pc.extend(pc.fw, function () {
         material.setParameter('material_opacity', 1)
         componentData.material = material;
 
-        this.initialiseComponent(entity, componentData, data, ['type', 'color']);
+        var attribs = ['castShadows', 'color', 'receiveShadows', 'type'];
+        this.initialiseComponent(entity, componentData, data, attribs);
 
         return componentData;
     };      
@@ -115,21 +120,13 @@ pc.extend(pc.fw, function () {
         }
     };
 
-    PrimitiveComponentSystem.prototype.onSetModel = function (entity, name, oldValue, newValue) {
-        if (oldValue) {
-            entity.removeChild(oldValue.getGraph());
-            this.context.scene.removeModel(oldValue);
-            delete oldValue._entity;
-        }
-        
-        if (newValue) {
-            entity.addChild(newValue.getGraph());
-            this.context.scene.addModel(newValue);
-            // Store the entity that owns this model
-            newValue._entity = entity;
+    ModelComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            componentData.model.setCastShadows(newValue);
         }
     };
-    
+
     /**
      * @function
      * @private
@@ -155,6 +152,34 @@ pc.extend(pc.fw, function () {
         data.material.setParameter('material_ambient', color);
 
     }
+
+    PrimitiveComponentSystem.prototype.onSetModel = function (entity, name, oldValue, newValue) {
+        if (oldValue) {
+            entity.removeChild(oldValue.getGraph());
+            this.context.scene.removeModel(oldValue);
+            delete oldValue._entity;
+        }
+        
+        if (newValue) {
+            var componentData = this.getComponentData(entity);
+            newValue.setCastShadows(componentData.castShadows);
+            newValue.setReceiveShadows(componentData.receiveShadows);
+
+            entity.addChild(newValue.getGraph());
+            this.context.scene.addModel(newValue);
+
+            // Store the entity that owns this model
+            newValue._entity = entity;
+        }
+    };
+
+    ModelComponentSystem.prototype.onSetReceiveShadows = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            componentData.model.setReceiveShadows(newValue);
+        }
+    };
+
     return {
         PrimitiveComponentSystem: PrimitiveComponentSystem
     };

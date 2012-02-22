@@ -13,10 +13,10 @@ pc.extend(pc.fw, function () {
 
         // Handle changes to the 'asset' value
         this.bind("set_asset", this.onSetAsset.bind(this));
-        // Handle changes to the 'model' value
-        this.bind("set_model", this.onSetModel.bind(this));
         // Handle changes to the 'castShadows' value
         this.bind("set_castShadows", this.onSetCastShadows.bind(this));
+        // Handle changes to the 'model' value
+        this.bind("set_model", this.onSetModel.bind(this));
         // Handle changes to the 'receiveShadows' value
         this.bind("set_receiveShadows", this.onSetReceiveShadows.bind(this));
     }
@@ -25,7 +25,8 @@ pc.extend(pc.fw, function () {
     ModelComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.ModelComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['asset']);
+        var attribs = ['asset', 'castShadows', 'receiveShadows'];
+        this.initialiseComponent(entity, componentData, data, attribs);
 
         return componentData;
     };
@@ -120,7 +121,7 @@ pc.extend(pc.fw, function () {
             // Update any animation component
             this.context.systems.animation.setModel(entity, newValue);
         }
-    };    
+    };
 
     ModelComponentSystem.prototype.onSetReceiveShadows = function (entity, name, oldValue, newValue) {
         if (newValue !== undefined) {
