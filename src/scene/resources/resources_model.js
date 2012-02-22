@@ -470,7 +470,7 @@ pc.extend(pc.resources, function () {
                 var sphere = new pc.shape.Sphere();
                 sphere.compute(entry.data);
                 geometry.setVolume(sphere);
-    
+
                 positions = entry.data;
             }
             if (entry.name === "vertex_normal") {
@@ -549,6 +549,17 @@ pc.extend(pc.resources, function () {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
     
             geometry.getSubMeshes().push(subMesh);
+        }
+
+        // Set the local space axis-aligned bounding box of the geometry
+        if (geomData.aabb) {
+            var min = geomData.aabb.min;
+            var max = geomData.aabb.max;
+            var aabb = new pc.shade.Aabb(
+                pc.math.vec3.create((max.x + min.x) * 0.5, (max.y + min.y) * 0.5, (max.z + min.z) * 0.5),
+                pc.math.vec3.create((max.x - min.x) * 0.5, (max.y - min.y) * 0.5, (max.z - min.z) * 0.5)
+            );
+            geometry.setAabb(aabb);
         }
 
         return geometry;

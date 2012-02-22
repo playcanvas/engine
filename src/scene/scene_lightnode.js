@@ -59,7 +59,7 @@ pc.extend(pc.scene, function () {
         clone.setColor(this.getColor().splice(0));
         clone.setIntensity(this.getIntensity());
         clone.setEnabled(this.getEnabled());
-        clone.setCastShadows(this.getCastShadows());
+        clone.setCastShadows(this.castShadows());
 
         // Point and spot properties
         clone.setAttenuationStart(this.getAttenuationStart());
@@ -97,13 +97,13 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.LightNode#getCastShadows
+     * @name pc.scene.LightNode#castShadows
      * @description Queries whether the light casts shadows. Dynamic lights do not
      * cast shadows by default.
      * @returns {Boolean} true if the specified light casts shadows and false otherwise.
      * @author Will Eastcott
      */
-    LightNode.prototype.getCastShadows = function () {
+    LightNode.prototype.castShadows = function () {
         return this._castShadows;
     };
 

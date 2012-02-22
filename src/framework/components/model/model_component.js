@@ -10,9 +10,15 @@ pc.extend(pc.fw, function () {
         this.context = context;
 
         context.systems.add("model", this);
-        
+
+        // Handle changes to the 'asset' value
         this.bind("set_asset", this.onSetAsset.bind(this));
+        // Handle changes to the 'model' value
         this.bind("set_model", this.onSetModel.bind(this));
+        // Handle changes to the 'castShadows' value
+        this.bind("set_castShadows", this.onSetCastShadows.bind(this));
+        // Handle changes to the 'receiveShadows' value
+        this.bind("set_receiveShadows", this.onSetReceiveShadows.bind(this));
     }
     ModelComponentSystem = ModelComponentSystem.extendsFrom(pc.fw.ComponentSystem);
     
@@ -86,22 +92,42 @@ pc.extend(pc.fw, function () {
             this.set(entity, 'model', null);
         }
     }; 
-    
+
+    ModelComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            componentData.model.setCastShadows(newValue);
+        }
+    };
+
     ModelComponentSystem.prototype.onSetModel = function (entity, name, oldValue, newValue) {
-        if(oldValue) {
+        if (oldValue) {
             this.context.scene.removeModel(oldValue);
             entity.removeChild(oldValue.getGraph());
         }
 
-        if(newValue) {
+        if (newValue) {
+            var componentData = this.getComponentData(entity);
+            newValue.setCastShadows(componentData.castShadows);
+            newValue.setReceiveShadows(componentData.receiveShadows);
+
             entity.addChild(newValue.getGraph());
             this.context.scene.addModel(newValue);
+
             // Store the entity that owns this model
             newValue._entity = entity;
+
             // Update any animation component
             this.context.systems.animation.setModel(entity, newValue);
         }
     };    
+
+    ModelComponentSystem.prototype.onSetReceiveShadows = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            componentData.model.setReceiveShadows(newValue);
+        }
+    };
 
     return {
         ModelComponentSystem: ModelComponentSystem

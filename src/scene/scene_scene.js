@@ -277,12 +277,16 @@ pc.extend(pc.scene, function () {
                     // Render both alpha and opaque meshes front to back
                     if (alphaMeshes.length > 0) {
                         for (j = alphaMeshes.length - 1; j >= 0; j--) {
-                            alphaMeshes[i].dispatch();
+                            if (alphaMeshes[i].occludeLight()) {
+                                alphaMeshes[i].dispatch();
+                            }
                         }
                     }
                     if (opaqueMeshes.length > 0) {
                         for (j = opaqueMeshes.length - 1; j >= 0; j--) {
-                            opaqueMeshes[j].dispatch();
+                            if (alphaMeshes[i].occludeLight()) {
+                                opaqueMeshes[j].dispatch();
+                            }
                         }
                     }
 
