@@ -97,7 +97,9 @@ pc.extend(pc.fw, function () {
     ModelComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
-            componentData.model.setCastShadows(newValue);
+            if (componentData.model) {
+                componentData.model.setCastShadows(newValue);
+            }
         }
     };
 
@@ -126,7 +128,9 @@ pc.extend(pc.fw, function () {
     ModelComponentSystem.prototype.onSetReceiveShadows = function (entity, name, oldValue, newValue) {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
-            componentData.model.setReceiveShadows(newValue);
+            if (componentData.model) {
+                componentData.model.setReceiveShadows(newValue);
+            }
         }
     };
 
