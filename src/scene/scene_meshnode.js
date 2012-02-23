@@ -148,7 +148,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     MeshNode.prototype.setCastShadows = function (castShadows) {
-        this._castShadows = occlude;
+        this._castShadows = castShadows;
     };
 
     /**

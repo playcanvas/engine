@@ -98,7 +98,10 @@ pc.extend(pc.fw, function () {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
             if (componentData.model) {
-                componentData.model.setCastShadows(newValue);
+                var meshes = componentData.model.getMeshes();
+                for (var i = 0; i < meshes.length; i++) {
+                    meshes[i].setCastShadows(newValue);
+                }
             }
         }
     };
@@ -111,8 +114,11 @@ pc.extend(pc.fw, function () {
 
         if (newValue) {
             var componentData = this.getComponentData(entity);
-            newValue.setCastShadows(componentData.castShadows);
-            newValue.setReceiveShadows(componentData.receiveShadows);
+            var meshes = newValue.getMeshes();
+            for (var i = 0; i < meshes.length; i++) {
+                meshes[i].setCastShadows(componentData.castShadows);
+                meshes[i].setReceiveShadows(componentData.receiveShadows);
+            }
 
             entity.addChild(newValue.getGraph());
             this.context.scene.addModel(newValue);
@@ -129,7 +135,10 @@ pc.extend(pc.fw, function () {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
             if (componentData.model) {
-                componentData.model.setReceiveShadows(newValue);
+                var meshes = componentData.model.getMeshes();
+                for (var i = 0; i < meshes.length; i++) {
+                    meshes[i].setReceiveShadows(newValue);
+                }
             }
         }
     };
