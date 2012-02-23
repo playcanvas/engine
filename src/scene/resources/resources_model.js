@@ -471,6 +471,12 @@ pc.extend(pc.resources, function () {
                 sphere.compute(entry.data);
                 geometry.setVolume(sphere);
 
+                if (!geomData.bbox) {
+                    var aabb = new pc.shape.Aabb();
+                    aabb.compute(entry.data);
+                    geometry.setAabb(sphere);
+                }
+
                 positions = entry.data;
             }
             if (entry.name === "vertex_normal") {
@@ -552,12 +558,12 @@ pc.extend(pc.resources, function () {
         }
 
         // Set the local space axis-aligned bounding box of the geometry
-        if (geomData.aabb) {
-            var min = geomData.aabb.min;
-            var max = geomData.aabb.max;
-            var aabb = new pc.shade.Aabb(
-                pc.math.vec3.create((max.x + min.x) * 0.5, (max.y + min.y) * 0.5, (max.z + min.z) * 0.5),
-                pc.math.vec3.create((max.x - min.x) * 0.5, (max.y - min.y) * 0.5, (max.z - min.z) * 0.5)
+        if (geomData.bbox) {
+            var min = geomData.bbox.min;
+            var max = geomData.bbox.max;
+            var aabb = new pc.shape.Aabb(
+                pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+                pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
             );
             geometry.setAabb(aabb);
         }
