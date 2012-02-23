@@ -120,7 +120,7 @@ pc.extend(pc.fw, function () {
         }
     };
 
-    ModelComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
+    PrimitiveComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
             componentData.model.setCastShadows(newValue);
@@ -173,7 +173,7 @@ pc.extend(pc.fw, function () {
         }
     };
 
-    ModelComponentSystem.prototype.onSetReceiveShadows = function (entity, name, oldValue, newValue) {
+    PrimitiveComponentSystem.prototype.onSetReceiveShadows = function (entity, name, oldValue, newValue) {
         if (newValue !== undefined) {
             var componentData = this.getComponentData(entity);
             componentData.model.setReceiveShadows(newValue);
