@@ -44,6 +44,12 @@ pc.extend(pc.fw, function () {
         
         // Register message event handler
         window.addEventListener("message", this._handler, false);
+        
+        if (!pc.livelinks) {
+            pc.livelinks = [];
+        }
+        
+        pc.livelinks.push(this);
     }
     
     /**
@@ -90,6 +96,7 @@ pc.extend(pc.fw, function () {
      * @function
      * @name pc.fw.LiveLink#send
      * @description Send a message to all registered destinations
+     * Note, if the destination window is the same as the current window, the call will be synchronous (success() will be called before the function returns), otherwise it will be asynchronous
      * @param {pc.fw.LiveLinkMessage} msg The message to send
      */
     LiveLink.prototype.send = function (msg, success) {
@@ -114,8 +121,6 @@ pc.extend(pc.fw, function () {
     }
     
     LiveLink.prototype._send = function(msg, success, _window, origin) {
-        //logDEBUG("Send: " + msg.type);
-
         msg.senderid = this._linkid;
         if(this._callbacks[msg.id]) {
             this._callbacks[msg.id].count++;
@@ -126,7 +131,21 @@ pc.extend(pc.fw, function () {
             }            
         }
         var data = pc.fw.LiveLinkMessage.serialize(msg);
-        _window.postMessage(data, origin);
+        
+        // If we're sending a message to the current window, then just call the _handleMessage function directly to prevent the overhead
+        // of postMessage() which can take several hundred ms in some cases. 
+        // NOTE: This is not asynchronous like a call to postMessage()
+        if (_window === window) {
+            pc.livelinks.forEach(function (link) {
+                link._handleMessage({
+                    source: window,
+                    data: data             
+                });
+            })
+        } else {
+            _window.postMessage(data, origin);    
+        }
+        
     };
     
     /**
