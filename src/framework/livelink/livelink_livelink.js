@@ -40,7 +40,9 @@ pc.extend(pc.fw, function () {
         this._callbacks = {};
         this._linkid = senderIdPrefix + '-' + pc.guid.create();
         this._listener = null;
-        this._handler = pc.callback(this, this._handleMessage);
+        this._handler = this._handleMessage.bind(this);
+        
+        // Register message event handler
         window.addEventListener("message", this._handler, false);
     }
     
@@ -119,13 +121,14 @@ pc.extend(pc.fw, function () {
             this._callbacks[msg.id].count++;
         } else {
             this._callbacks[msg.id] = {
-                count:1,
-                callback:pc.callback(this, success)
+                count: 1,
+                callback: success ? success.bind(this) : function () {}
             }            
         }
         var data = pc.fw.LiveLinkMessage.serialize(msg);
         _window.postMessage(data, origin);
     };
+    
     /**
      * @ignore
      * @function
