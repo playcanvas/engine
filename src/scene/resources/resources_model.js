@@ -130,6 +130,11 @@ pc.extend(pc.resources, function () {
         camera.setNearClip(cameraData.nearClip);
         camera.setFarClip(cameraData.farClip);
         camera.setFov(cameraData.fov);
+        camera.setClearOptions({
+            color: cameraData.clearColor || [0, 0, 0, 1],
+            depth: 1,
+            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+        });
         if (cameraData.lookAt) {
             camera._lookAtId = cameraData.lookAt;
         }
@@ -465,7 +470,13 @@ pc.extend(pc.resources, function () {
                 var sphere = new pc.shape.Sphere();
                 sphere.compute(entry.data);
                 geometry.setVolume(sphere);
-    
+
+                if (!geomData.bbox) {
+                    var aabb = new pc.shape.Aabb();
+                    aabb.compute(entry.data);
+                    geometry.setAabb(sphere);
+                }
+
                 positions = entry.data;
             }
             if (entry.name === "vertex_normal") {
@@ -544,6 +555,17 @@ pc.extend(pc.resources, function () {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
     
             geometry.getSubMeshes().push(subMesh);
+        }
+
+        // Set the local space axis-aligned bounding box of the geometry
+        if (geomData.bbox) {
+            var min = geomData.bbox.min;
+            var max = geomData.bbox.max;
+            var aabb = new pc.shape.Aabb(
+                pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+                pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+            );
+            geometry.setAabb(aabb);
         }
 
         return geometry;

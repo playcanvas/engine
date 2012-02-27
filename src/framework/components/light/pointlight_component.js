@@ -9,7 +9,12 @@ pc.extend(pc.fw, function () {
         lightMat.setParameter("material_emissive",  [1,1,0]);
         lightMat.setParameter("material_opacity",   1);
 
-        return pc.scene.procedural.createSphere({material: lightMat});
+        var sphereGeom = pc.scene.procedural.createSphere({material: lightMat});
+        
+        var sphereMesh = new pc.scene.MeshNode();
+        sphereMesh.setGeometry(sphereGeom);
+        
+        return sphereMesh;
     };
 
     /**
@@ -50,7 +55,8 @@ pc.extend(pc.fw, function () {
         data = data || {};
         data.light = light;
 
-        this.initialiseComponent(entity, componentData, data, ['light', 'color', 'intensity', 'attenuationEnd', 'enable']);
+        var attribs = ['light', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd'];
+        this.initialiseComponent(entity, componentData, data, attribs);
 
         return componentData;
     };
@@ -72,7 +78,10 @@ pc.extend(pc.fw, function () {
                 var componentData = components[id].component;
 
                 var transform = entity.getWorldTransform();
-                this.renderable.dispatch(transform);
+
+                this.renderable.setLocalTransform(transform);
+                this.renderable.syncHierarchy();
+                this.renderable.dispatch();
             }
         }
     };

@@ -3,6 +3,8 @@ pc.extend(pc.fw, function () {
         // Serialized
         this.type = pc.shape.Type.BOX;
         this.color = "0xffffff";
+        this.castShadows = false;
+        this.receiveShadows = true;
 
         // Non-serialized
         this.material = null;
@@ -51,3 +53,20 @@ editor.link.expose({
     defaultValue: "0xffffff"
 });
 
+editor.link.expose({
+    system: "primitive",
+    variable: "castShadows",
+    displayName: "Cast shadows",
+    description: "Occlude light from shadow casting lights",
+    type: "boolean",
+    defaultValue: false
+});
+
+editor.link.expose({
+    system: "primitive",
+    variable: "receiveShadows",
+    displayName: "Receive shadows",
+    description: "Receive shadows cast from occluders",
+    type: "boolean",
+    defaultValue: true
+});

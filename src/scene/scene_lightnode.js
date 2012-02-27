@@ -38,6 +38,10 @@ pc.extend(pc.scene, function () {
         this._direction = [];
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
+
+        this._shadowBuffer = null;
+        this._shadowCamera = null;
+        this._shadowMatrix = null;
     };
 
     LightNode = LightNode.extendsFrom(pc.scene.GraphNode);
@@ -55,7 +59,7 @@ pc.extend(pc.scene, function () {
         clone.setColor(this.getColor().splice(0));
         clone.setIntensity(this.getIntensity());
         clone.setEnabled(this.getEnabled());
-        clone.setCastShadows(this.getCastShadows());
+        clone.setCastShadows(this.castShadows());
 
         // Point and spot properties
         clone.setAttenuationStart(this.getAttenuationStart());
@@ -93,13 +97,13 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.LightNode#getCastShadows
+     * @name pc.scene.LightNode#castShadows
      * @description Queries whether the light casts shadows. Dynamic lights do not
      * cast shadows by default.
      * @returns {Boolean} true if the specified light casts shadows and false otherwise.
      * @author Will Eastcott
      */
-    LightNode.prototype.getCastShadows = function () {
+    LightNode.prototype.castShadows = function () {
         return this._castShadows;
     };
 
@@ -207,6 +211,46 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setCastShadows = function (castShadows) {
         this._castShadows = castShadows;
+
+        if (this._type === pc.scene.LightType.POINT) {
+            // No support for point lights yet
+            return;
+        }
+
+        if (castShadows && !this._shadowBuffer) {
+            // SHADOW TODO: Make the shadowmap dimensions controllable
+            // Also, it may be better to keep shadow algorithm implementation details out of the light class
+            this._shadowBuffer = new pc.gfx.FrameBuffer(1024, 1024, true);
+            var shadowTexture = this._shadowBuffer.getTexture();
+            shadowTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
+            shadowTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+
+            var near = 0.1;
+            var far = 50;
+            var extent = 10;
+            this._shadowCamera = new pc.scene.CameraNode();
+            if (this._type === pc.scene.LightType.DIRECTIONAL) {
+                this._shadowCamera.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
+                this._shadowCamera.setViewWindow(pc.math.vec2.create(extent, extent));
+            } else {
+                this._shadowCamera.setProjection(pc.scene.Projection.PERSPECTIVE);
+                this._shadowCamera.setFov(this._outerConeAngle * 2);
+            }
+            this._shadowCamera.setNearClip(near);
+            this._shadowCamera.setFarClip(far);
+            this._shadowCamera.setRenderTarget(new pc.gfx.RenderTarget(this._shadowBuffer));
+            this._shadowCamera.setClearOptions({
+                color: [1.0, 1.0, 1.0, 1.0],
+                depth: 1.0,
+                flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+            });
+
+            this._shadowMatrix = pc.math.mat4.create();
+        } else if (!castShadows && this._shadowBuffer) {
+            this._shadowBuffer = null;
+            this._shadowCamera = null;
+            this._shadowMatrix = null;
+        }
     };
 
     /**
@@ -253,7 +297,7 @@ pc.extend(pc.scene, function () {
      * @description Sets the intensity of the light. The intensity is used to
      * scale the color of the light. Note that this makes it possible to take
      * the light color's RGB components outside the range 0 to 1.
-     * @param {Number} color The intensity of the light.
+     * @param {Number} intensity The intensity of the light.
      * @author Will Eastcott
      */
     LightNode.prototype.setIntensity = function (intensity) {
@@ -273,6 +317,10 @@ pc.extend(pc.scene, function () {
     LightNode.prototype.setOuterConeAngle = function (angle) {
         this._outerConeAngle = angle;
         this._outerConeAngleCos = Math.cos(angle * Math.PI / 180);
+
+        if (this._castShadows && this._type === pc.scene.LightType.SPOT) {
+            this._shadowCamera.setFov(this._outerConeAngle * 2);
+        }
     };
 
     /**

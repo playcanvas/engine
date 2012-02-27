@@ -193,12 +193,16 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
 
     var boundingSphere = new pc.shape.Sphere();
     boundingSphere.compute(positions);
-    
+
+    var aabb = new pc.shape.Aabb();
+    aabb.compute(positions);
+
     var geometry = new pc.scene.Geometry();
     geometry.setVertexBuffers([vertexBuffer]);
     geometry.setIndexBuffer(indexBuffer);
     geometry.setSubMeshes([submesh]);
     geometry.setVolume(boundingSphere);
+    geometry.setAabb(aabb);
     return geometry;
 }
 

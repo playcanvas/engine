@@ -74,7 +74,7 @@ pc.extend(pc.scene, function () {
             var material = submesh.material;
             material.setParameters();
             device.updateLocalState(material.getState());
-            device.setProgram(material.getProgram(this));
+            device.setProgram(material.getProgram(pc.scene.MeshNode._current));
 
             // Now draw the submesh
             device.draw(submesh.primitive);
@@ -206,6 +206,29 @@ pc.extend(pc.scene, function () {
             this._matrixPaletteF32 = null;
             this._matrixPaletteEntryF32 = null;
         }
+    };
+
+    /**
+     * @function
+     * @name pc.scene.Geometry#getAabb
+     * @description Retrieves the pc.shape.Aabb object assigned to the geometry which acts as
+     * the geometry's bounding volume.
+     * @returns {pc.shape.Aabb} The geometry's axis-aligned bounding box volume.
+     * @author Will Eastcott
+     */
+    Geometry.prototype.getAabb = function () {
+        return this._aabb;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.Geometry#setAabb
+     * @description Assigns a pc.shape.Aabb volume object to the specified geometry.
+     * @param {pc.shape.Aabb} volume The bounding volume to assign to the geometry.
+     * @author Will Eastcott
+     */
+    Geometry.prototype.setAabb = function (aabb) {
+        this._aabb = aabb;
     };
 
     /**

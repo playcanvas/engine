@@ -12,11 +12,17 @@ pc.extend(pc.scene, function () {
         this._geometry = null;
         this._style = RenderStyle.NORMAL;
         this._castShadows = false;
-        this._receiveShadows = false;
+        this._receiveShadows = true;
+
+        this._localLights = [[], []]; // All currently enabled point and spots
+
+        this._aabb = new pc.shape.Aabb();
 
         this._bones = null; // For skinned meshes, the bones array that influences the skin
     }
     MeshNode = MeshNode.extendsFrom(pc.scene.GraphNode);
+
+    MeshNode._current = null;
 
     /**
      * @function
@@ -48,6 +54,8 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     MeshNode.prototype.dispatch = function () {
+        MeshNode._current = this;
+
         var geom = this._geometry;
         if (geom !== null) {
             if (geom.isSkinned()) {
@@ -61,27 +69,30 @@ pc.extend(pc.scene, function () {
 
             geom.dispatch(this._wtm, this._style);
         }
+        
+        MeshNode._current = null;
     };
 
     /**
      * @function
-     * @name pc.scene.MeshNode#getCastShadows
-     * @description Queries whether the specified mesh cast shadows onto other meshes.
-     * @returns {Boolean} True if the specified mesh cast shadows, false otherwise.
+     * @name pc.scene.MeshNode#castShadows
+     * @description Queries whether the specified mesh occludes light from dynamic 
+     * lights that cast shadows.
+     * @returns {Boolean} True if the specified mesh casts shadows, false otherwise.
      * @author Will Eastcott
      */
-    MeshNode.prototype.getCastShadows = function () {
+    MeshNode.prototype.castShadows = function () {
         return this._castShadows;
     };
 
     /**
      * @function
-     * @name pc.scene.MeshNode#getReceiveShadows
+     * @name pc.scene.MeshNode#receiveShadows
      * @description Queries whether the specified mesh cast shadows onto other meshes.
      * @returns {Boolean} True if the specified mesh cast shadows, false otherwise.
      * @author Will Eastcott
      */
-    MeshNode.prototype.getReceiveShadows = function () {
+    MeshNode.prototype.receiveShadows = function () {
         return this._receiveShadows;
     };
 
@@ -130,7 +141,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.MeshNode#setCastShadows
+     * @name pc.scene.MeshNode#setOccludeLight
      * @description Toggles the casting of shadows from this mesh. In other words, if true
      * is passed to this function, the mesh will be treated as an occluder.
      * @param {Boolean} castShadows True to cast shadows from this mesh, false otherwise.
@@ -178,6 +189,11 @@ pc.extend(pc.scene, function () {
      */
     MeshNode.prototype.setRenderStyle = function (style) {
         this._style = style;
+    }
+
+    MeshNode.prototype.getAabb = function () {
+        this._aabb.setFromTransformedAabb(this._geometry._aabb, this._wtm);
+        return this._aabb;
     }
 
     return {

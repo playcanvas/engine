@@ -155,14 +155,14 @@ pc.extend(pc.scene, function () {
      * @returns {pc.gfx.Program} The program assigned to the material.
      * @author Will Eastcott
      */
-    Material.prototype.getProgram = function (geometry) {
+    Material.prototype.getProgram = function (mesh) {
         if (this._programName === null) {
             return this._program;
         } else {
-            var key = pc.scene.materialplugin[this._programName].generateStateKey(geometry);
+            var key = pc.scene.materialplugin[this._programName].generateStateKey(mesh);
             var program = this._programs[key];
             if (!program) {
-                program = pc.scene.materialplugin[this._programName].getProgram(this, geometry);
+                program = pc.scene.materialplugin[this._programName].getProgram(this, mesh);
                 this._programs[key] = program;
             }
             return program;
