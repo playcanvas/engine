@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.40.0
+-------
+* Update primitive component to support casting/receiving shadows
+* Compute/load AABB info for models and primitives
+* Update Copyright and title in models and primitives
+* Remove some deprecated calls to pc.callback
+* [FIX] Large speed increase to Designer Camera, especially in Firefox
+* [FIX] Script resources which are regular javascript files no longer hang the resource loader.
+
+-------
 v0.39.3
 -------
 [FIX] If a spotlight's outer cone angle changes, update the shadow camera's FOV.
