@@ -110,13 +110,14 @@ pc.extend(pc.resources, function () {
                     if (ScriptType._pcScriptName) {
                         throw Error("Attribute _pcScriptName is reserved on ScriptTypes for ResourceLoader use");
                     }
-                    ScriptType._pcScriptName = script.name; // store name in script object
+                    ScriptType._pcScriptName = script.name; // sotre name in script object
                     self._loaded[url] = ScriptType; //{name: script.name, ScriptType: ScriptType};
                     success(ScriptType);
                 } else {
                     // loaded a regular javascript script, so no ScriptType to instanciate.
                     // However, we still need to register that we've loaded it in case there is a timeout
                     self._loaded[url] = true;
+                    success(null);
                 }
                 self._loading = null;
                 // Load next one in the queue

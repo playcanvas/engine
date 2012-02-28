@@ -23,21 +23,21 @@ pc.scene.materialplugin.phong.generateStateKey = function (mesh) {
     var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
     if (scene) {
         for (i = 0; i < scene._globalLights.length; i++) {
-            if (scene._globalLights[i].getCastShadows()) {
+            if (scene._globalLights[i].castShadows()) {
                 numSDirs++;
             } else {
                 numDirs++;
             }
         }
         for (i = 0; i < mesh._localLights[0].length; i++) {
-            if (mesh._localLights[0][i].getCastShadows()) {
+            if (mesh._localLights[0][i].castShadows()) {
                 numSPnts++;
             } else {
                 numPnts++;
             }
         }
         for (i = 0; i < mesh._localLights[1].length; i++) {
-            if (mesh._localLights[1][i].getCastShadows()) {
+            if (mesh._localLights[1][i].castShadows()) {
                 numSSpts++;
             } else {
                 numSpts++;
@@ -61,21 +61,21 @@ pc.scene.materialplugin.phong.getProgram = function (material, mesh) {
     var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
     if (scene) {
         for (i = 0; i < scene._globalLights.length; i++) {
-            if (scene._globalLights[i].getCastShadows()) {
+            if (scene._globalLights[i].castShadows()) {
                 numSDirs++;
             } else {
                 numDirs++;
             }
         }
         for (i = 0; i < mesh._localLights[0].length; i++) {
-            if (mesh._localLights[0][i].getCastShadows()) {
+            if (mesh._localLights[0][i].castShadows()) {
                 numSPnts++;
             } else {
                 numPnts++;
             }
         }
         for (i = 0; i < mesh._localLights[1].length; i++) {
-            if (mesh._localLights[1][i].getCastShadows()) {
+            if (mesh._localLights[1][i].castShadows()) {
                 numSSpts++;
             } else {
                 numSpts++;

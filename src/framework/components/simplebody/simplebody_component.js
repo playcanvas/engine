@@ -14,11 +14,13 @@ pc.extend(pc.fw, function () {
     };
     
     SimpleBodyComponentSystem.prototype.update = function (dt) {
-        var components = this._getComponents();
+        var id;
+        var components = this.getComponents();
+        
         for (id in components) {
             if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
-                component = components[id].component;
+                var entity = components[id].entity;
+                var component = components[id].component;
                 
                 var transform = entity.getLocalTransform();
                 position = pc.math.mat4.getTranslation(transform),

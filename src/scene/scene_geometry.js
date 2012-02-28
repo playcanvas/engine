@@ -210,6 +210,29 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.Geometry#getAabb
+     * @description Retrieves the pc.shape.Aabb object assigned to the geometry which acts as
+     * the geometry's bounding volume.
+     * @returns {pc.shape.Aabb} The geometry's axis-aligned bounding box volume.
+     * @author Will Eastcott
+     */
+    Geometry.prototype.getAabb = function () {
+        return this._aabb;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.Geometry#setAabb
+     * @description Assigns a pc.shape.Aabb volume object to the specified geometry.
+     * @param {pc.shape.Aabb} volume The bounding volume to assign to the geometry.
+     * @author Will Eastcott
+     */
+    Geometry.prototype.setAabb = function (aabb) {
+        this._aabb = aabb;
+    };
+
+    /**
+     * @function
      * @name pc.scene.Geometry#getVolume
      * @description Retrieves the pc.shape.Sphere object assigned to the geometry which acts as
      * the geometry's bounding volume.

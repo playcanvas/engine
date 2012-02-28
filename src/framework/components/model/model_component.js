@@ -10,16 +10,23 @@ pc.extend(pc.fw, function () {
         this.context = context;
 
         context.systems.add("model", this);
-        
+
+        // Handle changes to the 'asset' value
         this.bind("set_asset", this.onSetAsset.bind(this));
+        // Handle changes to the 'castShadows' value
+        this.bind("set_castShadows", this.onSetCastShadows.bind(this));
+        // Handle changes to the 'model' value
         this.bind("set_model", this.onSetModel.bind(this));
+        // Handle changes to the 'receiveShadows' value
+        this.bind("set_receiveShadows", this.onSetReceiveShadows.bind(this));
     }
     ModelComponentSystem = ModelComponentSystem.extendsFrom(pc.fw.ComponentSystem);
     
     ModelComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.ModelComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['asset']);
+        var attribs = ['asset', 'castShadows', 'receiveShadows'];
+        this.initialiseComponent(entity, componentData, data, attribs);
 
         return componentData;
     };
@@ -86,22 +93,55 @@ pc.extend(pc.fw, function () {
             this.set(entity, 'model', null);
         }
     }; 
-    
+
+    ModelComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            if (componentData.model) {
+                var meshes = componentData.model.getMeshes();
+                for (var i = 0; i < meshes.length; i++) {
+                    meshes[i].setCastShadows(newValue);
+                }
+            }
+        }
+    };
+
     ModelComponentSystem.prototype.onSetModel = function (entity, name, oldValue, newValue) {
-        if(oldValue) {
+        if (oldValue) {
             this.context.scene.removeModel(oldValue);
             entity.removeChild(oldValue.getGraph());
         }
 
-        if(newValue) {
+        if (newValue) {
+            var componentData = this.getComponentData(entity);
+            var meshes = newValue.getMeshes();
+            for (var i = 0; i < meshes.length; i++) {
+                meshes[i].setCastShadows(componentData.castShadows);
+                meshes[i].setReceiveShadows(componentData.receiveShadows);
+            }
+
             entity.addChild(newValue.getGraph());
             this.context.scene.addModel(newValue);
+
             // Store the entity that owns this model
             newValue._entity = entity;
+
             // Update any animation component
             this.context.systems.animation.setModel(entity, newValue);
         }
-    };    
+    };
+
+    ModelComponentSystem.prototype.onSetReceiveShadows = function (entity, name, oldValue, newValue) {
+        if (newValue !== undefined) {
+            var componentData = this.getComponentData(entity);
+            if (componentData.model) {
+                var meshes = componentData.model.getMeshes();
+                for (var i = 0; i < meshes.length; i++) {
+                    meshes[i].setReceiveShadows(newValue);
+                }
+            }
+        }
+    };
 
     return {
         ModelComponentSystem: ModelComponentSystem
