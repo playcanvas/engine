@@ -42,7 +42,7 @@ pc.math.vec2 = function () {
          * @author Will Eastcott
          */
         clone: function (v0) {
-            return v0.slice(0, 2);
+            return new Float32Array(v0);
         },
 
         /**
@@ -79,7 +79,10 @@ pc.math.vec2 = function () {
          * @author Will Eastcott
          */
         create: function (x, y) {
-            return [x, y];
+            var v = new Float32Array(2);
+            v[0] = x;
+            v[1] = y;
+            return v;
         },
 
         /**
@@ -96,7 +99,7 @@ pc.math.vec2 = function () {
          * console.log("The result of the dot product is: " + v1dotv2);
          * @author Will Eastcott
          */
-        dot : function (v0, v1) {
+        dot: function (v0, v1) {
             return v0[0]*v1[0] + v0[1]*v1[1];
         },
 
@@ -281,7 +284,7 @@ pc.math.vec2 = function () {
          * console.log("The result of the sum is: " + result[0] + ", " + result[1]);
          * @author Will Eastcott
          */
-        sum: function() {
+        sum: function () {
             var i;
             var num = arguments.length - 1;
             var x = 0;
@@ -351,7 +354,7 @@ pc.math.vec3 = function () {
          * console.log("The result of the sum is: " + result[0] + ", " + result[1] + ", " + result[2]);
          * @author Will Eastcott
          */
-        sum: function() {
+        sum: function () {
             var i;
             var num = arguments.length - 1;
             var x = 0;
