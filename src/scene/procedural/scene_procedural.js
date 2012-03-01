@@ -27,7 +27,6 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
     var v1, v2, v3;
     var w1, w2, w3;
     var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
-    var temp = pc.math.vec3.create(0, 0, 0);
     var sdir = pc.math.vec3.create(0, 0, 0);
     var tdir = pc.math.vec3.create(0, 0, 0);
     var v1   = pc.math.vec3.create(0, 0, 0);
@@ -37,15 +36,10 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
     var w2   = pc.math.vec2.create(0, 0);
     var w3   = pc.math.vec2.create(0, 0);
     var i; // Loop counter
-    var tan1 = [];
-    var tan2 = [];
+    var tan1 = new Float32Array(vertexCount * 3);
+    var tan2 = new Float32Array(vertexCount * 3);
 
-    for (i = 0; i < vertexCount; i++) {
-        tan1[i] = pc.math.vec3.create(0, 0, 0);
-        tan2[i] = pc.math.vec3.create(0, 0, 0);
-    }
     var tangents = [];
-    var sdir, tdir;
 
     for (i = 0; i < triangleCount; i++) {
         i1 = indices[i * 3];
@@ -80,24 +74,41 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
                                (s1 * y2 - s2 * y1) * r,
                                (s1 * z2 - s2 * z1) * r);
 
-        pc.math.vec3.add(tan1[i1], sdir, tan1[i1]);
-        pc.math.vec3.add(tan1[i2], sdir, tan1[i2]);
-        pc.math.vec3.add(tan1[i3], sdir, tan1[i3]);
+        tan1[i1 * 3 + 0] += sdir[0];
+        tan1[i1 * 3 + 1] += sdir[1];
+        tan1[i1 * 3 + 2] += sdir[2];
+        tan1[i2 * 3 + 0] += sdir[0];
+        tan1[i2 * 3 + 1] += sdir[1];
+        tan1[i2 * 3 + 2] += sdir[2];
+        tan1[i3 * 3 + 0] += sdir[0];
+        tan1[i3 * 3 + 1] += sdir[1];
+        tan1[i3 * 3 + 2] += sdir[2];
 
-        pc.math.vec3.add(tan2[i1], tdir, tan2[i1]);
-        pc.math.vec3.add(tan2[i2], tdir, tan2[i2]);
-        pc.math.vec3.add(tan2[i3], tdir, tan2[i3]);
+        tan2[i1 * 3 + 0] += tdir[0];
+        tan2[i1 * 3 + 1] += tdir[1];
+        tan2[i1 * 3 + 2] += tdir[2];
+        tan2[i2 * 3 + 0] += tdir[0];
+        tan2[i2 * 3 + 1] += tdir[1];
+        tan2[i2 * 3 + 2] += tdir[2];
+        tan2[i3 * 3 + 0] += tdir[0];
+        tan2[i3 * 3 + 1] += tdir[1];
+        tan2[i3 * 3 + 2] += tdir[2];
     }
 
-    var n = pc.math.vec3.create(0, 0, 0);
+    var n    = pc.math.vec3.create(0, 0, 0);
+    var t1   = pc.math.vec3.create(0, 0, 0);
+    var t2   = pc.math.vec3.create(0, 0, 0);
+    var temp = pc.math.vec3.create(0, 0, 0);
+
     for (i = 0; i < vertexCount; i++) {
         pc.math.vec3.set(n, normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
-        var t = tan1[i];
+        pc.math.vec3.set(t1, tan1[i * 3], tan1[i * 3 + 1], tan1[i * 3 + 2]);
+        pc.math.vec3.set(t2, tan2[i * 3], tan2[i * 3 + 1], tan2[i * 3 + 2]);
 
         // Gram-Schmidt orthogonalize
-        var ndott = pc.math.vec3.dot(n, t);
+        var ndott = pc.math.vec3.dot(n, t1);
         pc.math.vec3.scale(n, ndott, temp);
-        pc.math.vec3.subtract(t, temp, temp);
+        pc.math.vec3.subtract(t1, temp, temp);
         pc.math.vec3.normalize(temp, temp);
 
         tangents[i * 4]     = temp[0];
@@ -105,8 +116,8 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
         tangents[i * 4 + 2] = temp[2];
 
         // Calculate handedness
-        pc.math.vec3.cross(n, t, temp);
-        tangents[i * 4 + 3] = (pc.math.vec3.dot(temp, tan2[i]) < 0.0) ? -1.0 : 1.0;
+        pc.math.vec3.cross(n, t1, temp);
+        tangents[i * 4 + 3] = (pc.math.vec3.dot(temp, t2) < 0.0) ? -1.0 : 1.0;
     }
     
     return tangents;
