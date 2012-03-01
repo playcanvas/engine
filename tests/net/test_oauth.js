@@ -88,7 +88,7 @@ asyncTest("refreshAccessToken", 3, function () {
         start();
     });
     
-    var iframe = document.getElementById("pc-oauth-access-token");
+    var iframe = document.getElementById(pc.net.oauth.OAUTH_IFRAME_ID_BASE + "0");
     ok(iframe);
     equal(iframe.src, "http://example.com/endpoint?client_id=client_id&redirect_url=" + encodeURIComponent("http://example.com/redirect") + "&scope=scope&response_type=token");
     
