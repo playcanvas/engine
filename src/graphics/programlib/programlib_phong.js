@@ -430,6 +430,27 @@ pc.gfx.programlib.phong = {
             code += "    return depth;\n";
             code += "}\n";
         }
+/*
+        if ((totalPnts > 0) || (totalSpts > 0)) {
+            code += "\n";
+            code += "float calculateAttenuation(float d, float r, float cutoff)\n";
+            code += "{\n";
+            // calculate normalized light vector and distance to sphere light surface
+            code += "    d = max(d - r, 0.0);\n";
+
+            // calculate basic attenuation
+            code += "    float denom = d/r + 1.0;\n";
+            code += "    float attenuation = 1 / (denom*denom);\n";
+
+            // scale and bias attenuation such that:
+            //   attenuation == 0 at extent of max influence
+            //   attenuation == 1 when d == 0
+            code += "    attenuation = (attenuation - cutoff) / (1 - cutoff);\n";
+            code += "    attenuation = max(attenuation, 0);\n";
+            code += "    return attenuation;\n";
+            code += "}\n";
+        }
+*/
         code += "\n";
         code += "void main(void)\n";
         code += "{\n";
@@ -545,6 +566,7 @@ pc.gfx.programlib.phong = {
                     code += "        if (nDotL > 0.0)\n";
                     code += "        {\n";
                     code += "            float att = ((light" + i + "_radius - d) / light" + i + "_radius);\n";
+//                    code += "            float att = light" + i + "_attenuate ? 1.0 : calculateAttenuation(N, light" + i + "_range, ;\n";
                     if (i >= totalDirs + totalPnts) {
                         code += "            float cosAngle = dot(-lightDir, vLight" + i + "SpotDir);\n";
                         code += "            float cosInnerAngle = light" + i + "_innerConeAngle;\n";
