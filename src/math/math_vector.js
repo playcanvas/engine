@@ -421,12 +421,15 @@ pc.math.vec3 = function () {
          * var v2 = pc.math.vec3.create(10, 20, 30);
          * @author Will Eastcott
          */
-        create: function (x, y, z) {
-            var v = new Float32Array(3);
-            v[0] = x;
-            v[1] = y;
-            v[2] = z;
-            return v;
+        create: function () {
+            var v;
+            if (arguments.length === 3) {
+               v = new Float32Array(arguments);
+               return v;
+            } else {
+               v = new Float32Array(3);
+               return v;
+            }
         },
 
         /**

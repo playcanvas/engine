@@ -63,9 +63,9 @@ test("create: no args", function () {
     var v = pc.math.vec3.create();
     
     same(3, v.length);
-    ok(isNaN(v[0]));
-    ok(isNaN(v[1]));
-    ok(isNaN(v[2]));
+    equal(v[0], 0);
+    equal(v[1], 0);
+    equal(v[2], 0);
 });
 
 
