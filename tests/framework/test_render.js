@@ -23,12 +23,17 @@ test("deleteComponent: model and entity removed", function () {
     jack(function () {
         var mc = new pc.fw.ModelComponentSystem(context);
         var entity = new pc.fw.Entity();
-        var model = jack.create("model", ["getGraph"]);
+        var model = jack.create("model", ["getGraph", "getMeshes"]);
         var node = new pc.scene.GraphNode();
         jack.expect("model.getGraph")
             .exactly("2 time")
             .mock(function () {
                 return node;
+            });
+        jack.expect("model.getMeshes")
+            .exactly("1 time"),
+            .mock(function () {
+                return [];
             });
         var compData = mc.createComponent(entity);
         
