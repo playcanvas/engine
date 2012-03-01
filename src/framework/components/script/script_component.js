@@ -140,13 +140,17 @@ pc.extend(pc.fw, function () {
                 var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
                 this.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
                     var ScriptType = resources[url];
-                    var instance = new ScriptType(entity);
-                    this.preRegisterInstance(entity, url, ScriptType._pcScriptName, instance);
-                    
-                    // If there is no request batch, then this is not part of a load request and so we need 
-                    // to register the instances immediately to call the initialize function
-                    if (!options.batch) {
-                        this.registerInstances(entity);
+
+                    // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
+                    if (ScriptType) {
+                        var instance = new ScriptType(entity);
+                        this.preRegisterInstance(entity, url, ScriptType._pcScriptName, instance);
+                        
+                        // If there is no request batch, then this is not part of a load request and so we need 
+                        // to register the instances immediately to call the initialize function
+                        if (!options.batch) {
+                            this.registerInstances(entity);
+                        }                        
                     }
                 }.bind(this), function (errors) {
                     Object.keys(errors).forEach(function (key) {
