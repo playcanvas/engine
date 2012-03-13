@@ -75,6 +75,9 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioManager));
 
+        // Display shows debug loading information. Only really fit for debug display at the moment.
+        // var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
+
 		// The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options.controller, options.keyboard, options.mouse);
     
