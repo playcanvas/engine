@@ -31,4 +31,55 @@ pc.gfx.ShaderInput = function (name, type, locationId) {
 
     // Set the data type
     this.dataType = type;
+
+    this.commitArgs = [locationId];
+    this.valueIndex = 1;
+    var f;
+    var gl = pc.gfx.Device.getCurrent().gl;
+    switch (type) {
+        case pc.gfx.ShaderInputType.BOOL: 
+        case pc.gfx.ShaderInputType.INT: 
+            f = gl.uniform1i;
+            break;
+        case pc.gfx.ShaderInputType.FLOAT: 
+            f = gl.uniform1f;
+            break;
+        case pc.gfx.ShaderInputType.VEC2: 
+            f = gl.uniform2fv;
+            break;
+        case pc.gfx.ShaderInputType.VEC3: 
+            f = gl.uniform3fv;
+            break;
+        case pc.gfx.ShaderInputType.VEC4: 
+            f = gl.uniform4fv;
+            break;
+        case pc.gfx.ShaderInputType.BVEC2: 
+        case pc.gfx.ShaderInputType.IVEC2: 
+            f = gl.uniform2iv;
+            break;
+        case pc.gfx.ShaderInputType.BVEC3: 
+        case pc.gfx.ShaderInputType.IVEC3: 
+            f = gl.uniform3iv;
+            break;
+        case pc.gfx.ShaderInputType.BVEC4: 
+        case pc.gfx.ShaderInputType.IVEC4: 
+            f = gl.uniform4iv;
+            break;
+        case pc.gfx.ShaderInputType.MAT2: 
+            f = gl.uniformMatrix2fv;
+            this.commitArgs.push(false);
+            this.valueIndex = 2;
+            break;
+        case pc.gfx.ShaderInputType.MAT3: 
+            f = gl.uniformMatrix3fv;
+            this.commitArgs.push(false);
+            this.valueIndex = 2;
+            break;
+        case pc.gfx.ShaderInputType.MAT4: 
+            f = gl.uniformMatrix4fv;
+            this.commitArgs.push(false);
+            this.valueIndex = 2;
+            break;
+    }
+    this.commitFunc = f;
 }
