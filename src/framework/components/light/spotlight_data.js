@@ -5,7 +5,7 @@ pc.extend(pc.fw, function () {
         this.color = "0xffffff";
         this.intensity = 1;
         this.castShadows = false;
-        this.attenuationEnd = 1;
+        this.attenuationEnd = 10;
         this.innerConeAngle = 40;
         this.outerConeAngle = 45;
 
@@ -68,7 +68,7 @@ editor.link.expose({
     displayName: "Attenuation End",
     description: "The distance from the light where its contribution falls to zero",
     type: "number",
-    defaultValue: 1,
+    defaultValue: 10,
     options: {
         min: 0
     }

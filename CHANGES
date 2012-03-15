@@ -3,6 +3,19 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.41.0
+-------
+* Reexposed cast shadows for point light even though it doesn't function (fixes saving).
+* Make default light radius 10.
+* Added 'rgb' and 'rgba' types for component properties which are colors.
+* Local lights are once again just dispatched once per frame.
+* [FIX] Script resources are loaded correctly on Opera.
+* Cache geometry scope IDs (seems to give a good performance boost).
+* Added OAUTH_IFRAME_ID_BASE constant for net.oauth iframe id. Fixed tests.
+* [FIX] mat4.create() handles input arguments correctly (16 floats or 1 array of floats).
+* Further optimizations to calculateTangents.  Probably about 10x faster than it was originally.
+
+-------
 v0.40.0
 -------
 * Update primitive component to support casting/receiving shadows
