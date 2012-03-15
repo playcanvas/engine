@@ -32,7 +32,7 @@ pc.extend(pc.resources, function () {
      */
     ScriptResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
         options = options || {};
-        options.timeout = options.timeout || 10000; // default 10 second timeout
+        options.timeout = options.timeout || 60000; // default 10 second timeout
         
         var url = new pc.URI(identifier);
         url.path = pc.path.join(this._prefix, url.path);
