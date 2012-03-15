@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.41.1
+-------
+* Increase script resource loading timeout from 10s to 60s
+* Removed debug logging from resource loading
+
+-------
 v0.41.0
 -------
 * Reexposed cast shadows for point light even though it doesn't function (fixes saving).

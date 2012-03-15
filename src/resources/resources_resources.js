@@ -117,7 +117,6 @@ pc.resources = function () {
         batch = new RequestBatch(this._batchId++, requests, priority, success, error, function (pcnt) {
             var value = this.getProgress();
             this.fire('batchprogress', this, batch);
-            console.log(value);
             progress(value);
         }.bind(this));
 
