@@ -437,9 +437,6 @@ pc.resources = function () {
     RequestBatch.prototype.addResource = function (identifier, resource) {
         this.resources[identifier] = resource;
         this.count += 1;
-        if (this.count > this.requests.length) {
-            debugger;
-        }
         return this._update();
     };
     
@@ -453,10 +450,7 @@ pc.resources = function () {
     RequestBatch.prototype.addResourceError = function (identifier, errors) {
         this.errored = true;
         this.errors[identifier] = errors;
-        this.count += 1;
-        if (this.count > this.requests.length) {
-            debugger;
-        }                
+        this.count += 1; // TODO: This shouldn't always count up, in some cases the error has occured after addResource() is called and the count is already incremented
         return this._update();
     };
     

@@ -206,6 +206,10 @@ pc.extend(pc.fw, function () {
                     this.set(entity, 'currentSource', names[0]);
                 }
                 this.set(entity, 'sources', sources);
+
+                if (!options.batch && this.get(entity, 'activate')) {
+                    this.play(entity, names[0]);
+                }
             }.bind(this), function (errors) {
                 
             }, function (progress) {
