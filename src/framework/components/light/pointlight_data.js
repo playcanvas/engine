@@ -5,7 +5,7 @@ pc.extend(pc.fw, function () {
         this.color = "0xffffff";
         this.intensity = 1;
         this.castShadows = false;
-        this.attenuationEnd = 1;
+        this.attenuationEnd = 10;
 
         // Non-serialized
         this.light = null;
@@ -33,7 +33,7 @@ editor.link.expose({
     variable: "color",
     displayName: "Color",
     description: "Light color",
-    type: "string",
+    type: "rgb",
     defaultValue: "0xffffff"
 });
 
@@ -53,11 +53,20 @@ editor.link.expose({
 
 editor.link.expose({
     system: "pointlight",
+    variable: "castShadows",
+    displayName: "Cast shadows",
+    description: "Cast shadows from this light",
+    type: "boolean",
+    defaultValue: false
+});
+
+editor.link.expose({
+    system: "pointlight",
     variable: "attenuationEnd",
     displayName: "Attenuation End",
     description: "The distance from the light where its contribution falls to zero",
     type: "number",
-    defaultValue: 1,
+    defaultValue: 10,
     options: {
         min: 0
     }

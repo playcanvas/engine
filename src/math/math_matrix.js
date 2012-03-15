@@ -126,24 +126,33 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         create: function () {
-            var m = new Float32Array(16);
-            m[0] = 1;
-            m[1] = 0;
-            m[2] = 0;
-            m[3] = 0;
-            m[4] = 0;
-            m[5] = 1;
-            m[6] = 0;
-            m[7] = 0;
-            m[8] = 0;
-            m[9] = 0;
-            m[10] = 1;
-            m[11] = 0;
-            m[12] = 0;
-            m[13] = 0;
-            m[14] = 0;
-            m[15] = 1;
-            return m;
+            var m;
+            if (arguments.length === 1 && arguments[0].length === 16) {
+               m = new Float32Array(arguments[0]);
+               return m;
+            } else if (arguments.length === 16) {
+               m = new Float32Array(arguments);
+               return m;
+            } else {
+               m = new Float32Array(16);
+               m[0] = 1;
+               m[1] = 0;
+               m[2] = 0;
+               m[3] = 0;
+               m[4] = 0;
+               m[5] = 1;
+               m[6] = 0;
+               m[7] = 0;
+               m[8] = 0;
+               m[9] = 0;
+               m[10] = 1;
+               m[11] = 0;
+               m[12] = 0;
+               m[13] = 0;
+               m[14] = 0;
+               m[15] = 1;
+               return m;               
+            }
         },
 
         /**
@@ -675,8 +684,16 @@ pc.math.mat4 = function () {
          * var translation = pc.math.mat4.getTranslation(t);
          * @author Will Eastcott
          */
-        getTranslation: function (m) {
-            return pc.math.vec3.create(m[12], m[13], m[14]);
+        getTranslation: function (m, r) {
+            if (r === undefined) {
+               r = pc.math.vec3.create();
+            }
+
+            r[0] = m[12];
+            r[1] = m[13];
+            r[2] = m[14];
+
+            return r;
         },
 
         /**
@@ -695,8 +712,16 @@ pc.math.mat4 = function () {
          * var x = pc.math.mat4.getX(rot);
          * @author Will Eastcott
          */
-        getX: function (m) {
-            return pc.math.vec3.create(m[0], m[1], m[2]);
+        getX: function (m, r) {
+            if (r === undefined) {
+               r = pc.math.vec3.create();
+            }
+
+            r[0] = m[0];
+            r[1] = m[1];
+            r[2] = m[2];
+
+            return r;
         },
 
         /**
@@ -715,8 +740,16 @@ pc.math.mat4 = function () {
          * var y = pc.math.mat4.getY(rot);
          * @author Will Eastcott
          */
-        getY: function (m) {
-            return pc.math.vec3.create(m[4], m[5], m[6]);
+        getY: function (m, r) {
+            if (r === undefined) {
+               r = pc.math.vec3.create();
+            }
+
+            r[0] = m[4];
+            r[1] = m[5];
+            r[2] = m[6];
+
+            return r;
         },
 
         /**
@@ -735,14 +768,28 @@ pc.math.mat4 = function () {
          * var z = pc.math.mat4.getZ(rot);
          * @author Will Eastcott
          */
-        getZ: function (m) {
+        getZ: function (m, r) {
+            if (r === undefined) {
+               r = pc.math.vec3.create();
+            }
+
+            r[0] = m[8];
+            r[1] = m[9];
+            r[2] = m[10];
+
             return pc.math.vec3.create(m[8], m[9], m[10]);
         },
         
-        getScale: function (m) {
-            return pc.math.vec3.create(pc.math.vec3.length(pc.math.vec3.create(m[0], m[1], m[2])),
-                                       pc.math.vec3.length(pc.math.vec3.create(m[4], m[5], m[6])),
-                                       pc.math.vec3.length(pc.math.vec3.create(m[8], m[9], m[10])));
+        getScale: function (m, r) {
+            if (r === undefined) {
+               r = pc.math.vec3.create();
+            }
+
+            r[0] = pc.math.vec3.length(pc.math.vec3.create(m[0], m[1], m[2]));
+            r[1] = pc.math.vec3.length(pc.math.vec3.create(m[4], m[5], m[6]));
+            r[2] = pc.math.vec3.length(pc.math.vec3.create(m[8], m[9], m[10]));
+
+            return r;
         },
         
         // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle

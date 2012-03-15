@@ -1,5 +1,6 @@
 pc.extend(pc.net, function () {
     var refreshCounter = 0;
+    
     var OAuth = function OAuth(endpoint, redirectUrl, origin, clientId, scope) {
         this.clientId = clientId;
         this.endpoint = endpoint;
@@ -8,12 +9,16 @@ pc.extend(pc.net, function () {
         this.scope = scope;
         this.responseType = "token";
         this.accessToken = null;
+
+        // Base string for iframe element id
+        this.OAUTH_IFRAME_ID_BASE = "pc-oauth-access-token-";
+
         //this._refreshCounter = 0;
     };
     OAuth = OAuth.extendsFrom(pc.net.Http);
-    
+
     OAuth.prototype.refreshAccessToken = function (success) {
-        var id = "pc-corazon-auth-token-" + refreshCounter++;
+        var id = this.OAUTH_IFRAME_ID_BASE + refreshCounter++;
         
         // Create a message handler to receive message from iframe.
         var handleMessage = function handleMessage (msg) {

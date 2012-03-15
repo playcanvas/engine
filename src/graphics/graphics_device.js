@@ -464,6 +464,7 @@ pc.extend(pc.gfx, function () {
         this.commitAttributes();
 
         // Commit the shader program variables
+        this.commitSamplers();
         this.commitUniforms();
 
         var gl = this.gl;
@@ -506,26 +507,24 @@ pc.extend(pc.gfx, function () {
      * @author Will Eastcott
      */
     Device.prototype.clear = function (options) {
-        logASSERT(this.canvas != null, "Device has not been started");
-
         options = options || _defaultClearOptions;
-        options.color = options.color || _defaultClearOptions.color;
-        options.depth = options.depth || _defaultClearOptions.depth;
-        options.flags = options.flags || _defaultClearOptions.flags;
+        var color = options.color || _defaultClearOptions.color;
+        var depth = options.depth || _defaultClearOptions.depth;
+        var flags = options.flags || _defaultClearOptions.flags;
 
         // Set the clear color
         var gl = this.gl;
-        if (options.flags & pc.gfx.ClearFlag.COLOR) {
-            gl.clearColor(options.color[0], options.color[1], options.color[2], options.color[3]);
+        if (flags & pc.gfx.ClearFlag.COLOR) {
+            gl.clearColor(color[0], color[1], color[2], color[3]);
         }
-        
-        if (options.flags & pc.gfx.ClearFlag.DEPTH) {
+
+        if (flags & pc.gfx.ClearFlag.DEPTH) {
             // Set the clear depth
-            gl.clearDepth(options.depth);
+            gl.clearDepth(depth);
         }
-        
+
         // Clear the frame buffer
-        gl.clear(this.lookup.clear[options.flags]);
+        gl.clear(this.lookup.clear[flags]);
     };
 
     /**
@@ -715,47 +714,52 @@ pc.extend(pc.gfx, function () {
 
     /**
      * @function
+     * @name pc.gfx.Device#commitSamplers
+     * @author Will Eastcott
+     */
+    // Handle textures differently, as it's probably safer
+    // to always set them rather than try to track which
+    // one is currently set!
+    Device.prototype.commitSamplers = function () {
+        var i, len, sampler, textureUnit = 0;
+        var samplers = this.program.samplers;
+        var gl = this.gl;
+
+        for (i = 0, len = samplers.length; i < len; i++) {
+            sampler = samplers[i];
+
+            gl.activeTexture(gl.TEXTURE0 + textureUnit);
+            sampler.scopeId.value.bind();
+            gl.uniform1i(sampler.locationId, textureUnit++);
+        }
+    }
+
+    /**
+     * @function
      * @name pc.gfx.Device#commitUniforms
      * @author Will Eastcott
      */
     Device.prototype.commitUniforms = function () {
-        var textureUnit = 0;
         var i, len, uniform;
         var uniforms = this.program.uniforms;
         var gl = this.gl;
 
         for (i = 0, len = uniforms.length; i < len; i++) {
             uniform = uniforms[i];
-
             // Check the value is valid
-            if (uniform.scopeId.value != null) {
+            if (uniform.version.notequals(uniform.scopeId.versionObject.version)) {
 
-                // Handle textures differently, as its probably safer
-                // to always set them rather than try to track which
-                // one is currently set!
-                if ((uniform.dataType === pc.gfx.ShaderInputType.TEXTURE2D) || 
-                    (uniform.dataType === pc.gfx.ShaderInputType.TEXTURECUBE)) {
-                    var texture = uniform.scopeId.value;
+                // Copy the version to track that its now up to date
+                uniform.version.copy(uniform.scopeId.versionObject.version);
 
-                    gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                    texture.bind();
-                    gl.uniform1i(uniform.locationId, textureUnit);
+                // Retrieve value for this shader uniform
+                var value = uniform.scopeId.value;
 
-                    textureUnit++;
-                } else {
-                    // Check if the value is out of date
-                    if (uniform.version.notequals(uniform.scopeId.versionObject.version)) {
+                // Call the function to commit the uniform value
+                this.commitFunction[uniform.dataType](uniform.locationId, value);
 
-                        // Copy the version to track that its now up to date
-                        uniform.version.copy(uniform.scopeId.versionObject.version);
-
-                        // Retrieve value for this shader uniform
-                        var value = uniform.scopeId.value;
-
-                        // Call the function to commit the uniform value
-                        this.commitFunction[uniform.dataType](uniform.locationId, value);
-                    }
-                }
+//              uniform.commitArgs[uniform.valueIndex] = uniform.scopeId.value;
+//              uniform.commitFunc.apply(gl, uniform.commitArgs);
             }
         }
     };

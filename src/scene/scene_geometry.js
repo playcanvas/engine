@@ -20,6 +20,11 @@ pc.extend(pc.scene, function () {
         // Object space bounding volume
         this._aabb = null;
         this._volume = null;
+
+        var device = pc.gfx.Device.getCurrent();
+        var scope = device.scope;
+        this.matrixModelId = scope.resolve("matrix_model");
+        this.poseId = scope.resolve("matrix_pose[0]"); 
     };
 
     /**
@@ -35,7 +40,6 @@ pc.extend(pc.scene, function () {
 
         var i, j, numVertBuffers, numSubmeshes, numBoneIndices, material;
         var device = pc.gfx.Device.getCurrent();
-        var scope = device.scope;
 
         // Set the vertex and index buffers
         for (i = 0, numVertBuffers = this._vertexBuffers.length; i < numVertBuffers; i++) {
@@ -45,15 +49,13 @@ pc.extend(pc.scene, function () {
 
         // Generate the matrix palette
         var skinned = this.isSkinned();
-        var poseId;
         if (skinned) {
-            poseId = scope.resolve("matrix_pose[0]"); 
             if (!this._partitionedBoneIndices) {
-                poseId.setValue(this._matrixPaletteF32);
+                this.poseId.setValue(this._matrixPaletteF32);
             }
         }
 
-        scope.resolve("matrix_model").setValue(transform);
+        this.matrixModelId.setValue(transform);
 
         // Dispatch each submesh
         var submeshes = this._submeshes[style];
@@ -67,7 +69,7 @@ pc.extend(pc.scene, function () {
                 for (j = 0; j < boneIndices.length; j++) {
                     palette.set(this._matrixPaletteEntryF32[boneIndices[j]], j * 16);
                 }
-                poseId.setValue(palette);
+                this.poseId.setValue(palette);
             }
 
             // Set all state related to the material

@@ -1,23 +1,27 @@
 module("pc.fw.Asset");
 
 test("asset new", function () {
+    var prefix = "/dir";
     var data = {
         "_id": "abc",
         "key": "value",
         "key2": "value2"
     }
+
     
-    var asset = new pc.fw.Asset(data);
+    var asset = new pc.fw.Asset(prefix, data);
     
     ok(asset instanceof pc.fw.Asset)    
+    equal(asset.prefix, prefix);
 });
 
 test("asset.getGuid", function () {
+    var prefix = "/dir";
     var data = {
         "_id": "abc"
     }
     
-    var asset = new pc.fw.Asset(data);
+    var asset = new pc.fw.Asset(prefix, data);
     
     equal(asset.getGuid(), "abc");
     equal(asset._id, undefined);
@@ -25,26 +29,29 @@ test("asset.getGuid", function () {
 });
 
 test("asset.setGuid", function () {
+    var prefix = "/dir";
     var data = {
         "_id": "abc"
     }
     
-    var asset = new pc.fw.Asset(data);
+    var asset = new pc.fw.Asset(prefix, data);
     asset.setGuid("def")
     equal(asset.getGuid(), "def");
 });
 
 test("asset.data", function () {
+    var prefix = "/dir";
     var data = {
         "_id": "abc"
     }
     
-    var asset = new pc.fw.Asset(data);
+    var asset = new pc.fw.Asset(prefix, data);
     equal(asset.key, data['key']);
     equal(asset.key2, data['key2']);
 });
 
-test("asset.getFileUrl, api", function () {
+test("asset.getFileUrl", function () {
+    var prefix = "/dir";
     var data = {
         "_id": "abc",
         "file": {
@@ -52,20 +59,6 @@ test("asset.getFileUrl, api", function () {
         }
     };
     
-    var asset = new pc.fw.Asset(data);
-    equal(asset.getFileUrl(), pc.path.join("/api", data.file.url)); 
+    var asset = new pc.fw.Asset(prefix, data);
+    equal(asset.getFileUrl(), "/dir/path/to/file.txt"); 
 });
-
-test("asset.getFileUrl, exported", function () {
-    var data = {
-        "_id": "abc",
-        "file": {
-            "exported": true,
-            "url": "path/to/file.txt"
-        }
-    };
-    
-    var asset = new pc.fw.Asset(data);
-    equal(asset.getFileUrl(), data.file.url); 
-});
-

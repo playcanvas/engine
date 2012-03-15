@@ -25,6 +25,7 @@
 ../src/shape/shape_sphere.js
 ../src/shape/shape_torus.js
 ../src/resources/resources_resources.js
+../src/resources/resources_resourceloaderdisplay.js
 ../src/resources/resources_image.js
 ../src/graphics/graphics_graphics.js
 ../src/graphics/graphics_scopeid.js

@@ -111,8 +111,6 @@ test("makeLookAt: 180deg", function () {
     }
 });
 	
-test("MakeRotate", function() {});
-	
 test("makeTranslate", function() {
     var x = 10;
     var y = 20;
@@ -131,12 +129,7 @@ test("makeTranslate", function() {
     same(r[13], y);
     same(r[14], z);
 });
-	
-test("makeFrustum", function() {
 
-});
-	
-test("MakePerspective", function() {});
 	
 test("transpose", function() {
     var x = 10;
@@ -188,6 +181,57 @@ test("invert: same matrix for both arguments", function() {
     deepEqual(result, pc.math.mat4.create());
 });
 
+test("getX", function () {
+    var m = pc.math.mat4.create(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+    var v1 = pc.math.mat4.getX(m);
+
+    same(v1[0], 1);
+    same(v1[1], 2);
+    same(v1[2], 3);
+
+    // use existing vector
+    var v2 = pc.math.vec3.create();
+    pc.math.mat4.getX(m, v2);
+
+    same(v2[0], 1);
+    same(v2[1], 2);
+    same(v2[2], 3);
+});
+
+test("getY", function () {
+    var m = pc.math.mat4.create(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+    var v1 = pc.math.mat4.getY(m);
+
+    same(v1[0], 5);
+    same(v1[1], 6);
+    same(v1[2], 7);
+
+    // use existing vector
+    var v2 = pc.math.vec3.create();
+    pc.math.mat4.getY(m, v2);
+
+    same(v2[0], 5);
+    same(v2[1], 6);
+    same(v2[2], 7);
+});
+
+test("getZ", function () {
+    var m = pc.math.mat4.create(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
+    var v1 = pc.math.mat4.getZ(m);
+
+    same(v1[0], 9);
+    same(v1[1], 10);
+    same(v1[2], 11);
+
+    // use existing vector
+    var v2 = pc.math.vec3.create();
+    pc.math.mat4.getZ(m, v2);
+
+    same(v2[0], 9);
+    same(v2[1], 10);
+    same(v2[2], 11);
+});
+
 test("getTranslation", function() {
     var m = pc.math.mat4.create(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
     var t = pc.math.mat4.getTranslation(m);
@@ -195,7 +239,33 @@ test("getTranslation", function() {
     same(t[0], 13);
     same(t[1], 14);
     same(t[2], 15);
+
+    var t2 = pc.math.vec3.create();
+    pc.math.mat4.getTranslation(m, t2);
+    
+    same(t2[0], 13);
+    same(t2[1], 14);
+    same(t2[2], 15);
+
 });
+
+test("getScale", function() {
+    var m = pc.math.mat4.create(2,0,0,1,0,3,0,1,0,0,4,1,0,0,0,1);
+    var v = pc.math.mat4.getScale(m);
+    
+    same(v[0], 2);
+    same(v[1], 3);
+    same(v[2], 4);
+
+    var v2 = pc.math.vec3.create();
+    pc.math.mat4.getScale(m, v2);
+    
+    same(v2[0], 2);
+    same(v2[1], 3);
+    same(v2[2], 4);
+
+});
+
 
 test("toEulerXYZ", function () {
     var m, e;
@@ -208,7 +278,7 @@ test("toEulerXYZ", function () {
 
     m = pc.math.mat4.create(1,0,0,0, 0,0,1,0, 0,-1,0,0, 0,0,0,1);
     e = pc.math.mat4.toEulerXYZ(m);
-    approx(e[0], -Math.PI / 2);
+    approx(e[0], Math.PI / 2, e[0].toString() + " ~= " + Math.PI / 2);
     equal(e[1], 0);
     equal(e[2], 0);
 
@@ -221,12 +291,12 @@ test("toEulerXYZ", function () {
     m = [0.7071067811865476,0,0.7071067811865476,0,0,1,0,0,-0.7071067811865476,0,0.7071067811865476,0,0,0,0,1]
     e = pc.math.mat4.toEulerXYZ(m);
     equal(e[0], 0);
-    approx(e[1], Math.PI / 4, e[1].toString() + " ~= " + Math.PI/4);
+    approx(e[1], -Math.PI / 4, e[1].toString() + " ~= " + -Math.PI/4);
     equal(e[2], 0);
 
     m = [1,0,0,0, 0,0.7071067811865476,-0.7071067811865476,0, 0,0.7071067811865476,0.7071067811865476,0, 0,0,0,1]
     e = pc.math.mat4.toEulerXYZ(m);
-    approx(e[0], Math.PI / 4, e[0].toString() + " ~= " + Math.PI/4);
+    approx(e[0], -Math.PI / 4, e[0].toString() + " ~= " + -Math.PI/4);
     equal(e[1], 0);
     equal(e[2], 0);
 
@@ -234,55 +304,58 @@ test("toEulerXYZ", function () {
     e = pc.math.mat4.toEulerXYZ(m);
     equal(e[0], 0);
     equal(e[1], 0);
-    approx(e[2], Math.PI / 4, e[2].toString() + " ~= " + Math.PI/4);
+    approx(e[2], -Math.PI / 4, e[2].toString() + " ~= " + -Math.PI/4);
 
 });
 
 test("fromEulerXYZ", function () {
     var m, x, y, z;
     
+    /** clip to 3 decimal places and convert to string for comparison **/
     var clip = function (m) {
         var i,l = m.length;
+        var a = [];
         for(i = 0;i < l; i++) {
-            m[i] = parseFloat(m[i].toFixed(3));
+            a[i] = parseFloat(m[i].toFixed(3));
         }
         
-        return m;
+        return a;
     };
     
     // no rotation -> identity
     x = y = z = 0;
     m = pc.math.mat4.fromEulerXYZ(x,y,z);
-    deepEqual(m, [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+    deepEqual(m, new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]));
 
     // Rotate 45 around y
     y = Math.PI / 4;
     x = z = 0;
     m = pc.math.mat4.fromEulerXYZ(x,y,z);
-    deepEqual(clip(m), [0.707,0,0.707,0,0,1,0,0,-0.707,0,0.707,0, 0,0,0,1]);
+    deepEqual(clip(m), [0.707,0,-0.707,0,0,1,0,0,0.707,0,0.707,0, 0,0,0,1]);
 
     // Rotate 45 around x
     x = Math.PI / 4;
     y = z = 0;
     m = pc.math.mat4.fromEulerXYZ(x,y,z);
-    deepEqual(clip(m), [1,0,0,0, 0,0.707,-0.707,0, 0,0.707,0.707,0, 0,0,0,1]);
+    deepEqual(clip(m), [1,0,0,0, 0,0.707,0.707,0, 0,-0.707,0.707,0, 0,0,0,1]);
 
     // Rotate 45 around z
     z = Math.PI / 4;
     y = x = 0;
     m = pc.math.mat4.fromEulerXYZ(x,y,z);
-    deepEqual(clip(m), [0.707,-0.707,0,0, 0.707,0.707,0,0, 0,0,1,0, 0,0,0,1]);
+    deepEqual(clip(m), [0.707,0.707,0,0, -0.707,0.707,0,0, 0,0,1,0, 0,0,0,1]);
 
 });
 
 test("fromEuler and back", function () {
     var clip = function (m) {
         var i,l = m.length;
+        var a = []
         for(i = 0;i < l; i++) {
-            m[i] = parseFloat(m[i].toFixed(3));
+            a[i] = parseFloat(m[i].toFixed(3));
         }
         
-        return m;
+        return a;
     };
     
     var m1 = [0.7071067811865476,0,0.7071067811865476,0,0,1,0,0,-0.7071067811865476,0,0.7071067811865476,0, 0,0,0,1];
@@ -293,3 +366,19 @@ test("fromEuler and back", function () {
     
     deepEqual(clip(m1),clip(m2));
 });
+
+/*
+
+test("makeRotate", function() {
+    ok(false, "Not written");
+});    
+    
+test("makeFrustum", function() {
+    ok(false, "Not written")
+});
+    
+test("makePerspective", function() {
+    ok(false, "Not written");
+});
+
+*/
