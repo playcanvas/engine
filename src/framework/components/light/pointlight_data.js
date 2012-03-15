@@ -53,6 +53,15 @@ editor.link.expose({
 
 editor.link.expose({
     system: "pointlight",
+    variable: "castShadows",
+    displayName: "Cast shadows",
+    description: "Cast shadows from this light",
+    type: "boolean",
+    defaultValue: false
+});
+
+editor.link.expose({
+    system: "pointlight",
     variable: "attenuationEnd",
     displayName: "Attenuation End",
     description: "The distance from the light where its contribution falls to zero",
