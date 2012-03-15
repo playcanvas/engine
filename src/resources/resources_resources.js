@@ -454,9 +454,6 @@ pc.resources = function () {
         this.errored = true;
         this.errors[identifier] = errors;
         this.count += 1;
-        if (this.count > this.requests.length) {
-            debugger;
-        }                
         return this._update();
     };
     
