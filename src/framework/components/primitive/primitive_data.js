@@ -49,7 +49,7 @@ editor.link.expose({
     variable: "color",
     displayName: "Color",
     description: "Material color",
-    type: "string",
+    type: "rgb",
     defaultValue: "0xffffff"
 });
 

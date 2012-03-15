@@ -33,7 +33,7 @@ editor.link.expose({
     variable: "color",
     displayName: "Color",
     description: "Light color",
-    type: "string",
+    type: "rgb",
     defaultValue: "0xffffff"
 });
 

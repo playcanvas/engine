@@ -79,7 +79,7 @@ editor.link.expose({
     variable: "clearColor",
     displayName: "Clear Color",
     description: "Clear Color",
-    type: "string",
+    type: "rgba",
     defaultValue: "0xbabab1ff"
 });
 
