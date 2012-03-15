@@ -437,9 +437,6 @@ pc.resources = function () {
     RequestBatch.prototype.addResource = function (identifier, resource) {
         this.resources[identifier] = resource;
         this.count += 1;
-        if (this.count > this.requests.length) {
-            debugger;
-        }
         return this._update();
     };
     
