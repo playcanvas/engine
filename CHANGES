@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.41.2
+-------
+* [FIX] AudioSource correctly plays audio when you add a new component over livelink
+* [FIX] Cache model (if it exists) on animation component creation.
+
+-------
 v0.41.1
 -------
 * Increase script resource loading timeout from 10s to 60s
