@@ -117,7 +117,9 @@ pc.resources = function () {
         batch = new RequestBatch(this._batchId++, requests, priority, success, error, function (pcnt) {
             var value = this.getProgress();
             this.fire('batchprogress', this, batch);
-            progress(value);
+            if (progress) {
+                progress(value);
+            }
         }.bind(this));
 
         // If a batch handle is passed in as an option, we use it as a 'parent' to the new batch. 
