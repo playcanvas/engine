@@ -279,7 +279,7 @@ pc.extend(pc.scene, function () {
          */
         /**
          * @function
-         * @name pc.scene.GraphNode#setLocalPosition
+         * @name pc.scene.GraphNode#setLocalPosition^2
          * @description Sets the local space position of the specified graph node.
          * @param {Number} x x-coordinate of local-space position.
          * @param {Number} y y-coordinate of local-space position.
