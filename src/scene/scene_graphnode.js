@@ -5,7 +5,7 @@ pc.extend(pc.scene, function () {
     /**
      * @name pc.scene.GraphNode
      * @class A node.
-     * @param {String} name Non-unique human readable name.
+     * @param {String} name Non-unique, human readable name.
      */
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
@@ -89,10 +89,11 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#findOne
-         * @description @see pc.scene.GraphNode#find, but this will only return the first GraphNode that it finds
-         * @param {String} attr The property or function name to search using
-         * @param {String} value The value to search for
-         * @returns {pc.scene.GraphNode} A single GraphNode
+         * @description @see pc.scene.GraphNode#find, but this will only return the first graph node
+         * that it finds.
+         * @param {String} attr The property or function name to search using.
+         * @param {String} value The value to search for.
+         * @returns {pc.scene.GraphNode} A single graph node.
          */
         findOne: function(attr, value) {
             var i;
@@ -124,8 +125,9 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#findByName
-         * @description Get the first node found in the graph with the name.
-         * @returns {pc.scene.GraphNode} 
+         * @description Get the first node found in the graph with the name. The search
+         * is depth first.
+         * @returns {pc.scene.GraphNode} The first node to be found matching the supplied name.
          * @author Will Eastcott
          */
         findByName: function (name) {
@@ -158,8 +160,8 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#getRoot
-         * @description Get the highest ancestor node from this one.
-         * @return {pc.scene.GraphNode} The root node
+         * @description Get the highest ancestor node from this graph node.
+         * @return {pc.scene.GraphNode} The root node of the hierarchy to which this node belongs.
          */
         getRoot: function () {
             var parent = this.getParent()
@@ -186,8 +188,8 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#getChildren
-         * @description Get the children of this GraphNode
-         * @returns {Array}
+         * @description Get the children of this graph node.
+         * @returns {Array} The child array of this node.
          * @author Will Eastcott
          */
         getChildren: function () {
@@ -198,7 +200,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#getLocalPosition
          * @description Get the position in local space for the specified GraphNode.
-         * @returns {Float32Array} The local space position of the graph node.
+         * @returns {pc.math.vec3} The local space position of the graph node.
          * @author Will Eastcott
          */
         getLocalPosition: function () {
@@ -208,8 +210,9 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#getLocalTransform
-         * @description Get the local transform matrix for this GraphNode
-         * @returns {Array}
+         * @description Get the local transform matrix for this graph node. This matrix
+         * is the transform relative to the node's parent's world transformation matrix.
+         * @returns {pc.math.mat4} The node's local transformation matrix.
          * @author Will Eastcott
          */
         getLocalTransform: function () {
@@ -219,8 +222,9 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#getName
-         * @description Get the human-readable name for this GraphNode. Note the name is not guaranteed to be unique.
-         * @returns {String}
+         * @description Get the human-readable name for this graph node. Note the name
+         * is not guaranteed to be unique.
+         * @returns {String} The name of the node.
          * @author Will Eastcott
          */
         getName: function () {
@@ -231,7 +235,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#getWorldPosition
          * @description Get the position in world space for the specified GraphNode.
-         * @returns {Float32Array} The world space position of the graph node.
+         * @returns {pc.math.vec3} The world space position of the graph node.
          * @author Will Eastcott
          */
         getWorldPosition: function () {
@@ -241,8 +245,8 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#getWorldTransform
-         * @description Get the world transformation matrix for this GraphNode
-         * @returns {Array}
+         * @description Get the world transformation matrix for this graph node.
+         * @returns {pc.math.mat4} The node's world transformation matrix.
          * @author Will Eastcott
          */
         getWorldTransform: function () {
@@ -263,7 +267,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#setChildren
          * @description Set the child array of this node. Note, this does not update the parent value of the children.
-         * @param {Array} children
+         * @param {Array} children 
          * @author Will Eastcott
          */
         setChildren: function (children) {
@@ -305,8 +309,8 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#setName
-         * @description
-         * @param {String} name
+         * @description Sets the non-unique name for this graph node.
+         * @param {String} name The name for the node.
          * @author Will Eastcott
          */
         setName: function (name) {
@@ -353,8 +357,10 @@ pc.extend(pc.scene, function () {
         /**
          * @function 
          * @name pc.scene.GraphNode#addLabel
-         * @description Add a string label to this GraphNode, labels can be used to group and filter nodes. e.g. The 'enemies' label could be applied to a group of NPCs who are enemies
-         * @param {String} label The label to apply to this GraphNode
+         * @description Add a string label to this graph node, labels can be used to group
+         * and filter nodes. For example, the 'enemies' label could be applied to a group of NPCs
+         * who are enemies.
+         * @param {String} label The label to apply to this graph node.
          */
         addLabel: function (label) {
             this._labels[label] = true;
@@ -363,8 +369,8 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#getLabels
-         * @description Get a list of all labels applied to this GraphNode
-         * @param {Array} A list of all labels
+         * @description Get an array of all labels applied to this graph node.
+         * @returns {Array} An array of all labels.
          */
         getLabels: function () {
             return Object.keys(this._labels);
@@ -373,9 +379,9 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#hasLabel
-         * @description Test if a label has been applied to this GraphNode
-         * @param label {String} The label to test for
-         * @returns {Boolean} True if the label has been added to this GraphNode
+         * @description Test if a label has been applied to this graph node.
+         * @param {String} label The label to test for.
+         * @returns {Boolean} True if the label has been added to this GraphNode.
          */
         hasLabel: function (label) {
             return !!this._labels[label];
@@ -384,8 +390,8 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#removeLabel
-         * @description Remove label from this GraphNode
-         * @param label {String} The label to remove from this node
+         * @description Remove label from this graph node.
+         * @param {String} label The label to remove from this node.
          */
         removeLabel: function (label) {
             delete this._labels[label];
@@ -394,10 +400,10 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#findByLabel
-         * @description Find all GraphNodes from the root and all descendants with the label
-         * @param label {String} The label to search for
-         * @param [results] {Array} An array to store the results in
-         * @returns The array passed in or a new array of results 
+         * @description Find all graph nodes from the root and all descendants with the label.
+         * @param {String} label The label to search for.
+         * @param {Array} results An array to store the results in.
+         * @returns The array passed in or a new array of results.
          */
         findByLabel: function (label, results) {
             var i, length = this._children.length;
@@ -453,6 +459,17 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#translate
          * @description Translates the graph node by the given translation vector.
          * @param {pc.math.vec3} translation The translation vector to apply.
+         * @param {pc.scene.Space} space The coordinate system that the translation is relative to.
+         * In left unspecified, local space is assumed.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#translate^2
+         * @description Translates the graph node by the given translation vector.
+         * @param {Number} x x-component of the translation vector.
+         * @param {Number} y y-component of the translation vector.
+         * @param {Number} z z-component of the translation vector.
          * @param {pc.scene.Space} space The coordinate system that the translation is relative to.
          * In left unspecified, local space is assumed.
          * @author Will Eastcott
