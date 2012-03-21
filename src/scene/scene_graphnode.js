@@ -202,7 +202,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getLocalPosition: function () {
-            return this._ltm.subarray(12, 14);
+            return this._ltm.subarray(12, 15);
         },
 
         /**
@@ -235,7 +235,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getWorldPosition: function () {
-            return this._wtm.subarray(12, 14);
+            return this._wtm.subarray(12, 15);
         },
 
         /**
@@ -417,11 +417,10 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#syncHierarchy
-         * @description
-         * @param {pc.math.mat4} [transform] Parent transform to sync hierarchy to. Defaults to identity.
+         * @description Updates the world transformation matrices at this node and all of its descendants.
          * @author Will Eastcott
          */
-        syncHierarchy: function (transform) {
+        syncHierarchy: function () {
             function _syncHierarchy(node, parentTransform) {
                 // Now calculate this nodes world space transform
                 pc.math.mat4.multiply(parentTransform, node._ltm, node._wtm);
@@ -431,9 +430,50 @@ pc.extend(pc.scene, function () {
                     _syncHierarchy(node._children[i], node._wtm);
                 }
             }
-        
-            transform = transform || identity;
-            _syncHierarchy(this, transform);
+
+            _syncHierarchy(this, this._parent ? this._parent._wtm : identity);
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#lookAt
+         * @description Reorients the graph node so that the z axis points towards the target.
+         * @param {pc.math.vec3} target The world space coordinate to 'look at'.
+         * @param {pc.math.vec3} up The up vector for the look at transform. If left unspecified,
+         * this is set to the world space y axis.
+         * @author Will Eastcott
+         */
+        lookAt: function (target, up) {
+            up = up || pc.math.vec3.create(0, 1, 0);
+            pc.math.mat4.makeLookAt(this.getLocalPosition(), target, up, this._ltm);
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#translate
+         * @description Translates the graph node by the given translation vector.
+         * @param {pc.math.vec3} translation The translation vector to apply.
+         * @param {pc.scene.Space} space The coordinate system that the translation is relative to.
+         * In left unspecified, local space is assumed.
+         * @author Will Eastcott
+         */
+        translate: function () {
+            var relativeTo;
+            if (arguments.length >= 3) {
+                relativeTo = arguments[3];
+                if ((relativeTo === undefined) || (relativeTo === pc.scene.Space.LOCAL)) {
+                    this._ltm[12] += arguments[0];
+                    this._ltm[13] += arguments[1];
+                    this._ltm[14] += arguments[2];
+                }
+            } else {
+                relativeTo = arguments[1];
+                if ((relativeTo === undefined) || (relativeTo === pc.scene.Space.LOCAL)) {
+                    this._ltm[12] += arguments[0][0];
+                    this._ltm[13] += arguments[0][1];
+                    this._ltm[14] += arguments[0][2];
+                }
+            }
         }
     };
 

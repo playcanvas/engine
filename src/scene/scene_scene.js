@@ -5,6 +5,11 @@
  */
 pc.scene = {};
 
+pc.scene.Space = {
+    LOCAL: 0,
+    WORLD: 1
+};
+
 pc.extend(pc.scene, function () {
 
     var _tempVec = pc.math.vec3.create(0, 0, 0);
