@@ -70,7 +70,7 @@ pc.extend(pc.anim, function () {
             }
 
             for (i = 0; i < nodes.length; i++) {
-                var keys = nodes[i];
+                var keys = nodes[i]._keys;
 
                 // Find keyframe pair
                 if (keys.length === 1) {
@@ -192,15 +192,12 @@ pc.extend(pc.anim, function () {
      * @author Will Eastcott
      */
     Skeleton.prototype.setGraph = function (graph) {
-        var nodeIndex = 0;
-        var setGraph = function(skeleton, node) {
-            skeleton._interpolatedKeys[nodeIndex++].setTarget(node);
-            var children = node.getChildren();
-            for (var i = 0; i < children.length; i++) {
-                setGraph(skeleton, children[i]);
-            }
+        var nodes = this._animation.getNodes();
+        for (var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            var graphNode = graph.findByName(node._name);
+            this._interpolatedKeys[i].setTarget(graphNode);
         }
-        setGraph(this, graph);
     };
 
     /**
@@ -217,24 +214,22 @@ pc.extend(pc.anim, function () {
 
         var nodes = this._animation.getNodes();
         for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].length > 0) {
-                var interpKey = this._interpolatedKeys[i];
+            var interpKey = this._interpolatedKeys[i];
 
-                var ltm = interpKey.getTarget().getLocalTransform();
-                pc.math.quat.toMat4(interpKey._quat, ltm);
-                ltm[0] *= interpKey._scale[0];
-                ltm[4] *= interpKey._scale[0];
-                ltm[8] *= interpKey._scale[0];
-                ltm[1] *= interpKey._scale[1];
-                ltm[5] *= interpKey._scale[1];
-                ltm[9] *= interpKey._scale[1];
-                ltm[2] *= interpKey._scale[2];
-                ltm[6] *= interpKey._scale[2];
-                ltm[10] *= interpKey._scale[2];
-                ltm[12] = interpKey._pos[0];
-                ltm[13] = interpKey._pos[1];
-                ltm[14] = interpKey._pos[2];
-            }
+            var ltm = interpKey.getTarget().getLocalTransform();
+            pc.math.quat.toMat4(interpKey._quat, ltm);
+            ltm[0] *= interpKey._scale[0];
+            ltm[4] *= interpKey._scale[0];
+            ltm[8] *= interpKey._scale[0];
+            ltm[1] *= interpKey._scale[1];
+            ltm[5] *= interpKey._scale[1];
+            ltm[9] *= interpKey._scale[1];
+            ltm[2] *= interpKey._scale[2];
+            ltm[6] *= interpKey._scale[2];
+            ltm[10] *= interpKey._scale[2];
+            ltm[12] = interpKey._pos[0];
+            ltm[13] = interpKey._pos[1];
+            ltm[14] = interpKey._pos[2];
         }
     };
 

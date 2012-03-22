@@ -4,6 +4,11 @@ pc.anim.Key = function Key() {
     this._time = 0;
 }
 
+pc.anim.Node = function Node() {
+    this._name = "";
+    this._keys = [];
+}
+
 pc.extend(pc.anim, function () {
     /**
      * @name pc.anim.Animation
@@ -15,6 +20,7 @@ pc.extend(pc.anim, function () {
         this._name = "";
         this._duration = 0;
         this._nodes = [];
+        this._nodeDict = {};
     };
 
     /**
@@ -37,6 +43,17 @@ pc.extend(pc.anim, function () {
      */
     Animation.prototype.getName = function () {
         return this._name;
+    };
+
+    /**
+     * @function
+     * @name pc.anim.Animation#getNode
+     * @description
+     * @returns {pc.anim.Node}
+     * @author Will Eastcott
+     */
+    Animation.prototype.getNode = function (name) {
+        return this._nodeDict[name];
     };
 
     /**
@@ -74,13 +91,15 @@ pc.extend(pc.anim, function () {
 
     /**
      * @function
-     * @name pc.anim.Animation#setNodes
+     * @name pc.anim.Animation#setNode
      * @description
-     * @param {number} nodes
+     * @param {String} name
+     * @param {pc.anim.Node} node
      * @author Will Eastcott
      */
-    Animation.prototype.setNodes = function (nodes) {
-        this._nodes = nodes;
+    Animation.prototype.addNode = function (node) {
+        this._nodes.push(node);
+        this._nodeDict[node._name] = node;
     };
 
     return {
