@@ -60,9 +60,9 @@ pc.extend(pc.scene, function () {
         if (geom !== null) {
             if (geom.isSkinned()) {
                 var i, numBones;
+                var matrixPalette = geom.getMatrixPalette();
+                var invBindPose = geom.getInverseBindPose();
                 for (i = 0, numBones = this._bones.length; i < numBones; i++) {
-                    var matrixPalette = geom.getMatrixPalette();
-                    var invBindPose = geom.getInverseBindPose();
                     pc.math.mat4.multiply(this._bones[i]._wtm, invBindPose[i], matrixPalette[i]);
                 }
             } 
