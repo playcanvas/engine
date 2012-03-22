@@ -3,6 +3,17 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.42.0
+-------
+* Animation file format updated!  Reconvert all animation JSON from source FBX files!
+* Reworked animation API to support skeleton to graph link up via bone names. This fixes the case where the skeleton does not include all the graph nodes.
+* [FIX] Skin partitioning fixed for geometries with more than one submesh.
+* Added GraphNode#lookAt and GraphNode#translate.
+* Added GraphNode#set/getLocalPostion and GraphNode#getWorldPosition.
+* [FIX] ResourceLoader.request now works if you don't supply a progress function.
+* Updated Closure Compiler to latest version (fixes new lines at end of code modules in non-minified engine).
+
+-------
 v0.41.2
 -------
 * [FIX] AudioSource correctly plays audio when you add a new component over livelink
