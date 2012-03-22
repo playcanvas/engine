@@ -1,18 +1,18 @@
 pc.extend(pc.resources, function () {
-	var AnimationResourceHandler = function () {
-	};
-	AnimationResourceHandler = AnimationResourceHandler.extendsFrom(pc.resources.ResourceHandler);
-	
+    var AnimationResourceHandler = function () {};
+
+    AnimationResourceHandler = AnimationResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+
     AnimationResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
     	var url = identifier;
         var dir = pc.path.getDirectory(url);
 
         pc.net.http.get(url, function (response) {
-	        try {
-    	    	success(response);
-	        } catch (e) {
-	            error(pc.string.format("An error occured while loading animation from: '{0}'", url));
-	        }
+            try {
+                success(response);
+            } catch (e) {
+                error(pc.string.format("An error occured while loading animation from: '{0}'", url));
+            }
         }.bind(this), {cache:false});
     };
 
@@ -21,39 +21,49 @@ pc.extend(pc.resources, function () {
     	return animation;
     };
 	
-	AnimationResourceHandler.prototype._loadAnimation = function (data) {
+    AnimationResourceHandler.prototype._loadAnimation = function (data) {
         var animData = data.animation;
 
-	    var nodes = [];
-	    for (var i = 0; i < animData.nodes.length; i++) {
-	        var keys = [];
-	        for (var j = 0; j < animData.nodes[i].length; j++) {
-	            key = new pc.anim.Key();
-	            key._quat  = animData.nodes[i][j].quat;
-	            key._pos   = animData.nodes[i][j].pos;
-	            key._scale = animData.nodes[i][j].scale;
-	            key._time  = animData.nodes[i][j].time;
-	            keys.push(key);
-	        }
-	        nodes.push(keys);
-	    }
+        var anim = new pc.anim.Animation();
+        anim.setName(animData.name);
+        anim.setDuration(animData.duration);
+
+        for (var i = 0; i < animData.nodes.length; i++) {
+            var node = new pc.anim.Node();            
+
+            var n = animData.nodes[i];
+            node._name = n.name;
+
+            for (var j = 0; j < n.keys.length; j++) {
+                var key = new pc.anim.Key();
+
+                var k = n.keys[j];
+                var q = k.quat;
+                var p = k.pos;
+                var s = k.scale;
+                var t = k.time;
+
+                key._quat  = pc.math.quat.create(q[0], q[1], q[2], q[3]);
+                key._pos   = pc.math.quat.create(p[0], p[1], p[2]);
+                key._scale = pc.math.quat.create(s[0], s[1], s[2]);
+                key._time  = t;
+
+                node._keys.push(key);
+            }
+
+            anim.addNode(node);
+        }
+
+        return anim;
+    };
 	
-	    var anim = new pc.anim.Animation();
-	    
-	    anim.setName(animData.name);
-	    anim.setDuration(animData.duration);
-	    anim.setNodes(nodes);
-	    
-	    return anim;
-	};
+    var AnimationRequest = function AnimationRequest(identifier) {};
+
+    AnimationRequest = AnimationRequest.extendsFrom(pc.resources.ResourceRequest);
+    AnimationRequest.prototype.type = "animation";
 	
-	var AnimationRequest = function AnimationRequest(identifier) {
-	};
-	AnimationRequest = AnimationRequest.extendsFrom(pc.resources.ResourceRequest);
-	AnimationRequest.prototype.type = "animation";
-	
-	return {
-		AnimationResourceHandler: AnimationResourceHandler,
-		AnimationRequest: AnimationRequest
-	}	
+    return {
+        AnimationResourceHandler: AnimationResourceHandler,
+        AnimationRequest: AnimationRequest
+    }	
 }());
