@@ -11,7 +11,14 @@ pc.extend(pc.fw, function () {
          * @param {Function} progress Callback fired on each progress event, usually when a file or Entity is loaded, passed a percentage complete value
          */
         loadPack: function (guid, context, success, error, progress) {
-            context.loader.request(new pc.resources.EntityRequest(guid), function (resources) {
+            var new_db_format = true;
+            if (new_db_format) {
+                var request = new pc.resources.PackRequest(guid);
+            } else {
+                var request = new pc.resources.EntityRequest(guid);                
+            }
+
+            context.loader.request(request, function (resources) {
                 var pack = resources[guid];
 
                 // add to hierarchy
