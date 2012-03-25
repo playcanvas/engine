@@ -28,7 +28,7 @@ pc.extend(pc.resources, function () {
     };
 
     PackResourceHandler.prototype.open = function (data, options) {
-        var pack = this.openEntity(data);
+        var pack = this.openEntity(data, options);
 
         return pack;
     };
