@@ -63,12 +63,6 @@ pc.extend(pc.gfx, function () {
     }
     ContextCreationError.prototype = Error.prototype;
 
-    var _defaultClearOptions = {
-        color: [0, 0, 0, 1],
-        depth: 1,
-        flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
-    };
-    
     var _contextLostHandler = function () {
         logWARNING("Context lost.");
     };
@@ -142,12 +136,29 @@ pc.extend(pc.gfx, function () {
         logINFO("WebGL max fshader vectors: " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
         logINFO("WebGL max varying vectors: " + gl.getParameter(gl.MAX_VARYING_VECTORS));
 
+        this.defaultClearOptions = {
+            color: [0, 0, 0, 1],
+            depth: 1,
+            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+        };
+
         this.lookupPrim = [
             gl.POINTS, 
             gl.LINES, 
             gl.LINE_STRIP, 
             gl.TRIANGLES, 
             gl.TRIANGLE_STRIP 
+        ];
+
+        this.lookupClear = [
+            0,
+            gl.COLOR_BUFFER_BIT,
+            gl.DEPTH_BUFFER_BIT,
+            gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT|gl.COLOR_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT|gl.DEPTH_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT|gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT
         ];
 
         this.lookup = {
@@ -163,16 +174,6 @@ pc.extend(pc.gfx, function () {
                 gl.ONE_MINUS_SRC_ALPHA,
                 gl.DST_ALPHA,
                 gl.ONE_MINUS_DST_ALPHA
-            ],
-            clear: [
-                0,
-                gl.COLOR_BUFFER_BIT,
-                gl.DEPTH_BUFFER_BIT,
-                gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT,
-                gl.STENCIL_BUFFER_BIT,
-                gl.STENCIL_BUFFER_BIT|gl.COLOR_BUFFER_BIT,
-                gl.STENCIL_BUFFER_BIT|gl.DEPTH_BUFFER_BIT,
-                gl.STENCIL_BUFFER_BIT|gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT
             ],
             elementType: [
                 gl.BYTE,
@@ -507,24 +508,27 @@ pc.extend(pc.gfx, function () {
      * @author Will Eastcott
      */
     Device.prototype.clear = function (options) {
-        options = options || _defaultClearOptions;
-        var color = options.color || _defaultClearOptions.color;
-        var depth = options.depth || _defaultClearOptions.depth;
-        var flags = options.flags || _defaultClearOptions.flags;
+        var defaultOptions = this.defaultClearOptions;
+        options = options || defaultOptions;
+
+        var flags = options.flags || defaultOptions.flags;
+        var glFlags = this.lookupClear[flags];
 
         // Set the clear color
         var gl = this.gl;
-        if (flags & pc.gfx.ClearFlag.COLOR) {
+        if (glFlags & gl.COLOR_BUFFER_BIT) {
+            var color = options.color || defaultOptions.color;
             gl.clearColor(color[0], color[1], color[2], color[3]);
         }
 
-        if (flags & pc.gfx.ClearFlag.DEPTH) {
+        if (glFlags & gl.DEPTH_BUFFER_BIT) {
             // Set the clear depth
+            var depth = options.depth || defaultOptions.depth;
             gl.clearDepth(depth);
         }
 
         // Clear the frame buffer
-        gl.clear(this.lookup.clear[flags]);
+        gl.clear(glFlags);
     };
 
     /**
