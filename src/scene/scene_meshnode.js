@@ -73,8 +73,9 @@ pc.extend(pc.scene, function () {
                 var i, numBones;
                 var matrixPalette = geom.getMatrixPalette();
                 var invBindPose = geom.getInverseBindPose();
+                var m4Mult = pc.math.mat4.multiply;
                 for (i = 0, numBones = this._bones.length; i < numBones; i++) {
-                    pc.math.mat4.multiply(this._bones[i]._wtm, invBindPose[i], matrixPalette[i]);
+                    m4Mult(this._bones[i]._wtm, invBindPose[i], matrixPalette[i]);
                 }
             } 
 

@@ -13,6 +13,7 @@ pc.scene.Space = {
 pc.extend(pc.scene, function () {
 
     var _tempVec = pc.math.vec3.create(0, 0, 0);
+    var _tempMat = pc.math.mat4.create();
 
     /**
      * @name pc.scene.Scene
@@ -31,6 +32,12 @@ pc.extend(pc.scene, function () {
         this._localLights = [[], []]; // All currently enabled points and spots
 
         // Shadows
+        var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
+        var shift = pc.math.mat4.makeTranslate(0.5, 0.5, 0.5);
+        this._shadowScaleShift = pc.math.mat4.multiply(shift, scale);
+        // Lights look down the negative Y and camera's down the positive Z so rotate by -90
+        this._shadowCamLtm = pc.math.mat4.makeRotate(-Math.PI / 2.0, [1, 0, 0]);
+        this._shadowCamWtm = pc.math.mat4.create();
         this._shadowMaterial = new pc.scene.Material();
         this._shadowMaterial.setProgramName('shadowmap');
         this._shadowState = {
@@ -261,28 +268,13 @@ pc.extend(pc.scene, function () {
                 for (i = 0; i < self._lights.length; i++) {
                     var light = self._lights[i];
                     if (light.getCastShadows()) {
-                        var near = 0.1;
-                        var far = 50;
-                        var extent = 10;
-                        
-                        // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-                        var shadowCamLtm = pc.math.mat4.makeRotate(-Math.PI / 2.0, [1, 0, 0]);
                         var lightWtm = light.getWorldTransform();
-                        var shadowCamWtm = pc.math.mat4.multiply(lightWtm, shadowCamLtm);
-                        var shadowCamView = pc.math.mat4.invert(shadowCamWtm);
-                        var shadowCamProj;
-                        if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
-                            shadowCamProj = pc.math.mat4.makeOrtho(-extent, extent, -extent, extent, near, far);
-                        } else {
-                            shadowCamProj = pc.math.mat4.makePerspective(light._outerConeAngle * 2, 1, near, far);
-                        }
-                        var shadowViewProj = pc.math.mat4.multiply(shadowCamProj, shadowCamView);
-                        var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
-                        var shift = pc.math.mat4.makeTranslate(0.5, 0.5, 0.5);
-                        var scaleShift = pc.math.mat4.multiply(shift, scale);
-                        pc.math.mat4.multiply(scaleShift, shadowViewProj, light._shadowMatrix);
+                        pc.math.mat4.multiply(lightWtm, self._shadowCamLtm, self._shadowCamWtm);
+                        pc.math.mat4.invert(self._shadowCamWtm, _tempMat);
+                        pc.math.mat4.multiply(light._shadowProj, _tempMat, _tempMat);
+                        pc.math.mat4.multiply(self._shadowScaleShift, _tempMat, light._shadowMatrix);
 
-                        light._shadowCamera.setLocalTransform(shadowCamWtm);
+                        light._shadowCamera.setLocalTransform(self._shadowCamWtm);
                         light._shadowCamera.syncHierarchy();
                         light._shadowCamera.frameBegin();
 
