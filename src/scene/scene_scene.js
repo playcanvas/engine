@@ -144,12 +144,12 @@ pc.extend(pc.scene, function () {
         var lights = this._lights;
         for (i = 0, len = lights.length; i < len; i++) {
             var light = lights[i];
-            if (light.castShadows()) {
+            if (light.getCastShadows()) {
                 castShadows = true;
             }
             if (light.getEnabled()) {
                 if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
-                    if (light.castShadows()) {
+                    if (light.getCastShadows()) {
                         this._globalLights.push(light);
                     } else {
                         this._globalLights.unshift(light);
@@ -260,7 +260,7 @@ pc.extend(pc.scene, function () {
                 setShadowMapMaterial();
                 for (i = 0; i < self._lights.length; i++) {
                     var light = self._lights[i];
-                    if (light.castShadows()) {
+                    if (light.getCastShadows()) {
                         var near = 0.1;
                         var far = 50;
                         var extent = 10;
@@ -289,14 +289,14 @@ pc.extend(pc.scene, function () {
                         // Render both alpha and opaque meshes front to back
                         if (alphaMeshes.length > 0) {
                             for (j = alphaMeshes.length - 1; j >= 0; j--) {
-                                if (alphaMeshes[j].castShadows()) {
+                                if (alphaMeshes[j].getCastShadows()) {
                                     alphaMeshes[j].dispatch();
                                 }
                             }
                         }
                         if (opaqueMeshes.length > 0) {
                             for (j = opaqueMeshes.length - 1; j >= 0; j--) {
-                                if (opaqueMeshes[j].castShadows()) {
+                                if (opaqueMeshes[j].getCastShadows()) {
                                     opaqueMeshes[j].dispatch();
                                 }
                             }
@@ -388,7 +388,7 @@ pc.extend(pc.scene, function () {
             directional._direction[2] = -wtm[6];
             scope.resolve(light + "_direction").setValue(directional._direction);
 
-            if (directional.castShadows()) {
+            if (directional.getCastShadows()) {
                 var shadowMap = directional._shadowBuffer.getTexture();
                 scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
@@ -444,7 +444,7 @@ pc.extend(pc.scene, function () {
             spot._direction[2] = -wtm[6];
             scope.resolve(light + "_spotDirection").setValue(spot._direction);
 
-            if (spot.castShadows()) {
+            if (spot.getCastShadows()) {
                 var shadowMap = spot._shadowBuffer.getTexture();
                 scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);

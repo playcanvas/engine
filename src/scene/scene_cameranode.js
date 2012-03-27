@@ -49,15 +49,19 @@ pc.extend(pc.scene, function () {
     // A CameraNode is a specialization of a GraphNode.  So inherit...
     CameraNode = CameraNode.extendsFrom(pc.scene.GraphNode);
 
-    CameraNode.prototype.clone = function () {
-        var clone = new pc.scene.CameraNode();
+    /**
+     * @private
+     * @function
+     * @name pc.scene.CameraNode#_cloneInternal
+     * @description Internal function for cloning the contents of a camera node. Also clones
+     * the properties of the superclass GraphNode.
+     * @param {pc.scene.CameraNode} clone The clone that will receive the copied properties.
+     */
+    CameraNode.prototype._cloneInternal = function (clone) {
+        // Clone GraphNode properties
+        CameraNode._super._cloneInternal.call(this, clone);
 
-        // GraphNode
-        clone.setName(this.getName());
-        clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
-        clone._graphId = this._graphId;
-
-        // CameraNode
+        // Clone CameraNode properties
         clone.setProjection(this.getProjection());
         clone.setNearClip(this.getNearClip());
         clone.setFarClip(this.getFarClip());
@@ -67,7 +71,18 @@ pc.extend(pc.scene, function () {
         clone.setUpNode(this.getUpNode());
         clone.setRenderTarget(this.getRenderTarget());
         clone.setClearOptions(this.getClearOptions());
+    };
 
+    /**
+     * @function
+     * @name pc.scene.CameraNode#clone
+     * @description Duplicates a camera node but does not 'deep copy' the hierarchy.
+     * @returns {pc.scene.CameraNode} A cloned CameraNode.
+     * @author Will Eastcott
+     */
+    CameraNode.prototype.clone = function () {
+        var clone = new pc.scene.CameraNode();
+        this._cloneInternal(clone);
         return clone;
     };
 
@@ -88,17 +103,17 @@ pc.extend(pc.scene, function () {
         projMat = pc.math.mat4.makePerspective(this._fov, width / height, this._nearClip, this._farClip);
         // Create projection view matrix
         pc.math.mat4.multiply(projMat, viewMat, pvm);    
-        
+
         // transform point
         pc.math.mat4.multiplyVec3(point, 1.0, pvm, point2d);
-        
+
         // Convert from homogenous coords
         var denom = point2d[3] || 1;
-        
+
         point2d[0] = (width / 2) + (width / 2) * point2d[0] / denom;
         point2d[1] = height - ((height / 2) + (height / 2) * point2d[1] / denom);
         point2d[2] = point2d[2] / denom;        
-        
+
         return point2d;
     };
 
@@ -118,7 +133,7 @@ pc.extend(pc.scene, function () {
         var viewMat = pc.math.mat4.invert(wtm);
 
         unproject(pc.math.vec3.create(x,y,z), modelview, projection, viewport, output);
-        
+
         return output;
     };
 
@@ -136,7 +151,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.frameBegin = function (clear) {
         clear = (clear === undefined) ? true : clear;
-        
+
         var device = pc.gfx.Device.getCurrent();
         device.setRenderTarget(this._renderTarget);
         device.updateBegin();
@@ -154,7 +169,7 @@ pc.extend(pc.scene, function () {
                          -this._viewWindow[1], this._viewWindow[1],
                           this._nearClip, this._farClip, this._projMat);
         }
-        
+
         // Set the view related matrices
         var wtm = this.getWorldTransform();
         if (this._lookAtNode !== null) {

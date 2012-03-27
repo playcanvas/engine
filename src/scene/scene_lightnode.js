@@ -46,20 +46,24 @@ pc.extend(pc.scene, function () {
 
     LightNode = LightNode.extendsFrom(pc.scene.GraphNode);
 
-    LightNode.prototype.clone = function () {
-        var clone = new pc.scene.LightNode();
+    /**
+     * @private
+     * @function
+     * @name pc.scene.LightNode#_cloneInternal
+     * @description Internal function for cloning the contents of a light node. Also clones
+     * the properties of the superclass GraphNode.
+     * @param {pc.scene.LightNode} clone The clone that will receive the copied properties.
+     */
+    LightNode.prototype._cloneInternal = function (clone) {
+        // Clone GraphNode properties
+        LightNode._super._cloneInternal.call(this, clone);
 
-        // GraphNode
-        clone.setName(this.getName());
-        clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
-        clone._graphId = this._graphId;
-
-        // LightNode properties
+        // Clone LightNode properties
         clone.setType(this.getType());
-        clone.setColor(this.getColor().splice(0));
+        clone.setColor(pc.math.vec3.clone(this.getColor()));
         clone.setIntensity(this.getIntensity());
+        clone.setCastShadows(this.getCastShadows());
         clone.setEnabled(this.getEnabled());
-        clone.setCastShadows(this.castShadows());
 
         // Point and spot properties
         clone.setAttenuationStart(this.getAttenuationStart());
@@ -68,7 +72,18 @@ pc.extend(pc.scene, function () {
         // Spot properties
         clone.setInnerConeAngle(this.getInnerConeAngle());
         clone.setOuterConeAngle(this.getOuterConeAngle());
+    };
 
+    /**
+     * @function
+     * @name pc.scene.LightNode#clone
+     * @description Duplicates a light node but does not 'deep copy' the hierarchy.
+     * @returns {pc.scene.LightNode} A cloned LightNode.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.clone = function () {
+        var clone = new pc.scene.LightNode();
+        this._cloneInternal(clone);
         return clone;
     };
 
@@ -97,13 +112,13 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.LightNode#castShadows
+     * @name pc.scene.LightNode#getCastShadows
      * @description Queries whether the light casts shadows. Dynamic lights do not
      * cast shadows by default.
      * @returns {Boolean} true if the specified light casts shadows and false otherwise.
      * @author Will Eastcott
      */
-    LightNode.prototype.castShadows = function () {
+    LightNode.prototype.getCastShadows = function () {
         return this._castShadows;
     };
 
