@@ -17,19 +17,34 @@ pc.extend(pc.shape, function () {
     Aabb = Aabb.extendsFrom(pc.shape.Shape);
 
     Aabb.prototype.add = function (other) {
-        var otherMin = other.getMin();
-        var otherMax = other.getMax();
-        var thisMin = this.getMin();
-        var thisMax = this.getMax();
-
-        if (otherMin[0] < thisMin[0]) thisMin[0] = otherMin[0];
-        if (otherMin[1] < thisMin[1]) thisMin[1] = otherMin[1];
-        if (otherMin[2] < thisMin[2]) thisMin[2] = otherMin[2];
-        if (otherMax[0] > thisMax[0]) thisMax[0] = otherMax[0];
-        if (otherMax[1] > thisMax[1]) thisMax[1] = otherMax[1];
-        if (otherMax[2] > thisMax[2]) thisMax[2] = otherMax[2];
-
-        this.setMinMax(thisMin, thisMax);
+        var tc = this.center;
+        var th = this.halfExtents;
+        var tminx = tc[0] - th[0];
+        var tmaxx = tc[0] + th[0];
+        var tminy = tc[1] - th[1];
+        var tmaxy = tc[1] + th[1];
+        var tminz = tc[2] - th[2];
+        var tmaxz = tc[2] + th[2];
+        var oc = other.center;
+        var oh = other.halfExtents;
+        var ominx = oc[0] - oh[0];
+        var omaxx = oc[0] + oh[0];
+        var ominy = oc[1] - oh[1];
+        var omaxy = oc[1] + oh[1];
+        var ominz = oc[2] - oh[2];
+        var omaxz = oc[2] + oh[2];
+        if (ominx < tminx) tminx = ominx;
+        if (omaxx > tmaxx) tmaxx = omaxx;
+        if (ominy < tminy) tminy = ominy;
+        if (omaxy > tmaxy) tmaxy = omaxy;
+        if (ominz < tminz) tminz = ominz;
+        if (omaxz > tmaxz) tmaxz = omaxz;
+        tc[0] = (tminx + tmaxx) * 0.5;
+        tc[1] = (tminy + tmaxy) * 0.5;
+        tc[2] = (tminz + tmaxz) * 0.5;
+        th[0] = (tmaxx - tminx) * 0.5;
+        th[1] = (tmaxy - tminy) * 0.5;
+        th[2] = (tmaxz - tminz) * 0.5;
     }
 
     Aabb.prototype.copy = function (src) {

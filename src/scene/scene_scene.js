@@ -223,9 +223,6 @@ pc.extend(pc.scene, function () {
 	    alphaMeshes.sort(sortBackToFront);
 	    opaqueMeshes.sort(sortBackToFront);
 
-        this.dispatchGlobalLights();
-        this.dispatchLocalLights();
-
         // Enqueue rendering of all shadowmaps
         var self = this;        
         if (castShadows) {
@@ -359,25 +356,29 @@ pc.extend(pc.scene, function () {
             });
         }
 
-        // Enqueue alpha meshes
-        if (alphaMeshes.length > 0) {
-            this.enqueue("transparent", function() {
-                // Render back to front
-                for (i = 0, numMeshes = alphaMeshes.length; i < numMeshes; i++) {
-                    alphaMeshes[i].dispatch();
-                }
-            });
-        }
-
         // Enqueue opaque meshes
-        if (opaqueMeshes.length > 0) {
-            this.enqueue("opaque", function() {
+        this.enqueue("opaque", function() {
+            // Lights get dispatched after the shadowmap generation is done.
+            // By this point, the shadow matrices for the lights  have been
+            // calculated.
+            self.dispatchGlobalLights();
+            self.dispatchLocalLights();
+
+            if (opaqueMeshes.length > 0) {
                 // Render front to back
                 for (i = opaqueMeshes.length - 1; i >= 0; i--) {
                     opaqueMeshes[i].dispatch();
                 }
-            });
-        }
+            }
+        });
+
+        // Enqueue alpha meshes
+        this.enqueue("transparent", function() {
+            // Render back to front
+            for (i = 0, numMeshes = alphaMeshes.length; i < numMeshes; i++) {
+                alphaMeshes[i].dispatch();
+            }
+        });
     };
 	
 	Scene.prototype.enqueue = function (queueName, renderFunc) {
