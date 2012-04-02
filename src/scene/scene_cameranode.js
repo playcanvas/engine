@@ -4,6 +4,7 @@ pc.scene.Projection = {
 }
 
 pc.extend(pc.scene, function () {
+    var v2 = pc.math.vec2;
     var v3 = pc.math.vec3;
     var m4 = pc.math.mat4;
 
@@ -14,12 +15,12 @@ pc.extend(pc.scene, function () {
     var CameraNode = function () {
         this._projection = pc.scene.Projection.PERSPECTIVE;
         this._nearClip = 0.1;
-        this._farClip = 10000.0;
-        this._fov = 45.0;
-        this._viewWindow = pc.math.vec2.create(1.0, 1.0);
+        this._farClip = 10000;
+        this._fov = 45;
+        this._viewWindow = v2.create(1, 1);
         this._lookAtNode = null;
         this._upNode = null;
-        this._viewPosition = [0, 0, 0];
+        this._viewPosition = v3.create(0, 0, 0);
 
         // Uniforms that are automatically set by a camera at the start of a scene render
         var scope = pc.gfx.Device.getCurrent().scope;
@@ -29,6 +30,7 @@ pc.extend(pc.scene, function () {
         this._viewProjId = scope.resolve("matrix_viewProjection");
         this._viewPosId = scope.resolve("view_position");
 
+        this._projMatDirty = true;
         this._projMat = m4.create();
         this._viewMat = m4.create();
         this._viewProjMat = m4.create();
@@ -158,18 +160,7 @@ pc.extend(pc.scene, function () {
         if (clear) {
             device.clear(this._clearOptions);
         }
-
-        // Set the projection matrix
-        if (this._projection === pc.scene.Projection.PERSPECTIVE) {
-            var viewport = this._renderTarget.getViewport();
-            var aspect = viewport.width / viewport.height;
-            m4.makePerspective(this._fov, aspect, this._nearClip, this._farClip, this._projMat);
-        } else {
-            m4.makeOrtho(-this._viewWindow[0], this._viewWindow[0], 
-                         -this._viewWindow[1], this._viewWindow[1],
-                          this._nearClip, this._farClip, this._projMat);
-        }
-
+        
         // Set the view related matrices
         var wtm = this.getWorldTransform();
         if (this._lookAtNode !== null) {
@@ -185,20 +176,29 @@ pc.extend(pc.scene, function () {
             }
             wtm = pc.math.mat4.makeLookAt(eye, target, up);
         }
-        m4.invert(wtm, this._viewMat);
-        m4.multiply(this._projMat, this._viewMat, this._viewProjMat);
-        this._frustum.update(this._projMat, this._viewMat);
 
-        this._projId.setValue(this._projMat);
+        // Projection Matrix
+        var projMat = this.getProjectionMatrix();
+        this._projId.setValue(projMat);
+
+        // View Matrix
+        m4.invert(wtm, this._viewMat);
         this._viewId.setValue(this._viewMat);
-        this._viewInvId.setValue(wtm);
+
+        // ViewProjection Matrix
+        m4.multiply(projMat, this._viewMat, this._viewProjMat);
         this._viewProjId.setValue(this._viewProjMat);
 
-        // Set the eye position in world coordinates
+        // ViewInverse Matrix
+        this._viewInvId.setValue(wtm);
+
+        // View Position (world space)
         this._viewPosition[0] = wtm[12];
         this._viewPosition[1] = wtm[13];
         this._viewPosition[2] = wtm[14];
         this._viewPosId.setValue(this._viewPosition);
+
+        this._frustum.update(projMat, this._viewMat);
     };
 
     /**
@@ -212,6 +212,18 @@ pc.extend(pc.scene, function () {
     CameraNode.prototype.frameEnd = function () {
         var device = pc.gfx.Device.getCurrent();
         device.updateEnd();
+    };
+
+    /**
+     * @function
+     * @name pc.scene.CameraNode#getClearOptions
+     * @description Retrieves the options used to determine how the camera's render target will be cleared.
+     * The clearing of the render target actually happens on a call to pc.scene.CameraNode#frameBegin.
+     * @return {Object} The options determining the behaviour of render target clears.
+     * @author Will Eastcott
+     */
+    CameraNode.prototype.getClearOptions = function () {
+        return this._clearOptions;
     };
 
     /**
@@ -276,21 +288,24 @@ pc.extend(pc.scene, function () {
      * @function
      * @name pc.scene.CameraNode#getProjectionMatrix
      * @description Retrieves the projection matrix for the specified camera.
-     * @returns {pc.matrix.Mat4} The camera's projection matrix.
+     * @returns {pc.math.mat4} The camera's projection matrix.
      * @author Will Eastcott
      */
     CameraNode.prototype.getProjectionMatrix = function () {
-        var projMat;
-        if (this._projection === pc.scene.Projection.PERSPECTIVE) {
-            var viewport = this._renderTarget.getViewport();
-            var aspect = viewport.width / viewport.height;
-            projMat = pc.math.mat4.makePerspective(this._fov, aspect, this._nearClip, this._farClip);
-        } else {
-            projMat = pc.math.mat4.makeOrtho(-this._viewWindow[0], this._viewWindow[0], 
-                                             -this._viewWindow[1], this._viewWindow[1],
-                                              this._nearClip, this._farClip);
+        if (this._projMatDirty) {
+            if (this._projection === pc.scene.Projection.PERSPECTIVE) {
+                var viewport = this._renderTarget.getViewport();
+                var aspect = viewport.width / viewport.height;
+                m4.makePerspective(this._fov, aspect, this._nearClip, this._farClip, this._projMat);
+            } else {
+                m4.makeOrtho(-this._viewWindow[0], this._viewWindow[0], 
+                             -this._viewWindow[1], this._viewWindow[1],
+                              this._nearClip, this._farClip, this._projMat);
+            }
+
+            this._projMatDirty = false;
         }
-        return projMat;
+        return this._projMat;
     };
 
     /**
@@ -335,18 +350,6 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.CameraNode#getClearOptions
-     * @description Retrieves the options used to determine how the camera's render target will be cleared.
-     * The clearing of the render target actually happens on a call to pc.scene.CameraNode#frameBegin.
-     * @return {Object} The options determining the behaviour of render target clears.
-     * @author Will Eastcott
-     */
-    CameraNode.prototype.getClearOptions = function () {
-        return this._clearOptions;
-    };
-
-    /**
-     * @function
      * @name pc.scene.CameraNode#setFarClip
      * @description Sets the specified camera's far clipping plane. This is a Z-coordinate in eye coordinates.
      * @param {Number} far The far clipping plane distance.
@@ -354,6 +357,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setFarClip = function (far) {
         this._farClip = far;
+        this._projMatDirty = true;
     };
 
     /**
@@ -367,6 +371,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setFov = function (fov) {
         this._fov = fov;
+        this._projMatDirty = true;
     };
 
     /**
@@ -378,6 +383,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setNearClip = function (near) {
         this._nearClip = near;
+        this._projMatDirty = true;
     };
 
     /**
@@ -390,6 +396,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setProjection = function (type) {
         this._projection = type;
+        this._projMatDirty = true;
     };
 
     /**
@@ -401,6 +408,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setRenderTarget = function (target) {
         this._renderTarget = target;
+        this._projMatDirty = true;
     };
 
     /**
@@ -415,6 +423,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setViewWindow = function (halfExtents) {
         this._viewWindow = halfExtents;
+        this._projMatDirty = true;
     };
 
     CameraNode.prototype.setLookAtNode = function (node) {
