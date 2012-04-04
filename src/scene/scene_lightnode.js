@@ -41,7 +41,6 @@ pc.extend(pc.scene, function () {
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
         // Shadow mapping resources
-        this._shadowBuffer = null;
         this._shadowCamera = null;
         this._shadowMatrix = pc.math.mat4.create();
     };
