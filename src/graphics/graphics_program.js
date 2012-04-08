@@ -7,6 +7,7 @@ pc.extend(pc.gfx, function () {
      */
     var Program = function (vertexShader, fragmentShader) {
         this.attributes = [];
+        this.samplers   = [];
         this.uniforms   = [];
         
         // Create the WebGL program ID
@@ -80,7 +81,11 @@ pc.extend(pc.gfx, function () {
         while (i < numUniforms) {
             var info = gl.getActiveUniform(this.programId, i++);
             var locationId = gl.getUniformLocation(this.programId, info.name);
-            this.uniforms.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
+            if ((info.type === gl.SAMPLER_2D) || (info.type === gl.SAMPLER_CUBE)) {
+                this.samplers.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
+            } else {
+                this.uniforms.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
+            }
 
             logDEBUG("Added shader uniform: " + _typeToString[info.type] + " " + info.name);
         }

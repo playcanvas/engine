@@ -70,6 +70,9 @@ pc.extend(pc.fw, function () {
 
                 componentData.skeleton.setLooping(componentData.loop);
 
+                // If the entity has a model on a model component, grab it
+                componentData.model = this.context.systems.model.get(entity, 'model');
+
                 // Set the first loaded animation as the current
                 if (componentData.activate) {
                     this.setAnimation(entity, animName);
@@ -197,8 +200,7 @@ pc.extend(pc.fw, function () {
             componentData.toSkel.setAnimation(componentData.animations[componentData.currAnim]);
             componentData.toSkel.addTime(0);
         } else {
-            var animation = componentData.animations[componentData.currAnim];
-            componentData.skeleton.setAnimation(animation);
+            componentData.skeleton.setAnimation(componentData.animations[componentData.currAnim]);
         }
 
         if (componentData.model) {

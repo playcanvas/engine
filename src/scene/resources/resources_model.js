@@ -292,9 +292,9 @@ pc.extend(pc.resources, function () {
         // Since we are working with a single triangle list, everything is a triangle
         var basePartition = 0;
         var indexList = geometryData.indices.data;
-        for (iSubMesh = 0; iSubMesh < geometryData.submeshes.length; iSubMesh++) {
+        for (var iSubMesh = 0; iSubMesh < geometryData.submeshes.length; iSubMesh++) {
             var submesh = geometryData.submeshes[iSubMesh];
-            for (var iIndex = submesh.primitive.base; iIndex < submesh.primitive.count; ) {  
+            for (var iIndex = submesh.primitive.base; iIndex < submesh.primitive.base + submesh.primitive.count; ) {  
                 // Extact primitive  
                 // Convert vertices  
                 // There is a little bit of wasted time here if the vertex was already added previously  

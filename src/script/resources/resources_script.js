@@ -32,7 +32,7 @@ pc.extend(pc.resources, function () {
      */
     ScriptResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
         options = options || {};
-        options.timeout = options.timeout || 10000; // default 10 second timeout
+        options.timeout = options.timeout || 60000; // default 10 second timeout
         
         var url = new pc.URI(identifier);
         url.path = pc.path.join(this._prefix, url.path);
@@ -102,8 +102,10 @@ pc.extend(pc.resources, function () {
             error(pc.string.format("Error loading script from '{0}'", e.target.src));    
         });
         
+        var done = false;
         element.onload = element.onreadystatechange = function () {
-            if(!this.readyState || (this.readyState == "loaded" || this.readyState == "complete")) {
+            if(!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
+                done = true; // prevent double event firing
                 var script = self._pending.shift();
                 if (script) {
                     var ScriptType = script.callback(self._context);

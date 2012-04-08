@@ -13,16 +13,35 @@ pc.extend(pc.scene, function () {
         this._style = RenderStyle.NORMAL;
         this._castShadows = false;
         this._receiveShadows = true;
-
-        this._localLights = [[], []]; // All currently enabled point and spots
-
         this._aabb = new pc.shape.Aabb();
-
         this._bones = null; // For skinned meshes, the bones array that influences the skin
     }
     MeshNode = MeshNode.extendsFrom(pc.scene.GraphNode);
 
     MeshNode._current = null;
+
+    /**
+     * @private
+     * @function
+     * @name pc.scene.MeshNode#_cloneInternal
+     * @description Internal function for cloning the contents of a mesh node. Also clones
+     * the properties of the superclass GraphNode.
+     * @param {pc.scene.MeshNode} clone The clone that will receive the copied properties.
+     */
+    MeshNode.prototype._cloneInternal = function (clone) {
+        // Clone GraphNode properties
+        MeshNode._super._cloneInternal.call(this, clone);
+
+        // Clone MeshNode properties
+        clone.setGeometry(this.getGeometry());
+        clone.setRenderStyle(this.getRenderStyle());
+        clone.setReceiveShadows(this.getReceiveShadows());
+        clone.setCastShadows(this.getCastShadows());
+        
+        // Notice the bone array isn't cloned here.  This generated externally
+        // (normally in Model#clone) where a graph is supplied to find bones
+        // matching the bone IDs on the geometry.
+    };
 
     /**
      * @function
@@ -34,15 +53,7 @@ pc.extend(pc.scene, function () {
      */
     MeshNode.prototype.clone = function () {
         var clone = new pc.scene.MeshNode();
-
-        // GraphNode
-        clone.setName(this.getName());
-        clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
-        clone._graphId = this._graphId;
-
-        // MeshNode
-        clone.setGeometry(this.getGeometry());
-
+        this._cloneInternal(clone);
         return clone;
     };
 
@@ -60,10 +71,11 @@ pc.extend(pc.scene, function () {
         if (geom !== null) {
             if (geom.isSkinned()) {
                 var i, numBones;
+                var matrixPalette = geom.getMatrixPalette();
+                var invBindPose = geom.getInverseBindPose();
+                var m4Mult = pc.math.mat4.multiply;
                 for (i = 0, numBones = this._bones.length; i < numBones; i++) {
-                    var matrixPalette = geom.getMatrixPalette();
-                    var invBindPose = geom.getInverseBindPose();
-                    pc.math.mat4.multiply(this._bones[i]._wtm, invBindPose[i], matrixPalette[i]);
+                    m4Mult(this._bones[i]._wtm, invBindPose[i], matrixPalette[i]);
                 }
             } 
 
@@ -75,24 +87,24 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.MeshNode#castShadows
+     * @name pc.scene.MeshNode#getCastShadows
      * @description Queries whether the specified mesh occludes light from dynamic 
      * lights that cast shadows.
      * @returns {Boolean} True if the specified mesh casts shadows, false otherwise.
      * @author Will Eastcott
      */
-    MeshNode.prototype.castShadows = function () {
+    MeshNode.prototype.getCastShadows = function () {
         return this._castShadows;
     };
 
     /**
      * @function
-     * @name pc.scene.MeshNode#receiveShadows
+     * @name pc.scene.MeshNode#getReceiveShadows
      * @description Queries whether the specified mesh cast shadows onto other meshes.
      * @returns {Boolean} True if the specified mesh cast shadows, false otherwise.
      * @author Will Eastcott
      */
-    MeshNode.prototype.receiveShadows = function () {
+    MeshNode.prototype.getReceiveShadows = function () {
         return this._receiveShadows;
     };
 
