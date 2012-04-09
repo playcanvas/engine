@@ -423,11 +423,37 @@ pc.gfx.programlib.phong = {
 
         if (numShadowLights > 0) {
             code += "\n";
-            code += "float unpack_depth(const in vec4 rgba_depth)\n";
+            code += "float upackRgbaDepthToFloat(const in vec4 rgba_depth)\n";
             code += "{\n";
             code += "    const vec4 bit_shift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);\n";
             code += "    float depth = dot(rgba_depth, bit_shift);\n";
             code += "    return depth;\n";
+            code += "}\n\n";
+            
+            code += "float calculateShadowFactor(const in vec4 sc, const in vec3 sp, const in sampler2D sm)\n";
+            code += "{\n";
+            code += "    vec3 shadowCoord = sc.xyz / sc.w;\n";
+            code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
+            code += "    {\n";
+            code += "        float shadowAccum = 0.0;\n";
+            code += "        float xoffset = 1.0 / sp[0];\n"; // 1/shadow map width
+            code += "        float yoffset = 1.0 / sp[1];\n"; // 1/shadow map height
+            code += "        float depthBias = sp[2];\n";
+            code += "        for (float x = -1.25; x <= 1.25; x += 1.25)\n";
+            code += "        {\n";
+            code += "            for (float y = -1.25; y <= 1.25; y += 1.25)\n";
+            code += "            {\n";
+            code += "                vec4 rgbaDepth = texture2D(sm, shadowCoord.xy + vec2(x * xoffset, y * yoffset));\n";
+            code += "                float depth = upackRgbaDepthToFloat(rgbaDepth);\n";
+            code += "                shadowAccum += (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
+            code += "            }\n";
+            code += "        }\n";
+            code += "        return shadowAccum / 9.0;\n";
+            code += "    }\n";
+            code += "    else\n";
+            code += "    {\n";
+            code += "        return 1.0;\n";
+            code += "    }\n";
             code += "}\n";
         }
 /*
@@ -524,7 +550,6 @@ pc.gfx.programlib.phong = {
             }
             if (numShadowLights > 0) {
                 code += "    float shadowFactor = 0.0;\n";
-                code += "    vec3 shadowCoord;\n";
             }
             if ((options.normalMap) || (options.parallaxMap)) {
                 // Use a normal extracted from the supplied normal map
@@ -602,28 +627,13 @@ pc.gfx.programlib.phong = {
                         code += "    {\n";
                         code += "        float depthBias = light" + i + "_shadowParams[2];\n";
                         code += "        vec4 rgbaDepth = texture2D(light" + i + "_shadowMap, shadowCoord.xy);\n";
-                        code += "        float depth     = unpack_depth(rgbaDepth);\n";
+                        code += "        float depth     = upackRgbaDepthToFloat(rgbaDepth);\n";
                         code += "        float shadowFactor = (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
                         code += "        diffuse         = diffuse * shadowFactor;\n";
                         code += "        specular        = specular * shadowFactor;\n";
                         code += "    }\n";
                     } else {
-                        code += "    shadowCoord = vLight" + i + "ShadowCoord.xyz / vLight" + i + "ShadowCoord.w;\n";
-                        code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
-                        code += "    {\n";
-                        code += "        float xoffset = 1.0 / light" + i + "_shadowParams[0];\n"; // 1/shadow map width
-                        code += "        float yoffset = 1.0 / light" + i + "_shadowParams[1];\n"; // 1/shadow map height
-                        code += "        float depthBias = light" + i + "_shadowParams[2];\n";
-                        code += "        for (float x = -1.25; x <= 1.25; x += 1.25)\n";
-                        code += "        {\n";
-                        code += "            for (float y = -1.25; y <= 1.25; y += 1.25)\n";
-                        code += "            {\n";
-                        code += "                vec4 rgbaDepth = texture2D(light" + i + "_shadowMap, shadowCoord.xy + vec2(x * xoffset, y * yoffset));\n";
-                        code += "                float depth = unpack_depth(rgbaDepth);\n";
-                        code += "                shadowFactor += (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
-                        code += "            }\n";
-                        code += "        }\n";
-                        code += "    }\n";
+                        code += "    shadowFactor += calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
                     }
                 }
             }
@@ -674,7 +684,9 @@ pc.gfx.programlib.phong = {
             }
 
             if (numShadowLights > 0) {
-                code += "    shadowFactor *= 1.0 / (9.0 * " + numShadowLights + ".0);\n";
+                if (numShadowLights > 1) {
+                    code += "    shadowFactor *= 1.0 / " + numShadowLights + ".0;\n";
+                }
                 code += "    diffuse = diffuse * shadowFactor;\n";
                 code += "    specular = specular * shadowFactor;\n";
             }

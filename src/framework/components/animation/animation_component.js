@@ -200,8 +200,7 @@ pc.extend(pc.fw, function () {
             componentData.toSkel.setAnimation(componentData.animations[componentData.currAnim]);
             componentData.toSkel.addTime(0);
         } else {
-            var animation = componentData.animations[componentData.currAnim];
-            componentData.skeleton.setAnimation(animation);
+            componentData.skeleton.setAnimation(componentData.animations[componentData.currAnim]);
         }
 
         if (componentData.model) {

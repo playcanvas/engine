@@ -19,14 +19,17 @@ pc.extend(pc.scene, function () {
 
     GraphNode.prototype = {
 
+        _cloneInternal: function (clone) {
+            clone._name = this._name;
+            pc.math.mat4.copy(this._ltm, clone._ltm);
+            pc.math.mat4.copy(this._wtm, clone._wtm);
+            clone._labels = pc.extend(this._lables, {});
+            clone._graphId = this._graphId;
+        },
+
         clone: function () {
             var clone = new pc.scene.GraphNode();
-
-            // GraphNode
-            clone.setName(this.getName());
-            clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
-            clone._graphId = this._graphId;
-
+            this._cloneInternal(clone);
             return clone;
         },
 
@@ -491,6 +494,10 @@ pc.extend(pc.scene, function () {
                     this._ltm[14] += arguments[0][2];
                 }
             }
+        },
+
+        rotate: function (axis, angle) {
+        
         }
     };
 

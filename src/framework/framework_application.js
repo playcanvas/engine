@@ -72,6 +72,7 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler());
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
+        loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioManager));
 

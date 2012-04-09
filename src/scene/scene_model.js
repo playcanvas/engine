@@ -1,4 +1,9 @@
 pc.extend(pc.scene, function () {
+
+    /**
+     * @name pc.scene.Model
+     * @class A model.
+     */
 	var Model = function Model() {
 	    this._textures   = [];
 	    this._materials  = [];
@@ -73,8 +78,23 @@ pc.extend(pc.scene, function () {
 	    }
 	};
 
+    /**
+     * @function
+     * @name pc.scene.Model#clone
+     * @description Clones a model. The returned model has a newly created hierarchy
+     * but actually just references the geometries of the model being cloned. This is
+     * a very memory efficient way of generating lots of copies of a model at runtime.
+     * The caveat is that modifications to the cloned model's geometries, submeshes,
+     * materials or textures will actually also modify the source model (and vice versa).
+     * @returns {pc.scene.Model} A cloned Model.
+     * @author Will Eastcott
+     */
 	Model.prototype.clone = function () {
         var clone = new pc.scene.Model();
+
+        clone._textures = this._textures.splice(0);
+        clone._materials = this._materials.splice(0);
+        clone._geometries = this._geometries.splice(0);
 
         var _duplicate = function (node) {
             var newNode = node.clone();
@@ -98,7 +118,7 @@ pc.extend(pc.scene, function () {
 
         // Resolve bone IDs to actual graph nodes
         var meshes = clone.getMeshes();
-        for (i = 0; i < meshes.length; i++) {
+        for (var i = 0; i < meshes.length; i++) {
             var mesh = meshes[i];
             var geom = mesh.getGeometry();
             if (geom._boneIds !== undefined) {

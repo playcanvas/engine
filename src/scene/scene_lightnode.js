@@ -12,6 +12,7 @@ pc.scene.LightType = {
 };
 
 pc.extend(pc.scene, function () {
+
     /**
      * @name pc.scene.LightNode
      * @class A light.
@@ -39,27 +40,31 @@ pc.extend(pc.scene, function () {
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
-        this._shadowBuffer = null;
+        // Shadow mapping resources
         this._shadowCamera = null;
-        this._shadowMatrix = null;
+        this._shadowMatrix = pc.math.mat4.create();
     };
 
     LightNode = LightNode.extendsFrom(pc.scene.GraphNode);
 
-    LightNode.prototype.clone = function () {
-        var clone = new pc.scene.LightNode();
+    /**
+     * @private
+     * @function
+     * @name pc.scene.LightNode#_cloneInternal
+     * @description Internal function for cloning the contents of a light node. Also clones
+     * the properties of the superclass GraphNode.
+     * @param {pc.scene.LightNode} clone The clone that will receive the copied properties.
+     */
+    LightNode.prototype._cloneInternal = function (clone) {
+        // Clone GraphNode properties
+        LightNode._super._cloneInternal.call(this, clone);
 
-        // GraphNode
-        clone.setName(this.getName());
-        clone.setLocalTransform(pc.math.mat4.clone(this.getLocalTransform()));
-        clone._graphId = this._graphId;
-
-        // LightNode properties
+        // Clone LightNode properties
         clone.setType(this.getType());
-        clone.setColor(this.getColor().splice(0));
+        clone.setColor(pc.math.vec3.clone(this.getColor()));
         clone.setIntensity(this.getIntensity());
+        clone.setCastShadows(this.getCastShadows());
         clone.setEnabled(this.getEnabled());
-        clone.setCastShadows(this.castShadows());
 
         // Point and spot properties
         clone.setAttenuationStart(this.getAttenuationStart());
@@ -68,7 +73,18 @@ pc.extend(pc.scene, function () {
         // Spot properties
         clone.setInnerConeAngle(this.getInnerConeAngle());
         clone.setOuterConeAngle(this.getOuterConeAngle());
+    };
 
+    /**
+     * @function
+     * @name pc.scene.LightNode#clone
+     * @description Duplicates a light node but does not 'deep copy' the hierarchy.
+     * @returns {pc.scene.LightNode} A cloned LightNode.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.clone = function () {
+        var clone = new pc.scene.LightNode();
+        this._cloneInternal(clone);
         return clone;
     };
 
@@ -97,13 +113,13 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.LightNode#castShadows
+     * @name pc.scene.LightNode#getCastShadows
      * @description Queries whether the light casts shadows. Dynamic lights do not
      * cast shadows by default.
      * @returns {Boolean} true if the specified light casts shadows and false otherwise.
      * @author Will Eastcott
      */
-    LightNode.prototype.castShadows = function () {
+    LightNode.prototype.getCastShadows = function () {
         return this._castShadows;
     };
 
@@ -188,7 +204,7 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setAttenuationEnd = function (radius) {
         this._attenuationEnd = radius;
-    }
+   }
 
     /**
      * @function
@@ -202,6 +218,28 @@ pc.extend(pc.scene, function () {
         this._attenuationStart = radius;
     }
 
+    LightNode.prototype._createShadowCamera = function () {
+        if (this._shadowCamera)
+            return;
+
+        // SHADOW TODO: Make the shadowmap dimensions controllable
+        // Also, it may be better to keep shadow algorithm implementation details out of the light class
+        var shadowBuffer = new pc.gfx.FrameBuffer(1024, 1024, true);
+        var shadowTexture = shadowBuffer.getTexture();
+        shadowTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
+        shadowTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+
+        var shadowCam = new pc.scene.CameraNode();
+        shadowCam.setRenderTarget(new pc.gfx.RenderTarget(shadowBuffer));
+        shadowCam.setClearOptions({
+            color: [1.0, 1.0, 1.0, 1.0],
+            depth: 1.0,
+            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+        });
+
+        this._shadowCamera = shadowCam;
+    };
+
     /**
      * @function
      * @name pc.scene.LightNode#setCastShadows
@@ -212,44 +250,11 @@ pc.extend(pc.scene, function () {
     LightNode.prototype.setCastShadows = function (castShadows) {
         this._castShadows = castShadows;
 
-        if (this._type === pc.scene.LightType.POINT) {
-            // No support for point lights yet
-            return;
-        }
-
-        if (castShadows && !this._shadowBuffer) {
-            // SHADOW TODO: Make the shadowmap dimensions controllable
-            // Also, it may be better to keep shadow algorithm implementation details out of the light class
-            this._shadowBuffer = new pc.gfx.FrameBuffer(1024, 1024, true);
-            var shadowTexture = this._shadowBuffer.getTexture();
-            shadowTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
-            shadowTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
-
-            var near = 0.1;
-            var far = 50;
-            var extent = 10;
-            this._shadowCamera = new pc.scene.CameraNode();
-            if (this._type === pc.scene.LightType.DIRECTIONAL) {
-                this._shadowCamera.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
-                this._shadowCamera.setViewWindow(pc.math.vec2.create(extent, extent));
-            } else {
-                this._shadowCamera.setProjection(pc.scene.Projection.PERSPECTIVE);
-                this._shadowCamera.setFov(this._outerConeAngle * 2);
-            }
-            this._shadowCamera.setNearClip(near);
-            this._shadowCamera.setFarClip(far);
-            this._shadowCamera.setRenderTarget(new pc.gfx.RenderTarget(this._shadowBuffer));
-            this._shadowCamera.setClearOptions({
-                color: [1.0, 1.0, 1.0, 1.0],
-                depth: 1.0,
-                flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
-            });
-
-            this._shadowMatrix = pc.math.mat4.create();
-        } else if (!castShadows && this._shadowBuffer) {
-            this._shadowBuffer = null;
+        // No support for point lights yet
+        if (this._castShadows && this._type !== pc.scene.LightType.POINT) {
+            this._createShadowCamera();
+        } else {
             this._shadowCamera = null;
-            this._shadowMatrix = null;
         }
     };
 
@@ -317,10 +322,6 @@ pc.extend(pc.scene, function () {
     LightNode.prototype.setOuterConeAngle = function (angle) {
         this._outerConeAngle = angle;
         this._outerConeAngleCos = Math.cos(angle * Math.PI / 180);
-
-        if (this._castShadows && this._type === pc.scene.LightType.SPOT) {
-            this._shadowCamera.setFov(this._outerConeAngle * 2);
-        }
     };
 
     /**
@@ -331,7 +332,13 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     LightNode.prototype.setType = function (type) {
-        this._type = type;
+        if (this._type !== type) {
+            this._type = type;
+
+            if (this._castShadows && type !== pc.scene.LightType.POINT) {
+                this._createShadowCamera();
+            }
+        }
     };
 
     return {

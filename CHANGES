@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.43.0
+-------
+* Optimized Device#clear
+* Renamed castShadows back to getCastShadows and receiveShadows back to getReceiveShadows
+* Refactored shadow-mapping (better frustum for directional lights, optimizations)
+* Optimized Aabb#add to avoid allocations
+* Fixed shadowmapping GLSL outside of UV bounds
+
+-------
 v0.42.0
 -------
 * Animation file format updated!  Reconvert all animation JSON from source FBX files!

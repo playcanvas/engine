@@ -12,7 +12,19 @@ pc.scene.Space = {
 
 pc.extend(pc.scene, function () {
 
+    // Global shadowmap resources
+    var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
+    var shift = pc.math.mat4.makeTranslate(0.5, 0.5, 0.5);
+    var scaleShift = pc.math.mat4.multiply(shift, scale);
+
+    // Lights look down the negative Y and camera's down the positive Z so rotate by -90
+    var camToLight = pc.math.mat4.makeRotate(-Math.PI / 2.0, [1, 0, 0]);
+    var shadowCamWtm = pc.math.mat4.create();
+    var shadowCamView = pc.math.mat4.create();
+    var shadowCamViewProj = pc.math.mat4.create();
+
     var _tempVec = pc.math.vec3.create(0, 0, 0);
+    var _tempMat = pc.math.mat4.create();
 
     /**
      * @name pc.scene.Scene
@@ -23,6 +35,7 @@ pc.extend(pc.scene, function () {
         this._models = [];
         this._alphaMeshes = [];
         this._opaqueMeshes = [];
+        this._shadowMeshes = [];
 
         // Lights
         this._lights = [];
@@ -36,6 +49,7 @@ pc.extend(pc.scene, function () {
         this._shadowState = {
             blend: false
         };
+        this._shadowAabb = new pc.shape.Aabb();
 
         // Initialize dispatch queues
         this._queues = {};
@@ -144,12 +158,12 @@ pc.extend(pc.scene, function () {
         var lights = this._lights;
         for (i = 0, len = lights.length; i < len; i++) {
             var light = lights[i];
-            if (light.castShadows()) {
+            if (light.getCastShadows()) {
                 castShadows = true;
             }
             if (light.getEnabled()) {
                 if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
-                    if (light.castShadows()) {
+                    if (light.getCastShadows()) {
                         this._globalLights.push(light);
                     } else {
                         this._globalLights.unshift(light);
@@ -209,9 +223,6 @@ pc.extend(pc.scene, function () {
 	    alphaMeshes.sort(sortBackToFront);
 	    opaqueMeshes.sort(sortBackToFront);
 
-        this.dispatchGlobalLights();
-        this.dispatchLocalLights();
-
         // Enqueue rendering of all shadowmaps
         var self = this;        
         if (castShadows) {
@@ -250,7 +261,36 @@ pc.extend(pc.scene, function () {
                     }
                 };
 
+                var calculateShadowMeshBBox = function () {
+                    var meshes = self._shadowMeshes;
+                    if (meshes.length > 0) {
+                        self._shadowAabb.copy(meshes[0].getAabb());
+                        for (var i = 1; i < meshes.length; i++) {
+                            self._shadowAabb.add(meshes[i].getAabb());
+                        }
+                    }
+                }
+
                 camera.frameEnd();
+
+                // Store an array of shadow casters
+                var shadowMeshes = self._shadowMeshes;
+                shadowMeshes.length = 0;
+
+                if (alphaMeshes.length > 0) {
+                    for (j = alphaMeshes.length - 1; j >= 0; j--) {
+                        if (alphaMeshes[j].getCastShadows()) {
+                            shadowMeshes.push(alphaMeshes[j]);
+                        }
+                    }
+                }
+                if (opaqueMeshes.length > 0) {
+                    for (j = opaqueMeshes.length - 1; j >= 0; j--) {
+                        if (opaqueMeshes[j].getCastShadows()) {
+                            shadowMeshes.push(opaqueMeshes[j]);
+                        }
+                    }
+                }
 
                 // Disable blending
                 var device = pc.gfx.Device.getCurrent();
@@ -258,51 +298,53 @@ pc.extend(pc.scene, function () {
                 device.updateGlobalState(self._shadowState);
 
                 setShadowMapMaterial();
+                var calcBbox = false;
+
                 for (i = 0; i < self._lights.length; i++) {
                     var light = self._lights[i];
-                    if (light.castShadows()) {
-                        var near = 0.1;
-                        var far = 50;
-                        var extent = 10;
-                        
-                        // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-                        var shadowCamLtm = pc.math.mat4.makeRotate(-Math.PI / 2.0, [1, 0, 0]);
-                        var lightWtm = light.getWorldTransform();
-                        var shadowCamWtm = pc.math.mat4.multiply(lightWtm, shadowCamLtm);
-                        var shadowCamView = pc.math.mat4.invert(shadowCamWtm);
-                        var shadowCamProj;
-                        if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
-                            shadowCamProj = pc.math.mat4.makeOrtho(-extent, extent, -extent, extent, near, far);
-                        } else {
-                            shadowCamProj = pc.math.mat4.makePerspective(light._outerConeAngle * 2, 1, near, far);
-                        }
-                        var shadowViewProj = pc.math.mat4.multiply(shadowCamProj, shadowCamView);
-                        var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
-                        var shift = pc.math.mat4.makeTranslate(0.5, 0.5, 0.5);
-                        var scaleShift = pc.math.mat4.multiply(shift, scale);
-                        pc.math.mat4.multiply(scaleShift, shadowViewProj, light._shadowMatrix);
+                    if (light.getCastShadows()) {
+                        var shadowCam = light._shadowCamera;
 
-                        light._shadowCamera.setLocalTransform(shadowCamWtm);
-                        light._shadowCamera.syncHierarchy();
-                        light._shadowCamera.frameBegin();
-
-                        // Render both alpha and opaque meshes front to back
-                        if (alphaMeshes.length > 0) {
-                            for (j = alphaMeshes.length - 1; j >= 0; j--) {
-                                if (alphaMeshes[j].castShadows()) {
-                                    alphaMeshes[j].dispatch();
-                                }
+                        var type = light.getType();
+                        if (type === pc.scene.LightType.DIRECTIONAL) {
+                            if (!calcBbox) {
+                                calculateShadowMeshBBox();
+                                calcBbox = true;
                             }
-                        }
-                        if (opaqueMeshes.length > 0) {
-                            for (j = opaqueMeshes.length - 1; j >= 0; j--) {
-                                if (opaqueMeshes[j].castShadows()) {
-                                    opaqueMeshes[j].dispatch();
-                                }
-                            }
+
+                            pc.math.mat4.copy(light.getWorldTransform(), shadowCamWtm);
+                            shadowCamWtm[12] = self._shadowAabb.center[0];
+                            shadowCamWtm[13] = self._shadowAabb.center[1];
+                            shadowCamWtm[14] = self._shadowAabb.center[2];
+                            pc.math.mat4.multiply(shadowCamWtm, camToLight, shadowCamWtm);
+
+                            var extent = pc.math.vec3.length(self._shadowAabb.halfExtents);
+                            shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
+                            shadowCam.setNearClip(-extent);
+                            shadowCam.setFarClip(extent);
+                            shadowCam.setViewWindow(pc.math.vec2.create(extent, extent));
+                        } else if (type === pc.scene.LightType.SPOT) {
+                            shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
+                            shadowCam.setFov(light.getOuterConeAngle() * 2);
+                            shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
+                            shadowCam.setFarClip(light.getAttenuationEnd());
+
+                            var lightWtm = light.getWorldTransform();
+                            pc.math.mat4.multiply(lightWtm, camToLight, shadowCamWtm);
                         }
 
-                        light._shadowCamera.frameEnd();
+                        pc.math.mat4.invert(shadowCamWtm, shadowCamView);
+                        pc.math.mat4.multiply(shadowCam.getProjectionMatrix(), shadowCamView, shadowCamViewProj);
+                        pc.math.mat4.multiply(scaleShift, shadowCamViewProj, light._shadowMatrix);
+
+                        // Point the camera along direction of light
+                        pc.math.mat4.copy(shadowCamWtm, shadowCam._wtm);
+
+                        shadowCam.frameBegin();
+                        for (i = 0; i < shadowMeshes.length; i++) {
+                            shadowMeshes[i].dispatch();
+                        }
+                        shadowCam.frameEnd();
                     }
                 }
                 restoreMaterials();
@@ -314,25 +356,29 @@ pc.extend(pc.scene, function () {
             });
         }
 
-        // Enqueue alpha meshes
-        if (alphaMeshes.length > 0) {
-            this.enqueue("transparent", function() {
-                // Render back to front
-                for (i = 0, numMeshes = alphaMeshes.length; i < numMeshes; i++) {
-                    alphaMeshes[i].dispatch();
-                }
-            });
-        }
-
         // Enqueue opaque meshes
-        if (opaqueMeshes.length > 0) {
-            this.enqueue("opaque", function() {
+        this.enqueue("opaque", function() {
+            // Lights get dispatched after the shadowmap generation is done.
+            // By this point, the shadow matrices for the lights  have been
+            // calculated.
+            self.dispatchGlobalLights();
+            self.dispatchLocalLights();
+
+            if (opaqueMeshes.length > 0) {
                 // Render front to back
                 for (i = opaqueMeshes.length - 1; i >= 0; i--) {
                     opaqueMeshes[i].dispatch();
                 }
-            });
-        }
+            }
+        });
+
+        // Enqueue alpha meshes
+        this.enqueue("transparent", function() {
+            // Render back to front
+            for (i = 0, numMeshes = alphaMeshes.length; i < numMeshes; i++) {
+                alphaMeshes[i].dispatch();
+            }
+        });
     };
 	
 	Scene.prototype.enqueue = function (queueName, renderFunc) {
@@ -388,8 +434,8 @@ pc.extend(pc.scene, function () {
             directional._direction[2] = -wtm[6];
             scope.resolve(light + "_direction").setValue(directional._direction);
 
-            if (directional.castShadows()) {
-                var shadowMap = directional._shadowBuffer.getTexture();
+            if (directional.getCastShadows()) {
+                var shadowMap = directional._shadowCamera._renderTarget._frameBuffer.getTexture();
                 scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
                 scope.resolve(light + "_shadowParams").setValue([shadowMap.getWidth(), shadowMap.getHeight(), 0.0001]);
@@ -444,8 +490,8 @@ pc.extend(pc.scene, function () {
             spot._direction[2] = -wtm[6];
             scope.resolve(light + "_spotDirection").setValue(spot._direction);
 
-            if (spot.castShadows()) {
-                var shadowMap = spot._shadowBuffer.getTexture();
+            if (spot.getCastShadows()) {
+                var shadowMap = spot._shadowCamera._renderTarget._frameBuffer.getTexture();
                 scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
                 scope.resolve(light + "_shadowParams").setValue([shadowMap.getWidth(), shadowMap.getHeight(), 0.0001]);
