@@ -45,8 +45,8 @@ pc.gfx.programlib.phong = {
                 code += "attribute vec4 vertex_tangent;\n";
             }
         }
-        if (options.diffuseMap || options.specularMap || options.emissiveMap || 
-            options.normalMap || options.parallaxMap || options.opacityMap) {
+        if (options.diffuseMap || options.specularMap || options.specularFactorMap ||
+            options.emissiveMap || options.normalMap || options.parallaxMap || options.opacityMap) {
             code += "attribute vec2 vertex_texCoord0;\n";
         }
         if (options.lightMap) {
