@@ -680,7 +680,7 @@ pc.math.vec4 = function () {
         },
 
         clone : function (v0) {
-            return v0.slice(0, 4);
+            return new Float32Array(v0);
         },
 
         copy : function (v0, r) {
@@ -690,8 +690,15 @@ pc.math.vec4 = function () {
             r[3] = v0[3];
         },
 
-        create : function (x, y, z, w) {
-            return [x, y, z, w];
+        create : function () {
+            var v;
+            if (arguments.length === 4) {
+               v = new Float32Array(arguments);
+               return v;
+            } else {
+               v = new Float32Array(4);
+               return v;
+            }
         },
 
         dot : function (v0, v1) {
