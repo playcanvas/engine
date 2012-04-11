@@ -61,7 +61,7 @@ FlyCam.prototype.orbit = function (rotation) {
 }
 
 FlyCam.prototype.onMouseWheel = function (event) {
-    var distance = event.deltaWheel * 10;
+    var distance = event.wheelDelta * 10;
     this.dolly(distance);
 };
 
@@ -69,15 +69,15 @@ FlyCam.prototype.onMouseMove = function (event) {
     // We can't rely on a right click because that has a 'special function'
     // in most (all?) browsers
     if (event.buttons[pc.input.MOUSE_BUTTON_LEFT] && event.buttons[pc.input.MOUSE_BUTTON_MIDDLE]) {
-        var distance = event.deltaY;
+        var distance = event.movementY;
         this.dolly(distance);
     }
-    else if (event.event.altKey && event.buttons[pc.input.MOUSE_BUTTON_LEFT]) {
-        var rotation = [event.deltaX/300.0, event.deltaY/300.0];
+    else if (event.altKey && event.buttons[pc.input.MOUSE_BUTTON_LEFT]) {
+        var rotation = [event.movementX/300.0, event.movementY/300.0];
         this.orbit(rotation);
     }
-    else if (event.event.altKey && event.buttons[pc.input.MOUSE_BUTTON_MIDDLE]) {
-        var movement = [event.deltaX, event.deltaY];
+    else if (event.altKey && event.buttons[pc.input.MOUSE_BUTTON_MIDDLE]) {
+        var movement = [event.movementX, event.movementY];
         this.pan(movement);
     }    
 };

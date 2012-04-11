@@ -1,107 +1,6 @@
 pc.extend(pc.input, function () {    
-
-    /**
-     * @function
-     * @name pc.input.createMouseEvent
-     * @description Extend the browser mouse event with some additional cross-browser values.
-     * This identical to a DOM MouseEvent with some additional values
-     * event.targetX - The X coordinate relative to the event target element
-     * event.targetY - The Y coordinate relative to the event target element
-     * event.wheelDelta - The change in mouse wheel value (if there is one) Normalized between -1 and 1
-     * @param {MouseEvent} event The mouse event to extend
-     */
-    var createMouseEvent = function (event) {
-        // Copy event values
-        //pc.extend(this, event);
-        
-        var offset = pc.input.getOffsetCoords(event);
-
-        event.targetX = offset.x;
-        event.targetY = offset.y;
-
-        if(event.wheelDelta) {
-            event.wheelDelta = event.wheelDelta / 120; // Convert to -1 to 1
-        } else if (event.detail) {
-            event.wheelDelta = event.detail / -3; // Convert to -1 to 1
-        } else {
-            event.wheelDelta = 0;
-        }
-        
-        return event;
-    };
-        
-    /**
-     * @name pc.input.MouseEvent
-     * @class The object passed into Mouse Event handlers
-     * @params {Object} [options] Data used to initialize the fields of the Event. See the fields for details
-     * @deprecated 
-     */
-    var MouseEvent = function (options) {
-        options = options || {};
-        /**
-         * @field
-         * @name pc.input.MouseEvent#type
-         * @description Type of the mouse event: pc.input.EVENT_MOUSE_UP, pc.input.EVENT_MOUSE_DOWN, pc.input.EVENT_MOUSE_MOVE, pc.input.EVENT_MOUSE_WHEEL 
-         */
-        this.type = options.type || "";
-        //this.positionX = options.positionX || 0;
-        //this.positionY = options.positionY || 0;
-        
-        /**
-         * @field
-         * @name pc.input.MouseEvent#x
-         * @description Horizontal co-ordinate of the event, relative to the DOM Element the Mouse object is attached to, often the canvas element.
-         */
-        this.x = options.x || 0;
-        /**
-         * @field
-         * @name pc.input.MouseEvent#y
-         * @description Vertical co-ordinate of the event, relative to the DOM Element the Mouse object is attached to, often the canvas element.
-         */
-        this.y = options.y || 0;
-        
-        /**
-         * @field
-         * @name pc.input.MouseEvent#deltaX
-         * @description Change in horizonal co-ordinate value since the last event, only valid for pc.input.EVENT_MOUSE_MOVE
-         */
-        this.deltaX = options.deltaX || 0;
-        /**
-         * @field
-         * @name pc.input.MouseEvent#deltaY
-         * @description Change in vertical co-ordinate value since the last event, only valid for pc.input.EVENT_MOUSE_MOVE
-         */
-        this.deltaY = options.deltaY || 0;
-        
-        /**
-         * @field
-         * @name pc.input.MouseEvent#deltaWheel
-         * @description Change in value of the mouse wheel since the last event. This is a normalized value in the range -1 to 1. 
-         */
-        this.deltaWheel = options.deltaWheel || 0;
-        
-        /**
-         * @field
-         * @name pc.input.MouseEvent#button
-         * @description The individual button to which the event refers. Only valid for pc.input.EVENT_MOUSE_UP and pc.input.EVENT_MOUSE_DOWN
-         */
-        this.button = pc.isDefined(options.button) ? options.button : pc.input.MOUSE_BUTTON_NONE;
-        
-        /**
-         * @field
-         * @name pc.input.MouseEvent#buttons
-         * @description Boolean array of button states. A value of true indicates the button is currently pressed. 
-         * The array is in this order [pc.input.MOUSE_BUTTON_LEFT, pc.input.MOUSE_BUTTON_MIDDLE, pc.input.MOUSE_BUTTON_RIGHT] 
-         */
-        this.buttons = options.buttons || [false, false, false];
-        
-        /**
-         * @field
-         * @name pc.input.MouseEvent#event
-         * @description The original DOM MouseEvent
-         */
-        this.event = options.event || null;
-    };
+      
+    
     /**
      * @name pc.input.Mouse
      * @description Create a new Mouse object
@@ -109,37 +8,42 @@ pc.extend(pc.input, function () {
      * @param {DOMElement} [element] The DOMElement that the mouse events are attached to
      * @param {Boolean} [_new] Use new mouse events (to be removed with old designer)
      */
-    var Mouse = function (element, _new) {
+    var Mouse = function (element, options) {
+            options = options || {};
+
             // Clear the mouse state
             this._positionY    = 0;
             this._positionX    = 0;
             this._offsetX      = 0;
             this._offsetY      = 0;
-            this._deltaX       = 0;
-            this._deltaY       = 0;
             this._buttons      = [false,false,false];
             this._lastbuttons  = [];
             
-            if(_new) {
-                this._upHandler = pc.callback(this, this._handleUp);
-                this._downHandler = pc.callback(this, this._handleDown);
-                this._moveHandler = pc.callback(this, this._handleMove);
-                this._wheelHandler = pc.callback(this, this._handleWheel);
-                this._contextMenuHandler = function (event) { event.preventDefault(); };                
-            } else {
-                this._upHandler = pc.callback(this, this.__handleUp);
-                this._downHandler = pc.callback(this, this.__handleDown);
-                this._moveHandler = pc.callback(this, this.__handleMove);
-                this._wheelHandler = pc.callback(this, this.__handleWheel);
-                this._contextMenuHandler = function (event) { event.preventDefault(); };                
-            }
+
+            // Setup event handlers so they are bound to the correct 'this'
+            this._upHandler = this._handleUp.bind(this);
+            this._downHandler = this._handleDown.bind(this);
+            this._moveHandler = this._handleMove.bind(this);
+            this._wheelHandler = this._handleWheel.bind(this);
+            this._handleFullscreenChange = this._handleFullscreenChange.bind(this);
+            this._handlePointerLockLost = this._handlePointerLockLost.bind(this);
+            this._contextMenuHandler = function (event) { event.preventDefault(); };                
             
             this._element = null;
-            
             if(element) {
                 this.attach(element);
             }
-            
+        
+            this.allowPointerLock = options.allowPointerLock || false;
+            if (!Mouse.getPointer()) {
+                this.allowPointerLock = false;
+            }
+
+            if (this.allowPointerLock) {
+                document.addEventListener('webkitfullscreenchange', this._handleFullscreenChange, false);
+                document.addEventListener('webkitpointerlocklost', this._handlePointerLockLost, false);                    
+            }
+
             // Add events
             pc.extend(this, pc.events);
         };
@@ -224,128 +128,88 @@ pc.extend(pc.input, function () {
     Mouse.prototype.wasPressed = function (button) {
         return (this._buttons[button] && !this._lastbuttons[button]);
     };
-    
+
+    Mouse.isPointerLocked = function () {
+        var pointer = Mouse.getPointer();
+        if (pointer) {
+            return pointer.isLocked();    
+        } else {
+            return false;
+        }
+        
+    };
+
+    /**
+    * @function
+    * @name pc.input.Mouse#getPointer
+    * @description Return the native PointerLock object from the navigator. This method works cross-browser.
+    * @returns {PointerLock} The PointerLock object 
+    */
+    Mouse.getPointer = function () {
+        return navigator.pointer || navigator.webkitPointer;
+    };
+
+    /**
+     * @function
+     * @name pc.input.createMouseEvent
+     * @description Extend the browser mouse event with some additional cross-browser values.
+     * This identical to a DOM MouseEvent with some additional values
+     * event.targetX - The X coordinate relative to the event target element
+     * event.targetY - The Y coordinate relative to the event target element
+     * event.wheelDelta - The change in mouse wheel value (if there is one) Normalized between -1 and 1
+     * event.buttons - The current state of all mouse buttons
+     * @param {pc.input.Mouse} mouse A pc.input.Mouse instance, needed to get the button state from
+     * @param {MouseEvent} event The mouse event to extend
+     * @returns {MouseEvent} The original event with added/edited parameters
+     */
+    Mouse.createMouseEvent = function (mouse, event) {
+        var offset = pc.input.getTargetCoords(event);
+        event.targetX = offset.x;
+        event.targetY = offset.y;
+
+        if(event.wheelDelta) {
+            event.wheelDelta = event.wheelDelta / 120; // Convert to -1 to 1
+        } else if (event.detail) {
+            event.wheelDelta = event.detail / -3; // Convert to -1 to 1
+        } else {
+            event.wheelDelta = 0;
+        }
+        
+        // Get the movement delta in this event
+        event.movementX = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
+        event.movementY = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
+
+        event.buttons = mouse._buttons;
+        return event;
+    };
+
     Mouse.prototype._handleUp = function (event) {
         // disable released button
         this._buttons[event.button] = false;
-        
+
         // send 'mouseup' event
-        this.fire(pc.input.EVENT_MOUSE_UP, new MouseEvent(event));
-        /*
-        {
-            type: pc.input.EVENT_MOUSE_UP,
-            positionX: this._positionX,
-            positionY: this._positionY,
-            x: this._offsetX,
-            y: this._offsetY,
-            button: event.button,
-            buttons: this._buttons,
-            event: event
-        }));
-        */
+        this.fire(pc.input.EVENT_MOUSE_UP, pc.input.Mouse.createMouseEvent(this, event));
     };
     
-    Mouse.prototype.__handleUp = function (event) {
-        // disable released button
-        this._buttons[event.button] = false;
-        
-        // send 'mouseup' event
-        this.fire(pc.input.EVENT_MOUSE_UP, new MouseEvent({
-            type: pc.input.EVENT_MOUSE_UP,
-            positionX: this._positionX,
-            positionY: this._positionY,
-            x: this._offsetX,
-            y: this._offsetY,
-            button: event.button,
-            buttons: this._buttons,
-            event: event
-        }));
-    }
     
     Mouse.prototype._handleDown = function (event) {
         // Store which button has affected
-        this._buttons[event.button] = true;    
+        this._buttons[event.button] = true;
 
-        this.fire(pc.input.EVENT_MOUSE_DOWN, new MouseEvent(event));
-        /*{
-            type: pc.input.EVENT_MOUSE_DOWN,
-            positionX: this._positionX,
-            positionY: this._positionY,
-            x: this._offsetX,
-            y: this._offsetY,
-            button: event.button,
-            buttons: this._buttons,
-            event: event
-        }));*/
-    };
-
-    Mouse.prototype.__handleDown = function (event) {
-        // Store which button has affected
-        this._buttons[event.button] = true;    
-
-        this.fire(pc.input.EVENT_MOUSE_DOWN, new MouseEvent({
-            type: pc.input.EVENT_MOUSE_DOWN,
-            positionX: this._positionX,
-            positionY: this._positionY,
-            x: this._offsetX,
-            y: this._offsetY,
-            button: event.button,
-            buttons: this._buttons,
-            event: event
-        }));
+        this.fire(pc.input.EVENT_MOUSE_DOWN, pc.input.Mouse.createMouseEvent(this, event));
     };
     
     Mouse.prototype._handleMove = function (event) {
-        // Calculate the mouse movement
-        this._deltaX = event.clientX - this._positionX;
-        this._deltaY = event.clientY - this._positionY;
-    
         // Update the current position
         this._positionX = event.clientX;
         this._positionY = event.clientY;
-        offset = pc.input.getOffsetCoords(event);
+        offset = pc.input.getTargetCoords(event);
         this._offsetX = offset.x;
         this._offsetY = offset.y;
         
-        this.fire(pc.input.EVENT_MOUSE_MOVE, new MouseEvent(event));
-        /*{
-            type: pc.input.EVENT_MOUSE_MOVE,
-            positionX: this._positionX,
-            positionY: this._positionY,
-            x: this._offsetX,
-            y: this._offsetY,
-            deltaX: this._deltaX,
-            deltaY: this._deltaY,
-            buttons: this._buttons,
-            event: event
-        }));*/
+        this.fire(pc.input.EVENT_MOUSE_MOVE, pc.input.Mouse.createMouseEvent(this, event));
     };
 
-    Mouse.prototype.__handleMove = function (event) {
-        // Calculate the mouse movement
-        this._deltaX = event.clientX - this._positionX;
-        this._deltaY = event.clientY - this._positionY;
-    
-        // Update the current position
-        this._positionX = event.clientX;
-        this._positionY = event.clientY;
-        offset = pc.input.getOffsetCoords(event);
-        this._offsetX = offset.x;
-        this._offsetY = offset.y;
-        
-        this.fire(pc.input.EVENT_MOUSE_MOVE, new MouseEvent({
-            type: pc.input.EVENT_MOUSE_MOVE,
-            positionX: this._positionX,
-            positionY: this._positionY,
-            x: this._offsetX,
-            y: this._offsetY,
-            deltaX: this._deltaX,
-            deltaY: this._deltaY,
-            buttons: this._buttons,
-            event: event
-        }));
-    };    
-    
     Mouse.prototype._handleWheel = function (event) {    
         // Store the wheel movement
         if(event.wheelDelta) {
@@ -354,41 +218,25 @@ pc.extend(pc.input, function () {
             this.deltaWheel = event.detail / -3; // Convert to -1 to 1
         }
         
-        this.fire(pc.input.EVENT_MOUSE_WHEEL, new MouseEvent(event));
-        /*{
-            type: pc.input.EVENT_MOUSE_WHEEL,
-            positionX: this._positionX,
-            positionY: this._positionY,
-            x: this._offsetX,
-            y: this._offsetY,
-            deltaWheel: this.deltaWheel,
-            buttons: this._buttons,
-            event: event
-        }));*/
+        this.fire(pc.input.EVENT_MOUSE_WHEEL, pc.input.Mouse.createMouseEvent(this, event));
     };
 
-    Mouse.prototype.__handleWheel = function (event) {    
-        // Store the wheel movement
-        if(event.wheelDelta) {
-            this.deltaWheel = event.wheelDelta / 120; // Convert to -1 to 1
-        } else {
-            this.deltaWheel = event.detail / -3; // Convert to -1 to 1
+    Mouse.prototype._handleFullscreenChange = function (event) {
+        if (this.allowPointerLock) {
+            if (document.webkitIsFullScreen) {
+                Mouse.getPointer().lock(this._element, function () {
+                    this.fire('pointerlock');
+                }.bind(this), function () {
+                    logERROR('pointerlock failed');
+                });
+            }
         }
-        
-        this.fire(pc.input.EVENT_MOUSE_WHEEL, new MouseEvent({
-            type: pc.input.EVENT_MOUSE_WHEEL,
-            positionX: this._positionX,
-            positionY: this._positionY,
-            x: this._offsetX,
-            y: this._offsetY,
-            deltaWheel: this.deltaWheel,
-            buttons: this._buttons,
-            event: event
-        }));
     };
-    
-    
-    
+
+    Mouse.prototype._handlePointerLockLost = function (event) {
+        this.fire('pointerlocklost');
+    };
+
     // Public Interface
     return  {
         /**
@@ -411,16 +259,16 @@ pc.extend(pc.input, function () {
         
         Mouse: Mouse,
         MouseEvent: MouseEvent,
-        createMouseEvent: createMouseEvent,
         /**
          * @private
          * @function
-         * @name pc.input.getOffsetCoords
-         * @description offsetX/Y are not cross-browser compatible so we generate a set of offset coords here
-         * from pageX/Y which are the same on all browsers 
+         * @name pc.input.getTargetCoords
+         * @description offsetX/Y are not cross-browser compatible so we generate a set of coords here which are the same on all browsers, 
+         * and relative to the element that the the mouse was attached to.
          * @param {MouseEvent} event
+         * @returns {Object} An object {x, y} which contains the co-ordinations
          */
-        getOffsetCoords: function getOffsetCoords(event) {
+        getTargetCoords: function getTargetCoords(event) {
             var coords = { x: 0, y: 0};
     
             var element = event.currentTarget;

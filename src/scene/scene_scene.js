@@ -381,9 +381,9 @@ pc.extend(pc.scene, function () {
 
                             var worldToLight = pc.math.mat4.invert(light.getWorldTransform());
                             var camToWorld = camera.getWorldTransform();
-                            var camToLight = pc.math.mat4.multiply(worldToLight, camToWorld);
+                            var c2l = pc.math.mat4.multiply(worldToLight, camToWorld);
                             for (i = 0; i < 8; i++) {
-                                pc.math.mat4.multiplyVec3(fp[i], 1.0, camToLight, fp[i]);
+                                pc.math.mat4.multiplyVec3(fp[i], 1.0, c2l, fp[i]);
                             }
 
                             var minx = 1000000;
