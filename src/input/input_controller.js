@@ -23,7 +23,8 @@ pc.extend(pc.input, function () {
         this._element = null;
         
         this._actions = {};
-        
+        this._axes = {};
+
         if(element) {
             this.attach(element);
         }
@@ -90,6 +91,12 @@ pc.extend(pc.input, function () {
         if(this._keyboard) {
             this._keyboard.update(dt);
         }
+
+        if (this._mouse) {
+            this._mouse.update(dt);
+        }
+
+        this._axes = {};
     };
     
     /**
@@ -100,13 +107,13 @@ pc.extend(pc.input, function () {
      * @param {Number} keys A list of keycodes
      */
     Controller.prototype.registerKeys = function (action, keys) {
-        if(!this._keyboard) {
+        if (!this._keyboard) {
             this._enableKeyboard();
         }
-        if(this._actions[action]) {
+        if (this._actions[action]) {
             throw new Error(pc.string.format("Action: {0} already registered", action));
         }
-        if(this._actions[action]) {
+        if (this._actions[action]) {
             this._actions[action].push(keys);
         } else {
             this._actions[action] = keys;
@@ -121,18 +128,81 @@ pc.extend(pc.input, function () {
      * @param {Number} button The mouse button
      */
     Controller.prototype.registerMouse = function (action, button) {
-        if(!this._mouse) {
+        if (!this._mouse) {
             this._enableMouse();
         }
 
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
-        if(this._actions[action]) {
+        if (this._actions[action]) {
             this._actions[action].push(-button)
         } else {
             this._actions[action] = [-button]
         }
     };
     
+    /**
+    * @function
+    * @name pc.input.Controller#registerAxis
+    * @description 
+    * @param {Object} options
+    */
+    Controller.prototype.registerAxis = function (options) {
+        var name = options['name'];
+
+        var bind = function (controller, source, value) {
+            switch (source) {
+                case 'mouseright':
+                case 'mouseleft':
+                    controller._mouse.bind('mousemove', function (e) {
+                        controller._axes[name] = e.movementX;
+                    });
+                    break;
+                case 'mouseup':
+                case 'mousedown':
+                    controller._mouse.bind('mousemove', function (e) {
+                        controller._axes[name] = -e.movementY;
+                    });
+                    break;
+                case 'left':
+                    controller._keyboard.bind('keydown', function (e) {
+                        if (e.event.keyCode === pc.input.KEY_LEFT) {
+                            controller._axes[name] = value;
+                        }
+                    });
+                    break;
+                case 'right':
+                    controller._keyboard.bind('keydown', function (e) {
+                        if (e.event.keyCode === pc.input.KEY_RIGHT) {
+                            controller._axes[name] = value;
+                        }
+                    });
+                    break;
+                case 'up':
+                    controller._keyboard.bind('keydown', function (e) {
+                        if (e.event.keyCode === pc.input.KEY_UP) {
+                            controller._axes[name] = value;
+                        }
+                    });
+                    break;
+                case 'down':
+                    controller._keyboard.bind('keydown', function (e) {
+                        if (e.event.keyCode === pc.input.KEY_DOWN) {
+                            controller._axes[name] = value;
+                        }
+                    });
+                    break;
+                default:
+                    controller._keyboard.bind('keydown', function (e) {
+                        controller._axes[name] = value;
+                    });
+                    break;
+            }
+        };
+
+        bind(this, options.positive, 1);
+        bind(this, options.negative, -1);
+    };
+
     /**
      * @function
      * @name pc.input.Controller#isPressed
@@ -193,6 +263,10 @@ pc.extend(pc.input, function () {
         return false;
     };
     
+    Controller.prototype.getAxis = function (name) {
+        return this._axes[name] || 0;
+    };
+
     Controller.prototype._enableMouse = function () {
         this._mouse = new pc.input.Mouse();
         if(!this._element) {

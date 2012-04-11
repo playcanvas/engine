@@ -23,9 +23,6 @@ pc.extend(pc.scene, function () {
     var shadowCamView = pc.math.mat4.create();
     var shadowCamViewProj = pc.math.mat4.create();
 
-    var _tempVec = pc.math.vec3.create(0, 0, 0);
-    var _tempMat = pc.math.mat4.create();
-
     /**
      * @name pc.scene.Scene
      * @class A scene.
@@ -39,7 +36,7 @@ pc.extend(pc.scene, function () {
 
         // Lights
         this._lights = [];
-        this._globalAmbient = [0.0, 0.0, 0.0];
+        this._globalAmbient = pc.math.vec3.create(0, 0, 0);
         this._globalLights = []; // All currently enabled directionals
         this._localLights = [[], []]; // All currently enabled points and spots
 
@@ -50,6 +47,7 @@ pc.extend(pc.scene, function () {
             blend: false
         };
         this._shadowAabb = new pc.shape.Aabb();
+        this._sceneAabb = new pc.shape.Aabb();
 
         // Initialize dispatch queues
         this._queues = {};
@@ -207,18 +205,21 @@ pc.extend(pc.scene, function () {
 	
 	    // Sort alpha meshes back to front
 	    var sortBackToFront = function (meshA, meshB) {
-	        var wtmA = meshA._wtm;
-	        var wtmB = meshB._wtm;
-	        _tempVec[0] = wtmA[12] - camMat[12];
-	        _tempVec[1] = wtmA[13] - camMat[13];
-	        _tempVec[2] = wtmA[14] - camMat[14];
-	        var distSqrA = _tempVec[0] * _tempVec[0] + _tempVec[1] * _tempVec[1] + _tempVec[2] * _tempVec[2];
-	        _tempVec[0] = wtmB[12] - camMat[12];
-	        _tempVec[1] = wtmB[13] - camMat[13];
-	        _tempVec[2] = wtmB[14] - camMat[14];
-	        var distSqrB = _tempVec[0] * _tempVec[0] + _tempVec[1] * _tempVec[1] + _tempVec[2] * _tempVec[2];
-	    
-	        return distSqrA < distSqrB;
+            var wtmA = meshA._wtm;
+            var wtmB = meshB._wtm;
+            var cmx = camMat[12];
+            var cmy = camMat[13];
+            var cmz = camMat[14];
+            var tempx = wtmA[12] - cmx;
+            var tempy = wtmA[13] - cmy;
+            var tempz = wtmA[14] - cmz;
+            var distSqrA = tempx * tempx + tempy * tempy + tempz * tempz;
+            tempx = wtmB[12] - cmx;
+            tempy = wtmB[13] - cmy;
+            tempz = wtmB[14] - cmz;
+            var distSqrB = tempx * tempx + tempy * tempy + tempz * tempz;
+
+            return distSqrA < distSqrB;
 	    }
 	    alphaMeshes.sort(sortBackToFront);
 	    opaqueMeshes.sort(sortBackToFront);
@@ -261,7 +262,7 @@ pc.extend(pc.scene, function () {
                     }
                 };
 
-                var calculateShadowMeshBBox = function () {
+                var calculateShadowMeshAabb = function () {
                     var meshes = self._shadowMeshes;
                     if (meshes.length > 0) {
                         self._shadowAabb.copy(meshes[0].getAabb());
@@ -269,6 +270,66 @@ pc.extend(pc.scene, function () {
                             self._shadowAabb.add(meshes[i].getAabb());
                         }
                     }
+                }
+
+                var calculateSceneAabb = function () {
+                    var meshes = self._opaqueMeshes;
+                    if (meshes.length > 0) {
+                        self._sceneAabb.copy(meshes[0].getAabb());
+                        for (var i = 1; i < meshes.length; i++) {
+                            self._sceneAabb.add(meshes[i].getAabb());
+                        }
+                    }
+                }
+
+                var getFrustumPoints = function (points) {
+                    var cam = camera;
+                    var nearClip   = cam.getNearClip();
+                    var farClip    = cam.getFarClip();
+                    var fov        = cam.getFov() * Math.PI / 180.0;
+                    var viewWindow = cam.getViewWindow();
+                    var viewport   = cam.getRenderTarget().getViewport();
+                    var projection = cam.getProjection();
+
+                    var x, y;
+                    if (projection === pc.scene.Projection.PERSPECTIVE) {
+                        y = Math.tan(fov / 2.0) * nearClip;
+                        x = y * viewport.width / viewport.height;
+                    } else {
+                        x = viewWindow[0];
+                        y = viewWindow[1];
+                    }
+                    points[0][0] = x;
+                    points[0][1] = -y;
+                    points[0][2] = -nearClip;
+                    points[1][0] = x;
+                    points[1][1] = y;
+                    points[1][2] = -nearClip;
+                    points[2][0] = -x;
+                    points[2][1] = y;
+                    points[2][2] = -nearClip;
+                    points[3][0] = -x;
+                    points[3][1] = -y;
+                    points[3][2] = -nearClip;
+
+                    if (projection === pc.scene.Projection.PERSPECTIVE) {
+                        y = Math.tan(fov / 2.0) * farClip;
+                        x = y * viewport.width / viewport.height;
+                    }
+                    points[4][0] = x;
+                    points[4][1] = -y;
+                    points[4][2] = -farClip;
+                    points[5][0] = x;
+                    points[5][1] = y;
+                    points[5][2] = -farClip;
+                    points[6][0] = -x;
+                    points[6][1] = y;
+                    points[6][2] = -farClip;
+                    points[7][0] = -x;
+                    points[7][1] = -y;
+                    points[7][2] = -farClip;
+
+                    return points;
                 }
 
                 camera.frameEnd();
@@ -300,6 +361,12 @@ pc.extend(pc.scene, function () {
                 setShadowMapMaterial();
                 var calcBbox = false;
 
+                var fp = [];
+                for (i = 0; i < 8; i++) {
+                    fp.push(pc.math.vec3.create());
+                }
+                getFrustumPoints(fp);
+                
                 for (i = 0; i < self._lights.length; i++) {
                     var light = self._lights[i];
                     if (light.getCastShadows()) {
@@ -308,21 +375,40 @@ pc.extend(pc.scene, function () {
                         var type = light.getType();
                         if (type === pc.scene.LightType.DIRECTIONAL) {
                             if (!calcBbox) {
-                                calculateShadowMeshBBox();
+                                calculateSceneAabb();
                                 calcBbox = true;
                             }
 
+                            var worldToLight = pc.math.mat4.invert(light.getWorldTransform());
+                            var camToWorld = camera.getWorldTransform();
+                            var c2l = pc.math.mat4.multiply(worldToLight, camToWorld);
+                            for (i = 0; i < 8; i++) {
+                                pc.math.mat4.multiplyVec3(fp[i], 1.0, c2l, fp[i]);
+                            }
+
+                            var minx = 1000000;
+                            var maxx = -1000000;
+                            var miny = 1000000;
+                            var maxy = -1000000;
+                            for (i = 0; i < 8; i++) {
+                                var p = fp[i];
+                                if (p[0] < minx) minx = p[0];
+                                if (p[0] > maxx) maxx = p[0];
+                                if (p[1] < miny) miny = p[1];
+                                if (p[1] > maxy) maxy = p[1];
+                            }
+
                             pc.math.mat4.copy(light.getWorldTransform(), shadowCamWtm);
-                            shadowCamWtm[12] = self._shadowAabb.center[0];
-                            shadowCamWtm[13] = self._shadowAabb.center[1];
-                            shadowCamWtm[14] = self._shadowAabb.center[2];
+                            shadowCamWtm[12] = self._sceneAabb.center[0];
+                            shadowCamWtm[13] = self._sceneAabb.center[1];
+                            shadowCamWtm[14] = self._sceneAabb.center[2];
                             pc.math.mat4.multiply(shadowCamWtm, camToLight, shadowCamWtm);
 
-                            var extent = pc.math.vec3.length(self._shadowAabb.halfExtents);
+                            var extent = pc.math.vec3.length(self._sceneAabb.halfExtents);
                             shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
                             shadowCam.setNearClip(-extent);
                             shadowCam.setFarClip(extent);
-                            shadowCam.setViewWindow(pc.math.vec2.create(extent, extent));
+                            shadowCam.setViewWindow(extent, extent);
                         } else if (type === pc.scene.LightType.SPOT) {
                             shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
                             shadowCam.setFov(light.getOuterConeAngle() * 2);
