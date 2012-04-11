@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.44.0
+-------
+* Optimized pc.scene.Scene front to back sorting callback.
+* Added support for Axes to pc.input.Controller.
+* Refactor of Mouse to support PointerLock and changed event to be based on native MouseEvent.
+* Changed CameraNode#setViewWindow to optionally take separate x and y values.
+* [FIX] GraphNode#setLocalPosition to work on Opera (Arguments is not an Array).
+* [FIX] Phong shader now handles case where specular factor map is only sampler.
+
+-------
 v0.43.0
 -------
 * Optimized Device#clear
