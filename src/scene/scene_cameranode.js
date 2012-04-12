@@ -418,11 +418,17 @@ pc.extend(pc.scene, function () {
      * as half extents in X and Y axes. Note that the view window is only relevant
      * for cameras with an orthographic projection type. For cameras with a perspective 
      * projection, pc.scene.CameraNode#setFov is used to control the frustum shape.
-     * @param {pc.math.Vec2} halfExtents The render target to set.
+     * @param {Number} halfExtentsX The horizontal half extent of the ortho frustum.
+     * @param {Number} halfExtentsY The vertical half extent of the ortho frustum.
      * @author Will Eastcott
      */
-    CameraNode.prototype.setViewWindow = function (halfExtents) {
-        this._viewWindow = halfExtents;
+    CameraNode.prototype.setViewWindow = function () {
+        if (arguments.length === 1) {
+            this._viewWindow = arguments[0];
+        } else {
+            this._viewWindow[0] = arguments[0];
+            this._viewWindow[1] = arguments[1];
+        }
         this._projMatDirty = true;
     };
 

@@ -294,7 +294,13 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         setLocalPosition: function () {
-            this._ltm.set((arguments.length === 1) ? arguments[0] : arguments, 12);
+            if (arguments.length === 1) {
+                this._ltm.set(arguments[0], 12);
+            } else {
+                this._ltm[12] = arguments[0];
+                this._ltm[13] = arguments[1];
+                this._ltm[14] = arguments[2];
+            }
         },
 
         /**

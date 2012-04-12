@@ -244,12 +244,16 @@ pc.extend(pc.resources, function () {
                 }
                 material.setParameter(param.name, texture);
                 if (texture.transform === undefined) {
-                    material.setParameter(param.name + "Transform", [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]);
+                    material.setParameter(param.name + "Transform", pc.math.mat4.create());
                 } else {
-                    material.setParameter(param.name + "Transform", texture.transform);
+                    material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
                 }
             } else {
-                material.setParameter(param.name, param.data);
+                if (param.type === 'float') {
+                    material.setParameter(param.name, param.data);
+                } else {
+                    material.setParameter(param.name, pc.math[param.type].clone(param.data));
+                }
             }
         }
     
