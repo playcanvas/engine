@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.45.0
+-------
+* Option to show debug ResourceLoader in pc.fw.Application
+
+-------
 v0.44.0
 -------
 * Optimized pc.scene.Scene front to back sorting callback.
