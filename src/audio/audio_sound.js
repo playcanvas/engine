@@ -25,6 +25,9 @@ pc.extend(pc.audio, function () {
                 this.isLoaded = true;
                 success(this);
             }.bind(this), false);
+            this.audio.addEventListener('error', function (e) {
+                error(pc.string.format("Error loading Sound from: '{0}'", url));
+            }.bind(this), false);
             this.audio.src = url;
         };
     }
