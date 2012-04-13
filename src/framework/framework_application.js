@@ -106,7 +106,6 @@ pc.extend(pc.fw, function () {
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioManager);
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
 
-        skyboxsys.setDataDir(options.dataDir);
         staticcubemapsys.setDataDir(options.dataDir);
 
         // Add event support
