@@ -36,6 +36,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.input.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
      * @param {pc.input.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
      * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
+     * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
      */
     var Application = function (canvas, options) {
         this._inTools = false;
@@ -77,7 +78,9 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioManager));
 
         // Display shows debug loading information. Only really fit for debug display at the moment.
-        // var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
+        if (options['displayLoader']) {
+            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
+        }
 
 		// The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options.controller, options.keyboard, options.mouse);
