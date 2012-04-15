@@ -4,9 +4,33 @@ pc.scene.Projection = {
 }
 
 pc.extend(pc.scene, function () {
-    var v2 = pc.math.vec2;
     var v3 = pc.math.vec3;
     var m4 = pc.math.mat4;
+
+    var _createGfxResources = function () {
+        // Create the graphical resources required to render a camera frustum
+        var device = pc.gfx.Device.getCurrent();
+        var library = device.getProgramLibrary();
+        var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
+        var format = new pc.gfx.VertexFormat();
+        format.begin();
+        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+        format.end();
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 8, pc.gfx.VertexBufferUsage.DYNAMIC);
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 24);
+        var indices = new Uint8Array(indexBuffer.lock());
+        indices.set([0,1,1,2,2,3,3,0, // Near plane
+                     4,5,5,6,6,7,7,4, // Far plane
+                     0,4,1,5,2,6,3,7]); // Near to far edges
+        indexBuffer.unlock();
+
+        // Set the resources on the component
+        return {
+            program: program,
+            indexBuffer: indexBuffer,
+            vertexBuffer: vertexBuffer
+        };
+    };
 
     /**
      * @name pc.scene.CameraNode
@@ -17,10 +41,10 @@ pc.extend(pc.scene, function () {
         this._nearClip = 0.1;
         this._farClip = 10000;
         this._fov = 45;
-        this._viewWindow = v2.create(1, 1);
+        this._orthoHeight = 10;
+        this._aspect = 16 / 9;
         this._lookAtNode = null;
         this._upNode = null;
-        this._viewPosition = v3.create(0, 0, 0);
 
         // Uniforms that are automatically set by a camera at the start of a scene render
         var scope = pc.gfx.Device.getCurrent().scope;
@@ -34,8 +58,10 @@ pc.extend(pc.scene, function () {
         this._projMat = m4.create();
         this._viewMat = m4.create();
         this._viewProjMat = m4.create();
+        this._viewPosition = v3.create(0, 0, 0);
 
         this._frustum = new pc.shape.Frustum(this._projMat, this._viewMat);
+        this._frustumGfx = _createGfxResources();
 
         // Create a full size viewport onto the backbuffer
         this._renderTarget = new pc.gfx.RenderTarget(pc.gfx.FrameBuffer.getBackBuffer());
@@ -68,7 +94,7 @@ pc.extend(pc.scene, function () {
         clone.setNearClip(this.getNearClip());
         clone.setFarClip(this.getFarClip());
         clone.setFov(this.getFov());
-        clone.setViewWindow(pc.math.vec2.clone(this.getViewWindow()));
+        clone.setAspectRatio(this.getAspectRatio());
         clone.setLookAtNode(this.getLookAtNode());
         clone.setUpNode(this.getUpNode());
         clone.setRenderTarget(this.getRenderTarget());
@@ -216,6 +242,17 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.CameraNode#getAspectRatio
+     * @description Retrieves the setting for the specified camera's aspect ratio.
+     * @returns {Number} The aspect ratio of the camera (width divided by height).
+     * @author Will Eastcott
+     */
+    CameraNode.prototype.getAspectRatio = function () {
+        return this._aspect;
+    };
+
+    /**
+     * @function
      * @name pc.scene.CameraNode#getClearOptions
      * @description Retrieves the options used to determine how the camera's render target will be cleared.
      * The clearing of the render target actually happens on a call to pc.scene.CameraNode#frameBegin.
@@ -275,6 +312,17 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.CameraNode#getOrthoHeight
+     * @description Retrieves the half height of the orthographic camera's view window.
+     * @returns {Number} The half height of the orthographic view window in eye coordinates.
+     * @author Will Eastcott
+     */
+    CameraNode.prototype.getOrthoHeight = function () {
+        return this._orthoHeight;
+    };
+
+    /**
+     * @function
      * @name pc.scene.CameraNode#getProjection
      * @description Retrieves the projection type for the specified camera.
      * @returns {pc.scene.Projection} The camera's projection type.
@@ -294,13 +342,11 @@ pc.extend(pc.scene, function () {
     CameraNode.prototype.getProjectionMatrix = function () {
         if (this._projMatDirty) {
             if (this._projection === pc.scene.Projection.PERSPECTIVE) {
-                var viewport = this._renderTarget.getViewport();
-                var aspect = viewport.width / viewport.height;
-                m4.makePerspective(this._fov, aspect, this._nearClip, this._farClip, this._projMat);
+                m4.makePerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._projMat);
             } else {
-                m4.makeOrtho(-this._viewWindow[0], this._viewWindow[0], 
-                             -this._viewWindow[1], this._viewWindow[1],
-                              this._nearClip, this._farClip, this._projMat);
+                var y = this._orthoHeight;
+                var x = y * this._aspect;
+                m4.makeOrtho(-x, x, -y, y, this._nearClip, this._farClip, this._projMat);
             }
 
             this._projMatDirty = false;
@@ -321,16 +367,15 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.CameraNode#getViewWindow
-     * @description Retrieves the view window on the camera. The view window is specified
-     * as half extents in X and Y axes. Note that the view window is only relevant
-     * for cameras with an orthographic projection type. For cameras with a perspective 
-     * projection, pc.scene.CameraNode#setFov is used to control the frustum shape.
-     * @param {pc.math.Vec2} halfExtents The render target to set.
+     * @name pc.scene.CameraNode#setAspectRatio
+     * @description Sets the specified camera's aspect ratio. This is normally the width
+     * of the viewport divided by height.
+     * @returns {Number} The aspect ratio of the camera.
      * @author Will Eastcott
      */
-    CameraNode.prototype.getViewWindow = function () {
-        return this._viewWindow;
+    CameraNode.prototype.setAspectRatio = function (aspect) {
+        this._aspect = aspect;
+        this._projMatDirty = true;
     };
 
     /**
@@ -388,6 +433,17 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.CameraNode#setOrthoHeight
+     * @description Sets the half height of the orthographic camera's view window.
+     * @param {Number} height The half height of the orthographic view window in eye coordinates.
+     * @author Will Eastcott
+     */
+    CameraNode.prototype.setOrthoHeight = function (height) {
+        this._orthoHeight = height;
+    };
+
+    /**
+     * @function
      * @name pc.scene.CameraNode#setProjection
      * @description Sets the projection type for the specified camera. This determines whether the projection
      * will be orthographic (parallel projection) or perspective.
@@ -411,27 +467,6 @@ pc.extend(pc.scene, function () {
         this._projMatDirty = true;
     };
 
-    /**
-     * @function
-     * @name pc.scene.CameraNode#setViewWindow
-     * @description Sets the view window on the camera. The view window is specified
-     * as half extents in X and Y axes. Note that the view window is only relevant
-     * for cameras with an orthographic projection type. For cameras with a perspective 
-     * projection, pc.scene.CameraNode#setFov is used to control the frustum shape.
-     * @param {Number} halfExtentsX The horizontal half extent of the ortho frustum.
-     * @param {Number} halfExtentsY The vertical half extent of the ortho frustum.
-     * @author Will Eastcott
-     */
-    CameraNode.prototype.setViewWindow = function () {
-        if (arguments.length === 1) {
-            this._viewWindow = arguments[0];
-        } else {
-            this._viewWindow[0] = arguments[0];
-            this._viewWindow[1] = arguments[1];
-        }
-        this._projMatDirty = true;
-    };
-
     CameraNode.prototype.setLookAtNode = function (node) {
         this._lookAtNode = node;
     };
@@ -446,6 +481,74 @@ pc.extend(pc.scene, function () {
 
     CameraNode.prototype.getUpNode = function () {
         return this._upNode;
+    };
+
+    CameraNode.prototype.drawFrustum = function () {
+        var indexBuffer = this._frustumGfx.indexBuffer;
+        var vertexBuffer = this._frustumGfx.vertexBuffer;
+
+        // Retrieve the characteristics of the camera frustum
+        var nearClip   = this.getNearClip();
+        var farClip    = this.getFarClip();
+        var fov        = this.getFov() * Math.PI / 180.0;
+        var aspect     = this.getAspectRatio();
+        var projection = this.getProjection();
+
+        var x, y;
+        if (projection === pc.scene.Projection.PERSPECTIVE) {
+            y = Math.tan(fov / 2.0) * nearClip;
+        } else {
+            y = this._orthoHeight;
+        }
+        x = y * aspect;
+
+        var positions = new Float32Array(vertexBuffer.lock());
+        positions[0]  = x;
+        positions[1]  = -y;
+        positions[2]  = -nearClip;
+        positions[3]  = x;
+        positions[4]  = y;
+        positions[5]  = -nearClip;
+        positions[6]  = -x;
+        positions[7]  = y;
+        positions[8]  = -nearClip;
+        positions[9]  = -x;
+        positions[10] = -y;
+        positions[11] = -nearClip;
+
+        if (projection === pc.scene.Projection.PERSPECTIVE) {
+            y = Math.tan(fov / 2.0) * farClip;
+            x = y * aspect;
+        }
+        positions[12]  = x;
+        positions[13]  = -y;
+        positions[14]  = -farClip;
+        positions[15]  = x;
+        positions[16]  = y;
+        positions[17]  = -farClip;
+        positions[18]  = -x;
+        positions[19]  = y;
+        positions[20]  = -farClip;
+        positions[21]  = -x;
+        positions[22] = -y;
+        positions[23] = -farClip;                
+        vertexBuffer.unlock();
+
+        // Render the camera frustum
+        var device = pc.gfx.Device.getCurrent();
+        device.setProgram(this._frustumGfx.program);
+        device.setIndexBuffer(indexBuffer);
+        device.setVertexBuffer(vertexBuffer, 0);
+
+        var transform = this.getWorldTransform();
+        device.scope.resolve("matrix_model").setValue(transform);
+        device.scope.resolve("constant_color").setValue([1, 1, 0, 1]);
+        device.draw({
+            type: pc.gfx.PrimType.LINES,
+            base: 0,
+            count: indexBuffer.getNumIndices(),
+            indexed: true
+        });
     };
 
     return {
