@@ -121,15 +121,15 @@ pc.extend(pc.fw, function () {
         
         return componentData;
     };
-    
+
     CameraComponentSystem.prototype.deleteComponent = function (entity) {
-        var data = this._getComponentData(entity);
-        
-        if(data.camera) {
+        var data = this.getComponentData(entity);
+
+        if (data.camera) {
             entity.removeChild(data.camera);
             data.camera = null;    
         }
-        
+
         this.removeComponent(entity);
     };
     
@@ -177,23 +177,32 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CameraComponentSystem#frameBegin
      */
     CameraComponentSystem.prototype.frameBegin = function (clear) {
-        if (!this._currentNode) {
+        var camera = this._currentNode;
+        if (!camera) {
             return;
         }
 
-        this._currentNode.frameBegin(clear);
+        var viewport = camera.getRenderTarget().getViewport();
+        var aspect = viewport.width / viewport.height;
+        if (aspect !== camera.getAspectRatio()) {
+            camera.setAspectRatio(aspect);
+        }
+
+        camera.frameBegin(clear);
     };
-    
+
     /**
      * End rendering the frame for the camera on the top of the stack
      * @function
      * @name pc.fw.CameraComponentSystem#frameEnd
      */
     CameraComponentSystem.prototype.frameEnd = function () {
-        if(!this._currentNode) {
+        var camera = this._currentNode;
+        if (!camera) {
             return;
         }
-        this._currentNode.frameEnd();        
+
+        camera.frameEnd();        
     };
     
     CameraComponentSystem.prototype.onSetCamera = function (entity, name, oldValue, newValue) {
