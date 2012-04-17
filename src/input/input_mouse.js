@@ -156,7 +156,7 @@ pc.extend(pc.input, function () {
      * This identical to a DOM MouseEvent with some additional values
      * event.targetX - The X coordinate relative to the event target element
      * event.targetY - The Y coordinate relative to the event target element
-     * event.wheelDelta - The change in mouse wheel value (if there is one) Normalized between -1 and 1
+     * event.wheel - The change in mouse wheel value (if there is one) Normalized between -1 and 1
      * event.buttons - The current state of all mouse buttons
      * @param {pc.input.Mouse} mouse A pc.input.Mouse instance, needed to get the button state from
      * @param {MouseEvent} event The mouse event to extend
@@ -167,17 +167,22 @@ pc.extend(pc.input, function () {
         event.targetX = offset.x;
         event.targetY = offset.y;
 
-        if(event.wheelDelta) {
-            event.wheelDelta = event.wheelDelta / 120; // Convert to -1 to 1
-        } else if (event.detail) {
-            event.wheelDelta = event.detail / -3; // Convert to -1 to 1
+        if (event.detail) {
+            event.wheel = event.detail / -3; // Convert to -1 to 1            
+        } else if (event.wheelDelta) {
+            event.wheel = event.wheelDelta / 120; // Convert to -1 to 1
         } else {
-            event.wheelDelta = 0;
+            event.wheel = 0;
         }
         
         // Get the movement delta in this event
-        event.movementX = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
-        event.movementY = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
+        if (event.movementX || event.webkitMovementX || event.mozMovementX) {
+            event.movementX = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
+            event.movementY = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
+        } else {
+            event.movementX = offset.x - mouse._offsetX;
+            event.movementY = offset.y - mouse._offsetY;
+        }
 
         event.buttons = mouse._buttons;
         return event;
@@ -210,14 +215,7 @@ pc.extend(pc.input, function () {
         this.fire(pc.input.EVENT_MOUSE_MOVE, pc.input.Mouse.createMouseEvent(this, event));
     };
 
-    Mouse.prototype._handleWheel = function (event) {    
-        // Store the wheel movement
-        if(event.wheelDelta) {
-            this.deltaWheel = event.wheelDelta / 120; // Convert to -1 to 1
-        } else {
-            this.deltaWheel = event.detail / -3; // Convert to -1 to 1
-        }
-        
+    Mouse.prototype._handleWheel = function (event) {
         this.fire(pc.input.EVENT_MOUSE_WHEEL, pc.input.Mouse.createMouseEvent(this, event));
     };
 
@@ -263,7 +261,8 @@ pc.extend(pc.input, function () {
          * @private
          * @function
          * @name pc.input.getTargetCoords
-         * @description offsetX/Y are not cross-browser compatible so we generate a set of coords here which are the same on all browsers, 
+         * @description Gets a pair of co-ords relative to the target element of the event.
+         * offsetX/Y are not cross-browser compatible so we generate a set of coords here which are the same on all browsers, 
          * and relative to the element that the the mouse was attached to.
          * @param {MouseEvent} event
          * @returns {Object} An object {x, y} which contains the co-ordinations
