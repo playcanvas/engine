@@ -158,6 +158,7 @@ pc.extend(pc.input, function () {
      * event.targetY - The Y coordinate relative to the event target element
      * event.wheel - The change in mouse wheel value (if there is one) Normalized between -1 and 1
      * event.buttons - The current state of all mouse buttons
+     * event.movementX/Y - This is added if not present in the current browser and is the movement since the last 
      * @param {pc.input.Mouse} mouse A pc.input.Mouse instance, needed to get the button state from
      * @param {MouseEvent} event The mouse event to extend
      * @returns {MouseEvent} The original event with added/edited parameters
@@ -168,7 +169,7 @@ pc.extend(pc.input, function () {
         event.targetY = offset.y;
 
         if (event.detail) {
-            event.wheel = event.detail / -3; // Convert to -1 to 1            
+            event.wheel = -1 * pc.math.clamp(event.detail, -1, 1); // detail appears to be unbounded, so we'll just clamp into range.
         } else if (event.wheelDelta) {
             event.wheel = event.wheelDelta / 120; // Convert to -1 to 1
         } else {
