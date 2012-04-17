@@ -22,31 +22,31 @@ pc.extend(pc.fw, function () {
          * @description The distance from the camera before which no rendering will take place
          * @type Number
          */
-        this.nearClip = 1;
+        this.nearClip = 0.1;
         /**
          * @name pc.fw.CameraComponentData#farClip
          * @description The distance from the camera after which no rendering will take place
          * @type Number
          */
-        this.farClip = 100000;
+        this.farClip = 1000;
         /**
          * @name pc.fw.CameraComponentData#fov
-         * @description The Y-axis field of view of the camera, in degrees. Used for {@link pc.scene.Projection.PERSPECTIVE} cameras only.
+         * @description The Y-axis field of view of the camera, in degrees. Used for {@link pc.scene.Projection.PERSPECTIVE} cameras only. Defaults to 45.
          * @type Number
          */
         this.fov = 45;
         /**
-         * @name pc.fw.CameraComponentData#viewWindowX
-         * @description The size of the view window in the X-axis. Used for {@link pc.scene.Projection.ORTHOGRAPHIC} cameras only.
+         * @name pc.fw.CameraComponentData#orthoHeight
+         * @description The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.scene.Projection.ORTHOGRAPHIC} cameras only. Defaults to 10.
          * @type Number
          */
-        this.viewWindowX = 1.0;
+        this.orthoHeight = 100;
         /**
-         * @name pc.fw.CameraComponentData#viewWindowY
-         * @description The size of the view window in the Y-axis. Used for {@link pc.scene.Projection.ORTHOGRAPHIC} cameras only.
+         * @name pc.fw.CameraComponentData#aspectRatio
+         * @description The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
          * @type Number
          */
-        this.viewWindowY = 1.0;
+        this.aspectRatio = 16 / 9;
         /**
          * @name pc.fw.CameraComponentData#projection
          * @description The type of projection used to render the camera.
@@ -85,9 +85,27 @@ editor.link.expose({
 
 editor.link.expose({
     system: "camera",
+    variable: "projection",
+    displayName: "Projection",
+    description: "Projection type of camera",
+    type: "enumeration",
+    options: {
+        enumerations: [{
+            name: 'Perspective',
+            value: 0
+        }, {
+            name: 'Orthographic',
+            value: 1
+        }]
+    },
+    defaultValue: 0
+});
+
+editor.link.expose({
+    system: "camera",
     variable: "fov",
-    displayName: "Field of view",
-    description: "Field Of View",
+    displayName: "Field of View",
+    description: "Field of view in Y axis",
     type: "number",
     defaultValue: 45,
     options: {
@@ -98,20 +116,11 @@ editor.link.expose({
 
 editor.link.expose({
     system: "camera",
-    variable: "viewWindowX",
-    displayName: "View Window X",
-    description: "View window half extent of camera in X axis",
-    type: "number",
-    defaultValue: 1
-});
-
-editor.link.expose({
-    system: "camera",
-    variable: "viewWindowY",
-    displayName: "View Window Y",
+    variable: "orthoHeight",
+    displayName: "Ortho Height",
     description: "View window half extent of camera in Y axis",
     type: "number",
-    defaultValue: 1
+    defaultValue: 100
 });
 
 editor.link.expose({
@@ -120,7 +129,7 @@ editor.link.expose({
     displayName: "Near Clip",
     description: "Near clipping distance",
     type: "number",
-    defaultValue: 1,
+    defaultValue: 0.1,
     options: {
         min: 0
     }
@@ -132,7 +141,7 @@ editor.link.expose({
     displayName: "Far Clip",
     description: "Far clipping distance",
     type: "number",
-    defaultValue: 100000,
+    defaultValue: 1000,
     options: {
         min: 0
     }
@@ -154,22 +163,4 @@ editor.link.expose({
     description: "Render to an offscreen buffer",
     type: "boolean",
     defaultValue: false
-});
-
-editor.link.expose({
-    system: "camera",
-    variable: "projection",
-    displayName: "Projection",
-    description: "Projection type of camera",
-    type: "enumeration",
-    options: {
-        enumerations: [{
-            name: 'Perspective',
-            value: 0
-        }, {
-            name: 'Orthographic',
-            value: 1
-        }]
-    },
-    defaultValue: 0
 });

@@ -45,7 +45,7 @@ pc.extend(pc.fw, function () {
         var program        = new pc.gfx.Program(vertexShader, fragmentShader);
 
 		var texture = new pc.gfx.TextureCube();
-        texture.setFilterMode(pc.gfx.TextureFilter.LINEAR_MIPMAP_LINEAR, pc.gfx.TextureFilter.LINEAR);
+        texture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
         texture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
 		
         var skyMat = new pc.scene.Material();
@@ -73,7 +73,12 @@ pc.extend(pc.fw, function () {
 			
 		}, options);
 
-        return pc.scene.procedural.createBox({material: skyMat, halfExtents: [1, 1, 1]});
+        var geom = pc.scene.procedural.createBox({material: skyMat, halfExtents: [1, 1, 1]});
+        
+        var skybox = new pc.scene.MeshNode();
+        skybox.setGeometry(geom);
+        
+        return skybox;
     };
     
     function _onSet(entity, name, oldValue, newValue) {
@@ -146,17 +151,11 @@ pc.extend(pc.fw, function () {
      */
     var SkyboxComponentSystem = function SkyboxComponentSystem (context) {
         context.systems.add("skybox", this);
-        
-        this._dataDir = "../../../tests/data/";
-        
+
         this.bind("set", pc.callback(this, _onSet));
     }
     SkyboxComponentSystem = SkyboxComponentSystem.extendsFrom(pc.fw.ComponentSystem);
 
-    SkyboxComponentSystem.prototype.setDataDir = function (dir) {
-        this._dataDir = dir;
-    }    
-    
     SkyboxComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.SkyboxComponentData();
 
@@ -164,47 +163,44 @@ pc.extend(pc.fw, function () {
 
         return componentData;
     };
-    
+
     SkyboxComponentSystem.prototype.deleteComponent = function (entity) {
-        var component = this._getComponentData(entity);
+        var component = this.getComponentData(entity);
         delete component.skybox;
         this.removeComponent(entity);
     };
-    
-    SkyboxComponentSystem.prototype.render = function (fn) {
-        var id;
-        var entity;
-        var componentData;
-        var components = this._getComponents();
 
-        for (id in components) {
+    SkyboxComponentSystem.prototype.update = function (dt) {
+        var components = this.getComponents();
+
+        for (var id in components) {
             if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
-                componentData = components[id].component;
+                var entity = components[id].entity;
+                var componentData = components[id].component;
 
                 if (componentData.skybox) {
-                    // Create a transform that will scale the skybox to always sit
-                    // in between the near and far clip planes
-                    var currentCameraEntity = this.context.systems.camera.getCurrent();
-                    var currentCamera = this.context.systems.camera.get(currentCameraEntity, "camera");                   
-                    var near = currentCamera.getNearClip();
-                    var far = currentCamera.getFarClip();
-                    var average = (near + far) / 2.0;
-                    var xform = pc.math.mat4.makeScale(average, average, average);
-
-                    this.context.scene.enqueue("first", (function(data, wtm) {
+                    this.context.scene.enqueue('first', (function (context, skybox) {
                             return function () {
-                                data.skybox.dispatch(wtm);
+                                // Create a transform that will scale the skybox to always sit
+                                // in between the near and far clip planes
+                                var camSys = context.systems.camera;
+                                var currentCamera = camSys.getCurrent();
+                                var near = camSys.get(currentCamera, 'nearClip');
+                                var far = camSys.get(currentCamera, 'farClip');
+                                var average = (near + far) * 0.5;
+
+                                // Set the scale - easy since the matrix is identity
+                                var wtm = skybox.getWorldTransform();
+                                wtm[0] = average;
+                                wtm[5] = average;
+                                wtm[10] = average;
+                                skybox.dispatch();
                             }
-                        })(componentData, xform));
+                        })(this.context, componentData.skybox));
                 }
             }
         }
     };
-    
-    SkyboxComponentSystem.prototype.loadTextureAsset = function (entity, name, guid) {
-    	    	
-    }
 
     return {
         SkyboxComponentSystem: SkyboxComponentSystem

@@ -61,7 +61,7 @@ FlyCam.prototype.orbit = function (rotation) {
 }
 
 FlyCam.prototype.onMouseWheel = function (event) {
-    var distance = event.wheelDelta * 10;
+    var distance = event.wheel * 10;
     this.dolly(distance);
 };
 

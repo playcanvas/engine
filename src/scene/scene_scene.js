@@ -23,6 +23,115 @@ pc.extend(pc.scene, function () {
     var shadowCamView = pc.math.mat4.create();
     var shadowCamViewProj = pc.math.mat4.create();
 
+    // The 8 points of the camera frustum transformed to light space
+    var frustumPoints = [];
+    for (i = 0; i < 8; i++) {
+        frustumPoints.push(pc.math.vec3.create());
+    }
+
+    function _setShadowMapMaterial(scene, material) {
+        var models = scene._models;
+        for (var i = 0; i < models.length; i++) {
+            var model = models[i];
+            var geometries = model.getGeometries();
+            for (var j = 0; j < geometries.length; j++) {
+                var geometry = geometries[j];
+                var subMeshes = geometry.getSubMeshes();
+                for (var k = 0; k < subMeshes.length; k++) {
+                    var subMesh = subMeshes[k];
+                    subMesh._cachedMaterial = subMesh.material;
+                    subMesh.material = material;
+                }
+            }
+        }
+    }
+
+    function _restoreMaterials(scene) {
+        var models = scene._models;
+        for (var i = 0; i < models.length; i++) {
+            var model = models[i];
+            var geometries = model.getGeometries();
+            for (var j = 0; j < geometries.length; j++) {
+                var geometry = geometries[j];
+                var subMeshes = geometry.getSubMeshes();
+                for (var k = 0; k < subMeshes.length; k++) {
+                    var subMesh = subMeshes[k];
+                    subMesh.material = subMesh._cachedMaterial;
+                    delete subMesh._cachedMaterial;
+                }
+            }
+        }
+    }
+
+    function _calculateShadowMeshAabb(scene) {
+        var meshes = scene._shadowMeshes;
+        if (meshes.length > 0) {
+            scene._shadowAabb.copy(meshes[0].getAabb());
+            for (var i = 1; i < meshes.length; i++) {
+                scene._shadowAabb.add(meshes[i].getAabb());
+            }
+        }
+    }
+
+    function _calculateSceneAabb(scene) {
+        var meshes = scene._opaqueMeshes;
+        if (meshes.length > 0) {
+            scene._sceneAabb.copy(meshes[0].getAabb());
+            for (var i = 1; i < meshes.length; i++) {
+                scene._sceneAabb.add(meshes[i].getAabb());
+            }
+        }
+    }
+
+    function _getFrustumPoints(camera, points) {
+        var cam = camera;
+        var nearClip   = cam.getNearClip();
+        var farClip    = cam.getFarClip();
+        var fov        = cam.getFov() * Math.PI / 180.0;
+        var aspect     = cam.getAspectRatio();
+        var projection = cam.getProjection();
+
+        var x, y;
+        if (projection === pc.scene.Projection.PERSPECTIVE) {
+            y = Math.tan(fov / 2.0) * nearClip;
+        } else {
+            y = this._orthoHeight;
+        }
+        x = y * aspect;
+
+        points[0][0] = x;
+        points[0][1] = -y;
+        points[0][2] = -nearClip;
+        points[1][0] = x;
+        points[1][1] = y;
+        points[1][2] = -nearClip;
+        points[2][0] = -x;
+        points[2][1] = y;
+        points[2][2] = -nearClip;
+        points[3][0] = -x;
+        points[3][1] = -y;
+        points[3][2] = -nearClip;
+
+        if (projection === pc.scene.Projection.PERSPECTIVE) {
+            y = Math.tan(fov / 2.0) * farClip;
+            x = y * aspect;
+        }
+        points[4][0] = x;
+        points[4][1] = -y;
+        points[4][2] = -farClip;
+        points[5][0] = x;
+        points[5][1] = y;
+        points[5][2] = -farClip;
+        points[6][0] = -x;
+        points[6][1] = y;
+        points[6][2] = -farClip;
+        points[7][0] = -x;
+        points[7][1] = -y;
+        points[7][2] = -farClip;
+
+        return points;
+    }
+
     /**
      * @name pc.scene.Scene
      * @class A scene.
@@ -228,110 +337,6 @@ pc.extend(pc.scene, function () {
         var self = this;        
         if (castShadows) {
             this.enqueue("first", function () {
-                var setShadowMapMaterial = function() {
-                    var models = self._models;
-                    for (var i = 0; i < models.length; i++) {
-                        var model = models[i];
-                        var geometries = model.getGeometries();
-                        for (var j = 0; j < geometries.length; j++) {
-                            var geometry = geometries[j];
-                            var subMeshes = geometry.getSubMeshes();
-                            for (var k = 0; k < subMeshes.length; k++) {
-                                var subMesh = subMeshes[k];
-                                subMesh._cachedMaterial = subMesh.material;
-                                subMesh.material = self._shadowMaterial;
-                            }
-                        }
-                    }
-                };
-
-                var restoreMaterials = function() {
-                    var models = self._models;
-                    for (var i = 0; i < models.length; i++) {
-                        var model = models[i];
-                        var geometries = model.getGeometries();
-                        for (var j = 0; j < geometries.length; j++) {
-                            var geometry = geometries[j];
-                            var subMeshes = geometry.getSubMeshes();
-                            for (var k = 0; k < subMeshes.length; k++) {
-                                var subMesh = subMeshes[k];
-                                subMesh.material = subMesh._cachedMaterial;
-                                delete subMesh._cachedMaterial;
-                            }
-                        }
-                    }
-                };
-
-                var calculateShadowMeshAabb = function () {
-                    var meshes = self._shadowMeshes;
-                    if (meshes.length > 0) {
-                        self._shadowAabb.copy(meshes[0].getAabb());
-                        for (var i = 1; i < meshes.length; i++) {
-                            self._shadowAabb.add(meshes[i].getAabb());
-                        }
-                    }
-                }
-
-                var calculateSceneAabb = function () {
-                    var meshes = self._opaqueMeshes;
-                    if (meshes.length > 0) {
-                        self._sceneAabb.copy(meshes[0].getAabb());
-                        for (var i = 1; i < meshes.length; i++) {
-                            self._sceneAabb.add(meshes[i].getAabb());
-                        }
-                    }
-                }
-
-                var getFrustumPoints = function (points) {
-                    var cam = camera;
-                    var nearClip   = cam.getNearClip();
-                    var farClip    = cam.getFarClip();
-                    var fov        = cam.getFov() * Math.PI / 180.0;
-                    var viewWindow = cam.getViewWindow();
-                    var viewport   = cam.getRenderTarget().getViewport();
-                    var projection = cam.getProjection();
-
-                    var x, y;
-                    if (projection === pc.scene.Projection.PERSPECTIVE) {
-                        y = Math.tan(fov / 2.0) * nearClip;
-                        x = y * viewport.width / viewport.height;
-                    } else {
-                        x = viewWindow[0];
-                        y = viewWindow[1];
-                    }
-                    points[0][0] = x;
-                    points[0][1] = -y;
-                    points[0][2] = -nearClip;
-                    points[1][0] = x;
-                    points[1][1] = y;
-                    points[1][2] = -nearClip;
-                    points[2][0] = -x;
-                    points[2][1] = y;
-                    points[2][2] = -nearClip;
-                    points[3][0] = -x;
-                    points[3][1] = -y;
-                    points[3][2] = -nearClip;
-
-                    if (projection === pc.scene.Projection.PERSPECTIVE) {
-                        y = Math.tan(fov / 2.0) * farClip;
-                        x = y * viewport.width / viewport.height;
-                    }
-                    points[4][0] = x;
-                    points[4][1] = -y;
-                    points[4][2] = -farClip;
-                    points[5][0] = x;
-                    points[5][1] = y;
-                    points[5][2] = -farClip;
-                    points[6][0] = -x;
-                    points[6][1] = y;
-                    points[6][2] = -farClip;
-                    points[7][0] = -x;
-                    points[7][1] = -y;
-                    points[7][2] = -farClip;
-
-                    return points;
-                }
-
                 camera.frameEnd();
 
                 // Store an array of shadow casters
@@ -358,14 +363,10 @@ pc.extend(pc.scene, function () {
                 var oldBlend = device.getGlobalState().blend;
                 device.updateGlobalState(self._shadowState);
 
-                setShadowMapMaterial();
+                _setShadowMapMaterial(self, self._shadowMaterial);
                 var calcBbox = false;
 
-                var fp = [];
-                for (i = 0; i < 8; i++) {
-                    fp.push(pc.math.vec3.create());
-                }
-                getFrustumPoints(fp);
+                _getFrustumPoints(camera, frustumPoints);
                 
                 for (i = 0; i < self._lights.length; i++) {
                     var light = self._lights[i];
@@ -375,7 +376,7 @@ pc.extend(pc.scene, function () {
                         var type = light.getType();
                         if (type === pc.scene.LightType.DIRECTIONAL) {
                             if (!calcBbox) {
-                                calculateSceneAabb();
+                                _calculateSceneAabb(self);
                                 calcBbox = true;
                             }
 
@@ -383,7 +384,7 @@ pc.extend(pc.scene, function () {
                             var camToWorld = camera.getWorldTransform();
                             var c2l = pc.math.mat4.multiply(worldToLight, camToWorld);
                             for (i = 0; i < 8; i++) {
-                                pc.math.mat4.multiplyVec3(fp[i], 1.0, c2l, fp[i]);
+                                pc.math.mat4.multiplyVec3(frustumPoints[i], 1.0, c2l, frustumPoints[i]);
                             }
 
                             var minx = 1000000;
@@ -391,7 +392,7 @@ pc.extend(pc.scene, function () {
                             var miny = 1000000;
                             var maxy = -1000000;
                             for (i = 0; i < 8; i++) {
-                                var p = fp[i];
+                                var p = frustumPoints[i];
                                 if (p[0] < minx) minx = p[0];
                                 if (p[0] > maxx) maxx = p[0];
                                 if (p[1] < miny) miny = p[1];
@@ -408,12 +409,14 @@ pc.extend(pc.scene, function () {
                             shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
                             shadowCam.setNearClip(-extent);
                             shadowCam.setFarClip(extent);
-                            shadowCam.setViewWindow(extent, extent);
+                            shadowCam.setAspectRatio(1);
+                            shadowCam.setOrthoHeight(extent);
                         } else if (type === pc.scene.LightType.SPOT) {
                             shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
-                            shadowCam.setFov(light.getOuterConeAngle() * 2);
                             shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                             shadowCam.setFarClip(light.getAttenuationEnd());
+                            shadowCam.setAspectRatio(1);
+                            shadowCam.setFov(light.getOuterConeAngle() * 2);
 
                             var lightWtm = light.getWorldTransform();
                             pc.math.mat4.multiply(lightWtm, camToLight, shadowCamWtm);
@@ -433,7 +436,7 @@ pc.extend(pc.scene, function () {
                         shadowCam.frameEnd();
                     }
                 }
-                restoreMaterials();
+                _restoreMaterials(self);
 
                 // Restore previous blend state
                 device.updateGlobalState({blend: oldBlend});

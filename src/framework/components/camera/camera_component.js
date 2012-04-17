@@ -1,40 +1,5 @@
 pc.extend(pc.fw, function () {
-    var _createGfxResources = function () {
-        // Create the graphical resources required to render a camera frustum
-        var device = pc.gfx.Device.getCurrent();
-        var library = device.getProgramLibrary();
-        var program = library.getProgram("basic", { vertexColors: false, diffuseMapping: false });
-        var format = new pc.gfx.VertexFormat();
-        format.begin();
-        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-        format.end();
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 8, pc.gfx.VertexBufferUsage.DYNAMIC);
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, 24);
-        var indices = new Uint16Array(indexBuffer.lock());
-        indices.set([0,1,1,2,2,3,3,0, // Near plane
-                     4,5,5,6,6,7,7,4, // Far plane
-                     0,4,1,5,2,6,3,7]); // Near to far edges
-        indexBuffer.unlock();
-        
-        // Set the resources on the component
-        return {
-            program: program,
-            indexBuffer: indexBuffer,
-            vertexBuffer: vertexBuffer
-        };
-    };
-    
-    var _createOffscreenBuffer = function () {
-        var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
-        var w = backBuffer.getWidth();
-        var h = backBuffer.getHeight();
-        var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
-        var offscreenTexture = offscreenBuffer.getTexture();
-        offscreenTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
-        offscreenTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
-        return offscreenBuffer;
-    };
-    
+
     /**
      * @name pc.fw.CameraComponentSystem
      * @class A Camera Component is used to render the scene.
@@ -48,7 +13,7 @@ pc.extend(pc.fw, function () {
      */
     var CameraComponentSystem = function (context) {
         context.systems.add("camera", this);
-        
+
         pc.extend(this, {
             _currentNode: null, // The current camera node
             _currentEntity: null, // The current camera entity
@@ -77,23 +42,12 @@ pc.extend(pc.fw, function () {
                 }
             },
 
-            _viewWindowX: function (componentData, vwx) {
-                if (pc.isDefined(vwx)) {
-                    componentData.viewWindowX = vwx;
-                    var vw = componentData.camera.getViewWindow();
-                    componentData.camera.setViewWindow(pc.math.vec2.create(vwx, vw[1]));
+            _orthoHeight: function (componentData, oh) {
+                if (pc.isDefined(oh)) {
+                    componentData.orthoHeight = oh;
+                    componentData.camera.setOrthoHeight(oh);
                 } else {
-                    return componentData.viewWindowX;
-                }
-            },
-
-            _viewWindowY: function (componentData, vwy) {
-                if (pc.isDefined(vwy)) {
-                    componentData.viewWindowY = vwy;
-                    var vw = componentData.camera.getViewWindow();
-                    componentData.camera.setViewWindow(pc.math.vec2.create(vw[0], vwy));
-                } else {
-                    return componentData.viewWindowY;
+                    return componentData.orthoHeight;
                 }
             },
 
@@ -117,12 +71,17 @@ pc.extend(pc.fw, function () {
 
             _offscreen: function (componentData, offscreen) {
                 if (pc.isDefined(offscreen)) {
+                    var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
                     if (offscreen) {
                         componentData.offscreen = offscreen;
-                        var offscreenBuffer = _createOffscreenBuffer();
+                        var w = backBuffer.getWidth();
+                        var h = backBuffer.getHeight();
+                        var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
+                        var offscreenTexture = offscreenBuffer.getTexture();
+                        offscreenTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
+                        offscreenTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
                         componentData.camera.setRenderTarget(new pc.gfx.RenderTarget(offscreenBuffer));
                     } else {
-                        var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
                         componentData.camera.setRenderTarget(new pc.gfx.RenderTarget(backBuffer));
                     }
                 } else {
@@ -151,114 +110,38 @@ pc.extend(pc.fw, function () {
 
         // Add new camera node and ensure it is first in the property list
         data = data || {};
-        data['camera'] = new pc.scene.CameraNode();
-        this.initialiseComponent(entity, componentData, data, ['camera', 'clearColor', 'fov', 'viewWindowX', 'viewWindowY', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection']);
-        
-        
+        data.camera = new pc.scene.CameraNode();
+
+        var attribs = ['camera', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
+        this.initialiseComponent(entity, componentData, data, attribs);
+
         if (!window.pc.apps.designer && this.get(entity, "activate") && !entity.hasLabel("pc:designer")) {
             this.setCurrent(entity);
         }
         
         return componentData;
     };
-    
+
     CameraComponentSystem.prototype.deleteComponent = function (entity) {
-        var data = this._getComponentData(entity);
-        
-        if(data.camera) {
+        var data = this.getComponentData(entity);
+
+        if (data.camera) {
             entity.removeChild(data.camera);
             data.camera = null;    
         }
-        
+
         this.removeComponent(entity);
     };
     
     CameraComponentSystem.prototype.toolsRender = function (fn) {
-        if (!this._renderable) {
-            this._renderable = _createGfxResources();            
-        }
-
-        var id;
-        var entity;
-        var componentData;
-        var components = this._getComponents();
-        var transform;
-        var device;
-        var program = this._renderable.program;
-        var vertexBuffer = this._renderable.vertexBuffer;
-        var indexBuffer = this._renderable.indexBuffer;
-        
-        for (id in components) {
+        var components = this.getComponents();
+        for (var id in components) {
             if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
+                var entity = components[id].entity;
+
                 if (!entity.hasLabel("pc:designer")) {
-                    componentData = components[id].component;
-
-                    // Retrieve the characteristics of the camera frustum
-                    var cam = componentData.camera;
-                    var nearClip   = cam.getNearClip();
-                    var farClip    = cam.getFarClip();
-                    var fov        = cam.getFov() * Math.PI / 180.0;
-                    var viewWindow = cam.getViewWindow();
-                    var viewport   = cam.getRenderTarget().getViewport();
-                    var projection = cam.getProjection();
-
-                    var x, y;
-                    if (projection === pc.scene.Projection.PERSPECTIVE) {
-                        y = Math.tan(fov / 2.0) * nearClip;
-                        x = y * viewport.width / viewport.height;
-                    } else {
-                        x = viewWindow[0];
-                        y = viewWindow[1];
-                    }
-
-                    var positions = new Float32Array(vertexBuffer.lock());
-                    positions[0]  = x;
-                    positions[1]  = -y;
-                    positions[2]  = -nearClip;
-                    positions[3]  = x;
-                    positions[4]  = y;
-                    positions[5]  = -nearClip;
-                    positions[6]  = -x;
-                    positions[7]  = y;
-                    positions[8]  = -nearClip;
-                    positions[9]  = -x;
-                    positions[10] = -y;
-                    positions[11] = -nearClip;
-
-                    if (projection === pc.scene.Projection.PERSPECTIVE) {
-                        y = Math.tan(fov / 2.0) * farClip;
-                        x = y * viewport.width / viewport.height;
-                    }
-                    positions[12]  = x;
-                    positions[13]  = -y;
-                    positions[14]  = -farClip;
-                    positions[15]  = x;
-                    positions[16]  = y;
-                    positions[17]  = -farClip;
-                    positions[18]  = -x;
-                    positions[19]  = y;
-                    positions[20]  = -farClip;
-                    positions[21]  = -x;
-                    positions[22] = -y;
-                    positions[23] = -farClip;                
-                    vertexBuffer.unlock();
-
-                    // Render the camera frustum
-                    device = pc.gfx.Device.getCurrent();
-                    device.setProgram(program);
-                    device.setIndexBuffer(indexBuffer);
-                    device.setVertexBuffer(vertexBuffer, 0);
-
-                    transform = entity.getWorldTransform();
-                    device.scope.resolve("matrix_model").setValue(transform);
-                    device.scope.resolve("constant_color").setValue([1,1,0,1]);
-                    device.draw({
-                        type: pc.gfx.PrimType.LINES,
-                        base: 0,
-                        count: indexBuffer.getNumIndices(),
-                        indexed: true
-                    });
+                    var componentData = components[id].component;
+                    componentData.camera.drawFrustum();
                 }
             }
         }
@@ -294,23 +177,32 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CameraComponentSystem#frameBegin
      */
     CameraComponentSystem.prototype.frameBegin = function (clear) {
-        if (!this._currentNode) {
+        var camera = this._currentNode;
+        if (!camera) {
             return;
         }
 
-        this._currentNode.frameBegin(clear);
+        var viewport = camera.getRenderTarget().getViewport();
+        var aspect = viewport.width / viewport.height;
+        if (aspect !== camera.getAspectRatio()) {
+            camera.setAspectRatio(aspect);
+        }
+
+        camera.frameBegin(clear);
     };
-    
+
     /**
      * End rendering the frame for the camera on the top of the stack
      * @function
      * @name pc.fw.CameraComponentSystem#frameEnd
      */
     CameraComponentSystem.prototype.frameEnd = function () {
-        if(!this._currentNode) {
+        var camera = this._currentNode;
+        if (!camera) {
             return;
         }
-        this._currentNode.frameEnd();        
+
+        camera.frameEnd();        
     };
     
     CameraComponentSystem.prototype.onSetCamera = function (entity, name, oldValue, newValue) {
