@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.47.0
+-------
+* [FIX] Designer Camera in FF works again
+* Added event.wheel value to MouseEvent which is normalized value across all browsers
+* Added scaling to dolly camera so that movement is reduced closer to the selection
+* Tidied up skybox component.
+* [FIX] Local state now gets cleared properly.
+* Moved camera frustum render function into CameraNode class.
+* Switched from view window to ortho height and aspect ratio.
+* Update camera aspect ratio on resize.
+
+-------
 v0.46.0
 -------
 * [FIX] Unsupported audio formats no longer hang resource loading in Firefox
