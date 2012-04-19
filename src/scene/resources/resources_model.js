@@ -65,25 +65,16 @@ pc.extend(pc.resources, function () {
     	var url = identifier;
     	options = options || {};
         options.directory = pc.path.getDirectory(url);
-/*
-        pbinUrl = url.substr(0, url.lastIndexOf('.')) + '.bin';
-        pc.net.http.get(pbinUrl, function (response) {
-            options.bin = response;
-*/
-            pc.net.http.get(url, function (response) {
-                try {
-                    success(response, options);
-                } catch (e) {
-                    error(pc.string.format("An error occured while loading model from: '{0}'", url));
-                }
-            }.bind(this), {
-                cache:false
-            });
-            /*
+
+        var uri = new pc.URI(url)
+        var ext = pc.path.getExtension(uri.path);
+        options.binary = (ext === '.bin');
+
+        pc.net.http.get(url, function (response) {
+            success(response, options);
         }.bind(this), {
-            responseType: 'arraybuffer',
-            cache:false
-        });*/
+            cache: false
+        });
     };
 	
 	/**
@@ -100,8 +91,12 @@ pc.extend(pc.resources, function () {
     	options.directory = options.directory || "";
     	options.priority = options.priority || 1; // default priority of 1
     	options.batch = options.batch || null;
-    	
-        model = this._loadModel(data, options);
+
+        if (options.binary) {
+            model = this._loadModelBin(data, options);
+        } else {
+            model = this._loadModel(data, options);
+        }
     	return model;
     };
         
@@ -677,6 +672,8 @@ pc.extend(pc.resources, function () {
             }
         }
 
+        if (!(positions && normals && uvs)) return;
+
         var triangleCount = indices.length / 3;
         var vertexCount   = vertices.byteLength / stride;
         var i1, i2, i3;
@@ -939,11 +936,418 @@ pc.extend(pc.resources, function () {
         return model;
     };
 
+    ///////////////////
+    // BINARY LOADER //
+    ///////////////////
+
+    function MemoryStream(arrayBuffer, loader, options) {
+        this.memory = arrayBuffer;
+        this.dataView = new DataView(arrayBuffer);
+        this.filePointer = 0;
+        this.options = options;
+        this.loader = loader;
+    };
+
+    MemoryStream.prototype = {
+
+        // Basic type reading
+        readF32: function (count) {
+            count = count || 1;
+            var data;
+            if (count === 1) {
+                data = this.dataView.getFloat32(this.filePointer, true);
+            } else {
+                data = new Float32Array(this.memory, this.filePointer, count);
+            }
+            this.filePointer += 4 * count;
+            return data;
+        },
+
+        readU8: function (count) {
+            count = count || 1;
+            var data;
+            if (count === 1) {
+                data = this.dataView.getUint8(this.filePointer, true);
+            } else {
+                data = new Uint8Array(this.memory, this.filePointer, count);
+            }
+            this.filePointer += 1 * count;
+            return data;
+        },
+
+        readU16: function (count) {
+            count = count || 1;
+            var data;
+            if (count === 1) {
+                data = this.dataView.getUint16(this.filePointer, true);
+            } else {
+                data = new Uint16Array(this.memory, this.filePointer, count);
+            }
+            this.filePointer += 2 * count;
+            return data;
+        },
+
+        readU32: function (count) {
+            count = count || 1;
+            var data;
+            if (count === 1) {
+                data = this.dataView.getUint32(this.filePointer, true);
+            } else {
+                data = new Uint32Array(this.memory, this.filePointer, count);
+            }
+            this.filePointer += 4 * count;
+            return data;
+        },
+
+        readString: function (length) {
+            var str = "";
+            for (var i = 0; i < length; i++) {
+                var charCode = this.dataView.getUint8(this.filePointer++);
+                str += String.fromCharCode(charCode);
+            }
+            return str;
+        },
+
+        // Chunk reading
+        readChunkHeader: function () {
+            var magic = this.readString(4);
+            var version = this.readU32();
+            var length = this.readU32();
+            return {
+                magic: magic,
+                version: version,
+                length: length
+            };
+        },
+
+        readStringChunk: function () {
+            var header = this.readChunkHeader();
+            var str = this.readString(header.length);
+
+            // Read to the next 4 byte boundary
+            while (this.filePointer % 4 !== 0) {
+                this.filePointer++;
+            }
+            return str;
+        },
+
+        readTextureChunk: function () {
+            var header    = this.readChunkHeader();
+            var name      = this.readStringChunk();
+            var filename  = this.readStringChunk();
+            var addrModeU = this.readU8();
+            var addrModeV = this.readU8();
+            var filterMin = this.readU8();
+            var filterMax = this.readU8();
+            var transform = pc.math.mat4.create();
+            for (var i = 0; i < 16; i++) {
+                transform[i] = this.readF32();
+            }
+
+            var texture = new pc.gfx.Texture2D();
+
+            var url = this.options.directory + "/" + filename;
+
+            // Make a new request for the Image resource at the same priority as the Model was requested.
+            this.loader.request([new pc.resources.ImageRequest(url)], this.options.priority, function (resources) {
+                texture.setSource(resources[url]);	
+            }, function (errors, resources) {
+                Object.keys(errors).forEach(function (key) {
+                   logERROR(errors[key]);    
+                });
+            }, function (progress) {
+                // no progress features
+            }, this.options);
+
+            texture.setName(name);
+            texture.setAddressMode(addrModeU, addrModeV);
+            texture.setFilterMode(filterMin, filterMax);
+            texture.transform = transform;
+
+            return texture;
+        },
+
+        readMaterialParamChunk: function () {
+            var header = this.readChunkHeader();
+            var name   = this.readStringChunk();
+            var type   = this.readU32();
+            var data;
+            switch (type) {
+                case pc.gfx.ShaderInputType.FLOAT:
+                    data = this.readF32();
+                    break;
+                case pc.gfx.ShaderInputType.VEC2:
+                    var x = this.readF32();
+                    var y = this.readF32();
+                    data = pc.math.vec2.create(x, y);
+                    break;
+                case pc.gfx.ShaderInputType.VEC3:
+                    var x = this.readF32();
+                    var y = this.readF32();
+                    var z = this.readF32();
+                    data = pc.math.vec3.create(x, y, z);
+                    break;
+                case pc.gfx.ShaderInputType.VEC4:
+                    var x = this.readF32();
+                    var y = this.readF32();
+                    var z = this.readF32();
+                    var w = this.readF32();
+                    data = pc.math.vec4.create(x, y, z, w);
+                    break;
+                case pc.gfx.ShaderInputType.TEXTURE2D:
+                    data = this.model.getTextures()[this.readU32()];
+                    break;
+            }
+            return {
+                name: name,
+                data: data
+            };
+        },
+
+        readMaterialChunk: function () {
+            var header    = this.readChunkHeader();
+            var name      = this.readStringChunk();
+            var shader    = this.readStringChunk();
+            var numParams = this.readU32();
+
+            var material = new pc.scene.Material();
+            material.setName(name);
+            material.setProgramName(shader);
+
+            // Read each shader parameter
+            for (var i = 0; i < numParams; i++) {
+                var param = this.readMaterialParamChunk();
+                material.setParameter(param.name, param.data);
+                if (param.name.substring(0, 'texture_'.length) === 'texture_') {
+                    var texture = param.data;
+                    if (texture.transform === undefined) {
+                        material.setParameter(param.name + "Transform", pc.math.mat4.create());
+                    } else {
+                        material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
+                    }
+                }
+            }
+
+            return material;
+        },
+
+        readAabbChunk: function () {
+            var header = this.readChunkHeader();
+            var minx = this.readF32();
+            var miny = this.readF32();
+            var minz = this.readF32();
+            var maxx = this.readF32();
+            var maxy = this.readF32();
+            var maxz = this.readF32();
+
+            var center = pc.math.vec3.create((maxx + minx) * 0.5, (maxy + miny) * 0.5, (maxz + minz) * 0.5);
+            var halfExtents = pc.math.vec3.create((maxx - minx) * 0.5, (maxy - miny) * 0.5, (maxz - minz) * 0.5);
+            return new pc.shape.Aabb(center, halfExtents);
+        },
+
+        readVertexBufferChunk: function () {
+            var header = this.readChunkHeader();
+            var format = this.readU32();
+            var count  = this.readU32();
+            var stride = this.readU32();
+
+            // Create the vertex buffer format
+            var vertexFormat = translateFormat(format);
+
+            var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, count);
+            var vbuff = vertexBuffer.lock();
+            var dst = new Uint8Array(vbuff);
+            var src = this.readU8(count * stride);
+            copyToBuffer(dst, src, vertexFormat, stride);
+            vertexBuffer.unlock();
+            
+            return vertexBuffer;
+        },
+
+        readIndexBufferChunk: function () {
+            var header = this.readChunkHeader();
+            var type = this.readU32();
+            var numIndices = this.readU32();
+
+            var indexBuffer = new pc.gfx.IndexBuffer(type, numIndices);
+            var ibuff = indexBuffer.lock();
+            var src, dst;
+            if (type === pc.gfx.IndexFormat.UINT8) {
+                src = this.readU8(numIndices);
+                dst = new Uint8Array(ibuff);
+            } else {
+                src = this.readU16(numIndices);
+                dst = new Uint16Array(ibuff);
+            }
+            dst.set(src);
+            indexBuffer.unlock();
+
+            // Read to the next 4 byte boundary
+            while (this.filePointer % 4 !== 0) {
+                this.filePointer++;
+            }
+
+            return indexBuffer;
+        },
+
+        readSubMeshesChunk: function () {
+            var header = this.readChunkHeader();
+            var numSubMeshes = this.readU32();
+
+            var subMeshes = [];
+            for (var i = 0; i < numSubMeshes; i++) {
+                var matIndex = this.readU16();
+                var primType = this.readU8();
+                var indexed  = this.readU8();
+                var base     = this.readU32();
+                var count    = this.readU32();
+
+                subMeshes.push({
+                    material: this.model.getMaterials()[matIndex],
+                    primitive: {
+                        type: primType,
+                        indexed: indexed === 1,
+                        base: base,
+                        count: count
+                    }
+                });
+            }
+            return subMeshes;
+        },
+
+        readGeometryChunk: function () {
+            var header = this.readChunkHeader();
+
+            var bbox = this.readAabbChunk();
+            var vbuff = this.readVertexBufferChunk();
+            var ibuff = this.readIndexBufferChunk();
+            var subMeshes = this.readSubMeshesChunk();
+
+            var indices = new Uint16Array(ibuff.lock());
+            var vertices = vbuff.lock();
+            generateTangentsInPlace(vbuff.getFormat(), vertices, indices);
+            ibuff.unlock();
+            vbuff.unlock();
+
+            var geometry = new pc.scene.Geometry();
+            geometry.setAabb(bbox);
+            geometry.setIndexBuffer(ibuff);
+            geometry.setVertexBuffers([vbuff]);
+            geometry.setSubMeshes(subMeshes);            
+            return geometry;
+        },
+
+        readNodeChunk: function () {
+            var header = this.readChunkHeader();
+
+            // Read the GraphNode properties
+            var nodeType  = this.readU32();
+            var name      = this.readStringChunk();
+            var transform = pc.math.mat4.create();
+            for (var i = 0; i < 16; i++) {
+                transform[i] = this.readF32();
+            }
+
+            var node;
+            switch (nodeType) {
+                case 0: // GraphNode
+                    node = new pc.scene.GraphNode();
+                    node.setName(name);
+                    node.setLocalTransform(transform);
+                    break;
+                case 1: // Camera
+                    node = new pc.scene.CameraNode();
+                    node.setName(name);
+                    node.setLocalTransform(transform);
+
+                    this.model.getCameras().push(node);
+                    break;
+                case 2: // Light
+                    node = new pc.scene.LightNode();
+                    node.setName(name);
+                    node.setLocalTransform(transform);
+
+                    this.model.getLights().push(node);
+                    break;
+                case 3: // Mesh
+                    node = new pc.scene.MeshNode();
+                    node.setName(name);
+                    node.setLocalTransform(transform);
+
+                    // Mesh specific properties
+                    var geomIndex = this.readU32();
+                    node.setGeometry(this.model.getGeometries()[geomIndex]);
+
+                    this.model.getMeshes().push(node);
+                    break;
+            }
+            
+            return node;
+        },
+
+        readModelChunk: function () {
+            var i;
+            this.model = new pc.scene.Model();
+
+            var header = this.readChunkHeader();
+
+            // Get the model stats
+            var numTextures   = this.readU16();
+            var numMaterials  = this.readU16();
+            var numGeometries = this.readU16();
+            var numNodes      = this.readU16();
+
+            // Read the texture array
+            var textures = this.model.getTextures();
+            for (i = 0; i < numTextures; i++) {
+                textures.push(this.readTextureChunk());
+            }
+
+            // Read the material array
+            var materials = this.model.getMaterials();
+            for (i = 0; i < numMaterials; i++) {
+                materials.push(this.readMaterialChunk());
+            }
+
+            // Read the geometry array
+            var geometries = this.model.getGeometries();
+            for (i = 0; i < numGeometries; i++) {
+                geometries.push(this.readGeometryChunk());
+            }
+
+            // Read the node array
+            var nodes = [];
+            for (i = 0; i < numNodes; i++) {
+                nodes.push(this.readNodeChunk());
+            }
+
+            // Read the hierarchy
+            var numConnections = numNodes - 1;
+            var connections = this.readU16(numConnections * 2);
+            for (i = 0; i < numConnections; i++) {
+                var parent = connections[i * 2];
+                var child  = connections[i * 2 + 1];
+                nodes[parent].addChild(nodes[child]);
+            }
+            this.model.setGraph(nodes[0]);
+
+            return this.model;
+        }
+    };
+
+    ModelResourceHandler.prototype._loadModelBin = function (data, options) {
+        var stream = new MemoryStream(data, this._loader, options);
+        return stream.readModelChunk();
+    };
     
 	var ModelRequest = function ModelRequest(identifier) {		
 	};
 	ModelRequest = ModelRequest.extendsFrom(pc.resources.ResourceRequest);
     ModelRequest.prototype.type = "model";
+
+    ///////////////////////
+    // SKIN PARTITIONING //
+    ///////////////////////
 
 	var Vertex = function Vertex() {};
 	// Returns a vertex from the JSON data in the followin format:
