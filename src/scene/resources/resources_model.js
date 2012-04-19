@@ -1158,7 +1158,7 @@ pc.extend(pc.resources, function () {
             var vbuff = vertexBuffer.lock();
             var dst = new Uint8Array(vbuff);
             var src = this.readU8(count * stride);
-            copyToBuffer(dst, src, vertexFormat, stride);
+            copyToBuffer(dst, src, format, stride);
             vertexBuffer.unlock();
             
             return vertexBuffer;
