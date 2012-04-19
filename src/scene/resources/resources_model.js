@@ -680,28 +680,30 @@ pc.extend(pc.resources, function () {
         var v1, v2, v3;
         var w1, w2, w3;
         var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
-        var temp  = pc.math.vec3.create(0, 0, 0);
+        var sdir = pc.math.vec3.create(0, 0, 0);
+        var tdir = pc.math.vec3.create(0, 0, 0);
+        var v1   = pc.math.vec3.create(0, 0, 0);
+        var v2   = pc.math.vec3.create(0, 0, 0);
+        var v3   = pc.math.vec3.create(0, 0, 0);
+        var w1   = pc.math.vec2.create(0, 0);
+        var w2   = pc.math.vec2.create(0, 0);
+        var w3   = pc.math.vec2.create(0, 0);
         var i; // Loop counter
-        var tan1 = [];
-        var tan2 = [];
-        for (var i = 0; i < vertexCount; i++) {
-            tan1[i] = pc.math.vec3.create(0, 0, 0);
-            tan2[i] = pc.math.vec3.create(0, 0, 0);
-        }
-        var sdir, tdir;
+        var tan1 = new Float32Array(vertexCount * 3);
+        var tan2 = new Float32Array(vertexCount * 3);
 
         for (i = 0; i < triangleCount; i++) {
             i1 = indices[i * 3];
             i2 = indices[i * 3 + 1];
             i3 = indices[i * 3 + 2];
 
-            v1 = pc.math.vec3.create(positions[i1 * (stride / 4)], positions[i1 * (stride / 4) + 1], positions[i1 * (stride / 4) + 2]);
-            v2 = pc.math.vec3.create(positions[i2 * (stride / 4)], positions[i2 * (stride / 4) + 1], positions[i2 * (stride / 4) + 2]);
-            v3 = pc.math.vec3.create(positions[i3 * (stride / 4)], positions[i3 * (stride / 4) + 1], positions[i3 * (stride / 4) + 2]);
+            pc.math.vec3.set(v1, positions[i1 * (stride / 4)], positions[i1 * (stride / 4) + 1], positions[i1 * (stride / 4) + 2]);
+            pc.math.vec3.set(v2, positions[i2 * (stride / 4)], positions[i2 * (stride / 4) + 1], positions[i2 * (stride / 4) + 2]);
+            pc.math.vec3.set(v3, positions[i3 * (stride / 4)], positions[i3 * (stride / 4) + 1], positions[i3 * (stride / 4) + 2]);
 
-            w1 = pc.math.vec2.create(uvs[i1 * (stride / 4)], uvs[i1 * (stride / 4) + 1]);
-            w2 = pc.math.vec2.create(uvs[i2 * (stride / 4)], uvs[i2 * (stride / 4) + 1]);
-            w3 = pc.math.vec2.create(uvs[i3 * (stride / 4)], uvs[i3 * (stride / 4) + 1]);
+            pc.math.vec2.set(w1, uvs[i1 * (stride / 4)], uvs[i1 * (stride / 4) + 1]);
+            pc.math.vec2.set(w2, uvs[i2 * (stride / 4)], uvs[i2 * (stride / 4) + 1]);
+            pc.math.vec2.set(w3, uvs[i3 * (stride / 4)], uvs[i3 * (stride / 4) + 1]);
 
             x1 = v2[0] - v1[0];
             x2 = v3[0] - v1[0];
@@ -716,30 +718,48 @@ pc.extend(pc.resources, function () {
             t2 = w3[1] - w1[1];
 
             r = 1.0 / (s1 * t2 - s2 * t1);
-            sdir = pc.math.vec3.create((t2 * x1 - t1 * x2) * r, 
-                                       (t2 * y1 - t1 * y2) * r,
-                                       (t2 * z1 - t1 * z2) * r);
-            tdir = pc.math.vec3.create((s1 * x2 - s2 * x1) * r,
-                                       (s1 * y2 - s2 * y1) * r,
-                                       (s1 * z2 - s2 * z1) * r);
-            
-            pc.math.vec3.add(tan1[i1], sdir, tan1[i1]);
-            pc.math.vec3.add(tan1[i2], sdir, tan1[i2]);
-            pc.math.vec3.add(tan1[i3], sdir, tan1[i3]);
-            
-            pc.math.vec3.add(tan2[i1], tdir, tan2[i1]);
-            pc.math.vec3.add(tan2[i2], tdir, tan2[i2]);
-            pc.math.vec3.add(tan2[i3], tdir, tan2[i3]);
+            pc.math.vec3.set(sdir, (t2 * x1 - t1 * x2) * r, 
+                                   (t2 * y1 - t1 * y2) * r,
+                                   (t2 * z1 - t1 * z2) * r);
+            pc.math.vec3.set(tdir, (s1 * x2 - s2 * x1) * r,
+                                   (s1 * y2 - s2 * y1) * r,
+                                   (s1 * z2 - s2 * z1) * r);
+
+            tan1[i1 * 3 + 0] += sdir[0];
+            tan1[i1 * 3 + 1] += sdir[1];
+            tan1[i1 * 3 + 2] += sdir[2];
+            tan1[i2 * 3 + 0] += sdir[0];
+            tan1[i2 * 3 + 1] += sdir[1];
+            tan1[i2 * 3 + 2] += sdir[2];
+            tan1[i3 * 3 + 0] += sdir[0];
+            tan1[i3 * 3 + 1] += sdir[1];
+            tan1[i3 * 3 + 2] += sdir[2];
+
+            tan2[i1 * 3 + 0] += tdir[0];
+            tan2[i1 * 3 + 1] += tdir[1];
+            tan2[i1 * 3 + 2] += tdir[2];
+            tan2[i2 * 3 + 0] += tdir[0];
+            tan2[i2 * 3 + 1] += tdir[1];
+            tan2[i2 * 3 + 2] += tdir[2];
+            tan2[i3 * 3 + 0] += tdir[0];
+            tan2[i3 * 3 + 1] += tdir[1];
+            tan2[i3 * 3 + 2] += tdir[2];
         }
 
+        var n    = pc.math.vec3.create(0, 0, 0);
+        var t1   = pc.math.vec3.create(0, 0, 0);
+        var t2   = pc.math.vec3.create(0, 0, 0);
+        var temp = pc.math.vec3.create(0, 0, 0);
+
         for (i = 0; i < vertexCount; i++) {
-            var n = pc.math.vec3.create(normals[i * (stride / 4)], normals[i * (stride / 4) + 1], normals[i * (stride / 4) + 2]);
-            var t = tan1[i];
-            
+            pc.math.vec3.set(n, normals[i * (stride / 4)], normals[i * (stride / 4) + 1], normals[i * (stride / 4) + 2]);
+            pc.math.vec3.set(t1, tan1[i * 3], tan1[i * 3 + 1], tan1[i * 3 + 2]);
+            pc.math.vec3.set(t2, tan2[i * 3], tan2[i * 3 + 1], tan2[i * 3 + 2]);
+
             // Gram-Schmidt orthogonalize
-            var ndott = pc.math.vec3.dot(n, t);
+            var ndott = pc.math.vec3.dot(n, t1);
             pc.math.vec3.scale(n, ndott, temp);
-            pc.math.vec3.subtract(t, temp, temp);
+            pc.math.vec3.subtract(t1, temp, temp);
             pc.math.vec3.normalize(temp, temp);
 
             tangents[i * (stride / 4)]     = temp[0];
@@ -747,8 +767,8 @@ pc.extend(pc.resources, function () {
             tangents[i * (stride / 4) + 2] = temp[2];
 
             // Calculate handedness
-            pc.math.vec3.cross(n, t, temp);
-            tangents[i * (stride / 4) + 3] = (pc.math.vec3.dot(temp, tan2[i]) < 0.0) ? -1.0 : 1.0;
+            pc.math.vec3.cross(n, t1, temp);
+            tangents[i * (stride / 4) + 3] = (pc.math.vec3.dot(temp, t2) < 0.0) ? -1.0 : 1.0;
         }
     }
 
