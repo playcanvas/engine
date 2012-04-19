@@ -17,7 +17,7 @@ pc.gfx.post.bloom = function () {
         baseSaturation: 1
     };
     var sampleCount = 15;
-    var combineParams = [0, 0, 0, 0];
+    var combineParams = pc.math.vec4.create(0, 0, 0, 0);
 
     // Full screen quad rendering
     var vertexBuffer = null;
@@ -44,8 +44,8 @@ pc.gfx.post.bloom = function () {
         device.updateEnd();
     }
 
-    var sampleWeights = [];
-    var sampleOffsets = [];
+    var sampleWeights = new Float32Array(sampleCount);
+    var sampleOffsets = new Float32Array(sampleCount * 2);
 
     var calculateBlurValues = function (dx, dy, blurAmount) {
 
