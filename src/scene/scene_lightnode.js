@@ -26,8 +26,8 @@ pc.extend(pc.scene, function () {
         this._enabled = false;
 
         // Point and spot properties
-        this._attenuationStart = 1.0;
-        this._attenuationEnd = 1.0;
+        this._attenuationStart = 10;
+        this._attenuationEnd = 10;
 
         // Spot properties
         this._innerConeAngle = 40;
