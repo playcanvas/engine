@@ -257,7 +257,7 @@ pc.extend(pc.input, function () {
         MOUSE_BUTTON_RIGHT: 2,
         
         Mouse: Mouse,
-        MouseEvent: MouseEvent,
+
         /**
          * @private
          * @function
