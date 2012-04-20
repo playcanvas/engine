@@ -33,7 +33,7 @@ pc.extend(pc.net, function () {
     };
     
     Http.binaryExtensions = [
-        '.bin',
+        '.model',
         '.wav',
         '.ogg',
         '.mp3'

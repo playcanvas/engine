@@ -68,7 +68,7 @@ pc.extend(pc.resources, function () {
 
         var uri = new pc.URI(url)
         var ext = pc.path.getExtension(uri.path);
-        options.binary = (ext === '.bin');
+        options.binary = (ext === '.model');
 
         pc.net.http.get(url, function (response) {
             success(response, options);
@@ -1279,6 +1279,25 @@ pc.extend(pc.resources, function () {
                     node = new pc.scene.CameraNode();
                     node.setName(name);
                     node.setLocalTransform(transform);
+
+                    var projection = this.readU32();
+                    var nearClip = this.readF32();
+                    var farClip = this.readF32();
+                    var fov = this.readF32();
+                    var r = this.readF32();
+                    var g = this.readF32();
+                    var b = this.readF32();
+                    var a = this.readF32();
+
+                    node.setProjection(projection);
+                    node.setNearClip(nearClip);
+                    node.setFarClip(farClip);
+                    node.setFov(fov);
+                    var clearColor = node.getClearOptions().color;
+                    clearColor[0] = r;
+                    clearColor[1] = g;
+                    clearColor[2] = b;
+                    clearColor[3] = a;
 
                     this.model.getCameras().push(node);
                     break;

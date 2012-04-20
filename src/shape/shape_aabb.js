@@ -121,13 +121,13 @@ pc.extend(pc.shape, function () {
         var ar = aabb.halfExtents;
 
         var mx0 = m[0];
-        var mx1 = m[1];
-        var mx2 = m[2];
-        var my0 = m[4];
+        var mx1 = m[4];
+        var mx2 = m[8];
+        var my0 = m[1];
         var my1 = m[5];
-        var my2 = m[6];
-        var mz0 = m[8];
-        var mz1 = m[9];
+        var my2 = m[9];
+        var mz0 = m[2];
+        var mz1 = m[6];
         var mz2 = m[10];
 
         var mx0a = Math.abs(mx0);
