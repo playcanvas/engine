@@ -282,7 +282,7 @@ pc.extend(pc.scene, function () {
         } else if (arguments.length === 3) {
             pc.math.vec3.set(this._color, arguments[0], arguments[1], arguments[2]); 
         }
-        pc.math.vec3.scale(color, this._intensity, this._finalColor);
+        pc.math.vec3.scale(this._color, this._intensity, this._finalColor);
     };
 
     /**
