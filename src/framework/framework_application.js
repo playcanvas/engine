@@ -65,7 +65,7 @@ pc.extend(pc.fw, function () {
     
         var audioManager = new pc.audio.AudioManager();
         
-        scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
+        var scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
 
 		// Create resource loader
 		var loader = new pc.resources.ResourceLoader();

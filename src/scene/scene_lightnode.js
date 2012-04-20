@@ -26,8 +26,8 @@ pc.extend(pc.scene, function () {
         this._enabled = false;
 
         // Point and spot properties
-        this._attenuationStart = 1.0;
-        this._attenuationEnd = 1.0;
+        this._attenuationStart = 10;
+        this._attenuationEnd = 10;
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -266,9 +266,23 @@ pc.extend(pc.scene, function () {
      * @param {Array} color The RGB color of the light.
      * @author Will Eastcott
      */
-    LightNode.prototype.setColor = function (color) {
-        this._color = color;
-        pc.math.vec3.scale(color, this._intensity, this._finalColor);
+    /**
+     * @function
+     * @name pc.scene.LightNode#setColor^2
+     * @description Sets the RGB color of the light. RGB components should be
+     * specified in the range 0 to 1.
+     * @param {Number} red The red component of the light color.
+     * @param {Number} green The green component of the light color.
+     * @param {Number} blue The blue component of the light color.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.setColor = function () {
+        if (arguments.length === 1) {
+            pc.math.vec3.set(this._color, arguments[0][0], arguments[0][1], arguments[0][2]); 
+        } else if (arguments.length === 3) {
+            pc.math.vec3.set(this._color, arguments[0], arguments[1], arguments[2]); 
+        }
+        pc.math.vec3.scale(this._color, this._intensity, this._finalColor);
     };
 
     /**

@@ -65,25 +65,16 @@ pc.extend(pc.resources, function () {
     	var url = identifier;
     	options = options || {};
         options.directory = pc.path.getDirectory(url);
-/*
-        pbinUrl = url.substr(0, url.lastIndexOf('.')) + '.bin';
-        pc.net.http.get(pbinUrl, function (response) {
-            options.bin = response;
-*/
-            pc.net.http.get(url, function (response) {
-                try {
-                    success(response, options);
-                } catch (e) {
-                    error(pc.string.format("An error occured while loading model from: '{0}'", url));
-                }
-            }.bind(this), {
-                cache:false
-            });
-            /*
+
+        var uri = new pc.URI(url)
+        var ext = pc.path.getExtension(uri.path);
+        options.binary = (ext === '.model');
+
+        pc.net.http.get(url, function (response) {
+            success(response, options);
         }.bind(this), {
-            responseType: 'arraybuffer',
-            cache:false
-        });*/
+            cache: false
+        });
     };
 	
 	/**
@@ -100,8 +91,12 @@ pc.extend(pc.resources, function () {
     	options.directory = options.directory || "";
     	options.priority = options.priority || 1; // default priority of 1
     	options.batch = options.batch || null;
-    	
-        model = this._loadModel(data, options);
+
+        if (options.binary) {
+            model = this._loadModelBin(data, options);
+        } else {
+            model = this._loadModel(data, options);
+        }
     	return model;
     };
         
@@ -595,8 +590,8 @@ pc.extend(pc.resources, function () {
 
     function copyToBuffer(dstBuffer, srcBuffer, srcAttribs, srcStride) {
         var hasPositions = (srcAttribs & attribs.POSITION) !== 0;
-        var hasNormals = (srcAttribs & attribs.POSITION) !== 0;
-        var hasUvs = (srcAttribs & attribs.POSITION) !== 0;
+        var hasNormals = (srcAttribs & attribs.NORMAL) !== 0;
+        var hasUvs = (srcAttribs & attribs.UV0) !== 0;
         var addTangents = hasPositions && hasNormals && hasUvs;
 
         if (addTangents) {
@@ -677,34 +672,38 @@ pc.extend(pc.resources, function () {
             }
         }
 
+        if (!(positions && normals && uvs)) return;
+
         var triangleCount = indices.length / 3;
         var vertexCount   = vertices.byteLength / stride;
         var i1, i2, i3;
         var v1, v2, v3;
         var w1, w2, w3;
         var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
-        var temp  = pc.math.vec3.create(0, 0, 0);
+        var sdir = pc.math.vec3.create(0, 0, 0);
+        var tdir = pc.math.vec3.create(0, 0, 0);
+        var v1   = pc.math.vec3.create(0, 0, 0);
+        var v2   = pc.math.vec3.create(0, 0, 0);
+        var v3   = pc.math.vec3.create(0, 0, 0);
+        var w1   = pc.math.vec2.create(0, 0);
+        var w2   = pc.math.vec2.create(0, 0);
+        var w3   = pc.math.vec2.create(0, 0);
         var i; // Loop counter
-        var tan1 = [];
-        var tan2 = [];
-        for (var i = 0; i < vertexCount; i++) {
-            tan1[i] = pc.math.vec3.create(0, 0, 0);
-            tan2[i] = pc.math.vec3.create(0, 0, 0);
-        }
-        var sdir, tdir;
+        var tan1 = new Float32Array(vertexCount * 3);
+        var tan2 = new Float32Array(vertexCount * 3);
 
         for (i = 0; i < triangleCount; i++) {
             i1 = indices[i * 3];
             i2 = indices[i * 3 + 1];
             i3 = indices[i * 3 + 2];
 
-            v1 = pc.math.vec3.create(positions[i1 * (stride / 4)], positions[i1 * (stride / 4) + 1], positions[i1 * (stride / 4) + 2]);
-            v2 = pc.math.vec3.create(positions[i2 * (stride / 4)], positions[i2 * (stride / 4) + 1], positions[i2 * (stride / 4) + 2]);
-            v3 = pc.math.vec3.create(positions[i3 * (stride / 4)], positions[i3 * (stride / 4) + 1], positions[i3 * (stride / 4) + 2]);
+            pc.math.vec3.set(v1, positions[i1 * (stride / 4)], positions[i1 * (stride / 4) + 1], positions[i1 * (stride / 4) + 2]);
+            pc.math.vec3.set(v2, positions[i2 * (stride / 4)], positions[i2 * (stride / 4) + 1], positions[i2 * (stride / 4) + 2]);
+            pc.math.vec3.set(v3, positions[i3 * (stride / 4)], positions[i3 * (stride / 4) + 1], positions[i3 * (stride / 4) + 2]);
 
-            w1 = pc.math.vec2.create(uvs[i1 * (stride / 4)], uvs[i1 * (stride / 4) + 1]);
-            w2 = pc.math.vec2.create(uvs[i2 * (stride / 4)], uvs[i2 * (stride / 4) + 1]);
-            w3 = pc.math.vec2.create(uvs[i3 * (stride / 4)], uvs[i3 * (stride / 4) + 1]);
+            pc.math.vec2.set(w1, uvs[i1 * (stride / 4)], uvs[i1 * (stride / 4) + 1]);
+            pc.math.vec2.set(w2, uvs[i2 * (stride / 4)], uvs[i2 * (stride / 4) + 1]);
+            pc.math.vec2.set(w3, uvs[i3 * (stride / 4)], uvs[i3 * (stride / 4) + 1]);
 
             x1 = v2[0] - v1[0];
             x2 = v3[0] - v1[0];
@@ -719,30 +718,48 @@ pc.extend(pc.resources, function () {
             t2 = w3[1] - w1[1];
 
             r = 1.0 / (s1 * t2 - s2 * t1);
-            sdir = pc.math.vec3.create((t2 * x1 - t1 * x2) * r, 
-                                       (t2 * y1 - t1 * y2) * r,
-                                       (t2 * z1 - t1 * z2) * r);
-            tdir = pc.math.vec3.create((s1 * x2 - s2 * x1) * r,
-                                       (s1 * y2 - s2 * y1) * r,
-                                       (s1 * z2 - s2 * z1) * r);
-            
-            pc.math.vec3.add(tan1[i1], sdir, tan1[i1]);
-            pc.math.vec3.add(tan1[i2], sdir, tan1[i2]);
-            pc.math.vec3.add(tan1[i3], sdir, tan1[i3]);
-            
-            pc.math.vec3.add(tan2[i1], tdir, tan2[i1]);
-            pc.math.vec3.add(tan2[i2], tdir, tan2[i2]);
-            pc.math.vec3.add(tan2[i3], tdir, tan2[i3]);
+            pc.math.vec3.set(sdir, (t2 * x1 - t1 * x2) * r, 
+                                   (t2 * y1 - t1 * y2) * r,
+                                   (t2 * z1 - t1 * z2) * r);
+            pc.math.vec3.set(tdir, (s1 * x2 - s2 * x1) * r,
+                                   (s1 * y2 - s2 * y1) * r,
+                                   (s1 * z2 - s2 * z1) * r);
+
+            tan1[i1 * 3 + 0] += sdir[0];
+            tan1[i1 * 3 + 1] += sdir[1];
+            tan1[i1 * 3 + 2] += sdir[2];
+            tan1[i2 * 3 + 0] += sdir[0];
+            tan1[i2 * 3 + 1] += sdir[1];
+            tan1[i2 * 3 + 2] += sdir[2];
+            tan1[i3 * 3 + 0] += sdir[0];
+            tan1[i3 * 3 + 1] += sdir[1];
+            tan1[i3 * 3 + 2] += sdir[2];
+
+            tan2[i1 * 3 + 0] += tdir[0];
+            tan2[i1 * 3 + 1] += tdir[1];
+            tan2[i1 * 3 + 2] += tdir[2];
+            tan2[i2 * 3 + 0] += tdir[0];
+            tan2[i2 * 3 + 1] += tdir[1];
+            tan2[i2 * 3 + 2] += tdir[2];
+            tan2[i3 * 3 + 0] += tdir[0];
+            tan2[i3 * 3 + 1] += tdir[1];
+            tan2[i3 * 3 + 2] += tdir[2];
         }
 
+        var n    = pc.math.vec3.create(0, 0, 0);
+        var t1   = pc.math.vec3.create(0, 0, 0);
+        var t2   = pc.math.vec3.create(0, 0, 0);
+        var temp = pc.math.vec3.create(0, 0, 0);
+
         for (i = 0; i < vertexCount; i++) {
-            var n = pc.math.vec3.create(normals[i * (stride / 4)], normals[i * (stride / 4) + 1], normals[i * (stride / 4) + 2]);
-            var t = tan1[i];
-            
+            pc.math.vec3.set(n, normals[i * (stride / 4)], normals[i * (stride / 4) + 1], normals[i * (stride / 4) + 2]);
+            pc.math.vec3.set(t1, tan1[i * 3], tan1[i * 3 + 1], tan1[i * 3 + 2]);
+            pc.math.vec3.set(t2, tan2[i * 3], tan2[i * 3 + 1], tan2[i * 3 + 2]);
+
             // Gram-Schmidt orthogonalize
-            var ndott = pc.math.vec3.dot(n, t);
+            var ndott = pc.math.vec3.dot(n, t1);
             pc.math.vec3.scale(n, ndott, temp);
-            pc.math.vec3.subtract(t, temp, temp);
+            pc.math.vec3.subtract(t1, temp, temp);
             pc.math.vec3.normalize(temp, temp);
 
             tangents[i * (stride / 4)]     = temp[0];
@@ -750,8 +767,8 @@ pc.extend(pc.resources, function () {
             tangents[i * (stride / 4) + 2] = temp[2];
 
             // Calculate handedness
-            pc.math.vec3.cross(n, t, temp);
-            tangents[i * (stride / 4) + 3] = (pc.math.vec3.dot(temp, tan2[i]) < 0.0) ? -1.0 : 1.0;
+            pc.math.vec3.cross(n, t1, temp);
+            tangents[i * (stride / 4) + 3] = (pc.math.vec3.dot(temp, t2) < 0.0) ? -1.0 : 1.0;
         }
     }
 
@@ -939,11 +956,459 @@ pc.extend(pc.resources, function () {
         return model;
     };
 
+    ///////////////////
+    // BINARY LOADER //
+    ///////////////////
+
+    function MemoryStream(arrayBuffer, loader, options) {
+        this.memory = arrayBuffer;
+        this.dataView = new DataView(arrayBuffer);
+        this.filePointer = 0;
+        this.options = options;
+        this.loader = loader;
+    };
+
+    MemoryStream.prototype = {
+
+        // Basic type reading
+        readF32: function (count) {
+            count = count || 1;
+            var data;
+            if (count === 1) {
+                data = this.dataView.getFloat32(this.filePointer, true);
+            } else {
+                data = new Float32Array(this.memory, this.filePointer, count);
+            }
+            this.filePointer += 4 * count;
+            return data;
+        },
+
+        readU8: function (count) {
+            count = count || 1;
+            var data;
+            if (count === 1) {
+                data = this.dataView.getUint8(this.filePointer, true);
+            } else {
+                data = new Uint8Array(this.memory, this.filePointer, count);
+            }
+            this.filePointer += 1 * count;
+            return data;
+        },
+
+        readU16: function (count) {
+            count = count || 1;
+            var data;
+            if (count === 1) {
+                data = this.dataView.getUint16(this.filePointer, true);
+            } else {
+                data = new Uint16Array(this.memory, this.filePointer, count);
+            }
+            this.filePointer += 2 * count;
+            return data;
+        },
+
+        readU32: function (count) {
+            count = count || 1;
+            var data;
+            if (count === 1) {
+                data = this.dataView.getUint32(this.filePointer, true);
+            } else {
+                data = new Uint32Array(this.memory, this.filePointer, count);
+            }
+            this.filePointer += 4 * count;
+            return data;
+        },
+
+        readString: function (length) {
+            var str = "";
+            for (var i = 0; i < length; i++) {
+                var charCode = this.dataView.getUint8(this.filePointer++);
+                str += String.fromCharCode(charCode);
+            }
+            return str;
+        },
+
+        // Chunk reading
+        readChunkHeader: function () {
+            var magic = this.readString(4);
+            var version = this.readU32();
+            var length = this.readU32();
+            return {
+                magic: magic,
+                version: version,
+                length: length
+            };
+        },
+
+        readStringChunk: function () {
+            var header = this.readChunkHeader();
+            var str = this.readString(header.length);
+
+            // Read to the next 4 byte boundary
+            while (this.filePointer % 4 !== 0) {
+                this.filePointer++;
+            }
+            return str;
+        },
+
+        readTextureChunk: function () {
+            var header    = this.readChunkHeader();
+            var name      = this.readStringChunk();
+            var filename  = this.readStringChunk();
+            var addrModeU = this.readU8();
+            var addrModeV = this.readU8();
+            var filterMin = this.readU8();
+            var filterMax = this.readU8();
+            var transform = pc.math.mat4.create();
+            for (var i = 0; i < 16; i++) {
+                transform[i] = this.readF32();
+            }
+
+            var texture = new pc.gfx.Texture2D();
+
+            var url = this.options.directory + "/" + filename;
+
+            // Make a new request for the Image resource at the same priority as the Model was requested.
+            this.loader.request([new pc.resources.ImageRequest(url)], this.options.priority, function (resources) {
+                texture.setSource(resources[url]);	
+            }, function (errors, resources) {
+                Object.keys(errors).forEach(function (key) {
+                   logERROR(errors[key]);    
+                });
+            }, function (progress) {
+                // no progress features
+            }, this.options);
+
+            texture.setName(name);
+            texture.setAddressMode(addrModeU, addrModeV);
+            texture.setFilterMode(filterMin, filterMax);
+            texture.transform = transform;
+
+            return texture;
+        },
+
+        readMaterialParamChunk: function () {
+            var header = this.readChunkHeader();
+            var name   = this.readStringChunk();
+            var type   = this.readU32();
+            var data;
+            switch (type) {
+                case pc.gfx.ShaderInputType.FLOAT:
+                    data = this.readF32();
+                    break;
+                case pc.gfx.ShaderInputType.VEC2:
+                    var x = this.readF32();
+                    var y = this.readF32();
+                    data = pc.math.vec2.create(x, y);
+                    break;
+                case pc.gfx.ShaderInputType.VEC3:
+                    var x = this.readF32();
+                    var y = this.readF32();
+                    var z = this.readF32();
+                    data = pc.math.vec3.create(x, y, z);
+                    break;
+                case pc.gfx.ShaderInputType.VEC4:
+                    var x = this.readF32();
+                    var y = this.readF32();
+                    var z = this.readF32();
+                    var w = this.readF32();
+                    data = pc.math.vec4.create(x, y, z, w);
+                    break;
+                case pc.gfx.ShaderInputType.TEXTURE2D:
+                    data = this.model.getTextures()[this.readU32()];
+                    break;
+            }
+            return {
+                name: name,
+                data: data
+            };
+        },
+
+        readMaterialChunk: function () {
+            var header    = this.readChunkHeader();
+            var name      = this.readStringChunk();
+            var shader    = this.readStringChunk();
+            var numParams = this.readU32();
+
+            var material = new pc.scene.Material();
+            material.setName(name);
+            material.setProgramName(shader);
+
+            // Read each shader parameter
+            for (var i = 0; i < numParams; i++) {
+                var param = this.readMaterialParamChunk();
+                material.setParameter(param.name, param.data);
+                if (param.name.substring(0, 'texture_'.length) === 'texture_') {
+                    var texture = param.data;
+                    if (texture.transform === undefined) {
+                        material.setParameter(param.name + "Transform", pc.math.mat4.create());
+                    } else {
+                        material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
+                    }
+                }
+            }
+
+            return material;
+        },
+
+        readAabbChunk: function () {
+            var header = this.readChunkHeader();
+            var minx = this.readF32();
+            var miny = this.readF32();
+            var minz = this.readF32();
+            var maxx = this.readF32();
+            var maxy = this.readF32();
+            var maxz = this.readF32();
+
+            var center = pc.math.vec3.create((maxx + minx) * 0.5, (maxy + miny) * 0.5, (maxz + minz) * 0.5);
+            var halfExtents = pc.math.vec3.create((maxx - minx) * 0.5, (maxy - miny) * 0.5, (maxz - minz) * 0.5);
+            return new pc.shape.Aabb(center, halfExtents);
+        },
+
+        readVertexBufferChunk: function () {
+            var header = this.readChunkHeader();
+            var format = this.readU32();
+            var count  = this.readU32();
+            var stride = this.readU32();
+
+            // Create the vertex buffer format
+            var vertexFormat = translateFormat(format);
+
+            var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, count);
+            var vbuff = vertexBuffer.lock();
+            var dst = new Uint8Array(vbuff);
+            var src = this.readU8(count * stride);
+            copyToBuffer(dst, src, format, stride);
+            vertexBuffer.unlock();
+            
+            return vertexBuffer;
+        },
+
+        readIndexBufferChunk: function () {
+            var header = this.readChunkHeader();
+            var type = this.readU32();
+            var numIndices = this.readU32();
+
+            var indexBuffer = new pc.gfx.IndexBuffer(type, numIndices);
+            var ibuff = indexBuffer.lock();
+            var src, dst;
+            if (type === pc.gfx.IndexFormat.UINT8) {
+                src = this.readU8(numIndices);
+                dst = new Uint8Array(ibuff);
+            } else {
+                src = this.readU16(numIndices);
+                dst = new Uint16Array(ibuff);
+            }
+            dst.set(src);
+            indexBuffer.unlock();
+
+            // Read to the next 4 byte boundary
+            while (this.filePointer % 4 !== 0) {
+                this.filePointer++;
+            }
+
+            return indexBuffer;
+        },
+
+        readSubMeshesChunk: function () {
+            var header = this.readChunkHeader();
+            var numSubMeshes = this.readU32();
+
+            var subMeshes = [];
+            for (var i = 0; i < numSubMeshes; i++) {
+                var matIndex = this.readU16();
+                var primType = this.readU8();
+                var indexed  = this.readU8();
+                var base     = this.readU32();
+                var count    = this.readU32();
+
+                subMeshes.push({
+                    material: this.model.getMaterials()[matIndex],
+                    primitive: {
+                        type: primType,
+                        indexed: indexed === 1,
+                        base: base,
+                        count: count
+                    }
+                });
+            }
+            return subMeshes;
+        },
+
+        readGeometryChunk: function () {
+            var header = this.readChunkHeader();
+
+            var bbox = this.readAabbChunk();
+            var vbuff = this.readVertexBufferChunk();
+            var ibuff = this.readIndexBufferChunk();
+            var subMeshes = this.readSubMeshesChunk();
+
+            var indices = new Uint16Array(ibuff.lock());
+            var vertices = vbuff.lock();
+            generateTangentsInPlace(vbuff.getFormat(), vertices, indices);
+            ibuff.unlock();
+            vbuff.unlock();
+
+            var geometry = new pc.scene.Geometry();
+            geometry.setAabb(bbox);
+            geometry.setIndexBuffer(ibuff);
+            geometry.setVertexBuffers([vbuff]);
+            geometry.setSubMeshes(subMeshes);            
+            return geometry;
+        },
+
+        readNodeChunk: function () {
+            var header = this.readChunkHeader();
+
+            // Read the GraphNode properties
+            var nodeType  = this.readU32();
+            var name      = this.readStringChunk();
+            var transform = pc.math.mat4.create();
+            for (var i = 0; i < 16; i++) {
+                transform[i] = this.readF32();
+            }
+
+            var node;
+            switch (nodeType) {
+                case 0: // GraphNode
+                    node = new pc.scene.GraphNode();
+                    node.setName(name);
+                    node.setLocalTransform(transform);
+                    break;
+                case 1: // Camera
+                    node = new pc.scene.CameraNode();
+                    node.setName(name);
+                    node.setLocalTransform(transform);
+
+                    var projection = this.readU32();
+                    var nearClip = this.readF32();
+                    var farClip = this.readF32();
+                    var fov = this.readF32();
+                    var r = this.readF32();
+                    var g = this.readF32();
+                    var b = this.readF32();
+                    var a = this.readF32();
+
+                    node.setProjection(projection);
+                    node.setNearClip(nearClip);
+                    node.setFarClip(farClip);
+                    node.setFov(fov);
+                    var clearColor = node.getClearOptions().color;
+                    clearColor[0] = r;
+                    clearColor[1] = g;
+                    clearColor[2] = b;
+                    clearColor[3] = a;
+
+                    this.model.getCameras().push(node);
+                    break;
+                case 2: // Light
+                    node = new pc.scene.LightNode();
+                    node.setName(name);
+                    node.setLocalTransform(transform);
+
+                    var type = this.readU16();
+                    var enabled = this.readU8();
+                    var castShadows = this.readU8();
+                    var r = this.readF32();
+                    var g = this.readF32();
+                    var b = this.readF32();
+                    var intensity = this.readF32();
+                    var attStart = this.readF32();
+                    var attEnd = this.readF32();
+                    var innerConeAngle = this.readF32();
+                    var outerConeAngle = this.readF32();
+
+                    node.setType(type);
+                    node.setEnabled(enabled);
+                    node.setCastShadows(castShadows);
+                    node.setColor(r, g, b);
+                    node.setIntensity(intensity);
+                    node.setAttenuationStart(attStart);
+                    node.setAttenuationEnd(attEnd);
+                    node.setInnerConeAngle(innerConeAngle);
+                    node.setOuterConeAngle(outerConeAngle);
+
+                    this.model.getLights().push(node);
+                    break;
+                case 3: // Mesh
+                    node = new pc.scene.MeshNode();
+                    node.setName(name);
+                    node.setLocalTransform(transform);
+
+                    // Mesh specific properties
+                    var geomIndex = this.readU32();
+                    node.setGeometry(this.model.getGeometries()[geomIndex]);
+
+                    this.model.getMeshes().push(node);
+                    break;
+            }
+            
+            return node;
+        },
+
+        readModelChunk: function () {
+            var i;
+            this.model = new pc.scene.Model();
+
+            var header = this.readChunkHeader();
+
+            // Get the model stats
+            var numTextures   = this.readU16();
+            var numMaterials  = this.readU16();
+            var numGeometries = this.readU16();
+            var numNodes      = this.readU16();
+
+            // Read the texture array
+            var textures = this.model.getTextures();
+            for (i = 0; i < numTextures; i++) {
+                textures.push(this.readTextureChunk());
+            }
+
+            // Read the material array
+            var materials = this.model.getMaterials();
+            for (i = 0; i < numMaterials; i++) {
+                materials.push(this.readMaterialChunk());
+            }
+
+            // Read the geometry array
+            var geometries = this.model.getGeometries();
+            for (i = 0; i < numGeometries; i++) {
+                geometries.push(this.readGeometryChunk());
+            }
+
+            // Read the node array
+            var nodes = [];
+            for (i = 0; i < numNodes; i++) {
+                nodes.push(this.readNodeChunk());
+            }
+
+            // Read the hierarchy
+            var numConnections = numNodes - 1;
+            var connections = this.readU16(numConnections * 2);
+            for (i = 0; i < numConnections; i++) {
+                var parent = connections[i * 2];
+                var child  = connections[i * 2 + 1];
+                nodes[parent].addChild(nodes[child]);
+            }
+            this.model.setGraph(nodes[0]);
+
+            return this.model;
+        }
+    };
+
+    ModelResourceHandler.prototype._loadModelBin = function (data, options) {
+        var stream = new MemoryStream(data, this._loader, options);
+        return stream.readModelChunk();
+    };
     
 	var ModelRequest = function ModelRequest(identifier) {		
 	};
 	ModelRequest = ModelRequest.extendsFrom(pc.resources.ResourceRequest);
     ModelRequest.prototype.type = "model";
+
+    ///////////////////////
+    // SKIN PARTITIONING //
+    ///////////////////////
 
 	var Vertex = function Vertex() {};
 	// Returns a vertex from the JSON data in the followin format:

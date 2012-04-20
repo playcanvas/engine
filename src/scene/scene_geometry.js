@@ -290,21 +290,19 @@ pc.extend(pc.scene, function () {
             count = submesh.primitive.count;
 
             var uniqueLineIndices = {};
+            var lines = [];
             for (j = base; j < base + count; j+=3) {
                 for (var k = 0; k < 3; k++) {
                     i1 = srcIndices[j + offsets[k][0]];
                     i2 = srcIndices[j + offsets[k][1]];
                     var line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
-                    uniqueLineIndices[line] = 0;
+                    if (uniqueLineIndices[line] === undefined) {
+                        uniqueLineIndices[line] = 0;
+                        lines.push(i1, i2);
+                    }
                 }
             }
 
-            var lines = [];
-            for (lineIndexPair in uniqueLineIndices) {
-                i1 = (lineIndexPair >> 16) & 0xFFFF;
-                i2 = lineIndexPair & 0xFFFF;
-                lines.push(i1, i2);
-            }
             wireIndices.push(lines);
         }
         indexBuffer.unlock();
