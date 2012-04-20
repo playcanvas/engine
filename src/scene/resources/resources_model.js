@@ -1306,6 +1306,28 @@ pc.extend(pc.resources, function () {
                     node.setName(name);
                     node.setLocalTransform(transform);
 
+                    var type = this.readU16();
+                    var enabled = this.readU8();
+                    var castShadows = this.readU8();
+                    var r = this.readF32();
+                    var g = this.readF32();
+                    var b = this.readF32();
+                    var intensity = this.readF32();
+                    var attStart = this.readF32();
+                    var attEnd = this.readF32();
+                    var innerConeAngle = this.readF32();
+                    var outerConeAngle = this.readF32();
+
+                    node.setType(type);
+                    node.setEnabled(enabled);
+                    node.setCastShadows(castShadows);
+                    node.setColor(r, g, b);
+                    node.setIntensity(intensity);
+                    node.setAttenuationStart(attStart);
+                    node.setAttenuationEnd(attEnd);
+                    node.setInnerConeAngle(innerConeAngle);
+                    node.setOuterConeAngle(outerConeAngle);
+
                     this.model.getLights().push(node);
                     break;
                 case 3: // Mesh
