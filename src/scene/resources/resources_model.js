@@ -590,8 +590,8 @@ pc.extend(pc.resources, function () {
 
     function copyToBuffer(dstBuffer, srcBuffer, srcAttribs, srcStride) {
         var hasPositions = (srcAttribs & attribs.POSITION) !== 0;
-        var hasNormals = (srcAttribs & attribs.POSITION) !== 0;
-        var hasUvs = (srcAttribs & attribs.POSITION) !== 0;
+        var hasNormals = (srcAttribs & attribs.NORMAL) !== 0;
+        var hasUvs = (srcAttribs & attribs.UV0) !== 0;
         var addTangents = hasPositions && hasNormals && hasUvs;
 
         if (addTangents) {
