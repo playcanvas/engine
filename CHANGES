@@ -3,6 +3,17 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.48.0
+-------
+* Optional support for binary model data
+* Optimized in place tangent generation
+* Optimized Geometry#generateWireframe
+* Add another prototype function for setting a light's color from components.
+* [FIX] AABB recalculation on a transformation now works properly.
+* Increase default light radius to 10 (from 1).
+* Switch bloom component to use Float32Array to pass uniforms to GPU.
+
+-------
 v0.47.0
 -------
 * [FIX] Designer Camera in FF works again
