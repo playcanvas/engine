@@ -250,7 +250,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
 	Scene.prototype.dispatch = function (camera) {
-	    var i, j, len, model, numModels, mesh, numMeshes;
+	    var i, j, k, len, model, numModels, mesh, numMeshes;
 
         var alphaMeshes = this._alphaMeshes;
         var opaqueMeshes = this._opaqueMeshes;
@@ -383,16 +383,16 @@ pc.extend(pc.scene, function () {
                             var worldToLight = pc.math.mat4.invert(light.getWorldTransform());
                             var camToWorld = camera.getWorldTransform();
                             var c2l = pc.math.mat4.multiply(worldToLight, camToWorld);
-                            for (i = 0; i < 8; i++) {
-                                pc.math.mat4.multiplyVec3(frustumPoints[i], 1.0, c2l, frustumPoints[i]);
+                            for (k = 0; k < 8; k++) {
+                                pc.math.mat4.multiplyVec3(frustumPoints[k], 1.0, c2l, frustumPoints[k]);
                             }
 
                             var minx = 1000000;
                             var maxx = -1000000;
                             var miny = 1000000;
                             var maxy = -1000000;
-                            for (i = 0; i < 8; i++) {
-                                var p = frustumPoints[i];
+                            for (k = 0; k < 8; k++) {
+                                var p = frustumPoints[k];
                                 if (p[0] < minx) minx = p[0];
                                 if (p[0] > maxx) maxx = p[0];
                                 if (p[1] < miny) miny = p[1];
@@ -430,8 +430,8 @@ pc.extend(pc.scene, function () {
                         pc.math.mat4.copy(shadowCamWtm, shadowCam._wtm);
 
                         shadowCam.frameBegin();
-                        for (i = 0; i < shadowMeshes.length; i++) {
-                            shadowMeshes[i].dispatch();
+                        for (k = 0; k < shadowMeshes.length; k++) {
+                            shadowMeshes[k].dispatch();
                         }
                         shadowCam.frameEnd();
                     }

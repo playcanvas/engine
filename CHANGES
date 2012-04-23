@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.49.0
+-------
+* [FIX] Fix infinite loop in lighting
+
+-------
 v0.48.0
 -------
 * Optional support for binary model data
