@@ -30,30 +30,30 @@ pc.gfx.programlib.particle.generateVertexShader = function (options) {
 
     // VERTEX SHADER OUTPUTS
     code += "varying vec2 vUv0;\n";
-    code += "varying vec2 vAge;\n";
+    code += "varying float vAge;\n";
     code += "varying vec4 vColor;\n\n";
 
     // VERTEX SHADER BODY
     code += "void main(void)\n";
     code += "{\n";
-    code += "    vec2 uv = uvLifeTimeFrameStart.xy;\n";
-    code += "    float lifeTime = uvLifeTimeFrameStart.z;\n";
-    code += "    float frameStart = uvLifeTimeFrameStart.w;\n";
-    code += "    vec3 position = positionStartTime.xyz;\n";
-    code += "    float startTime = positionStartTime.w;\n";
-    code += "    vec3 velocity = (matrix_model * vec4(velocityStartSize.xyz, 0.0)).xyz + worldVelocity;\n";
-    code += "    float startSize = velocityStartSize.w;\n";
-    code += "    vec3 acceleration = (matrix_model * vec4(accelerationEndSize.xyz, 0.0)).xyz + worldAcceleration;\n";
-    code += "    float endSize = accelerationEndSize.w;\n";
-    code += "    float spinStart = spinStartSpinSpeed.x;\n";
-    code += "    float spinSpeed = spinStartSpinSpeed.y;\n";
+    code += "    vec2 uv = particle_uvLifeTimeFrameStart.xy;\n";
+    code += "    float lifeTime = particle_uvLifeTimeFrameStart.z;\n";
+    code += "    float frameStart = particle_uvLifeTimeFrameStart.w;\n";
+    code += "    vec3 position = particle_positionStartTime.xyz;\n";
+    code += "    float startTime = particle_positionStartTime.w;\n";
+    code += "    vec3 velocity = (matrix_model * vec4(particle_velocityStartSize.xyz, 0.0)).xyz + worldVelocity;\n";
+    code += "    float startSize = particle_velocityStartSize.w;\n";
+    code += "    vec3 acceleration = (matrix_model * vec4(particle_accelerationEndSize.xyz, 0.0)).xyz + worldAcceleration;\n";
+    code += "    float endSize = particle_accelerationEndSize.w;\n";
+    code += "    float spinStart = particle_spinStartSpinSpeed.x;\n";
+    code += "    float spinSpeed = particle_spinStartSpinSpeed.y;\n";
     code += "    float localTime = mod((time - timeOffset - startTime), timeRange);\n";
     code += "    float percentLife = localTime / lifeTime;\n";
     code += "    float frame = mod(floor(localTime / frameDuration + frameStart), numFrames);\n";
     code += "    float uOffset = frame / numFrames;\n";
     code += "    float u = uOffset + (uv.x + 0.5) * (1.0 / numFrames);\n";
     code += "    vUv0 = vec2(u, uv.y + 0.5);\n";
-    code += "    vColor = colorMult;\n";
+    code += "    vColor = particle_colorMult;\n";
     code += "    vec3 basisX = matrix_viewInverse[0].xyz;\n";
     code += "    vec3 basisZ = matrix_viewInverse[1].xyz;\n";
     code += "    float size = mix(startSize, endSize, percentLife);\n";
@@ -81,7 +81,7 @@ pc.gfx.programlib.particle.generateFragmentShader = function (options) {
 
     // FRAGMENT SHADER INPUTS: VARYINGS
     code += "varying vec2 vUv0;\n";
-    code += "varying vec2 vAge;\n";
+    code += "varying float vAge;\n";
     code += "varying vec4 vColor;\n";
 
     // FRAGMENT SHADER INPUTS: UNIFORMS
@@ -91,7 +91,7 @@ pc.gfx.programlib.particle.generateFragmentShader = function (options) {
     code += "void main(void)\n";
     code += "{\n";
     code += "    vec4 colorMult = texture2D(texture_rampMap, vec2(vAge, 0.5)) * vColor;\n";
-    code += "    gl_FragColor = texture2D(colorSampler, vUv0) * colorMult;\n";
+    code += "    gl_FragColor = texture2D(texture_diffuseMap, vUv0) * colorMult;\n";
     code += "}";
 
     return code;

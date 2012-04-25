@@ -14,6 +14,10 @@ pc.extend(pc.scene, function () {
         [-0.5,  0.5]
     ];
 
+    var plusMinus = function(range) {
+        return (Math.random() - 0.5) * range * 2;
+    };
+
     var ParticleEmitter = function ParticleEmitter(numParticles) {
         this.config = {
             // The number of particles to emit.
@@ -100,10 +104,12 @@ pc.extend(pc.scene, function () {
         var iterator = new pc.gfx.VertexIterator(vertexBuffer);
         for (var p = 0; p < numParticles; p++) {
             var lifeTime = this.config.lifeTime;
-            var frameStart = parameters.frameStart + plusMinus(parameters.frameStartRange);
+            var frameStart = this.config.frameStart + plusMinus(this.config.frameStartRange);
+            var pPosition = pc.math.vec3.create();
+            o3djs.math.addVector(parameters.position, plusMinusVector(parameters.positionRange));
 
             for (var corner = 0; corner < 4; corner++) {
-                var e = iterator element;
+                var e = iterator.element;
                 e["particle_uvLifeTimeFrameStart"].set(particleVerts[corner][0], particleVerts[corner][0], lifeTime, frameStart);
                 e["particle_positionStartTime"].set(position[0], position[1], position[2], startTime);
                 e["particle_velocityStartSize"].set(velocityStart[0], velocityStart[1], velocityStart[2], startSize);
@@ -162,7 +168,7 @@ pc.extend(pc.scene, function () {
         };
     }
 
-    ParticleEmitter = ParticleEmitter.extendsFrom(pc.scene.Node);
+    ParticleEmitter = ParticleEmitter.extendsFrom(pc.scene.GraphNode);
 
     ParticleEmitter.prototype.dispatch = function () {
         var res = this.resources;
@@ -192,9 +198,10 @@ pc.extend(pc.scene, function () {
 
         // Now draw the triangle
         device.draw({
-            primitiveType: pc.gfx.PrimType.TRIANGLES,
-            numVertices: res.indexBuffer.getNumIndices(),
-            useIndexBuffer: true
+            type: pc.gfx.PrimType.TRIANGLES,
+            base: 0,
+            count: res.indexBuffer.getNumIndices(),
+            indexed: true
         });
     };
 
