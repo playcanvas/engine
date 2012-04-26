@@ -2,7 +2,7 @@
     <head>
     </head>
     <body>
-        <h1 id="qunit-header">sdk.tests.audio</h1>
+        <h1 id="qunit-header">pc.audio</h1>
         <h2 id="qunit-banner"></h2>
         <div id="qunit-testrunner-toolbar"></div>
         <h2 id="qunit-userAgent"></h2>
@@ -14,17 +14,20 @@
         <script type="text/javascript" src="../qunit/jack.js"></script>
 
         <script type="text/javascript" src="../../src/core/core_core.js"></script>
+        <script type="text/javascript" src="../../src/core/core_path.js"></script>
         <script type="text/javascript" src="../../src/core/core_inheritance.js"></script>
         <script type="text/javascript" src="../../src/events/events_events.js"></script>
         <script type="text/javascript" src="../../src/math/math_math.js"></script>
         <script type="text/javascript" src="../../src/math/math_vector.js"></script>
 
         <!-- Source to test -->
-        <script type="text/javascript" src="../../src/audio/audio_base.js"></script>
-		<script type="text/javascript" src="../../src/audio/audio_point.js"></script>
+        <script type="text/javascript" src="../../src/audio/audio_audio.js"></script>
+        <script type="text/javascript" src="../../src/audio/audio_sound.js"></script>
+        <script type="text/javascript" src="../../src/audio/audio_channel.js"></script>
+        <script type="text/javascript" src="../../src/audio/audio_channel3d.js"></script>
+        <script type="text/javascript" src="../../src/audio/audio_listener.js"></script>
         
         <!-- Tests -->
-        <script type="text/javascript" src="test_audio_base.js"></script>
-        <script type="text/javascript" src="test_audio_point.js"></script>
+        <script type="text/javascript" src="test_audio.js"></script>
     </body>
 </html>
