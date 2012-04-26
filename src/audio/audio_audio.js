@@ -85,6 +85,29 @@ pc.audio = function () {
         },
         hasAudioContext: function () {
             return !!(window.AudioContext || window.webkitAudioContext)
+        },
+        /**
+        * @description Estimate from the url/extension, whether the browser can play this audio type
+        */
+        isSupported: function (url, audio) {
+            var toMIME = {
+                '.ogg': 'audio/ogg',
+                '.mp3': 'audio/mpeg',
+                '.wav': 'audio/x-wav'
+            }
+
+            var ext = pc.path.getExtension(url);
+
+            if (toMIME[ext]) {
+                if (!audio) {
+                    audio = new Audio();
+                }
+                return audio.canPlayType(toMIME[ext]) !== '';
+            } else {
+                return false;
+            }
+
         }
+
     }
 }();

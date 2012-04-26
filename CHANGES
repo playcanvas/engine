@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.50.0
+-------
+* Added pc.audio.isSupported(url) to test if the url to an audio file is a supported format.
+* [FIX] Prevent crash in pc.audio.Channel3d if stop() is called when using Audio tag (FF/Opera/Safari)
+* [FIX] ResourceLoaderDisplay works if resources are included in mulitple batches, also sanitize identifier before using as DOM id.
+* [FIX] Probably fixed #38 by checking for 'loadstart', 'canplaythrough' and 'loadeddata' events to see if Audio tag has loaded.
+
+-------
 v0.49.0
 -------
 * [FIX] Fix infinite loop in lighting

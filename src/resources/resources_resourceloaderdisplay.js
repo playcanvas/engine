@@ -58,6 +58,15 @@ pc.extend(pc.resources, function () {
         this._rootTable.appendChild(resourceRow);
     };
 
+    /**
+    * @function
+    * @private
+    * @name pc.resources.ResourceLoaderDisplay#_sanitizeId
+    * @description Clean up the a text string for use as a dom element id
+    */
+    ResourceLoaderDisplay.prototype._sanitizeId = function (id) {
+        return id.replace(/\//, '').replace(/\./, '');
+    }
 
     /**
     * @function
@@ -87,7 +96,7 @@ pc.extend(pc.resources, function () {
             row.appendChild(idElement);
             
             var progressElement = document.createElement('td');
-            progressElement.id = 'pc-resourceloaderdisplay-progress-' + handle + '-' + request.identifier;
+            progressElement.id = 'pc-resourceloaderdisplay-progress-' + handle + '-' + this._sanitizeId(request.identifier);
             progressElement.textContent = "0%";
             row.appendChild(progressElement);
 
@@ -101,8 +110,11 @@ pc.extend(pc.resources, function () {
     * @description Handle a loaded event from ResourceLoader
     */
     ResourceLoaderDisplay.prototype.handleLoaded = function (loader, request, batch, resource) {
-        var resourceProgress = document.getElementById('pc-resourceloaderdisplay-progress-' + batch.handle + '-' + request.identifier);
-        resourceProgress.textContent = "100%";
+        var resourceProgress = document.getElementById('pc-resourceloaderdisplay-progress-' + batch.handle + '-' + this._sanitizeId(request.identifier));
+        if (resourceProgress) {
+            resourceProgress.textContent = "100%";    
+        }
+        
     };
 
     /**
@@ -120,7 +132,10 @@ pc.extend(pc.resources, function () {
     */
     ResourceLoaderDisplay.prototype.handleBatchProgress = function (loader, batch) {
         var batchProgress = document.getElementById('pc-resourceloaderdisplay-batchprogress-' + batch.handle);
-        batchProgress.textContent = batch.getProgress() + '%';
+        if (batchProgress) {
+            batchProgress.textContent = batch.getProgress() + '%';    
+        }
+        
     };
 
     return {
