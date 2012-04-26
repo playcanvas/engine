@@ -102,7 +102,10 @@ pc.extend(pc.resources, function () {
     */
     ResourceLoaderDisplay.prototype.handleLoaded = function (loader, request, batch, resource) {
         var resourceProgress = document.getElementById('pc-resourceloaderdisplay-progress-' + batch.handle + '-' + request.identifier);
-        resourceProgress.textContent = "100%";
+        if (resourceProgress) {
+            resourceProgress.textContent = "100%";    
+        }
+        
     };
 
     /**
@@ -120,7 +123,10 @@ pc.extend(pc.resources, function () {
     */
     ResourceLoaderDisplay.prototype.handleBatchProgress = function (loader, batch) {
         var batchProgress = document.getElementById('pc-resourceloaderdisplay-batchprogress-' + batch.handle);
-        batchProgress.textContent = batch.getProgress() + '%';
+        if (batchProgress) {
+            batchProgress.textContent = batch.getProgress() + '%';    
+        }
+        
     };
 
     return {
