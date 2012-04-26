@@ -104,14 +104,17 @@ pc.extend(pc.audio, function () {
     
         Channel3d.prototype.setPosition = function (position) {
             pc.math.vec3.copy(position, this.position);
-            var listener = this.manager.getListener();
-            
-            var lpos = listener.getPosition();
-            
-            var factor = fallOff(lpos, this.position, this.minDistance, this.maxDistance, this.rollOffFactor);
-            
-            var v = this.getVolume();
-            this.source.volume = v * factor;
+
+            if (this.source) {
+                var listener = this.manager.getListener();
+                
+                var lpos = listener.getPosition();
+                
+                var factor = fallOff(lpos, this.position, this.minDistance, this.maxDistance, this.rollOffFactor);
+                
+                var v = this.getVolume();
+                this.source.volume = v * factor;                
+            }
         };
         
         Channel3d.prototype.getVelocity = function () {
