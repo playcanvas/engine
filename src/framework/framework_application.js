@@ -121,8 +121,6 @@ pc.extend(pc.fw, function () {
      * @description Start the Application updating
      */
     Application.prototype.start = function () {
-        this.context.root.syncHierarchy();
-
         this.tick();
     };
     
