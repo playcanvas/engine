@@ -1,41 +1,30 @@
 module('pc.input.mouse');
 
-function createWebKitStyleMouseEvent() {    
-    return {
-        button: 1,
-        charCode: 0,
-        bubbles: true,
-        x: 0,
-        y: 0,
-        clientX: 0,
-        clientY: 0,
-        pageX: 0,
-        pageY: 0,
-        layerX: 0,
-        layerY: 0,
-        offsetX: 0,
-        offsetY: 0,
-        screenX: 0,
-        screenY: 0,
-        wheelDelta: 120,
-        target: document
-    };
+function simMouseDown(el) {
+  var evt = document.createEvent("MouseEvents");
+  // middle mouse down
+  evt.initMouseEvent("mousedown", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 1, null);
+  el.dispatchEvent(evt);
 }
 
-function simMouseDown(mouse) {
-    mouse._handleDown(createWebKitStyleMouseEvent());
+function simMouseUp(el) {
+  var evt = document.createEvent("MouseEvents");
+  // middle mouse down
+  evt.initMouseEvent("mouseup", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 1, null);
+  el.dispatchEvent(evt);
 }
 
-function simMouseUp(mouse) {
-    mouse._handleUp(createWebKitStyleMouseEvent());
-}
-
-function simMouseMove(mouse) {
-    mouse._handleMove(createWebKitStyleMouseEvent());
+function simMouseMove(el) {
+  var evt = document.createEvent("MouseEvents");
+  evt.initMouseEvent("mousemove", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  el.dispatchEvent(evt);
 }
 
 function simMouseWheel(mouse) {
-    mouse._handleWheel(createWebKitStyleMouseEvent());
+  var evt = document.createEvent("MouseEvents");
+  // middle mouse down
+  evt.initMouseEvent("mousewheel", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+  el.dispatchEvent(evt);
 }
 
 test("Object exists", function () {
@@ -58,7 +47,7 @@ test("mousedown: fires", function () {
         ok(event.event);
     });
     
-    simMouseDown(m);
+    simMouseDown(document.body);
     
     ok(called);
 });
@@ -80,7 +69,7 @@ test("mouseup: fires", function () {
         ok(event.event);
     });
     
-    simMouseUp(m);
+    simMouseUp(document.body);
     
     ok(called);
 })
@@ -104,7 +93,7 @@ test("mousemove: fires", function () {
         ok(event.event);
     });
     
-    simMouseMove(m);
+    simMouseMove(document.body);
     
     ok(called);    
 });
@@ -125,7 +114,7 @@ test("mousewheel: fires", function () {
         equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
     });
     
-    simMouseWheel(m);
+    simMouseWheel(document.body;
     
     ok(called);    
 });

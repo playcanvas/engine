@@ -45,9 +45,9 @@ pc.extend(pc.input, function(){
         options = options || {};
         this._element = null;
         
-        this._keyDownHandler = pc.callback(this, this._handleKeyDown);
-        this._keyUpHandler = pc.callback(this, this._handleKeyUp);
-        this._keyPressHandler = pc.callback(this, this._handleKeyPress);
+        this._keyDownHandler = this._handleKeyDown.bind(this);
+        this._keyUpHandler = this._handleKeyUp.bind(this);
+        this._keyPressHandler = this._handleKeyPress.bind(this);
         
         pc.extend(this, pc.events);
         

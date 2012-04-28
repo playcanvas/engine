@@ -152,7 +152,7 @@ pc.extend(pc.fw, function () {
     var SkyboxComponentSystem = function SkyboxComponentSystem (context) {
         context.systems.add("skybox", this);
 
-        this.bind("set", pc.callback(this, _onSet));
+        this.bind("set", _onSet.bind(this));
     }
     SkyboxComponentSystem = SkyboxComponentSystem.extendsFrom(pc.fw.ComponentSystem);
 

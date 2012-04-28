@@ -108,7 +108,7 @@ pc.extend(pc.fw, function () {
         
         this._dataDir = "../../../tests/data/";
         
-        this.bind("set", pc.callback(this, _onSet));
+        this.bind("set", _onSet.bind(this));
     }
     StaticCubeMapComponentSystem = StaticCubeMapComponentSystem.extendsFrom(pc.fw.ComponentSystem);
 
