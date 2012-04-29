@@ -207,7 +207,15 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getLocalPosition: function () {
-            return this._ltm.subarray(12, 15);
+            if (arguments.length === 1) {
+                var pos = arguments[0];
+                pos[0] = this._ltm[0];
+                pos[1] = this._ltm[1];
+                pos[2] = this._ltm[2];
+                return pos;
+            } else {
+                return this._ltm.subarray(12, 15);
+            }
         },
 
         /**
@@ -242,7 +250,15 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getWorldPosition: function () {
-            return this._wtm.subarray(12, 15);
+            if (arguments.length === 1) {
+                var pos = arguments[0];
+                pos[0] = this._wtm[0];
+                pos[1] = this._wtm[1];
+                pos[2] = this._wtm[2];
+                return pos;
+            } else {
+                return this._wtm.subarray(12, 15);
+            }
         },
 
         /**
