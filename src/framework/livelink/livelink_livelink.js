@@ -107,13 +107,16 @@ pc.extend(pc.fw, function () {
         for(i = 0; i < length; i++) {
             var w = this._destinations[i];
             if (!w.closed) {
+                // TODO: We currently get one call back per window
+                // rather than one per send() because calls to the current window are synchronouse and the send completes
+                // before the next window send has started.
                 var origin = w.location.protocol + "//" + w.location.host;
                 this._send(msg, success, w, origin);                
             } else {
                 closed.push(w);
             }        
         }
-        
+
         length = closed.length;
         for(i = 0; i < length; i++) {
             this.removeDestinationWindow(closed[i]);

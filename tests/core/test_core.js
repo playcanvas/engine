@@ -1,41 +1,4 @@
 module('pc.core');
-
-test('callback', function () {
-    var self = this;
-    var o = {
-        f: function(){
-            strictEqual(this, self);
-        }
-    };
-    
-    pc.callback(this, o.f)();
-});
-
-test('callback: with arguments', function () {
-   var self = this;
-   var o = {
-       f: function(a,b) {
-           strictEqual(this, self);
-           strictEqual(a, "a");
-           strictEqual(b, "b");
-       }
-   };
-
-   pc.callback(this, o.f)("a","b");
-});
-
-test('callback return value', function () {
-    var self = this;
-    
-    var fn = function () {
-        return "a";
-    }
-    
-    var v = pc.callback(this, fn)();
-    
-    equal("a", v);
-});
-
 test('type', function() {
     var types = [
         null,

@@ -135,9 +135,11 @@ asyncTest("send, 2 windows, with callback", 5, function () {
     var msg = new pc.fw.LiveLinkMessage();
     msg.id = "test"
     msg.content = "test";
-    var sent = false;
+    var count = 0;
     l2.send(msg, function () {
         ok(true);
+        // This is failing at the moment because sending messages to the current window is synchronous which means the code hasn't group the message sends
+        // into one callback, so we get one callback per window.
         equal(false, sent);
         sent = true;
     });

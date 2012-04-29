@@ -865,13 +865,13 @@ pc.extend(pc.resources, function () {
         }
     
         var _jsonToLoader = {
-            "camera" : pc.callback(this, this._loadCamera),
-            "light"  : pc.callback(this, this._loadLight),
-            "mesh"   : pc.callback(this, this._loadMesh),
-            "node"   : pc.callback(this, this._loadNode)
+            "camera" : this._loadCamera.bind(this),
+            "light"  : this._loadLight.bind(this),
+            "mesh"   : this._loadMesh.bind(this),
+            "node"   : this._loadNode.bind(this)
         };
     
-        var _loadHierarchy = pc.callback(this, function (nodeData) {
+        var _loadHierarchy = function (nodeData) {
             var node = null;
             var loadFunc = _jsonToLoader[nodeData.type];
             if (loadFunc !== undefined) {
@@ -896,7 +896,7 @@ pc.extend(pc.resources, function () {
             }
     
             return node;
-        });
+        }.bind(this);
 
         var _resolveCameraIds = function (node) {
             if (node instanceof pc.scene.CameraNode) {
