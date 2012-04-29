@@ -57,7 +57,6 @@ pc.extend(pc.audio, function () {
                     this.source.noteGrainOn(0, startTime, this.source.buffer.duration - startTime);
                     this.paused = false;
                 }
-
             },
 
             /**
@@ -111,10 +110,12 @@ pc.extend(pc.audio, function () {
 
         };
     } else if (pc.audio.hasAudio()) {
-        Channel = function (manager, sound) {
-            this.volume = 1;
+        Channel = function (manager, sound, options) {
+            this.volume = options.volume || 1;
+            this.loop = options.loop || false;
             this.sound = sound;
 
+            this.paused = false;
             this.suspended = false;
 
             this.manager = manager;
@@ -129,43 +130,38 @@ pc.extend(pc.audio, function () {
         Channel.prototype = {
             play: function () {
                 if (this.source) {
+                    this.paused = false;
+                    this.setVolume(this.volume);
+                    this.setLoop(this.loop);
                     this.source.play();
-                } else {
-                    throw Error('Channel already stopped');
                 }
             },
 
             pause: function () {
                 if (this.source) {
+                    this.paused = true;
                     this.source.pause();
-                } else {
-                    throw Error('Channel already stopped');
                 }
             },
             
             stop: function () {
                 if (this.source) {                
                     this.source.pause();
-                    this.source = null;
-                } else {
-                    throw Error('Channel already stopped');
+                    // Reset to beginning of sample.
+                    this.source.currentTime = 0;
                 }
             },
             
             setVolume: function (volume) {
+                this.volume = volume;
                 if (this.source) {
-                    this.volume = volume;
                     this.source.volume = volume * this.manager.getVolume();
-                }
-                else {
-                    throw Error('Channel already stopped');
                 }
             },
              
             setLoop: function (loop) {
                 this.loop = loop;
                 if (this.source) {
-                    this.loop = loop;
                     this.source.loop = loop;
                 }
             }
