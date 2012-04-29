@@ -209,9 +209,9 @@ pc.extend(pc.scene, function () {
         getLocalPosition: function () {
             if (arguments.length === 1) {
                 var pos = arguments[0];
-                pos[0] = this._ltm[0];
-                pos[1] = this._ltm[1];
-                pos[2] = this._ltm[2];
+                pos[0] = this._ltm[12];
+                pos[1] = this._ltm[13];
+                pos[2] = this._ltm[14];
                 return pos;
             } else {
                 return this._ltm.subarray(12, 15);
@@ -252,9 +252,9 @@ pc.extend(pc.scene, function () {
         getWorldPosition: function () {
             if (arguments.length === 1) {
                 var pos = arguments[0];
-                pos[0] = this._wtm[0];
-                pos[1] = this._wtm[1];
-                pos[2] = this._wtm[2];
+                pos[0] = this._wtm[12];
+                pos[1] = this._wtm[13];
+                pos[2] = this._wtm[14];
                 return pos;
             } else {
                 return this._wtm.subarray(12, 15);
