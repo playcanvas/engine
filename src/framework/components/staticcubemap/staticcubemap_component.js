@@ -106,15 +106,9 @@ pc.extend(pc.fw, function () {
     var StaticCubeMapComponentSystem = function StaticCubeMapComponentSystem (context) {
         context.systems.add("staticcubemap", this);
         
-        this._dataDir = "../../../tests/data/";
-        
         this.bind("set", _onSet.bind(this));
     }
     StaticCubeMapComponentSystem = StaticCubeMapComponentSystem.extendsFrom(pc.fw.ComponentSystem);
-
-    StaticCubeMapComponentSystem.prototype.setDataDir = function (dir) {
-        this._dataDir = dir;
-    }    
     
     StaticCubeMapComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.StaticCubeMapComponentData();

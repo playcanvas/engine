@@ -109,8 +109,6 @@ pc.extend(pc.fw, function () {
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioManager);
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
 
-        staticcubemapsys.setDataDir(options.dataDir);
-
         // Add event support
         pc.extend(this, pc.events);
     };
