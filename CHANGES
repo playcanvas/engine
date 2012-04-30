@@ -3,6 +3,17 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.51.0
+-------
+* Added setVolume() to AudioManager, it affects the volume of all audio sources
+* Added suspend() and resume() to AudioManager, to pause and resume all audio sources
+* Allow the passing of a preallocted vector argument to receive the position of LTM/WTM of a graph node.
+* [FIX] Loading library javascript resources for the second time correctly fires success callback
+* [FIX] Hierarchy is synced before script.initialize() is called
+* [FIX] Visualizer camera
+* Removed deprecated functions pc.each and pc.callback
+
+-------
 v0.50.0
 -------
 * Added pc.audio.isSupported(url) to test if the url to an audio file is a supported format.
