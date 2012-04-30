@@ -209,11 +209,13 @@ pc.extend(pc.input, function () {
         // Update the current position
         this._positionX = event.clientX;
         this._positionY = event.clientY;
+        
+        this.fire(pc.input.EVENT_MOUSE_MOVE, pc.input.Mouse.createMouseEvent(this, event));
+
+        // Store the last offset position to calculate deltas
         offset = pc.input.getTargetCoords(event);
         this._offsetX = offset.x;
         this._offsetY = offset.y;
-        
-        this.fire(pc.input.EVENT_MOUSE_MOVE, pc.input.Mouse.createMouseEvent(this, event));
     };
 
     Mouse.prototype._handleWheel = function (event) {
