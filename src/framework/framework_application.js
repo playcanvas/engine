@@ -63,7 +63,7 @@ pc.extend(pc.fw, function () {
 
         var registry = new pc.fw.ComponentSystemRegistry();
     
-        var audioManager = new pc.audio.AudioManager();
+        this.audioManager = new pc.audio.AudioManager();
         
         var scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
 
@@ -75,7 +75,7 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
-        loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(audioManager));
+        loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
         // Display shows debug loading information. Only really fit for debug display at the moment.
         if (options['displayLoader']) {
@@ -105,246 +105,278 @@ pc.extend(pc.fw, function () {
         var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
         var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
-        var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, audioManager);
-        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, audioManager);
+        var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
+        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
-
-        staticcubemapsys.setDataDir(options.dataDir);
 
         // Add event support
         pc.extend(this, pc.events);
-    };
+
+        // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
+        // in this._hiddenAttr.
+        if (typeof document.hidden !== 'undefined') {
+            this._hiddenAttr = 'hidden';
+            document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this), false);
+        } else if (typeof document.mozHidden !== 'undefined') {  
+            this._hiddenAttr = 'mozHidden';
+            document.addEventListener('mozvisibilitychange', this.onVisibilityChange.bind(this), false);
+        } else if (typeof document.msHidden !== 'undefined') {  
+            this._hiddenAttr = 'msHidden';
+            document.addEventListener('msvisibilitychange', this.onVisibilityChange.bind(this), false);
+        } else if (typeof document.webkitHidden !== 'undefined') {  
+            this._hiddenAttr = 'webkitHidden';
+            document.addEventListener('webkitvisibilitychange', this.onVisibilityChange.bind(this), false);
+        }
+   };
     
-    /**
-     * @function
-     * @name pc.fw.Application#start
-     * @description Start the Application updating
-     */
-    Application.prototype.start = function () {
-        this.context.root.syncHierarchy();
-
-        this.tick();
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.Application#update
-     * @description Application specific update method. Override this if you have a custom Application
-     * @param {Number} dt The time delta since the last frame.
-     */
-    Application.prototype.update = function (dt) {
-        var context = this.context;
-
-        // Perform ComponentSystem update
-        pc.fw.ComponentSystem.update(dt, context, this._inTools);
-        pc.fw.ComponentSystem.updateFixed(1.0 / 60.0, context, this._inTools);
-
-        // fire update event
-        this.fire("update", dt);
-
-        if (context.controller) {
-            context.controller.update(dt);
-        }
-        if (context.keyboard) {
-            context.keyboard.update(dt);
-        }
-    };
-
-    /** 
-     * @function
-     * @name pc.fw.Application#render
-     * @description Application specific render method. Override this if you have a custom Application
-     */
-    Application.prototype.render = function () {
-        var context = this.context;
-
-        context.root.syncHierarchy();
-
-        pc.gfx.Device.setCurrent(this.graphicsDevice);
-
-        var currentCamera = context.systems.camera.getCurrent();
-        if (currentCamera) {
-            context.systems.camera.frameBegin();
-
-            pc.fw.ComponentSystem.render(context, this._inTools);
-            var camera = context.systems.camera.get(currentCamera, 'camera');
-            context.scene.dispatch(camera);
-            context.scene.flush();
-
-            context.systems.camera.frameEnd();            
-        }
-    };
-
-    /** 
-     * @function
-     * @name pc.fw.Application#tick
-     * @description Application specific tick method that calls update and render and queues
-     * the next tick. Override this if you have a custom Application.
-     */
-    Application.prototype.tick = function () {
-        this.lastTime = this.currTime || Date.now();
-        this.currTime = Date.now();
-
-        var dt = (this.currTime - this.lastTime) * 0.001;
-        dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
+    Application.prototype = {
+        /**
+         * @function
+         * @name pc.fw.Application#start
+         * @description Start the Application updating
+         */
+        start: function () {
+            this.tick();
+        },
         
-    	this.update(dt);
-    	this.render();
+        /**
+         * @function
+         * @name pc.fw.Application#update
+         * @description Application specific update method. Override this if you have a custom Application
+         * @param {Number} dt The time delta since the last frame.
+         */
+        update: function (dt) {
+            var context = this.context;
 
-        // Submit a request to queue up a new animation frame immediately
-        requestAnimFrame(this.tick.bind(this), this.canvas);
-    };
+            // Perform ComponentSystem update
+            pc.fw.ComponentSystem.update(dt, context, this._inTools);
+            pc.fw.ComponentSystem.updateFixed(1.0 / 60.0, context, this._inTools);
 
-    /**
-     * @function
-     * @name pc.fw.Application#_handleMessage
-     * @description Called when the LiveLink object receives a new message
-     * @param {pc.fw.LiveLiveMessage} msg The received message
-     */
-    Application.prototype._handleMessage = function (msg) {
-        switch(msg.type) {
-            case pc.fw.LiveLinkMessageType.UPDATE_COMPONENT:
-                this._updateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
-                break;
-            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY:
-                this._updateEntity(msg.content.id, msg.content.components);
-                break;
-            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
-                var transform = pc.math.mat4.compose(msg.content.translate, msg.content.rotate, msg.content.scale);
-                this._updateEntityTransform(msg.content.id, transform);
-                break;
-            case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME:
-                var entity = this.context.root.findOne("getGuid", msg.content.id);
-                entity.setName(msg.content.name);
-                break;
-            case pc.fw.LiveLinkMessageType.REPARENT_ENTITY:
-                this._reparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
-                break;
-            case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
-                var entity = this.context.root.findOne("getGuid", msg.content.id);
-                if(entity) {
-                    entity.close(this.context.systems);
+            // fire update event
+            this.fire("update", dt);
+
+            if (context.controller) {
+                context.controller.update(dt);
+            }
+            if (context.keyboard) {
+                context.keyboard.update(dt);
+            }
+        },
+
+        /** 
+         * @function
+         * @name pc.fw.Application#render
+         * @description Application specific render method. Override this if you have a custom Application
+         */
+        render: function () {
+            var context = this.context;
+
+            context.root.syncHierarchy();
+
+            pc.gfx.Device.setCurrent(this.graphicsDevice);
+
+            var currentCamera = context.systems.camera.getCurrent();
+            if (currentCamera) {
+                context.systems.camera.frameBegin();
+
+                pc.fw.ComponentSystem.render(context, this._inTools);
+                var camera = context.systems.camera.get(currentCamera, 'camera');
+                context.scene.dispatch(camera);
+                context.scene.flush();
+
+                context.systems.camera.frameEnd();            
+            }
+        },
+
+        /** 
+         * @function
+         * @name pc.fw.Application#tick
+         * @description Application specific tick method that calls update and render and queues
+         * the next tick. Override this if you have a custom Application.
+         */
+        tick: function () {
+            this.lastTime = this.currTime || Date.now();
+            this.currTime = Date.now();
+
+            var dt = (this.currTime - this.lastTime) * 0.001;
+            dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
+            
+            this.update(dt);
+            this.render();
+
+            // Submit a request to queue up a new animation frame immediately
+            requestAnimFrame(this.tick.bind(this), this.canvas);
+        },
+
+        /**
+        * @function
+        * @name pc.fw.Application#isHidden
+        * @description Returns true if the window or tab in which the application is running in is not visible to the user.
+        */ 
+        isHidden: function () {
+            return document[this._hiddenAttr];
+        },
+
+        /**
+         * @function
+         * @name pc.fw.Application#_handleMessage
+         * @description Called when the LiveLink object receives a new message
+         * @param {pc.fw.LiveLiveMessage} msg The received message
+         */
+        _handleMessage: function (msg) {
+            switch(msg.type) {
+                case pc.fw.LiveLinkMessageType.UPDATE_COMPONENT:
+                    this._updateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
+                    break;
+                case pc.fw.LiveLinkMessageType.UPDATE_ENTITY:
+                    this._updateEntity(msg.content.id, msg.content.components);
+                    break;
+                case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
+                    var transform = pc.math.mat4.compose(msg.content.translate, msg.content.rotate, msg.content.scale);
+                    this._updateEntityTransform(msg.content.id, transform);
+                    break;
+                case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME:
+                    var entity = this.context.root.findOne("getGuid", msg.content.id);
+                    entity.setName(msg.content.name);
+                    break;
+                case pc.fw.LiveLinkMessageType.REPARENT_ENTITY:
+                    this._reparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
+                    break;
+                case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
+                    var entity = this.context.root.findOne("getGuid", msg.content.id);
+                    if(entity) {
+                        entity.close(this.context.systems);
+                    }
+                    break;
+                case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
+                    var entities = {};
+                    var guid = null;
+                    
+                    msg.content.models.forEach(function (model) {
+                        var entity = this.context.loader.open(pc.resources.EntityRequest, model);
+                        entities[entity.getGuid()] = entity;
+                    }, this);
+                    
+                    for (guid in entities) {
+                        if (entities.hasOwnProperty(guid)) {
+                            pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
+                            if (!entities[guid].__parent) {
+                                // If entity has no parent add to the root
+                                this.context.root.addChild(entities[guid]);
+                            } else if (!entities[entities[guid].__parent]) {
+                                // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
+                                var parent = this.context.root.findByGuid(entities[guid].__parent);
+                                parent.addChild(entities[guid]);
+                            }
+                        }
+                    }
+                    break;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.fw.Application#_updateComponent
+         * @description Update a value on a component, 
+         * @param {String} guid GUID for the entity
+         * @param {String} componentName name of the component to update
+         * @param {String} attributeName name of the attribute on the component
+         * @param {Object} value - value to set attribute to
+         */
+        _updateComponent: function(guid, componentName, attributeName, value) {
+            var entity = this.context.root.findOne("getGuid", guid);
+            var system;
+                
+            if (entity) {
+                if(componentName) {
+                    system = this.context.systems[componentName];
+                    if(system) {
+                        system.set(entity, attributeName, value);
+                    } else {
+                        logWARNING(pc.string.format("No component system called '{0}' exists", componentName))
+                    }
+                } else {
+                    // set value on node
+                    entity[attributeName] = value;
                 }
-                break;
-            case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
-                var entities = {};
-                var guid = null;
+            }
+        },
+
+        _updateEntityTransform: function (guid, transform) {
+            var entity = this.context.root.findByGuid(guid);
+            if(entity) {
+                entity.setLocalTransform(transform);
+            }
+        },
+        
+        _updateEntityAttribute: function (guid, accessor, value) {
+            var entity = this.context.root.findOne("getGuid", guid);
+            
+            if(entity) {
+                if(pc.type(entity[accessor]) != "function") {
+                    logWARNING(pc.string.format("{0} is not an accessor function", accessor));
+                }
                 
-                msg.content.models.forEach(function (model) {
-                    var entity = this.context.loader.open(pc.resources.EntityRequest, model);
-                    entities[entity.getGuid()] = entity;
-                }, this);
-                
-                for (guid in entities) {
-                    if (entities.hasOwnProperty(guid)) {
-                        pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
-                        if (!entities[guid].__parent) {
-                            // If entity has no parent add to the root
-                            this.context.root.addChild(entities[guid]);
-                        } else if (!entities[entities[guid].__parent]) {
-                            // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
-                            var parent = this.context.root.findByGuid(entities[guid].__parent);
-                            parent.addChild(entities[guid]);
+                if(pc.string.startsWith(accessor, "reparent")) {
+                    entity[accessor](value, this.context);
+                } else {
+                    entity[accessor](value);                
+                }
+            }
+        },
+        
+        _reparentEntity: function (guid, parentId, index) {
+            var entity = this.context.root.findByGuid(guid);
+            var parent = this.context.root.findByGuid(parentId);
+            // TODO: use index to insert child into child list
+            entity.reparent(parent);    
+        },
+        
+        /**
+         * @function
+         * @name pc.fw.Application#_updateEntity
+         * @description Update an Entity from a set of components, deletes components that are no longer there, adds components that are new.
+         * Note this does not update the data inside the components, just whether or not a component is present.
+         * @param {Object} guid GUID of the entity
+         * @param {Object} components Component object keyed by component name.
+         */
+        _updateEntity: function (guid, components) {
+            var type;
+            var entity = this.context.root.findOne("getGuid", guid);
+            
+            if(entity) {
+                for(type in components) {
+                    if(this.context.systems.hasOwnProperty(type)) {
+                       if(!this.context.systems[type].hasComponent(entity)) {
+                            this.context.systems[type].createComponent(entity);
                         }
                     }
                 }
-                break;
-        }
-    };
+                
+                for(type in this.context.systems) {
+                    if(type === "gizmo" || type === "pick") {
+                        continue;
+                    }
 
-    /**
-     * @function
-     * @name pc.fw.Application#_updateComponent
-     * @description Update a value on a component, 
-     * @param {String} guid GUID for the entity
-     * @param {String} componentName name of the component to update
-     * @param {String} attributeName name of the attribute on the component
-     * @param {Object} value - value to set attribute to
-     */
-    Application.prototype._updateComponent = function(guid, componentName, attributeName, value) {
-        var entity = this.context.root.findOne("getGuid", guid);
-        var system;
-            
-        if (entity) {
-            if(componentName) {
-                system = this.context.systems[componentName];
-                if(system) {
-                    system.set(entity, attributeName, value);
-                } else {
-                    logWARNING(pc.string.format("No component system called '{0}' exists", componentName))
-                }
-            } else {
-                // set value on node
-                entity[attributeName] = value;
-            }
-        }
-    };
-
-    Application.prototype._updateEntityTransform = function (guid, transform) {
-        var entity = this.context.root.findByGuid(guid);
-        if(entity) {
-            entity.setLocalTransform(transform);
-        }
-    };
-    
-    Application.prototype._updateEntityAttribute = function (guid, accessor, value) {
-        var entity = this.context.root.findOne("getGuid", guid);
-        
-        if(entity) {
-            if(pc.type(entity[accessor]) != "function") {
-                logWARNING(pc.string.format("{0} is not an accessor function", accessor));
-            }
-            
-            if(pc.string.startsWith(accessor, "reparent")) {
-                entity[accessor](value, this.context);
-            } else {
-                entity[accessor](value);                
-            }
-        }
-    };
-    Application.prototype._reparentEntity = function (guid, parentId, index) {
-        var entity = this.context.root.findByGuid(guid);
-        var parent = this.context.root.findByGuid(parentId);
-        // TODO: use index to insert child into child list
-        entity.reparent(parent);    
-    },
-    
-    /**
-     * @function
-     * @name pc.fw.Application#_updateEntity
-     * @description Update an Entity from a set of components, deletes components that are no longer there, adds components that are new.
-     * Note this does not update the data inside the components, just whether or not a component is present.
-     * @param {Object} guid GUID of the entity
-     * @param {Object} components Component object keyed by component name.
-     */
-    Application.prototype._updateEntity = function (guid, components) {
-        var type;
-        var entity = this.context.root.findOne("getGuid", guid);
-        
-        if(entity) {
-            for(type in components) {
-                if(this.context.systems.hasOwnProperty(type)) {
-                   if(!this.context.systems[type].hasComponent(entity)) {
-                        this.context.systems[type].createComponent(entity);
+                    if(this.context.systems.hasOwnProperty(type)) {
+                        if(!components.hasOwnProperty(type) && 
+                            this.context.systems[type].hasComponent(entity)) {
+                            this.context.systems[type].deleteComponent(entity);
+                        }
                     }
                 }
             }
-            
-            for(type in this.context.systems) {
-                if(type === "gizmo" || type === "pick") {
-                    continue;
-                }
+        },
 
-                if(this.context.systems.hasOwnProperty(type)) {
-                    if(!components.hasOwnProperty(type) && 
-                        this.context.systems[type].hasComponent(entity)) {
-                        this.context.systems[type].deleteComponent(entity);
-                    }
-                }
+        onVisibilityChange: function (e) {
+            if (this.isHidden()) {
+                this.audioManager.suspend();
+            } else {
+                this.audioManager.resume();
             }
         }
     };
-        
+
     return {
             Application: Application
     };

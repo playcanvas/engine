@@ -42,7 +42,8 @@ pc.extend(pc.resources, function () {
             if (this._loaded[url] !== true) {
                 success(this._loaded[url]);
             } else {
-                // regular js script, no need to call success callback
+                // regular js script
+                success(null);
             }
         } else {
             if (this._loading) {

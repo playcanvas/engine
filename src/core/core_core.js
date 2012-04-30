@@ -26,14 +26,11 @@ var pc = function () {
          * @description Copy a set of common PlayCanvas functions/classes/namespaces into the global namespace
          */
         unpack: function () {
-            // Objects to copy into global window object.
-            // in format ["src name", "target name"]
-            objects = [
-                ["pc.math.vec3", "vec3"],
-                ["pc.math.vec4", "vec4"],
-                ["pc.math.mat3", "mat3"],
-                ["pc.math.mat4", "mat4"]
-            ]            
+            window.m4 = pc.math.mat4;
+            window.v2 = pc.math.vec2;
+            window.v3 = pc.math.vec3;
+            window.v4 = pc.math.vec4;
+            window.quat = pc.math.quat;
         },
              
         /**
@@ -54,38 +51,6 @@ var pc = function () {
             }
             
             return ret;
-        },
-
-        /**
-         * [deprecated] Call fn(index, arrayItem) for each item in the array
-         * @deprecated There is a built in function Array.map which should perform this task
-         * @param {Array} arr The array to iterate over
-         * @param {Function} fn The function to execute on each array item
-         * @function
-         * @name pc.each
-         */
-        each: function (arr, fn) {
-            var index,
-            length = arr.length;
-            
-            for(index = 0; index < length; ++index) {
-                fn(index, arr[index]);
-            }
-        },
-
-        /**
-         * [deprecated] Create a callback function which maintains the correct value for 'this'
-         * @deprecated Use the built in function bind() on the Function object
-         * @param {Object} self The object to use as 'this' for the callback
-         * @param {Object} fn The function to callback
-         * @function
-         * @name pc.callback
-         */
-        callback: function (self, fn) {
-            return function () {
-                    var args = pc.makeArray(arguments);
-                    return fn.apply(self, args);
-                };
         },
         
         /**
