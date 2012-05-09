@@ -489,7 +489,6 @@ pc.extend(pc.scene, function () {
 
             var geomIndices = new Uint16Array(this.getIndexBuffer(pc.scene.RenderStyle.NORMAL).lock());
             var subMeshes = this.getSubMeshes(pc.scene.RenderStyle.NORMAL);
- 
             for (var iSubMesh = 0; iSubMesh < subMeshes.length; iSubMesh++) {
                 var submesh = subMeshes[iSubMesh];
                 for (var iIndex = submesh.primitive.base; iIndex < submesh.primitive.base + submesh.primitive.count; ) {  

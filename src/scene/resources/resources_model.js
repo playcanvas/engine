@@ -1012,6 +1012,22 @@ pc.extend(pc.resources, function () {
             var vbuff = this.readVertexBufferChunk();
             var ibuff = this.readIndexBufferChunk();
             var subMeshes = this.readSubMeshesChunk();
+            var numBones  = this.readU32();
+            var ibp = [];
+            var boneNames = [];
+            if (numBones > 0) {
+                for (var i = 0; i < numBones; i++) {
+                    var ibm = pc.math.mat4.create();
+                    for (var j = 0; j < 16; j++) {
+                        ibm[j] = this.readF32();
+                    }
+                    ibp.push(ibm);
+                }
+                for (var i = 0; i < numBones; i++) {
+                    var boneName = this.readStringChunk();
+                    boneNames.push(boneName);
+                }
+            }
 
             generateTangentsInPlace(vbuff, ibuff);
 
@@ -1020,11 +1036,17 @@ pc.extend(pc.resources, function () {
             geometry.setIndexBuffer(ibuff);
             geometry.setVertexBuffers([vbuff]);
             geometry.setSubMeshes(subMeshes);
-            
-            var device = pc.gfx.Device.getCurrent();
-            var maxBones = device.getBoneLimit();
-            if (geometry.getInverseBindPose().length > maxBones) {
-                geometry.partitionSkin(maxBones);
+            if (numBones > 0) {
+                geometry.setInverseBindPose(ibp);
+                geometry._boneNames = boneNames;
+            }
+
+            if (geometry.isSkinned()) {
+                var device = pc.gfx.Device.getCurrent();
+                var maxBones = device.getBoneLimit();
+                if (geometry.getInverseBindPose().length > maxBones) {
+                    geometry.partitionSkin(maxBones);
+                }
             }
 
             return geometry;
@@ -1164,6 +1186,22 @@ pc.extend(pc.resources, function () {
                 nodes[parent].addChild(nodes[child]);
             }
             this.model.setGraph(nodes[0]);
+
+            // Resolve bone IDs to actual graph nodes
+            var meshes = this.model.getMeshes();
+            var graph = this.model.getGraph();
+            for (i = 0; i < meshes.length; i++) {
+                var mesh = meshes[i];
+                var geom = mesh.getGeometry();
+                if (geom._boneNames !== undefined) {
+                    mesh._bones = [];
+                    for (var j = 0; j < geom._boneNames.length; j++) {
+                        var boneName = geom._boneNames[j];
+                        var bone = graph.findByName(boneName);
+                        mesh._bones.push(bone);
+                    }
+                }
+            }
 
             return this.model;
         }
