@@ -95,7 +95,7 @@ pc.extend(pc.resources, function () {
         if (options.binary) {
             model = this._loadModelBin(data, options);
         } else {
-            model = this._loadModel(data, options);
+            model = this._loadModelJson(data, options);
         }
     	return model;
     };
@@ -275,181 +275,11 @@ pc.extend(pc.resources, function () {
         return subMesh;
     };
 
-    ModelResourceHandler.prototype._partitionSkinnedGeometry = function (geometryData, maxBonesPerPartition) {
-        var partitions = [];
-        var partitionedVertices = [];
-        var partitionedIndices = [];
-        var partitionedBones = [];
-
-        // Phase 1:  
-        // Build the skin partitions
-        var primitiveVertices = [];
-        var primitiveVertexIndices = [];
-        var primitiveVertexCount = 3; // Assume only triangle list support for now
-
-        // Go through index list and extract primitives and add them to bone partitions  
-        // Since we are working with a single triangle list, everything is a triangle
-        var basePartition = 0;
-        var indexList = geometryData.indices.data;
-        for (var iSubMesh = 0; iSubMesh < geometryData.submeshes.length; iSubMesh++) {
-            var submesh = geometryData.submeshes[iSubMesh];
-            for (var iIndex = submesh.primitive.base; iIndex < submesh.primitive.base + submesh.primitive.count; ) {  
-                // Extact primitive  
-                // Convert vertices  
-                // There is a little bit of wasted time here if the vertex was already added previously  
-                var index;  
-
-                index = indexList[iIndex++];
-                primitiveVertices[0] = new Vertex();  
-                primitiveVertices[0].extract(geometryData, index);  
-                primitiveVertexIndices[0] = index;
-
-                index = indexList[iIndex++];  
-                primitiveVertices[1] = new Vertex();  
-                primitiveVertices[1].extract(geometryData, index);  
-                primitiveVertexIndices[1] = index; 
-
-                index = indexList[iIndex++];  
-                primitiveVertices[2] = new Vertex();  
-                primitiveVertices[2].extract(geometryData, index);  
-                primitiveVertexIndices[2] = index;  
-
-                // Attempt to add the primitive to an existing bone partition  
-                var added = false;
-                for (var iBonePartition = basePartition; iBonePartition < partitions.length; iBonePartition++) {
-                    var partition = partitions[iBonePartition];  
-                    if (partition.addPrimitive(primitiveVertexCount, primitiveVertices, primitiveVertexIndices, maxBonesPerPartition)) {  
-                        added = true;  
-                        break;  
-                    }
-                }
-
-                // If the primitive was not added to an existing bone partition, we need to make a new bone partition and add the primitive to it  
-                if (!added) {
-                    var partition = new SkinPartition();
-                    partition.material = submesh.material;
-                    partitions.push(partition);
-                    partition.addPrimitive(primitiveVertexCount, primitiveVertices, primitiveVertexIndices, maxBonesPerPartition);  
-                }
-            }  
-
-            basePartition = partitions.length;
-        }
-
-        // Phase 2:
-        // Gather vertex and index lists from all the partitions, then upload to GPU  
-        for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-            var partition = partitions[iPartition];  
-	
-            if (partition.vertices.length && partition.indices.length) {
-                // this bone partition contains vertices and indices  
-	
-                // Find offsets  
-                var vertexStart = partitionedVertices.length;  
-                var vertexCount = partition.vertices.length;  
-                var indexStart = partitionedIndices.length;  
-                var indexCount = partition.indices.length;  
-
-                // Make a new sub set  
-                partition.partition = iPartition;  
-                partition.vertexStart = vertexStart;  
-                partition.vertexCount = vertexCount;  
-                partition.indexStart = indexStart;  
-                partition.indexCount = indexCount;  
-
-                // Copy buffers  
-                var iSour;  
-                var iDest;  
-
-                // Copy vertices to final list  
-                iSour = 0;  
-                iDest = vertexStart;
-                while (iSour < vertexCount) {
-                    partitionedVertices[iDest++] = partition.vertices[iSour++];  
-                }
-	
-                // Copy indices to final list  
-                iSour = 0;  
-                iDest = indexStart;
-                while (iSour < indexCount) {
-                    partitionedIndices[iDest++] = partition.indices[iSour++] + vertexStart;    // adjust so they reference into flat vertex list  
-                }
-
-                // Clean up  
-                partition.clear();  
-            }  
-        }
-
-        // Phase 3:
-        // Update geometry data to reflect partitions
-
-        // Blank data arrays
-        for (var i = 0; i < partitionedVertices.length; i++) {
-            for (var j = 0; j < geometryData.attributes.length; j++) {
-                geometryData.attributes[j].data = [];
-            }
-        }
-        // Copy partitioned verts back to JSON structure
-        for (var i = 0; i < partitionedVertices.length; i++) {
-            for (var j = 0; j < geometryData.attributes.length; j++) {
-                var attribute = geometryData.attributes[j];
-                for (var k = 0; k < attribute.components; k++) {
-                    attribute.data.push(partitionedVertices[i][attribute.name][k]);
-                }
-            }
-        }
-        // Copy partitioned indices back to geometry submesh indices
-        var subMeshes = [];
-        var indices = [];
-        geometryData.partitionedBoneIndices = [];
-        for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-            var partition = partitions[iPartition];
-            var subMesh = {
-                material: partition.material,
-                primitive: {
-                    type: "triangles",
-                    base: indices.length,
-                    count: partition.indexCount,
-                    indexed: true
-                }
-            };
-
-            subMeshes.push(subMesh);
-
-            geometryData.partitionedBoneIndices.push(partition.boneIndices);
-
-            indices = indices.concat(partitionedIndices.splice(0, partition.indexCount));
-        }
-
-        geometryData.indices.data = indices;
-        geometryData.submeshes = subMeshes;
-    };
-
     ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData, buffers) {
         var geometry = new pc.scene.Geometry();
     
         // Skinning data
         if (geomData.inverse_bind_pose !== undefined) {
-            var device = pc.gfx.Device.getCurrent();
-            var maxBones = device.getBoneLimit();
-            if (geomData.inverse_bind_pose.length > maxBones) {
-                // FIXME!!: This is here to duplicate the incoming JSON because requests to
-                // the same URL passes in the same data, making the assumption it is read
-                // only.  Unfortunately, the skin partition code writes to this data.  A
-                // good fix would be to make skin partitioning a geometry utility library.
-                geomData = pc.extend({}, geomData);
-                this._partitionSkinnedGeometry(geomData, maxBones);
-
-                geometry._partitionedBoneIndices = [];
-                geometry._partitionedPalettes = [];
-                if (geomData.partitionedBoneIndices) {
-                    for (var i = 0; i < geomData.partitionedBoneIndices.length; i++) {
-                        geometry._partitionedBoneIndices.push(geomData.partitionedBoneIndices[i].slice(0));
-                        geometry._partitionedPalettes.push(new Float32Array(geomData.partitionedBoneIndices[i].length * 16));
-                    }
-                }
-            }
-    
             var inverseBindPose = [];
             for (var i = 0; i < geomData.inverse_bind_pose.length; i++) {
                 inverseBindPose[i] = pc.math.mat4.clone(geomData.inverse_bind_pose[i]);
@@ -463,19 +293,8 @@ pc.extend(pc.resources, function () {
         var positions = null, normals = null, uvs = null, tangents = null;
         for (var i = 0; i < geomData.attributes.length; i++) {
             var entry = geomData.attributes[i];
-    
+
             if (entry.name === "vertex_position") {
-                // Calculate a bounding sphere for the geometry
-                var sphere = new pc.shape.Sphere();
-                sphere.compute(entry.data);
-                geometry.setVolume(sphere);
-
-                if (!geomData.bbox) {
-                    var aabb = new pc.shape.Aabb();
-                    aabb.compute(entry.data);
-                    geometry.setAabb(sphere);
-                }
-
                 positions = entry.data;
             }
             if (entry.name === "vertex_normal") {
@@ -493,19 +312,19 @@ pc.extend(pc.resources, function () {
             var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, geomData.indices.data);
             geomData.attributes.push({ name: "vertex_tangent", type: "float32", components: 4, data: tangents });
         }
-    
+
         // Generate the vertex format for the geometry's vertex buffer
         var vertexFormat = new pc.gfx.VertexFormat();
         vertexFormat.begin();
         for (var i = 0; i < geomData.attributes.length; i++) {
             var attribute = geomData.attributes[i];
-    
+
             // Create the vertex format for this buffer
             var attributeType = this._jsonToVertexElementType[attribute.type];
             vertexFormat.addElement(new pc.gfx.VertexElement(attribute.name, attribute.components, attributeType));
         }
         vertexFormat.end();
-    
+
         // Create the vertex buffer
         var numVertices = geomData.attributes[0].data.length / geomData.attributes[0].components;
         var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
@@ -541,14 +360,7 @@ pc.extend(pc.resources, function () {
         dst.set(geomData.indices.data);
         indexBuffer.unlock();
         geometry.setIndexBuffer(indexBuffer);
-/*
-        geometry.getVertexBuffers().push(buffers.vb);
-        geometry.setIndexBuffer(buffers.ib);
 
-        var sphere = new pc.shape.Sphere();
-        sphere.radius = 30;
-        geometry.setVolume(sphere);
-*/
         // Create and read each submesh
         for (var i = 0; i < geomData.submeshes.length; i++) {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
@@ -567,8 +379,147 @@ pc.extend(pc.resources, function () {
             geometry.setAabb(aabb);
         }
 
+        if (geometry.isSkinned()) {
+            var device = pc.gfx.Device.getCurrent();
+            var maxBones = device.getBoneLimit();
+            if (geometry.getInverseBindPose().length > maxBones) {
+                geometry.partitionSkin(maxBones);
+            }
+        }
+
         return geometry;
     };
+
+    /**
+    * @function
+    * @name pc.resources.ModelResourceHandler#_loadModelJson
+    * @description Load a pc.scene.Model from data in the PlayCanvas JSON format
+    * @param {Object} json The data
+    */
+    ModelResourceHandler.prototype._loadModelJson = function (data, options) {
+        var modelData = data.model;
+
+        var model = new pc.scene.Model();
+        var i;
+
+        // Load in the shared resources of the model (textures, materials and geometries)
+        if (modelData.textures) {
+            var textures = model.getTextures();
+            for (i = 0; i < modelData.textures.length; i++) {
+                var textureData = modelData.textures[i];
+                textures.push(this._loadTexture(model, modelData, textureData, options));
+            }
+        }
+
+        if (modelData.materials) {
+            var materials = model.getMaterials();
+            for (i = 0; i < modelData.materials.length; i++) {
+                var materialData = modelData.materials[i];
+                materials.push(this._loadMaterial(model, modelData, materialData));
+            }
+        }
+
+        var geometries = model.getGeometries();
+        for (i = 0; i < modelData.geometries.length; i++) {
+            var geomData = modelData.geometries[i];
+            geometries.push(this._loadGeometry(model, modelData, geomData));
+        }
+    
+        var _jsonToLoader = {
+            "camera" : this._loadCamera.bind(this),
+            "light"  : this._loadLight.bind(this),
+            "mesh"   : this._loadMesh.bind(this),
+            "node"   : this._loadNode.bind(this)
+        };
+    
+        var _loadHierarchy = function (nodeData) {
+            var node = null;
+            var loadFunc = _jsonToLoader[nodeData.type];
+            if (loadFunc !== undefined) {
+                node = loadFunc(model, modelData, nodeData);
+    
+                if (node instanceof pc.scene.CameraNode)
+                    model.getCameras().push(node);
+                else if (node instanceof pc.scene.LightNode)
+                    model.getLights().push(node);
+                else if (node instanceof pc.scene.MeshNode)
+                    model.getMeshes().push(node);
+
+                // Now create and load each child
+                if (nodeData.children !== undefined) {
+                    for (var i = 0; i < nodeData.children.length; i++) {
+                        var child = _loadHierarchy(nodeData.children[i]);
+                        node.addChild(child);
+                    }
+                }
+            } else {
+                logERROR("Unknown graph node: " + nodeData.type);        
+            }
+    
+            return node;
+        }.bind(this);
+
+        var _resolveCameraIds = function (node) {
+            if (node instanceof pc.scene.CameraNode) {
+                if (node._lookAtId) {
+                    var lookAtNode = model.getGraph().findByGraphId(node._lookAtId);
+                    node.setLookAtNode(lookAtNode);
+                    delete node._lookAtId;
+                }
+                if (node._upId) {
+                    var upNode = model.getGraph().findByGraphId(node._upId);
+                    node.setUpNode(upNode);
+                    delete node._upId;
+                }
+            }
+            var children = node.getChildren();
+            for (var i = 0; i < children.length; i++) {
+                _resolveCameraIds(children[i]);
+            }
+        }
+
+        var _clearGraphIds = function (node) {
+            var i = 0;
+            var children = node.getChildren();
+            var length = children.length;
+            
+            node.removeGraphId();
+            node.getChildren().forEach(function (child) {
+                _clearGraphIds(child);
+            }, this);
+        };
+        
+        if (modelData.graph !== undefined) {
+            var graph = _loadHierarchy(modelData.graph);
+            model.setGraph(graph);
+
+            // Resolve bone IDs to actual graph nodes
+            var meshes = model.getMeshes();
+            for (i = 0; i < meshes.length; i++) {
+                var mesh = meshes[i];
+                var geom = mesh.getGeometry();
+                if (geom._boneIds !== undefined) {
+                    mesh._bones = [];
+                    for (var j = 0; j < geom._boneIds.length; j++) {
+                        var id = geom._boneIds[j];
+                        var bone = graph.findByGraphId(id);
+                        mesh._bones.push(bone);
+                    }
+                }
+            }
+
+            // Resolve camera aim/up graph node IDs to actual graph nodes            
+            _resolveCameraIds(graph);
+
+//            _clearGraphIds(graph);
+        }
+        
+        return model;
+    };
+
+    ///////////////////
+    // BINARY LOADER //
+    ///////////////////
 
     var attribs = {
         POSITION: 1 << 0,
@@ -656,7 +607,11 @@ pc.extend(pc.resources, function () {
         return vertexFormat;
     }
 
-    function generateTangentsInPlace(vertexFormat, vertices, indices) {
+    function generateTangentsInPlace(vertexBuffer, indexBuffer) {
+        var indices = new Uint16Array(indexBuffer.lock());
+        var vertices = vertexBuffer.lock();
+        var vertexFormat = vertexBuffer.getFormat();
+
         var stride = vertexFormat.size;
         var positions, normals, tangents, uvs;
         for (var el = 0; el < vertexFormat.elements.length; el++) {
@@ -770,195 +725,10 @@ pc.extend(pc.resources, function () {
             pc.math.vec3.cross(n, t1, temp);
             tangents[i * (stride / 4) + 3] = (pc.math.vec3.dot(temp, t2) < 0.0) ? -1.0 : 1.0;
         }
+
+        indexBuffer.unlock();
+        vertexBuffer.unlock();
     }
-
-    function parseBin(bin) {
-        // Parse file header
-        var fileHeader = new Uint32Array(bin, 0, 3);
-        if(getChunkHeaderId(fileHeader[0]) !== "pbin") {
-            throw new Error("BIN file has invalid file header id.");
-        }
-        if (fileHeader[1] !== 1) {
-            throw new Error("BIN file version is unsupported.");
-        }
-        var numChunks = fileHeader[2];
-        var buffers = [];
-
-        // Parse chunks
-        for (i = 0; i < numChunks; i+=2) {
-            // Extract vertex/index buffer data from the BIN file
-            var chunkHeader = new Uint32Array(bin, (3 + (i * 3)) * 4, 3);
-            if (getChunkHeaderId(chunkHeader[0]) !== "vbuf") {
-                throw new Error("Expected to find a vertex buffer in BIN stream.");
-            }
-            var vbuffInfo = new Uint32Array(bin, chunkHeader[1], 2);
-            var vbuffFormat = vbuffInfo[0];
-            var vbuffStride = vbuffInfo[1];
-            var vbuffNumVerts = (chunkHeader[2] - 8) / vbuffStride;
-            var vbuffData = new Uint8Array(bin, chunkHeader[1] + 8, chunkHeader[2] - 8);
-
-            chunkHeader = new Uint32Array(bin, (3 + ((i + 1) * 3)) * 4, 3);
-            if (getChunkHeaderId(chunkHeader[0]) !== "ibuf") {
-                throw new Error("Expected to find an index buffer in BIN stream.");
-            }
-            var ibuffNumInds = chunkHeader[2] / 2;
-            var ibuffData = new Uint16Array(bin, chunkHeader[1], ibuffNumInds);
-
-            // Construct vertex/index buffers
-            var ib = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, ibuffNumInds);
-            var dst = new Uint16Array(ib.lock());
-            dst.set(ibuffData);
-            ib.unlock();
-
-            // Create the vertex buffer
-            var vertexFormat = translateFormat(vbuffFormat);
-
-            var vb = new pc.gfx.VertexBuffer(vertexFormat, vbuffNumVerts);
-            var dst = vb.lock();
-            var dstBuffer = new Uint8Array(dst);
-            copyToBuffer(dstBuffer, vbuffData, vbuffFormat, vbuffStride);
-            generateTangentsInPlace(vertexFormat, dst, ibuffData);
-            vb.unlock();
-
-            buffers.push({
-                vb: vb,
-                ib: ib
-            });
-        }
-        
-        return buffers;
-    }
-    
-    /**
-    * @function
-    * @name pc.resources.ModelResourceHandler#_loadModel
-    * @description Load a pc.scene.Model from data in the PlayCanvas JSON format
-    * @param {Object} json The data
-    */
-    ModelResourceHandler.prototype._loadModel = function (data, options) {
-        var modelData = data.model;
-
-        var model = new pc.scene.Model();
-        var i;
-
-        // Load in the shared resources of the model (textures, materials and geometries)
-        if (modelData.textures) {
-            var textures = model.getTextures();
-            for (i = 0; i < modelData.textures.length; i++) {
-                var textureData = modelData.textures[i];
-                textures.push(this._loadTexture(model, modelData, textureData, options));
-            }
-        }
-
-        var materials = model.getMaterials();
-        for (i = 0; i < modelData.materials.length; i++) {
-            var materialData = modelData.materials[i];
-            materials.push(this._loadMaterial(model, modelData, materialData));
-        }
-/*    
-        var buffers = parseBin(options.bin);
-*/
-        var geometries = model.getGeometries();
-        for (i = 0; i < modelData.geometries.length; i++) {
-            var geomData = modelData.geometries[i];
-            geometries.push(this._loadGeometry(model, modelData, geomData/*, buffers[i]*/));
-        }
-    
-        var _jsonToLoader = {
-            "camera" : this._loadCamera.bind(this),
-            "light"  : this._loadLight.bind(this),
-            "mesh"   : this._loadMesh.bind(this),
-            "node"   : this._loadNode.bind(this)
-        };
-    
-        var _loadHierarchy = function (nodeData) {
-            var node = null;
-            var loadFunc = _jsonToLoader[nodeData.type];
-            if (loadFunc !== undefined) {
-                node = loadFunc(model, modelData, nodeData);
-    
-                if (node instanceof pc.scene.CameraNode)
-                    model.getCameras().push(node);
-                else if (node instanceof pc.scene.LightNode)
-                    model.getLights().push(node);
-                else if (node instanceof pc.scene.MeshNode)
-                    model.getMeshes().push(node);
-
-                // Now create and load each child
-                if (nodeData.children !== undefined) {
-                    for (var i = 0; i < nodeData.children.length; i++) {
-                        var child = _loadHierarchy(nodeData.children[i]);
-                        node.addChild(child);
-                    }
-                }
-            } else {
-                logERROR("Unknown graph node: " + nodeData.type);        
-            }
-    
-            return node;
-        }.bind(this);
-
-        var _resolveCameraIds = function (node) {
-            if (node instanceof pc.scene.CameraNode) {
-                if (node._lookAtId) {
-                    var lookAtNode = model.getGraph().findByGraphId(node._lookAtId);
-                    node.setLookAtNode(lookAtNode);
-                    delete node._lookAtId;
-                }
-                if (node._upId) {
-                    var upNode = model.getGraph().findByGraphId(node._upId);
-                    node.setUpNode(upNode);
-                    delete node._upId;
-                }
-            }
-            var children = node.getChildren();
-            for (var i = 0; i < children.length; i++) {
-                _resolveCameraIds(children[i]);
-            }
-        }
-
-        var _clearGraphIds = function (node) {
-            var i = 0;
-            var children = node.getChildren();
-            var length = children.length;
-            
-            node.removeGraphId();
-            node.getChildren().forEach(function (child) {
-                _clearGraphIds(child);
-            }, this);
-        };
-        
-        if (modelData.graph !== undefined) {
-            var graph = _loadHierarchy(modelData.graph);
-            model.setGraph(graph);
-
-            // Resolve bone IDs to actual graph nodes
-            var meshes = model.getMeshes();
-            for (i = 0; i < meshes.length; i++) {
-                var mesh = meshes[i];
-                var geom = mesh.getGeometry();
-                if (geom._boneIds !== undefined) {
-                    mesh._bones = [];
-                    for (var j = 0; j < geom._boneIds.length; j++) {
-                        var id = geom._boneIds[j];
-                        var bone = graph.findByGraphId(id);
-                        mesh._bones.push(bone);
-                    }
-                }
-            }
-
-            // Resolve camera aim/up graph node IDs to actual graph nodes            
-            _resolveCameraIds(graph);
-
-//            _clearGraphIds(graph);
-        }
-        
-        return model;
-    };
-
-    ///////////////////
-    // BINARY LOADER //
-    ///////////////////
 
     function MemoryStream(arrayBuffer, loader, options) {
         this.memory = arrayBuffer;
@@ -1242,18 +1012,43 @@ pc.extend(pc.resources, function () {
             var vbuff = this.readVertexBufferChunk();
             var ibuff = this.readIndexBufferChunk();
             var subMeshes = this.readSubMeshesChunk();
+            var numBones  = this.readU32();
+            var ibp = [];
+            var boneNames = [];
+            if (numBones > 0) {
+                for (var i = 0; i < numBones; i++) {
+                    var ibm = pc.math.mat4.create();
+                    for (var j = 0; j < 16; j++) {
+                        ibm[j] = this.readF32();
+                    }
+                    ibp.push(ibm);
+                }
+                for (var i = 0; i < numBones; i++) {
+                    var boneName = this.readStringChunk();
+                    boneNames.push(boneName);
+                }
+            }
 
-            var indices = new Uint16Array(ibuff.lock());
-            var vertices = vbuff.lock();
-            generateTangentsInPlace(vbuff.getFormat(), vertices, indices);
-            ibuff.unlock();
-            vbuff.unlock();
+            generateTangentsInPlace(vbuff, ibuff);
 
             var geometry = new pc.scene.Geometry();
             geometry.setAabb(bbox);
             geometry.setIndexBuffer(ibuff);
             geometry.setVertexBuffers([vbuff]);
-            geometry.setSubMeshes(subMeshes);            
+            geometry.setSubMeshes(subMeshes);
+            if (numBones > 0) {
+                geometry.setInverseBindPose(ibp);
+                geometry._boneNames = boneNames;
+            }
+
+            if (geometry.isSkinned()) {
+                var device = pc.gfx.Device.getCurrent();
+                var maxBones = device.getBoneLimit();
+                if (geometry.getInverseBindPose().length > maxBones) {
+                    geometry.partitionSkin(maxBones);
+                }
+            }
+
             return geometry;
         },
 
@@ -1392,6 +1187,22 @@ pc.extend(pc.resources, function () {
             }
             this.model.setGraph(nodes[0]);
 
+            // Resolve bone IDs to actual graph nodes
+            var meshes = this.model.getMeshes();
+            var graph = this.model.getGraph();
+            for (i = 0; i < meshes.length; i++) {
+                var mesh = meshes[i];
+                var geom = mesh.getGeometry();
+                if (geom._boneNames !== undefined) {
+                    mesh._bones = [];
+                    for (var j = 0; j < geom._boneNames.length; j++) {
+                        var boneName = geom._boneNames[j];
+                        var bone = graph.findByName(boneName);
+                        mesh._bones.push(bone);
+                    }
+                }
+            }
+
             return this.model;
         }
     };
@@ -1405,131 +1216,6 @@ pc.extend(pc.resources, function () {
 	};
 	ModelRequest = pc.inherits(ModelRequest, pc.resources.ResourceRequest);
     ModelRequest.prototype.type = "model";
-
-    ///////////////////////
-    // SKIN PARTITIONING //
-    ///////////////////////
-
-	var Vertex = function Vertex() {};
-	// Returns a vertex from the JSON data in the followin format:
-	// {
-	//     "vertex_position": [x,y,z],
-	//     ...
-	// }
-	Vertex.prototype.extract = function (geometryData, index) {
-	    for (var i = 0; i < geometryData.attributes.length; i++) {
-	        var attribute = geometryData.attributes[i];
-	        this[attribute.name] = [];
-	        for (var j = 0; j < attribute.components; j++) {
-	            this[attribute.name].push(attribute.data[index * attribute.components + j]);
-	        }
-	    }
-	};
-	
-	Vertex.prototype.clone = function () {
-	    var newVertex = new Vertex();
-	    for (i in this) {
-	        if (this[i] instanceof Array) {
-	            newVertex[i] = this[i];
-	        }
-	    } 
-	    return newVertex;
-	};
-	
-	var SkinPartition = function SkinPartition() {
-	    this.partition = 0;
-	    this.vertexStart = 0;
-	    this.vertexCount = 0;
-	    this.indexStart = 0;
-	    this.indexCount = 0;
-	
-	    // Indices of bones in this partition. skin matrices will be uploaded to the vertex shader in this order.
-	    this.boneIndices = []; 
-	    
-	    this.vertices = []; // Partitioned vertex attributes
-	    this.indices  = []; // Partitioned vertex indices
-	    this.indexMap = {}; // Maps the index of an un-partitioned vertex to that same vertex if it has been added to this particular partition. speeds up checking for duplicate vertices so we don't add the same vertex more than once.  
-	};
-	
-	SkinPartition.prototype.addVertex = function (vertex, index) {
-	    var remappedIndex = -1;
-	    if (this.indexMap[index] !== undefined) {
-	        remappedIndex = this.indexMap[index];
-	        this.indices.push(remappedIndex);
-	    } else {
-	        // Create new partitioned vertex  
-	        var vertexPartitioned = vertex.clone();  
-	        for (var influence = 0; influence < 4; influence++ ) {
-	            if (vertex["vertex_boneWeights"][influence] == 0 )  
-	                continue;  
-	
-	            vertexPartitioned["vertex_boneIndices"][influence] = this.getBoneRemap(vertex["vertex_boneIndices"][influence]);
-	        }  
-	        remappedIndex = this.vertices.length;
-	        this.indices.push(remappedIndex);  
-	        this.vertices.push(vertexPartitioned);  
-	        this.indexMap[index] = remappedIndex;  
-	    }
-	    return remappedIndex;
-	};
-	
-	SkinPartition.prototype.addPrimitive = function (vertexCount, vertices, vertexIndices, maxBonesPerPartition) {
-	    // Build a list of all the bones used by the vertex that aren't currently in this partition  
-	    var bonesToAdd = [];
-	    var bonesToAddCount = 0;
-	    for (var i = 0; i < vertexCount; i++) {
-	        for (var influence = 0; influence < 4; influence++) {
-	            if (vertices[i]["vertex_boneWeights"][influence] > 0.0 ) {
-	                var boneIndex = vertices[i]["vertex_boneIndices"][influence];  
-	                var needToAdd = true;
-	                for (var j = 0; j < bonesToAddCount; j++) {
-	                    if (bonesToAdd[j] == boneIndex) {
-	                        needToAdd = false;
-	                        break;
-	                    }  
-	                }
-	                if (needToAdd) {
-	                    bonesToAdd[bonesToAddCount] = boneIndex;  
-	                    var boneRemap = this.getBoneRemap(boneIndex);  
-	                    bonesToAddCount += (boneRemap === -1 ? 1 : 0);
-	                }  
-	            }  
-	        }  
-	    }  
-	   
-	    // Check that we can fit more bones in this partition.  
-	    if ((this.boneIndices.length + bonesToAddCount) > maxBonesPerPartition) {
-	        return false;  
-	    }  
-	
-	    // Add bones  
-	    for (var i = 0; i < bonesToAddCount; i++) {
-	        this.boneIndices.push(bonesToAdd[i]);
-	    }
-	
-	    // Add vertices and indices
-	    for (var i = 0; i < vertexCount; i++) {  
-	        this.addVertex(vertices[i], vertexIndices[i] );  
-	    }
-	
-	    return true;
-	};
-	
-	SkinPartition.prototype.getBoneRemap = function (boneIndex) {
-	    for (var i = 0; i < this.boneIndices.length; i++ ) {
-	        if (this.boneIndices[i] === boneIndex) {
-	            return i;
-	        }  
-	    }  
-	    return -1;  
-	}; 
-
-	SkinPartition.prototype.clear = function () {
-	    this.vertices = {};
-	//    this.indices = [];
-	    this.indexMap = [];  
-	};
-	
 
 	return {
 		ModelResourceHandler: ModelResourceHandler,
