@@ -327,7 +327,7 @@ pc.extend(pc.net, function () {
             } else if (this.isBinaryContentType(contentType)) {
                 response = xhr.response;
             } else {
-                if (xhr.responseXML != null) {
+                if (xhr.responseType === 'document') {
                     // It's an XML response
                     response = xhr.responseXML;
                 }

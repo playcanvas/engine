@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
      * <pre class="code" lang="javascript">
      * var MyApplication = function () {
      * };
-     * MyApplication = MyApplication.extendsFrom(pc.fw.Application);
+     * MyApplication = pc.inherits(MyApplication, pc.fw.Application);
      * 
      * MyApplication.prototype.update = function () {
      *   // custom update code
@@ -217,6 +217,30 @@ pc.extend(pc.fw, function () {
             return document[this._hiddenAttr];
         },
 
+        printHierarchy: function (e) {
+            function print(e, depth) {
+                var indent = '';
+                var count = 0;
+
+                while (count < depth) {
+                    indent += ' ';
+                    count++;
+                }
+                logDEBUG(indent + e.getGuid());
+
+                var i, children = e.getChildren(), len = children.length;
+                for (i = 0; i < len; i++) {
+                    if(children[i] instanceof pc.fw.Entity) {
+                        print.call(this, children[i], depth + 1);
+                    }
+                }
+            }
+
+            logDEBUG('---');
+            print.call(this, e, 0);
+            logDEBUG('---');
+        },
+
         /**
          * @function
          * @name pc.fw.Application#_handleMessage
@@ -245,13 +269,14 @@ pc.extend(pc.fw, function () {
                 case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                     var entity = this.context.root.findOne("getGuid", msg.content.id);
                     if(entity) {
+                        logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid())); 
                         entity.close(this.context.systems);
+                        //this.printHierarchy(this.context.root);
                     }
                     break;
                 case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
                     var entities = {};
                     var guid = null;
-                    
                     msg.content.models.forEach(function (model) {
                         var entity = this.context.loader.open(pc.resources.EntityRequest, model);
                         entities[entity.getGuid()] = entity;
@@ -267,6 +292,8 @@ pc.extend(pc.fw, function () {
                                 // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
                                 var parent = this.context.root.findByGuid(entities[guid].__parent);
                                 parent.addChild(entities[guid]);
+                                logDEBUG(pc.string.format("RT: Added '{0}' to parent {1}", guid, entities[guid].__parent));
+                                //this.printHierarchy(this.context.root);
                             }
                         }
                     }

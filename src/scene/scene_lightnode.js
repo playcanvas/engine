@@ -44,8 +44,7 @@ pc.extend(pc.scene, function () {
         this._shadowCamera = null;
         this._shadowMatrix = pc.math.mat4.create();
     };
-
-    LightNode = LightNode.extendsFrom(pc.scene.GraphNode);
+    LightNode = pc.inherits(LightNode, pc.scene.GraphNode);
 
     /**
      * @private

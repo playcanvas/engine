@@ -8,7 +8,7 @@ pc.extend(pc.resources, function () {
         this._depot = depot;
     
     };
-    EntityResourceHandler = EntityResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+    EntityResourceHandler = pc.inherits(EntityResourceHandler, pc.resources.ResourceHandler);
     
     EntityResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
         options = options || {};
@@ -116,7 +116,7 @@ pc.extend(pc.resources, function () {
     
     var EntityRequest = function EntityRequest(identifier) {
     }
-    EntityRequest = EntityRequest.extendsFrom(pc.resources.ResourceRequest);
+    EntityRequest = pc.inherits(EntityRequest, pc.resources.ResourceRequest);
     EntityRequest.prototype.type = "entity";
     
     return {

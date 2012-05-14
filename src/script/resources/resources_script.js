@@ -18,7 +18,7 @@ pc.extend(pc.resources, function () {
                 
         pc.script.bind("created", this._onScriptCreated.bind(this));
     };
-    ScriptResourceHandler = ScriptResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+    ScriptResourceHandler = pc.inherits(ScriptResourceHandler, pc.resources.ResourceHandler);
     
     /**
      * @name pc.resources.ScriptResourceHandler#load
@@ -138,7 +138,7 @@ pc.extend(pc.resources, function () {
     
     var ScriptRequest = function ScriptRequest() {
     };
-    ScriptRequest = ScriptRequest.extendsFrom(pc.resources.ResourceRequest);
+    ScriptRequest = pc.inherits(ScriptRequest, pc.resources.ResourceRequest);
     ScriptRequest.prototype.type = "script";
     
     return {

@@ -168,7 +168,7 @@ pc.extend(pc.scene, function () {
         };
     }
 
-    ParticleEmitter = ParticleEmitter.extendsFrom(pc.scene.GraphNode);
+    ParticleEmitter = pc.inherits(ParticleEmitter, pc.scene.GraphNode);
 
     ParticleEmitter.prototype.dispatch = function () {
         var res = this.resources;

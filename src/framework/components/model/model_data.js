@@ -9,7 +9,7 @@ pc.extend(pc.fw, function() {
         // non-serialized
         this.model = null;
     }
-    ModelComponentData = ModelComponentData.extendsFrom(pc.fw.ComponentData);
+    ModelComponentData = pc.inherits(ModelComponentData, pc.fw.ComponentData);
     
     return {
         ModelComponentData:ModelComponentData 

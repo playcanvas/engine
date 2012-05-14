@@ -18,7 +18,7 @@ pc.extend(pc.fw, function () {
             value: value
         };
     };
-    LiveLinkUpdateComponentMessage = LiveLinkUpdateComponentMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    LiveLinkUpdateComponentMessage = pc.inherits(LiveLinkUpdateComponentMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("UPDATE_COMPONENT");
         
     return {

@@ -6,7 +6,7 @@ var TestResourceHandler = function () {
 	this.progress = [];
 	this.opened = false;
 };
-TestResourceHandler = TestResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+TestResourceHandler = pc.inherits(TestResourceHandler, pc.resources.ResourceHandler);
 TestResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
 	this.success.push(success);
 	this.error.push(error);
@@ -19,7 +19,7 @@ TestResourceHandler.prototype.open = function (response, options) {
 };
 
 var TestRequest = function TestRequest() {};
-TestRequest = TestRequest.extendsFrom(pc.resources.ResourceRequest);
+TestRequest = pc.inherits(TestRequest, pc.resources.ResourceRequest);
 TestRequest.type = "test";
 
 // Simulate a hierarchical asset handler
@@ -34,7 +34,7 @@ var ChildResourceHandler = function (depth) {
     this.progress = [];
     this.depth = depth;
 };
-ChildResourceHandler = ChildResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+ChildResourceHandler = pc.inherits(ChildResourceHandler, pc.resources.ResourceHandler);
 ChildResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
     // If child resource has 'delay' in the name then push it on the delay list,
     // otherwise use the success list
@@ -63,7 +63,7 @@ ChildResourceHandler.prototype.open = function (response, options) {
 }
 
 var ChildRequest = function ChildRequest() {};
-ChildRequest = ChildRequest.extendsFrom(pc.resources.ResourceRequest);
+ChildRequest = pc.inherits(ChildRequest, pc.resources.ResourceRequest);
 ChildRequest.type = "child";
 
 test("new ResourceLoader", function () {

@@ -1,7 +1,7 @@
 pc.extend(pc.resources, function () {
     var AnimationResourceHandler = function () {};
 
-    AnimationResourceHandler = AnimationResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+    AnimationResourceHandler = pc.inherits(AnimationResourceHandler, pc.resources.ResourceHandler);
 
     AnimationResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
     	var url = identifier;
@@ -59,7 +59,7 @@ pc.extend(pc.resources, function () {
 	
     var AnimationRequest = function AnimationRequest(identifier) {};
 
-    AnimationRequest = AnimationRequest.extendsFrom(pc.resources.ResourceRequest);
+    AnimationRequest = pc.inherits(AnimationRequest, pc.resources.ResourceRequest);
     AnimationRequest.prototype.type = "animation";
 	
     return {

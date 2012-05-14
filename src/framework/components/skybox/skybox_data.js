@@ -11,7 +11,7 @@ pc.extend(pc.fw, function() {
 
         this.skybox = null;
     }
-    SkyboxComponentData = SkyboxComponentData.extendsFrom(pc.fw.ComponentData);
+    SkyboxComponentData = pc.inherits(SkyboxComponentData, pc.fw.ComponentData);
     
     return {
         SkyboxComponentData:SkyboxComponentData 

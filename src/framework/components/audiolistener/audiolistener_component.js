@@ -5,7 +5,7 @@ pc.extend(pc.fw, function () {
         this.manager = manager;
         this.current = null;
     };        
-    AudioListenerComponentSystem = AudioListenerComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    AudioListenerComponentSystem = pc.inherits(AudioListenerComponentSystem, pc.fw.ComponentSystem);
         
     AudioListenerComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AudioListenerComponentData();

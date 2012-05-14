@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
             context.systems.add("cubemap", this);
         };
 
-    CubeMapComponentSystem = CubeMapComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    CubeMapComponentSystem = pc.inherits(CubeMapComponentSystem, pc.fw.ComponentSystem);
     
     CubeMapComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.CubeMapComponentData();

@@ -1,7 +1,7 @@
 pc.extend(pc.fw, function () {
     var AudioZoneComponentData = function () {
     };
-    AudioZoneComponentData = AudioZoneComponentData.extendsFrom(pc.fw.ComponentData);
+    AudioZoneComponentData = pc.inherits(AudioZoneComponentData, pc.fw.ComponentData);
     
     return {
         AudioZoneComponentData: AudioZoneComponentData

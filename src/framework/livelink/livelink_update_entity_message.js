@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
             components: components
         };
     };
-    LiveLinkUpdateEntityMessage = LiveLinkUpdateEntityMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    LiveLinkUpdateEntityMessage = pc.inherits(LiveLinkUpdateEntityMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("UPDATE_ENTITY");
 
 
@@ -28,7 +28,7 @@ pc.extend(pc.fw, function () {
             scale: scale
         }
     };
-    LiveLinkUpdateEntityTransformMessage = LiveLinkUpdateEntityTransformMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    LiveLinkUpdateEntityTransformMessage = pc.inherits(LiveLinkUpdateEntityTransformMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_TRANSFORM");
     
     var LiveLinkUpdateEntityNameMessage = function (id, name) {
@@ -38,7 +38,7 @@ pc.extend(pc.fw, function () {
             name: name
         };
     };
-    LiveLinkUpdateEntityNameMessage = LiveLinkUpdateEntityNameMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    LiveLinkUpdateEntityNameMessage = pc.inherits(LiveLinkUpdateEntityNameMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_NAME");
     
     var LiveLinkReparentEntityMessage = function (id, oldParentId, newParentId, index) {
@@ -51,7 +51,7 @@ pc.extend(pc.fw, function () {
             index: index
         };
     };
-    LiveLinkReparentEntityMessage = LiveLinkReparentEntityMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    LiveLinkReparentEntityMessage = pc.inherits(LiveLinkReparentEntityMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("REPARENT_ENTITY");
     
     return {

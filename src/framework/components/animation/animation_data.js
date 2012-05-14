@@ -19,7 +19,7 @@ pc.extend(pc.fw, function() {
         this.blendTimeRemaining = 0;
         this.playing = false;
     }
-    AnimationComponentData = AnimationComponentData.extendsFrom(pc.fw.ComponentData);
+    AnimationComponentData = pc.inherits(AnimationComponentData, pc.fw.ComponentData);
 
     return {
         AnimationComponentData: AnimationComponentData 

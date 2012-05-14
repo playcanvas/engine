@@ -9,6 +9,7 @@
 ../src/core/core_content.js
 ../src/core/core_string.js
 ../src/core/core_json.js
+../src/core/core_cookie.js
 ../src/events/events_events.js
 ../src/core/core_dom.js
 ../src/math/math_math.js

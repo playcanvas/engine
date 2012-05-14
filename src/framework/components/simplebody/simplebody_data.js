@@ -11,7 +11,7 @@ pc.extend(pc.fw, function() {
         this.angVelocity = pc.math.vec3.create(0, 0, 0);
         this.torque      = pc.math.vec3.create(0, 0, 0);
     }
-    SimpleBodyComponentData = SimpleBodyComponentData.extendsFrom(pc.fw.ComponentData);
+    SimpleBodyComponentData = pc.inherits(SimpleBodyComponentData, pc.fw.ComponentData);
     
     return {
         SimpleBodyComponentData: SimpleBodyComponentData

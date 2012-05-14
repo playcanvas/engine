@@ -10,7 +10,7 @@ pc.extend(pc.fw, function () {
         this.light = null;
     };
 
-    DirectionalLightComponentData.extendsFrom(pc.fw.ComponentData);
+    DirectionalLightComponentData = pc.inherits(DirectionalLightComponentData, pc.fw.ComponentData);
 
     return {
         DirectionalLightComponentData: DirectionalLightComponentData

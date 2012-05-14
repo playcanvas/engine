@@ -44,7 +44,7 @@ pc.extend(pc.fw, function () {
         this.bind("set_light", this.onSetLight.bind(this));
     };
         
-    PointLightComponentSystem = PointLightComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    PointLightComponentSystem = pc.inherits(PointLightComponentSystem, pc.fw.ComponentSystem);
 
     PointLightComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PointLightComponentData();

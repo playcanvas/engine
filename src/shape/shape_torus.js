@@ -16,7 +16,7 @@ pc.extend(pc.shape, function () {
         
         this.type = pc.shape.Type.TORUS;
     };
-    Torus = Torus.extendsFrom(pc.shape.Shape);
+    Torus = pc.inherits(Torus, pc.shape.Shape);
     
     Torus.prototype.containsPoint = function (point) {
         throw new Error("Not implemented yet");    

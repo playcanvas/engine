@@ -12,7 +12,7 @@ pc.extend(pc.fw, function () {
             id: id
         };
     };
-    LiveLinkCloseEntityMessage = LiveLinkCloseEntityMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    LiveLinkCloseEntityMessage = pc.inherits(LiveLinkCloseEntityMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("CLOSE_ENTITY");
         
     return {

@@ -108,7 +108,7 @@ pc.extend(pc.fw, function () {
         
         this.bind("set", _onSet.bind(this));
     }
-    StaticCubeMapComponentSystem = StaticCubeMapComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    StaticCubeMapComponentSystem = pc.inherits(StaticCubeMapComponentSystem, pc.fw.ComponentSystem);
     
     StaticCubeMapComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.StaticCubeMapComponentData();

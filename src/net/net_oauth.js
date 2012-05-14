@@ -15,7 +15,7 @@ pc.extend(pc.net, function () {
 
         //this._refreshCounter = 0;
     };
-    OAuth = OAuth.extendsFrom(pc.net.Http);
+    OAuth = pc.inherits(OAuth, pc.net.Http);
 
     OAuth.prototype.refreshAccessToken = function (success) {
         var id = this.OAUTH_IFRAME_ID_BASE + refreshCounter++;

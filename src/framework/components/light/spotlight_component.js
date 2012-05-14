@@ -66,7 +66,7 @@ pc.extend(pc.fw, function () {
         this.bind("set_outerConeAngle", this.onSetOuterConeAngle.bind(this));
     };
 
-    SpotLightComponentSystem = SpotLightComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    SpotLightComponentSystem = pc.inherits(SpotLightComponentSystem, pc.fw.ComponentSystem);
 
     SpotLightComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.SpotLightComponentData();

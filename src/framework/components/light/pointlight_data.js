@@ -11,7 +11,7 @@ pc.extend(pc.fw, function () {
         this.light = null;
     };
 
-    PointLightComponentData.extendsFrom(pc.fw.ComponentData);
+    PointLightComponentData = pc.inherits(PointLightComponentData, pc.fw.ComponentData);
 
     return {
         PointLightComponentData: PointLightComponentData

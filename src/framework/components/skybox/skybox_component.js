@@ -154,7 +154,7 @@ pc.extend(pc.fw, function () {
 
         this.bind("set", _onSet.bind(this));
     }
-    SkyboxComponentSystem = SkyboxComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);
 
     SkyboxComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.SkyboxComponentData();

@@ -66,7 +66,7 @@ pc.extend(pc.fw, function () {
          */
         this.offscreen = false;
     };
-    CameraComponentData.extendsFrom(pc.fw.ComponentData);
+    CameraComponentData = pc.inherits(CameraComponentData, pc.fw.ComponentData);
     
     return {
         CameraComponentData: CameraComponentData

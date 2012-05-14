@@ -1,7 +1,7 @@
 pc.extend(pc.fw, function () {
     var AudioListenerComponentData = function () {
     };
-    AudioListenerComponentData = AudioListenerComponentData.extendsFrom(pc.fw.ComponentData);
+    AudioListenerComponentData = pc.inherits(AudioListenerComponentData, pc.fw.ComponentData);
     
     return {
         AudioListenerComponentData: AudioListenerComponentData

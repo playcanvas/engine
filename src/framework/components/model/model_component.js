@@ -20,7 +20,7 @@ pc.extend(pc.fw, function () {
         // Handle changes to the 'receiveShadows' value
         this.bind("set_receiveShadows", this.onSetReceiveShadows.bind(this));
     }
-    ModelComponentSystem = ModelComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.fw.ComponentSystem);
     
     ModelComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.ModelComponentData();

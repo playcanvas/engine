@@ -48,7 +48,7 @@ pc.extend(pc.resources, function () {
             "orthographic" : pc.scene.Projection.ORTHOGRAPHIC
         }
 	};
-	ModelResourceHandler = ModelResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+	ModelResourceHandler = pc.inherits(ModelResourceHandler, pc.resources.ResourceHandler);
 	
 	/**
 	 * @function
@@ -1403,7 +1403,7 @@ pc.extend(pc.resources, function () {
     
 	var ModelRequest = function ModelRequest(identifier) {		
 	};
-	ModelRequest = ModelRequest.extendsFrom(pc.resources.ResourceRequest);
+	ModelRequest = pc.inherits(ModelRequest, pc.resources.ResourceRequest);
     ModelRequest.prototype.type = "model";
 
     ///////////////////////

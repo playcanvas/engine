@@ -2,7 +2,7 @@ pc.extend(pc.resources, function () {
 	var AssetResourceHandler = function (depot) {
 		this._depot = depot;
 	};
-	AssetResourceHandler = AssetResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+	AssetResourceHandler = pc.inherits(AssetResourceHandler, pc.resources.ResourceHandler);
 	
 	AssetResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
 		var guid = identifier;
@@ -29,7 +29,7 @@ pc.extend(pc.resources, function () {
 	var AssetRequest = function AssetRequest(identifier) {
 		
 	};
-	AssetRequest = AssetRequest.extendsFrom(pc.resources.ResourceRequest);
+	AssetRequest = pc.inherits(AssetRequest, pc.resources.ResourceRequest);
 	AssetRequest.prototype.type = "asset";
 	
 	return {

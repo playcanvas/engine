@@ -8,7 +8,7 @@ module('pc.core', {
         Derived = function Derived() {
             this.type = "derived";        
         };
-        Derived = Derived.extendsFrom(Base);
+        Derived = pc.inherits(Derived, Base);
         Derived.prototype.b = function () {return "b";}        
     },
     teardown: function () {
@@ -49,14 +49,14 @@ test("constructor not called during initialisation", function () {
     var TestDerived = function () {
         ok(false);
     }    
-    TestDerived = TestDerived.extendsFrom(TestBase);    
+    TestDerived = pc.inherits(TestDerived, TestBase);
 });
 
-test("super_ can be used to access overridden functions", function () {
+test("_super can be used to access overridden functions", function () {
     var NewDerived = function () {
         
     };
-    NewDerived = NewDerived.extendsFrom(Base);
+    NewDerived = pc.inherits(NewDerived, Base);
     
     NewDerived.prototype.a = function () {
         return NewDerived._super.a();

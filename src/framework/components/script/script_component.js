@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
         
         this.bind("set_urls", this.onSetUrls.bind(this));
     }
-    ScriptComponentSystem = ScriptComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.fw.ComponentSystem);
 
     ScriptComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.ScriptComponentData();
