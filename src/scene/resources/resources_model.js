@@ -527,7 +527,13 @@ pc.extend(pc.resources, function () {
         BONEINDICES: 1 << 5,
         BONEWEIGHTS: 1 << 6,
         UV0: 1 << 7,
-        UV1: 1 << 8
+        UV1: 1 << 8,
+        UV2: 1 << 9,
+        UV3: 1 << 10,
+        UV4: 1 << 11,
+        UV5: 1 << 12,
+        UV6: 1 << 13,
+        UV7: 1 << 14
     };
 
     function getChunkHeaderId(id) {
@@ -601,6 +607,24 @@ pc.extend(pc.resources, function () {
         }
         if (attributes & attribs.UV1) {
             vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord1", 2, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.UV2) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord2", 2, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.UV3) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord3", 2, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.UV4) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord4", 2, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.UV5) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord5", 2, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.UV6) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord6", 2, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.UV7) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord7", 2, pc.gfx.VertexElementType.FLOAT32));
         }
         vertexFormat.end();
 
