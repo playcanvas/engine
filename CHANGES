@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.52.1
+-------
+* Re-add Function.extendsFrom until Designer is updated
+
+-------
 v0.52.0
 -------
 * Replaced Function.extendsFrom with pc.inherits.
