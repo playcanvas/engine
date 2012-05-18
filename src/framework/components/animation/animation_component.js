@@ -219,7 +219,9 @@ pc.extend(pc.fw, function () {
         var componentData = this.getComponentData(entity);
         if (componentData) {
             if (model && componentData.skeleton) {
-                componentData.skeleton.setGraph(model.getGraph());    
+                if (componentData.skeleton.getAnimation()) {
+                    componentData.skeleton.setGraph(model.getGraph());
+                }
             }
             componentData.model = model;
         }    
