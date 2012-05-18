@@ -16,7 +16,7 @@ pc.extend(pc.scene, function () {
         this._aabb = new pc.shape.Aabb();
         this._bones = null; // For skinned meshes, the bones array that influences the skin
     }
-    MeshNode = MeshNode.extendsFrom(pc.scene.GraphNode);
+    MeshNode = pc.inherits(MeshNode, pc.scene.GraphNode);
 
     MeshNode._current = null;
 

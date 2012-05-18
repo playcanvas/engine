@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
     var SimpleBodyComponentSystem = function SimpleBodyComponentSystem(context) {
             context.systems.add("simplebody", this);
         };
-    SimpleBodyComponentSystem = SimpleBodyComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    SimpleBodyComponentSystem = pc.inherits(SimpleBodyComponentSystem, pc.fw.ComponentSystem);
         
     SimpleBodyComponentSystem.prototype.createComponent = function(entity, data) {
         var componentData = new pc.fw.SimpleBodyComponentData();

@@ -2,7 +2,7 @@ function FlyCam() {
     this.target = pc.math.vec3.create(0.0, 0.0, 0.0);
 }
 
-FlyCam = FlyCam.extendsFrom(pc.scene.CameraNode);
+FlyCam = pc.inherits(FlyCam, pc.scene.CameraNode);
 
 FlyCam.prototype.pan = function(movement) {
     var factorX = pc.math.clamp(movement[0], -100.0, 100.0) * -0.025;

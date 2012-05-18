@@ -15,7 +15,7 @@ pc.extend(pc.audio, function () {
             //this.source.connect(this.panner);
             //this.panner.connect(manager.context.destination);
         };
-        Channel3d = Channel3d.extendsFrom(pc.audio.Channel);
+        Channel3d = pc.inherits(Channel3d, pc.audio.Channel);
         
         Channel3d.prototype = pc.extend(Channel3d.prototype, {
             play: function () {
@@ -122,7 +122,7 @@ pc.extend(pc.audio, function () {
             this.rollOffFactor = 1;
             
         };
-        Channel3d = Channel3d.extendsFrom(pc.audio.Channel);
+        Channel3d = pc.inherits(Channel3d, pc.audio.Channel);
         
         Channel3d.prototype = pc.extend(Channel3d.prototype, {
             getPosition: function () {

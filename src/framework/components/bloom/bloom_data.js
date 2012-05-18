@@ -7,7 +7,7 @@ pc.extend(pc.fw, function() {
         this.bloomSaturation = 1.0;
         this.baseSaturation = 1.0;
     }
-    BloomComponentData = BloomComponentData.extendsFrom(pc.fw.ComponentData);
+    BloomComponentData = pc.inherits(BloomComponentData, pc.fw.ComponentData);
     
     return {
         BloomComponentData: BloomComponentData 

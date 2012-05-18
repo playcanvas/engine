@@ -11,7 +11,7 @@ pc.extend(pc.fw, function () {
         this.model = null;
     };
     
-    PrimitiveComponentData = PrimitiveComponentData.extendsFrom(pc.fw.ComponentData);
+    PrimitiveComponentData = pc.inherits(PrimitiveComponentData, pc.fw.ComponentData);
     
     return {
         PrimitiveComponentData: PrimitiveComponentData

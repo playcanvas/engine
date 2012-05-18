@@ -18,7 +18,7 @@ pc.extend(pc.fw, function () {
         this.bind("set_maxDistance", this.onSetMaxDistance);
         this.bind("set_rollOffFactor", this.onSetRollOffFactor);
     };
-    AudioSourceComponentSystem = AudioSourceComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.fw.ComponentSystem);
         
     AudioSourceComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AudioSourceComponentData();

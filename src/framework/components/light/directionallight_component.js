@@ -69,7 +69,7 @@ pc.extend(pc.fw, function () {
         this.bind("set_light", this.onSetLight.bind(this));
     };
         
-    DirectionalLightComponentSystem = DirectionalLightComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    DirectionalLightComponentSystem = pc.inherits(DirectionalLightComponentSystem, pc.fw.ComponentSystem);
 
     DirectionalLightComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.DirectionalLightComponentData();

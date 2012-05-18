@@ -103,7 +103,7 @@ pc.extend(pc.fw, function () {
         this.bind("set_camera", this.onSetCamera.bind(this));
     };
     
-    CameraComponentSystem = CameraComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
     
     CameraComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.CameraComponentData();

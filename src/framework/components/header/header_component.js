@@ -10,7 +10,7 @@ pc.extend(pc.fw, function () {
     var HeaderComponentSystem = function HeaderComponentSystem(context) {
         context.systems.add("header", this);
     };
-    HeaderComponentSystem = HeaderComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    HeaderComponentSystem = pc.inherits(HeaderComponentSystem, pc.fw.ComponentSystem);
     
     HeaderComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.HeaderComponentData();

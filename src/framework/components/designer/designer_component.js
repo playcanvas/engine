@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
             context.systems.add("designer", this);
         };
 
-    DesignerComponentSystem = DesignerComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    DesignerComponentSystem = pc.inherits(DesignerComponentSystem, pc.fw.ComponentSystem);
     
     DesignerComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.DesignerComponentData();

@@ -52,7 +52,7 @@ pc.extend(pc.gfx, function () {
                 switch (status)
                 {
                     case gl.FRAMEBUFFER_COMPLETE:
-                        logINFO("FrameBuffer status OK");
+                        //logINFO("FrameBuffer status OK");
                         break;
                     case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
                         logERROR("FrameBuffer error: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");

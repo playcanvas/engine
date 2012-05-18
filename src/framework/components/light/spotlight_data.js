@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
         this.light = null;
     };
 
-    SpotLightComponentData.extendsFrom(pc.fw.ComponentData);
+    SpotLightComponentData = pc.inherits(SpotLightComponentData, pc.fw.ComponentData);
 
     return {
         SpotLightComponentData: SpotLightComponentData

@@ -12,7 +12,7 @@ test('derived ResourceRequest', function () {
 	var DerivedRequest = function DerivedRequest() {
 		
 	};
-	DerivedRequest = DerivedRequest.extendsFrom(pc.resources.ResourceRequest);
+	DerivedRequest = pc.inherits(DerivedRequest, pc.resources.ResourceRequest);
 	
 	var request = new DerivedRequest();
 	

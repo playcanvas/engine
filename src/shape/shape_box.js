@@ -20,7 +20,7 @@ pc.extend(pc.shape, function () {
         this.halfExtents = halfExtents;
         this.type = pc.shape.Type.BOX;
     };
-    Box = Box.extendsFrom(pc.shape.Shape);
+    Box = pc.inherits(Box, pc.shape.Shape);
     
     /**
      * Return true if point is inside the box

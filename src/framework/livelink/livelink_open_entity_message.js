@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
             models: models
         };
     };
-    LiveLinkOpenEntityMessage = LiveLinkOpenEntityMessage.extendsFrom(pc.fw.LiveLinkMessage);
+    LiveLinkOpenEntityMessage = pc.inherits(LiveLinkOpenEntityMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("OPEN_ENTITY");
         
     return {

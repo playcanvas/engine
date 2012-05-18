@@ -4,7 +4,7 @@ pc.extend(pc.fw, function () {
         this.width = 800;
         this.height = 450;
     };
-    DesignerComponentData.extendsFrom(pc.fw.ComponentData);
+    DesignerComponentData = pc.inherits(DesignerComponentData, pc.fw.ComponentData);
     
     return {
         DesignerComponentData: DesignerComponentData

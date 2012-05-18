@@ -10,7 +10,7 @@ pc.extend(pc.fw, function () {
     var BloomComponentSystem = function BloomComponentSystem (context) {
         context.systems.add("bloom", this);
     }
-    BloomComponentSystem = BloomComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    BloomComponentSystem = pc.inherits(BloomComponentSystem, pc.fw.ComponentSystem);
     
     BloomComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.BloomComponentData();

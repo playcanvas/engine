@@ -75,8 +75,7 @@ pc.extend(pc.scene, function () {
     }
 
     // A CameraNode is a specialization of a GraphNode.  So inherit...
-    CameraNode = CameraNode.extendsFrom(pc.scene.GraphNode);
-
+    CameraNode = pc.inherits(CameraNode, pc.scene.GraphNode);
     /**
      * @private
      * @function

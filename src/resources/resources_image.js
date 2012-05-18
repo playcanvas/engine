@@ -1,7 +1,7 @@
 pc.extend(pc.resources, function () {
 	var ImageResourceHandler = function () {
 	};
-	ImageResourceHandler = ImageResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+	ImageResourceHandler = pc.inherits(ImageResourceHandler, pc.resources.ResourceHandler);
 	
     ImageResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
         var image = new Image();
@@ -27,7 +27,7 @@ pc.extend(pc.resources, function () {
 	var ImageRequest = function ImageRequest(identifier) {
 		
 	};
-	ImageRequest = ImageRequest.extendsFrom(pc.resources.ResourceRequest);
+	ImageRequest = pc.inherits(ImageRequest, pc.resources.ResourceRequest);
 	ImageRequest.prototype.type = "image";
 	
 	return {

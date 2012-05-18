@@ -36,7 +36,7 @@ pc.extend(pc.fw, function () {
             
         }
     };
-    AnimationComponentSystem = AnimationComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.fw.ComponentSystem);
     
     AnimationComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AnimationComponentData();

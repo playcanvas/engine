@@ -21,8 +21,8 @@ pc.extend(pc.fw, function () {
         // Handle changes to the 'type' value
         this.bind("set_type", this.onSetType.bind(this));
     };
-    
-    PrimitiveComponentSystem = PrimitiveComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    PrimitiveComponentSystem = pc.inherits(PrimitiveComponentSystem, pc.fw.ComponentSystem);
+
     PrimitiveComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PrimitiveComponentData();
 

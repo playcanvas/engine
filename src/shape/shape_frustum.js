@@ -24,7 +24,7 @@ pc.extend(pc.shape, function () {
 
         this.type = pc.shape.Type.FRUSTUM;
     };
-    Frustum = Frustum.extendsFrom(pc.shape.Shape);
+    Frustum = pc.inherits(Frustum, pc.shape.Shape);
 
     Frustum.prototype.update = function (projectionMatrix, viewMatrix) {
         pc.math.mat4.multiply(projectionMatrix, viewMatrix, viewProj);

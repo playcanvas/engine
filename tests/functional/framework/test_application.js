@@ -4,7 +4,7 @@ module("pc.fw.Application", {
         application = new pc.fw.Application(canvas, {});
         
         TestComponent = function (entity) {};
-        TestComponent = TestComponent.extendsFrom(pc.fw.ComponentSystem);
+        TestComponent = pc.inherits(TestComponent, pc.fw.ComponentSystem);
         TestComponent.prototype.createComponent = function (entity) {
             var data = new pc.fw.ComponentData(entity);
             

@@ -14,7 +14,7 @@ pc.extend(pc.shape, function () {
         this.halfExtents = halfExtents || pc.math.vec3.create(0.5, 0.5, 0.5);
         this.type = pc.shape.Type.AABB;
     }
-    Aabb = Aabb.extendsFrom(pc.shape.Shape);
+    Aabb = pc.inherits(Aabb, pc.shape.Shape);
 
     Aabb.prototype.add = function (other) {
         var tc = this.center;

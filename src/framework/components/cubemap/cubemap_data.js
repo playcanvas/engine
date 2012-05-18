@@ -6,7 +6,7 @@ pc.extend(pc.fw, function () {
         this.width = 256;
         this.height = 256;
     };
-    CubeMapComponentData.extendsFrom(pc.fw.ComponentData);
+    CubeMapComponentData = pc.inherits(CubeMapComponentData, pc.fw.ComponentData);
     
     return {
         CubeMapComponentData: CubeMapComponentData

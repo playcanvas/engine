@@ -12,7 +12,7 @@ pc.extend(pc.shape, function () {
         this.d      = -pc.math.vec3.dot(this.normal, this.point);
         this.type = pc.shape.Type.PLANE;
     };
-    Plane = Plane.extendsFrom(pc.shape.Shape);
+    Plane = pc.inherits(Plane, pc.shape.Shape);
     
     /**
      * Tests whether a point is inside the plane.

@@ -9,7 +9,7 @@ pc.extend(pc.fw, function () {
     var PackComponentSystem = function PackComponentSystem(context) {
         context.systems.add("pack", this);
     };
-    PackComponentSystem = PackComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    PackComponentSystem = pc.inherits(PackComponentSystem, pc.fw.ComponentSystem);
     
     PackComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PackComponentData();

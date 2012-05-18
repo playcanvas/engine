@@ -8,7 +8,7 @@ pc.extend(pc.resources, function () {
         this._depot = depot;
     
     };
-    PackResourceHandler = PackResourceHandler.extendsFrom(pc.resources.ResourceHandler);
+    PackResourceHandler = pc.inherits(PackResourceHandler, pc.resources.ResourceHandler);
     
     PackResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
         options = options || {};
@@ -96,7 +96,7 @@ pc.extend(pc.resources, function () {
     */
     var PackRequest = function PackRequest(identifier) {
     }
-    PackRequest = PackRequest.extendsFrom(pc.resources.ResourceRequest);
+    PackRequest = pc.inherits(PackRequest, pc.resources.ResourceRequest);
     PackRequest.prototype.type = "pack";
     
     return {

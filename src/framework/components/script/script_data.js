@@ -5,7 +5,7 @@ pc.extend(pc.fw, function () {
         this.instances = {};
         this._scripts = [];
     }
-    ScriptComponentData = ScriptComponentData.extendsFrom(pc.fw.ComponentData);
+    ScriptComponentData = pc.inherits(ScriptComponentData, pc.fw.ComponentData);
     
     return {
         ScriptComponentData: ScriptComponentData

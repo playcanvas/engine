@@ -4,7 +4,7 @@ pc.extend(pc.fw, function() {
         this.shapes = [];
         this.material = null;
     };
-    PickComponentData = PickComponentData.extendsFrom(pc.fw.ComponentData);
+    PickComponentData = pc.inherits(PickComponentData, pc.fw.ComponentData);
     
     return {
         PickComponentData: PickComponentData    

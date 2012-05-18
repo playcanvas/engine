@@ -316,7 +316,7 @@ pc.extend(pc.gfx, function () {
     };
 
     // A Texture2D is a specialization of a Texture.  So inherit...
-    Texture2D = Texture2D.extendsFrom(pc.gfx.Texture);
+    Texture2D = pc.inherits(Texture2D, pc.gfx.Texture);
 
 	/**
 	 * @function
@@ -425,7 +425,7 @@ pc.extend(pc.gfx, function () {
     };
 
     // A TextureCube is a specialization of a Texture.  So inherit...
-    TextureCube = TextureCube.extendsFrom(pc.gfx.Texture);
+    TextureCube = pc.inherits(TextureCube, pc.gfx.Texture);
     
 	/**
 	 * @function

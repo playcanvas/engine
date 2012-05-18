@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
         this.name = "Untitled";
         this.description = "";
     }
-    HeaderComponentData = HeaderComponentData.extendsFrom(pc.fw.ComponentData);
+    HeaderComponentData = pc.inherits(HeaderComponentData, pc.fw.ComponentData);
     
     return {
         HeaderComponentData: HeaderComponentData

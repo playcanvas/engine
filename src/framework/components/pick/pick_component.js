@@ -17,7 +17,7 @@ pc.extend(pc.fw, function () {
         this.display = false;
     };
     
-    PickComponentSystem = PickComponentSystem.extendsFrom(pc.fw.ComponentSystem);
+    PickComponentSystem = pc.inherits(PickComponentSystem, pc.fw.ComponentSystem);
     
     PickComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PickComponentData();

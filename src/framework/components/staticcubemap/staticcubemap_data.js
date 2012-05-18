@@ -11,7 +11,7 @@ pc.extend(pc.fw, function() {
 
         this.cubemap = null;
     }
-    StaticCubeMapComponentData = StaticCubeMapComponentData.extendsFrom(pc.fw.ComponentData);
+    StaticCubeMapComponentData = pc.inherits(StaticCubeMapComponentData, pc.fw.ComponentData);
     
     return {
         StaticCubeMapComponentData:StaticCubeMapComponentData 

@@ -15,7 +15,7 @@ pc.extend(pc.shape, function () {
         
         this.type = pc.shape.Type.SPHERE;
     };
-    Sphere = Sphere.extendsFrom(pc.shape.Shape);
+    Sphere = pc.inherits(Sphere, pc.shape.Shape);
 
     /**
      * Test whether point is inside sphere
