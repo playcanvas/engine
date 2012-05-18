@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.52.2
+-------
+* Ensure an animation is set on a skeleton before having anim component set skeleton's graph.
+
+-------
 v0.52.1
 -------
 * Re-add Function.extendsFrom until Designer is updated
