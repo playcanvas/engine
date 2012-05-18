@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.52.0
+-------
+* Replaced Function.extendsFrom with pc.inherits.
+* Added pc.cookie.get/set to use browser cookies.
+* Binary file format now active but format is likely to go through a number of iterations before stabilizing.
+* Skin partitioning now operates on a pc.scene.Geometry.
+
+-------
 v0.51.0
 -------
 * Added setVolume() to AudioManager, it affects the volume of all audio sources
