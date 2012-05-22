@@ -42,65 +42,67 @@ pc.extend(pc.gfx, function () {
         this.storage = new ArrayBuffer(this.numBytes);
     };
 
-    /**
-     * @function
-     * @name pc.gfx.VertexBuffer#getFormat
-     * @description Returns the data format of the specified vertex buffer.
-     * @returns {pc.gfx.VertexFormat} The data format of the specified vertex buffer.
-     * @author Will Eastcott
-     */
-    VertexBuffer.prototype.getFormat = function () {
-        return this.format;
-    };
+    VertexBuffer.prototype = {
+        /**
+         * @function
+         * @name pc.gfx.VertexBuffer#getFormat
+         * @description Returns the data format of the specified vertex buffer.
+         * @returns {pc.gfx.VertexFormat} The data format of the specified vertex buffer.
+         * @author Will Eastcott
+         */
+        getFormat: function () {
+            return this.format;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.VertexBuffer#getUsage
-     * @description Returns the usage type of the specified vertex buffer. This indicates
-     * whether the buffer can be written to once (pc.gfx.VertexBufferUsage.STATIC) or
-     * multiple times (pc.gfx.VertexBufferUsage.DYNAMIC).
-     * @returns {pc.gfx.VertexBufferUsage} The usage type of the vertex buffer.
-     * @author Will Eastcott
-     */
-    VertexBuffer.prototype.getUsage = function () {
-        return this.usage;
-    };
+        /**
+         * @function
+         * @name pc.gfx.VertexBuffer#getUsage
+         * @description Returns the usage type of the specified vertex buffer. This indicates
+         * whether the buffer can be written to once (pc.gfx.VertexBufferUsage.STATIC) or
+         * multiple times (pc.gfx.VertexBufferUsage.DYNAMIC).
+         * @returns {pc.gfx.VertexBufferUsage} The usage type of the vertex buffer.
+         * @author Will Eastcott
+         */
+        getUsage: function () {
+            return this.usage;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.VertexBuffer#getNumVertices
-     * @description Returns the number of vertices stored in the specified vertex buffer.
-     * @returns {number} The number of vertices stored in the vertex buffer.
-     * @author Will Eastcott
-     */
-    VertexBuffer.prototype.getNumVertices = function () {
-        return this.numVertices;
-    };
+        /**
+         * @function
+         * @name pc.gfx.VertexBuffer#getNumVertices
+         * @description Returns the number of vertices stored in the specified vertex buffer.
+         * @returns {number} The number of vertices stored in the vertex buffer.
+         * @author Will Eastcott
+         */
+        getNumVertices: function () {
+            return this.numVertices;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.VertexBuffer#lock
-     * @description Returns a mapped memory block representing the content of the vertex buffer.
-     * @returns {ArrayBuffer} An array containing the byte data stored in the vertex buffer.
-     * @author Will Eastcott
-     */
-    VertexBuffer.prototype.lock = function () {
-        return this.storage;
-    };
+        /**
+         * @function
+         * @name pc.gfx.VertexBuffer#lock
+         * @description Returns a mapped memory block representing the content of the vertex buffer.
+         * @returns {ArrayBuffer} An array containing the byte data stored in the vertex buffer.
+         * @author Will Eastcott
+         */
+        lock: function () {
+            return this.storage;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.VertexBuffer#unlock
-     * @description Notifies the graphics engine that the client side copy of the vertex buffer's
-     * memory can be returned to the control of the graphics driver.
-     * @author Will Eastcott
-     */
-    VertexBuffer.prototype.unlock = function () {
-        // Upload the new vertex data
-        var gl = pc.gfx.Device.getCurrent().gl;
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferId);
-        gl.bufferData(gl.ARRAY_BUFFER, this.storage, this.usage);
-    };
+        /**
+         * @function
+         * @name pc.gfx.VertexBuffer#unlock
+         * @description Notifies the graphics engine that the client side copy of the vertex buffer's
+         * memory can be returned to the control of the graphics driver.
+         * @author Will Eastcott
+         */
+        unlock: function () {
+            // Upload the new vertex data
+            var gl = pc.gfx.Device.getCurrent().gl;
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferId);
+            gl.bufferData(gl.ARRAY_BUFFER, this.storage, this.usage);
+        }
+    }
 
     return {
         VertexBuffer: VertexBuffer
