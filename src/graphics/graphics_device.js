@@ -709,7 +709,7 @@ pc.extend(pc.gfx, function () {
                 gl.vertexAttribPointer(attribute.locationId, 
                                        element.numComponents, 
                                        this.lookup.elementType[element.dataType], 
-                                       false,
+                                       element.normalize,
                                        element.stride,
                                        element.offset);
             }

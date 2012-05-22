@@ -45,6 +45,8 @@ pc.extend(pc.gfx, function () {
         // Store the data type information
         this.dataType      = dataType;
         this.numComponents = numComponents;
+        
+        this.normalize = (this.dataType !== pc.gfx.VertexElementType.FLOAT32);
 
         // Calculate the size
         this.size = this.numComponents * _typeSize[this.dataType];
