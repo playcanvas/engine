@@ -19,7 +19,7 @@ pc.extend(pc.gfx, function () {
          * @example
          * var format = new pc.gfx.VertexFormat();
          * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32, false));
          * vertexFormat.end();
          * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
          * @author Will Eastcott
@@ -36,7 +36,7 @@ pc.extend(pc.gfx, function () {
          * @example
          * var format = new pc.gfx.VertexFormat();
          * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32, false));
          * vertexFormat.end();
          * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
          * @author Will Eastcott
@@ -66,9 +66,9 @@ pc.extend(pc.gfx, function () {
          * @example
          * var format = new pc.gfx.VertexFormat();
          * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord0", 2, pc.gfx.VertexElementType.FLOAT32));
-         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_color", 4, pc.gfx.VertexElementType.UINT8));
+         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32, false));
+         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord0", 2, pc.gfx.VertexElementType.FLOAT32, false));
+         * vertexFormat.addElement(new pc.gfx.VertexElement("vertex_color", 4, pc.gfx.VertexElementType.UINT8, true));
          * vertexFormat.end();
          * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
          * @author Will Eastcott

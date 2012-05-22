@@ -389,464 +389,466 @@ pc.extend(pc.gfx, function () {
         return Device._current;
     };
 
-    /**
-     * @function
-     * @name pc.gfx.Device#getProgramLibrary
-     * @description Retrieves the program library assigned to the specified graphics device.
-     * @returns {pc.gfx.ProgramLibrary} The program library assigned to the device.
-     * @author Will Eastcott
-     */
-    Device.prototype.getProgramLibrary = function () {
-        return this.programLib;
-    };
+    Device.prototype = {
+        /**
+         * @function
+         * @name pc.gfx.Device#getProgramLibrary
+         * @description Retrieves the program library assigned to the specified graphics device.
+         * @returns {pc.gfx.ProgramLibrary} The program library assigned to the device.
+         * @author Will Eastcott
+         */
+        getProgramLibrary: function () {
+            return this.programLib;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Device#setProgramLibrary
-     * @description Assigns a program library to the specified device. By default, a graphics
-     * device is created with a program library that manages all of the programs that are
-     * used to render any graphical primitives. However, this function allows the user to
-     * replace the existing program library with a new one.
-     * @param {pc.gfx.ProgramLibrary} programLib The program library to assign to the device.
-     * @author Will Eastcott
-     */
-    Device.prototype.setProgramLibrary = function (programLib) {
-        this.programLib = programLib;
-    };
+        /**
+         * @function
+         * @name pc.gfx.Device#setProgramLibrary
+         * @description Assigns a program library to the specified device. By default, a graphics
+         * device is created with a program library that manages all of the programs that are
+         * used to render any graphical primitives. However, this function allows the user to
+         * replace the existing program library with a new one.
+         * @param {pc.gfx.ProgramLibrary} programLib The program library to assign to the device.
+         * @author Will Eastcott
+         */
+        setProgramLibrary: function (programLib) {
+            this.programLib = programLib;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Device#updateBegin
-     * @description Marks the beginning of a block of rendering. Internally, this function
-     * binds the render target currently set on the device. This function should be matched
-     * with a call to pc.gfx.Device#updateEnd. Calls to pc.gfx.Device#updateBegin
-     * and pc.gfx.Device#updateEnd must not be nested.
-     * @author Will Eastcott
-     */
-    Device.prototype.updateBegin = function () {
-        logASSERT(this.canvas !== null, "Device has not been started");
+        /**
+         * @function
+         * @name pc.gfx.Device#updateBegin
+         * @description Marks the beginning of a block of rendering. Internally, this function
+         * binds the render target currently set on the device. This function should be matched
+         * with a call to pc.gfx.Device#updateEnd. Calls to pc.gfx.Device#updateBegin
+         * and pc.gfx.Device#updateEnd must not be nested.
+         * @author Will Eastcott
+         */
+        updateBegin: function () {
+            logASSERT(this.canvas !== null, "Device has not been started");
 
-        // Set the render target
-        this.renderTarget.bind();
-    };
+            // Set the render target
+            this.renderTarget.bind();
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Device#updateEnd
-     * @description Marks the end of a block of rendering. This function should be called
-     * after a matching call to pc.gfx.Device#updateBegin. Calls to pc.gfx.Device#updateBegin
-     * and pc.gfx.Device#updateEnd must not be nested.
-     * @author Will Eastcott
-     */
-    Device.prototype.updateEnd = function () {
-    };
+        /**
+         * @function
+         * @name pc.gfx.Device#updateEnd
+         * @description Marks the end of a block of rendering. This function should be called
+         * after a matching call to pc.gfx.Device#updateBegin. Calls to pc.gfx.Device#updateBegin
+         * and pc.gfx.Device#updateEnd must not be nested.
+         * @author Will Eastcott
+         */
+        updateEnd: function () {
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Device#draw
-     * @description Submits a graphical primitive to the hardware for immediate rendering.
-     * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
-     * @param {pc.gfx.PrimType} primitive.type The type of primitive to render.
-     * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
-     * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
-     * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
-     * @example
-     * // Render a single, unindexed triangle
-     * device.draw({
-     *     type: pc.gfx.PrimType.TRIANGLES,
-     *     base: 0,
-     *     count: 3,
-     *     indexed: false
-     * )};
-     * @author Will Eastcott
-     */
-    Device.prototype.draw = function (primitive) {
-        // Commit the vertex buffer inputs
-        this.commitAttributes();
+        /**
+         * @function
+         * @name pc.gfx.Device#draw
+         * @description Submits a graphical primitive to the hardware for immediate rendering.
+         * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
+         * @param {pc.gfx.PrimType} primitive.type The type of primitive to render.
+         * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
+         * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
+         * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
+         * @example
+         * // Render a single, unindexed triangle
+         * device.draw({
+         *     type: pc.gfx.PrimType.TRIANGLES,
+         *     base: 0,
+         *     count: 3,
+         *     indexed: false
+         * )};
+         * @author Will Eastcott
+         */
+        draw: function (primitive) {
+            // Commit the vertex buffer inputs
+            this.commitAttributes();
 
-        // Commit the shader program variables
-        this.commitSamplers();
-        this.commitUniforms();
+            // Commit the shader program variables
+            this.commitSamplers();
+            this.commitUniforms();
 
-        var gl = this.gl;
-        if (primitive.indexed) {
-            gl.drawElements(this.lookupPrim[primitive.type],
-                            primitive.count,
-                            this.indexBuffer.glFormat,
-                            primitive.base * 2);
-        } else {
-            gl.drawArrays(this.lookupPrim[primitive.type],
-                          primitive.base,
-                          primitive.count);
-        }
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#clear
-     * @description Clears the frame buffer of the currently set render target.
-     * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
-     * @param {Array} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
-     * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
-     * @param {pc.gfx.ClearFlag} options.flags The buffers to clear (the types being color, depth and stencil).
-     * @example
-     * // Clear color buffer to black and depth buffer to 1.0
-     * device.clear();
-     *
-     * // Clear just the color buffer to red
-     * device.clear({
-     *     color: [1, 0, 0, 1],
-     *     flags: pc.gfx.ClearFlag.COLOR
-     * });
-     *
-     * // Clear color buffer to yellow and depth to 1.0
-     * device.clear({
-     *     color: [1, 1, 0, 1],
-     *     depth: 1.0,
-     *     flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
-     * });
-     * @author Will Eastcott
-     */
-    Device.prototype.clear = function (options) {
-        var defaultOptions = this.defaultClearOptions;
-        options = options || defaultOptions;
-
-        var flags = options.flags || defaultOptions.flags;
-        var glFlags = this.lookupClear[flags];
-
-        // Set the clear color
-        var gl = this.gl;
-        if (glFlags & gl.COLOR_BUFFER_BIT) {
-            var color = options.color || defaultOptions.color;
-            gl.clearColor(color[0], color[1], color[2], color[3]);
-        }
-
-        if (glFlags & gl.DEPTH_BUFFER_BIT) {
-            // Set the clear depth
-            var depth = options.depth || defaultOptions.depth;
-            gl.clearDepth(depth);
-        }
-
-        // Clear the frame buffer
-        gl.clear(glFlags);
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#getGlobalState
-     * @author Will Eastcott
-     */
-    Device.prototype.getGlobalState = function (state) {
-        return this._globalState;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#updateGlobalState
-     * @author Will Eastcott
-     */
-    Device.prototype.updateGlobalState = function (delta) {
-        for (var key in delta) {
-            if (this._localState[key] === undefined) {
-                this._stateFuncs[key](delta[key]);
+            var gl = this.gl;
+            if (primitive.indexed) {
+                gl.drawElements(this.lookupPrim[primitive.type],
+                                primitive.count,
+                                this.indexBuffer.glFormat,
+                                primitive.base * 2);
+            } else {
+                gl.drawArrays(this.lookupPrim[primitive.type],
+                              primitive.base,
+                              primitive.count);
             }
-            this._globalState[key] = delta[key];
-        }
-    };
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Device#getLocalState
-     * @author Will Eastcott
-     */
-    Device.prototype.getLocalState = function (state) {
-        return this._localState;
-    };
+        /**
+         * @function
+         * @name pc.gfx.Device#clear
+         * @description Clears the frame buffer of the currently set render target.
+         * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
+         * @param {Array} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
+         * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
+         * @param {pc.gfx.ClearFlag} options.flags The buffers to clear (the types being color, depth and stencil).
+         * @example
+         * // Clear color buffer to black and depth buffer to 1.0
+         * device.clear();
+         *
+         * // Clear just the color buffer to red
+         * device.clear({
+         *     color: [1, 0, 0, 1],
+         *     flags: pc.gfx.ClearFlag.COLOR
+         * });
+         *
+         * // Clear color buffer to yellow and depth to 1.0
+         * device.clear({
+         *     color: [1, 1, 0, 1],
+         *     depth: 1.0,
+         *     flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+         * });
+         * @author Will Eastcott
+         */
+        clear: function (options) {
+            var defaultOptions = this.defaultClearOptions;
+            options = options || defaultOptions;
 
-    /**
-     * @function
-     * @name pc.gfx.Device#updateLocalState
-     * @author Will Eastcott
-     */
-    Device.prototype.updateLocalState = function (localState) {
-        for (var key in localState) {
-            this._stateFuncs[key](localState[key]);
-            this._localState[key] = localState[key];
-        }
-    };
+            var flags = options.flags || defaultOptions.flags;
+            var glFlags = this.lookupClear[flags];
 
-    /**
-     * @function
-     * @name pc.gfx.Device#clearLocalState
-     * @author Will Eastcott
-     */
-    Device.prototype.clearLocalState = function () {
-        for (var key in this._localState) {
-            // Reset to global state
-            this._stateFuncs[key](this._globalState[key]);
-            delete this._localState[key];
-        }
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#getCurrentState
-     * @author Will Eastcott
-     */
-    Device.prototype.getCurrentState = function () {
-        return this._currentState;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#setRenderTarget
-     * @author Will Eastcott
-     */
-    Device.prototype.setRenderTarget = function (renderTarget) {
-        this.renderTarget = renderTarget;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#getRenderTarget
-     * @author Will Eastcott
-     */
-    Device.prototype.getRenderTarget = function () {
-        return this.renderTarget;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#setIndexBuffer
-     * @description Sets the current index buffer on the graphics device. On subsequent
-     * calls to pc.gfx.Device#draw, the specified index buffer will be used to provide
-     * index data for any indexed primitives.
-     * @param {pc.gfx.IndexBuffer} indexBuffer The index buffer to assign to the device.
-     * @author Will Eastcott
-     */
-    Device.prototype.setIndexBuffer = function (indexBuffer) {
-        // Store the index buffer
-        if (this.indexBuffer !== indexBuffer) {
-            this.indexBuffer = indexBuffer;
-
-            // Set the active index buffer object
+            // Set the clear color
             var gl = this.gl;
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer ? indexBuffer.bufferId : null);
-        }
-    };
+            if (glFlags & gl.COLOR_BUFFER_BIT) {
+                var color = options.color || defaultOptions.color;
+                gl.clearColor(color[0], color[1], color[2], color[3]);
+            }
 
-    /**
-     * @function
-     * @name pc.gfx.Device#setVertexBuffer
-     * @description Sets the current vertex buffer for a specific stream index on the graphics
-     * device. On subsequent calls to pc.gfx.Device#draw, the specified vertex buffer will be 
-     * used to provide vertex data for any primitives.
-     * @param {pc.gfx.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
-     * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
-     * @author Will Eastcott
-     */
-    Device.prototype.setVertexBuffer = function (vertexBuffer, stream) {
-        // Store the vertex buffer for this stream index
-        this.vertexBuffers[stream] = vertexBuffer;
+            if (glFlags & gl.DEPTH_BUFFER_BIT) {
+                // Set the clear depth
+                var depth = options.depth || defaultOptions.depth;
+                gl.clearDepth(depth);
+            }
 
-        // Push each vertex element in scope
-        var vertexFormat = vertexBuffer.getFormat();
-        var i = 0;
-        var elements = vertexFormat.elements;
-        var numElements = elements.length;
-        while (i < numElements) {
-            var vertexElement = elements[i++];
-            vertexElement.stream = stream;
-            vertexElement.scopeId.setValue(vertexElement);
-        }
-    };
+            // Clear the frame buffer
+            gl.clear(glFlags);
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Device#setProgram
-     * @author Will Eastcott
-     */
-    Device.prototype.setProgram = function(program) {
-        if (program !== this.program) {
-            // Store the program
-            this.program = program;
+        /**
+         * @function
+         * @name pc.gfx.Device#getGlobalState
+         * @author Will Eastcott
+         */
+        getGlobalState: function (state) {
+            return this._globalState;
+        },
 
-            // Set the active shader program
-            var gl = this.gl;
-            gl.useProgram(program.programId);
-        }
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#commitAttributes
-     * @author Will Eastcott
-     */
-    Device.prototype.commitAttributes = function () {
-        var i, len, attribute, element, vertexBuffer;
-        var attributes = this.program.attributes;
-        var gl = this.gl;
-
-        for (i = 0, len = attributes.length; i < len; i++) {
-            attribute = attributes[i];
-
-            // Retrieve vertex element for this shader attribute
-            element = attribute.scopeId.value;
-
-            // Check the vertex element is valid
-            if (element !== null) {
-                // Retrieve the vertex buffer that contains this element
-                vertexBuffer = this.vertexBuffers[element.stream];
-
-                // Set the active vertex buffer object
-                if (this.boundBuffer !== vertexBuffer.bufferId) {
-                    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
-                    this.boundBuffer = vertexBuffer.bufferId;
+        /**
+         * @function
+         * @name pc.gfx.Device#updateGlobalState
+         * @author Will Eastcott
+         */
+        updateGlobalState: function (delta) {
+            for (var key in delta) {
+                if (this._localState[key] === undefined) {
+                    this._stateFuncs[key](delta[key]);
                 }
-
-                // Hook the vertex buffer to the shader program
-                gl.enableVertexAttribArray(attribute.locationId);
-                gl.vertexAttribPointer(attribute.locationId, 
-                                       element.numComponents, 
-                                       this.lookup.elementType[element.dataType], 
-                                       element.normalize,
-                                       element.stride,
-                                       element.offset);
+                this._globalState[key] = delta[key];
             }
-        }
-    };
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Device#commitSamplers
-     * @author Will Eastcott
-     */
-    // Handle textures differently, as it's probably safer
-    // to always set them rather than try to track which
-    // one is currently set!
-    Device.prototype.commitSamplers = function () {
-        var i, len, sampler, textureUnit = 0;
-        var samplers = this.program.samplers;
-        var gl = this.gl;
+        /**
+         * @function
+         * @name pc.gfx.Device#getLocalState
+         * @author Will Eastcott
+         */
+        getLocalState: function (state) {
+            return this._localState;
+        },
 
-        for (i = 0, len = samplers.length; i < len; i++) {
-            sampler = samplers[i];
-
-            gl.activeTexture(gl.TEXTURE0 + textureUnit);
-            sampler.scopeId.value.bind();
-            gl.uniform1i(sampler.locationId, textureUnit++);
-        }
-    }
-
-    /**
-     * @function
-     * @name pc.gfx.Device#commitUniforms
-     * @author Will Eastcott
-     */
-    Device.prototype.commitUniforms = function () {
-        var i, len, uniform;
-        var uniforms = this.program.uniforms;
-        var gl = this.gl;
-
-        for (i = 0, len = uniforms.length; i < len; i++) {
-            uniform = uniforms[i];
-            // Check the value is valid
-            if (uniform.version.notequals(uniform.scopeId.versionObject.version)) {
-
-                // Copy the version to track that its now up to date
-                uniform.version.copy(uniform.scopeId.versionObject.version);
-
-                // Retrieve value for this shader uniform
-                var value = uniform.scopeId.value;
-
-                // Call the function to commit the uniform value
-                this.commitFunction[uniform.dataType](uniform.locationId, value);
-
-//              uniform.commitArgs[uniform.valueIndex] = uniform.scopeId.value;
-//              uniform.commitFunc.apply(gl, uniform.commitArgs);
+        /**
+         * @function
+         * @name pc.gfx.Device#updateLocalState
+         * @author Will Eastcott
+         */
+        updateLocalState: function (localState) {
+            for (var key in localState) {
+                this._stateFuncs[key](localState[key]);
+                this._localState[key] = localState[key];
             }
-        }
-    };
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Device#getBoneLimit
-     * @description Queries the maximum number of bones that can be referenced by a shader.
-     * The shader generators (pc.gfx.programlib) use this number to specify the matrix array
-     * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of 
-     * available uniform vectors available after subtracting the number taken by a typical 
-     * heavyweight shader. If a different number is required, it can be tuned via
-     * pc.gfx.Device#setBoneLimit.
-     * @returns {Number} The maximum number of bones that can be supported by the host hardware.
-     * @author Will Eastcott
-     */
-    Device.prototype.getBoneLimit = function () {
-        return this.boneLimit;
-    }
-
-    /**
-     * @function
-     * @name pc.gfx.Device#setBoneLimit
-     * @description Specifies the maximum number of bones that the device can support on
-     * the current hardware. This function allows the default calculated value based on
-     * available vector uniforms to be overridden.
-     * @param {Number} maxBones The maximum number of bones supported by the host hardware.
-     * @author Will Eastcott
-     */
-    Device.prototype.setBoneLimit = function (maxBones) {
-        this.boneLimit = maxBones;
-    }
-
-    /**
-     * @function
-     * @name pc.gfx.Device#enableValidation
-     * @description Activates additional validation within the engine. Internally,
-     * the WebGL error code is checked after every call to a WebGL function. If an error
-     * is detected, it will be output to the Javascript console. Note that enabling
-     * validation will have negative performance implications for the PlayCanvas runtime.
-     * @param {Boolean} enable true to activate validation and false to deactivate it.
-     * @author Will Eastcott
-     */
-    Device.prototype.enableValidation = function (enable) {
-        if (enable === true) {
-            if (this.gl instanceof WebGLRenderingContext) {
-
-                // Create a new WebGLValidator object to
-                // usurp the real WebGL context
-                this.gl = new WebGLValidator(this.gl);
+        /**
+         * @function
+         * @name pc.gfx.Device#clearLocalState
+         * @author Will Eastcott
+         */
+        clearLocalState: function () {
+            for (var key in this._localState) {
+                // Reset to global state
+                this._stateFuncs[key](this._globalState[key]);
+                delete this._localState[key];
             }
-        } else {
-            if (this.gl instanceof WebGLValidator) {
+        },
 
-                // Unwrap the real WebGL context
-                this.gl = Context.gl;
+        /**
+         * @function
+         * @name pc.gfx.Device#getCurrentState
+         * @author Will Eastcott
+         */
+        getCurrentState: function () {
+            return this._currentState;
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setRenderTarget
+         * @author Will Eastcott
+         */
+        setRenderTarget: function (renderTarget) {
+            this.renderTarget = renderTarget;
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#getRenderTarget
+         * @author Will Eastcott
+         */
+        getRenderTarget: function () {
+            return this.renderTarget;
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setIndexBuffer
+         * @description Sets the current index buffer on the graphics device. On subsequent
+         * calls to pc.gfx.Device#draw, the specified index buffer will be used to provide
+         * index data for any indexed primitives.
+         * @param {pc.gfx.IndexBuffer} indexBuffer The index buffer to assign to the device.
+         * @author Will Eastcott
+         */
+        setIndexBuffer: function (indexBuffer) {
+            // Store the index buffer
+            if (this.indexBuffer !== indexBuffer) {
+                this.indexBuffer = indexBuffer;
+
+                // Set the active index buffer object
+                var gl = this.gl;
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer ? indexBuffer.bufferId : null);
             }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setVertexBuffer
+         * @description Sets the current vertex buffer for a specific stream index on the graphics
+         * device. On subsequent calls to pc.gfx.Device#draw, the specified vertex buffer will be 
+         * used to provide vertex data for any primitives.
+         * @param {pc.gfx.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
+         * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
+         * @author Will Eastcott
+         */
+        setVertexBuffer: function (vertexBuffer, stream) {
+            // Store the vertex buffer for this stream index
+            this.vertexBuffers[stream] = vertexBuffer;
+
+            // Push each vertex element in scope
+            var vertexFormat = vertexBuffer.getFormat();
+            var i = 0;
+            var elements = vertexFormat.elements;
+            var numElements = elements.length;
+            while (i < numElements) {
+                var vertexElement = elements[i++];
+                vertexElement.stream = stream;
+                vertexElement.scopeId.setValue(vertexElement);
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setProgram
+         * @author Will Eastcott
+         */
+        setProgram: function(program) {
+            if (program !== this.program) {
+                // Store the program
+                this.program = program;
+
+                // Set the active shader program
+                var gl = this.gl;
+                gl.useProgram(program.programId);
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#commitAttributes
+         * @author Will Eastcott
+         */
+        commitAttributes: function () {
+            var i, len, attribute, element, vertexBuffer;
+            var attributes = this.program.attributes;
+            var gl = this.gl;
+
+            for (i = 0, len = attributes.length; i < len; i++) {
+                attribute = attributes[i];
+
+                // Retrieve vertex element for this shader attribute
+                element = attribute.scopeId.value;
+
+                // Check the vertex element is valid
+                if (element !== null) {
+                    // Retrieve the vertex buffer that contains this element
+                    vertexBuffer = this.vertexBuffers[element.stream];
+
+                    // Set the active vertex buffer object
+                    if (this.boundBuffer !== vertexBuffer.bufferId) {
+                        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
+                        this.boundBuffer = vertexBuffer.bufferId;
+                    }
+
+                    // Hook the vertex buffer to the shader program
+                    gl.enableVertexAttribArray(attribute.locationId);
+                    gl.vertexAttribPointer(attribute.locationId, 
+                                           element.numComponents, 
+                                           this.lookup.elementType[element.dataType], 
+                                           element.normalize,
+                                           element.stride,
+                                           element.offset);
+                }
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#commitSamplers
+         * @author Will Eastcott
+         */
+        // Handle textures differently, as it's probably safer
+        // to always set them rather than try to track which
+        // one is currently set!
+        commitSamplers: function () {
+            var i, len, sampler, textureUnit = 0;
+            var samplers = this.program.samplers;
+            var gl = this.gl;
+
+            for (i = 0, len = samplers.length; i < len; i++) {
+                sampler = samplers[i];
+
+                gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                sampler.scopeId.value.bind();
+                gl.uniform1i(sampler.locationId, textureUnit++);
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#commitUniforms
+         * @author Will Eastcott
+         */
+        commitUniforms: function () {
+            var i, len, uniform;
+            var uniforms = this.program.uniforms;
+            var gl = this.gl;
+
+            for (i = 0, len = uniforms.length; i < len; i++) {
+                uniform = uniforms[i];
+                // Check the value is valid
+                if (uniform.version.notequals(uniform.scopeId.versionObject.version)) {
+
+                    // Copy the version to track that its now up to date
+                    uniform.version.copy(uniform.scopeId.versionObject.version);
+
+                    // Retrieve value for this shader uniform
+                    var value = uniform.scopeId.value;
+
+                    // Call the function to commit the uniform value
+                    this.commitFunction[uniform.dataType](uniform.locationId, value);
+
+    //              uniform.commitArgs[uniform.valueIndex] = uniform.scopeId.value;
+    //              uniform.commitFunc.apply(gl, uniform.commitArgs);
+                }
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#getBoneLimit
+         * @description Queries the maximum number of bones that can be referenced by a shader.
+         * The shader generators (pc.gfx.programlib) use this number to specify the matrix array
+         * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of 
+         * available uniform vectors available after subtracting the number taken by a typical 
+         * heavyweight shader. If a different number is required, it can be tuned via
+         * pc.gfx.Device#setBoneLimit.
+         * @returns {Number} The maximum number of bones that can be supported by the host hardware.
+         * @author Will Eastcott
+         */
+        getBoneLimit: function () {
+            return this.boneLimit;
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setBoneLimit
+         * @description Specifies the maximum number of bones that the device can support on
+         * the current hardware. This function allows the default calculated value based on
+         * available vector uniforms to be overridden.
+         * @param {Number} maxBones The maximum number of bones supported by the host hardware.
+         * @author Will Eastcott
+         */
+        setBoneLimit: function (maxBones) {
+            this.boneLimit = maxBones;
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#enableValidation
+         * @description Activates additional validation within the engine. Internally,
+         * the WebGL error code is checked after every call to a WebGL function. If an error
+         * is detected, it will be output to the Javascript console. Note that enabling
+         * validation will have negative performance implications for the PlayCanvas runtime.
+         * @param {Boolean} enable true to activate validation and false to deactivate it.
+         * @author Will Eastcott
+         */
+        enableValidation: function (enable) {
+            if (enable === true) {
+                if (this.gl instanceof WebGLRenderingContext) {
+
+                    // Create a new WebGLValidator object to
+                    // usurp the real WebGL context
+                    this.gl = new WebGLValidator(this.gl);
+                }
+            } else {
+                if (this.gl instanceof WebGLValidator) {
+
+                    // Unwrap the real WebGL context
+                    this.gl = Context.gl;
+                }
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#validate
+         * @description Performs a one time validation on the error state of the underlying
+         * WebGL API. Note that pc.gfx.Device#enableValidation does not have to be activated
+         * for this function to operate. If an error is detected, it is output to the
+         * Javascript console and the function returns false. Otherwise, the function returns
+         * true. If an error is detected, it will have been triggered by a WebGL call between
+         * the previous and this call to pc.gfx.Device#validate. If this is the first call to
+         * pc.gfx.Device#validate, it detects errors since the device was created.
+         * @returns {Boolean} false if there was an error and true otherwise.
+         * @author Will Eastcott
+         */
+        validate: function () {
+            var gl = this.gl;
+            var error = gl.getError();
+
+            if (error !== gl.NO_ERROR) {
+                Log.error("WebGL error: " + WebGLValidator.ErrorString[error]);
+                return false;
+            }
+
+            return true;
         }
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device#validate
-     * @description Performs a one time validation on the error state of the underlying
-     * WebGL API. Note that pc.gfx.Device#enableValidation does not have to be activated
-     * for this function to operate. If an error is detected, it is output to the
-     * Javascript console and the function returns false. Otherwise, the function returns
-     * true. If an error is detected, it will have been triggered by a WebGL call between
-     * the previous and this call to pc.gfx.Device#validate. If this is the first call to
-     * pc.gfx.Device#validate, it detects errors since the device was created.
-     * @returns {Boolean} false if there was an error and true otherwise.
-     * @author Will Eastcott
-     */
-    Device.prototype.validate = function () {
-        var gl = this.gl;
-        var error = gl.getError();
-
-        if (error !== gl.NO_ERROR) {
-            Log.error("WebGL error: " + WebGLValidator.ErrorString[error]);
-            return false;
-        }
-
-        return true;
     };
 
     return {
