@@ -238,9 +238,7 @@ pc.extend(pc.resources, function () {
                     logERROR("Texture " + name + " not found in model's texture dictionary.");
                 }
                 material.setParameter(param.name, texture);
-                if (texture.transform === undefined) {
-                    material.setParameter(param.name + "Transform", pc.math.mat4.create());
-                } else {
+                if (texture.transform !== undefined) {
                     material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
                 }
             } else {
@@ -934,9 +932,7 @@ pc.extend(pc.resources, function () {
                 material.setParameter(param.name, param.data);
                 if (param.name.substring(0, 'texture_'.length) === 'texture_') {
                     var texture = param.data;
-                    if (texture.transform === undefined) {
-                        material.setParameter(param.name + "Transform", pc.math.mat4.create());
-                    } else {
+                    if (texture.transform !== undefined) {
                         material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
                     }
                 }
