@@ -311,6 +311,12 @@ pc.math.vec3 = function () {
 
     // Public functions
     return {
+        zero: new Float32Array([0, 0, 0]),
+        one: new Float32Array([1, 1, 1]),
+        xaxis: new Float32Array([1, 0, 0]),
+        yaxis: new Float32Array([0, 1, 0]),
+        zaxis: new Float32Array([0, 0, 1]),
+
         /**
          * @function
          * @name pc.math.vec3.add
