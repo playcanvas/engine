@@ -119,15 +119,7 @@ pc.extend(pc.gfx, function () {
         logINFO("WebGL shader version:      " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
         logINFO("WebGL vendor:              " + gl.getParameter(gl.VENDOR));
         logINFO("WebGL renderer:            " + gl.getParameter(gl.RENDERER));
-        // Note that gl.getSupportedExtensions is not actually available in Chrome 9.
-        var extensions;
-        try {
-            extensions = gl.getSupportedExtensions();
-        }
-        catch (e) {
-            extensions = 'Extensions unavailable';
-        }
-        logINFO("WebGL extensions:          " + extensions);
+        logINFO("WebGL extensions:          " + gl.getSupportedExtensions());
         logINFO("WebGL num texture units:   " + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
         logINFO("WebGL max texture size:    " + gl.getParameter(gl.MAX_TEXTURE_SIZE));
         logINFO("WebGL max cubemap size:    " + gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE));
