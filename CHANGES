@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.53.0
+-------
+* Phong shader now only transforms UVs in the vertex shader if there is a non-identity texture transform set.
+* GraphNode#lookAt no longer allocates.
+* Add some named constants to pc.math.vec3 (zero, one, xaxis, yaxis, zaxis).
+* Allow integer vertex attribs which require normalization on a render. This allows for UINT8 vertex colors in a vertex buffer, for example.
+
+-------
 v0.52.2
 -------
 * Ensure an animation is set on a skeleton before having anim component set skeleton's graph.
