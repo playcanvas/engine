@@ -8,33 +8,35 @@ pc.extend(pc.gfx, function () {
         this.namespaces = {};
     };
 
-    ScopeSpace.prototype.resolve = function(name) {
-        // Check if the ScopeId already exists
-        if (this.variables.hasOwnProperty(name) == false) {
+    ScopeSpace.prototype = {
+        resolve: function(name) {
+            // Check if the ScopeId already exists
+            if (this.variables.hasOwnProperty(name) == false) {
 
-            // Create and add to the table
-            this.variables[name] = new pc.gfx.ScopeId(name);
+                // Create and add to the table
+                this.variables[name] = new pc.gfx.ScopeId(name);
 
-            logDEBUG("Added ScopeId: " + name);
+                logDEBUG("Added ScopeId: " + name);
+            }
+
+            // Now return the ScopeId instance
+            return this.variables[name];
+        },
+
+        getSubSpace: function(name) {
+            // Check if the nested namespace already exists
+            if (this.namespaces.hasOwnProperty(name) == false) {
+
+                // Create and add to the table
+                this.namespaces[name] = new pc.gfx.ScopeSpace(name);
+
+                logDEBUG("Added ScopeSpace: " + name);
+            }
+
+            // Now return the ScopeNamespace instance
+            return this.namespaces[name];
         }
-
-        // Now return the ScopeId instance
-        return this.variables[name];
-    };
-
-    ScopeSpace.prototype.getSubSpace = function(name) {
-        // Check if the nested namespace already exists
-        if (this.namespaces.hasOwnProperty(name) == false) {
-
-            // Create and add to the table
-            this.namespaces[name] = new pc.gfx.ScopeSpace(name);
-
-            logDEBUG("Added ScopeSpace: " + name);
-        }
-
-        // Now return the ScopeNamespace instance
-        return this.namespaces[name];
-    };
+    }
 
     return {
         ScopeSpace: ScopeSpace

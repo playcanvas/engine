@@ -36,53 +36,55 @@ pc.extend(pc.gfx, function () {
         this.storage = new ArrayBuffer(numBytes);
     };
 
-    /**
-     * @function
-     * @name pc.gfx.IndexBuffer#getFormat
-     * @description Returns the data format of the specified index buffer.
-     * @returns {pc.gfx.IndexFormat} The data format of the specified index buffer.
-     * @author Will Eastcott
-     */
-    IndexBuffer.prototype.getFormat = function () {
-        return this.format;
-    };
+    IndexBuffer.prototype = {
+        /**
+         * @function
+         * @name pc.gfx.IndexBuffer#getFormat
+         * @description Returns the data format of the specified index buffer.
+         * @returns {pc.gfx.IndexFormat} The data format of the specified index buffer.
+         * @author Will Eastcott
+         */
+        getFormat: function () {
+            return this.format;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.IndexBuffer#getNumIndices
-     * @description Returns the number of indices stored in the specified index buffer.
-     * @returns {Number} The number of indices stored in the specified index buffer.
-     * @author Will Eastcott
-     */
-    IndexBuffer.prototype.getNumIndices = function () {
-        return this.numIndices;
-    };
+        /**
+         * @function
+         * @name pc.gfx.IndexBuffer#getNumIndices
+         * @description Returns the number of indices stored in the specified index buffer.
+         * @returns {Number} The number of indices stored in the specified index buffer.
+         * @author Will Eastcott
+         */
+        getNumIndices: function () {
+            return this.numIndices;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.IndexBuffer#lock
-     * @description Gives access to the block of memory that stores the buffer's indices.
-     * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
-     * @author Will Eastcott
-     */
-    IndexBuffer.prototype.lock = function () {
-        return this.storage;
-    };
+        /**
+         * @function
+         * @name pc.gfx.IndexBuffer#lock
+         * @description Gives access to the block of memory that stores the buffer's indices.
+         * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
+         * @author Will Eastcott
+         */
+        lock: function () {
+            return this.storage;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.IndexBuffer#unlock
-     * @description Signals that the block of memory returned by a call to the lock function is 
-     * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the 
-     * currently active device.
-     * @author Will Eastcott
-     */
-    IndexBuffer.prototype.unlock = function () {
-        // Upload the new index data
-        var gl = pc.gfx.Device.getCurrent().gl;
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, gl.STATIC_DRAW);
-    };
+        /**
+         * @function
+         * @name pc.gfx.IndexBuffer#unlock
+         * @description Signals that the block of memory returned by a call to the lock function is 
+         * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the 
+         * currently active device.
+         * @author Will Eastcott
+         */
+        unlock: function () {
+            // Upload the new index data
+            var gl = pc.gfx.Device.getCurrent().gl;
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, gl.STATIC_DRAW);
+        }
+    }
 
     return {
         IndexBuffer: IndexBuffer

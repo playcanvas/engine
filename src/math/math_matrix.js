@@ -37,6 +37,11 @@ pc.math.mat3 = function () {
  */
 pc.math.mat4 = function () {
 
+    var scratchVecs = [];
+    for (var i = 0; i < 3; i++) {
+        scratchVecs.push(pc.math.vec3.create());
+    }
+    
     // Public functions
     return {
 
@@ -291,9 +296,9 @@ pc.math.mat4 = function () {
                 r = pc.math.mat4.create();
             }
 
-            var x = pc.math.vec3.create();
-            var y = pc.math.vec3.create();
-            var z = pc.math.vec3.create();
+            var x = scratchVecs[0];
+            var y = scratchVecs[1];
+            var z = scratchVecs[2];
 
             pc.math.vec3.subtract(position, target, z);
             pc.math.vec3.normalize(z, z);
@@ -785,9 +790,15 @@ pc.math.mat4 = function () {
                r = pc.math.vec3.create();
             }
 
-            r[0] = pc.math.vec3.length(pc.math.vec3.create(m[0], m[1], m[2]));
-            r[1] = pc.math.vec3.length(pc.math.vec3.create(m[4], m[5], m[6]));
-            r[2] = pc.math.vec3.length(pc.math.vec3.create(m[8], m[9], m[10]));
+            var x = scratchVecs[0];
+            var y = scratchVecs[1];
+            var z = scratchVecs[2];
+            pc.math.vec3.set(x, m[0], m[1], m[2]);
+            pc.math.vec3.set(y, m[4], m[5], m[6]);
+            pc.math.vec3.set(z, m[8], m[9], m[10]);
+            r[0] = pc.math.vec3.length(x);
+            r[1] = pc.math.vec3.length(y);
+            r[2] = pc.math.vec3.length(z);
 
             return r;
         },
