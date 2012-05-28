@@ -28,20 +28,20 @@ pc.extend(pc.resources, function () {
     };
 
     PackResourceHandler.prototype.open = function (data, options) {
-        var pack = this.openPack(data, options);
+        var pack = this.openEntity(data, options);
 
         return pack;
     };
     
-    PackResourceHandler.prototype.openPack = function (data, options) {
-        options = options || {};
-        options.priority = options.priority || 1; // default priority of 1
-        options.batch = options.batch || null;
+    // PackResourceHandler.prototype.openPack = function (data, options) {
+    //     options = options || {};
+    //     options.priority = options.priority || 1; // default priority of 1
+    //     options.batch = options.batch || null;
 
-        var pack = data['hierarchy'];
+    //     var pack = data['hierarchy'];
 
-        return this.openEntity(pack, options)
-    };
+    //     return this.openEntity(pack, options)
+    // };
 
     PackResourceHandler.prototype.openEntity = function (data, options) {
         var entity = new pc.fw.Entity();

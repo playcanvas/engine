@@ -11,11 +11,7 @@ pc.extend(pc.fw, function () {
         this.type = pc.fw.LiveLinkMessageType.OPEN_ENTITY
         this.content = {};
 
-        if (pc.type(models) === 'array') {
-            this.content.models = models;
-        } else {
-            this.content.model = models;
-        }
+        this.content.models = models;
     };
     LiveLinkOpenEntityMessage = pc.inherits(LiveLinkOpenEntityMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("OPEN_ENTITY");

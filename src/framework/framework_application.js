@@ -277,17 +277,17 @@ pc.extend(pc.fw, function () {
                 case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
                     var entities = {};
                     var guid = null;
-                    if (msg.content.model) {
-                        // entity is sent as complete hierarchy, use PackRequest to load
-                        var entity = this.context.loader.open(pc.resources.PackRequest, msg.content.model);
-                        if (entity.__parent) {
-                            var parent = this.context.root.findByGuid(entity.__parent);
-                            parent.addChild(entity);
-                        } else {
-                            this.context.root.addChild(entity);
-                        }
-                    }
-                    else if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
+                    // if (msg.content.model) {
+                    //     // entity is sent as complete hierarchy, use PackRequest to load
+                    //     var entity = this.context.loader.open(pc.resources.PackRequest, msg.content.model);
+                    //     if (entity.__parent) {
+                    //         var parent = this.context.root.findByGuid(entity.__parent);
+                    //         parent.addChild(entity);
+                    //     } else {
+                    //         this.context.root.addChild(entity);
+                    //     }
+                    // }
+                    if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
                         var i, len = msg.content.models.length;
 
                         for (i = 0; i < len; i++) {
