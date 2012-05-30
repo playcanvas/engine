@@ -25,12 +25,15 @@ pc.extend(pc.gfx, function () {
 
     /**
      * @name pc.gfx.VertexElement
-     * @class A program representing a compiled and linked vertex and fragment shader pair.
-     * @param {pc.gfx.ShaderType} name
-     * @param {String} numComponents
-     * @param {String} dataType
+     * @class An attribute stored in a vertex buffer. Positions, normals, texture coordinates
+     * and vertex colors are all examples of vertex elements.
+     * @param {pc.gfx.ShaderType} name The name of the vertex element as referenced by any shaders.
+     * @param {Number} numComponents The number of distinct components in this particular element.
+     * @param {pc.gfx.VertexElementType} dataType The type of each element component.
+     * @param {Boolean} normalize If true, map integer values to the range 0 to 1, otherwise leave
+     * them unaltered. Defaults to false.
      */
-    var VertexElement = function (name, numComponents, dataType) {
+    var VertexElement = function (name, numComponents, dataType, normalize) {
         // These will be initialized by the VertexFormat constructor
         this.offset = 0;
         this.stride = 0;
@@ -45,6 +48,8 @@ pc.extend(pc.gfx, function () {
         // Store the data type information
         this.dataType      = dataType;
         this.numComponents = numComponents;
+
+        this.normalize = (typeof normalize === 'undefined') ? false : normalize;
 
         // Calculate the size
         this.size = this.numComponents * _typeSize[this.dataType];

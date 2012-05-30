@@ -12,10 +12,12 @@ pc.extend(pc.gfx, function () {
         this.version.globalId = idCounter;
     };
 
-    VersionedObject.prototype.increment = function () {
-        // Increment the revision number
-        this.version.revision++;
-    };
+    VersionedObject.prototype = {
+        increment: function () {
+            // Increment the revision number
+            this.version.revision++;
+        }
+    }
 
     return {
         VersionedObject: VersionedObject

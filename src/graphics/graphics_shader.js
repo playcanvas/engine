@@ -40,38 +40,40 @@ pc.extend(pc.gfx, function () {
         }
     }
 
-    /**
-     * @function
-     * @name pc.gfx.Shader#getType
-     * @description Returns the type of the shader which can be either a vertex shader or a
-     * fragment shader.
-     * @returns {pc.gfx.ShaderType} A constant denoting a vertex shader or a fragment shader.
-     * @example
-     * var shader = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, source);
-     * var type = shader.getType();
-     * if (type === pc.gfx.ShaderType.VERTEX) {
-     *     console.log("This is indeed a vertex shader!");
-     * }
-     * @author Will Eastcott
-     */
-    Shader.prototype.getType = function () {
-        return this.type;
-    };
+    Shader.prototype = {
+        /**
+         * @function
+         * @name pc.gfx.Shader#getType
+         * @description Returns the type of the shader which can be either a vertex shader or a
+         * fragment shader.
+         * @returns {pc.gfx.ShaderType} A constant denoting a vertex shader or a fragment shader.
+         * @example
+         * var shader = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, source);
+         * var type = shader.getType();
+         * if (type === pc.gfx.ShaderType.VERTEX) {
+         *     console.log("This is indeed a vertex shader!");
+         * }
+         * @author Will Eastcott
+         */
+        getType: function () {
+            return this.type;
+        },
 
-    /**
-     * @function
-     * @name pc.gfx.Shader#getSource
-     * @description Returns the string object that constitutes the source code for the 
-     * specified shader object.
-     * @returns {String} The source code for the specified shader.
-     * @example
-     * var shader1 = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, source);
-     * var shader2 = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, shader1.getSource());
-     * @author Will Eastcott
-     */
-    Shader.prototype.getSource = function () {
-        return this.src;
-    };
+        /**
+         * @function
+         * @name pc.gfx.Shader#getSource
+         * @description Returns the string object that constitutes the source code for the 
+         * specified shader object.
+         * @returns {String} The source code for the specified shader.
+         * @example
+         * var shader1 = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, source);
+         * var shader2 = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, shader1.getSource());
+         * @author Will Eastcott
+         */
+        getSource: function () {
+            return this.src;
+        }
+    }
 
     return {
         Shader: Shader

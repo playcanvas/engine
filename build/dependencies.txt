@@ -13,10 +13,10 @@
 ../src/events/events_events.js
 ../src/core/core_dom.js
 ../src/math/math_math.js
+../src/math/math_vector.js
 ../src/math/math_matrix.js
 ../src/math/math_quaternion.js
 ../src/math/math_utils.js
-../src/math/math_vector.js
 ../src/shape/shape_shape.js
 ../src/shape/shape_intersection.js
 ../src/shape/shape_aabb.js

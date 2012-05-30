@@ -238,9 +238,7 @@ pc.extend(pc.resources, function () {
                     logERROR("Texture " + name + " not found in model's texture dictionary.");
                 }
                 material.setParameter(param.name, texture);
-                if (texture.transform === undefined) {
-                    material.setParameter(param.name + "Transform", pc.math.mat4.create());
-                } else {
+                if (texture.transform !== undefined) {
                     material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
                 }
             } else {
@@ -756,7 +754,7 @@ pc.extend(pc.resources, function () {
 
     function MemoryStream(arrayBuffer, loader, options) {
         this.memory = arrayBuffer;
-        this.dataView = new DataView(arrayBuffer);
+        this.dataView = (typeof DataView !== 'undefined') ? new DataView(arrayBuffer) : null;
         this.filePointer = 0;
         this.options = options;
         this.loader = loader;
@@ -769,7 +767,11 @@ pc.extend(pc.resources, function () {
             count = count || 1;
             var data;
             if (count === 1) {
-                data = this.dataView.getFloat32(this.filePointer, true);
+                if (this.dataView) {
+                    data = this.dataView.getFloat32(this.filePointer, true);
+                } else {
+                    data = (new Float32Array(this.memory, this.filePointer, 1))[0];
+                }
             } else {
                 data = new Float32Array(this.memory, this.filePointer, count);
             }
@@ -781,7 +783,11 @@ pc.extend(pc.resources, function () {
             count = count || 1;
             var data;
             if (count === 1) {
-                data = this.dataView.getUint8(this.filePointer, true);
+                if (this.dataView) {
+                    data = this.dataView.getUint8(this.filePointer, true);
+                } else {
+                    data = (new Uint8Array(this.memory, this.filePointer, 1))[0];
+                }
             } else {
                 data = new Uint8Array(this.memory, this.filePointer, count);
             }
@@ -793,7 +799,11 @@ pc.extend(pc.resources, function () {
             count = count || 1;
             var data;
             if (count === 1) {
-                data = this.dataView.getUint16(this.filePointer, true);
+                if (this.dataView) {
+                    data = this.dataView.getUint16(this.filePointer, true);
+                } else {
+                    data = (new Uint16Array(this.memory, this.filePointer, 1))[0];
+                }
             } else {
                 data = new Uint16Array(this.memory, this.filePointer, count);
             }
@@ -805,7 +815,11 @@ pc.extend(pc.resources, function () {
             count = count || 1;
             var data;
             if (count === 1) {
-                data = this.dataView.getUint32(this.filePointer, true);
+                if (this.dataView) {
+                    data = this.dataView.getUint32(this.filePointer, true);
+                } else {
+                    data = (new Uint32Array(this.memory, this.filePointer, 1))[0];
+                }
             } else {
                 data = new Uint32Array(this.memory, this.filePointer, count);
             }
@@ -816,7 +830,7 @@ pc.extend(pc.resources, function () {
         readString: function (length) {
             var str = "";
             for (var i = 0; i < length; i++) {
-                var charCode = this.dataView.getUint8(this.filePointer++);
+                var charCode = this.readU8();
                 str += String.fromCharCode(charCode);
             }
             return str;
@@ -934,9 +948,7 @@ pc.extend(pc.resources, function () {
                 material.setParameter(param.name, param.data);
                 if (param.name.substring(0, 'texture_'.length) === 'texture_') {
                     var texture = param.data;
-                    if (texture.transform === undefined) {
-                        material.setParameter(param.name + "Transform", pc.math.mat4.create());
-                    } else {
+                    if (texture.transform !== undefined) {
                         material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
                     }
                 }

@@ -1,6 +1,7 @@
 pc.extend(pc.scene, function () {
 
     var identity = pc.math.mat4.create();
+    var tempVec = pc.math.vec3.create();
 
     /**
      * @name pc.scene.GraphNode
@@ -475,8 +476,10 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         lookAt: function (target, up) {
-            up = up || pc.math.vec3.create(0, 1, 0);
-            pc.math.mat4.makeLookAt(this.getLocalPosition(), target, up, this._ltm);
+            up = up || pc.math.vec3.yaxis;
+            var pos = tempVec;
+            this.getLocalPosition(pos);
+            pc.math.mat4.makeLookAt(pos, target, up, this._ltm);
         },
 
         /**
