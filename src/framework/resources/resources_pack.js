@@ -28,22 +28,27 @@ pc.extend(pc.resources, function () {
     };
 
     PackResourceHandler.prototype.open = function (data, options) {
-        var pack = this.openEntity(data, options);
+        var pack = this.openPack(data, options);
 
         return pack;
     };
     
-    PackResourceHandler.prototype.openEntity = function (data, options) {
-        var guid = data.resource_id;
-
+    PackResourceHandler.prototype.openPack = function (data, options) {
         options = options || {};
-    	options.priority = options.priority || 1; // default priority of 1
+        options.priority = options.priority || 1; // default priority of 1
         options.batch = options.batch || null;
-        
+
+        var pack = data['hierarchy'];
+
+        data['hierarchy'] = this.openEntity(pack, options)
+        return data;
+    };
+
+    PackResourceHandler.prototype.openEntity = function (data, options) {
         var entity = new pc.fw.Entity();
 
-        entity.setName(data.name);
-        entity.setGuid(guid);
+        entity.setName(data['name']);
+        entity.setGuid(data['resource_id']);
         if (data.transform) {
             entity.setLocalTransform(pc.math.mat4.clone(data.transform));    
         } else {
@@ -61,8 +66,8 @@ pc.extend(pc.resources, function () {
         entity.__parent = data.parent;
         entity.__children = data.children;
 
-        entity._rev = data._rev;
-        entity.version = data.version;
+        // entity._rev = data._rev;
+        // entity.version = data.version;
         entity.name = data.name;
         entity.template = data.template;
         

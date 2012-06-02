@@ -16,7 +16,7 @@ pc.extend(pc.fw, function () {
                 var pack = resources[guid];
 
                 // add to hierarchy
-                context.root.addChild(pack);
+                context.root.addChild(pack['hierarchy']);
                 
                 // and update world transforms
                 context.root.syncHierarchy();
@@ -26,7 +26,7 @@ pc.extend(pc.fw, function () {
                 for (system in context.systems) {
                     if (context.systems.hasOwnProperty(system)) {
                         if (context.systems[system].initialize) {
-                            context.systems[system].initialize(pack);
+                            context.systems[system].initialize(pack['hierarchy']);
                         }
                         
                     }

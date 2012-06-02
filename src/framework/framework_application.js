@@ -277,23 +277,36 @@ pc.extend(pc.fw, function () {
                 case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
                     var entities = {};
                     var guid = null;
-                    msg.content.models.forEach(function (model) {
-                        var entity = this.context.loader.open(pc.resources.EntityRequest, model);
-                        entities[entity.getGuid()] = entity;
-                    }, this);
-                    
-                    for (guid in entities) {
-                        if (entities.hasOwnProperty(guid)) {
-                            pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
-                            if (!entities[guid].__parent) {
-                                // If entity has no parent add to the root
-                                this.context.root.addChild(entities[guid]);
-                            } else if (!entities[entities[guid].__parent]) {
-                                // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
-                                var parent = this.context.root.findByGuid(entities[guid].__parent);
-                                parent.addChild(entities[guid]);
-                                logDEBUG(pc.string.format("RT: Added '{0}' to parent {1}", guid, entities[guid].__parent));
-                                //this.printHierarchy(this.context.root);
+                    // if (msg.content.model) {
+                    //     // entity is sent as complete hierarchy, use PackRequest to load
+                    //     var entity = this.context.loader.open(pc.resources.PackRequest, msg.content.model);
+                    //     if (entity.__parent) {
+                    //         var parent = this.context.root.findByGuid(entity.__parent);
+                    //         parent.addChild(entity);
+                    //     } else {
+                    //         this.context.root.addChild(entity);
+                    //     }
+                    // }
+                    if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
+                        var i, len = msg.content.models.length;
+
+                        for (i = 0; i < len; i++) {
+                            var model = msg.content.models[i];
+                            var entity = this.context.loader.open(pc.resources.EntityRequest, model);
+                            entities[entity.getGuid()] = entity;
+                        }
+                        
+                        for (guid in entities) {
+                            if (entities.hasOwnProperty(guid)) {
+                                pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
+                                if (!entities[guid].__parent) {
+                                    // If entity has no parent add to the root
+                                    this.context.root.addChild(entities[guid]);
+                                } else if (!entities[entities[guid].__parent]) {
+                                    // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
+                                    var parent = this.context.root.findByGuid(entities[guid].__parent);
+                                    parent.addChild(entities[guid]);
+                                }
                             }
                         }
                     }

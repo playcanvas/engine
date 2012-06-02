@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @param {Object} source either pc.content.data['application'] or the designer Component in as a source
      */
     var AppData = function (source) {
-        this.fillWindow = source['fillWindow'];
+        this.fillWindow = source['fill_window'];
         this.width = source['width'];
         this.height = source['height']
     };
