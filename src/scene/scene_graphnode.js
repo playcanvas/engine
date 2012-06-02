@@ -203,8 +203,24 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#getLocalPosition
-         * @description Get the position in local space for the specified GraphNode.
+         * @description Get the position in local space for the specified GraphNode. This
+         * function internally allocates a 3-dimensional vector and copies the translational
+         * components of the graph node's local transformation matrix into it. This vector
+         * is returned by the function.
          * @returns {pc.math.vec3} The local space position of the graph node.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#getLocalPosition^2
+         * @description Get the position in local space for the specified GraphNode. By
+         * supplying a 3-dimensional vector as a parameter, this function will not 
+         * allocate internally and is therefore more optimal than the other 
+         * pc.scene.GraphNode#getLocalPosition prototype.
+         * @param {pc.math.vec3} pos A pre-alloacted 3-dimensional vector to receive the
+         * local space position of the graph node.
+         * @returns {pc.math.vec3} The local space position of the graph node (simply a 
+         * reference to the parameter passed to the function).
          * @author Will Eastcott
          */
         getLocalPosition: function () {
@@ -215,7 +231,7 @@ pc.extend(pc.scene, function () {
                 pos[2] = this._ltm[14];
                 return pos;
             } else {
-                return this._ltm.subarray(12, 15);
+                return pc.math.vec3.create(this._ltm[12], this._ltm[13], this._ltm[14]);
             }
         },
 
@@ -246,8 +262,24 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#getWorldPosition
-         * @description Get the position in world space for the specified GraphNode.
+         * @description Get the position in world space for the specified GraphNode. This
+         * function internally allocates a 3-dimensional vector and copies the translational
+         * components of the graph node's world transformation matrix into it. This vector
+         * is returned by the function.
          * @returns {pc.math.vec3} The world space position of the graph node.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#getWorldPosition^2
+         * @description Get the position in world space for the specified GraphNode. By
+         * supplying a 3-dimensional vector as a parameter, this function will not 
+         * allocate internally and is therefore more optimal than the other 
+         * pc.scene.GraphNode#getWorldPosition prototype.
+         * @param {pc.math.vec3} pos A pre-alloacted 3-dimensional vector to receive the
+         * world space position of the graph node.
+         * @returns {pc.math.vec3} The world space position of the graph node (simply a 
+         * reference to the parameter passed to the function).
          * @author Will Eastcott
          */
         getWorldPosition: function () {
@@ -258,7 +290,7 @@ pc.extend(pc.scene, function () {
                 pos[2] = this._wtm[14];
                 return pos;
             } else {
-                return this._wtm.subarray(12, 15);
+                return pc.math.vec3.create(this._wtm[12], this._wtm[13], this._wtm[14]);
             }
         },
 
