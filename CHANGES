@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.54.0
+-------
+* Update to new Pack format, with application_data, and hierarchy properties
+* pc.scene.GraphNode#getLocal/WorldPosition no longer return a reference to the graph node's LTM/WTM but a newly allocated vector.
+* pc.net.http.delete_ renamed to pc.net.http.del
+
+-------
 v0.53.0
 -------
 * Phong shader now only transforms UVs in the vertex shader if there is a non-identity texture transform set.

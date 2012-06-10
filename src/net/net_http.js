@@ -112,12 +112,12 @@ pc.extend(pc.net, function () {
          * @param {Object} options
          * @param {XmlHttpRequest} xhr
          */
-        delete_: function (url, success, options, xhr) {
+        del: function (url, success, options, xhr) {
             options = options || {};
             options.success = success;
             return this.request("DELETE", url, options, xhr);
         },
-        
+
         /**
          * Make an XmlHttpRequest to the given url
          * @param {String} method
@@ -344,6 +344,8 @@ pc.extend(pc.net, function () {
         }
     };
     
+    Http.prototype.delete_ = Http.prototype.del;
+
     return {
         Http: Http,
         http: new Http()
