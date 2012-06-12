@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.55.0
+-------
+* [FIX] Pack loading no longer edits pack data in place, a PackResourceHandler.open returns a copy
+
+-------
 v0.54.2
 -------
 * [FIX] Set up dynamic lights right at the start of a scene flush.

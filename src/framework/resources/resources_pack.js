@@ -39,9 +39,10 @@ pc.extend(pc.resources, function () {
         options.batch = options.batch || null;
 
         var pack = data['hierarchy'];
-
-        data['hierarchy'] = this.openEntity(pack, options)
-        return data;
+        return {
+            application_data: data['application_data'],
+            hierarchy: this.openEntity(pack, options)
+        };
     };
 
     PackResourceHandler.prototype.openEntity = function (data, options) {
