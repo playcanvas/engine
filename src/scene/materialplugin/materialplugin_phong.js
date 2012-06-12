@@ -101,7 +101,7 @@ pc.scene.materialplugin.phong.getProgram = function (material, mesh) {
         specularMap:                (parameters["texture_specularMap"] !== undefined),
         specularMapTransform:       (parameters["texture_specularMapTransform"] !== undefined),
         specularFactorMap:          (parameters["texture_specularFactorMap"] !== undefined),
-        specularFactorMapTransform: (parameters["texture_specularFactorMap"] !== undefined),
+        specularFactorMapTransform: (parameters["texture_specularFactorMapTransform"] !== undefined),
         emissiveMap:                (parameters["texture_emissiveMap"] !== undefined),
         emissiveMapTransform:       (parameters["texture_emissiveMapTransform"] !== undefined),
         opacityMap:                 (parameters["texture_opacityMap"] !== undefined),

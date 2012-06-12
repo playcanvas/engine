@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.54.2
+-------
+* [FIX] Set up dynamic lights right at the start of a scene flush.
+
+-------
+v0.54.1
+-------
+* [FIX] Rendering would fail for materials with a specular map but no transform applied to the map.
+
+-------
 v0.54.0
 -------
 * Update to new Pack format, with application_data, and hierarchy properties

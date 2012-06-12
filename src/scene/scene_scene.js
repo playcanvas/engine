@@ -450,9 +450,6 @@ pc.extend(pc.scene, function () {
             // Lights get dispatched after the shadowmap generation is done.
             // By this point, the shadow matrices for the lights  have been
             // calculated.
-            self.dispatchGlobalLights();
-            self.dispatchLocalLights();
-
             if (opaqueMeshes.length > 0) {
                 // Render front to back
                 for (i = opaqueMeshes.length - 1; i >= 0; i--) {
@@ -598,6 +595,9 @@ pc.extend(pc.scene, function () {
      */
 	Scene.prototype.flush = function () {
         pc.scene.Scene.current = this;
+
+        this.dispatchGlobalLights();
+        this.dispatchLocalLights();
 
 	    for (var i = 0; i < this._priorities.length; i++) {
 	        var queueName = this._priorities[i].name;
