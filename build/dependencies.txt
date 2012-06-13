@@ -87,6 +87,7 @@
 ../src/net/net_net.js
 ../src/net/net_http.js
 ../src/net/net_oauth.js
+../src/net/net_socket.js
 ../src/script/script_script.js
 ../src/script/resources/resources_script.js
 ../src/helpers/helpers_flycam.js

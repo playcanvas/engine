@@ -127,7 +127,9 @@ pc.extend(pc.fw, function () {
         var length = children.length;
         var child;
         while(child = children.shift()) {
-            child.close(registry);
+            if(child instanceof pc.fw.Entity) {
+                child.close(registry);
+            }
         }
     };
     

@@ -55,9 +55,13 @@ def build(dst):
     if formatting: 
         cmd.append("--formatting")
         cmd.append(formatting)
-        
+    
+    # Use ECMA script 5 which supports getters and setters    
+    cmd.append("--language_in=ECMASCRIPT5")
+
     for file in dependencies:
         cmd.append( "--js=" + os.path.join(root, file.strip()))
+
     retcode = subprocess.call(cmd)
     
     # Copy output to build directory
