@@ -30,7 +30,11 @@ pc.shape = function () {
          */
         Type: {
             CONE: "Cone", // TODO: this should go in shape_cone.js
-            CYLINDER: "Cylinder" // TODO: this should go in shape_cylinder.js
+            CYLINDER: "Cylinder", // TODO: this should go in shape_cylinder.js
+
+            // 2D shapes
+            CIRCLE: "Circle",
+            RECT: "Rect"
         }
     };
 }();
