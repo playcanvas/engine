@@ -367,7 +367,7 @@ if (typeof(Box2D) !== 'undefined') {
                 device.setIndexBuffer(indexBuffer);
                 device.setVertexBuffer(vertexBuffer, 0);
 
-                var transform = entity.getWorldTransform();
+                var transform = entity.getLocalTransform();
                 device.scope.resolve("matrix_model").setValue(transform);
                 device.scope.resolve("constant_color").setValue(this._gfx.color);
                 device.draw({
@@ -402,7 +402,7 @@ if (typeof(Box2D) !== 'undefined') {
                     device.setIndexBuffer(indexBuffer);
                     device.setVertexBuffer(vertexBuffer, 0);
 
-                    transform = entity.getWorldTransform();
+                    transform = entity.getLocalTransform();
                     device.scope.resolve("matrix_model").setValue(transform);
                     device.scope.resolve("constant_color").setValue(this._gfx.color);
                     device.draw({
