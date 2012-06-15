@@ -101,9 +101,10 @@ if (typeof(Box2D) !== 'undefined') {
                 var attribs = ['density', 'friction', 'restitution', 'static', 'shape'];
                 this.initialiseComponent(entity, componentData, data, attribs);
 
-                entity.getLocalPosition(position);
-                pc.math.mat4.toEulerXYZ(entity.getLocalTransform(), rotation);
-                pc.math.mat4.getScale(entity.getLocalTransform(), scale);
+                entity.syncHierarchy();
+                entity.getWorldPosition(position);
+                pc.math.mat4.toEulerXYZ(entity.getWorldTransform(), rotation);
+                pc.math.mat4.getScale(entity.getWorldTransform(), scale);
 
                 var fixtureDef = new b2FixtureDef();
                 this.initFixtureDef(fixtureDef, componentData);
@@ -279,6 +280,13 @@ if (typeof(Box2D) !== 'undefined') {
                 var positionIterations = 2;
                 var components = this.getComponents();
 
+                // var setWorldTransform = function (e, w) {
+                //     var p = e.getParent();
+                //     var pw = p.getWorldTransform();
+                //     pc.math.mat4.invert(pw, pw);
+                //     pc.math.mat4.multiply(pw, w, e.getLocalTransform());
+                // };
+
                 for (id in components) {
                     if (components.hasOwnProperty(id)) {
                         entity = components[id].entity;
@@ -287,17 +295,18 @@ if (typeof(Box2D) !== 'undefined') {
                             var position2d = componentData.body.GetPosition();
 
                             position[this.xi] = position2d.x;
-                            position[this.yi] = position2d.y;
                             position[this.ri] = 0;
+                            position[this.yi] = position2d.y;
 
                             rotation[this.xi] = 0;
-                            rotation[this.zi] = 0;
                             rotation[this.ri] = -componentData.body.GetAngle();
+                            rotation[this.zi] = 0;
 
-                            ltm = entity.getLocalTransform();
+                            //var wtm = entity.getWorldTransform();
+                            var ltm = entity.getLocalTransform();
                             pc.math.mat4.getScale(ltm, scale);
-
-                            pc.math.mat4.compose(position,rotation,scale, ltm);
+                            pc.math.mat4.compose(position, rotation, scale, ltm);
+                            //setWorldTransform(entity, wtm);
                         }
                     }
                 }
@@ -367,7 +376,16 @@ if (typeof(Box2D) !== 'undefined') {
                 device.setIndexBuffer(indexBuffer);
                 device.setVertexBuffer(vertexBuffer, 0);
 
-                var transform = entity.getLocalTransform();
+                var t = pc.math.vec3.create();
+                var r = pc.math.vec3.create();
+                var s = pc.math.vec3.create();
+                var transform = entity.getWorldTransform();
+                pc.math.mat4.getTranslation(transform, t);
+                pc.math.mat4.toEulerXYZ(transform, r); r[this.xi] = 0; r[this.yi] = 0;
+                pc.math.mat4.getScale(transform, s);
+
+                pc.math.mat4.compose(t, r, s, transform);
+
                 device.scope.resolve("matrix_model").setValue(transform);
                 device.scope.resolve("constant_color").setValue(this._gfx.color);
                 device.draw({
@@ -375,7 +393,7 @@ if (typeof(Box2D) !== 'undefined') {
                     base: 0,
                     count: indexBuffer.getNumIndices(),
                     indexed: true
-                });            
+                });
             },
 
             renderCircle: function (entity, vertexBuffer, indexBuffer) {
@@ -402,7 +420,18 @@ if (typeof(Box2D) !== 'undefined') {
                     device.setIndexBuffer(indexBuffer);
                     device.setVertexBuffer(vertexBuffer, 0);
 
-                    transform = entity.getLocalTransform();
+                    transform = entity.getWorldTransform();
+
+                    var t = pc.math.vec3.create();
+                    var r = pc.math.vec3.create();
+                    var s = pc.math.vec3.create();
+                    var transform = entity.getWorldTransform();
+                    pc.math.mat4.getTranslation(transform, t);
+                    pc.math.mat4.toEulerXYZ(transform, r); r[this.xi] = 0; r[this.yi] = 0;
+                    pc.math.mat4.getScale(transform, s);
+
+                    pc.math.mat4.compose(t, r, s, transform);
+
                     device.scope.resolve("matrix_model").setValue(transform);
                     device.scope.resolve("constant_color").setValue(this._gfx.color);
                     device.draw({
