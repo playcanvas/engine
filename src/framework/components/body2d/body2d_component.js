@@ -75,6 +75,8 @@ pc.extend(pc.fw, function () {
         this.context = context;
 
         this._gfx = _createGfxResources();
+        
+        this.debugRender = false;
 
         this.time = 0;
         this.step = 1/60;
@@ -159,12 +161,21 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @name pc.fw.Body2dComponentSystem#setDebugRender
+        * @description Display collision shape outlines
+        * @param {Boolean} value Enable or disable
+        */
+        setDebugRender: function (value) {
+            this.debugRender = value;
+        },
+
+        /**
         * @name pc.fw.Body2dComponentSystem#setGravity
         * @description Set the gravity vector for the 2D physics world
         */
         setGravity: function (x, y) {
             pos2d.Set(x,y);
-            this.b2world.setGravity(pos2d);
+            this.b2world.SetGravity(pos2d);
         },
 
         /**
@@ -302,7 +313,7 @@ meaning full damping. Normally you will use a damping value between 0 and 0.1
             }
         },
 
-        render: function () {
+        toolsRender: function () {
             var id;
             var entity;
             var componentData;
@@ -328,6 +339,12 @@ meaning full damping. Normally you will use a damping value between 0 and 0.1
                             break;
                     }
                 }
+            }
+        },
+
+        render: function () {
+            if (this.debugRender) {
+                this.toolsRender();
             }
         },
 
