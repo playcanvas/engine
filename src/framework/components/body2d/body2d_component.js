@@ -9,50 +9,6 @@ if (typeof(Box2D) !== 'undefined') {
         var b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
         var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
 
-        var _createGfxResources = function () {
-            // Create the graphical resources required to render a camera frustum
-            var device = pc.gfx.Device.getCurrent();
-            var library = device.getProgramLibrary();
-            var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
-            var vertBufferLength = 4;
-            var indexBufferLength = 8;
-
-            var format = new pc.gfx.VertexFormat();
-            format.begin();
-            format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-            format.end();
-            var rectVertexBuffer = new pc.gfx.VertexBuffer(format, vertBufferLength, pc.gfx.VertexBufferUsage.DYNAMIC);
-            var rectIndexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, indexBufferLength);
-            var indices = new Uint8Array(rectIndexBuffer.lock());
-            indices.set([0,1,1,2,2,3,3,0]);
-            rectIndexBuffer.unlock();
-
-            var format = new pc.gfx.VertexFormat();
-            format.begin();
-            format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-            format.end();
-            var circleVertexBuffer = new pc.gfx.VertexBuffer(format, 42, pc.gfx.VertexBufferUsage.DYNAMIC);
-            var circleIndexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 80);
-            var inds = new Uint8Array(circleIndexBuffer.lock());
-            
-            // Spot cone circle - 40 segments
-            for (var i = 0; i < 40; i++) {
-                inds[i * 2 + 0] = i + 1;
-                inds[i * 2 + 1] = i + 2;
-            }
-            circleIndexBuffer.unlock();
-
-            // Set the resources on the component
-            return {
-                program: program,
-                rectIndexBuffer: rectIndexBuffer,
-                rectVertexBuffer: rectVertexBuffer,
-                circleIndexBuffer: circleIndexBuffer,
-                circleVertexBuffer: circleVertexBuffer,
-                color: [0,0,1,1]
-            };
-        };
-
         // Shared vectors to avoid excessive allocation
         var position = pc.math.vec3.create();
         var rotation = pc.math.vec3.create();
@@ -70,8 +26,6 @@ if (typeof(Box2D) !== 'undefined') {
             context.systems.add("body2d", this);
 
             this.context = context;
-
-            this._gfx = _createGfxResources();
             
             this.debugRender = false;
 
@@ -85,67 +39,61 @@ if (typeof(Box2D) !== 'undefined') {
 
             // Create the Box2D physics world
             this.b2world = new b2World(new b2Vec2(0,0), true);
-
-            this.bind('set_density', this.onSetFixtureValue.bind(this));
-            this.bind('set_friction', this.onSetFixtureValue.bind(this));
-            this.bind('set_restitution', this.onSetFixtureValue.bind(this));
             this.bind('set_static', this.onSetStatic.bind(this));
-            this.bind('set_shape', this.onSetShape.bind(this));
         };
         Body2dComponentSystem = pc.inherits(Body2dComponentSystem, pc.fw.ComponentSystem);
         
         Body2dComponentSystem.prototype = pc.extend(Body2dComponentSystem.prototype, {
+
             createComponent: function (entity, data) {
                 var componentData = new pc.fw.Body2dComponentData();
 
-                var attribs = ['density', 'friction', 'restitution', 'static', 'shape'];
+                var attribs = ['static'];
                 this.initialiseComponent(entity, componentData, data, attribs);
 
-                entity.syncHierarchy();
-                entity.getWorldPosition(position);
-                pc.math.mat4.toEulerXYZ(entity.getWorldTransform(), rotation);
-                pc.math.mat4.getScale(entity.getWorldTransform(), scale);
+                // entity.syncHierarchy();
+                // entity.getWorldPosition(position);
+                // pc.math.mat4.toEulerXYZ(entity.getWorldTransform(), rotation);
+                // pc.math.mat4.getScale(entity.getWorldTransform(), scale);
 
-                var fixtureDef = new b2FixtureDef();
-                this.initFixtureDef(fixtureDef, componentData);
-                fixtureDef.userData = this.entity;
+                // var fixtureDef = new b2FixtureDef();
+                // this.initFixtureDef(fixtureDef, componentData);
+                // fixtureDef.userData = this.entity;
 
                 // Create a static body at the current position
                 var bodyDef = new b2BodyDef();
-                this.initBodyDef(bodyDef, componentData);
+                this.initBodyDef(entity, bodyDef, componentData);
 
-                componentData.fixtureDef = fixtureDef;
-                componentData.bodyDef = bodyDef;
+                // componentData.fixtureDef = fixtureDef;
+                componentData['bodyDef'] = bodyDef;
 
-                componentData.body = this.addBody(bodyDef, fixtureDef);
+                var collisionRect = this.context.systems.collisionrect.getComponentData(entity);
+                if (collisionRect) {
+                    this.addCollision(entity, collisionRect);
+                }
+
+                // componentData.body = this.addBody(bodyDef, fixtureDef);
 
                 return componentData;
             },
 
-            initBodyDef: function (bodyDef, componentData) {
+            initBodyDef: function (entity, bodyDef, componentData) {
+                entity.syncHierarchy();
+                entity.getWorldPosition(position);
+
                 bodyDef.type = componentData['static'] ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
                 bodyDef.position.Set(position[this.xi], position[this.yi]);
                 bodyDef.angle = rotation[this.ri];
             },
-            
-            initFixtureDef: function(fixtureDef, componentData) {
-                fixtureDef.density = componentData['density'];
-                fixtureDef.friction = componentData['friction'];
-                fixtureDef.restitution = componentData['restitution'];                        
-                switch (componentData['shape']) {
-                    case pc.shape.Type.RECT:
-                        fixtureDef.shape = new b2PolygonShape();
-                        fixtureDef.shape.SetAsBox(scale[this.xi]/2, scale[this.yi]/2);
-                        break;
-                    case pc.shape.Type.CIRCLE:
-                        fixtureDef.shape = new b2CircleShape();
-                        fixtureDef.shape.SetRadius(scale[this.xi]/2);
-                        break;
-                }
-            },
 
             deleteComponent: function (entity) {
                 this.removeComponent(entity);
+            },
+
+            addCollision: function (entity, collision) {
+                // Create body from fixturedef and bodydef
+                var bodyDef = this.get(entity, 'bodyDef');
+                this.set(entity, 'body', this.addBody(bodyDef, collision.fixtureDef));
             },
 
             addBody: function (bodyDef, fixtureDef) {
@@ -156,15 +104,6 @@ if (typeof(Box2D) !== 'undefined') {
 
             removeBody: function(body) {
                 this.b2world.DestroyBody(body)
-            },
-
-            /**
-            * @name pc.fw.Body2dComponentSystem#setDebugRender
-            * @description Display collision shape outlines
-            * @param {Boolean} value Enable or disable
-            */
-            setDebugRender: function (value) {
-                this.debugRender = value;
             },
 
             /**
@@ -319,145 +258,6 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
-            toolsRender: function () {
-                var id;
-                var entity;
-                var componentData;
-                var components = this.getComponents();
-
-                for (id in components) {
-                    if (components.hasOwnProperty(id)) {
-                        entity = components[id].entity;
-                        componentData = components[id].component;
-
-                        switch(componentData['shape']) {
-                            case pc.shape.Type.RECT:
-                                var indexBuffer = this._gfx.rectIndexBuffer;
-                                var vertexBuffer = this._gfx.rectVertexBuffer;
-
-                                this.renderRect(entity, vertexBuffer, indexBuffer);
-                                break;
-                            case pc.shape.Type.CIRCLE:
-                                var indexBuffer = this._gfx.circleIndexBuffer;
-                                var vertexBuffer = this._gfx.circleVertexBuffer;
-
-                                this.renderCircle(entity, vertexBuffer, indexBuffer);
-                                break;
-                        }
-                    }
-                }
-            },
-
-            render: function () {
-                if (this.debugRender) {
-                    this.toolsRender();
-                }
-            },
-
-            renderRect: function (entity, vertexBuffer, indexBuffer) {
-                var positions = new Float32Array(vertexBuffer.lock());
-
-                positions[0]  = -0.5;
-                positions[1]  = 0;
-                positions[2]  = -0.5
-                positions[3]  = 0.5;
-                positions[4]  = 0;
-                positions[5]  = -0.5;
-                positions[6]  = 0.5;
-                positions[7]  = 0;
-                positions[8]  = 0.5;
-                positions[9]  = -0.5;
-                positions[10] = 0;
-                positions[11] = 0.5;
-                vertexBuffer.unlock();
-
-                var device = pc.gfx.Device.getCurrent();
-                device.setProgram(this._gfx.program);
-                device.setIndexBuffer(indexBuffer);
-                device.setVertexBuffer(vertexBuffer, 0);
-
-                var t = pc.math.vec3.create();
-                var r = pc.math.vec3.create();
-                var s = pc.math.vec3.create();
-                var transform = entity.getWorldTransform();
-                pc.math.mat4.getTranslation(transform, t);
-                pc.math.mat4.toEulerXYZ(transform, r); r[this.xi] = 0; r[this.yi] = 0;
-                pc.math.mat4.getScale(transform, s);
-
-                pc.math.mat4.compose(t, r, s, transform);
-
-                device.scope.resolve("matrix_model").setValue(transform);
-                device.scope.resolve("constant_color").setValue(this._gfx.color);
-                device.draw({
-                    type: pc.gfx.PrimType.LINES,
-                    base: 0,
-                    count: indexBuffer.getNumIndices(),
-                    indexed: true
-                });
-            },
-
-            renderCircle: function (entity, vertexBuffer, indexBuffer) {
-                var positions = new Float32Array(vertexBuffer.lock());
-                    positions[0] = 0;
-                    positions[1] = 0;
-                    positions[2] = 0;
-
-                    var r = 0.5;
-                    var numVerts = vertexBuffer.getNumVertices();
-                    for (var i = 0; i < numVerts-1; i++) {
-                        var theta = 2 * Math.PI * (i / (numVerts-2));
-                        var x = r * Math.cos(theta);
-                        var z = r * Math.sin(theta);
-                        positions[(i+1)*3+0] = x;
-                        positions[(i+1)*3+1] = 0;
-                        positions[(i+1)*3+2] = z;
-                    }
-                    vertexBuffer.unlock();
-
-                    // Render a representation of the light
-                    var device = pc.gfx.Device.getCurrent();
-                    device.setProgram(this._gfx.program);
-                    device.setIndexBuffer(indexBuffer);
-                    device.setVertexBuffer(vertexBuffer, 0);
-
-                    transform = entity.getWorldTransform();
-
-                    var t = pc.math.vec3.create();
-                    var r = pc.math.vec3.create();
-                    var s = pc.math.vec3.create();
-                    var transform = entity.getWorldTransform();
-                    pc.math.mat4.getTranslation(transform, t);
-                    pc.math.mat4.toEulerXYZ(transform, r); r[this.xi] = 0; r[this.yi] = 0;
-                    pc.math.mat4.getScale(transform, s);
-
-                    pc.math.mat4.compose(t, r, s, transform);
-
-                    device.scope.resolve("matrix_model").setValue(transform);
-                    device.scope.resolve("constant_color").setValue(this._gfx.color);
-                    device.draw({
-                        type: pc.gfx.PrimType.LINES,
-                        base: 0,
-                        count: indexBuffer.getNumIndices(),
-                        indexed: true
-                    });
-            },
-
-            onSetFixtureValue: function (entity, name, oldValue, newValue) {
-                var body = this.get(entity, 'body');
-                if (body) {
-                    // We only support a single fixture at the moment
-                    var fixture = body.GetFixtureList();
-                    var accessors = {
-                        density: fixture.SetDensity,
-                        friction: fixture.SetFriction,
-                        restitution: fixture.SetRestitution
-                    };
-                    accessors[name].call(body, newValue);
-                    // Update the body with changes
-                    body.ResetMassData();
-                }
-            },
-
             onSetStatic: function (entity, name, oldValue, newValue) {
                 var body = this.get(entity, 'body');
                 if (body) {
@@ -468,21 +268,6 @@ if (typeof(Box2D) !== 'undefined') {
                     }
                 }
             },
-
-            onSetShape: function (entity, name, oldValue, newValue) {
-                var componentData = this.getComponentData(entity);
-
-                if (componentData['shape'] !== newValue) {
-                    // Shape change, delete and add new body
-                    this.removeBody(componentData.body);
-
-                    componentData['shape'] = newValue;
-                    this.initFixtureDef(componentData['fixtureDef'], componentData);
-
-                    componentData.body = this.addBody(bodyDef, fixtureDef);
-                }
-
-            }
 
         });
 

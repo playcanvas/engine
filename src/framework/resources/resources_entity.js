@@ -62,13 +62,12 @@ pc.extend(pc.resources, function () {
         
         entity.setRequestBatch(options.batch);
         // Load component data
-        for (name in data.components) {
-            if (data.components.hasOwnProperty(name)) {
-                if (this._registry[name]) {
-                    component = this._registry[name].createComponent(entity, data.components[name]);
-                } else {
-                    logWARNING(name + " Component does not exist.");
-                }
+        var systems = this._registry.getComponentSystemOrder();
+        var i, len = systems.length;
+        for (i = 0; i < len; i++) {
+            var component = data.components[systems[i]];
+            if (component) {
+                this._registry[systems[i]].createComponent(entity, component);
             }
         }
         entity.setRequestBatch(null);
