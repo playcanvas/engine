@@ -19,6 +19,7 @@ if (typeof(Box2D) !== 'undefined') {
 
         var pos2d = new b2Vec2();
         /**
+         * @private
          * @name pc.fw.Body2dComponentSystem
          * @constructor Create a new Body2dComponentSystem
          * @class 

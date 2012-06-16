@@ -60,9 +60,11 @@ if (typeof(Box2D) !== 'undefined') {
         var transform = pc.math.mat4.create();
 
         var pos2d = new b2Vec2();
+
         /**
-         * @name pc.fw.Collision2dComponentSystem
-         * @constructor Create a new Collision2dComponentSystem
+         * @private
+         * @name pc.fw.CollisionCircleComponentSystem
+         * @constructor Create a new CollisionCircleComponentSystem
          * @class 
          * @param {Object} context
          * @extends pc.fw.ComponentSystem

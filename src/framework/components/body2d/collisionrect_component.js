@@ -61,8 +61,9 @@ if (typeof(Box2D) !== 'undefined') {
 
         var pos2d = new b2Vec2();
         /**
-         * @name pc.fw.Collision2dComponentSystem
-         * @constructor Create a new Collision2dComponentSystem
+         * @private
+         * @name pc.fw.CollisionRectComponentSystem
+         * @constructor Create a new CollisionRectComponentSystem
          * @class 
          * @param {Object} context
          * @extends pc.fw.ComponentSystem
