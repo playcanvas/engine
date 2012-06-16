@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.57.0
+-------
+* [FIX] Entity hierarchy is built and world transforms synced before createComponent is called
+
+-------
 v0.56.0
 -------
 * Added pc.net.Socket which wraps native WebSocket
