@@ -239,17 +239,17 @@ if (typeof(Box2D) !== 'undefined') {
                         entity = components[id].entity;
                         componentData = components[id].component;
                         if (componentData.body) {
+                            var wtm = entity.getWorldTransform();
                             var position2d = componentData.body.GetPosition();
 
                             position[this.xi] = position2d.x;
-                            position[this.ri] = 0;
+                            position[this.ri] = wtm[13];
                             position[this.yi] = position2d.y;
 
                             rotation[this.xi] = 0;
                             rotation[this.ri] = -componentData.body.GetAngle();
                             rotation[this.zi] = 0;
 
-                            var wtm = entity.getWorldTransform();
                             var m = pc.math.mat4.create();
                             //var ltm = entity.getLocalTransform();
                             pc.math.mat4.getScale(wtm, scale);
