@@ -29,11 +29,11 @@ pc.extend(pc.resources, function () {
     
     EntityResourceHandler.prototype.open = function (data, options) {
         var guid = data.resource_id;
-
-        options = options || {};
-    	options.priority = options.priority || 1; // default priority of 1
-        options.batch = options.batch || null;
         
+        options = options || {};
+        options.priority = options.priority || 1; // default priority of 1
+        options.batch = options.batch || null;
+
         var entity = new pc.fw.Entity();
 
         entity.setName(data.name);
@@ -74,7 +74,7 @@ pc.extend(pc.resources, function () {
         
         return entity;
     };
-    
+
     EntityResourceHandler.prototype.postOpen = function (entity, success, error, progress, options) {
         if(entity.__children.length) {
             // make requests for all children

@@ -198,8 +198,10 @@ pc.extend(pc.fw, function () {
     /**
      * @function
      * @name pc.fw.ComponentSystem#createComponent
-     * @description Create a new ComponentSystem attached to the entity
-     * @param {pc.fw.Entity} entity Create a new ComponentSystem attached to this Entity
+     * @description Create a new ComponentSystem attached to the entity. 
+     * When calling this the Entity hierarchy is already in place.  Components are created in a specific order
+     * as defined by `ComponentSystemRegistry.getComponentSystemOrder()`
+     * @param {pc.fw.Entity} entity Create a new ComponentData attached to this Entity
      * @param {Object} data Data to initialize the ComponentData with
      */
     ComponentSystem.prototype.createComponent = function (entity, data) {  
@@ -267,7 +269,7 @@ pc.extend(pc.fw, function () {
             }
             this.fire('set', entity, name, oldValue, value)
         }
-    }
+    };
     
     /**
      * @function

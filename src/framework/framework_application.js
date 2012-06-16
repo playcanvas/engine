@@ -282,16 +282,23 @@ pc.extend(pc.fw, function () {
                 case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
                     var entities = {};
                     var guid = null;
-                    // if (msg.content.model) {
-                    //     // entity is sent as complete hierarchy, use PackRequest to load
-                    //     var entity = this.context.loader.open(pc.resources.PackRequest, msg.content.model);
-                    //     if (entity.__parent) {
-                    //         var parent = this.context.root.findByGuid(entity.__parent);
-                    //         parent.addChild(entity);
-                    //     } else {
-                    //         this.context.root.addChild(entity);
-                    //     }
-                    // }
+                    if (msg.content.entity) {
+                        // Create a fake little pack to open the entity hierarchy
+                        var pack = {
+                            application_data: {},
+                            hierarchy: msg.content.entity
+                        };
+                        var pack = this.context.loader.open(pc.resources.PackRequest, pack);
+
+                        // Get the root entity back from the fake pack
+                        var entity = pack['hierarchy'];
+                        if (entity.__parent) {
+                            var parent = this.context.root.findByGuid(entity.__parent);
+                            parent.addChild(entity);
+                        } else {
+                            this.context.root.addChild(entity);
+                        }
+                    }
                     if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
                         var i, len = msg.content.models.length;
 

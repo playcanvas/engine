@@ -9,7 +9,10 @@ if (typeof(Box2D) !== 'undefined') {
         var b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
         var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
 
-        // Shared vectors to avoid excessive allocation
+
+        // Shared math variable to avoid excessive allocation
+        var transform = pc.math.mat4.create();
+
         var position = pc.math.vec3.create();
         var rotation = pc.math.vec3.create();
         var scale = pc.math.vec3.create();
@@ -80,10 +83,11 @@ if (typeof(Box2D) !== 'undefined') {
             initBodyDef: function (entity, bodyDef, componentData) {
                 entity.syncHierarchy();
                 entity.getWorldPosition(position);
+                pc.math.mat4.toEulerXYZ(entity.getWorldTransform(), rotation);
 
                 bodyDef.type = componentData['static'] ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
                 bodyDef.position.Set(position[this.xi], position[this.yi]);
-                bodyDef.angle = rotation[this.ri];
+                bodyDef.angle = -rotation[this.ri];
             },
 
             deleteComponent: function (entity) {
@@ -219,12 +223,12 @@ if (typeof(Box2D) !== 'undefined') {
                 var positionIterations = 2;
                 var components = this.getComponents();
 
-                // var setWorldTransform = function (e, w) {
-                //     var p = e.getParent();
-                //     var pw = p.getWorldTransform();
-                //     pc.math.mat4.invert(pw, pw);
-                //     pc.math.mat4.multiply(pw, w, e.getLocalTransform());
-                // };
+                var setWorldTransform = function (e, w) {
+                    var p = e.getParent();
+                    var pw = p.getWorldTransform();
+                    pc.math.mat4.invert(pw, transform);
+                    pc.math.mat4.multiply(transform, w, e.getLocalTransform());
+                };
 
                 for (id in components) {
                     if (components.hasOwnProperty(id)) {
@@ -241,11 +245,12 @@ if (typeof(Box2D) !== 'undefined') {
                             rotation[this.ri] = -componentData.body.GetAngle();
                             rotation[this.zi] = 0;
 
-                            //var wtm = entity.getWorldTransform();
-                            var ltm = entity.getLocalTransform();
-                            pc.math.mat4.getScale(ltm, scale);
-                            pc.math.mat4.compose(position, rotation, scale, ltm);
-                            //setWorldTransform(entity, wtm);
+                            var wtm = entity.getWorldTransform();
+                            var m = pc.math.mat4.create();
+                            //var ltm = entity.getLocalTransform();
+                            pc.math.mat4.getScale(wtm, scale);
+                            pc.math.mat4.compose(position, rotation, scale, m);
+                            setWorldTransform(entity, m);
                         }
                     }
                 }

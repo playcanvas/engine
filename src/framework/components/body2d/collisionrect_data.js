@@ -4,6 +4,8 @@ pc.extend(pc.fw, function () {
         this.friction = 0.5;
         this.restitution = 0;
         this.shape = pc.shape.Type.RECT;
+        this.x = 0.5;
+        this.y = 0.5;
     };
     CollisionRectComponentData = pc.inherits(CollisionRectComponentData, pc.fw.ComponentData);
 
@@ -50,6 +52,32 @@ editor.link.expose({
         step: 0.01
     },
     defaultValue: 0
+});
+
+editor.link.expose({
+    system: "collisionrect",
+    variable: "x",
+    displayName: "Size: X",
+    description: "The size of the Rect in the x-axis",
+    type: "number",
+    options: {
+        min: 0,
+        step: 0.1,
+    },
+    defaultValue: 0.5
+});
+
+editor.link.expose({
+    system: "collisionrect",
+    variable: "y",
+    displayName: "Size: Y",
+    description: "The size of the Rect in the y-axis",
+    type: "number",
+    options: {
+        min: 0,
+        step: 0.1,
+    },
+    defaultValue: 0.5
 });
 
 editor.link.expose({

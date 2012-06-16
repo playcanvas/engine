@@ -57,6 +57,7 @@ if (typeof(Box2D) !== 'undefined') {
         var position = pc.math.vec3.create();
         var rotation = pc.math.vec3.create();
         var scale = pc.math.vec3.create();
+        var transform = pc.math.mat4.create();
 
         var pos2d = new b2Vec2();
         /**
@@ -96,7 +97,7 @@ if (typeof(Box2D) !== 'undefined') {
             createComponent: function (entity, data) {
                 var componentData = new pc.fw.CollisionRectComponentData();
 
-                var attribs = ['density', 'friction', 'restitution'];
+                var attribs = ['density', 'friction', 'restitution', 'x', 'y'];
                 this.initialiseComponent(entity, componentData, data, attribs);
 
                 var fixtureDef = new b2FixtureDef();
@@ -113,7 +114,7 @@ if (typeof(Box2D) !== 'undefined') {
                 fixtureDef.friction = componentData['friction'];
                 fixtureDef.restitution = componentData['restitution'];                        
                 fixtureDef.shape = new b2PolygonShape();
-                fixtureDef.shape.SetAsBox(0.5, 0.5);
+                fixtureDef.shape.SetAsBox(componentData['x'], componentData['y']);
 
                 // switch (componentData['shape']) {
                 //     case pc.shape.Type.RECT:
@@ -154,13 +155,13 @@ if (typeof(Box2D) !== 'undefined') {
                                 var indexBuffer = this._gfx.rectIndexBuffer;
                                 var vertexBuffer = this._gfx.rectVertexBuffer;
 
-                                this.renderRect(entity, vertexBuffer, indexBuffer);
+                                this.renderRect(entity, componentData, vertexBuffer, indexBuffer);
                                 break;
                             case pc.shape.Type.CIRCLE:
                                 var indexBuffer = this._gfx.circleIndexBuffer;
                                 var vertexBuffer = this._gfx.circleVertexBuffer;
 
-                                this.renderCircle(entity, vertexBuffer, indexBuffer);
+                                this.renderCircle(entity, componentData, vertexBuffer, indexBuffer);
                                 break;
                         }
                     }
@@ -173,21 +174,21 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
-            renderRect: function (entity, vertexBuffer, indexBuffer) {
+            renderRect: function (entity, data, vertexBuffer, indexBuffer) {
                 var positions = new Float32Array(vertexBuffer.lock());
 
-                positions[0]  = -0.5;
+                positions[0]  = -data['x'];
                 positions[1]  = 0;
-                positions[2]  = -0.5
-                positions[3]  = 0.5;
+                positions[2]  = -data['y'];
+                positions[3]  = data['x'];
                 positions[4]  = 0;
-                positions[5]  = -0.5;
-                positions[6]  = 0.5;
+                positions[5]  = -data['y'];
+                positions[6]  = data['x'];
                 positions[7]  = 0;
-                positions[8]  = 0.5;
-                positions[9]  = -0.5;
+                positions[8]  = data['y'];
+                positions[9]  = -data['x'];
                 positions[10] = 0;
-                positions[11] = 0.5;
+                positions[11] = data['y'];
                 vertexBuffer.unlock();
 
                 var device = pc.gfx.Device.getCurrent();
@@ -195,15 +196,12 @@ if (typeof(Box2D) !== 'undefined') {
                 device.setIndexBuffer(indexBuffer);
                 device.setVertexBuffer(vertexBuffer, 0);
 
-                var t = pc.math.vec3.create();
-                var r = pc.math.vec3.create();
-                var s = pc.math.vec3.create();
-                var transform = entity.getWorldTransform();
-                pc.math.mat4.getTranslation(transform, t);
-                pc.math.mat4.toEulerXYZ(transform, r); r[this.xi] = 0; r[this.yi] = 0;
-                pc.math.mat4.getScale(transform, s);
+                var wtm = entity.getWorldTransform();
 
-                pc.math.mat4.compose(t, r, s, transform);
+                pc.math.mat4.getTranslation(wtm, position);
+                pc.math.mat4.toEulerXYZ(wtm, rotation); rotation[this.xi] = 0; rotation[this.yi] = 0;
+                pc.math.vec3.set(scale, 1, 1, 1);
+                pc.math.mat4.compose(position, rotation, scale, transform);
 
                 device.scope.resolve("matrix_model").setValue(transform);
                 device.scope.resolve("constant_color").setValue(this._gfx.color);
@@ -215,7 +213,7 @@ if (typeof(Box2D) !== 'undefined') {
                 });
             },
 
-            renderCircle: function (entity, vertexBuffer, indexBuffer) {
+            renderCircle: function (entity, data, vertexBuffer, indexBuffer) {
                 var positions = new Float32Array(vertexBuffer.lock());
                     positions[0] = 0;
                     positions[1] = 0;
@@ -241,15 +239,13 @@ if (typeof(Box2D) !== 'undefined') {
 
                     transform = entity.getWorldTransform();
 
-                    var t = pc.math.vec3.create();
-                    var r = pc.math.vec3.create();
-                    var s = pc.math.vec3.create();
-                    var transform = entity.getWorldTransform();
-                    pc.math.mat4.getTranslation(transform, t);
-                    pc.math.mat4.toEulerXYZ(transform, r); r[this.xi] = 0; r[this.yi] = 0;
-                    pc.math.mat4.getScale(transform, s);
 
-                    pc.math.mat4.compose(t, r, s, transform);
+                    var wtm = entity.getWorldTransform();
+
+                    pc.math.mat4.getTranslation(wtm, position);
+                    pc.math.mat4.toEulerXYZ(wtm, rotation); //r[this.xi] = 0; r[this.yi] = 0;
+                    pc.math.vec3.set(scale, 1, 1, 1);
+                    pc.math.mat4.compose(position, rotation, scale, transform);
 
                     device.scope.resolve("matrix_model").setValue(transform);
                     device.scope.resolve("constant_color").setValue(this._gfx.color);
