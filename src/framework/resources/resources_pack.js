@@ -46,6 +46,16 @@ pc.extend(pc.resources, function () {
     };
 
     PackResourceHandler.prototype.openEntity = function (data, options) {
+        var hierarchy;
+
+        hierarchy = this.openEntityHierarchy(data, options);
+        hierarchy.syncHierarchy();
+        hierarchy = this.openComponentData(hierarchy, data, options);
+        
+        return hierarchy;
+    };
+    
+    PackResourceHandler.prototype.openEntityHierarchy = function (data, options) {
         var entity = new pc.fw.Entity();
 
         entity.setName(data['name']);
@@ -55,7 +65,6 @@ pc.extend(pc.resources, function () {
         } else {
             entity.setLocalTransform(pc.math.mat4.clone(pc.math.mat4.compose(data['translate'], data['rotate'], data['scale'])));
         }
-        
         
         if (data.labels) {
             data.labels.forEach(function (label) {
@@ -71,30 +80,41 @@ pc.extend(pc.resources, function () {
         // entity.version = data.version;
         entity.name = data.name;
         entity.template = data.template;
-        
-        entity.setRequestBatch(options.batch);
-        // Load component data
-        for (name in data.components) {
-            if (data.components.hasOwnProperty(name)) {
-                if (this._registry[name]) {
-                    component = this._registry[name].createComponent(entity, data.components[name]);
-                } else {
-                    logWARNING(name + " Component does not exist.");
-                }
-            }
-        }
-        entity.setRequestBatch(null);
-        
+                
         // Open all children and add them to the node
         var i, child, length = data.children.length;
         for (i = 0; i < length; i++) {
-            child = this.openEntity(data.children[i], options);
+            child = this.openEntityHierarchy(data.children[i], options);
             entity.addChild(child);
         }
 
         return entity;
     };
-    
+
+    PackResourceHandler.prototype.openComponentData = function (entity, data, options) {
+        entity.setRequestBatch(options.batch);
+
+        // Create Components in order
+        var systems = this._registry.getComponentSystemOrder();
+        var i, len = systems.length;
+        for (i = 0; i < len; i++) {
+            var component = data.components[systems[i]];
+            if (component) {
+                this._registry[systems[i]].createComponent(entity, component);
+            }
+        }
+
+        entity.setRequestBatch(null);
+
+        // Open all children and add them to the node
+        var i, child, length = data.children.length;
+        var children = entity.getChildren();
+        for (i = 0; i < length; i++) {
+            children[i] = this.openComponentData(children[i], data.children[i], options);
+        }
+
+        return entity;
+    }
     /**
     * @name pc.fw.PackRequest
     * @class Make a request for a Pack resource

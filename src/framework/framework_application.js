@@ -108,6 +108,12 @@ pc.extend(pc.fw, function () {
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
+        if (typeof(Box2D) !== "undefined") {
+            // Only include the Body2d component system if box2d library is loaded
+            var body2dsys = new pc.fw.Body2dComponentSystem(this.context);    
+            var collisionrectsys = new pc.fw.CollisionRectComponentSystem(this.context);
+            var collisioncirclesys = new pc.fw.CollisionCircleComponentSystem(this.context);
+        }
 
         // Add event support
         pc.extend(this, pc.events);
@@ -277,16 +283,23 @@ pc.extend(pc.fw, function () {
                 case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
                     var entities = {};
                     var guid = null;
-                    // if (msg.content.model) {
-                    //     // entity is sent as complete hierarchy, use PackRequest to load
-                    //     var entity = this.context.loader.open(pc.resources.PackRequest, msg.content.model);
-                    //     if (entity.__parent) {
-                    //         var parent = this.context.root.findByGuid(entity.__parent);
-                    //         parent.addChild(entity);
-                    //     } else {
-                    //         this.context.root.addChild(entity);
-                    //     }
-                    // }
+                    if (msg.content.entity) {
+                        // Create a fake little pack to open the entity hierarchy
+                        var pack = {
+                            application_data: {},
+                            hierarchy: msg.content.entity
+                        };
+                        var pack = this.context.loader.open(pc.resources.PackRequest, pack);
+
+                        // Get the root entity back from the fake pack
+                        var entity = pack['hierarchy'];
+                        if (entity.__parent) {
+                            var parent = this.context.root.findByGuid(entity.__parent);
+                            parent.addChild(entity);
+                        } else {
+                            this.context.root.addChild(entity);
+                        }
+                    }
                     if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
                         var i, len = msg.content.models.length;
 
