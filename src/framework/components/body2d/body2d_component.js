@@ -74,8 +74,12 @@ if (typeof(Box2D) !== 'undefined') {
                 if (collisionRect) {
                     this.addCollision(entity, collisionRect);
                 }
-
-                // componentData.body = this.addBody(bodyDef, fixtureDef);
+                else {
+                    var collisioncircle = this.context.systems.collisioncircle.getComponentData(entity);
+                    if (collisioncircle) {
+                        this.addCollision(entity, collisioncircle);
+                    }
+                }
 
                 return componentData;
             },

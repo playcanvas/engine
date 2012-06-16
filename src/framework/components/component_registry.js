@@ -37,9 +37,15 @@ pc.extend(pc.fw, function () {
     
     ComponentSystemRegistry.prototype.getComponentSystemOrder = function () {
         var names = Object.keys(this);
+
         var index = names.indexOf('collisionrect');
         names.splice(index, 1);
         names.unshift('collisionrect');
+
+        var index = names.indexOf('collisioncircle');
+        names.splice(index, 1);
+        names.unshift('collisioncircle');
+
         return names;
     };
 

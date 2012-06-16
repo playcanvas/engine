@@ -126,6 +126,7 @@
 ../src/framework/components/designer/designer_component.js
 ../src/framework/components/body2d/body2d_component.js
 ../src/framework/components/body2d/collisionrect_component.js
+../src/framework/components/body2d/collisioncircle_component.js
 ../src/framework/livelink/livelink_livelink.js
 ../src/framework/livelink/livelink_message.js
 ../src/framework/livelink/livelink_update_component_message.js
@@ -157,3 +158,4 @@
 ../src/framework/components/designer/designer_data.js
 ../src/framework/components/body2d/body2d_data.js
 ../src/framework/components/body2d/collisionrect_data.js
+../src/framework/components/body2d/collisioncircle_data.js

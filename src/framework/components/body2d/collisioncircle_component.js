@@ -67,17 +67,14 @@ if (typeof(Box2D) !== 'undefined') {
          * @param {Object} context
          * @extends pc.fw.ComponentSystem
          */
-        var CollisionRectComponentSystem = function CollisionRectComponentSystem (context) {
-            context.systems.add("collisionrect", this);
+        var CollisionCircleComponentSystem = function CollisionCircleComponentSystem (context) {
+            context.systems.add("collisioncircle", this);
 
             this.context = context;
 
             this._gfx = _createGfxResources();
             
             this.debugRender = false;
-
-            this.time = 0;
-            this.step = 1/60;
 
             // Indexes for converting between 2D and 3D co-ords
             this.xi = 0; // 3D index that corresponds to 2D x-axis
@@ -88,13 +85,13 @@ if (typeof(Box2D) !== 'undefined') {
             this.bind('set_friction', this.onSetFixtureValue.bind(this));
             this.bind('set_restitution', this.onSetFixtureValue.bind(this));
         };
-        CollisionRectComponentSystem = pc.inherits(CollisionRectComponentSystem, pc.fw.ComponentSystem);
+        CollisionCircleComponentSystem = pc.inherits(CollisionCircleComponentSystem, pc.fw.ComponentSystem);
         
-        CollisionRectComponentSystem.prototype = pc.extend(CollisionRectComponentSystem.prototype, {
+        CollisionCircleComponentSystem.prototype = pc.extend(CollisionCircleComponentSystem.prototype, {
             createComponent: function (entity, data) {
-                var componentData = new pc.fw.CollisionRectComponentData();
+                var componentData = new pc.fw.CollisionCircleComponentData();
 
-                var attribs = ['density', 'friction', 'restitution', 'x', 'y'];
+                var attribs = ['density', 'friction', 'restitution', 'radius'];
                 this.initialiseComponent(entity, componentData, data, attribs);
 
                 var fixtureDef = new b2FixtureDef();
@@ -110,17 +107,8 @@ if (typeof(Box2D) !== 'undefined') {
                 fixtureDef.density = componentData['density'];
                 fixtureDef.friction = componentData['friction'];
                 fixtureDef.restitution = componentData['restitution'];                        
-                fixtureDef.shape = new b2PolygonShape();
-                fixtureDef.shape.SetAsBox(componentData['x'], componentData['y']);
-
-                // switch (componentData['shape']) {
-                //     case pc.shape.Type.RECT:
-                //         break;
-                //     case pc.shape.Type.CIRCLE:
-                //         fixtureDef.shape = new b2CircleShape();
-                //         fixtureDef.shape.SetRadius(1);
-                //         break;
-                // }
+                fixtureDef.shape = new b2CircleShape();
+                fixtureDef.shape.SetRadius(componentData['radius']);
             },
 
             deleteComponent: function (entity) {
@@ -146,21 +134,10 @@ if (typeof(Box2D) !== 'undefined') {
                     if (components.hasOwnProperty(id)) {
                         entity = components[id].entity;
                         componentData = components[id].component;
+                        var indexBuffer = this._gfx.circleIndexBuffer;
+                        var vertexBuffer = this._gfx.circleVertexBuffer;
 
-                        switch(componentData['shape']) {
-                            case pc.shape.Type.RECT:
-                                var indexBuffer = this._gfx.rectIndexBuffer;
-                                var vertexBuffer = this._gfx.rectVertexBuffer;
-
-                                this.renderRect(entity, componentData, vertexBuffer, indexBuffer);
-                                break;
-                            case pc.shape.Type.CIRCLE:
-                                var indexBuffer = this._gfx.circleIndexBuffer;
-                                var vertexBuffer = this._gfx.circleVertexBuffer;
-
-                                this.renderCircle(entity, componentData, vertexBuffer, indexBuffer);
-                                break;
-                        }
+                        this.renderCircle(entity, componentData, vertexBuffer, indexBuffer);
                     }
                 }
             },
@@ -171,52 +148,13 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
-            renderRect: function (entity, data, vertexBuffer, indexBuffer) {
-                var positions = new Float32Array(vertexBuffer.lock());
-
-                positions[0]  = -data['x'];
-                positions[1]  = 0;
-                positions[2]  = -data['y'];
-                positions[3]  = data['x'];
-                positions[4]  = 0;
-                positions[5]  = -data['y'];
-                positions[6]  = data['x'];
-                positions[7]  = 0;
-                positions[8]  = data['y'];
-                positions[9]  = -data['x'];
-                positions[10] = 0;
-                positions[11] = data['y'];
-                vertexBuffer.unlock();
-
-                var device = pc.gfx.Device.getCurrent();
-                device.setProgram(this._gfx.program);
-                device.setIndexBuffer(indexBuffer);
-                device.setVertexBuffer(vertexBuffer, 0);
-
-                var wtm = entity.getWorldTransform();
-
-                pc.math.mat4.getTranslation(wtm, position);
-                pc.math.mat4.toEulerXYZ(wtm, rotation); rotation[this.xi] = 0; rotation[this.yi] = 0;
-                pc.math.vec3.set(scale, 1, 1, 1);
-                pc.math.mat4.compose(position, rotation, scale, transform);
-
-                device.scope.resolve("matrix_model").setValue(transform);
-                device.scope.resolve("constant_color").setValue(this._gfx.color);
-                device.draw({
-                    type: pc.gfx.PrimType.LINES,
-                    base: 0,
-                    count: indexBuffer.getNumIndices(),
-                    indexed: true
-                });
-            },
-
             renderCircle: function (entity, data, vertexBuffer, indexBuffer) {
                 var positions = new Float32Array(vertexBuffer.lock());
                     positions[0] = 0;
                     positions[1] = 0;
                     positions[2] = 0;
 
-                    var r = 0.5;
+                    var r = data['radius'];
                     var numVerts = vertexBuffer.getNumVertices();
                     for (var i = 0; i < numVerts-1; i++) {
                         var theta = 2 * Math.PI * (i / (numVerts-2));
@@ -273,7 +211,7 @@ if (typeof(Box2D) !== 'undefined') {
         });
 
         return {
-            CollisionRectComponentSystem: CollisionRectComponentSystem
+            CollisionCircleComponentSystem: CollisionCircleComponentSystem
         };
     }());
 }

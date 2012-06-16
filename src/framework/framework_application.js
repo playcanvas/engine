@@ -112,6 +112,7 @@ pc.extend(pc.fw, function () {
             // Only include the Body2d component system if box2d library is loaded
             var body2dsys = new pc.fw.Body2dComponentSystem(this.context);    
             var collisionrectsys = new pc.fw.CollisionRectComponentSystem(this.context);
+            var collisioncirclesys = new pc.fw.CollisionCircleComponentSystem(this.context);
         }
 
         // Add event support
