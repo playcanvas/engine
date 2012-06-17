@@ -60,9 +60,11 @@ if (typeof(Box2D) !== 'undefined') {
         var transform = pc.math.mat4.create();
 
         var pos2d = new b2Vec2();
+
         /**
-         * @name pc.fw.Collision2dComponentSystem
-         * @constructor Create a new Collision2dComponentSystem
+         * @private
+         * @name pc.fw.CollisionCircleComponentSystem
+         * @constructor Create a new CollisionCircleComponentSystem
          * @class 
          * @param {Object} context
          * @extends pc.fw.ComponentSystem
@@ -95,20 +97,20 @@ if (typeof(Box2D) !== 'undefined') {
                 this.initialiseComponent(entity, componentData, data, attribs);
 
                 var fixtureDef = new b2FixtureDef();
-                this.initFixtureDef(fixtureDef, componentData);
-                fixtureDef.userData = this.entity;
+                this.initFixtureDef(entity, fixtureDef, componentData);
 
                 componentData['fixtureDef'] = fixtureDef;
 
                 return componentData;
             },
             
-            initFixtureDef: function(fixtureDef, componentData) {
+            initFixtureDef: function(entity, fixtureDef, componentData) {
                 fixtureDef.density = componentData['density'];
                 fixtureDef.friction = componentData['friction'];
                 fixtureDef.restitution = componentData['restitution'];                        
                 fixtureDef.shape = new b2CircleShape();
                 fixtureDef.shape.SetRadius(componentData['radius']);
+                fixtureDef.userData = entity;
             },
 
             deleteComponent: function (entity) {
@@ -116,7 +118,8 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
-            * @name pc.fw.Body2dComponentSystem#setDebugRender
+            * @private
+            * @name pc.fw.CollisionCircleComponentSystem#setDebugRender
             * @description Display collision shape outlines
             * @param {Boolean} value Enable or disable
             */

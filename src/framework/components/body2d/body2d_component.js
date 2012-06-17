@@ -19,6 +19,7 @@ if (typeof(Box2D) !== 'undefined') {
 
         var pos2d = new b2Vec2();
         /**
+         * @private
          * @name pc.fw.Body2dComponentSystem
          * @constructor Create a new Body2dComponentSystem
          * @class 
@@ -41,7 +42,7 @@ if (typeof(Box2D) !== 'undefined') {
             this.ri = 1; // 3D index that corresponds to the rotation axis
 
             // Create the Box2D physics world
-            this.b2world = new b2World(new b2Vec2(0,0), true);
+            this.b2World = new b2World(new b2Vec2(0,0), true);
             this.bind('set_static', this.onSetStatic.bind(this));
         };
         Body2dComponentSystem = pc.inherits(Body2dComponentSystem, pc.fw.ComponentSystem);
@@ -53,15 +54,6 @@ if (typeof(Box2D) !== 'undefined') {
 
                 var attribs = ['static'];
                 this.initialiseComponent(entity, componentData, data, attribs);
-
-                // entity.syncHierarchy();
-                // entity.getWorldPosition(position);
-                // pc.math.mat4.toEulerXYZ(entity.getWorldTransform(), rotation);
-                // pc.math.mat4.getScale(entity.getWorldTransform(), scale);
-
-                // var fixtureDef = new b2FixtureDef();
-                // this.initFixtureDef(fixtureDef, componentData);
-                // fixtureDef.userData = this.entity;
 
                 // Create a static body at the current position
                 var bodyDef = new b2BodyDef();
@@ -92,6 +84,15 @@ if (typeof(Box2D) !== 'undefined') {
                 bodyDef.type = componentData['static'] ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
                 bodyDef.position.Set(position[this.xi], position[this.yi]);
                 bodyDef.angle = -rotation[this.ri];
+                bodyDef.userData = entity;
+            },
+
+            /*
+            * Convert a pc.math.vec3 into a b2Vec2
+            */
+            to2d: function (vec3, vec2) {
+                vec2 = vec2 || new b2Vec2();
+                return vec2.Set(vec3[this.xi], vec3[this.yi]);
             },
 
             deleteComponent: function (entity) {
@@ -105,25 +106,27 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             addBody: function (bodyDef, fixtureDef) {
-                var body = this.b2world.CreateBody(bodyDef);
+                var body = this.b2World.CreateBody(bodyDef);
                 body.CreateFixture(fixtureDef);
                 return body;            
             },
 
             removeBody: function(body) {
-                this.b2world.DestroyBody(body)
+                this.b2World.DestroyBody(body)
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setGravity
             * @description Set the gravity vector for the 2D physics world
             */
             setGravity: function (x, y) {
                 pos2d.Set(x,y);
-                this.b2world.SetGravity(pos2d);
+                this.b2World.SetGravity(pos2d);
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#applyForce
             * @description Apply an force to the body
             * @param {pc.fw.Entity} entity The Entity to apply the force to
@@ -149,6 +152,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#applyImpulse
             * @description Apply an impulse (instantaneous change of velocity) to the body
             * @param {pc.fw.Entity} entity The Entity to apply the impulse to
@@ -175,6 +179,44 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
+            * @name pc.fw.Body2dComponentSystem#raycast
+            * @description Raycast the world for entities that intersect with the ray. Your callback controls whether you get the closest entity, 
+            * any entity or n-entities. Entities that contain the starting point are ignored
+            * @param {Function} callback Callback with signature `callback(entity, point, normal, fraction)`. The callback should return the 
+            * the new length of the ray as a fraction of original length. So, returning 0, terminates; returning 1, continues with original ray,
+            * returning current fraction will find the closest entity.
+            */
+            raycast: function (callback, start, end) {
+                var s = new b2Vec2();
+                var e = new b2Vec2();
+                
+                this.to2d(start, s);
+                this.to2d(end, e);
+
+                this.b2World.RayCast(callback, s, e);
+            },
+
+            /**
+            * @private
+            * @name pc.fw.Body2dComponentSystem#raycastFirst
+            * @description Raycast into the world (in 2D) and return the first Entity hit
+            * @param {pc.math.vec3} start The ray start position
+            * @param {pc.math.vec3} end The ray end position
+            * @returns {pc.fw.Entity} The first Entity with a 2D collision shape hit by the ray.
+            */
+            raycastFirst: function (start, end) {
+                var e;
+                this.raycast(function (fixture, point, normal, fraction) {
+                    e = fixture.GetUserData();
+                    return fraction;
+                }, start, end);
+
+                return e;
+            },
+
+            /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setLinearVelocity
             * @description Set the linear velocity of the body
             * @param {pc.fw.Entity} entity The Entity to change
@@ -192,6 +234,21 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
+            * @name pc.fw.Body2dComponentSystem#setAngularVelocity
+            * @description Set the angular  velocity of the body
+            * @param {pc.fw.Entity} entity The Entity to change
+            * @param {Number} a The a value of the angular velocity
+            */
+            setAngularVelocity: function (entity, a) {
+                var body = this.get(entity, 'body');
+                if (body) {
+                    body.SetAngularVelocity(a);
+                }
+            },
+
+            /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setPosition
             * @description Set the position of the body
             * @param {pc.fw.Entity} entity The Entity to change
@@ -209,9 +266,25 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
+            * @name pc.fw.Body2dComponentSystem#setAngle
+            * @description Set the angle of the body
+            * @param {pc.fw.Entity} entity The Entity to change
+            * @param {Number} a The new angle
+            */
+            setAngle: function (entity, a) {
+                var body = this.get(entity, 'body');
+                if(body) {
+                    body.SetAngle(a);    
+                }
+            },
+
+            /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setLinearDamping
-            * @description Set the linear damping value of the body. Damping parameters should be between 0 and infinity, with 0 meaning no damping, and infinity 
-    meaning full damping. Normally you will use a damping value between 0 and 0.1
+            * @description Set the linear damping value of the body. 
+            * Damping parameters should be between 0 and infinity, with 0 meaning no damping, and infinity 
+            * meaning full damping. Normally you will use a damping value between 0 and 0.1
             * @param {pc.fw.Entity} entity The Entity to change
             * @param {Number} damping The damping value
             */
@@ -262,7 +335,7 @@ if (typeof(Box2D) !== 'undefined') {
                 this.time += dt;
 
                 while (this.time > this.step) {
-                    this.b2world.Step(this.step, velocityIterations, positionIterations);
+                    this.b2World.Step(this.step, velocityIterations, positionIterations);
                     this.time -= this.step;
                 }
             },
