@@ -120,7 +120,8 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
-            * @name pc.fw.Body2dComponentSystem#setDebugRender
+            * @private
+            * @name pc.fw.CollisionRectComponentSystem#setDebugRender
             * @description Display collision shape outlines
             * @param {Boolean} value Enable or disable
             */

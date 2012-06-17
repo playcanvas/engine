@@ -116,6 +116,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setGravity
             * @description Set the gravity vector for the 2D physics world
             */
@@ -125,6 +126,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#applyForce
             * @description Apply an force to the body
             * @param {pc.fw.Entity} entity The Entity to apply the force to
@@ -150,6 +152,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#applyImpulse
             * @description Apply an impulse (instantaneous change of velocity) to the body
             * @param {pc.fw.Entity} entity The Entity to apply the impulse to
@@ -176,6 +179,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#raycast
             * @description Raycast the world for entities that intersect with the ray. Your callback controls whether you get the closest entity, 
             * any entity or n-entities. Entities that contain the starting point are ignored
@@ -194,6 +198,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#raycastFirst
             * @description Raycast into the world (in 2D) and return the first Entity hit
             * @param {pc.math.vec3} start The ray start position
@@ -211,6 +216,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setLinearVelocity
             * @description Set the linear velocity of the body
             * @param {pc.fw.Entity} entity The Entity to change
@@ -228,6 +234,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setAngularVelocity
             * @description Set the angular  velocity of the body
             * @param {pc.fw.Entity} entity The Entity to change
@@ -241,6 +248,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setPosition
             * @description Set the position of the body
             * @param {pc.fw.Entity} entity The Entity to change
@@ -258,6 +266,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setAngle
             * @description Set the angle of the body
             * @param {pc.fw.Entity} entity The Entity to change
@@ -271,6 +280,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             /**
+            * @private
             * @name pc.fw.Body2dComponentSystem#setLinearDamping
             * @description Set the linear damping value of the body. 
             * Damping parameters should be between 0 and infinity, with 0 meaning no damping, and infinity 
