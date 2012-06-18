@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.59.0
+-------
+* [FIX] Fix possible crash when animation components are loaded while the application is running
+* [FIX] Fix possible crash when loading body2d components while the application is running
+
+-------
 v0.58.0
 -------
 * Updates to private Body2D component
