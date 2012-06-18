@@ -106,7 +106,7 @@ pc.extend(pc.fw, function () {
                 var componentData = components[id].component;
                 if (componentData.playing) {
                     var skeleton = componentData.skeleton;
-                    if (skeleton !== null) {
+                    if (skeleton !== null && componentData.model !== null) {
                         if (componentData.blending) {
                             componentData.blendTimeRemaining -= dt;
                             if (componentData.blendTimeRemaining < 0.0) {
