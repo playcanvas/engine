@@ -62,8 +62,8 @@ pc.extend(pc.resources, function () {
 	 * @param {Number} [options.priority] The priority to load the model textures at.
 	 */
     ModelResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
-    	var url = identifier;
-    	options = options || {};
+        var url = identifier;
+        options = options || {};
         options.directory = pc.path.getDirectory(url);
 
         var uri = new pc.URI(url)
@@ -84,7 +84,8 @@ pc.extend(pc.resources, function () {
 	 * @param {Object} data The data from model file deserialized into a Javascript Object
 	 * @param {Object} [options]
 	 * @param {Number} [options.priority] The priority to load the textures at
-	 * @param {String} [options.directory] The directory to load textures from 
+	 * @param {String} [options.directory] The directory to load textures from
+     * @param {String} [options.identifier] The identifier used to load the resource, this is used to store the opened resource in the loader cache 
 	 */
     ModelResourceHandler.prototype.open = function (data, options) {
     	options = options || {};
@@ -97,8 +98,13 @@ pc.extend(pc.resources, function () {
         } else {
             model = this._loadModelJson(data, options);
         }
+
     	return model;
     };
+
+    ModelResourceHandler.prototype.clone = function (model) {
+        return model.clone();
+    }
         
     ModelResourceHandler.prototype._loadNode = function (model, modelData, nodeData) {
         var node = new pc.scene.GraphNode();
@@ -208,7 +214,7 @@ pc.extend(pc.resources, function () {
 		
 		// Make a new request for the Image resource at the same priority as the Model was requested.
         this._loader.request([new pc.resources.ImageRequest(url)], options.priority, function (resources) {
-        	texture.setSource(resources[url]);	
+        	texture.setSource(resources[url]);
         }, function (errors, resources) {
         	Object.keys(errors).forEach(function (key) {
         	   logERROR(errors[key]);    
@@ -221,6 +227,7 @@ pc.extend(pc.resources, function () {
         texture.setAddressMode(addressu, addressv);
         texture.setFilterMode(minFilter, magFilter);
         texture.transform = textureData.transform;
+        
         return texture;
     };
     
@@ -235,7 +242,7 @@ pc.extend(pc.resources, function () {
             if (param.type === "sampler") {
                 var texture = model.getTextures()[param.data];
                 if (texture === undefined) {
-                    logERROR("Texture " + name + " not found in model's texture dictionary.");
+                    logERROR("Texture " + modelData[param.data].uri + " not found in model's texture dictionary.");
                 }
                 material.setParameter(param.name, texture);
                 if (texture.transform !== undefined) {
