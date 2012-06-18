@@ -302,15 +302,19 @@ if (typeof(Box2D) !== 'undefined') {
 
                 var setWorldTransform = function (e, w) {
                     var p = e.getParent();
-                    var pw = p.getWorldTransform();
-                    pc.math.mat4.invert(pw, transform);
-                    pc.math.mat4.multiply(transform, w, e.getLocalTransform());
+                    if (p) {
+                        var pw = p.getWorldTransform();
+                        pc.math.mat4.invert(pw, transform);
+                        pc.math.mat4.multiply(transform, w, e.getLocalTransform());
+                    } else {
+                        e.setLocalTransform(w);
+                    }
                 };
 
                 for (id in components) {
                     if (components.hasOwnProperty(id)) {
-                        entity = components[id].entity;
-                        componentData = components[id].component;
+                        var entity = components[id].entity;
+                        var componentData = components[id].component;
                         if (componentData.body) {
                             var wtm = entity.getWorldTransform();
                             var position2d = componentData.body.GetPosition();
@@ -324,7 +328,7 @@ if (typeof(Box2D) !== 'undefined') {
                             rotation[this.zi] = 0;
 
                             var m = pc.math.mat4.create();
-                            //var ltm = entity.getLocalTransform();
+                            
                             pc.math.mat4.getScale(wtm, scale);
                             pc.math.mat4.compose(position, rotation, scale, m);
                             setWorldTransform(entity, m);
