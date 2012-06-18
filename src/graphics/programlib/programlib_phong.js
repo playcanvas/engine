@@ -38,7 +38,7 @@ pc.gfx.programlib.phong = {
             key += "_emix"; // Emissive map with texture transform
         } else if (options.emissiveMap) {
             key += "_emim"; // Emissive map
-        } else {
+        } else if (options.emissiveColor) {
             key += "_emic"; // Emissive color
         }
 
@@ -174,20 +174,22 @@ pc.gfx.programlib.phong = {
         if (options.diffuseMap) {
             code += "varying vec2 vUvDiffuseMap;\n";
         }
-        if (options.specularMap) {
-            code += "varying vec2 vUvSpecularMap;\n";
-        }
-        if (options.specularFactorMap) {
-            code += "varying vec2 vUvSpecularFactorMap;\n";
+        if (lighting) {
+            if (options.specularMap) {
+                code += "varying vec2 vUvSpecularMap;\n";
+            }
+            if (options.specularFactorMap) {
+                code += "varying vec2 vUvSpecularFactorMap;\n";
+            }
+            if (options.normalMap || options.parallaxMap) {
+                code += "varying vec2 vUvBumpMap;\n";
+            }
         }
         if (options.emissiveMap) {
             code += "varying vec2 vUvEmissiveMap;\n";
         }
         if (options.opacityMap) {
             code += "varying vec2 vUvOpacityMap;\n";
-        }
-        if (options.normalMap || options.parallaxMap) {
-            code += "varying vec2 vUvBumpMap;\n";
         }
         if (options.lightMap) {
             code += "varying vec2 vUvLightMap;\n";
@@ -311,17 +313,35 @@ pc.gfx.programlib.phong = {
             }
         }
 
-        if (options.normalMap) {
-            if (options.normalMapTransform) {
-                code += "    vUvBumpMap = (texture_normalMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
-            } else {
-                code += "    vUvBumpMap = vertex_texCoord0;\n";
+        if (lighting) {
+            if (options.specularMap) {
+                if (options.specularMapTransform) {
+                    code += "    vUvSpecularMap = (texture_specularMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
+                } else { 
+                    code += "    vUvSpecularMap = vertex_texCoord0;\n";
+                }
             }
-        } else if (options.parallaxMap) {
-            if (options.parallaxMapTransform) {
-                code += "    vUvBumpMap = (texture_parallaxMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
-            } else {
-                code += "    vUvBumpMap = vertex_texCoord0;\n";
+
+            if (options.specularFactorMap) {
+                if (options.specularFactorMapTransform) {
+                    code += "    vUvSpecularFactorMap = (texture_specularFactorMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
+                } else {
+                    code += "    vUvSpecularFactorMap = vertex_texCoord0;\n";
+                }
+            }
+
+            if (options.normalMap) {
+                if (options.normalMapTransform) {
+                    code += "    vUvBumpMap = (texture_normalMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
+                } else {
+                    code += "    vUvBumpMap = vertex_texCoord0;\n";
+                }
+            } else if (options.parallaxMap) {
+                if (options.parallaxMapTransform) {
+                    code += "    vUvBumpMap = (texture_parallaxMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
+                } else {
+                    code += "    vUvBumpMap = vertex_texCoord0;\n";
+                }
             }
         }
 
@@ -330,22 +350,6 @@ pc.gfx.programlib.phong = {
                 code += "    vUvOpacityMap = (texture_opacityMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
             } else {
                 code += "    vUvOpacityMap = vertex_texCoord0;\n";
-            }
-        }
-
-        if (options.specularMap) {
-            if (options.specularMapTransform) {
-                code += "    vUvSpecularMap = (texture_specularMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
-            } else { 
-                code += "    vUvSpecularMap = vertex_texCoord0;\n";
-            }
-        }
-
-        if (options.specularFactorMap) {
-            if (options.specularFactorMapTransform) {
-                code += "    vUvSpecularFactorMap = (texture_specularFactorMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
-            } else {
-                code += "    vUvSpecularFactorMap = vertex_texCoord0;\n";
             }
         }
 
@@ -401,20 +405,22 @@ pc.gfx.programlib.phong = {
         if (options.diffuseMap) {
             code += "varying vec2 vUvDiffuseMap;\n";
         }
-        if (options.specularMap) {
-            code += "varying vec2 vUvSpecularMap;\n";
-        }
-        if (options.specularFactorMap) {
-            code += "varying vec2 vUvSpecularFactorMap;\n";
+        if (lighting) {
+            if (options.specularMap) {
+                code += "varying vec2 vUvSpecularMap;\n";
+            }
+            if (options.specularFactorMap) {
+                code += "varying vec2 vUvSpecularFactorMap;\n";
+            }
+            if (options.normalMap || options.parallaxMap) {
+                code += "varying vec2 vUvBumpMap;\n";
+            }
         }
         if (options.emissiveMap) {
             code += "varying vec2 vUvEmissiveMap;\n";
         }
         if (options.opacityMap) {
             code += "varying vec2 vUvOpacityMap;\n";
-        }
-        if (options.normalMap || options.parallaxMap) {
-            code += "varying vec2 vUvBumpMap;\n";
         }
         if (options.lightMap) {
             code += "varying vec2 vUvLightMap;\n";
@@ -429,9 +435,13 @@ pc.gfx.programlib.phong = {
         code += "\n";
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
-        if (lighting) {
+        if (!options.diffuseMap) {
             code += "uniform vec3 material_ambient;\n";
-            code += "uniform vec3 material_diffuse;\n";
+            if (lighting) {
+                code += "uniform vec3 material_diffuse;\n";
+            }
+        }
+        if (lighting) {
             if (options.specularMap) {
                 code += "uniform sampler2D texture_specularMap;\n";
             } else {
@@ -444,7 +454,7 @@ pc.gfx.programlib.phong = {
         }
         if (options.emissiveMap) {
             code += "uniform sampler2D texture_emissiveMap;\n";
-        } else {
+        } else if (options.emissiveColor) {
             code += "uniform vec3 material_emissive;\n";
         }
         if (options.diffuseMap) {
@@ -453,18 +463,20 @@ pc.gfx.programlib.phong = {
         if (options.lightMap) {
             code += "uniform sampler2D texture_lightMap;\n";
         }
-        if (options.normalMap) {
-            code += "uniform sampler2D texture_normalMap;\n";
-        } else if (options.parallaxMap) {
-            code += "uniform sampler2D texture_parallaxMap;\n";
-        }
-        if (options.cubeMap || options.sphereMap) {
-            code += "uniform float material_reflectionFactor;\n";
-            if (options.sphereMap) {
-                code += "uniform sampler2D texture_sphereMap;\n";
-            } else { // Cube mapping
-                code += "uniform mat4 matrix_view;\n";
-                code += "uniform samplerCube texture_cubeMap;\n";
+        if (lighting) {
+            if (options.normalMap) {
+                code += "uniform sampler2D texture_normalMap;\n";
+            } else if (options.parallaxMap) {
+                code += "uniform sampler2D texture_parallaxMap;\n";
+            }
+            if (options.cubeMap || options.sphereMap) {
+                code += "uniform float material_reflectionFactor;\n";
+                if (options.sphereMap) {
+                    code += "uniform sampler2D texture_sphereMap;\n";
+                } else { // Cube mapping
+                    code += "uniform mat4 matrix_view;\n";
+                    code += "uniform samplerCube texture_cubeMap;\n";
+                }
             }
         }
         if (options.opacityMap) {
@@ -564,41 +576,50 @@ pc.gfx.programlib.phong = {
         if (options.diffuseMap) {
             code += "    vec2 uvDiffuseMap = vUvDiffuseMap;\n";
         }
-        if (options.specularMap) {
-            code += "    vec2 uvSpecularMap = vUvSpecularMap;\n";
-        }
-        if (options.specularFactorMap) {
-            code += "    vec2 uvSpecularFactorMap = vUvSpecularFactorMap;\n";
-        }
-        
         // Read the map texels that the shader needs
-        if (options.normalMap) {
-            code += "    vec3 normMapPixel = texture2D(texture_normalMap, vUvBumpMap).rgb;\n";
-        } else if (options.parallaxMap) {
-            // Shift UV0 if parallax mapping is enabled
-            code += "    float height = texture2D(texture_parallaxMap, vUvBumpMap).a;\n";
-            // Scale and bias
-            code += "    float offset = height * 0.025 - 0.02;\n";
-            code += "    vec3 normMapPixel = texture2D(texture_parallaxMap, vUvBumpMap + offset * viewDir.xy).rgb;\n";
-            if (options.diffuseMap) {
-                code += "    uvDiffuseMap += offset * viewDir.xy;\n";
-            }
+        if (lighting) {
             if (options.specularMap) {
-                code += "    uvSpecularMap += offset * viewDir.xy;\n";
+                code += "    vec2 uvSpecularMap = vUvSpecularMap;\n";
+            }
+            if (options.specularFactorMap) {
+                code += "    vec2 uvSpecularFactorMap = vUvSpecularFactorMap;\n";
+            }
+            if (options.normalMap) {
+                code += "    vec3 normMapPixel = texture2D(texture_normalMap, vUvBumpMap).rgb;\n";
+            } else if (options.parallaxMap) {
+                // Shift UV0 if parallax mapping is enabled
+                code += "    float height = texture2D(texture_parallaxMap, vUvBumpMap).a;\n";
+                // Scale and bias
+                code += "    float offset = height * 0.025 - 0.02;\n";
+                code += "    vec3 normMapPixel = texture2D(texture_parallaxMap, vUvBumpMap + offset * viewDir.xy).rgb;\n";
+                if (options.diffuseMap) {
+                    code += "    uvDiffuseMap += offset * viewDir.xy;\n";
+                }
+                if (options.specularMap) {
+                    code += "    uvSpecularMap += offset * viewDir.xy;\n";
+                }
             }
         }
 
         if (options.diffuseMap) {
             code += "    vec4 diffMapPixel = texture2D(texture_diffuseMap, uvDiffuseMap);\n";
         }
-        if (options.specularMap && lighting) {
-            code += "    vec4 specMapPixel = texture2D(texture_specularMap, uvSpecularMap);\n";
-        }
-        if (options.specularFactorMap && lighting) {
-            code += "    vec4 specFacMapPixel = texture2D(texture_specularFactorMap, uvSpecularFactorMap);\n";
+        if (lighting) {
+            if (options.specularMap) {
+                code += "    vec4 specMapPixel = texture2D(texture_specularMap, uvSpecularMap);\n";
+            }
+            if (options.specularFactorMap) {
+                code += "    vec4 specFacMapPixel = texture2D(texture_specularFactorMap, uvSpecularFactorMap);\n";
+            }
         }
         if (options.lightMap) {
             code += "    vec4 lghtMapPixel = texture2D(texture_lightMap, vUvLightMap);\n";
+        }
+
+        if (options.diffuseMap) {
+            code += "    gl_FragColor.rgb  = diffMapPixel.rgb * light_globalAmbient;\n";
+        } else {
+            code += "    gl_FragColor.rgb  = material_ambient * light_globalAmbient;\n";
         }
 
         if (options.opacityMap) {
@@ -617,7 +638,7 @@ pc.gfx.programlib.phong = {
 
         if (lighting) {
             code += "    vec3 lightDir;\n";
-            code += "    vec3 ambient, diffuse, specular;\n";
+            code += "    vec3 diffuse, specular;\n";
             code += "    vec3 diffuseContrib = vec3(0.0);\n";
             code += "    float specularContrib = 0.0;\n";
             code += "    float d, nDotL;\n";
@@ -716,10 +737,8 @@ pc.gfx.programlib.phong = {
 
             // Select the sources for material color
             if (options.diffuseMap) {
-                code += "    ambient = diffMapPixel.rgb;\n";
                 code += "    diffuse = diffMapPixel.rgb;\n";
             } else {
-                code += "    ambient = material_ambient;\n";
                 code += "    diffuse = material_diffuse;\n";
             }
             if (options.cubeMap) {
@@ -754,7 +773,6 @@ pc.gfx.programlib.phong = {
             }
 
             // Add ambient + diffuse + specular
-            code += "    gl_FragColor.rgb  = ambient * light_globalAmbient;\n";
             if (options.lightMap) {
                 code += "    diffuseContrib += lghtMapPixel.rgb;\n";
             }
@@ -779,7 +797,7 @@ pc.gfx.programlib.phong = {
 
         if (options.emissiveMap) {
             code += "    gl_FragColor.rgb += texture2D(texture_emissiveMap, vUvEmissiveMap).rgb;\n";
-        } else {
+        } else if (options.emissiveColor) {
             code += "    gl_FragColor.rgb += material_emissive;\n";
         }
 
