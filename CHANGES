@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.61.1
+-------
+* [FIX] Check that animations have been loaded before playing on AnimationComponentSystem.setModel
+
+-------
 v0.61.0
 -------
 * [FIX] Added support to the animation system for blending two skeletons with different topologies.
