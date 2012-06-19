@@ -6,6 +6,7 @@ PlayCanvas Runtime Changes
 v0.61.0
 -------
 * [FIX] Added support to the animation system for blending two skeletons with different topologies.
+* [BREAKING] AnimationComponentSystem.setAnimation() renamed to play()
 
 -------
 v0.60.0
@@ -14,7 +15,7 @@ v0.60.0
     Anything store as a Asset on the server can be cached and multiple instances are cloned (models) or shared.
 * Added canonical identifiers internally to pc.resources.ResourceLoader.
     Files in different assets with matches hashes will be loaded from a single source
-* Model loader now ignores texture transforms on the texture. Instead they are taken from a material's parameters.
+* [BREAKING] Model loader now ignores texture transforms on the texture. Instead they are taken from a material's parameters.
 * Scene#setGlobalAmbient now also accepts separate r, g and b parameters.
 * Global ambient now works when there are no lights enabled.
 * Optimized some code generation for the Phong shader generator, especially for the case when no lights are enabled.
