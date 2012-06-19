@@ -574,7 +574,7 @@ pc.resources = function () {
         // Add all alternatives identifiers as well.
         var i, len = request.alternatives.length;
         for (i = 0; i < len; i++) {
-            this.errors[request.alternatives[i]] = resource;
+            this.errors[request.alternatives[i]] = errors;
         }
         this.count += 1; // TODO: This shouldn't always count up, in some cases the error has occured after addResource() is called and the count is already incremented
         return this._update();
