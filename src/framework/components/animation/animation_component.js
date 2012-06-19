@@ -61,21 +61,9 @@ pc.extend(pc.fw, function () {
         if (pc.isDefined(newValue)) {
             var componentData = this.getComponentData(entity);
             for (var animName in componentData.animations) {
-                // Create skeletons
-                var animation = componentData.animations[animName];
-                var numNodes = animation.getNodes().length;
-                componentData.skeleton = new pc.anim.Skeleton(numNodes);
-                componentData.fromSkel = new pc.anim.Skeleton(numNodes);
-                componentData.toSkel = new pc.anim.Skeleton(numNodes);
-
-                componentData.skeleton.setLooping(componentData.loop);
-
-                // If the entity has a model on a model component, grab it
-                componentData.model = this.context.systems.model.get(entity, 'model');
-
                 // Set the first loaded animation as the current
                 if (componentData.activate) {
-                    this.setAnimation(entity, animName);
+                    this.play(entity, animName);
                 }
                 break;
             }
@@ -176,40 +164,38 @@ pc.extend(pc.fw, function () {
 
     /**
      * @function 
-     * @name pc.fw.AnimationComponentSystem#setAnimation
+     * @name pc.fw.AnimationComponentSystem#play
      * @description Sets the currently playing animation on the specified entity.
      * @param {pc.fw.Entity} entity An Entity with a camera Component.
      * @param {String} name The name of the animation asset to set.
      * @param {Number} blendTime (Optional) The time in seconds to blend from the current
      * animation state to the start of the animation being set.
      */
-    AnimationComponentSystem.prototype.setAnimation = function (entity, name, blendTime) {
+    AnimationComponentSystem.prototype.play = function (entity, name, blendTime) {
         var componentData = this.getComponentData(entity);
-        
+
         componentData.prevAnim = componentData.currAnim;
         componentData.currAnim = name;
 
-        componentData.blending = blendTime > 0;
-        if (componentData.blending) {
-            // Blend from the current time of the current animation to the start of 
-            // the newly specified animation over the specified blend time period.
-            componentData.blendTime = blendTime;
-            componentData.blendTimeRemaining = blendTime;
-            componentData.fromSkel.setAnimation(componentData.animations[componentData.prevAnim]);
-            componentData.fromSkel.addTime(componentData.skeleton.getCurrentTime());
-            componentData.toSkel.setAnimation(componentData.animations[componentData.currAnim]);
-            componentData.toSkel.addTime(0);
-        } else {
-            componentData.skeleton.setAnimation(componentData.animations[componentData.currAnim]);
+        if (componentData.model) {
+            componentData.blending = blendTime > 0;
+            if (componentData.blending) {
+                // Blend from the current time of the current animation to the start of 
+                // the newly specified animation over the specified blend time period.
+                componentData.blendTime = blendTime;
+                componentData.blendTimeRemaining = blendTime;
+                componentData.fromSkel.setAnimation(componentData.animations[componentData.prevAnim]);
+                componentData.fromSkel.addTime(componentData.skeleton.getCurrentTime());
+                componentData.toSkel.setAnimation(componentData.animations[componentData.currAnim]);
+                componentData.toSkel.addTime(0);
+            } else {
+                componentData.skeleton.setAnimation(componentData.animations[componentData.currAnim]);
+            }
         }
 
-        if (componentData.model) {
-            componentData.skeleton.setGraph(componentData.model.getGraph());
-        }
-        
         componentData.playing = true;
     };
-    
+
     AnimationComponentSystem.prototype.getAnimation = function (entity, name) {
         var componentData = this.getComponentData(entity);
         return componentData.animations[name];
@@ -218,12 +204,21 @@ pc.extend(pc.fw, function () {
     AnimationComponentSystem.prototype.setModel = function (entity, model) {
         var componentData = this.getComponentData(entity);
         if (componentData) {
-            if (model && componentData.skeleton) {
-                if (componentData.skeleton.getAnimation()) {
-                    componentData.skeleton.setGraph(model.getGraph());
-                }
+            if (model) {
+                // Create skeletons
+                var graph = model.getGraph();
+                componentData.fromSkel = new pc.anim.Skeleton(graph);
+                componentData.toSkel = new pc.anim.Skeleton(graph);
+                componentData.skeleton = new pc.anim.Skeleton(graph);
+                componentData.skeleton.setLooping(componentData.loop);
+                componentData.skeleton.setGraph(graph);
             }
             componentData.model = model;
+
+            // Reset the current animation on the new model
+            if (componentData.animations[componentData.currAnim]) {
+                this.play(entity, componentData.currAnim);
+            }
         }    
     };
     

@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.61.0
+-------
+* [FIX] Added support to the animation system for blending two skeletons with different topologies.
+
+-------
 v0.60.0
 -------
 * Added caching for downloaded files to pc.resources.ResourceLoader. 
@@ -13,8 +18,6 @@ v0.60.0
 * Scene#setGlobalAmbient now also accepts separate r, g and b parameters.
 * Global ambient now works when there are no lights enabled.
 * Optimized some code generation for the Phong shader generator, especially for the case when no lights are enabled.
-
-
 
 -------
 v0.59.0
