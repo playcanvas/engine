@@ -216,7 +216,7 @@ pc.extend(pc.fw, function () {
             componentData.model = model;
 
             // Reset the current animation on the new model
-            if (componentData.animations[componentData.currAnim]) {
+            if (componentData.animations && componentData.currAnim && componentData.animations[componentData.currAnim]) {
                 this.play(entity, componentData.currAnim);
             }
         }    
