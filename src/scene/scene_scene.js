@@ -492,11 +492,27 @@ pc.extend(pc.scene, function () {
      * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
      * value by multiplying it by the material color of a mesh's material and adding it to
      * the total light contribution.
-     * @returns {Array} The global ambient color represented by a 3 dimensional array (RGB components ranging 0..1).
+     * @param {pc.math.vec3} ambient The global ambient color represented by a 3 dimensional array (RGB components ranging 0..1).
      * @author Will Eastcott
      */
-    Scene.prototype.setGlobalAmbient = function (color) {
-        this._globalAmbient = color;
+    /**
+     * @function
+     * @name pc.scene.Scene#setGlobalAmbient^2
+     * @description Sets the current global ambient color. This color is uploaded to a
+     * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
+     * value by multiplying it by the material color of a mesh's material and adding it to
+     * the total light contribution.
+     * @param {Number} red The red component of the global ambient color (should be in range 0..1).
+     * @param {Number} green The green component of the global ambient color (should be in range 0..1).
+     * @param {Number} blue The blue component of the global ambient color (should be in range 0..1).
+     * @author Will Eastcott
+     */
+    Scene.prototype.setGlobalAmbient = function () {
+        if (arguments.length === 3) {
+            pc.math.vec3.set(this._globalAmbient, arguments[0], arguments[1], arguments[2]);
+        } else {
+            pc.math.vec3.copy(arguments[0], this._globalAmbient);
+        }
     };
 
     Scene.prototype.dispatchGlobalLights = function () {
