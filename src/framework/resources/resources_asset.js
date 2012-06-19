@@ -1,4 +1,17 @@
 pc.extend(pc.resources, function () {
+    /**
+    * @name pc.resources.AssetResourceHandler
+    * @extends pc.resources.ResourceHandler
+    * @class `pc.resources.ResourceHandler for loading Assets from Database or exported data file
+    * The AssetResourceHandler registers file hashes for loaded assets so local file caching works. 
+    * `pc.fw.Application` has an AssetResourceHandler already registered to it's `ResourceLoader` so you won't need to.
+    * However, if you are using a custom Application, this should be registered with a `pc.resources.ResourceLoader` 
+    * in your main application.
+    * @param depot A `DepotApi` from the corazon.js interface.
+    * @example
+    * var loader = new pc.resources.ResourceLoader();
+    * loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(depot));
+    */
 	var AssetResourceHandler = function (depot) {
 		this._depot = depot;
 	};
@@ -32,6 +45,7 @@ pc.extend(pc.resources, function () {
 	};
 	
     /**
+    * @private
     * @name pc.resources.AssetResourceHandler#registerAssetHashes
     * @description Add a file look up between file hash and file url into the resource loader. This can be uses to get resources from the case later
     */
@@ -44,6 +58,17 @@ pc.extend(pc.resources, function () {
         }
     };
 
+    /**
+    * @name pc.resources.AssetRequest
+    * @description Used to make a request for an Asset from the server or data file
+    * @extends pc.resources.ResourceRequest
+    * @example
+    *   ... 
+    *   var guid = "00000000-0000-0000-0000-000000000000";
+    *   context.loader.request(guid, context, function (resources) {
+    *       var asset = resources[guid];
+    *   });
+    */
 	var AssetRequest = function AssetRequest(identifier) {
 		
 	};
