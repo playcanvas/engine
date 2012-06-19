@@ -3,6 +3,20 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.60.0
+-------
+* Added caching for downloaded files to pc.resources.ResourceLoader. 
+    Anything store as a Asset on the server can be cached and multiple instances are cloned (models) or shared.
+* Added canonical identifiers internally to pc.resources.ResourceLoader.
+    Files in different assets with matches hashes will be loaded from a single source
+* Model loader now ignores texture transforms on the texture. Instead they are taken from a material's parameters.
+* Scene#setGlobalAmbient now also accepts separate r, g and b parameters.
+* Global ambient now works when there are no lights enabled.
+* Optimized some code generation for the Phong shader generator, especially for the case when no lights are enabled.
+
+
+
+-------
 v0.59.0
 -------
 * [FIX] Fix possible crash when animation components are loaded while the application is running
