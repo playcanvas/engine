@@ -311,6 +311,8 @@ pc.resources = function () {
                     // Found resource in cache
                     console.log(pc.string.format('Found {0} in cache', request.canonical));
                     
+                    this._completeRequest(request);
+
                     var i, len = request.batches.length;
                     for (i = 0; i < len; i++) {
                         this._afterOpened(request, resource, handler, request.batches[i], options);    
@@ -320,10 +322,6 @@ pc.resources = function () {
                     // load using handler
                     handler.load(request.canonical, function (response, options) {
                         this._completeRequest(request);
-                            
-                        // Add identifier to the options in case the open call needs it (usually it does to add to the cache)
-                        options = options || {};
-                        options.identifier = request.canonical;
 
                         // Handle success operations for each batch that this request is part of
                         // Call open() and then postOpen() to create a new resource for each batch that requires a resource. 
