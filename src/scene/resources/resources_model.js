@@ -62,8 +62,8 @@ pc.extend(pc.resources, function () {
 	 * @param {Number} [options.priority] The priority to load the model textures at.
 	 */
     ModelResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
-    	var url = identifier;
-    	options = options || {};
+        var url = identifier;
+        options = options || {};
         options.directory = pc.path.getDirectory(url);
 
         var uri = new pc.URI(url)
@@ -84,7 +84,8 @@ pc.extend(pc.resources, function () {
 	 * @param {Object} data The data from model file deserialized into a Javascript Object
 	 * @param {Object} [options]
 	 * @param {Number} [options.priority] The priority to load the textures at
-	 * @param {String} [options.directory] The directory to load textures from 
+	 * @param {String} [options.directory] The directory to load textures from
+     * @param {String} [options.identifier] The identifier used to load the resource, this is used to store the opened resource in the loader cache 
 	 */
     ModelResourceHandler.prototype.open = function (data, options) {
     	options = options || {};
@@ -97,8 +98,13 @@ pc.extend(pc.resources, function () {
         } else {
             model = this._loadModelJson(data, options);
         }
+
     	return model;
     };
+
+    ModelResourceHandler.prototype.clone = function (model) {
+        return model.clone();
+    }
         
     ModelResourceHandler.prototype._loadNode = function (model, modelData, nodeData) {
         var node = new pc.scene.GraphNode();
@@ -208,7 +214,7 @@ pc.extend(pc.resources, function () {
 		
 		// Make a new request for the Image resource at the same priority as the Model was requested.
         this._loader.request([new pc.resources.ImageRequest(url)], options.priority, function (resources) {
-        	texture.setSource(resources[url]);	
+        	texture.setSource(resources[url]);
         }, function (errors, resources) {
         	Object.keys(errors).forEach(function (key) {
         	   logERROR(errors[key]);    
@@ -220,7 +226,7 @@ pc.extend(pc.resources, function () {
         texture.setName(textureData.name);
         texture.setAddressMode(addressu, addressv);
         texture.setFilterMode(minFilter, magFilter);
-        texture.transform = textureData.transform;
+
         return texture;
     };
     
@@ -235,12 +241,9 @@ pc.extend(pc.resources, function () {
             if (param.type === "sampler") {
                 var texture = model.getTextures()[param.data];
                 if (texture === undefined) {
-                    logERROR("Texture " + name + " not found in model's texture dictionary.");
+                    logERROR("Texture " + modelData[param.data].uri + " not found in model's texture dictionary.");
                 }
                 material.setParameter(param.name, texture);
-                if (texture.transform !== undefined) {
-                    material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
-                }
             } else {
                 if (param.type === 'float') {
                     material.setParameter(param.name, param.data);
@@ -867,12 +870,11 @@ pc.extend(pc.resources, function () {
             var addrModeV = this.readU8();
             var filterMin = this.readU8();
             var filterMax = this.readU8();
-            var transform = pc.math.mat4.create();
-            for (var i = 0; i < 16; i++) {
-                transform[i] = this.readF32();
-            }
 
             var texture = new pc.gfx.Texture2D();
+            texture.setName(name);
+            texture.setAddressMode(addrModeU, addrModeV);
+            texture.setFilterMode(filterMin, filterMax);
 
             var url = this.options.directory + "/" + filename;
 
@@ -887,11 +889,6 @@ pc.extend(pc.resources, function () {
                 // no progress features
             }, this.options);
 
-            texture.setName(name);
-            texture.setAddressMode(addrModeU, addrModeV);
-            texture.setFilterMode(filterMin, filterMax);
-            texture.transform = transform;
-
             return texture;
         },
 
@@ -901,28 +898,89 @@ pc.extend(pc.resources, function () {
             var type   = this.readU32();
             var data;
             switch (type) {
+                case pc.gfx.ShaderInputType.BOOL:
+                    data = (this.readU32() !== 0);
+                    break;
                 case pc.gfx.ShaderInputType.FLOAT:
                     data = this.readF32();
                     break;
+                case pc.gfx.ShaderInputType.INT:
+                    data = this.readU32();
+                    break;
                 case pc.gfx.ShaderInputType.VEC2:
-                    var x = this.readF32();
-                    var y = this.readF32();
-                    data = pc.math.vec2.create(x, y);
+                    data = pc.math.vec2.create();
+                    for (var i = 0; i < 2; i++) {
+                        data[i] = this.readF32();
+                    }
                     break;
                 case pc.gfx.ShaderInputType.VEC3:
-                    var x = this.readF32();
-                    var y = this.readF32();
-                    var z = this.readF32();
-                    data = pc.math.vec3.create(x, y, z);
+                    data = pc.math.vec3.create();
+                    for (var i = 0; i < 3; i++) {
+                        data[i] = this.readF32();
+                    }
                     break;
                 case pc.gfx.ShaderInputType.VEC4:
-                    var x = this.readF32();
-                    var y = this.readF32();
-                    var z = this.readF32();
-                    var w = this.readF32();
-                    data = pc.math.vec4.create(x, y, z, w);
+                    data = pc.math.vec4.create();
+                    for (var i = 0; i < 4; i++) {
+                        data[i] = this.readF32();
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.IVEC2:
+                    data = pc.math.vec2.create();
+                    for (var i = 0; i < 2; i++) {
+                        data[i] = this.readU32();
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.IVEC3:
+                    data = pc.math.vec3.create();
+                    for (var i = 0; i < 3; i++) {
+                        data[i] = this.readU32();
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.IVEC4:
+                    data = pc.math.vec4.create();
+                    for (var i = 0; i < 4; i++) {
+                        data[i] = this.readU32();
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.BVEC2:
+                    data = [];
+                    for (var i = 0; i < 2; i++) {
+                        data.push(this.readU32() !== 0);
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.BVEC3:
+                    data = [];
+                    for (var i = 0; i < 3; i++) {
+                        data.push(this.readU32() !== 0);
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.BVEC4:
+                    data = [];
+                    for (var i = 0; i < 4; i++) {
+                        data.push(this.readU32() !== 0);
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.MAT2:
+                    data = new Float32Array(4); // PlayCanvas doesn't currently have a 2D matrix type
+                    for (var i = 0; i < 4; i++) {
+                        data[i] = this.readF32();
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.MAT3:
+                    data = pc.math.mat3.create();
+                    for (var i = 0; i < 9; i++) {
+                        data[i] = this.readF32();
+                    }
+                    break;
+                case pc.gfx.ShaderInputType.MAT4:
+                    data = pc.math.mat4.create();
+                    for (var i = 0; i < 16; i++) {
+                        data[i] = this.readF32();
+                    }
                     break;
                 case pc.gfx.ShaderInputType.TEXTURE2D:
+                case pc.gfx.ShaderInputType.TEXTURECUBE:
                     data = this.model.getTextures()[this.readU32()];
                     break;
             }
@@ -946,12 +1004,6 @@ pc.extend(pc.resources, function () {
             for (var i = 0; i < numParams; i++) {
                 var param = this.readMaterialParamChunk();
                 material.setParameter(param.name, param.data);
-                if (param.name.substring(0, 'texture_'.length) === 'texture_') {
-                    var texture = param.data;
-                    if (texture.transform !== undefined) {
-                        material.setParameter(param.name + "Transform", pc.math.mat4.create(texture.transform));
-                    }
-                }
             }
 
             return material;

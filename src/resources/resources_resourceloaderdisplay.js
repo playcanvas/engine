@@ -92,6 +92,9 @@ pc.extend(pc.resources, function () {
 
             var row = document.createElement('tr');
             var idElement = document.createElement('td');
+            if (request.identifier === "" || !request.identifier) {
+                debugger;
+            }
             idElement.textContent = request.identifier;
             row.appendChild(idElement);
             

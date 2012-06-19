@@ -38,6 +38,9 @@ pc.resources = function () {
         this._batches = [];
         this._handlers = {};
         this._requests = {};
+        this._hashes = {}; // Lookup from file url to file hash
+        this._canonicals = {}; // Lookup from hash to canonical file url
+        this._cache = {}; // Loaded resources stored by file hash
         this._sequence = 1; // internal counter for sorting based on request order
         
         this._batchId = 1; // internal counter for creating batch handles.
@@ -64,6 +67,55 @@ pc.resources = function () {
         handler.setLoader(this);
     };
     
+    ResourceLoader.prototype.registerHash = function (hash, identifier) {
+        if (!this._hashes[identifier]) {
+            this._hashes[identifier] = hash;
+        }
+
+        if (!this._canonicals[hash]) {
+            // First hash registered to a url gets to be canonical
+            this._canonicals[hash] = identifier;
+        }
+    };
+
+    ResourceLoader.prototype.getHash = function(identifier) {
+        return this._hashes[identifier];
+    };
+
+    ResourceLoader.prototype.addToCache = function (identifier, resource) {
+        var hash = this.getHash(identifier);
+        if (hash) {
+            this._cache[hash] = resource;    
+        } else {
+            console.log(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
+        }
+        
+    };
+
+    ResourceLoader.prototype.getFromCache = function(identifier) {
+        var hash = this.getHash(identifier);
+        if (hash) {
+            return this._cache[hash];    
+        } else {
+            return null;
+        }
+    };
+
+    /**
+    * @function
+    * @name pc.resources.ResourceLoader#getCanonicalIdentifier
+    * @description Returns the canonical identifier for a given identifier. If two files are registered with the same hash but different urls
+    * one of them will be assigned the canonical, all requests will be made to the canonical identifier so that multiple requests are cached correctly.
+    */
+    ResourceLoader.prototype.getCanonicalIdentifier = function(identifier) {
+        var hash = this.getHash(identifier);
+        if (this._canonicals[hash]) {
+            return this._canonicals[hash];
+        } else {
+            return identifier;
+        }
+    };
+
     /**
      * @function
      * @name pc.resources.ResourceLoader#request
@@ -140,10 +192,12 @@ pc.resources = function () {
         // Append each request with the batch it belongs to and the priority for easy access, 
         // then push the requests into the pending list
         requests.forEach(function (request, index, arr) {
-            if (this._requests[request.identifier]) {
+            request.canonical = this.getCanonicalIdentifier(request.identifier);
+            if (this._requests[request.canonical]) {
                 // This resource has already been requested, append the existing request with this batch so it gets the callbacks
-                var existingRequest = this._requests[request.identifier];
+                var existingRequest = this._requests[request.canonical];
                 existingRequest.batches.push(batch);
+                existingRequest.alternatives.push(request.identifier);
                 // Update the priority to the highest of the two
                 existingRequest.priority = Math.min(existingRequest.priority, priority);
             } else {
@@ -152,8 +206,8 @@ pc.resources = function () {
                 request.batches.push(batch);
                 request.priority = batch.priority;
                 request.sequence = this._sequence++;
-                this._requests[request.identifier] = request;
-                this._pending.push(request.identifier);                
+                this._requests[request.canonical] = request;
+                this._pending.push(request.canonical);                
             }
         }, this);
         
@@ -241,7 +295,7 @@ pc.resources = function () {
             (function () {
                 // remove first request identifier from pending list with shift(), fetch the request and then add it to loading list
                 var request = this._requests[this._pending.shift()];
-                this._loading.push(request.identifier);
+                this._loading.push(request.canonical);
                 
                 var options = {
                     priority: request.priority,
@@ -252,64 +306,88 @@ pc.resources = function () {
                 // fire loadrequest event
                 this.fire('loading', this, request);
 
-                // load using handler
-                handler.load(request.identifier, function (response, options) {
+                var resource = this.getFromCache(request.canonical);
+                if (resource) {
+                    // Found resource in cache
+                    console.log(pc.string.format('Found {0} in cache', request.canonical));
+                    
                     this._completeRequest(request);
-                    // Handle success operations for each batch that this request is part of
-                    // Call open() and then postOpen() to create a new resource for each batch that requires a resource. 
-                    request.batches.forEach(function (batch, index, arr) {
-                        var resource = handler.open(response, options);
-                        handler.postOpen(resource, function (resource) {
-                            // Add new resources to all batches that requested it, and check to see if the batch is now complete
-                            var complete = batch.addResource(request.identifier, resource);
-                            if (complete) {
+
+                    var i, len = request.batches.length;
+                    for (i = 0; i < len; i++) {
+                        this._afterOpened(request, resource, handler, request.batches[i], options);    
+                    }
+                    
+                } else {
+                    // load using handler
+                    handler.load(request.canonical, function (response, options) {
+                        this._completeRequest(request);
+
+                        // Handle success operations for each batch that this request is part of
+                        // Call open() and then postOpen() to create a new resource for each batch that requires a resource. 
+                        var i, len = request.batches.length;
+                        for (i = 0; i < len; i++) {
+                            var resource = handler.open(response, options);
+                            this._afterOpened(request, resource, handler, request.batches[i], options)
+                        }
+                        
+                        // Make any new requests
+                        this._update();
+                    }.bind(this), function (errors) {
+                        this._completeRequest(request);
+                        // Handle error operations for each batch that this request is part of
+                        request.batches.forEach(function (batch, index, arr) {
+                            this.fire('error', this, request, batch, errors);
+
+                            var complete = batch.addResourceError(request, errors);
+                            if(complete) {
                                 this._completeBatch(batch);
                             }
-                            this.fire('loaded', this, request, batch, resource);
-                        }.bind(this), function (errors) {
-                            if (batch.error) {
-                                batch.error(errors);    
-                            }
-                            if (batch.parent) {
-                                batch.parent.error(errors);
-                            }
-                        }, function (progress) {
-                            // This is for progress on the postOpen() call
-                            if (batch.progress) {
-                                batch.progress(progress);
-                            }
-                        }, options);
-                    }, this);
-                    
-                    // Make any new requests
-                    this._update();
-                }.bind(this), function (errors) {
-                    this._completeRequest(request);
-                    // Handle error operations for each batch that this request is part of
-                    request.batches.forEach(function (batch, index, arr) {
-                        this.fire('error', this, request, batch, errors);
-
-                        var complete = batch.addResourceError(request.identifier, errors);
-                        if(complete) {
-                            this._completeBatch(batch);
-                        }
-                    }, this);
-                    
-                }.bind(this), function (progress) {
-                    // This is for progress on a sub-resource level. e.g. the percentage complete a file download is
-                    // None of the resource handlers support this yet.
-                    request.batches.forEach(function (batch, index, arr) {
-                        this.fire('requestprogress', this, request, batch, progress);
-                        /*if (batch.progress) {
-                            batch.progress(progress);    
-                        }*/
-                    }, this);
-                }.bind(this), options);
-                
-                
+                        }, this);
+                        
+                    }.bind(this), function (progress) {
+                        // This is for progress on a sub-resource level. e.g. the percentage complete a file download is
+                        // None of the resource handlers support this yet.
+                        request.batches.forEach(function (batch, index, arr) {
+                            this.fire('requestprogress', this, request, batch, progress);
+                            /*if (batch.progress) {
+                                batch.progress(progress);    
+                            }*/
+                        }, this);
+                    }.bind(this), options);
+                }
             }.call(this));
         }                
     };
+
+    ResourceLoader.prototype._afterOpened = function (request, resource, handler, batch, options) {
+        handler.postOpen(resource, function (resource) {
+            this.addToCache(request.canonical, resource);
+
+            // Clone resource if handler requires it
+            resource = handler.clone(resource);
+
+            // Add new resources (using original identifier) to all batches that requested it, and check to see if the batch is now complete
+            var complete = batch.addResource(request, resource);
+            if (complete) {
+                this._completeBatch(batch);
+            }
+            this.fire('loaded', this, request, batch, resource);
+        }.bind(this), function (errors) {
+            if (batch.error) {
+                batch.error(errors);    
+            }
+            if (batch.parent) {
+                batch.parent.error(errors);
+            }
+        }, function (progress) {
+            // This is for progress on the postOpen() call
+            if (batch.progress) {
+                batch.progress(progress);
+            }
+        }, options);
+    };
+
     
     /**
      * @name pc.resources.ResourceLoader#_completeRequest
@@ -320,10 +398,10 @@ pc.resources = function () {
      */
     ResourceLoader.prototype._completeRequest = function (request) {
         // Request is now complete, remove it from map
-        delete this._requests[request.identifier];
+        delete this._requests[request.canonical];
     
         // Remove request from _loading list
-        this._loading.splice(this._loading.indexOf(request.identifier), 1);
+        this._loading.splice(this._loading.indexOf(request.canonical), 1);
     }; 
     
     /**
@@ -351,56 +429,92 @@ pc.resources = function () {
     var ResourceHandler = function () {
     }; 
     
-    ResourceHandler.prototype.setLoader = function (loader) {
-        this._loader = loader;
+    ResourceHandler.prototype = {
+        setLoader: function (loader) {
+            this._loader = loader;
+        },
+
+        getFromCache: function (identifier) {
+            var hash = this._loader.getHash(identifier);
+            var resource = null;
+
+            if (hash) {
+                resource = this._loader.getFromCache(hash);
+                if (resource) {
+                    console.log('Found in cache: ' + identifier);
+                }
+            }
+
+            return resource;
+        },
+
+        addToCache: function (identifier, resource) {
+            var hash = this._loader.getHash(identifier);
+            if (hash) {
+                console.log('Added to cache: ' + identifier);
+                this._loader.addToCache(hash, resource);
+            } else {
+                console.warn(pc.string.format("Could not add resource {0} to cache, no hash stored", identifier));
+            }
+            
+        },
+
+        /**
+         * @function
+         * @name pc.resources.ResourceHandler#load
+         * @description Fetch the resource from a remote location and then call the success callback with the response 
+         * If an error occurs the request is stopped and the error callback is called with details of the error. 
+         * If supported the progress callback is called during the download to report percentage complete progress.
+         * @param {string} identifier A unique identifier for the resource, possibly the URL or GUID of the resource
+         * @param {Function} success Callback passed the successfully fetched resource and an options object to pass the open method
+         * @param {Function} [error] Callback passed an array of error messages if the request fails
+         * @param {Function} [progress] If supported, the progress callback is called periodically with a percentage complete value.
+         * @param {Object} [options]
+         * @param {Number} [options.priority] The priority of the request for this resource
+          */
+        load: function (identifier, success, error, progress, options) {
+            throw Error("Not implemented");
+        },
+
+        /**
+        * @function
+        * @name pc.resources.ResourceHandler#open
+        * @description Take the data downloaded from the request and turn it into a resource object for use at runtime. 
+        * For example, and ImageResourceHandler.open() will return an Image object and an EntityResourceHandler.open() will return an Entity.
+        * @param data The data used to instanciate the resource
+        * @param [options]
+        * @param {Number} [options.priority] The priority of the request for this resource
+        */
+        open: function (data, options) {
+            throw Error("Not implemented");
+        },
+
+        /**
+         * @function
+         * @name pc.resources.ResourceHandler#postOpen
+         * @description Called after the open() method with the resultant resource. Used to start requests for other child resources (e.g. in EntityResourceHandler) but allows open() to remain 
+         * synchronous. Default behaviour is to call success callback straight away with the resource passed in.
+         * @param resource {Object} The resource returned from open()
+         * @param success {Function} Success callback passed the resource
+         * @param error {Function} Error callback passed a list of error messages
+         * @param progress {Function} Progress callback passed percentage complete number
+         * @param [options] {Object} Options specific for the resource handler, passed on from load() and open() methods
+         * 
+         */
+        postOpen: function (resource, success, error, progress, options) {
+            success(resource);
+        },
+
+
+        clone: function (resource) {
+            return resource;
+        }
     };
-    
-    /**
-     * @function
-     * @name pc.resources.ResourceHandler#load
-     * @description Fetch the resource from a remote location and then call the success callback with the response 
-     * If an error occurs the request is stopped and the error callback is called with details of the error. 
-     * If supported the progress callback is called during the download to report percentage complete progress.
-     * @param {string} identifier A unique identifier for the resource, possibly the URL or GUID of the resource
-     * @param {Function} success Callback passed the successfully fetched resource and an options object to pass the open method
-     * @param {Function} [error] Callback passed an array of error messages if the request fails
-     * @param {Function} [progress] If supported, the progress callback is called periodically with a percentage complete value.
-     * @param {Object} [options]
-     * @param {Number} [options.priority] The priority of the request for this resource
-      */
-    ResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
-        throw Error("Not implemented");
-    };
+
+
     
     
-    /**
-    * @function
-    * @name pc.resources.ResourceHandler#open
-    * @description Take the data downloaded from the request and turn it into a resource object for use at runtime. 
-    * For example, and ImageResourceHandler.open() will return an Image object and an EntityResourceHandler.open() will return an Entity.
-    * @param data The data used to instanciate the resource
-    * @param [options]
-    * @param {Number} [options.priority] The priority of the request for this resource
-    */
-    ResourceHandler.prototype.open = function (data, options) {
-        throw Error("Not implemented");
-    };
      
-    /**
-     * @function
-     * @name pc.resources.ResourceHandler#postOpen
-     * @description Called after the open() method with the resultant resource. Used to start requests for other child resources (e.g. in EntityResourceHandler) but allows open() to remain 
-     * synchronous. Default behaviour is to call success callback straight away with the resource passed in.
-     * @param resource {Object} The resource returned from open()
-     * @param success {Function} Success callback passed the resource
-     * @param error {Function} Error callback passed a list of error messages
-     * @param progress {Function} Progress callback passed percentage complete number
-     * @param [options] {Object} Options specific for the resource handler, passed on from load() and open() methods
-     * 
-     */
-    ResourceHandler.prototype.postOpen = function (resource, success, error, progress, options) {
-        success(resource);
-    };
     
     /**
      * @private
@@ -433,11 +547,16 @@ pc.resources = function () {
      * @private
      * @name RequestBatch#addResource
      * @description Add a resource to the completed resource list.
-     * @param identifier The identifier of the new resource
-     * @param resource The actual resource object, this must be one of the resources requested.
+     * @param {pc.resources.ResourceRequest} request The request that tried to download this resource 
+     * @param {Object} resource The actual resource object, this must be one of the resources requested.
      */
-    RequestBatch.prototype.addResource = function (identifier, resource) {
-        this.resources[identifier] = resource;
+    RequestBatch.prototype.addResource = function (request, resource) {
+        this.resources[request.identifier] = resource;
+        // Add all alternatives identifiers as well.
+        var i, len = request.alternatives.length;
+        for (i = 0; i < len; i++) {
+            this.resources[request.alternatives[i]] = resource;
+        }
         this.count += 1;
         return this._update();
     };
@@ -446,12 +565,17 @@ pc.resources = function () {
      * @private
      * @name RequestBatch#addResourceError
      * @description Add a resource to the error list.
-     * @param {String} identifier The identifier of the new resource
+     * @param {pc.resources.ResourceRequest} request The request that tried to download this resource 
      * @param {Array} errors Array of error strings
      */
-    RequestBatch.prototype.addResourceError = function (identifier, errors) {
+    RequestBatch.prototype.addResourceError = function (request, errors) {
         this.errored = true;
-        this.errors[identifier] = errors;
+        this.errors[request.identifier] = errors;
+        // Add all alternatives identifiers as well.
+        var i, len = request.alternatives.length;
+        for (i = 0; i < len; i++) {
+            this.errors[request.alternatives[i]] = errors;
+        }
         this.count += 1; // TODO: This shouldn't always count up, in some cases the error has occured after addResource() is called and the count is already incremented
         return this._update();
     };
@@ -546,7 +670,9 @@ pc.resources = function () {
      * @param identifier Used by the request handler to locate and access the resource. Usually this will be the URL or GUID of the resource.
      */
     var ResourceRequest = function ResourceRequest(identifier) {
-        this.identifier = identifier;
+        this.identifier = identifier; // The identifier for this resource
+        this.canonical = identifier;  // The canonical identifier using the file hash (if available) to match identical resources
+        this.alternatives = [];       // Alternative identifiers to the canonical
     };
 
     return {
