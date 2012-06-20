@@ -525,6 +525,7 @@ pc.extend(pc.resources, function () {
     var attribs = {
         POSITION: 1 << 0,
         NORMAL: 1 << 1,
+        COLORS: 1 << 4,
         BONEINDICES: 1 << 5,
         BONEWEIGHTS: 1 << 6,
         UV0: 1 << 7,
@@ -596,6 +597,9 @@ pc.extend(pc.resources, function () {
         // If we've got positions, normals and uvs, add tangents which will be auto-generated
         if ((attributes & attribs.POSITION) && (attributes & attribs.NORMAL) && (attributes & attribs.UV0)) {
             vertexFormat.addElement(new pc.gfx.VertexElement("vertex_tangent", 4, pc.gfx.VertexElementType.FLOAT32));
+        }
+        if (attributes & attribs.COLORS) {
+            vertexFormat.addElement(new pc.gfx.VertexElement("vertex_color", 4, pc.gfx.VertexElementType.UINT8), true);
         }
         if (attributes & attribs.BONEINDICES) {
             vertexFormat.addElement(new pc.gfx.VertexElement("vertex_boneIndices", 4, pc.gfx.VertexElementType.UINT8));
