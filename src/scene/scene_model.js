@@ -128,6 +128,13 @@ pc.extend(pc.scene, function () {
                     var bone = clone.getGraph().findByGraphId(id);
                     mesh._bones.push(bone);
                 }
+            } else if (geom._boneNames !== undefined) {
+                mesh._bones = [];
+                for (var j = 0; j < geom._boneNames.length; j++) {
+                    var id = geom._boneNames[j];
+                    var bone = clone.getGraph().findByName(id);
+                    mesh._bones.push(bone);
+                }
             }
         }
 
