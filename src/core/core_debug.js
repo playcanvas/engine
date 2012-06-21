@@ -46,7 +46,6 @@ pc.debug = (function () {
                 r.appendChild(f);
                 table.appendChild(r);  
             }
-
-        }   
+        }
     }
 }());
