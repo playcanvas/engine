@@ -1,6 +1,6 @@
 /**
-* @namespace pc.debug
-* @description Utilities to help debugging in non-production code
+* @name pc.debug
+* @namespace Utilities to help debugging in non-production code
 */
 pc.debug = (function () {
     var table = null;
