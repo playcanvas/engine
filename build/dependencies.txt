@@ -10,6 +10,7 @@
 ../src/core/core_string.js
 ../src/core/core_json.js
 ../src/core/core_cookie.js
+../src/core/core_debug.js
 ../src/events/events_events.js
 ../src/core/core_dom.js
 ../src/math/math_math.js
@@ -83,6 +84,7 @@
 ../src/input/input_input.js
 ../src/input/input_mouse.js
 ../src/input/input_keyboard.js
+../src/input/input_gamepads.js
 ../src/input/input_controller.js
 ../src/net/net_net.js
 ../src/net/net_http.js

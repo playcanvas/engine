@@ -84,7 +84,7 @@ pc.extend(pc.fw, function () {
         }
 
 		// The ApplicationContext is passed to new Components and user scripts
-        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options.controller, options.keyboard, options.mouse);
+        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options);
     
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
@@ -165,8 +165,14 @@ pc.extend(pc.fw, function () {
             if (context.controller) {
                 context.controller.update(dt);
             }
+            if (context.mouse) {
+                context.mouse.update(dt);
+            }
             if (context.keyboard) {
                 context.keyboard.update(dt);
+            }
+            if (context.gamepads) {
+                context.gamepads.update(dt);
             }
         },
 

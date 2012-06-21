@@ -53,6 +53,7 @@ pc.extend(pc.audio, function () {
                     this.source.noteOn(0);
                     this.startedAt = this.manager.context.currentTime;
                 } else {
+                    // Resume playing from when it was paused
                     var startTime = (this.pausedAt - this.startedAt) % this.source.buffer.duration;
                     this.source.noteGrainOn(0, startTime, this.source.buffer.duration - startTime);
                     this.paused = false;
@@ -106,6 +107,10 @@ pc.extend(pc.audio, function () {
                 if (this.source) {
                     this.source.gain.value = volume * this.manager.getVolume();
                 }
+            },
+
+            isPlaying: function () {
+                return this.source.playbackState === this.source.PLAYING_STATE;
             }
 
         };
@@ -164,6 +169,10 @@ pc.extend(pc.audio, function () {
                 if (this.source) {
                     this.source.loop = loop;
                 }
+            },
+
+            isPlaying: function () {
+                return this.source.isPlaying();
             }
         };
     }
@@ -205,7 +214,7 @@ pc.extend(pc.audio, function () {
         * @description Handle the manager's 'suspend' event.
         */
         onManagerSuspend: function () {
-            if (!this.suspended) {
+            if (this.isPlaying() && !this.suspended) {
                 this.suspended = true;
                 this.pause();
             }
