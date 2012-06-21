@@ -6,6 +6,8 @@ pc.extend(pc.input, function () {
     var GamePads = function () {
         this.current = [];
         this.previous = [];
+
+        this.deadZone = 0.20;
     };
 
     var MAPS = {
@@ -194,7 +196,12 @@ pc.extend(pc.input, function () {
             }
 
             var key = this.current[index].map.axes[axes];
-            return this.current[index].pad.axes[pc.input[key]];
+            var value = this.current[index].pad.axes[pc.input[key]];
+
+            if (Math.abs(value) < this.deadZone) {
+                value = 0;
+            }
+            return value;
         }
     };
 
