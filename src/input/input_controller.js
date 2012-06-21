@@ -20,10 +20,13 @@ pc.extend(pc.input, function () {
     var Controller = function (element) {
         this._keyboard = null;
         this._mouse = null;
-        this._element = null;
+        this._gamepads = null;
         
+        this._element = null;
+
         this._actions = {};
         this._axes = {};
+        this._axesValues = {};
 
         if(element) {
             this.attach(element);
@@ -96,7 +99,15 @@ pc.extend(pc.input, function () {
             this._mouse.update(dt);
         }
 
-        this._axes = {};
+        if (this._gamepads) {
+            this._gamepads.update(dt);
+        }
+
+        // clear axes values
+        this._axesValues = {};
+        for (key in this._axes) {
+            this._axesValues[key] = [];
+        }
     };
     
     /**
@@ -113,10 +124,26 @@ pc.extend(pc.input, function () {
         if (this._actions[action]) {
             throw new Error(pc.string.format("Action: {0} already registered", action));
         }
+
+        if (typeof(keys) === 'undefined') {
+            throw new Error('Invalid button')
+        }
+
+        // convert to an array
+        if (!keys.length) {
+            keys = [keys];
+        }
+
         if (this._actions[action]) {
-            this._actions[action].push(keys);
+            this._actions[action].push({
+                type: pc.input.ACTION_KEYBOARD,
+                keys: keys
+            });
         } else {
-            this._actions[action] = keys;
+            this._actions[action] = [{
+                type: pc.input.ACTION_KEYBOARD,
+                keys: keys
+            }];
         }
     };
     
@@ -132,75 +159,146 @@ pc.extend(pc.input, function () {
             this._enableMouse();
         }
 
+        if (typeof(button) === 'undefined') {
+            throw new Error('Invalid button')
+        }
+
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
         if (this._actions[action]) {
-            this._actions[action].push(-button)
+            this._actions[action].push({
+                type: pc.input.ACTION_MOUSE,
+                button: button
+            })
         } else {
-            this._actions[action] = [-button]
+            this._actions[action] = [{
+                type: pc.input.ACTION_MOUSE,
+                button: -button
+            }]
         }
     };
     
     /**
+     * @function
+     * @name pc.input.Controller#registerMouse
+     * @description Create or update an action which is enabled when the supplied mouse button is pressed
+     * @param {String} action The name of the action
+     * @param {Number} pad The index of the pad to register (use pc.input.PAD_1, etc)
+     * @param {Number} button The pad button
+     */
+    Controller.prototype.registerPadButton = function (action, pad, button) {
+        if (typeof(button) === 'undefined') {
+            throw new Error('Invalid button')
+        }
+        // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
+        if (this._actions[action]) {
+            this._actions[action].push({
+                type: pc.input.ACTION_GAMEPAD,
+                button: button,
+                pad: pad
+            })
+        } else {
+            this._actions[action] = [{
+                type: pc.input.ACTION_GAMEPAD,
+                button: button,
+                pad: pad
+            }]
+        }
+    };
+
+    /**
     * @function
     * @name pc.input.Controller#registerAxis
     * @description 
-    * @param {Object} options
+    * @param {Object} [options]
+    * @param {Object} [options.pad] The index of the game pad to register for (use pc.input.PAD_1, etc)
     */
     Controller.prototype.registerAxis = function (options) {
         var name = options['name'];
+        if (!this._axes[name]) {
+            this._axes[name] = [];
+        }
+        var i = this._axes[name].push(name);
 
-        var bind = function (controller, source, value) {
+        // 
+        options = options || {};
+        options.pad = options.pad || pc.input.PAD_1;
+
+        var bind = function (controller, source, value, key) {
             switch (source) {
-                case 'mouseright':
-                case 'mouseleft':
+                case 'mousex':
                     controller._mouse.bind('mousemove', function (e) {
-                        controller._axes[name] = e.movementX;
+                        controller._axesValues[name][i] = e.movementX;
                     });
                     break;
-                case 'mouseup':
-                case 'mousedown':
+                case 'mousey':
                     controller._mouse.bind('mousemove', function (e) {
-                        controller._axes[name] = -e.movementY;
+                        controller._axesValues[name][i] = -e.movementY;
                     });
                     break;
-                case 'left':
-                    controller._keyboard.bind('keydown', function (e) {
-                        if (e.event.keyCode === pc.input.KEY_LEFT) {
-                            controller._axes[name] = value;
-                        }
+                case 'key':
+                    controller._axes[name].push(function () {
+                        return controller._keyboard.isPressed(key) ? value : 0;
                     });
                     break;
-                case 'right':
-                    controller._keyboard.bind('keydown', function (e) {
-                        if (e.event.keyCode === pc.input.KEY_RIGHT) {
-                            controller._axes[name] = value;
-                        }
+                // case 'left':
+                //     controller._keyboard.bind('keydown', function (e) {
+                //         if (e.event.keyCode === pc.input.KEY_LEFT) {
+                //             controller._axesValues[name][i] = value;
+                //         }
+                //     });
+                //     break;
+                // case 'right':
+                //     controller._keyboard.bind('keydown', function (e) {
+                //         if (e.event.keyCode === pc.input.KEY_RIGHT) {
+                //             controller._axesValues[name][i] = value;
+                //         }
+                //     });
+                //     break;
+                // case 'up':
+                //     controller._keyboard.bind('keydown', function (e) {
+                //         if (e.event.keyCode === pc.input.KEY_UP) {
+                //             controller._axesValues[name][i] = value;
+                //         }
+                //     });
+                //     break;
+                // case 'down':
+                //     controller._keyboard.bind('keydown', function (e) {
+                //         if (e.event.keyCode === pc.input.KEY_DOWN) {
+                //             controller._axesValues[name][i] = value;
+                //         }
+                //     });
+                //     break;
+                case 'padrx':
+                    controller._axes[name].push(function () {
+                        return controller._gamepads.getAxis(options.pad, pc.input.PAD_R_STICK_X);
                     });
                     break;
-                case 'up':
-                    controller._keyboard.bind('keydown', function (e) {
-                        if (e.event.keyCode === pc.input.KEY_UP) {
-                            controller._axes[name] = value;
-                        }
+                case 'padry':
+                    controller._axes[name].push(function () {
+                        return controller._gamepads.getAxis(options.pad, pc.input.PAD_R_STICK_Y);
                     });
                     break;
-                case 'down':
-                    controller._keyboard.bind('keydown', function (e) {
-                        if (e.event.keyCode === pc.input.KEY_DOWN) {
-                            controller._axes[name] = value;
-                        }
+                case 'padlx':
+                    controller._axes[name].push(function () {
+                        return controller._gamepads.getAxis(options.pad, pc.input.PAD_L_STICK_X);
+                    });
+                    break;
+                case 'padly':
+                    controller._axes[name].push(function () {
+                        return controller._gamepads.getAxis(options.pad, pc.input.PAD_L_STICK_Y);
                     });
                     break;
                 default:
-                    controller._keyboard.bind('keydown', function (e) {
-                        controller._axes[name] = value;
-                    });
+                    throw new Error('Unknown axis')
                     break;
             }
         };
 
-        bind(this, options.positive, 1);
-        bind(this, options.negative, -1);
+        bind(this, options.positive, 1, options.positiveKey);
+        if (options.negativeKey || options.negative !== options.positive) {
+            bind(this, options.negative, -1, options.negativeKey);
+        }
+        
     };
 
     /**
@@ -209,26 +307,39 @@ pc.extend(pc.input, function () {
      * @description Return true if the current action is enabled
      * @param {String} action The name of the action
      */
-    Controller.prototype.isPressed = function (action) {
-        if(!this._actions[action]) {
+    Controller.prototype.isPressed = function (actionName) {
+        if(!this._actions[actionName]) {
             return false;
         }
         
-        var key;
+        var action;
         var index = 0;
-        var length = this._actions[action].length;
+        var length = this._actions[actionName].length;
         
         for(index = 0; index < length; ++index) {
-            key = this._actions[action][index];
-            if(key > 0) {
-                if(this._keyboard && this._keyboard.isPressed(key)) {
-                    return true;
-                }                
-            } else {
-                if(this._mouse && this._mouse.isPressed(-key)) {
-                    return true;
-                }
-            }
+            action = this._actions[actionName][index];
+            switch(action.type) {
+                case pc.input.ACTION_KEYBOARD:
+                    if(this._keyboard) {
+                        var i, len = action.keys.length;
+                        for (i = 0; i < len; i++) {
+                            if (this._keyboard.isPressed(action.keys[i])) {
+                                return true;
+                            }    
+                        }
+                    } 
+                    break;
+                case pc.input.ACTION_MOUSE:
+                    if(this._mouse && this._mouse.isPressed(action.button)) {
+                        return true;
+                    }
+                    break;
+                case pc.input.ACTION_GAMEPAD:
+                    if(this._gamepads && this._gamepads.isPressed(action.pad, action.button)) {
+                        return true;
+                    }
+                    break;                
+            };
         }
         return false;
     };
@@ -239,32 +350,63 @@ pc.extend(pc.input, function () {
      * @description Returns true if the action was enabled this since the last update
      * @param {String} action The name of the action
      */
-    Controller.prototype.wasPressed = function (action) {
-        if(!this._actions[action]) {
+    Controller.prototype.wasPressed = function (actionName) {
+        if(!this._actions[actionName]) {
             return false;
         }
 
-        var key;
+        var actionName;
         var index = 0;
-        var length = this._actions[action].length;
+        var length = this._actions[actionName].length;
         
         for(index = 0; index < length; ++index) {
-            key = this._actions[action][index];
-            if (key > 0) {
-                if(this._keyboard && this._keyboard.wasPressed(key)) {
-                    return true;
-                }                
-            } else {
-                if(this._mouse && this._mouse.wasPressed(-key)) {
-                    return true;
-                }
-            }
+            var action = this._actions[actionName][index];
+            switch(action.type) {
+                case pc.input.ACTION_KEYBOARD:
+                    if(this._keyboard) {
+                        var i, len = action.keys.length;
+                        for (i = 0; i < len; i++) {
+                            if (this._keyboard.wasPressed(action.keys[i])) {
+                                return true;
+                            }    
+                        }
+                    }
+                    break;
+                case pc.input.ACTION_MOUSE:
+                    if(this._mouse && this._mouse.wasPressed(action.button)) {
+                        return true;
+                    }
+                    break;
+                case pc.input.ACTION_GAMEPAD:
+                    if(this._gamepads && this._gamepads.wasPressed(action.pad, action.button)) {
+                        return true;
+                    }
+                    break;                
+            };
         }
         return false;
     };
     
     Controller.prototype.getAxis = function (name) {
-        return this._axes[name] || 0;
+        var value = 0;
+
+        if (this._axes[name]) {
+            var i, len = this._axes[name].length;
+            for (i = 0;i < len; i++) {
+                if (pc.type(this._axes[name][i]) === 'function') {
+                    var v = this._axes[name][i]();
+                    if (Math.abs(v) > Math.abs(value)) {
+                        value = v;
+                    }
+                } else if (this._axesValues[name]) {
+                    if (Math.abs(this._axesValues[name][i]) > Math.abs(value)) {
+                        value = this._axesValues[name][i];
+                    }                
+                }
+            }
+        }
+
+        return value;
     };
 
     Controller.prototype._enableMouse = function () {
@@ -284,6 +426,18 @@ pc.extend(pc.input, function () {
     };
     
     return {
+        ACTION_MOUSE: 'mouse',
+        ACTION_KEYBOARD: 'keyboard',
+        ACTION_GAMEPAD: 'gamepad',
+
+        AXIS_MOUSE_X: 'mousex',
+        AXIS_MOUSE_Y: 'mousey',
+        AXIS_PAD_L_X: 'padlx',
+        AXIS_PAD_L_Y: 'padly',
+        AXIS_PAD_R_X: 'padrx',
+        AXIS_PAD_R_Y: 'padry',
+        AXIS_KEY: 'key',
+
         Controller: Controller
     };
 }());

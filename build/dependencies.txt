@@ -84,6 +84,7 @@
 ../src/input/input_input.js
 ../src/input/input_mouse.js
 ../src/input/input_keyboard.js
+../src/input/input_gamepads.js
 ../src/input/input_controller.js
 ../src/net/net_net.js
 ../src/net/net_http.js
