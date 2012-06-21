@@ -7,7 +7,7 @@ pc.extend(pc.input, function () {
         this.current = [];
         this.previous = [];
 
-        this.deadZone = 0.20;
+        this.deadZone = 0.25;
     };
 
     var MAPS = {
