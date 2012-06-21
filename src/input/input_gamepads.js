@@ -9,6 +9,45 @@ pc.extend(pc.input, function () {
     };
 
     var MAPS = {
+        DEFAULT: {
+            buttons: [
+                // Face buttons
+                'PAD_FACE_1',
+                'PAD_FACE_2',
+                'PAD_FACE_3',
+                'PAD_FACE_4',
+               
+                // Shoulder buttons
+                'PAD_L_SHOULDER_1',
+                'PAD_R_SHOULDER_1',
+                'PAD_L_SHOULDER_2',
+                'PAD_R_SHOULDER_2',
+
+                // Other buttons
+                'PAD_SELECT',
+                'PAD_START',
+                'PAD_L_STICK_BUTTON',
+                'PAD_R_STICK_BUTTON',
+
+                // D Pad
+                'PAD_UP',
+                'PAD_DOWN',
+                'PAD_LEFT',
+                'PAD_RIGHT',
+
+                 // Vendor specific button
+                'PAD_VENDOR'
+            ],
+
+            axes: [
+                // Analogue Sticks
+                'PAD_L_STICK_X',
+                'PAD_L_STICK_Y',
+                'PAD_R_STICK_X',
+                'PAD_R_STICK_Y'
+            ]
+        },
+
         PS3: {
             buttons: [
                 // X, O, TRI, SQ
@@ -54,7 +93,8 @@ pc.extend(pc.input, function () {
 
     GamePads.prototype = {
         /**
-        * @name pc.input.GamePad#update
+        * @function
+        * @name pc.input.GamePads#update
         * @description Update the current and previous state of the gamepads. This must be called every frame for wasPressed()
         * to work
         */
@@ -69,7 +109,8 @@ pc.extend(pc.input, function () {
         },
 
         /**
-        * @name pc.input.GamePad#poll
+        * @function
+        * @name pc.input.GamePads#poll
         * @description Poll for the latest data from the gamepad API.
         * @returns {Array} An array of gamepads and mappings for the model of gamepad that is attached
         * @example
@@ -101,7 +142,7 @@ pc.extend(pc.input, function () {
                 }
             }
 
-            return null;
+            return MAPS.DEFAULT;
         },
 
         /**

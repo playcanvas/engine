@@ -179,8 +179,8 @@ pc.extend(pc.input, function () {
     
     /**
      * @function
-     * @name pc.input.Controller#registerMouse
-     * @description Create or update an action which is enabled when the supplied mouse button is pressed
+     * @name pc.input.Controller#registerPadButton
+     * @description Create or update an action which is enabled when the gamepad button is pressed
      * @param {String} action The name of the action
      * @param {Number} pad The index of the pad to register (use pc.input.PAD_1, etc)
      * @param {Number} button The pad button
@@ -232,7 +232,7 @@ pc.extend(pc.input, function () {
                     break;
                 case 'mousey':
                     controller._mouse.bind('mousemove', function (e) {
-                        controller._axesValues[name][i] = -e.movementY;
+                        controller._axesValues[name][i] = e.movementY;
                     });
                     break;
                 case 'key':
@@ -240,34 +240,6 @@ pc.extend(pc.input, function () {
                         return controller._keyboard.isPressed(key) ? value : 0;
                     });
                     break;
-                // case 'left':
-                //     controller._keyboard.bind('keydown', function (e) {
-                //         if (e.event.keyCode === pc.input.KEY_LEFT) {
-                //             controller._axesValues[name][i] = value;
-                //         }
-                //     });
-                //     break;
-                // case 'right':
-                //     controller._keyboard.bind('keydown', function (e) {
-                //         if (e.event.keyCode === pc.input.KEY_RIGHT) {
-                //             controller._axesValues[name][i] = value;
-                //         }
-                //     });
-                //     break;
-                // case 'up':
-                //     controller._keyboard.bind('keydown', function (e) {
-                //         if (e.event.keyCode === pc.input.KEY_UP) {
-                //             controller._axesValues[name][i] = value;
-                //         }
-                //     });
-                //     break;
-                // case 'down':
-                //     controller._keyboard.bind('keydown', function (e) {
-                //         if (e.event.keyCode === pc.input.KEY_DOWN) {
-                //             controller._axesValues[name][i] = value;
-                //         }
-                //     });
-                //     break;
                 case 'padrx':
                     controller._axes[name].push(function () {
                         return controller._gamepads.getAxis(options.pad, pc.input.PAD_R_STICK_X);
