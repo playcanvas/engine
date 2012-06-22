@@ -247,6 +247,14 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
+            setTransform: function (entity, transform) {
+                pc.math.mat4.getTranslation(transform, position);
+                pc.math.mat4.toEulerXYZ(transform, rotation);
+
+                this.setPosition(entity, position[this.xi], position[this.yi]);
+                this.setAngle(entity, -rotation[this.ri]);
+            },
+
             /**
             * @private
             * @name pc.fw.Body2dComponentSystem#setPosition
@@ -258,6 +266,7 @@ if (typeof(Box2D) !== 'undefined') {
             setPosition: function (entity, x, y) {
                 var body = this.get(entity, 'body');
                 if (body) {
+                    body.SetAwake(true);
                     var pos = body.GetPosition();
                     pos.x = x;
                     pos.y = y;
@@ -275,6 +284,7 @@ if (typeof(Box2D) !== 'undefined') {
             setAngle: function (entity, a) {
                 var body = this.get(entity, 'body');
                 if(body) {
+                    body.SetAwake(true);
                     body.SetAngle(a);    
                 }
             },

@@ -10,6 +10,7 @@ pc.extend(pc.fw, function () {
         this.fillWindow = source['fill_window'];
         this.width = source['width'];
         this.height = source['height']
+        this.keepAspect = source['keep_aspect'];
     };
     
     return {

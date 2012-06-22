@@ -104,7 +104,7 @@ pc.extend(pc.fw, function () {
         var packsys = new pc.fw.PackComponentSystem(this.context);
         var skyboxsys = new pc.fw.SkyboxComponentSystem(this.context);
         var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
-        var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
+        //var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
@@ -366,6 +366,16 @@ pc.extend(pc.fw, function () {
             var entity = this.context.root.findByGuid(guid);
             if(entity) {
                 entity.setLocalTransform(transform);
+
+                // TODO: I don't like referencing a specific system here, but the body2d system won't pick up changes to the ltm 
+                // unless we tell it directly. (Because it is simulating from the physics world). Perhaps we could do this 
+                // by firing an event which the body system subscribes to instead. But I do we really want entities (or nodes) firing
+                // an event everytime the transform is updated, sounds slow. Perhaps we can fire an event from in here.
+                if (this.context.systems.body2d) {
+                    entity.syncHierarchy();
+                    this.context.systems.body2d.setTransform(entity, entity.getWorldTransform());
+                }
+                
             }
         },
         
