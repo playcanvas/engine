@@ -104,7 +104,7 @@ pc.extend(pc.fw, function () {
         var packsys = new pc.fw.PackComponentSystem(this.context);
         var skyboxsys = new pc.fw.SkyboxComponentSystem(this.context);
         var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
-        var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
+        //var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
