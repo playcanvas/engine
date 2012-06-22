@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.63.0
+-------
+* Added support for Keep Aspect Ratio in Application Data
+* Increased gamepad deadzone
+* [FIX] Changes made to 2D body and collision in Designer are reflected in live game
+
+-------
 v0.62.0
 -------
 * Added pc.debug.display() which displays an object in the corner of the page
