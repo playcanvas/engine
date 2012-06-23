@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.64.0
+-------
+* [FIX] Handle onclose event in pc.net.Socket()
+* [FIX] Body2dComponentSystem.setAngle and setPosition update world transform directly so that hierarchy is in sync
+
+-------
 v0.63.0
 -------
 * Added support for Keep Aspect Ratio in Application Data
