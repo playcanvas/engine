@@ -3,6 +3,28 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.64.0
+-------
+* [FIX] Handle onclose event in pc.net.Socket()
+* [FIX] Body2dComponentSystem.setAngle and setPosition update world transform directly so that hierarchy is in sync
+
+-------
+v0.63.0
+-------
+* Added support for Keep Aspect Ratio in Application Data
+* Increased gamepad deadzone
+* [FIX] Changes made to 2D body and collision in Designer are reflected in live game
+
+-------
+v0.62.0
+-------
+* Added pc.debug.display() which displays an object in the corner of the page
+* Added gamepad support with pc.input.GamePads (Chrome Canary, FF Special build at the mo)
+* [FIX] Audio that has finished playing no longer restarts when you tab away and return.
+* Added isPlaying() method to pc.audio.Channel which returns true if the channel is currently playing audio.
+* [FIX] Binary geometries with vertex colors now load. Also, binary skin cloning is fixed.
+
+-------
 v0.61.1
 -------
 * [FIX] Check that animations have been loaded before playing on AnimationComponentSystem.setModel

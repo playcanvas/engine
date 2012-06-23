@@ -88,6 +88,8 @@ if (typeof(Box2D) !== 'undefined') {
             this.bind('set_density', this.onSetFixtureValue.bind(this));
             this.bind('set_friction', this.onSetFixtureValue.bind(this));
             this.bind('set_restitution', this.onSetFixtureValue.bind(this));
+            this.bind('set_x', this.onSetShapeValue.bind(this));
+            this.bind('set_y', this.onSetShapeValue.bind(this));
         };
         CollisionRectComponentSystem = pc.inherits(CollisionRectComponentSystem, pc.fw.ComponentSystem);
         
@@ -263,6 +265,25 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
+            onSetShapeValue: function (entity, name, oldValue, newValue) {
+                var body = this.context.systems.body2d.get(entity, 'body');
+                if (body) {
+                    // We only support a single fixture at the moment
+                    var fixture = body.GetFixtureList();
+                    var shape = fixture.GetShape();
+                    
+                    var b = {
+                        x: this.get(entity, 'x'),
+                        y: this.get(entity, 'y')
+                    };
+
+                    b[name] = newValue;
+                    
+                    shape.SetAsBox(b.x, b.y);
+
+                    body.SetAwake(true);
+                }
+            }
         });
 
         return {

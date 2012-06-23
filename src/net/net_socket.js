@@ -5,6 +5,7 @@ pc.extend(pc.net, function () {
         this._ws.onopen = this._handleOpen.bind(this);
         this._ws.onerror = this._handleError.bind(this);
         this._ws.onmessage = this._handleMessage.bind(this);
+        this._ws.onclose = this._handleClose.bind(this);
     };
 
     Socket.prototype = {
@@ -51,6 +52,12 @@ pc.extend(pc.net, function () {
         _handleMessage: function (msg) {
             if (this.onmessage) {
                 this.onmessage(msg);
+            }
+        },
+
+        _handleClose: function () {
+            if (this.onclose) {
+                this.onclose();
             }
         },
 
