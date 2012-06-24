@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.67.2
+-------
+* Optimize pc.math.mat4.compose and fromEulerXYZ to use scratch matrices.
+
+-------
 v0.67.1
 -------
 * [FIX] Body2d Component rotates correctly in designer. 
