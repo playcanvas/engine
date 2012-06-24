@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.66.0
+-------
+* Added TextureCache object to cache loaded textures and use them instead of reloading
+
+-------
 v0.65.0
 -------
 * Added optional ignore value to Body2dComponentSystem.raycastFirst 
