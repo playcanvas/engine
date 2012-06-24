@@ -340,7 +340,7 @@ if (typeof(Box2D) !== 'undefined') {
 
                 rotation[this.xi] = 0;
                 rotation[this.ri] = -body.GetAngle();
-                rotation[this.zi] = 0;
+                rotation[this.yi] = 0;
 
                 var m = pc.math.mat4.create();
                 

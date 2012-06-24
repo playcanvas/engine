@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.67.0
+-------
+* [FIX] Body2d Component sometimes creates upside down transforms, because undefined value was being used as index
+
+-------
 v0.66.0
 -------
 * Added TextureCache object to cache loaded textures and use them instead of reloading
