@@ -29,6 +29,7 @@
 ../src/resources/resources_resources.js
 ../src/resources/resources_resourceloaderdisplay.js
 ../src/resources/resources_image.js
+../src/resources/resources_texturecache.js
 ../src/graphics/graphics_graphics.js
 ../src/graphics/graphics_scopeid.js
 ../src/graphics/graphics_scopespace.js
