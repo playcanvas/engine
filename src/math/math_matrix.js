@@ -43,12 +43,12 @@ pc.math.mat4 = function () {
     }
 
     var fromEulerScratchMats = [];
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 4; i++) {
         fromEulerScratchMats.push(new Float32Array(16));
     }
 
     var composeScratchMats = [];
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 4; i++) {
         composeScratchMats.push(new Float32Array(16));
     }
 

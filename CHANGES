@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.67.3
+-------
+* Fix for 0.67.2.
+
+-------
 v0.67.2
 -------
 * Optimize pc.math.mat4.compose and fromEulerXYZ to use scratch matrices.
