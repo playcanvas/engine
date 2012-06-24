@@ -3,7 +3,10 @@ pc.extend(pc.resources, function () {
 	 * @name pc.resources.ModelResourceHandler
 	 * @description Resource Handler for creating pc.scene.Model resources
 	 */
-	var ModelResourceHandler = function () {
+	var ModelResourceHandler = function (textureCache) {
+        // optional textureCache for new texture cache
+        this._textureCache = textureCache;
+
         this._jsonToPrimitiveType = {
             "points":         pc.gfx.PrimType.POINTS,
             "lines":          pc.gfx.PrimType.LINES,
@@ -208,24 +211,37 @@ pc.extend(pc.resources, function () {
         var minFilter = this._jsonToFilterMode[textureData.minfilter];
         var magFilter = this._jsonToFilterMode[textureData.magfilter];
         
-        var texture = new pc.gfx.Texture2D();
-        
         var url = options.directory + "/" + textureData.uri;
-		
-		// Make a new request for the Image resource at the same priority as the Model was requested.
-        this._loader.request([new pc.resources.ImageRequest(url)], options.priority, function (resources) {
-        	texture.setSource(resources[url]);
-        }, function (errors, resources) {
-        	Object.keys(errors).forEach(function (key) {
-        	   logERROR(errors[key]);    
-        	});
-        }, function (progress) {
-        	// no progress features
-        }, options);
         
-        texture.setName(textureData.name);
-        texture.setAddressMode(addressu, addressv);
-        texture.setFilterMode(minFilter, magFilter);
+        var texture = null;
+        if (this._textureCache) {
+            texture = this._textureCache.getTexture(url);
+        }
+
+        // Texture not in cache, we need to create a new one and load it.
+        if (!texture) {
+            texture = new pc.gfx.Texture2D();
+
+            // add to textureCache cache
+            if (this._textureCache) {
+                this._textureCache.addTexture(url, texture);
+            }
+            
+            // Make a new request for the Image resource at the same priority as the Model was requested.
+            this._loader.request([new pc.resources.ImageRequest(url)], options.priority, function (resources) {
+                texture.setSource(resources[url]);
+            }, function (errors, resources) {
+                Object.keys(errors).forEach(function (key) {
+                   logERROR(errors[key]);    
+                });
+            }, function (progress) {
+                // no progress features
+            }, options);
+            
+            texture.setName(textureData.name);
+            texture.setAddressMode(addressu, addressv);
+            texture.setFilterMode(minFilter, magFilter);
+        }
 
         return texture;
     };
@@ -759,12 +775,13 @@ pc.extend(pc.resources, function () {
         vertexBuffer.unlock();
     }
 
-    function MemoryStream(arrayBuffer, loader, options) {
+    function MemoryStream(arrayBuffer, loader, textureCache, options) {
         this.memory = arrayBuffer;
         this.dataView = (typeof DataView !== 'undefined') ? new DataView(arrayBuffer) : null;
         this.filePointer = 0;
         this.options = options;
         this.loader = loader;
+        this.textureCache = textureCache;
     };
 
     MemoryStream.prototype = {
@@ -875,23 +892,37 @@ pc.extend(pc.resources, function () {
             var filterMin = this.readU8();
             var filterMax = this.readU8();
 
-            var texture = new pc.gfx.Texture2D();
-            texture.setName(name);
-            texture.setAddressMode(addrModeU, addrModeV);
-            texture.setFilterMode(filterMin, filterMax);
-
             var url = this.options.directory + "/" + filename;
+            
+            var texture = null;
+            if (this.textureCache) {
+                texture = this.textureCache.getTexture(url);
+            }
+            
+            if (!texture) {
+                texture = new pc.gfx.Texture2D();
+                
+                // Add to textureCache cache  
+                if (this.textureCache) {
+                    this.textureCache.addTexture(url, texture);
+                }
 
-            // Make a new request for the Image resource at the same priority as the Model was requested.
-            this.loader.request([new pc.resources.ImageRequest(url)], this.options.priority, function (resources) {
-                texture.setSource(resources[url]);	
-            }, function (errors, resources) {
-                Object.keys(errors).forEach(function (key) {
-                   logERROR(errors[key]);    
-                });
-            }, function (progress) {
-                // no progress features
-            }, this.options);
+                texture.setName(name);
+                texture.setAddressMode(addrModeU, addrModeV);
+                texture.setFilterMode(filterMin, filterMax);
+
+
+                // Make a new request for the Image resource at the same priority as the Model was requested.
+                this.loader.request([new pc.resources.ImageRequest(url)], this.options.priority, function (resources) {
+                    texture.setSource(resources[url]);  
+                }, function (errors, resources) {
+                    Object.keys(errors).forEach(function (key) {
+                       logERROR(errors[key]);    
+                    });
+                }, function (progress) {
+                    // no progress features
+                }, this.options);                
+            }
 
             return texture;
         },
@@ -1300,7 +1331,7 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadModelBin = function (data, options) {
-        var stream = new MemoryStream(data, this._loader, options);
+        var stream = new MemoryStream(data, this._loader, this._textureCache, options);
         return stream.readModelChunk();
     };
     
