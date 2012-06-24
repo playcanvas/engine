@@ -203,16 +203,21 @@ if (typeof(Box2D) !== 'undefined') {
             * @description Raycast into the world (in 2D) and return the first Entity hit
             * @param {pc.math.vec3} start The ray start position
             * @param {pc.math.vec3} end The ray end position
+            * @param {pc.fw.Entity} ignore An entity to ignore
             * @returns {pc.fw.Entity} The first Entity with a 2D collision shape hit by the ray.
             */
-            raycastFirst: function (start, end) {
-                var e;
+            raycastFirst: function (start, end, ignore) {
+                var result;
                 this.raycast(function (fixture, point, normal, fraction) {
-                    e = fixture.GetUserData();
-                    return fraction;
+                    var e = fixture.GetUserData();
+                    if (e !== ignore) {
+                        result = e;
+                        return fraction;
+                    } else {
+                        return 1;
+                    }
                 }, start, end);
-
-                return e;
+                return result;
             },
 
             /**
