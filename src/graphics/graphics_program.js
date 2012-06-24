@@ -72,7 +72,7 @@ pc.extend(pc.gfx, function () {
             var locationId = gl.getAttribLocation(this.programId, info.name);
             this.attributes.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
 
-            logDEBUG("Added shader attribute: " + _typeToString[info.type] + " " + info.name);
+//            logDEBUG("Added shader attribute: " + _typeToString[info.type] + " " + info.name);
         }
 
         // Query the program for each shader state (GLSL 'uniform')
@@ -87,7 +87,7 @@ pc.extend(pc.gfx, function () {
                 this.uniforms.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
             }
 
-            logDEBUG("Added shader uniform: " + _typeToString[info.type] + " " + info.name);
+//            logDEBUG("Added shader uniform: " + _typeToString[info.type] + " " + info.name);
         }
     }
 
