@@ -3,6 +3,32 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.67.1
+-------
+* [FIX] Body2d Component rotates correctly in designer. 
+* Added setPositionAndAngle() to Body2d component 
+
+-------
+v0.67.0
+-------
+* [FIX] Body2d Component sometimes creates upside down transforms, because undefined value was being used as index
+
+-------
+v0.66.0
+-------
+* Added TextureCache object to cache loaded textures and use them instead of reloading
+
+-------
+v0.65.0
+-------
+* Added optional ignore value to Body2dComponentSystem.raycastFirst 
+
+-------
+v0.64.1
+-------
+* Optimize the number of varying used by the phong shader generator with relation to UV sets and texture transforms.
+
+-------
 v0.64.0
 -------
 * [FIX] Handle onclose event in pc.net.Socket()

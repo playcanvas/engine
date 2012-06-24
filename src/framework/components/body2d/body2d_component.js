@@ -203,16 +203,21 @@ if (typeof(Box2D) !== 'undefined') {
             * @description Raycast into the world (in 2D) and return the first Entity hit
             * @param {pc.math.vec3} start The ray start position
             * @param {pc.math.vec3} end The ray end position
+            * @param {pc.fw.Entity} ignore An entity to ignore
             * @returns {pc.fw.Entity} The first Entity with a 2D collision shape hit by the ray.
             */
-            raycastFirst: function (start, end) {
-                var e;
+            raycastFirst: function (start, end, ignore) {
+                var result;
                 this.raycast(function (fixture, point, normal, fraction) {
-                    e = fixture.GetUserData();
-                    return fraction;
+                    var e = fixture.GetUserData();
+                    if (e !== ignore) {
+                        result = e;
+                        return fraction;
+                    } else {
+                        return 1;
+                    }
                 }, start, end);
-
-                return e;
+                return result;
             },
 
             /**
@@ -251,8 +256,7 @@ if (typeof(Box2D) !== 'undefined') {
                 pc.math.mat4.getTranslation(transform, position);
                 pc.math.mat4.toEulerXYZ(transform, rotation);
 
-                this.setPosition(entity, position[this.xi], position[this.yi]);
-                this.setAngle(entity, -rotation[this.ri]);
+                this.setPositionAndAngle(entity, position[this.xi], position[this.yi], -rotation[this.ri]);
             },
 
             /**
@@ -263,7 +267,7 @@ if (typeof(Box2D) !== 'undefined') {
             * @param {Number} x The x value of the position
             * @param {Number} y The y value of the position
             */
-            setPosition: function (entity, x, y) {
+            setPosition: function (entity, x, y, update) {
                 var body = this.get(entity, 'body');
                 if (body) {
                     body.SetAwake(true);
@@ -288,6 +292,20 @@ if (typeof(Box2D) !== 'undefined') {
                 if(body) {
                     body.SetAwake(true);
                     body.SetAngle(a);
+
+                    this.updateTransform(entity, body);
+                }
+            },
+
+            setPositionAndAngle: function (entity, x, y, a) {
+                var body = this.get(entity, 'body');
+                if (body) {
+                    body.SetAwake(true);
+                    var pos = body.GetPosition();
+                    pos.x = x;
+                    pos.y = y;
+
+                    body.SetPositionAndAngle(pos, a);
 
                     this.updateTransform(entity, body);
                 }
@@ -335,7 +353,7 @@ if (typeof(Box2D) !== 'undefined') {
 
                 rotation[this.xi] = 0;
                 rotation[this.ri] = -body.GetAngle();
-                rotation[this.zi] = 0;
+                rotation[this.yi] = 0;
 
                 var m = pc.math.mat4.create();
                 
