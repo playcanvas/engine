@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.67.1
+-------
+* [FIX] Body2d Component rotates correctly in designer. 
+* Added setPositionAndAngle() to Body2d component 
+
+-------
 v0.67.0
 -------
 * [FIX] Body2d Component sometimes creates upside down transforms, because undefined value was being used as index
