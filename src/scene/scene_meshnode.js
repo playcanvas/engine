@@ -203,8 +203,11 @@ pc.extend(pc.scene, function () {
         this._style = style;
     }
 
-    MeshNode.prototype.getAabb = function () {
+    MeshNode.prototype.syncAabb = function () {
         this._aabb.setFromTransformedAabb(this._geometry._aabb, this._wtm);
+    }
+
+    MeshNode.prototype.getAabb = function () {
         return this._aabb;
     }
 
