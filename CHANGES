@@ -3,7 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
-v0.68.0
+v0.70.0
+-------
+* [FIX] CollisionRect renders again
+
+-------
+v0.69.0
 -------
 * [FIX] pc.scene.Model.clone() correctly clones textures, materials and geometry lists
 
