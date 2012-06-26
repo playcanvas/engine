@@ -378,6 +378,8 @@ pc.extend(pc.fw, function () {
                 if (this.context.systems.body2d) {
                     entity.syncHierarchy();
                     this.context.systems.body2d.setTransform(entity, entity.getWorldTransform());
+                    this.context.systems.body2d.setLinearVelocity(entity, 0, 0);
+                    this.context.systems.body2d.setAngularVelocity(entity, 0);
                 }
                 
             }
