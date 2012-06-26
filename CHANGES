@@ -5,6 +5,11 @@ PlayCanvas Runtime Changes
 -------
 v0.68.0
 -------
+* [FIX] pc.scene.Model.clone() correctly clones textures, materials and geometry lists
+
+-------
+v0.68.0
+-------
 * [FIX] updates to collisionrect and collisioncircle values in the Designer are reflect in the live game.
 * [FIX] Set velocity to 0 when updating transform of a body2d component from the Designer
 

@@ -92,9 +92,9 @@ pc.extend(pc.scene, function () {
 	Model.prototype.clone = function () {
         var clone = new pc.scene.Model();
 
-        clone._textures = this._textures.splice(0);
-        clone._materials = this._materials.splice(0);
-        clone._geometries = this._geometries.splice(0);
+        clone._textures = this._textures.slice(0);
+        clone._materials = this._materials.slice(0);
+        clone._geometries = this._geometries.slice(0);
 
         var _duplicate = function (node) {
             var newNode = node.clone();
