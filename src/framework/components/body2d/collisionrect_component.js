@@ -142,20 +142,10 @@ if (typeof(Box2D) !== 'undefined') {
                         entity = components[id].entity;
                         componentData = components[id].component;
 
-                        switch(componentData['shape']) {
-                            case pc.shape.Type.RECT:
-                                var indexBuffer = this._gfx.rectIndexBuffer;
-                                var vertexBuffer = this._gfx.rectVertexBuffer;
+                        var indexBuffer = this._gfx.rectIndexBuffer;
+                        var vertexBuffer = this._gfx.rectVertexBuffer;
 
-                                this.renderRect(entity, componentData, vertexBuffer, indexBuffer);
-                                break;
-                            case pc.shape.Type.CIRCLE:
-                                var indexBuffer = this._gfx.circleIndexBuffer;
-                                var vertexBuffer = this._gfx.circleVertexBuffer;
-
-                                this.renderCircle(entity, componentData, vertexBuffer, indexBuffer);
-                                break;
-                        }
+                        this.renderRect(entity, componentData, vertexBuffer, indexBuffer);
                     }
                 }
             },
