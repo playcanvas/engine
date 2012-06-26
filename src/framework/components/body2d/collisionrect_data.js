@@ -3,7 +3,6 @@ pc.extend(pc.fw, function () {
         this.density = 1;
         this.friction = 0.5;
         this.restitution = 0;
-        this.shape = pc.shape.Type.RECT;
         this.x = 0.5;
         this.y = 0.5;
     };
@@ -78,22 +77,4 @@ editor.link.expose({
         step: 0.1,
     },
     defaultValue: 0.5
-});
-
-editor.link.expose({
-    system: "collisionrect",
-    variable: "shape",
-    displayName: "Shape",
-    description: "The shape of the body. Note, Circle shape radius is defined by the X scale, Y,Z are ignored.",
-    type: "enumeration",
-    options: {
-        enumerations: [{
-            name: 'Rect',
-            value: pc.shape.Type.RECT
-        }, {
-            name: 'Circle',
-            value: pc.shape.Type.CIRCLE
-        }]
-    },    
-    defaultValue: pc.shape.Type.RECT
 });

@@ -205,7 +205,7 @@ if (typeof(Box2D) !== 'undefined') {
                         friction: fixture.SetFriction,
                         restitution: fixture.SetRestitution
                     };
-                    accessors[name].call(body, newValue);
+                    accessors[name].call(fixture, newValue);
                     // Update the body with changes
                     body.ResetMassData();
                 }
