@@ -41,7 +41,17 @@ pc.math.mat4 = function () {
     for (var i = 0; i < 3; i++) {
         scratchVecs.push(pc.math.vec3.create());
     }
-    
+
+    var fromEulerScratchMats = [];
+    for (var i = 0; i < 4; i++) {
+        fromEulerScratchMats.push(new Float32Array(16));
+    }
+
+    var composeScratchMats = [];
+    for (var i = 0; i < 4; i++) {
+        composeScratchMats.push(new Float32Array(16));
+    }
+
     // Public functions
     return {
 
@@ -810,11 +820,15 @@ pc.math.mat4 = function () {
             if (r === undefined) {
                 r = pc.math.mat4.create();
             }
-            
-            var xm = pc.math.mat4.makeRotate(x, [1,0,0]);
-            var ym = pc.math.mat4.makeRotate(y, [0,1,0]);
-            var zm = pc.math.mat4.makeRotate(z, [0,0,1]);
-            
+
+            var xm = fromEulerScratchMats[0];
+            var ym = fromEulerScratchMats[1];
+            var zm = fromEulerScratchMats[2];
+
+            pc.math.mat4.makeRotate(x, pc.math.vec3.xaxis, xm);
+            pc.math.mat4.makeRotate(y, pc.math.vec3.yaxis, ym);
+            pc.math.mat4.makeRotate(z, pc.math.vec3.zaxis, zm);
+
             pc.math.mat4.multiply(ym, xm, r);
             pc.math.mat4.multiply(zm, r, r);
 
@@ -955,20 +969,26 @@ pc.math.mat4 = function () {
 
             return r;
         },
-        
+
         compose: function (t, r, s, result) {
             var mat = pc.math.mat4;
             if (result === undefined) {
                 result = mat.create();
             }
-            result = mat.makeTranslate(t[0],t[1],t[2], result);
-            var rm = mat.fromEulerXYZ(r[0],r[1],r[2]);
-            var sm = mat.makeScale(s[0],s[1],s[2]);
-            
+
+            var translate = composeScratchMats[0];
+            var rotate = composeScratchMats[1];
+            var scale = composeScratchMats[2];
+            var temp = composeScratchMats[3];
+
+            mat.makeTranslate(t[0], t[1], t[2], translate);
+            mat.fromEulerXYZ(r[0], r[1], r[2], rotate);
+            mat.makeScale(s[0], s[1], s[2], scale);
+
             // multiplied in order: translate * rotate * scale 
-            mat.multiply(rm, sm, rm);
-            mat.multiply(result, rm, result);
-            
+            mat.multiply(rotate, scale, temp);
+            mat.multiply(translate, temp, result);
+
             return result;
         }
     }

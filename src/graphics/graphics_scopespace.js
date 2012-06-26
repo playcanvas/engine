@@ -16,7 +16,7 @@ pc.extend(pc.gfx, function () {
                 // Create and add to the table
                 this.variables[name] = new pc.gfx.ScopeId(name);
 
-                logDEBUG("Added ScopeId: " + name);
+//                logDEBUG("Added ScopeId: " + name);
             }
 
             // Now return the ScopeId instance

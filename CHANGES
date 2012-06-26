@@ -3,6 +3,21 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.67.4
+-------
+* [FIX] Eye space z sorting is now based on mesh AABB center rather than WTM position.
+
+-------
+v0.67.3
+-------
+* Fix for 0.67.2.
+
+-------
+v0.67.2
+-------
+* Optimize pc.math.mat4.compose and fromEulerXYZ to use scratch matrices.
+
+-------
 v0.67.1
 -------
 * [FIX] Body2d Component rotates correctly in designer. 

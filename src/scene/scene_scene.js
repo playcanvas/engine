@@ -282,50 +282,51 @@ pc.extend(pc.scene, function () {
         }
 
 //	    var frustum = camera.getFrustum();
-	    for (i = 0, numModels = this._models.length; i < numModels; i++) {
-	        model = this._models[i];
-	        meshes = model.getMeshes();
-	        for (j = 0, numMeshes = meshes.length; j < numMeshes; j++) {
-	            var visible = true;
-	            mesh = meshes[j];
+        for (i = 0, numModels = this._models.length; i < numModels; i++) {
+            model = this._models[i];
+            meshes = model.getMeshes();
+            for (j = 0, numMeshes = meshes.length; j < numMeshes; j++) {
+                var visible = true;
+                mesh = meshes[j];
+                mesh.syncAabb();
                 /*
-	            var volume = mesh.getVolume();
-	            if (volume) {
-	                if (volume instanceof pc.shape.Sphere) {
-	                    visible = (frustum.containsSphere(volume) !== 0);
-	                }
-	            }
-	            if (true) {
+                var volume = mesh.getVolume();
+                if (volume) {
+                    if (volume instanceof pc.shape.Sphere) {
+                        visible = (frustum.containsSphere(volume) !== 0);
+                    }
+                }
+                if (true) {
                 */
                     mesh._localLights = this._localLights;
-	                if (!mesh.getGeometry().hasAlpha()) {
-	                    opaqueMeshes.push(mesh);
-	                } else {
-	                    alphaMeshes.push(mesh);
+                    if (!mesh.getGeometry().hasAlpha()) {
+                        opaqueMeshes.push(mesh);
+                    } else {
+                        alphaMeshes.push(mesh);
                 /*
-	                }
+                    }
                 */
-	            }
-	        }
-	    }
+                }
+            }
+        }
 
 	    var self = this;
         var camMat = camera.getWorldTransform();
 	
 	    // Sort alpha meshes back to front
 	    var sortBackToFront = function (meshA, meshB) {
-            var wtmA = meshA._wtm;
-            var wtmB = meshB._wtm;
+            var posA = meshA.getAabb().center;
+            var posB = meshB.getAabb().center;
             var cmx = camMat[12];
             var cmy = camMat[13];
             var cmz = camMat[14];
-            var tempx = wtmA[12] - cmx;
-            var tempy = wtmA[13] - cmy;
-            var tempz = wtmA[14] - cmz;
+            var tempx = posA[0] - cmx;
+            var tempy = posA[1] - cmy;
+            var tempz = posA[2] - cmz;
             var distSqrA = tempx * tempx + tempy * tempy + tempz * tempz;
-            tempx = wtmB[12] - cmx;
-            tempy = wtmB[13] - cmy;
-            tempz = wtmB[14] - cmz;
+            tempx = posB[0] - cmx;
+            tempy = posB[1] - cmy;
+            tempz = posB[2] - cmz;
             var distSqrB = tempx * tempx + tempy * tempy + tempz * tempz;
 
             return distSqrA < distSqrB;
