@@ -10,8 +10,10 @@ pc.extend(pc.scene, function () {
                 var submeshes = geometry.getSubMeshes();
                 for (var k = 0; k < submeshes.length; k++) {
                     var submesh = submeshes[k];
-                    submesh._cachedMaterial = submesh.material;
-                    submesh.material = material;
+                    if (typeof submesh._cachedMaterial === 'undefined') {
+                        submesh._cachedMaterial = submesh.material;
+                        submesh.material = material;
+                    }
                 }
             }
         }
@@ -27,8 +29,10 @@ pc.extend(pc.scene, function () {
                 var submeshes = geometry.getSubMeshes();
                 for (var k = 0; k < submeshes.length; k++) {
                     var submesh = submeshes[k];
-                    submesh.material = submesh._cachedMaterial;
-                    delete submesh._cachedMaterial;
+                    if (typeof submesh._cachedMaterial !== 'undefined') {
+                        submesh.material = submesh._cachedMaterial;
+                        delete submesh._cachedMaterial;
+                    }
                 }
             }
         }
