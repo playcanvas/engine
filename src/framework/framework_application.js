@@ -421,8 +421,12 @@ pc.extend(pc.fw, function () {
             var entity = this.context.root.findOne("getGuid", guid);
             
             if(entity) {
-                for(type in components) {
-                    if(this.context.systems.hasOwnProperty(type)) {
+                var order = this.context.systems.getComponentSystemOrder(); 
+
+                var i, len = order.length;
+                for(i = 0; i < len; i++) {
+                    type = order[i];
+                    if(components.hasOwnProperty(type) && this.context.systems.hasOwnProperty(type)) {
                        if(!this.context.systems[type].hasComponent(entity)) {
                             this.context.systems[type].createComponent(entity);
                         }
