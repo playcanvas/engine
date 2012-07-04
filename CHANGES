@@ -3,6 +3,17 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.71.1
+-------
+* Sync hierarchy and mesh AABBs after loading and cloning models.
+
+-------
+v0.71.0
+-------
+* [FIX] Fix picking for cloned models
+* [FIX] Add new components over LiveLink in correct order.
+
+-------
 v0.70.0
 -------
 * [FIX] CollisionRect renders again
