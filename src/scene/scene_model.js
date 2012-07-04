@@ -138,6 +138,12 @@ pc.extend(pc.scene, function () {
             }
         }
 
+        clone.getGraph().syncHierarchy();
+        var meshes = clone.getMeshes();
+        for (var i = 0; i < meshes.length; i++) {
+            meshes[i].syncAabb();
+        }
+
         return clone;
     };
 
