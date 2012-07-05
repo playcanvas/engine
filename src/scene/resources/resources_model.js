@@ -530,7 +530,13 @@ pc.extend(pc.resources, function () {
 
 //            _clearGraphIds(graph);
         }
-        
+
+        model.getGraph().syncHierarchy();
+        var meshes = model.getMeshes();
+        for (i = 0; i < meshes.length; i++) {
+            meshes[i].syncAabb();
+        }
+
         return model;
     };
 
@@ -1324,6 +1330,12 @@ pc.extend(pc.resources, function () {
                         mesh._bones.push(bone);
                     }
                 }
+            }
+
+            this.model.getGraph().syncHierarchy();
+            var meshes = this.model.getMeshes();
+            for (i = 0; i < meshes.length; i++) {
+                meshes[i].syncAabb();
             }
 
             return this.model;
