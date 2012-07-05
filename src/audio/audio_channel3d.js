@@ -81,10 +81,7 @@ pc.extend(pc.audio, function () {
             setRollOffFactor: function (factor) {
                 this.panner.rolloffFactor = factor;
             }            
-        });
-
-        
-        
+        });        
     } else if (pc.audio.hasAudio()) {
         // temp vector storage
         var offset = pc.math.vec3.create();
@@ -176,6 +173,9 @@ pc.extend(pc.audio, function () {
                 this.rolloffFactor = factor;
             }    
         });        
+    } else {
+        console.warn('No support for 3D audio found');
+        Channel3d = function () {};
     }
     
     return {
