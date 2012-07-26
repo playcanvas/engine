@@ -175,6 +175,10 @@ pc.extend(pc.audio, function () {
                 return this.source.isPlaying();
             }
         };
+    } else {
+        console.warn('No support for 2D audio found');
+        Channel = function () {
+        };
     }
 
     // Add functions which don't depend on source type

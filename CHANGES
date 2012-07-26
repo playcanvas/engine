@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.71.2
+-------
+* [FIX] Check for existing cachedMaterial before setting/deleting when handling shadow maps. Duplicated materials are shared between meshes so must only be deleted once.
+* [FIX] Handle case where <audio> tag isn't supported. e.g. Headless clients
+
+-------
 v0.71.1
 -------
 * Sync hierarchy and mesh AABBs after loading and cloning models.

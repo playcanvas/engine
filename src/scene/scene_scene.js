@@ -30,9 +30,6 @@ pc.extend(pc.scene, function () {
     }
 
     function _setShadowMapMaterial(scene, material) {
-        if (!material) {
-            debugger;
-        }
         var models = scene._models;
         for (var i = 0; i < models.length; i++) {
             var model = models[i];
