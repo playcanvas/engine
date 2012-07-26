@@ -30,6 +30,9 @@ pc.extend(pc.scene, function () {
     }
 
     function _setShadowMapMaterial(scene, material) {
+        if (!material) {
+            debugger;
+        }
         var models = scene._models;
         for (var i = 0; i < models.length; i++) {
             var model = models[i];
@@ -39,8 +42,11 @@ pc.extend(pc.scene, function () {
                 var subMeshes = geometry.getSubMeshes();
                 for (var k = 0; k < subMeshes.length; k++) {
                     var subMesh = subMeshes[k];
-                    subMesh._cachedMaterial = subMesh.material;
-                    subMesh.material = material;
+
+                    if (typeof(subMesh._cachedMaterial) === 'undefined') {
+                        subMesh._cachedMaterial = subMesh.material;
+                        subMesh.material = material;
+                    }
                 }
             }
         }
@@ -56,8 +62,11 @@ pc.extend(pc.scene, function () {
                 var subMeshes = geometry.getSubMeshes();
                 for (var k = 0; k < subMeshes.length; k++) {
                     var subMesh = subMeshes[k];
-                    subMesh.material = subMesh._cachedMaterial;
-                    delete subMesh._cachedMaterial;
+
+                    if (typeof(subMesh._cachedMaterial) !== 'undefined') {
+                        subMesh.material = subMesh._cachedMaterial;
+                        delete subMesh._cachedMaterial;                        
+                    }
                 }
             }
         }
