@@ -18,6 +18,35 @@ if (typeof(Box2D) !== 'undefined') {
         var scale = pc.math.vec3.create();
 
         var pos2d = new b2Vec2();
+
+
+        var _createGfxResources = function () {
+            // Create the graphical resources required to render a camera frustum
+            var device = pc.gfx.Device.getCurrent();
+            var library = device.getProgramLibrary();
+            var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
+            var vertBufferLength = 2;
+            var indexBufferLength = 2;
+
+            var format = new pc.gfx.VertexFormat();
+            format.begin();
+            format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+            format.end();
+            var vertexBuffer = new pc.gfx.VertexBuffer(format, vertBufferLength, pc.gfx.VertexBufferUsage.DYNAMIC);
+            var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, indexBufferLength);
+            var indices = new Uint8Array(indexBuffer.lock());
+            indices.set([0,1]);
+            indexBuffer.unlock();
+
+            // Set the resources on the component
+            return {
+                program: program,
+                indexBuffer: indexBuffer,
+                vertexBuffer: vertexBuffer,
+                color: [0,0,1,1]
+            };
+        };
+
         /**
          * @private
          * @name pc.fw.Body2dComponentSystem
@@ -32,6 +61,9 @@ if (typeof(Box2D) !== 'undefined') {
             this.context = context;
             
             this.debugRender = false;
+            this._gfx = _createGfxResources();      // debug gfx resources
+            this._rayStart = pc.math.vec3.create(); // for debugging raycasts
+            this._rayEnd = pc.math.vec3.create();   // for debugging raycasts
 
             this.time = 0;
             this.step = 1/60;
@@ -194,6 +226,9 @@ if (typeof(Box2D) !== 'undefined') {
                 this.to2d(start, s);
                 this.to2d(end, e);
 
+                pc.math.vec3.copy(start, this._rayStart);
+                pc.math.vec3.copy(end, this._rayEnd);
+
                 this.b2World.RayCast(callback, s, e);
             },
 
@@ -208,14 +243,14 @@ if (typeof(Box2D) !== 'undefined') {
             */
             raycastFirst: function (start, end, ignore) {
                 var result;
-                this.raycast(function (fixture, point, normal, fraction) {
+                var fraction = 1;
+                this.raycast(function (fixture, point, normal, f) {
                     var e = fixture.GetUserData();
-                    if (e !== ignore) {
+                    if (e !== ignore && f < fraction) {
                         result = e;
-                        return fraction;
-                    } else {
-                        return 1;
+                        fraction = f;
                     }
+                    return 1;
                 }, start, end);
                 return result;
             },
@@ -382,6 +417,36 @@ if (typeof(Box2D) !== 'undefined') {
                 while (this.time > this.step) {
                     this.b2World.Step(this.step, velocityIterations, positionIterations);
                     this.time -= this.step;
+                }
+            },
+
+            render: function () {
+                if (this.debugRender) {
+                    var p1 = this._rayStart;
+                    var p2 = this._rayEnd;
+
+                    var positions = new Float32Array(this._gfx.vertexBuffer.lock());
+                    positions[0]  = p1[0];
+                    positions[1]  = p1[1];
+                    positions[2]  = p1[2];
+                    positions[3]  = p2[0];
+                    positions[4]  = p2[1];
+                    positions[5]  = p2[2];
+                    this._gfx.vertexBuffer.unlock();
+
+                    var device = pc.gfx.Device.getCurrent();
+                    device.setProgram(this._gfx.program);
+                    device.setIndexBuffer(this._gfx.indexBuffer);
+                    device.setVertexBuffer(this._gfx.vertexBuffer, 0);
+
+                    device.scope.resolve("matrix_model").setValue(pc.math.mat4.create());
+                    device.scope.resolve("constant_color").setValue(this._gfx.color);
+                    device.draw({
+                        type: pc.gfx.PrimType.LINES,
+                        base: 0,
+                        count: this._gfx.indexBuffer.getNumIndices(),
+                        indexed: true
+                    });
                 }
             },
 
