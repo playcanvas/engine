@@ -505,15 +505,19 @@ pc.gfx.programlib.phong = {
             code += "uniform float alpha_ref;\n";
         }
 
+        code += "\n"; // End of uniform declarations
+
         if (numShadowLights > 0) {
+            if (!pc.gfx.Device.getCurrent().extDepthTexture) {
+                code += "float upackRgbaDepthToFloat(const in vec4 rgba_depth)\n";
+                code += "{\n";
+                code += "    const vec4 bit_shift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);\n";
+                code += "    float depth = dot(rgba_depth, bit_shift);\n";
+                code += "    return depth;\n";
+                code += "}\n";
+            }
+
             code += "\n";
-            code += "float upackRgbaDepthToFloat(const in vec4 rgba_depth)\n";
-            code += "{\n";
-            code += "    const vec4 bit_shift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);\n";
-            code += "    float depth = dot(rgba_depth, bit_shift);\n";
-            code += "    return depth;\n";
-            code += "}\n\n";
-            
             code += "float calculateShadowFactor(const in vec4 sc, const in vec3 sp, const in sampler2D sm)\n";
             code += "{\n";
             code += "    vec3 shadowCoord = sc.xyz / sc.w;\n";
@@ -527,8 +531,12 @@ pc.gfx.programlib.phong = {
             code += "        {\n";
             code += "            for (float y = -1.25; y <= 1.25; y += 1.25)\n";
             code += "            {\n";
-            code += "                vec4 rgbaDepth = texture2D(sm, shadowCoord.xy + vec2(x * xoffset, y * yoffset));\n";
-            code += "                float depth = upackRgbaDepthToFloat(rgbaDepth);\n";
+            if (pc.gfx.Device.getCurrent().extDepthTexture) {
+                code += "                float depth = texture2D(sm, shadowCoord.xy + vec2(x * xoffset, y * yoffset)).r;\n";
+            } else {
+                code += "                vec4 rgbaDepth = texture2D(sm, shadowCoord.xy + vec2(x * xoffset, y * yoffset));\n";
+                code += "                float depth = upackRgbaDepthToFloat(rgbaDepth);\n";
+            }
             code += "                shadowAccum += (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
             code += "            }\n";
             code += "        }\n";
