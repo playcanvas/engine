@@ -228,12 +228,16 @@ pc.extend(pc.scene, function () {
         shadowTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
         shadowTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
 
+        // We don't need to clear the color buffer if we're rendering a depth map
+        var device = pc.gfx.Device.getCurrent();
+        var flags = (device.extDepthTexture) ? pc.gfx.ClearFlag.DEPTH : pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH;
+
         var shadowCam = new pc.scene.CameraNode();
         shadowCam.setRenderTarget(new pc.gfx.RenderTarget(shadowBuffer));
         shadowCam.setClearOptions({
             color: [1.0, 1.0, 1.0, 1.0],
             depth: 1.0,
-            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+            flags: flags
         });
 
         this._shadowCamera = shadowCam;

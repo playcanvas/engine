@@ -11,19 +11,25 @@ pc.extend(pc.gfx, function () {
      */
     var FrameBuffer = function (width, height, depth, isCube) {
         if ((width !== undefined) && (height !== undefined)) {
+            var device = pc.gfx.Device.getCurrent();
+            var gl = device.gl;
+
             this._width     = width  || 1;
             this._height    = height || 1;
             this._colorBuffers = [];
-            if (depth) {
+            if (depth && !device.extDepthTexture) {
                 this._depthBuffers = [];
             }
 
-            var device = pc.gfx.Device.getCurrent();
-            var gl = device.gl;
             if (isCube) {
-                this._texture = new pc.gfx.TextureCube(width, height, pc.gfx.TextureFormat.RGBA);
+                this._colorTexture = new pc.gfx.TextureCube(width, height, pc.gfx.TextureFormat.RGBA);
             } else {
-                this._texture = new pc.gfx.Texture2D(width, height, pc.gfx.TextureFormat.RGBA);
+                this._colorTexture = new pc.gfx.Texture2D(width, height, pc.gfx.TextureFormat.RGBA);
+            }
+            if (depth && device.extDepthTexture) {
+                this._depthTexture = new pc.gfx.Texture2D(width, height, pc.gfx.TextureFormat.DEPTH);
+                this._depthTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+                this._depthTexture.setFilterMode(pc.gfx.TextureFilter.NEAREST, pc.gfx.TextureFilter.NEAREST);
             }
 
             var numBuffers = isCube ? 6 : 1;
@@ -36,16 +42,24 @@ pc.extend(pc.gfx, function () {
                 // Attach the specified texture to the frame buffer
                 gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers[i]);
                 gl.framebufferTexture2D(gl.FRAMEBUFFER,
-                                        gl.COLOR_ATTACHMENT0, 
-                                        isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D, 
-                                        this._texture._textureId, 
+                                        gl.COLOR_ATTACHMENT0,
+                                        isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
+                                        this._colorTexture._textureId,
                                         0);
                 if (depth) {
-                    this._depthBuffers[i] = gl.createRenderbuffer();
-                    gl.bindRenderbuffer(gl.RENDERBUFFER, this._depthBuffers[i]);
-                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this._width, this._height);
-                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._depthBuffers[i]);
+                    if (device.extDepthTexture) {
+                        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                                gl.DEPTH_ATTACHMENT,
+                                                isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
+                                                this._depthTexture._textureId, 
+                                                0);
+                    } else {
+                        this._depthBuffers[i] = gl.createRenderbuffer();
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, this._depthBuffers[i]);
+                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this._width, this._height);
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._depthBuffers[i]);
+                    }
                 }
 
                 var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
@@ -146,7 +160,7 @@ pc.extend(pc.gfx, function () {
      * @author Will Eastcott
      */
     FrameBuffer.prototype.getTexture = function () {
-        return (this._colorBuffers) ? this._texture : null;
+        return (this._colorBuffers) ? this._colorTexture : null;
     };
 
     return {
