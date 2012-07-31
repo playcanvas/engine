@@ -183,7 +183,8 @@ pc.extend(pc.gfx, function () {
         };
 
         // Initialize extensions
-        this.extTextureFloat = null;//gl.getExtension("OES_texture_float");
+        this.extTextureFloat = gl.getExtension("OES_texture_float");
+        this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
         this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
 
         // Create the default render target

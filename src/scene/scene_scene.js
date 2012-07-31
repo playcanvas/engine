@@ -437,8 +437,14 @@ pc.extend(pc.scene, function () {
                         pc.math.mat4.copy(shadowCamWtm, shadowCam._wtm);
 
                         shadowCam.frameBegin();
+                        if (device.extDepthTexture) {
+                            device.gl.colorMask(false, false, false, false);
+                        }
                         for (k = 0; k < shadowMeshes.length; k++) {
                             shadowMeshes[k].dispatch();
+                        }
+                        if (device.extDepthTexture) {
+                            device.gl.colorMask(true, true, true, true);
                         }
                         shadowCam.frameEnd();
                     }
@@ -544,9 +550,11 @@ pc.extend(pc.scene, function () {
             scope.resolve(light + "_direction").setValue(directional._direction);
 
             if (directional.getCastShadows()) {
-                var shadowMap = directional._shadowCamera._renderTarget._frameBuffer.getTexture();
-                scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
+                var shadowMap = device.extDepthTexture ? 
+                        directional._shadowCamera._renderTarget._frameBuffer._depthTexture :
+                        directional._shadowCamera._renderTarget._frameBuffer.getTexture();
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
+                scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
                 scope.resolve(light + "_shadowParams").setValue([shadowMap.getWidth(), shadowMap.getHeight(), 0.0001]);
             }
         }
@@ -600,9 +608,11 @@ pc.extend(pc.scene, function () {
             scope.resolve(light + "_spotDirection").setValue(spot._direction);
 
             if (spot.getCastShadows()) {
-                var shadowMap = spot._shadowCamera._renderTarget._frameBuffer.getTexture();
-                scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
+                var shadowMap = device.extDepthTexture ? 
+                        spot._shadowCamera._renderTarget._frameBuffer._depthTexture :
+                        spot._shadowCamera._renderTarget._frameBuffer.getTexture();
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
+                scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
                 scope.resolve(light + "_shadowParams").setValue([shadowMap.getWidth(), shadowMap.getHeight(), 0.0001]);
             }
         }

@@ -56,19 +56,26 @@ pc.gfx.programlib.shadowmap = {
 
         code += "precision mediump float;\n\n";
 
-        code += "vec4 pack_depth(const in float depth)\n";
-        code += "{\n";
-        code += "    const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);\n";
-        code += "    const vec4 bit_mask  = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);\n";
-        code += "    vec4 res = fract(depth * bit_shift);\n";
-        code += "    res -= res.xxyz * bit_mask;\n";
-        code += "    return res;\n";
-        code += "}\n\n";
-
-        code += "void main(void)\n";
-        code += "{\n";
-        code += "    gl_FragData[0] = pack_depth(gl_FragCoord.z);\n";
-        code += "}";
+        if (pc.gfx.Device.getCurrent().extDepthTexture) {
+            code += "void main(void)\n";
+            code += "{\n";
+            code += "    gl_FragData[0] = vec4(1.0);\n";
+            code += "}";
+        } else {
+            code += "vec4 pack_depth(const in float depth)\n";
+            code += "{\n";
+            code += "    const vec4 bit_shift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);\n";
+            code += "    const vec4 bit_mask  = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);\n";
+            code += "    vec4 res = fract(depth * bit_shift);\n";
+            code += "    res -= res.xxyz * bit_mask;\n";
+            code += "    return res;\n";
+            code += "}\n\n";
+            
+            code += "void main(void)\n";
+            code += "{\n";
+            code += "    gl_FragData[0] = pack_depth(gl_FragCoord.z);\n";
+            code += "}";
+        }
 
         return code;
     }

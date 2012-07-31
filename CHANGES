@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.72.0
+-------
+* Clear old events from mouse and keyboard if they are attached to a second element
+* Allow Controller to take a options argument to pass in existing Mouse/Keyboard/Gamepad input handlers
+* Updated Closure Compiler
+
+-------
 v0.71.2
 -------
 * [FIX] Check for existing cachedMaterial before setting/deleting when handling shadow maps. Duplicated materials are shared between meshes so must only be deleted once.

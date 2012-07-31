@@ -55,6 +55,10 @@ pc.extend(pc.input, function () {
      * @param {Object} element
      */
     Mouse.prototype.attach = function (element) {
+        if (this._element) {
+            // remove previously attached element
+            this.detach();
+        }
         // Store which DOM element the mouse is handling
         this._element = element;
     

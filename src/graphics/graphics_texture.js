@@ -19,7 +19,9 @@ pc.gfx.TextureFormat = {
     /** 32-bit RGBA format. */
     RGBA: 1,
     /** 8-bit luminance (greyscale) format. */
-    LUMINANCE: 2
+    LUMINANCE: 2,
+    /** 32-bit depth value */
+    DEPTH: 3
 };
 
 /**
@@ -375,26 +377,28 @@ pc.extend(pc.gfx, function () {
          */
         upload: function () {
             var gl = pc.gfx.Device.getCurrent().gl;
-            var _formatLookup = [gl.RGB, gl.RGBA, gl.LUMINANCE];
+            var _formatLookup = [gl.RGB, gl.RGBA, gl.LUMINANCE, gl.DEPTH_COMPONENT];
+            var _typeLookup = [gl.UNSIGNED_BYTE, gl.UNSIGNED_BYTE, gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT];
             var glFormat = _formatLookup[this._format];
+            var glType = _typeLookup[this._format];
 
             this.bind();
 
             if (this._source !== undefined) {
                 // Upload the image, canvas or video
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, glFormat, gl.UNSIGNED_BYTE, this._source);
+                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, glFormat, glType, this._source);
             } else if (this._levels !== undefined) {
                 // Upload the byte array
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, this._width, this._height, 0, glFormat, gl.UNSIGNED_BYTE, new Uint8Array(this._levels[0]));
+                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, this._width, this._height, 0, glFormat, glType, new Uint8Array(this._levels[0]));
             } else {
                 // Upload the byte array
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, this._width, this._height, 0, glFormat, gl.UNSIGNED_BYTE, null);
+                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, this._width, this._height, 0, glFormat, glType, null);
             }
 
-            if (this.isPowerOfTwo()) {
+            if (this.isPowerOfTwo() && (this._source || this._levels)) {
                 gl.generateMipmap(gl.TEXTURE_2D);
             }
         }
