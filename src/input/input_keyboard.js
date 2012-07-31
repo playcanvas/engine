@@ -63,6 +63,10 @@ pc.extend(pc.input, function(){
     };
     
     Keyboard.prototype.attach = function (element) {
+        if(this._element) {
+            // remove previous attached element
+            this.detach();
+        }
         this._element = element;
         this._element.addEventListener("keydown", this._keyDownHandler, false);
         this._element.addEventListener("keypress", this._keyPressHandler, false);

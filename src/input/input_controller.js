@@ -16,11 +16,16 @@ pc.extend(pc.input, function () {
      * </code>
      * @constructor Create a new instance of a Controller
      * @param {DOMElement} [element] DOMElement to attach Controller to
+     * @param {Object} [options] Optional arguments
+     * @param {pc.input.Keyboard} [options.keyboard] A Keyboard object to use.
+     * @param {pc.input.Mouse} [options.mouse] A Mouse object to use.
+     * @param {pc.input.Gamepads} [options.gamepads] A Gamepads object to use.
      */
-    var Controller = function (element) {
-        this._keyboard = null;
-        this._mouse = null;
-        this._gamepads = null;
+    var Controller = function (element, options) {
+        options = options || {};
+        this._keyboard = options.keyboard || null;
+        this._mouse = options.mouse || null;
+        this._gamepads = options.gamepads || null;
         
         this._element = null;
 
@@ -41,6 +46,13 @@ pc.extend(pc.input, function () {
      */
     Controller.prototype.attach = function (element) {
         this._element = element;
+        if (this._keyboard) {
+            this._keyboard.attach(element);
+        }
+
+        if (this._mouse) {
+            this._mouse.attach(element);
+        }
     }
     
     /**
