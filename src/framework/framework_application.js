@@ -42,6 +42,8 @@ pc.extend(pc.fw, function () {
         this._inTools = false;
 
         this.canvas = canvas;
+        this.fillMode = pc.fw.FillMode.KEEP_ASPECT;
+        this.resolutionMode = pc.fw.ResolutionMode.FIXED;
 
         this._link = new pc.fw.LiveLink("application");
         this._link.addDestinationWindow(window);
@@ -227,6 +229,45 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
+        * @name pc.fw.Application#setCanvasFillMode()
+        * @description Change the way the canvas fills the window and resizes when the window changes
+        * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
+        * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
+        * In NONE mode, the canvas will always match the size provided
+        * @param {pc.fw.FillMode} mode The mode to use when setting the size of the canvas
+        * @param {Number} [width] The width of the canvas, only used in NONE mode
+        * @param {Number} [height] The height of the canvase, only used in NONE mode
+        */
+        setCanvasFillMode: function (mode, width, height) {
+            this.fillMode = mode;
+            this.resizeCanvas(width, height);
+        },
+
+        /**
+        * @function
+        * @name pc.fw.Application#setCanvasResolution()
+        * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
+        * In AUTO mode, the resolution is change to match the size of the canvas when the canvas resizes
+        * In FIXED mode, the resolution remains until another call to setCanvasResolution()
+        * @param {pc.fw.ResolutionMode} mode The mode to use when setting the resolution
+        * @param {Number} [width] The horizontal resolution, only used in FIXED mode
+        * @param {Number} [height] The vertical resolution, only used in FIXED mode
+        */ 
+        setCanvasResolution: function (mode, width, height) {
+            this.resolutionMode = mode;
+
+            // In AUTO mode the resolution is the same as the canvas size
+            if (mode === pc.fw.ResolutionMode.AUTO) {
+                width = this.canvas.style.width;
+                height = this.canvas.style.height;
+            }
+
+            this.canvas.width = width;
+            this.canvas.height = height;
+        },
+
+        /**
+        * @function
         * @name pc.fw.Application#isHidden
         * @description Returns true if the window or tab in which the application is running in is not visible to the user.
         */ 
@@ -234,28 +275,71 @@ pc.extend(pc.fw, function () {
             return document[this._hiddenAttr];
         },
 
-        printHierarchy: function (e) {
-            function print(e, depth) {
-                var indent = '';
-                var count = 0;
+        /**
+        * @private
+        * @function
+        * @name pc.fw.Application#onVisibilityChange
+        * @description Called when the visibility state of the current tab/window changes
+        */
+        onVisibilityChange: function (e) {
+            if (this.isHidden()) {
+                this.audioManager.suspend();
+            } else {
+                this.audioManager.resume();
+            }
+        },
 
-                while (count < depth) {
-                    indent += ' ';
-                    count++;
-                }
-                logDEBUG(indent + e.getGuid());
+        /**
+        * @function
+        * @name pc.fw.Application#resizeCanvas
+        * @description Resize the canvas in line with the current FillMode
+        * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
+        * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
+        * In NONE mode, the canvas will always match the size provided
+        * @param {Number} [width] The width of the canvas, only used in NONE mode
+        * @param {Number} [height] The height of the canvas, only used in NONE mode
+        * @returns {Object} A object containing the values calculated to use as width and height
+        */
+        resizeCanvas: function (width, height) {
+            var windowWidth = window.innerWidth;
+            var windowHeight = window.innerHeight;
 
-                var i, children = e.getChildren(), len = children.length;
-                for (i = 0; i < len; i++) {
-                    if(children[i] instanceof pc.fw.Entity) {
-                        print.call(this, children[i], depth + 1);
-                    }
+            if (this.fillMode === pc.fw.FillMode.KEEP_ASPECT) {
+                var r = this.canvas.width/this.canvas.height;
+                var winR = windowWidth / windowHeight;
+
+                if (r > winR) {
+                    width = windowWidth;
+                    height = width / r ;
+
+                    //var marginTop = (windowHeight - height) / 2;
+                    //this.container.style.margin = marginTop + "px auto";
+                } else {
+                    height = windowHeight;
+                    width = height * r;
+
+                    //this.container.style.margin = "auto auto";
                 }
+            } else if (this.fillMode === pc.fw.FillMode.FILL_WINDOW) {
+                width = windowWidth;
+                height = windowHeight;
+            } else {
+                // FillMode.NONE use width and height that are provided
             }
 
-            logDEBUG('---');
-            print.call(this, e, 0);
-            logDEBUG('---');
+            this.canvas.style.width = width + 'px';
+            this.canvas.style.height = height + 'px';
+
+            // In AUTO mode the resolution is changed to match the canvas size
+            if (this.resolutionMode === pc.fw.ResolutionMode.AUTO) {
+                this.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+            }
+
+            // return the final values calculated for width and height
+            return {
+                width: width,
+                height: height
+            };
         },
 
         /**
@@ -446,19 +530,20 @@ pc.extend(pc.fw, function () {
                     }
                 }
             }
-        },
-
-        onVisibilityChange: function (e) {
-            if (this.isHidden()) {
-                this.audioManager.suspend();
-            } else {
-                this.audioManager.resume();
-            }
         }
     };
 
     return {
-            Application: Application
+        FillMode: {
+            NONE: 0,
+            FILL_WINDOW: 1,
+            KEEP_ASPECT: 2
+        },
+        ResolutionMode: {
+            AUTO: 0,
+            FIXED: 1
+        },
+        Application: Application
     };
     
 } ());
