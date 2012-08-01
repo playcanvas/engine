@@ -43,7 +43,7 @@ pc.extend(pc.fw, function () {
 
         this.canvas = canvas;
         this.fillMode = pc.fw.FillMode.KEEP_ASPECT;
-        this.resolutionMode = pc.fw.ResolutionMode.AUTO;
+        this.resolutionMode = pc.fw.ResolutionMode.FIXED;
 
         this._link = new pc.fw.LiveLink("application");
         this._link.addDestinationWindow(window);
@@ -234,12 +234,12 @@ pc.extend(pc.fw, function () {
         * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
         * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
         * In NONE mode, the canvas will always match the size provided
-        * @param {pc.fw.FillMode} fillMode The mode to use when setting the size of the canvas
+        * @param {pc.fw.FillMode} mode The mode to use when setting the size of the canvas
         * @param {Number} [width] The width of the canvas, only used in NONE mode
         * @param {Number} [height] The height of the canvase, only used in NONE mode
         */
         setCanvasFillMode: function (mode, width, height) {
-            this.fillMode = fillMode;
+            this.fillMode = mode;
             this.resizeCanvas(width, height);
         },
 
@@ -253,11 +253,11 @@ pc.extend(pc.fw, function () {
         * @param {Number} [width] The horizontal resolution, only used in FIXED mode
         * @param {Number} [height] The vertical resolution, only used in FIXED mode
         */ 
-        setCanvasResolution: function (mode, width, height)
+        setCanvasResolution: function (mode, width, height) {
             this.resolutionMode = mode;
 
             // In AUTO mode the resolution is the same as the canvas size
-            if (mode === pc.fw.Resolution.AUTO) {
+            if (mode === pc.fw.ResolutionMode.AUTO) {
                 width = this.canvas.style.width;
                 height = this.canvas.style.height;
             }
@@ -289,10 +289,6 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onWindowResize: function () {
-            this.resizeCanvas(this.canvas.style.width, this.canvas.style.height);
-        },
-
         /**
         * @function
         * @name pc.fw.Application#resizeCanvas
@@ -301,37 +297,49 @@ pc.extend(pc.fw, function () {
         * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
         * In NONE mode, the canvas will always match the size provided
         * @param {Number} [width] The width of the canvas, only used in NONE mode
-        * @param {Number} [height] The height of the canvase, only used in NONE mode
+        * @param {Number} [height] The height of the canvas, only used in NONE mode
+        * @returns {Object} A object containing the values calculated to use as width and height
         */
         resizeCanvas: function (width, height) {
+            var windowWidth = window.innerWidth;
+            var windowHeight = window.innerHeight;
+
             if (this.fillMode === pc.fw.FillMode.KEEP_ASPECT) {
                 var r = this.canvas.width/this.canvas.height;
-                var winR = window.innerWidth / window.innerHeight;
+                var winR = windowWidth / windowHeight;
 
                 if (r > winR) {
-                    width = window.innerWidth;
+                    width = windowWidth;
                     height = width / r ;
 
-                    var marginTop = (window.innerHeight - height) / 2;
-                    this.container.style.margin = marginTop + "px auto";
+                    //var marginTop = (windowHeight - height) / 2;
+                    //this.container.style.margin = marginTop + "px auto";
                 } else {
-                    height = window.innerHeight;
+                    height = windowHeight;
                     width = height * r;
 
-                    this.container.style.margin = "auto auto";
+                    //this.container.style.margin = "auto auto";
                 }
             } else if (this.fillMode === pc.fw.FillMode.FILL_WINDOW) {
-                width = window.innerWidth;
-                height = window.innerHeight;
+                width = windowWidth;
+                height = windowHeight;
+            } else {
+                // FillMode.NONE use width and height that are provided
             }
 
-            this.canvas.style.width = width;
-            this.canvas.style.height = height;        
+            this.canvas.style.width = width + 'px';
+            this.canvas.style.height = height + 'px';
 
             // In AUTO mode the resolution is changed to match the canvas size
             if (this.resolutionMode === pc.fw.ResolutionMode.AUTO) {
                 this.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
             }
+
+            // return the final values calculated for width and height
+            return {
+                width: width,
+                height: height
+            };
         },
 
         /**
