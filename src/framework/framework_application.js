@@ -140,8 +140,16 @@ pc.extend(pc.fw, function () {
             this._hiddenAttr = 'webkitHidden';
             document.addEventListener('webkitvisibilitychange', this.onVisibilityChange.bind(this), false);
         }
-   };
-    
+
+        // Store application instance
+        Application._applications[this.canvas.id] = this;
+    };
+
+    Application._applications = {};
+    Application.getApplication = function (id) {
+        return Application._applications[id];
+    };
+
     Application.prototype = {
         /**
          * @function
@@ -264,6 +272,81 @@ pc.extend(pc.fw, function () {
 
             this.canvas.width = width;
             this.canvas.height = height;
+        },
+
+        /**
+        * @function
+        * @name pc.fw.Application#isFullscreen
+        * @description Returns true if the application is currently running fullscreen
+        * @returns {Boolean} True if the application is running fullscreen
+        */
+        isFullscreen: function () {
+            return !!document.fullscreenElement;
+        },
+
+        /**
+        * @function
+        * @name pc.fw.Application#enableFullscreen
+        * @description Request that the browser enters fullscreen mode. This is not available on all browsers.
+        * Note: Switching to fullscreen can only be initiated by a user action, e.g. in the event hander for a mouse or keyboard input
+        * @param {DOMElement} [element] The element to display in fullscreen, if element is not provided the application canvas is used
+        * @param {Function} [success] Function called if the request for fullscreen was successful
+        * @param {Function} [error] Function called if the request for fullscreen was unsuccessful
+        * @example
+        * var canvas = document.getElementById('application-canvas');
+        * var application = pc.fw.Application.getApplication(canvas.id);
+        * var button = document.getElementById('my-button');
+        * button.addEventListener('click', function () {
+        *     application.enableFullscreen(canvas, function () {
+        *         console.log('fullscreen');
+        *     }, function () {
+        *         console.log('not fullscreen');
+        *     });
+        * }, false);
+        */
+        enableFullscreen: function (element, success, error) {
+            element = element || this.canvas;
+                
+            // success callback
+            var s = function () {
+                success();
+                document.removeEventListener('fullscreenchange', s);
+            };
+
+            // error callback
+            var e = function () {
+                error();
+                document.removeEventListener('fullscreenerror', e);
+            };
+
+            if (success) {
+                document.addEventListener('fullscreenchange', s, false);    
+            }
+
+            if (error) {
+                document.addEventListener('fullscreenerror', e, false);
+            }
+            element.requestFullscreen();
+        },
+
+        /**
+        * @function
+        * @name pc.fw.Application#disableFullscreen
+        * @description If application is currently displaying an element as fullscreen, then stop and return to normal.
+        * @param {Function} [success] Function called when transition to normal mode is finished
+        */
+        disableFullscreen: function (success) {
+            // success callback
+            var s = function () {
+                success();
+                document.removeEventListener('fullscreenchange', s);
+            };
+
+            if (success) {
+                document.addEventListener('fullscreenchange', s, false);    
+            }
+
+            document.exitFullscreen();
         },
 
         /**
@@ -532,6 +615,57 @@ pc.extend(pc.fw, function () {
             }
         }
     };
+
+    // Shim the Fullscreen API
+    (function () {
+        // Events
+        var fullscreenchange = function () {
+            var e = document.createEvent('CustomEvent');
+            e.initCustomEvent('fullscreenchange', true, false, null);
+            document.dispatchEvent(e);
+        };
+
+        var fullscreenerror = function () {
+            var e = document.createEvent('CustomEvent');
+            e.initCustomEvent('fullscreenerror', true, false, null);
+            document.dispatchEvent(e);
+        };
+
+        document.addEventListener('webkitfullscreenchange', fullscreenchange, false);
+        document.addEventListener('mozfullscreenchange', fullscreenchange, false);
+        document.addEventListener('webkitfullscreenerror', fullscreenerror, false);
+        document.addEventListener('mozfullscreenerror', fullscreenerror, false);
+
+        if (Element.prototype.mozRequestFullScreen) {
+            // FF requires a new function for some reason
+            Element.prototype.requestFullscreen = function () {
+                this.mozRequestFullScreen();
+            };
+        } else {
+            Element.prototype.requestFullscreen = Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen || function () {};    
+        }
+        document.exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+        if (!document.fullscreenElement) {
+            Object.defineProperty(document, 'fullscreenElement', {
+                enumerable: true, 
+                configurable: false, 
+                get: function () {
+                    return document.webkitCurrentFullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+                }
+            })
+        }
+        
+        if (!document.fullscreenEnabled) {
+            Object.defineProperty(document, 'fullscreenEnabled', {
+                enumerable: true,
+                configurable: false,
+                get: function () {
+                    return document.webkitFullscreenEnabled || document.mozFullScreenEnabled;
+                }
+            })
+        }
+
+    }());
 
     return {
         FillMode: {
