@@ -56,7 +56,7 @@ def build(dst):
         cmd.append("--formatting")
         cmd.append(formatting)
     
-    # Use ECMA script 5 which supports getters and setters    
+    # Use ECMA script 5 which supports getters and setters
     cmd.append("--language_in=ECMASCRIPT5")
 
     for file in dependencies:
