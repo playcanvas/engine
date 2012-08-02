@@ -1,6 +1,16 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+-------
+v0.73.0
+-------
+* Fullscreen API support, use enableFullscreen(), disableFullscreen() on pc.fw.Application
+* PointerLock API support, use enablePointerLock(), disablePointerLock() on pc.input.Mouse
+* setCanvasFillMode() on pc.fw.Application is used to setup the way the canvas is resized
+* setCanvasResolution() on pc.fw.Application is used to set the resolution of the canvas
+* resizeCanvas() on pc.fw.Application performs the resize
+* getApplication() on pc.fw.Application is used to get the application instance
+* [FIX] body2d.raycastFirst sometimes returned the wrong entity
 
 -------
 v0.72.0
