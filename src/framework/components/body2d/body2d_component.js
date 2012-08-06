@@ -12,6 +12,7 @@ if (typeof(Box2D) !== 'undefined') {
 
         // Shared math variable to avoid excessive allocation
         var transform = pc.math.mat4.create();
+        var newWtm = pc.math.mat4.create();
 
         var position = pc.math.vec3.create();
         var rotation = pc.math.vec3.create();
@@ -390,11 +391,9 @@ if (typeof(Box2D) !== 'undefined') {
                 rotation[this.ri] = -body.GetAngle();
                 rotation[this.yi] = 0;
 
-                var m = pc.math.mat4.create();
-                
                 pc.math.mat4.getScale(wtm, scale);
-                pc.math.mat4.compose(position, rotation, scale, m);
-                setWorldTransform(entity, m);
+                pc.math.mat4.compose(position, rotation, scale, newWtm);
+                setWorldTransform(entity, newWtm);
             },
 
             update: function (dt) {
@@ -406,7 +405,7 @@ if (typeof(Box2D) !== 'undefined') {
                     if (components.hasOwnProperty(id)) {
                         var entity = components[id].entity;
                         var componentData = components[id].component;
-                        if (componentData.body) {
+                        if (componentData.body && !componentData.static) {
                             this.updateTransform(entity, componentData.body);
                         }
                     }
