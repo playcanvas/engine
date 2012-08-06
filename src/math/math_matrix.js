@@ -792,7 +792,7 @@ pc.math.mat4 = function () {
             r[1] = m[9];
             r[2] = m[10];
 
-            return pc.math.vec3.create(m[8], m[9], m[10]);
+            return r;
         },
         
         getScale: function (m, r) {

@@ -2,6 +2,12 @@
 PlayCanvas Runtime Changes 
 --------------------------
 -------
+v0.74.0
+-------
+* [FIX] pc.math.mat4.getZ() no longer creates a vec3 if one is supplied
+* Optimized Body2d so that it no longer updates the transform static bodies every frame.
+
+-------
 v0.73.0
 -------
 * Fullscreen API support, use enableFullscreen(), disableFullscreen() on pc.fw.Application
