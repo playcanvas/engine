@@ -77,11 +77,9 @@ pc.extend(pc.input, function () {
         if (pc.input.Mouse.isPointerLocked()) {
             event.movementX = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
             event.movementY = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
-            console.log(pc.string.format('locked: {0},{1}', event.movementX, event.movementY));
         } else {
             event.movementX = offset.x - mouse._offsetX;
             event.movementY = offset.y - mouse._offsetY;
-            console.log(pc.string.format('not locked: {0},{1}', event.movementX, event.movementY));
         }
 
         event.buttons = mouse._buttons;
