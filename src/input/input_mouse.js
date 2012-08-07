@@ -74,7 +74,7 @@ pc.extend(pc.input, function () {
         }
         
         // Get the movement delta in this event
-        if (event.movementX || event.webkitMovementX || event.mozMovementX) {
+        if (pc.input.Mouse.isPointerLocked()) {
             event.movementX = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
             event.movementY = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
         } else {
@@ -282,7 +282,15 @@ pc.extend(pc.input, function () {
         document.addEventListener('mozpointerlockerror', pointerlockerror, false);
 
         // PointerLockElement
-        document.pointerLockElement = document.pointerLockElement || document.webkitPointerLockElement || document.mozPointerLockElement
+        if (!document.pointerLockElement) {
+            Object.defineProperty(document, 'pointerLockElement', {
+                enumerable: true, 
+                configurable: false, 
+                get: function () {
+                    return document.webkitPointerLockElement || document.mozPointerLockElement;
+                }
+            })
+        }
 
         // requestPointerLock
         if (Element.prototype.mozRequestPointerLock) {

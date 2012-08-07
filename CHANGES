@@ -1,11 +1,18 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+
+-------
+v0.75.0
+-------
+* Scale mouse value in pc.input.Controller.getAxis() down to more closely match the gamepad values
+* [FIX] pc.input.Mouse.isPointerLocker() works correctly
+
 -------
 v0.74.0
 -------
-* [FIX] pc.math.mat4.getZ() no longer creates a vec3 if one is supplied
 * Optimized Body2d so that it no longer updates the transform static bodies every frame.
+* [FIX] pc.math.mat4.getZ() no longer creates a vec3 if one is supplied
 
 -------
 v0.73.0
