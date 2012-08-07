@@ -1,6 +1,13 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+
+-------
+v0.75.0
+-------
+* Scale mouse value in pc.input.Controller.getAxis() down to more closely match the gamepad values
+* [FIX] pc.input.Mouse.isPointerLocker() works correctly
+
 -------
 v0.74.0
 -------
