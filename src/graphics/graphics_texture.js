@@ -63,6 +63,8 @@ pc.extend(pc.gfx, function () {
     _formatSize[pc.gfx.TextureFormat.RGBA] = 4;
     _formatSize[pc.gfx.TextureFormat.LUMINANCE] = 1;
 
+    var _units = [];
+
     /**
      * @name pc.gfx.Texture
      * @class A texture is a container for texel data that can be manipulated in a fragment shader.
@@ -111,12 +113,18 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Texture#bind
-         * @description Activates the specified texture on the current texture unit.
+         * @description Activates the specified texture on the specified texture unit.
          * @author Will Eastcott
          */
-        bind: function () {
-            var gl = pc.gfx.Device.getCurrent().gl;
-            gl.bindTexture(this._target, this._textureId);
+        bind: function (textureUnit) {
+            textureUnit = (textureUnit === 'undefined') ? 0 : textureUnit;
+
+            if (_units[textureUnit] !== this) {
+                var gl = pc.gfx.Device.getCurrent().gl;
+                gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                gl.bindTexture(this._target, this._textureId);
+                _units[textureUnit] = this;
+            }
         },
 
         /**

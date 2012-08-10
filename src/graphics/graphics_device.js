@@ -726,8 +726,7 @@ pc.extend(pc.gfx, function () {
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
 
-                gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                sampler.scopeId.value.bind();
+                sampler.scopeId.value.bind(textureUnit);
                 gl.uniform1i(sampler.locationId, textureUnit++);
             }
         },
