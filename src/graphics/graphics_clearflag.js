@@ -9,7 +9,5 @@ pc.gfx.ClearFlag = {
     /** Clear the depth buffer. */
     DEPTH: 2,
     /** Clear the stencil buffer. */
-    STENCIL: 4,
-    /** Clear the stencil buffer. */
-    DEPTHSTENCIL: 8
+    STENCIL: 4
 };
