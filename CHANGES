@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.75.1
+-------
+[FIX] Body2d components were overwriting ltm with shared variable
+
+-------
 v0.75.0
 -------
 * Scale mouse value in pc.input.Controller.getAxis() down to more closely match the gamepad values
