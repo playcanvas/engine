@@ -375,7 +375,7 @@ if (typeof(Box2D) !== 'undefined') {
                         pc.math.mat4.invert(pw, transform);
                         pc.math.mat4.multiply(transform, wtm, entity.getLocalTransform());
                     } else {
-                        entity.setLocalTransform(wtm);
+                        pc.math.mat4.copy(wtm, entity.getLocalTransform());
                     }
                     pc.math.mat4.copy(wtm, entity.getWorldTransform());
                 };
