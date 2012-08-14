@@ -3,9 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.76.0
+-------
+* [FIX] Fix for pc.math.quat.toMat4()
+
+-------
 v0.75.1
 -------
-[FIX] Body2d components were overwriting ltm with shared variable
+* [FIX] Body2d components were overwriting ltm with shared variable
 
 -------
 v0.75.0
