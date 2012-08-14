@@ -9,153 +9,46 @@ pc.extend(pc.input, function () {
      * @param {Boolean} [_new] Use new mouse events (to be removed with old designer)
      */
     var Mouse = function (element, options) {
-            options = options || {};
+        options = options || {};
 
-            // Clear the mouse state
-            this._positionY    = 0;
-            this._positionX    = 0;
-            this._offsetX      = 0;
-            this._offsetY      = 0;
-            this._buttons      = [false,false,false];
-            this._lastbuttons  = [];
-            
-
-            // Setup event handlers so they are bound to the correct 'this'
-            this._upHandler = this._handleUp.bind(this);
-            this._downHandler = this._handleDown.bind(this);
-            this._moveHandler = this._handleMove.bind(this);
-            this._wheelHandler = this._handleWheel.bind(this);
-            this._handleFullscreenChange = this._handleFullscreenChange.bind(this);
-            this._handlePointerLockLost = this._handlePointerLockLost.bind(this);
-            this._contextMenuHandler = function (event) { event.preventDefault(); };                
-            
-            this._element = null;
-            if(element) {
-                this.attach(element);
-            }
+        // Clear the mouse state
+        this._positionY    = 0;
+        this._positionX    = 0;
+        this._offsetX      = 0;
+        this._offsetY      = 0;
+        this._buttons      = [false,false,false];
+        this._lastbuttons  = [];
         
-            this.allowPointerLock = options.allowPointerLock || false;
-            if (!Mouse.getPointer()) {
-                this.allowPointerLock = false;
-            }
 
-            if (this.allowPointerLock) {
-                document.addEventListener('webkitfullscreenchange', this._handleFullscreenChange, false);
-                document.addEventListener('webkitpointerlocklost', this._handlePointerLockLost, false);                    
-            }
-
-            // Add events
-            pc.extend(this, pc.events);
-        };
-    
-    /**
-     * @function
-     * @name pc.input.Mouse#attach
-     * @description Attach mouse events to a DOMElement.
-     * @param {Object} element
-     */
-    Mouse.prototype.attach = function (element) {
-        if (this._element) {
-            // remove previously attached element
-            this.detach();
-        }
-        // Store which DOM element the mouse is handling
-        this._element = element;
-    
-        this._element.addEventListener("mouseup", this._upHandler, false);
-        this._element.addEventListener("mousedown", this._downHandler, false);
-        this._element.addEventListener("mousemove", this._moveHandler, false);
-        this._element.addEventListener("mousewheel", this._wheelHandler, false); // WekKit
-        this._element.addEventListener("DOMMouseScroll", this._wheelHandler, false); // Gecko        
-    };
-    
-    /**
-     * @function
-     * @name pc.input.Mouse#detach
-     * @description Remove mouse events from the DOMElement
-     */
-    Mouse.prototype.detach = function () {
-        this._element.removeEventListener("mouseup", this._upHandler);
-        this._element.removeEventListener("mousedown", this._downHandler);
-        this._element.removeEventListener("mousemove", this._moveHandler);
-        this._element.removeEventListener("mousewheel", this._wheelHandler); // WekKit
-        this._element.removeEventListener("DOMMouseScroll", this._wheelHandler); // Gecko                
+        // Setup event handlers so they are bound to the correct 'this'
+        this._upHandler = this._handleUp.bind(this);
+        this._downHandler = this._handleDown.bind(this);
+        this._moveHandler = this._handleMove.bind(this);
+        this._wheelHandler = this._handleWheel.bind(this);
+        this._contextMenuHandler = function (event) { event.preventDefault(); };                
         
         this._element = null;
-    };
-    
-    /**
-     * @function
-     * @name pc.input.Mouse#disableContextMenu
-     * @description Disable the context menu usually activated with right-click
-     */
-    Mouse.prototype.disableContextMenu = function () {
-        this._element.addEventListener("contextmenu", this._contextMenuHandler);        
-    };
-    
-    /**
-     * @function
-     * @name pc.input.Mouse#enableContextMenu
-     * @description Enable the context menu usually activated with right-click. This option is active by default.
-     */
-    Mouse.prototype.enableContextMenu = function () {
-        this._element.removeEventListener("contextmenu", this._contextMenuHandler);    
-    };
-    
-    /**
-     * @function
-     * @name pc.input.Mouse#update
-     * @description Update method, should be called once per frame
-     * @param {Object} dt
-     */
-    Mouse.prototype.update = function (dt) {
-        // Copy current button state
-        this._lastbuttons = this._buttons.slice(0);
-    };
-    
-    /**
-     * @function
-     * @name pc.input.Mouse#isPressed
-     * @description Returns true if the mouse button is currently pressed
-     * @param {Object} button
-     */
-    Mouse.prototype.isPressed = function (button) {
-        return this._buttons[button];
-    };
-    
-    /**
-     * @function
-     * @name pc.input.Mouse#wasPressed
-     * @description Returns true if the mouse button was pressed this frame (since the last call to update).
-     * @param {Object} button
-     */
-    Mouse.prototype.wasPressed = function (button) {
-        return (this._buttons[button] && !this._lastbuttons[button]);
-    };
-
-    Mouse.isPointerLocked = function () {
-        var pointer = Mouse.getPointer();
-        if (pointer) {
-            return pointer.isLocked();    
-        } else {
-            return false;
+        if(element) {
+            this.attach(element);
         }
-        
+    
+        // Add events
+        pc.extend(this, pc.events);
     };
 
     /**
-    * @function
-    * @name pc.input.Mouse#getPointer
-    * @description Return the native PointerLock object from the navigator. This method works cross-browser.
-    * @returns {PointerLock} The PointerLock object 
+    * @function 
+    * @name pc.input.Mouse.isPointerLocked
+    * @description Return True if the pointer is currently locked
+    * @returns {Boolean} True if locked
     */
-    Mouse.getPointer = function () {
-        return navigator.pointer || navigator.webkitPointer;
+    Mouse.isPointerLocked =  function () {
+        return !!document.pointerLockElement;
     };
 
     /**
      * @function
-     * @name pc.input.createMouseEvent
+     * @name pc.input.Mouse.createMouseEvent
      * @description Extend the browser mouse event with some additional cross-browser values.
      * This identical to a DOM MouseEvent with some additional values
      * event.targetX - The X coordinate relative to the event target element
@@ -181,7 +74,7 @@ pc.extend(pc.input, function () {
         }
         
         // Get the movement delta in this event
-        if (event.movementX || event.webkitMovementX || event.mozMovementX) {
+        if (pc.input.Mouse.isPointerLocked()) {
             event.movementX = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
             event.movementY = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
         } else {
@@ -193,54 +86,242 @@ pc.extend(pc.input, function () {
         return event;
     };
 
-    Mouse.prototype._handleUp = function (event) {
-        // disable released button
-        this._buttons[event.button] = false;
-
-        // send 'mouseup' event
-        this.fire(pc.input.EVENT_MOUSE_UP, pc.input.Mouse.createMouseEvent(this, event));
-    };
-    
-    
-    Mouse.prototype._handleDown = function (event) {
-        // Store which button has affected
-        this._buttons[event.button] = true;
-
-        this.fire(pc.input.EVENT_MOUSE_DOWN, pc.input.Mouse.createMouseEvent(this, event));
-    };
-    
-    Mouse.prototype._handleMove = function (event) {
-        // Update the current position
-        this._positionX = event.clientX;
-        this._positionY = event.clientY;
+    Mouse.prototype = {
+        /**
+         * @function
+         * @name pc.input.Mouse#attach
+         * @description Attach mouse events to a DOMElement.
+         * @param {Object} element
+         */
+        attach: function (element) {
+            if (this._element) {
+                // remove previously attached element
+                this.detach();
+            }
+            // Store which DOM element the mouse is handling
+            this._element = element;
         
-        this.fire(pc.input.EVENT_MOUSE_MOVE, pc.input.Mouse.createMouseEvent(this, event));
+            this._element.addEventListener("mouseup", this._upHandler, false);
+            this._element.addEventListener("mousedown", this._downHandler, false);
+            this._element.addEventListener("mousemove", this._moveHandler, false);
+            this._element.addEventListener("mousewheel", this._wheelHandler, false); // WekKit
+            this._element.addEventListener("DOMMouseScroll", this._wheelHandler, false); // Gecko        
+        },
+        
+        /**
+         * @function
+         * @name pc.input.Mouse#detach
+         * @description Remove mouse events from the DOMElement
+         */
+        detach: function () {
+            this._element.removeEventListener("mouseup", this._upHandler);
+            this._element.removeEventListener("mousedown", this._downHandler);
+            this._element.removeEventListener("mousemove", this._moveHandler);
+            this._element.removeEventListener("mousewheel", this._wheelHandler); // WekKit
+            this._element.removeEventListener("DOMMouseScroll", this._wheelHandler); // Gecko                
+            
+            this._element = null;
+        },
+        
+        /**
+         * @function
+         * @name pc.input.Mouse#disableContextMenu
+         * @description Disable the context menu usually activated with right-click
+         */
+        disableContextMenu: function () {
+            this._element.addEventListener("contextmenu", this._contextMenuHandler);        
+        },
+        
+        /**
+         * @function
+         * @name pc.input.Mouse#enableContextMenu
+         * @description Enable the context menu usually activated with right-click. This option is active by default.
+         */
+        enableContextMenu: function () {
+            this._element.removeEventListener("contextmenu", this._contextMenuHandler);    
+        },
+        
+        /**
+        * @function 
+        * @name pc.input.Mouse#enablePointerLock(success, error)
+        * @description Request that the browser hides the mouse cursor and locks the mouse to the element. 
+        * Allowing raw access to mouse input without risking the mouse exiting the element.
+        * Notes: 
+        * - In some browsers this will only work when the browser is running in fullscreen mode. See `pc.fw.Application#enableFullscreen`
+        * - Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+        * @param {Function} [success] Function called if the request for mouse lock is successful.
+        * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
+        */
+        enablePointerLock: function (success, error) {
+            var s = function () {
+                success();
+                document.removeEventListener('pointerlockchange', s);
+            };
+            var e = function () {
+                error();
+                document.removeEventListener('pointerlockerror', e);
+            };
 
-        // Store the last offset position to calculate deltas
-        offset = pc.input.getTargetCoords(event);
-        this._offsetX = offset.x;
-        this._offsetY = offset.y;
+            if (success) {
+                document.addEventListener('pointerlockchange', s, false);
+            }
+            
+            if (error) {
+                document.addEventListener('pointerlockerror', e, false);
+            }
+
+            this._element.requestPointerLock();
+        },
+
+        /**
+        * @function
+        * @name pc.input.Mouse#disablePointerLock()
+        * @description Return control of the mouse cursor to the user
+        * @param {Function} [success] Function called when the mouse lock is disabled
+        */
+        disablePointerLock: function (success) {
+            var s = function () {
+                success();
+                document.removeEventListener('pointerlockchange', s);
+            };
+            if (success) {
+                document.addEventListener('pointerlockchange', s, false);
+            }
+            document.exitPointerLock();
+        },
+
+        /**
+         * @function
+         * @name pc.input.Mouse#update
+         * @description Update method, should be called once per frame
+         * @param {Object} dt
+         */
+        update: function (dt) {
+            // Copy current button state
+            this._lastbuttons = this._buttons.slice(0);
+        },
+        
+        /**
+         * @function
+         * @name pc.input.Mouse#isPressed
+         * @description Returns true if the mouse button is currently pressed
+         * @param {Object} button
+         */
+        isPressed: function (button) {
+            return this._buttons[button];
+        },
+        
+        /**
+         * @function
+         * @name pc.input.Mouse#wasPressed
+         * @description Returns true if the mouse button was pressed this frame (since the last call to update).
+         * @param {Object} button
+         */
+        wasPressed: function (button) {
+            return (this._buttons[button] && !this._lastbuttons[button]);
+        },
+
+        _handleUp: function (event) {
+            // disable released button
+            this._buttons[event.button] = false;
+
+            // send 'mouseup' event
+            this.fire(pc.input.EVENT_MOUSE_UP, pc.input.Mouse.createMouseEvent(this, event));
+        },
+        
+        
+        _handleDown: function (event) {
+            // Store which button has affected
+            this._buttons[event.button] = true;
+
+            this.fire(pc.input.EVENT_MOUSE_DOWN, pc.input.Mouse.createMouseEvent(this, event));
+        },
+        
+        _handleMove: function (event) {
+            // Update the current position
+            this._positionX = event.clientX;
+            this._positionY = event.clientY;
+            
+            this.fire(pc.input.EVENT_MOUSE_MOVE, pc.input.Mouse.createMouseEvent(this, event));
+
+            // Store the last offset position to calculate deltas
+            offset = pc.input.getTargetCoords(event);
+            this._offsetX = offset.x;
+            this._offsetY = offset.y;
+        },
+
+        _handleWheel: function (event) {
+            this.fire(pc.input.EVENT_MOUSE_WHEEL, pc.input.Mouse.createMouseEvent(this, event));
+        },
     };
 
-    Mouse.prototype._handleWheel = function (event) {
-        this.fire(pc.input.EVENT_MOUSE_WHEEL, pc.input.Mouse.createMouseEvent(this, event));
-    };
+    // Apply PointerLock shims
+    (function () {
+        // Old API
+        navigator.pointer = navigator.pointer || navigator.webkitPointer || navigator.mozPointer;
 
-    Mouse.prototype._handleFullscreenChange = function (event) {
-        if (this.allowPointerLock) {
-            if (document.webkitIsFullScreen) {
-                Mouse.getPointer().lock(this._element, function () {
-                    this.fire('pointerlock');
-                }.bind(this), function () {
-                    logERROR('pointerlock failed');
-                });
+        // Events
+        var pointerlockchange = function () {
+            var e = document.createEvent('CustomEvent');
+            e.initCustomEvent('pointerlockchange', true, false, null);
+            document.dispatchEvent(e);
+        };
+
+        var pointerlockerror = function () {
+            var e = document.createEvent('CustomEvent');
+            e.initCustomEvent('pointerlockerror', true, false, null);
+            document.dispatchEvent(e);
+        }
+
+        document.addEventListener('webkitpointerlockchange', pointerlockchange, false);
+        document.addEventListener('webkitpointerlocklost', pointerlockchange, false);
+        document.addEventListener('mozpointerlockchange', pointerlockchange, false);
+        document.addEventListener('mozpointerlocklost', pointerlockchange, false);
+
+        document.addEventListener('webkitpointerlockerror', pointerlockerror, false);
+        document.addEventListener('mozpointerlockerror', pointerlockerror, false);
+
+        // PointerLockElement
+        if (!document.pointerLockElement) {
+            Object.defineProperty(document, 'pointerLockElement', {
+                enumerable: true, 
+                configurable: false, 
+                get: function () {
+                    return document.webkitPointerLockElement || document.mozPointerLockElement;
+                }
+            })
+        }
+
+        // requestPointerLock
+        if (Element.prototype.mozRequestPointerLock) {
+            // FF requires a new function for some reason
+            Element.prototype.requestPointerLock = function () {
+                this.mozRequestPointerLock();
+            };
+        } else {
+            Element.prototype.requestPointerLock = Element.prototype.requestPointerLock || Element.prototype.webkitRequestPointerLock || Element.prototype.mozRequestPointerLock;
+        }
+
+        if (!Element.prototype.requestPointerLock && navigator.pointer) {
+            Element.prototype.requestPointerLock = function () {
+                var el = this;
+                document.pointerLockElement = el;
+                navigator.pointer.lock(el, pointerlockchange, pointerlockerror);
+            };
+        }
+
+        // exitPointerLock
+        document.exitPointerLock = document.exitPointerLock || document.webkitExitPointerLock || document.mozExitPointerLock;
+        if (!document.exitPointerLock) {
+            document.exitPointerLock = function () {
+                if (navigator.pointer) {
+                    document.pointerLockElement = null;
+                    navigator.pointer.unlock();
+                }
             }
         }
-    };
+    })();
 
-    Mouse.prototype._handlePointerLockLost = function (event) {
-        this.fire('pointerlocklost');
-    };
 
     // Public Interface
     return  {
