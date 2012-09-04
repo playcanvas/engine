@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.75.3
+-------
+* [FIX] Back out previous fix for pc.math.quat.toMat4()
+
+-------
 v0.75.2
 -------
 * [FIX] Fix for pc.math.quat.toMat4()
