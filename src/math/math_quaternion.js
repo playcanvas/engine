@@ -116,15 +116,15 @@ pc.math.quat = function () {
             var xy = q[0] * ys; //crossz
 
             r[0] = 1.0 - (yy + zz);
-            r[4] = xy - wz;
-            r[8] = xz + wy;
+            r[1] = xy - wz;
+            r[2] = xz + wy;
             
-            r[1] = xy + wz;
+            r[4] = xy + wz;
             r[5] = 1.0 - (xx + zz);
-            r[9] = yz - wx;
+            r[6] = yz - wx;
 
-            r[2] = xz - wy;
-            r[6] = yz + wx;
+            r[8] = xz - wy;
+            r[9] = yz + wx;
             r[10] = 1.0 - (xx + yy);
 
             r[12] = r[13] = r[14] = r[3] = r[7] = r[11] = 0.0;
