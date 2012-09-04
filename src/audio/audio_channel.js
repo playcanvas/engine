@@ -30,6 +30,8 @@ pc.extend(pc.audio, function () {
             this.manager.bind('resume', this.onManagerResume.bind(this));
 
             this.source = null;
+
+            this.resetTimeout = null;
         };
         
         Channel.prototype = {
@@ -42,20 +44,29 @@ pc.extend(pc.audio, function () {
                 this.source = this.manager.context.createBufferSource();
                 this.source.buffer = this.sound.buffer;
                 this.source.connect(this.manager.context.destination);
+                this.startedAt = this.manager.context.currentTime;
 
                 // Initialize volume and loop
                 this.setVolume(this.volume);
                 this.setLoop(this.loop);
 
-                //this.source.noteOn(0);
                 if (!this.paused) {
                     // First call to play(), store the startedAt time to use when restarting if paused
                     this.source.noteOn(0);
-                    this.startedAt = this.manager.context.currentTime;
                 } else {
-                    // Resume playing from when it was paused
-                    var startTime = (this.pausedAt - this.startedAt) % this.source.buffer.duration;
-                    this.source.noteGrainOn(0, startTime, this.source.buffer.duration - startTime);
+                    this.startedAt -= this.pausedAt;
+                    var remainingTime = this.source.buffer.duration - this.pausedAt;
+                    this.source.noteGrainOn(0, this.pausedAt, remainingTime);
+
+                    var channel = this;
+                    this.resetTimeout = setTimeout(function () {
+                            // The loop property may have changed since the sound was restarted so check...
+                            if (channel.getLoop()) {
+                                channel.stop();
+                                channel.play();
+                            }
+                        }, remainingTime * 1000);
+
                     this.paused = false;
                 }
             },
@@ -67,8 +78,11 @@ pc.extend(pc.audio, function () {
             */
             pause: function () {
                 if (this.source) {
+                    if (this.resetTimeout !== null) {
+                      clearTimeout(this.resetTimeout);
+                    }
                     this.paused = true;
-                    this.pausedAt = this.manager.context.currentTime;
+                    this.pausedAt = (this.manager.context.currentTime - this.startedAt) % this.source.buffer.duration;
                     this.source.noteOff(0);
                 }
             },
@@ -80,6 +94,9 @@ pc.extend(pc.audio, function () {
             */
             stop: function () {
                 if (this.source) {
+                    if (this.resetTimeout !== null) {
+                      clearTimeout(this.resetTimeout);
+                    }
                     this.source.noteOff(0);
                     this.source = null;
                 }
