@@ -520,27 +520,84 @@ pc.gfx.programlib.phong = {
             code += "\n";
             code += "float calculateShadowFactor(const in vec4 sc, const in vec3 sp, const in sampler2D sm)\n";
             code += "{\n";
+            code += "    float depth;\n";
+            code += "    float depthBias = sp.z;\n";
             code += "    vec3 shadowCoord = sc.xyz / sc.w;\n";
-            code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
+            code += "    shadowCoord.z += depthBias;\n";
+            code += "    bvec4 containedVec = bvec4(shadowCoord.x >= 0.0, shadowCoord.x <= 1.0, shadowCoord.y >= 0.0, shadowCoord.y <= 1.0);\n";
+            code += "    bool contained = all(bvec2(all(containedVec), shadowCoord.z <= 1.0));\n";
+            code += "    if (contained)\n";
             code += "    {\n";
-            code += "        float shadowAccum = 0.0;\n";
-            code += "        float xoffset = 1.0 / sp[0];\n"; // 1/shadow map width
-            code += "        float yoffset = 1.0 / sp[1];\n"; // 1/shadow map height
-            code += "        float depthBias = sp[2];\n";
-            code += "        for (float x = -1.25; x <= 1.25; x += 1.25)\n";
-            code += "        {\n";
-            code += "            for (float y = -1.25; y <= 1.25; y += 1.25)\n";
-            code += "            {\n";
-            if (pc.gfx.Device.getCurrent().extDepthTexture) {
-                code += "                float depth = texture2D(sm, shadowCoord.xy + vec2(x * xoffset, y * yoffset)).r;\n";
+            if (false) {
+                code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy));\n";
+                code += "        return (depth < shadowCoord.z) ? 0.3 : 1.0;\n";
             } else {
-                code += "                vec4 rgbaDepth = texture2D(sm, shadowCoord.xy + vec2(x * xoffset, y * yoffset));\n";
-                code += "                float depth = upackRgbaDepthToFloat(rgbaDepth);\n";
+                code += "        float shadowAccum = 0.0;\n";
+                code += "        const float shadowContrib = 1.0 / 9.0;\n";
+                code += "        float xoffset = 1.0 / sp[0];\n"; // 1/shadow map width
+                code += "        float yoffset = 1.0 / sp[1];\n"; // 1/shadow map height
+                code += "        float xWest = -1.25 * xoffset;\n";
+                code += "        float ySouth = -1.25 * yoffset;\n";
+                code += "        float xEast = 1.25 * xoffset;\n";
+                code += "        float yNorth = 1.25 * yoffset;\n";
+
+                if (pc.gfx.Device.getCurrent().extDepthTexture) {
+                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xWest, ySouth)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(0.0, ySouth)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xEast, ySouth)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xWest, 0.0)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = texture2D(sm, shadowCoord.xy)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xEast, 0.0)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xWest, yNorth)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(0.0, yNorth)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xEast, yNorth)).r;\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+                } else {
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xWest, ySouth)));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(0.0, ySouth)));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xEast, ySouth)));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xWest, 0.0)));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xEast, 0.0)));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xWest, yNorth)));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(0.0, yNorth)));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+
+                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xEast, yNorth)));\n";
+                    code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
+                }
+                code += "        return shadowAccum;\n";
             }
-            code += "                shadowAccum += (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
-            code += "            }\n";
-            code += "        }\n";
-            code += "        return shadowAccum / 9.0;\n";
             code += "    }\n";
             code += "    else\n";
             code += "    {\n";
@@ -771,20 +828,7 @@ pc.gfx.programlib.phong = {
                 if ((i >= options.numDirs && i < totalDirs) || 
                     (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
                     (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                    if (false) {
-                        code += "    shadowCoord = vLight" + i + "ShadowCoord.xyz / vLight" + i + "ShadowCoord.w;\n";
-                        code += "    if (shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0)\n";
-                        code += "    {\n";
-                        code += "        float depthBias = light" + i + "_shadowParams[2];\n";
-                        code += "        vec4 rgbaDepth = texture2D(light" + i + "_shadowMap, shadowCoord.xy);\n";
-                        code += "        float depth     = upackRgbaDepthToFloat(rgbaDepth);\n";
-                        code += "        float shadowFactor = (depth + depthBias < shadowCoord.z) ? 0.3 : 1.0;\n";
-                        code += "        diffuse         = diffuse * shadowFactor;\n";
-                        code += "        specular        = specular * shadowFactor;\n";
-                        code += "    }\n";
-                    } else {
-                        code += "    shadowFactor += calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
-                    }
+                    code += "    shadowFactor += calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
                 }
             }
 
