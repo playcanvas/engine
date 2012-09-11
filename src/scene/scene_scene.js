@@ -377,10 +377,15 @@ pc.extend(pc.scene, function () {
                 
                 for (i = 0; i < self._lights.length; i++) {
                     var light = self._lights[i];
-                    if (light.getCastShadows()) {
+                    var type = light.getType();
+
+                    if (type === pc.scene.LightType.POINT) {
+                        continue;
+                    }
+
+                    if (light.getCastShadows() && light.getEnabled()) {
                         var shadowCam = light._shadowCamera;
 
-                        var type = light.getType();
                         if (type === pc.scene.LightType.DIRECTIONAL) {
                             if (!calcBbox) {
                                 _calculateSceneAabb(self);
