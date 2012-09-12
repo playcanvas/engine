@@ -1,4 +1,4 @@
-pc.scene.materialplugin.shadowmap = {
+pc.scene.materialplugin.depth = {
     isTransparent: function (material) {
         // Shadow geometry is never transparent.  It either occludes or it doesn't.
         return false;
@@ -15,7 +15,7 @@ pc.scene.materialplugin.shadowmap = {
             skin: skinned
         };
         var library = device.getProgramLibrary();
-        var program = library.getProgram("shadowmap", options);
+        var program = library.getProgram('depth', options);
         return program;
     }
 };

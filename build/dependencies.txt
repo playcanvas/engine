@@ -70,9 +70,9 @@
 ../src/scene/resources/resources_model.js
 ../src/scene/materialplugin/materialplugin_materialplugin.js
 ../src/scene/materialplugin/materialplugin_basic.js
+../src/scene/materialplugin/materialplugin_depth.js
 ../src/scene/materialplugin/materialplugin_phong.js
 ../src/scene/materialplugin/materialplugin_pick.js
-../src/scene/materialplugin/materialplugin_shadowmap.js
 ../src/anim/anim_anim.js
 ../src/anim/anim_animation.js
 ../src/anim/anim_skeleton.js
