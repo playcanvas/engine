@@ -1,6 +1,6 @@
-pc.gfx.programlib.shadowmap = {
+pc.gfx.programlib.depth = {
     generateKey: function (options) {
-        var key = "shadowmap";
+        var key = "depth";
         if (options.skin) key += "_skin";
         return key;
     },

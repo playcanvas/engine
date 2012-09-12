@@ -157,7 +157,7 @@ pc.extend(pc.scene, function () {
 
         // Shadows
         this._shadowMaterial = new pc.scene.Material();
-        this._shadowMaterial.setProgramName('shadowmap');
+        this._shadowMaterial.setProgramName('depth');
         this._shadowState = {
             blend: false
         };
