@@ -14,9 +14,9 @@ pc.gfx.programlib.basic = {
 
         // VERTEX SHADER DECLARATIONS
         if (options.skin) {
-            code += getSnippet('vs_transform_skin_decl');
+            code += getSnippet('vs_skin_position_decl');
         } else {
-            code += getSnippet('vs_transform_static_decl');
+            code += getSnippet('vs_static_position_decl');
         }
         if (options.vertexColors) {
             code += 'attribute vec4 vertex_color;\n';
@@ -32,9 +32,9 @@ pc.gfx.programlib.basic = {
 
         // Skinning is performed in world space
         if (options.skin) {
-            code += getSnippet('vs_transform_skin');
+            code += getSnippet('vs_skin_position');
         } else {
-            code += getSnippet('vs_transform_static');
+            code += getSnippet('vs_static_position');
         }
 
         if (options.vertexColors) {

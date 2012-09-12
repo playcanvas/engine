@@ -11,9 +11,9 @@ pc.gfx.programlib.pick = {
 
         // VERTEX SHADER DECLARATIONS
         if (options.skin) {
-            code += getSnippet('vs_transform_skin_decl');
+            code += getSnippet('vs_skin_position_decl');
         } else {
-            code += getSnippet('vs_transform_static_decl');
+            code += getSnippet('vs_static_position_decl');
         }
 
         // VERTEX SHADER BODY
@@ -21,9 +21,9 @@ pc.gfx.programlib.pick = {
 
         // Skinning is performed in world space
         if (options.skin) {
-            code += getSnippet('vs_transform_skin');
+            code += getSnippet('vs_skin_position');
         } else {
-            code += getSnippet('vs_transform_static');
+            code += getSnippet('vs_static_position');
         }
 
         code += getSnippet('common_main_end');

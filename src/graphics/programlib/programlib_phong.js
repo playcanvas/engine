@@ -353,8 +353,6 @@ pc.gfx.programlib.phong = {
     },
 
     generateFragmentShader: function (options) {
-        var code = "";
-
         var i;
 
         var numNormalLights = options.numDirs + options.numPnts + options.numSpts;
@@ -373,7 +371,8 @@ pc.gfx.programlib.phong = {
             (options.normalMap && !options.normalMapTransform) ||
             (options.parallaxMap && !options.parallaxMapTransform));
 
-        code += "precision mediump float;\n\n";
+        var getSnippet = pc.gfx.programlib.getSnippet;
+        var code = getSnippet('fs_precision');
 
         // FRAGMENT SHADER INPUTS: VARYINGS
         if (lighting) {
@@ -498,11 +497,10 @@ pc.gfx.programlib.phong = {
             }
         }
         if (options.fog) {
-            code += "uniform vec3 fog_color;\n";
-            code += "uniform float fog_density;\n";
+            code += getSnippet('fs_fog_decl');
         }
         if (options.alphaTest) {
-            code += "uniform float alpha_ref;\n";
+            code += getSnippet('fs_alpha_test_decl');
         }
 
         code += "\n"; // End of uniform declarations
@@ -514,10 +512,9 @@ pc.gfx.programlib.phong = {
                 code += "    const vec4 bit_shift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);\n";
                 code += "    float depth = dot(rgba_depth, bit_shift);\n";
                 code += "    return depth;\n";
-                code += "}\n";
+                code += "}\n\n";
             }
 
-            code += "\n";
             code += "float calculateShadowFactor(const in vec4 sc, const in vec3 sp, const in sampler2D sm)\n";
             code += "{\n";
             code += "    float depth;\n";
@@ -603,7 +600,7 @@ pc.gfx.programlib.phong = {
             code += "    {\n";
             code += "        return 1.0;\n";
             code += "    }\n";
-            code += "}\n";
+            code += "}\n\n";
         }
 /*
         if ((totalPnts > 0) || (totalSpts > 0)) {
@@ -626,9 +623,9 @@ pc.gfx.programlib.phong = {
             code += "}\n";
         }
 */
-        code += "\n";
-        code += "void main(void)\n";
-        code += "{\n";
+        // FRAGMENT SHADER BODY
+        code += getSnippet('common_main_begin');
+
         // We can't write to varyings to copy them to temporarys
         if (options.diffuseMap) {
             if (options.diffuseMapTransform) {
@@ -740,10 +737,7 @@ pc.gfx.programlib.phong = {
             code += "    gl_FragColor.a = material_opacity;\n";
         }
         if (options.alphaTest) {
-            code += "    if (gl_FragColor.a <= alpha_ref)\n"; 
-            code += "    {\n";
-            code += "        discard;\n";
-            code += "    }\n";
+            code += getSnippet('fs_alpha_test');
         }
 
         if (lighting) {
@@ -898,17 +892,13 @@ pc.gfx.programlib.phong = {
             code += "    gl_FragColor.rgb += material_emissive;\n";
         }
 
-        code += "    gl_FragColor = clamp(gl_FragColor, 0.0, 1.0);\n";
+        code += getSnippet('fs_clamp');
 
         if (options.fog) {
-            // Calculate fog (equivalent to glFogi(GL_FOG_MODE, GL_EXP2);
-            code += "    const float LOG2 = 1.442695;\n";
-            code += "    float z = gl_FragCoord.z / gl_FragCoord.w;\n";
-            code += "    float fogFactor = exp2(-fog_density * fog_density * z * z * LOG2);\n";
-            code += "    fogFactor = clamp(fogFactor, 0.0, 1.0);\n";
-            code += "    gl_FragColor.rgb = mix(fog_color, gl_FragColor.rgb, fogFactor);\n";
+            code += getSnippet('fs_fog');
         }
-        code += "}";
+
+        code += getSnippet('common_main_end');
 
         return code;
     }
