@@ -439,7 +439,7 @@ if (typeof(Box2D) !== 'undefined') {
                     device.setVertexBuffer(this._gfx.vertexBuffer, 0);
 
                     device.scope.resolve("matrix_model").setValue(pc.math.mat4.create());
-                    device.scope.resolve("constant_color").setValue(this._gfx.color);
+                    device.scope.resolve("uColor").setValue(this._gfx.color);
                     device.draw({
                         type: pc.gfx.PrimType.LINES,
                         base: 0,

@@ -6,63 +6,43 @@ pc.gfx.programlib.pick = {
     },
 
     generateVertexShader: function (options) {
-        var code = "";
+        var getSnippet = pc.gfx.programlib.getSnippet;
+        var code = '';
 
-        // VERTEX SHADER INPUTS: ATTRIBUTES
-        code += "attribute vec3 vertex_position;\n";
+        // VERTEX SHADER DECLARATIONS
         if (options.skin) {
-            code += "attribute vec4 vertex_boneWeights;\n";
-            code += "attribute vec4 vertex_boneIndices;\n";
-        }
-        code += "\n";
-
-        // VERTEX SHADER INPUTS: UNIFORMS
-        if (options.skin) {
-            var numBones = pc.gfx.Device.getCurrent().getBoneLimit();
-            code += "uniform mat4 matrix_pose[" + numBones + "];\n";
+            code += getSnippet('vs_transform_skin_decl');
         } else {
-            code += "uniform mat4 matrix_model;\n";
+            code += getSnippet('vs_transform_static_decl');
         }
-        code += "uniform mat4 matrix_viewProjection;\n";
-        code += "\n";
 
         // VERTEX SHADER BODY
-        code += "void main(void)\n";
-        code += "{\n";
-        // Prepare attribute values into the right formats for the vertex shader
-        code += "    vec4 position = vec4(vertex_position, 1.0);\n\n";
+        code += getSnippet('common_main_begin');
 
         // Skinning is performed in world space
         if (options.skin) {
-            // Skin the necessary vertex attributes
-            code += "    vec4 positionW;\n";
-            code += "    positionW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * position;\n";
-            code += "    positionW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * position;\n";
-            code += "    positionW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * position;\n";
-            code += "    positionW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * position;\n\n";
+            code += getSnippet('vs_transform_skin');
         } else {
-            code += "    vec4 positionW = matrix_model * position;\n\n";
+            code += getSnippet('vs_transform_static');
         }
 
-        // Transform to vertex position to screen
-        code += "    gl_Position = matrix_viewProjection * positionW;\n\n";
-        code += "}";
+        code += getSnippet('common_main_end');
         
         return code;
     },
 
     generateFragmentShader: function (options) {
-        var code = "";
+        var getSnippet = pc.gfx.programlib.getSnippet;
+        var code = getSnippet('fs_precision');
 
-        code += "precision mediump float;\n\n";
+        code += getSnippet('fs_flat_color_decl');
 
-        // FRAGMENT SHADER INPUTS: UNIFORMS
-        code += "uniform vec4 pick_color;\n\n";
+        // FRAGMENT SHADER BODY
+        code += getSnippet('common_main_begin');
 
-        code += "void main(void)\n";
-        code += "{\n";
-        code += "    gl_FragColor = pick_color;\n";
-        code += "}";
+        code += getSnippet('fs_flat_color');
+
+        code += getSnippet('common_main_end');
 
         return code;
     }

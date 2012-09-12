@@ -186,7 +186,7 @@ if (typeof(Box2D) !== 'undefined') {
                 pc.math.mat4.compose(position, rotation, scale, transform);
 
                 device.scope.resolve("matrix_model").setValue(transform);
-                device.scope.resolve("constant_color").setValue(this._gfx.color);
+                device.scope.resolve("uColor").setValue(this._gfx.color);
                 device.draw({
                     type: pc.gfx.PrimType.LINES,
                     base: 0,
@@ -230,7 +230,7 @@ if (typeof(Box2D) !== 'undefined') {
                     pc.math.mat4.compose(position, rotation, scale, transform);
 
                     device.scope.resolve("matrix_model").setValue(transform);
-                    device.scope.resolve("constant_color").setValue(this._gfx.color);
+                    device.scope.resolve("uColor").setValue(this._gfx.color);
                     device.draw({
                         type: pc.gfx.PrimType.LINES,
                         base: 0,

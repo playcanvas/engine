@@ -541,7 +541,7 @@ pc.extend(pc.scene, function () {
 
         var transform = this.getWorldTransform();
         device.scope.resolve("matrix_model").setValue(transform);
-        device.scope.resolve("constant_color").setValue([1, 1, 0, 1]);
+        device.scope.resolve("uColor").setValue([1, 1, 0, 1]);
         device.draw({
             type: pc.gfx.PrimType.LINES,
             base: 0,
