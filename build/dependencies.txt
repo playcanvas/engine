@@ -54,9 +54,9 @@
 ../src/graphics/post/post_bloom.js
 ../src/graphics/programlib/programlib_programlib.js
 ../src/graphics/programlib/programlib_basic.js
+../src/graphics/programlib/programlib_depth.js
 ../src/graphics/programlib/programlib_phong.js
 ../src/graphics/programlib/programlib_pick.js
-../src/graphics/programlib/programlib_shadowmap.js
 ../src/scene/scene_scene.js
 ../src/scene/scene_graphnode.js
 ../src/scene/scene_cameranode.js
@@ -69,9 +69,10 @@
 ../src/scene/procedural/scene_procedural.js
 ../src/scene/resources/resources_model.js
 ../src/scene/materialplugin/materialplugin_materialplugin.js
+../src/scene/materialplugin/materialplugin_basic.js
+../src/scene/materialplugin/materialplugin_depth.js
 ../src/scene/materialplugin/materialplugin_phong.js
 ../src/scene/materialplugin/materialplugin_pick.js
-../src/scene/materialplugin/materialplugin_shadowmap.js
 ../src/anim/anim_anim.js
 ../src/anim/anim_animation.js
 ../src/anim/anim_skeleton.js

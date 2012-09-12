@@ -1,6 +1,6 @@
-pc.gfx.programlib.pick = {
+pc.gfx.programlib.depth = {
     generateKey: function (options) {
-        var key = "pick";
+        var key = "depth";
         if (options.skin) key += "_skin";
         return key;
     },
@@ -35,12 +35,10 @@ pc.gfx.programlib.pick = {
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = getSnippet('fs_precision');
 
-        code += getSnippet('fs_flat_color_decl');
-
         // FRAGMENT SHADER BODY
         code += getSnippet('common_main_begin');
 
-        code += getSnippet('fs_flat_color');
+        code += getSnippet('fs_depth_write');
 
         code += getSnippet('common_main_end');
 

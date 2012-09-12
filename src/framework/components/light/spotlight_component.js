@@ -132,7 +132,7 @@ pc.extend(pc.fw, function () {
                 transform = entity.getWorldTransform();
                 device.scope.resolve("matrix_model").setValue(transform);
                 var c = light.getColor();
-                device.scope.resolve("constant_color").setValue([c[0], c[1], c[2], 1]);
+                device.scope.resolve("uColor").setValue([c[0], c[1], c[2], 1]);
                 device.draw({
                     type: pc.gfx.PrimType.LINES,
                     base: 0,

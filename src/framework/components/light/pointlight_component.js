@@ -1,13 +1,8 @@
 pc.extend(pc.fw, function () {
     var _createGfxResources = function () {
         var lightMat = new pc.scene.Material();
-        lightMat.setProgramName("phong");
-        lightMat.setParameter("material_ambient",   [0,0,0]);
-        lightMat.setParameter("material_diffuse",   [0,0,0]);
-        lightMat.setParameter("material_specular",  [0,0,0]);
-        lightMat.setParameter("material_shininess", 1);
-        lightMat.setParameter("material_emissive",  [1,1,0]);
-        lightMat.setParameter("material_opacity",   1);
+        lightMat.setProgramName("basic");
+        lightMat.setParameter("uColor",  [1, 1, 0, 1]);
 
         var sphereGeom = pc.scene.procedural.createSphere({material: lightMat});
         

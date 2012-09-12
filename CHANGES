@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.75.5
+-------
+* [FIX] Point light spheres no longer crash the Designer.
+* Shader system now uses shared GLSL snippets.
+
+-------
 v0.75.4
 -------
 * [FIX] Reduced shadow mapping artifacts.

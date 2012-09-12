@@ -163,7 +163,7 @@ pc.extend(pc.scene, function () {
                 (count & 0xff) / 255.0, 
                 1.0
             ];
-            this._pickMaterial.setParameter("pick_color", pickColor);
+            this._pickMaterial.setParameter("uColor", pickColor);
             model.dispatch();
             count++;
         }
