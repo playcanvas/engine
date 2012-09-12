@@ -54,9 +54,9 @@
 ../src/graphics/post/post_bloom.js
 ../src/graphics/programlib/programlib_programlib.js
 ../src/graphics/programlib/programlib_basic.js
+../src/graphics/programlib/programlib_depth.js
 ../src/graphics/programlib/programlib_phong.js
 ../src/graphics/programlib/programlib_pick.js
-../src/graphics/programlib/programlib_shadowmap.js
 ../src/scene/scene_scene.js
 ../src/scene/scene_graphnode.js
 ../src/scene/scene_cameranode.js
