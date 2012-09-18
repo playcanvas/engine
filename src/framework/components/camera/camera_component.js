@@ -71,9 +71,9 @@ pc.extend(pc.fw, function () {
 
             _offscreen: function (componentData, offscreen) {
                 if (pc.isDefined(offscreen)) {
+                    componentData.offscreen = offscreen;
                     var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
                     if (offscreen) {
-                        componentData.offscreen = offscreen;
                         var w = backBuffer.getWidth();
                         var h = backBuffer.getHeight();
                         var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
