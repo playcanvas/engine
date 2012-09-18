@@ -72,18 +72,6 @@ pc.extend(pc.fw, function () {
             _offscreen: function (componentData, offscreen) {
                 if (pc.isDefined(offscreen)) {
                     componentData.offscreen = offscreen;
-                    var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
-                    if (offscreen) {
-                        var w = backBuffer.getWidth();
-                        var h = backBuffer.getHeight();
-                        var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
-                        var offscreenTexture = offscreenBuffer.getTexture();
-                        offscreenTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
-                        offscreenTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
-                        componentData.camera.setRenderTarget(new pc.gfx.RenderTarget(offscreenBuffer));
-                    } else {
-                        componentData.camera.setRenderTarget(new pc.gfx.RenderTarget(backBuffer));
-                    }
                 } else {
                     return componentData.offscreen;
                 }
@@ -180,6 +168,28 @@ pc.extend(pc.fw, function () {
         var camera = this._currentNode;
         if (!camera) {
             return;
+        }
+
+        var device = pc.gfx.Device.getCurrent();
+        var w = device.canvas.width;
+        var h = device.canvas.height;
+        var target = camera.getRenderTarget();
+        var viewport = target.getViewport();
+        var texture = target.getFrameBuffer().getTexture();
+        var offscreen = this.getComponentData(this._currentEntity).offscreen;
+        if (offscreen) {
+            if (!texture || (viewport.width !== w) || (viewport.height !== h)) {
+                var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
+                var offscreenTexture = offscreenBuffer.getTexture();
+                offscreenTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
+                offscreenTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+                camera.setRenderTarget(new pc.gfx.RenderTarget(offscreenBuffer));
+            }
+        } else {
+            if (texture) {
+                var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
+                camera.setRenderTarget(new pc.gfx.RenderTarget(backBuffer));
+            }
         }
 
         var viewport = camera.getRenderTarget().getViewport();
