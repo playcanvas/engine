@@ -11,38 +11,8 @@ pc.extend(pc.fw, function () {
 
     // Private    
     var _createSkybox = function (entity, context, urls) {
-        var vertSrc = [
-            "attribute vec3 vertex_position;",
-            "uniform mat4 matrix_projection;",
-            "uniform mat4 matrix_view;",
-            "uniform mat4 matrix_model;",
-            "varying vec3 vViewDir;",
-            "",
-            "void main(void)",
-            "{",
-            "    mat4 viewMat = matrix_view;",
-            // We only want the rotational part of the view matrix
-            "    viewMat[3][0] = viewMat[3][1] = viewMat[3][2] = 0.0;",
-            "    gl_Position = matrix_projection * viewMat * matrix_model * vec4(vertex_position, 1.0);",
-            "    vViewDir = vertex_position;",
-            "}"
-        ].join("\n");
-
-        var fragSrc = [
-            "precision mediump float;",
-            "",
-            "varying vec3 vViewDir;",
-            "uniform samplerCube texture_cubeMap;",
-            "",
-            "void main(void)",
-            "{",
-            "    gl_FragColor = textureCube(texture_cubeMap, normalize(vViewDir));",
-            "}"
-        ].join("\n");
-
-        var vertexShader   = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, vertSrc);
-        var fragmentShader = new pc.gfx.Shader(pc.gfx.ShaderType.FRAGMENT, fragSrc);
-        var program        = new pc.gfx.Program(vertexShader, fragmentShader);
+        var library = pc.gfx.Device.getCurrent().getProgramLibrary();
+        var program = library.getProgram('skybox');
 
 		var texture = new pc.gfx.TextureCube();
         texture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);

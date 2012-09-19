@@ -21,29 +21,26 @@ pc.extend(pc.fw, function () {
     };
     
     BloomComponentSystem.prototype.deleteComponent = function (entity) {
-        var componentData = this._getComponentData(entity);
+        var componentData = this.getComponentData(entity);
         this.removeComponent(entity);
     };
     
-    BloomComponentSystem.prototype.render = function (fn) {
-        var id;
-        var entity;
-        var componentData;
-        var components = this._getComponents();
+    BloomComponentSystem.prototype.update = function (dt) {
+        var components = this.getComponents();
 
-        for (id in components) {
+        for (var id in components) {
             if (components.hasOwnProperty(id)) {
-                entity = components[id].entity;
-                componentData = components[id].component;
+                var entity = components[id].entity;
+                var componentData = components[id].component;
 
-                var offscreen = this.context.systems.camera.get(entity, "offscreen");
-                var camera = this.context.systems.camera.get(entity, "camera");
-                var currentEntity = this.context.systems.camera.getCurrent();
-                var currentCamera = this.context.systems.camera.get(currentEntity, "camera");
+                this.context.scene.enqueue("post", (function(data, e, c) {
+                        return function () {
+                            var offscreen = c.systems.camera.get(e, "offscreen");
+                            var camera = c.systems.camera.get(e, "camera");
+                            var currentEntity = c.systems.camera.getCurrent();
+                            var currentCamera = c.systems.camera.get(currentEntity, "camera");
 
-                if (offscreen && (currentCamera === camera)) {
-                    this.context.scene.enqueue("post", (function(data, camera) {
-                            return function () {
+                            if (offscreen && (currentCamera === camera)) {
                                 var input = camera.getRenderTarget();
                                 var output = new pc.gfx.RenderTarget(pc.gfx.FrameBuffer.getBackBuffer());
 
@@ -64,8 +61,8 @@ pc.extend(pc.fw, function () {
                                     baseSaturation: data.baseSaturation
                                 });
                             }
-                        })(componentData, currentCamera));
-                }
+                        }
+                    })(componentData, entity, this.context));
             }
         }
     };
