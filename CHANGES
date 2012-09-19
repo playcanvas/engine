@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.75.6
+-------
+* [FIX] Offscreen buffer creation deferred until rendering occurs. Fixes bloom on app start up.
+* [FIX] Bloom no longer crashes the engine when disabled from Designer.
+
+-------
 v0.75.5
 -------
 * [FIX] Point light spheres no longer crash the Designer.
