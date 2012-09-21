@@ -26,4 +26,7 @@
         exports.cancelAnimationFrame = function(id) {
             clearTimeout(id);
         };
+
+    // TEMP: compatibility
+    exports.requestAnimFrame = exports.requestAnimationFrame;
 }(typeof exports === 'undefined' ? this : exports));
