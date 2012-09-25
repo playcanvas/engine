@@ -232,7 +232,7 @@ pc.extend(pc.fw, function () {
             this.render();
 
             // Submit a request to queue up a new animation frame immediately
-            requestAnimFrame(this.tick.bind(this), this.canvas);
+            requestAnimationFrame(this.tick.bind(this), this.canvas);
         },
 
         /**
@@ -618,6 +618,11 @@ pc.extend(pc.fw, function () {
 
     // Shim the Fullscreen API
     (function () {
+        if (typeof document === 'undefined') {
+            // Not running in a browser
+            return;
+        }
+
         // Events
         var fullscreenchange = function () {
             var e = document.createEvent('CustomEvent');

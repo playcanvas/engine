@@ -106,19 +106,19 @@ def setup():
                 print(e)
                 compilation_level = "WHITESPACE_ONLY"
 
-def insert_versions(src):
-    '''.. ::insert_versions(src,dst)
-    Insert the version and revision numbers into the src file.
+def insert_versions(path):
+    '''.. ::insert_versions(path)
+    Insert the version and revision numbers into the path file.
     '''
     
     # open source, read in data and replace with version and revision numbers
-    sf = open(src, 'r')
+    sf = open(path, 'r')
     text = sf.read()
     text = text.replace("__CURRENT_SDK_VERSION__", get_version())
     text = text.replace("__MERCURIAL_REVISION__", get_revision()[0])
     
     # Open a temporary destination file
-    dst = src + '.tmp'
+    dst = path + '.tmp'
     df = open(dst, 'w')
     df.write(text)
     
@@ -126,10 +126,34 @@ def insert_versions(src):
     sf.close()
     df.close()
     
-    # replace src with dst, delete temporary file
-    shutil.copy(dst, src)
+    # replace path with dst, delete temporary file
+    shutil.copy(dst, path)
     os.remove(dst)
-    
+
+def create_package_json():
+    '''.. ::create_package_json()
+    Create the package.json file needed to create a nodejs package.
+    '''
+    base = '''{
+      "name": "playcanvas",
+      "description": "PlayCanvas Engine",
+      "version": "__VERSION__",
+      "homepage": "http://playcanvas.com",
+      "repository": "https://bitbucket.org/playcanvas/engine",
+      "author": "David Evans <dave@playcanvas.com>",
+      "main": "build/output/playcanvas-latest.js",
+      "engines": {
+        "node": ">= 0.6.12"
+      },
+      "files": [
+        "build/output/playcanvas-latest.js"
+      ]
+    }'''
+
+    with open('../package.json', 'w') as f:
+        f.write(base.replace('__VERSION__', get_version().strip()))
+
+
 if __name__ == "__main__":
     setup()
     output_path =  os.path.join(root, output)
@@ -139,4 +163,4 @@ if __name__ == "__main__":
         sys.exit(retcode)
     
     insert_versions(output_path)
-    
+    create_package_json()
