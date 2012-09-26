@@ -440,8 +440,7 @@ pc.extend(pc.fw, function () {
                     this._updateEntity(msg.content.id, msg.content.components);
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
-                    var transform = pc.math.mat4.compose(msg.content.translate, msg.content.rotate, msg.content.scale);
-                    this._updateEntityTransform(msg.content.id, transform);
+                    this._updateEntityTransform(msg.content.id, msg.content.translate, msg.content.rotate, msg.content.scale);
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME:
                     var entity = this.context.root.findOne("getGuid", msg.content.id);
@@ -533,10 +532,12 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        _updateEntityTransform: function (guid, transform) {
+        _updateEntityTransform: function (guid, translation, rotation, scale) {
             var entity = this.context.root.findByGuid(guid);
             if(entity) {
-                entity.setLocalTransform(transform);
+                entity.setLocalPosition(translation[0], translation[1], translation[2]);
+                entity.setLocalRotation(rotation[0] * pc.math.RAD_TO_DEG, rotation[1] * pc.math.RAD_TO_DEG, rotation[2] * pc.math.RAD_TO_DEG);
+                entity.setLocalScale(scale[0], scale[1], scale[2]);
 
                 // TODO: I don't like referencing a specific system here, but the body2d system won't pick up changes to the ltm 
                 // unless we tell it directly. (Because it is simulating from the physics world). Perhaps we could do this 

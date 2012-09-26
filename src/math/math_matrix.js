@@ -839,7 +839,7 @@ pc.math.mat4 = function () {
             if (r === undefined) {
                 r = pc.math.vec3.create();
             }
-            
+
             var scale = pc.math.mat4.getScale(m);
             
             var x; 
@@ -864,7 +864,7 @@ pc.math.mat4 = function () {
             r[0] = x;
             r[1] = y;
             r[2] = z;
-            
+
             return r;
         },
     

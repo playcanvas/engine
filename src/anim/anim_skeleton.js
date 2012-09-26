@@ -261,20 +261,12 @@ pc.extend(pc.anim, function () {
         for (var i = 0; i < this._interpolatedKeys.length; i++) {
             var interpKey = this._interpolatedKeys[i];
             if (interpKey._written) {
-                var ltm = interpKey.getTarget().getLocalTransform();
-                pc.math.quat.toMat4(interpKey._quat, ltm);
-                ltm[0] *= interpKey._scale[0];
-                ltm[4] *= interpKey._scale[0];
-                ltm[8] *= interpKey._scale[0];
-                ltm[1] *= interpKey._scale[1];
-                ltm[5] *= interpKey._scale[1];
-                ltm[9] *= interpKey._scale[1];
-                ltm[2] *= interpKey._scale[2];
-                ltm[6] *= interpKey._scale[2];
-                ltm[10] *= interpKey._scale[2];
-                ltm[12] = interpKey._pos[0];
-                ltm[13] = interpKey._pos[1];
-                ltm[14] = interpKey._pos[2];
+                var transform = interpKey.getTarget();
+
+                pc.math.vec3.copy(interpKey._pos, transform.position);
+                pc.math.quat.copy(interpKey._quat, transform.rotation);
+                pc.math.vec3.copy(interpKey._scale, transform.scale);
+                transform.dirtyLocal = true;
 
                 interpKey._written = false;
             }

@@ -70,6 +70,58 @@ pc.math.quat = function () {
             return q;
         },
 
+        multiply: function (q1, q2, qr) {
+            var xx = q1[3] * q2[0] +
+                     q1[0] * q2[3] +
+                     q1[1] * q2[2] -
+                     q1[2] * q2[1];
+
+            var yy = q1[3] * q2[1] +
+                     q1[1] * q2[3] +
+                     q1[2] * q2[0] -
+                     q1[0] * q2[2];
+
+            var zz = q1[3] * q2[2] +
+                     q1[2] * q2[3] +
+                     q1[0] * q2[1] -
+                     q1[1] * q2[0];
+
+            var ww = q1[3] * q2[3] -
+                     q1[0] * q2[0] -
+                     q1[1] * q2[1] -
+                     q1[2] * q2[2];
+
+            qr[0] = xx;
+            qr[1] = yy;
+            qr[2] = zz;
+            qr[3] = ww;
+        },
+
+        setFromEulers: function (q, ex, ey, ez) {
+            ex = ex * Math.PI / 180.0;
+            ey = ey * Math.PI / 180.0;
+            ez = ez * Math.PI / 180.0;
+
+            var sx = Math.sin(ex * -0.5);
+            var cx = Math.cos(ex * -0.5);
+            var sy = Math.sin(ey * -0.5);
+            var cy = Math.cos(ey * -0.5);
+            var sz = Math.sin(ez * -0.5);
+            var cz = Math.cos(ez * -0.5);
+
+            /* qx * qy */
+            var tx = sx * cy;
+            var ty = cx * sy;
+            var tz = sx * sy;
+            var tw = cx * cy;
+
+            /* qt * qz */
+            q[0] = tx * cz + ty * sz;
+            q[1] = ty * cz - tx * sz;
+            q[2] = tw * sz + tz * cz;
+            q[3] = tw * cz - tz * sz;
+        },
+
         /**
          * @function
          * @name pc.math.quat.toMat4

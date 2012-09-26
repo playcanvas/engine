@@ -2,6 +2,7 @@ pc.extend(pc.scene, function () {
 
     var identity = pc.math.mat4.create();
     var tempVec = pc.math.vec3.create();
+    var tempQuat = pc.math.quat.create();
 
     /**
      * @name pc.scene.GraphNode
@@ -10,10 +11,19 @@ pc.extend(pc.scene, function () {
      */
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
+
+        this.position = pc.math.vec3.create(0, 0, 0);
+        this.rotation = pc.math.quat.create(0, 0, 0, 1);
+        this.scale = pc.math.vec3.create(1, 1, 1);
+        this.dirtyLocal = false;
+        this.dirtyWorld = false;
+
         this._ltm = pc.math.mat4.create();
         this._wtm = pc.math.mat4.create();
+
         this._parent = null;
         this._children = [];
+
         this._labels = {};
         this._graphId = -1;
     };
@@ -224,15 +234,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getLocalPosition: function () {
-            if (arguments.length === 1) {
-                var pos = arguments[0];
-                pos[0] = this._ltm[12];
-                pos[1] = this._ltm[13];
-                pos[2] = this._ltm[14];
-                return pos;
-            } else {
-                return pc.math.vec3.create(this._ltm[12], this._ltm[13], this._ltm[14]);
-            }
+            return this.position;
         },
 
         /**
@@ -344,12 +346,37 @@ pc.extend(pc.scene, function () {
          */
         setLocalPosition: function () {
             if (arguments.length === 1) {
-                this._ltm.set(arguments[0], 12);
+                this.position[0] = arguments[0][0];
+                this.position[1] = arguments[0][1];
+                this.position[2] = arguments[0][2];
             } else {
-                this._ltm[12] = arguments[0];
-                this._ltm[13] = arguments[1];
-                this._ltm[14] = arguments[2];
+                this.position[0] = arguments[0];
+                this.position[1] = arguments[1];
+                this.position[2] = arguments[2];
             }
+            this.dirtyLocal = true;
+        },
+
+        setLocalRotation: function () {
+            if (arguments.length === 1) {
+                pc.math.quat.copy(arguments[0], this.rotation);
+            } else {
+                pc.math.quat.setFromEulers(this.rotation, arguments[0], arguments[1], arguments[2]);
+            }
+            this.dirtyLocal = true;
+        },
+
+        setLocalScale: function () {
+            if (arguments.length === 1) {
+                this.scale[0] = arguments[0][0];
+                this.scale[1] = arguments[0][1];
+                this.scale[2] = arguments[0][2];
+            } else {
+                this.scale[0] = arguments[0];
+                this.scale[1] = arguments[1];
+                this.scale[2] = arguments[2];
+            }
+            this.dirtyLocal = true;
         },
 
         /**
@@ -485,17 +512,71 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         syncHierarchy: function () {
-            function _syncHierarchy(node, parentTransform) {
-                // Now calculate this nodes world space transform
-                pc.math.mat4.multiply(parentTransform, node._ltm, node._wtm);
+            this.sync();
 
-                // Sync subhierarchy
-                for (var i = 0, len = node._children.length; i < len; i++) {
-                    _syncHierarchy(node._children[i], node._wtm);
-                }
+            // Sync subhierarchy
+            for (var i = 0, len = this._children.length; i < len; i++) {
+                this._children[i].syncHierarchy();
+            }
+        },
+
+        sync: function () {
+            if (this.dirtyLocal) {
+                var qx = this.rotation[0];
+                var qy = this.rotation[1];
+                var qz = this.rotation[2];
+                var qw = this.rotation[3];
+
+                var x2 = qx + qx;
+                var y2 = qy + qy;
+                var z2 = qz + qz;
+                var xx = qx * x2;
+                var xy = qx * y2;
+                var xz = qx * z2;
+                var yy = qy * y2;
+                var yz = qy * z2;
+                var zz = qz * z2;
+                var wx = qw * x2;
+                var wy = qw * y2;
+                var wz = qw * z2;
+
+                this._ltm[0] = (1.0 - (yy + zz)) * this.scale[0];
+                this._ltm[1] = (xy - wz) * this.scale[0];
+                this._ltm[2] = (xz + wy) * this.scale[0];
+                this._ltm[3] = 0.0;
+
+                this._ltm[4] = (xy + wz) * this.scale[1];
+                this._ltm[5] = (1.0 - (xx + zz)) * this.scale[1];
+                this._ltm[6] = (yz - wx) * this.scale[1];
+                this._ltm[7] = 0.0;
+
+                this._ltm[8] = (xz - wy) * this.scale[2];
+                this._ltm[9] = (yz + wx) * this.scale[2];
+                this._ltm[10] = (1.0 - (xx + yy)) * this.scale[2];
+                this._ltm[11] = 0.0;
+
+                this._ltm[12] = this.position[0];
+                this._ltm[13] = this.position[1];
+                this._ltm[14] = this.position[2];
+                this._ltm[15] = 1.0;
+
+                this.dirtyLocal = false;
+                this.dirtyWorld = true;
             }
 
-            _syncHierarchy(this, this._parent ? this._parent._wtm : identity);
+            if (this.dirtyWorld) {
+                if (this._parent === null) { 
+                    pc.math.mat4.copy(this._ltm, this._wtm);
+                } else {
+                    pc.math.mat4.multiply(this._parent._wtm, this._ltm, this._wtm);
+                }
+
+                for (var i = 0, len = this._children.length; i < len; i++) {
+                    this._children[i].dirtyWorld = true;
+                }
+
+                this.dirtyWorld = false;
+            }
         },
 
         /**
@@ -507,11 +588,29 @@ pc.extend(pc.scene, function () {
          * this is set to the world space y axis.
          * @author Will Eastcott
          */
-        lookAt: function (target, up) {
-            up = up || pc.math.vec3.yaxis;
-            var pos = tempVec;
-            this.getLocalPosition(pos);
-            pc.math.mat4.makeLookAt(pos, target, up, this._ltm);
+        lookAt: function () {
+            var target, up;
+
+            switch (arguments.length) {
+                case 1:
+                    target = arguments[0];
+                    up = pc.math.vec3.yaxis;
+                    break;
+                case 2:
+                    target = arguments[0];
+                    up = arguments[1];
+                    break;
+                case 3:
+                    target = tempVec;
+                    target[0] = arguments[0];
+                    target[1] = arguments[1];
+                    target[2] = arguments[2];
+                    up = pc.math.vec3.yaxis;
+                    break;
+            }
+
+            var m = pc.math.mat4.makeLookAt(this.position, target, up);
+            pc.math.mat4.toQuat(m, this.rotation);
         },
 
         /**
@@ -535,26 +634,45 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         translate: function () {
+            var x = 0, y = 0, z = 0, local = true;
+
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+            }
+
             var relativeTo;
             if (arguments.length >= 3) {
                 relativeTo = arguments[3];
                 if ((relativeTo === undefined) || (relativeTo === pc.scene.Space.LOCAL)) {
-                    this._ltm[12] += arguments[0];
-                    this._ltm[13] += arguments[1];
-                    this._ltm[14] += arguments[2];
+                    this.position[0] += arguments[0];
+                    this.position[1] += arguments[1];
+                    this.position[2] += arguments[2];
+                    this.dirtyLocal = true;
                 }
             } else {
                 relativeTo = arguments[1];
                 if ((relativeTo === undefined) || (relativeTo === pc.scene.Space.LOCAL)) {
-                    this._ltm[12] += arguments[0][0];
-                    this._ltm[13] += arguments[0][1];
-                    this._ltm[14] += arguments[0][2];
+                    this.position[0] += arguments[0][0];
+                    this.position[1] += arguments[0][1];
+                    this.position[2] += arguments[0][2];
+                    this.dirtyLocal = true;
                 }
             }
         },
 
-        rotate: function (axis, angle) {
-        
+        rotate: function (x, y, z) {
+            pc.math.quat.setFromEulers(tempQuat, x, y, z);
+            pc.math.quat.multiply(this.rotation, tempQuat, this.rotation);
+            this.dirtyLocal = true;
         }
     };
 
