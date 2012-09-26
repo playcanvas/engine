@@ -117,11 +117,11 @@ pc.extend(pc.resources, function () {
             var t = pc.math.mat4.getTranslation(data.transform);
             var r = pc.math.mat4.toEulerXYZ(data.transform);
             var s = pc.math.mat4.getScale(data.transform);
-            node.setLocalPosition(t);
+            node.setLocalTranslation(t);
             node.setLocalRotation(r[0] * pc.math.RAD_TO_DEG, r[1] * pc.math.RAD_TO_DEG, r[2] * pc.math.RAD_TO_DEG);
             node.setLocalScale(s);
         } else {
-            node.setLocalPosition(data.translation);
+            node.setLocalTranslation(data.translation);
             node.setLocalRotation(data.rotation[0], data.rotation[1], data.rotation[2]);
             node.setLocalScale(data.scale);
         }

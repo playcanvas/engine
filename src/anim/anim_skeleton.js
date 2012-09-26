@@ -263,7 +263,7 @@ pc.extend(pc.anim, function () {
             if (interpKey._written) {
                 var transform = interpKey.getTarget();
 
-                pc.math.vec3.copy(interpKey._pos, transform.position);
+                pc.math.vec3.copy(interpKey._pos, transform.translation);
                 pc.math.quat.copy(interpKey._quat, transform.rotation);
                 pc.math.vec3.copy(interpKey._scale, transform.scale);
                 transform.dirtyLocal = true;

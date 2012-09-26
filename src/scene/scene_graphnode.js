@@ -12,7 +12,7 @@ pc.extend(pc.scene, function () {
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
 
-        this.position = pc.math.vec3.create(0, 0, 0);
+        this.translation = pc.math.vec3.create(0, 0, 0);
         this.rotation = pc.math.quat.create(0, 0, 0, 1);
         this.scale = pc.math.vec3.create(1, 1, 1);
         this.dirtyLocal = false;
@@ -212,29 +212,29 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#getLocalPosition
-         * @description Get the position in local space for the specified GraphNode. This
+         * @name pc.scene.GraphNode#getLocalTranslation
+         * @description Get the translation in local space for the specified GraphNode. This
          * function internally allocates a 3-dimensional vector and copies the translational
          * components of the graph node's local transformation matrix into it. This vector
          * is returned by the function.
-         * @returns {pc.math.vec3} The local space position of the graph node.
+         * @returns {pc.math.vec3} The local space translation of the graph node.
          * @author Will Eastcott
          */
         /**
          * @function
-         * @name pc.scene.GraphNode#getLocalPosition^2
-         * @description Get the position in local space for the specified GraphNode. By
+         * @name pc.scene.GraphNode#getLocalTranslation^2
+         * @description Get the translation in local space for the specified GraphNode. By
          * supplying a 3-dimensional vector as a parameter, this function will not 
          * allocate internally and is therefore more optimal than the other 
-         * pc.scene.GraphNode#getLocalPosition prototype.
+         * pc.scene.GraphNode#getLocalTranslation prototype.
          * @param {pc.math.vec3} pos A pre-alloacted 3-dimensional vector to receive the
-         * local space position of the graph node.
-         * @returns {pc.math.vec3} The local space position of the graph node (simply a 
+         * local space translation of the graph node.
+         * @returns {pc.math.vec3} The local space translation of the graph node (simply a 
          * reference to the parameter passed to the function).
          * @author Will Eastcott
          */
-        getLocalPosition: function () {
-            return this.position;
+        getLocalTranslation: function () {
+            return this.translation;
         },
 
         /**
@@ -263,28 +263,28 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#getWorldPosition
-         * @description Get the position in world space for the specified GraphNode. This
+         * @name pc.scene.GraphNode#getWorldTranslation
+         * @description Get the translation in world space for the specified GraphNode. This
          * function internally allocates a 3-dimensional vector and copies the translational
          * components of the graph node's world transformation matrix into it. This vector
          * is returned by the function.
-         * @returns {pc.math.vec3} The world space position of the graph node.
+         * @returns {pc.math.vec3} The world space translation of the graph node.
          * @author Will Eastcott
          */
         /**
          * @function
-         * @name pc.scene.GraphNode#getWorldPosition^2
-         * @description Get the position in world space for the specified GraphNode. By
+         * @name pc.scene.GraphNode#getWorldTranslation^2
+         * @description Get the translation in world space for the specified GraphNode. By
          * supplying a 3-dimensional vector as a parameter, this function will not 
          * allocate internally and is therefore more optimal than the other 
-         * pc.scene.GraphNode#getWorldPosition prototype.
+         * pc.scene.GraphNode#getWorldTranslation prototype.
          * @param {pc.math.vec3} pos A pre-alloacted 3-dimensional vector to receive the
-         * world space position of the graph node.
-         * @returns {pc.math.vec3} The world space position of the graph node (simply a 
+         * world space translation of the graph node.
+         * @returns {pc.math.vec3} The world space translation of the graph node (simply a 
          * reference to the parameter passed to the function).
          * @author Will Eastcott
          */
-        getWorldPosition: function () {
+        getWorldTranslation: function () {
             if (arguments.length === 1) {
                 var pos = arguments[0];
                 pos[0] = this._wtm[12];
@@ -330,29 +330,29 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#setLocalPosition
-         * @description Sets the local space position of the specified graph node.
-         * @param {pc.math.vec3} pos Position vector of graph node in local-space.
+         * @name pc.scene.GraphNode#setLocalTranslation
+         * @description Sets the local space translation of the specified graph node.
+         * @param {pc.math.vec3} pos Translation vector of graph node in local-space.
          * @author Will Eastcott
          */
         /**
          * @function
-         * @name pc.scene.GraphNode#setLocalPosition^2
-         * @description Sets the local space position of the specified graph node.
-         * @param {Number} x x-coordinate of local-space position.
-         * @param {Number} y y-coordinate of local-space position.
-         * @param {Number} z z-coordinate of local-space position.
+         * @name pc.scene.GraphNode#setLocalTranslation^2
+         * @description Sets the local space translation of the specified graph node.
+         * @param {Number} x x-coordinate of local-space translation.
+         * @param {Number} y y-coordinate of local-space translation.
+         * @param {Number} z z-coordinate of local-space translation.
          * @author Will Eastcott
          */
-        setLocalPosition: function () {
+        setLocalTranslation: function () {
             if (arguments.length === 1) {
-                this.position[0] = arguments[0][0];
-                this.position[1] = arguments[0][1];
-                this.position[2] = arguments[0][2];
+                this.translation[0] = arguments[0][0];
+                this.translation[1] = arguments[0][1];
+                this.translation[2] = arguments[0][2];
             } else {
-                this.position[0] = arguments[0];
-                this.position[1] = arguments[1];
-                this.position[2] = arguments[2];
+                this.translation[0] = arguments[0];
+                this.translation[1] = arguments[1];
+                this.translation[2] = arguments[2];
             }
             this.dirtyLocal = true;
         },
@@ -555,9 +555,9 @@ pc.extend(pc.scene, function () {
                 this._ltm[10] = (1.0 - (xx + yy)) * this.scale[2];
                 this._ltm[11] = 0.0;
 
-                this._ltm[12] = this.position[0];
-                this._ltm[13] = this.position[1];
-                this._ltm[14] = this.position[2];
+                this._ltm[12] = this.translation[0];
+                this._ltm[13] = this.translation[1];
+                this._ltm[14] = this.translation[2];
                 this._ltm[15] = 1.0;
 
                 this.dirtyLocal = false;
@@ -609,7 +609,7 @@ pc.extend(pc.scene, function () {
                     break;
             }
 
-            var m = pc.math.mat4.makeLookAt(this.position, target, up);
+            var m = pc.math.mat4.makeLookAt(this.translation, target, up);
             pc.math.mat4.toQuat(m, this.rotation);
         },
 
@@ -653,17 +653,17 @@ pc.extend(pc.scene, function () {
             if (arguments.length >= 3) {
                 relativeTo = arguments[3];
                 if ((relativeTo === undefined) || (relativeTo === pc.scene.Space.LOCAL)) {
-                    this.position[0] += arguments[0];
-                    this.position[1] += arguments[1];
-                    this.position[2] += arguments[2];
+                    this.translation[0] += arguments[0];
+                    this.translation[1] += arguments[1];
+                    this.translation[2] += arguments[2];
                     this.dirtyLocal = true;
                 }
             } else {
                 relativeTo = arguments[1];
                 if ((relativeTo === undefined) || (relativeTo === pc.scene.Space.LOCAL)) {
-                    this.position[0] += arguments[0][0];
-                    this.position[1] += arguments[0][1];
-                    this.position[2] += arguments[0][2];
+                    this.translation[0] += arguments[0][0];
+                    this.translation[1] += arguments[0][1];
+                    this.translation[2] += arguments[0][2];
                     this.dirtyLocal = true;
                 }
             }
