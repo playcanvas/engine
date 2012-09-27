@@ -11,6 +11,7 @@
 ../src/core/core_json.js
 ../src/core/core_cookie.js
 ../src/core/core_debug.js
+../src/core/core_requestanimationframe.js
 ../src/events/events_events.js
 ../src/core/core_dom.js
 ../src/math/math_math.js
@@ -96,7 +97,6 @@
 ../src/script/script_script.js
 ../src/script/resources/resources_script.js
 ../src/helpers/helpers_flycam.js
-../src/helpers/helpers_animframe.js
 ../src/framework/framework_fw.js
 ../src/framework/framework_link.prod.js
 ../src/framework/framework_link.dev.js

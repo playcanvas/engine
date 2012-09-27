@@ -6,9 +6,7 @@
  * Copyright 2011-2012 PlayCanvas Ltd. All rights reserved.
  * Do not distribute.
  */
-var pc = function () {
-    // public interface
-    var _pc = {
+var pc = {
         common: {},
         /**
          * Storage for the applications using the PlayCanvas Engine
@@ -20,7 +18,6 @@ var pc = function () {
         data: {},
                 
         /**
-         * @private
          * @function
          * @name pc.unpack()
          * @description Copy a set of common PlayCanvas functions/classes/namespaces into the global namespace
@@ -121,24 +118,26 @@ var pc = function () {
             return !(o === a)
         }
     };
-    // private
+
     /**
-     * Create look up table for types
      * @private
-     * @function
      * @name pc._typeLookup
+     * @function
+     * @description Create look up table for types
      */
     var _typeLookup = function () {
-            var result = {}, 
-            index, 
-            names = ["Array", "Object", "Function", "Date", "RegExp", "Float32Array"];
-            
-            for(index = 0; index < names.length; ++index) {
-                result["[object " + names[index] + "]"] = names[index].toLowerCase();
-            };
-            
-            return result;
-        } ();
-    
-    return _pc;
-}();
+        var result = {}, 
+        index, 
+        names = ["Array", "Object", "Function", "Date", "RegExp", "Float32Array"];
+        
+        for(index = 0; index < names.length; ++index) {
+            result["[object " + names[index] + "]"] = names[index].toLowerCase();
+        };
+        
+        return result;
+    } ();
+
+if (typeof exports === 'undefined') {
+    exports = this;
+}
+exports.pc = pc;

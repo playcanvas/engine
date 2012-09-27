@@ -11,7 +11,7 @@ pc.audio = function () {
     */
     var AudioManager = function () {
         if (pc.audio.hasAudioContext()) {
-            var AudioContext = window.AudioContext || window.webkitAudioContext;
+            var AudioContext = AudioContext || webkitAudioContext;
             this.context = new AudioContext();
         }
         this.listener = new pc.audio.Listener(this);
@@ -126,10 +126,10 @@ pc.audio = function () {
     return {
         AudioManager: AudioManager,
         hasAudio: function () {
-            return !!window.Audio;
+            return typeof(Audio) !== 'undefined';
         },
         hasAudioContext: function () {
-            return !!(window.AudioContext || window.webkitAudioContext)
+            return !!(typeof(AudioContext) !== 'undefined' || typeof(webkitAudioContext) !== 'undefined')
         },
         /**
         * @description Estimate from the url/extension, whether the browser can play this audio type
