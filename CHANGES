@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.76.0
+-------
+* Engine now loads in nodejs environment
+* Deprecate requestAnimFrame() and replace with requestAnimationFrame()
+* Replace requestAnimationFrame shim with new version from Paul Irish
+
+-------
 v0.75.6
 -------
 * [FIX] Offscreen buffer creation deferred until rendering occurs. Fixes bloom on app start up.
