@@ -24,6 +24,19 @@ pc.math.quat = function () {
             return new Float32Array(q);
         },
 
+        conjugate: function (q, r) {
+            if (r === undefined) {
+                r = pc.math.quat.create();
+            }
+
+            r[0] = -q[0];
+            r[1] = -q[1];
+            r[2] = -q[2];
+            r[3] = q[3];
+
+            return r;
+        },
+
         /**
          * @function
          * @name pc.math.quat.copy
@@ -97,6 +110,19 @@ pc.math.quat = function () {
             qr[3] = ww;
         },
 
+        transformVector: function (q, v) {
+            var vn = pc.math.vec3.normalise(v);
+         
+            var vecQuat = pc.math.quat.create(vn[0], vn[1], vn[2], 0);         
+            var resQuat = pc.math.quat.create();
+
+            var conj = pc.math.quat.conjugate(q);
+            pc.math.quat.multiply(vecQuat, conj, resQuat);
+            pc.math.quat.multiply(q, resQuat, resQuat);
+         
+            return pc.math.vec3.create(resQuat[0], resQuat[1], resQuat[2]);
+        },
+
         setFromEulers: function (q, ex, ey, ez) {
             ex = ex * Math.PI / 180.0;
             ey = ey * Math.PI / 180.0;
@@ -120,6 +146,44 @@ pc.math.quat = function () {
             q[1] = ty * cz - tx * sz;
             q[2] = tw * sz + tz * cz;
             q[3] = tw * cz - tz * sz;
+        },
+
+        toMat3: function (q, r) {
+            if (r === undefined) {
+                r = pc.math.mat4.create();
+            }
+            var norm = q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
+            var s = (norm == 0.0) ? 0.0 : (2.0 / norm);
+
+            var xs = q[0] * s;
+            var ys = q[1] * s;
+            var zs = q[2] * s;
+
+            var wx = q[3] * xs;
+            var wy = q[3] * ys;
+            var wz = q[3] * zs;
+
+            var xx = q[0] * xs;
+            var yy = q[1] * ys;
+            var zz = q[2] * zs;
+
+            var yz = q[1] * zs; //crossx
+            var xz = q[2] * xs; //crossy
+            var xy = q[0] * ys; //crossz
+
+            r[0] = 1.0 - (yy + zz);
+            r[1] = xy - wz;
+            r[2] = xz + wy;
+            
+            r[3] = xy + wz;
+            r[4] = 1.0 - (xx + zz);
+            r[5] = yz - wx;
+
+            r[6] = xz - wy;
+            r[7] = yz + wx;
+            r[8] = 1.0 - (xx + yy);
+            
+            return r;
         },
 
         /**

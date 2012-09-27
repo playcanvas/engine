@@ -263,9 +263,9 @@ pc.extend(pc.anim, function () {
             if (interpKey._written) {
                 var transform = interpKey.getTarget();
 
-                pc.math.vec3.copy(interpKey._pos, transform.translation);
-                pc.math.quat.copy(interpKey._quat, transform.rotation);
-                pc.math.vec3.copy(interpKey._scale, transform.scale);
+                pc.math.vec3.copy(interpKey._pos, transform.localPosition);
+                pc.math.quat.copy(interpKey._quat, transform.localRotation);
+                pc.math.vec3.copy(interpKey._scale, transform.localScale);
                 transform.dirtyLocal = true;
 
                 interpKey._written = false;

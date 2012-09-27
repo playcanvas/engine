@@ -114,14 +114,14 @@ pc.extend(pc.resources, function () {
         node.addGraphId(data.uid);
         if (data.transform) {
             // Backwards compatibility code. Remove at some point...
-            var t = pc.math.mat4.getTranslation(data.transform);
+            var p = pc.math.mat4.getTranslation(data.transform);
             var r = pc.math.mat4.toEulerXYZ(data.transform);
             var s = pc.math.mat4.getScale(data.transform);
-            node.setLocalTranslation(t);
+            node.setLocalPosition(p);
             node.setLocalRotation(r[0] * pc.math.RAD_TO_DEG, r[1] * pc.math.RAD_TO_DEG, r[2] * pc.math.RAD_TO_DEG);
             node.setLocalScale(s);
         } else {
-            node.setLocalTranslation(data.translation);
+            node.setLocalPosition(data.position);
             node.setLocalRotation(data.rotation[0], data.rotation[1], data.rotation[2]);
             node.setLocalScale(data.scale);
         }

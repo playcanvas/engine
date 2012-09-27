@@ -532,10 +532,10 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        _updateEntityTransform: function (guid, translation, rotation, scale) {
+        _updateEntityTransform: function (guid, position, rotation, scale) {
             var entity = this.context.root.findByGuid(guid);
             if(entity) {
-                entity.setLocalTranslation(translation[0], translation[1], translation[2]);
+                entity.setLocalPosition(position[0], position[1], position[2]);
                 entity.setLocalRotation(rotation[0] * pc.math.RAD_TO_DEG, rotation[1] * pc.math.RAD_TO_DEG, rotation[2] * pc.math.RAD_TO_DEG);
                 entity.setLocalScale(scale[0], scale[1], scale[2]);
 

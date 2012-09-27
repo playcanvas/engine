@@ -12,11 +12,13 @@ pc.extend(pc.scene, function () {
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
 
-        this.translation = pc.math.vec3.create(0, 0, 0);
-        this.rotation = pc.math.quat.create(0, 0, 0, 1);
-        this.scale = pc.math.vec3.create(1, 1, 1);
+        this.localPosition = pc.math.vec3.create(0, 0, 0);
+        this.localRotation = pc.math.quat.create(0, 0, 0, 1);
+        this.localScale = pc.math.vec3.create(1, 1, 1);
         this.dirtyLocal = false;
         this.dirtyWorld = false;
+
+        this.localEulerAngles = pc.math.vec3.create(0, 0, 0);
 
         this._ltm = pc.math.mat4.create();
         this._wtm = pc.math.mat4.create();
@@ -212,29 +214,62 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#getLocalTranslation
-         * @description Get the translation in local space for the specified GraphNode. This
-         * function internally allocates a 3-dimensional vector and copies the translational
-         * components of the graph node's local transformation matrix into it. This vector
-         * is returned by the function.
-         * @returns {pc.math.vec3} The local space translation of the graph node.
+         * @name pc.scene.GraphNode#getLocalEulerAngles
+         * @description Get the rotation in local space for the specified GraphNode. The rotation
+         * is returned as eurler angles in a 3-dimensional vector where the order is XYZ. The 
+         * returned vector should be considered read-only. To update the local rotation, use 
+         * pc.scene.GraphNode#setLocalEulerAngles.
+         * @returns {pc.math.vec3} The local space rotation of the graph node as euler angles in XYZ order.
          * @author Will Eastcott
          */
+        getLocalEulerAngles: function () {
+            if (this.dirtyLocal) {
+                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this._ltm);
+
+                this.dirtyLocal = false;
+                this.dirtyWorld = true;
+            }
+            pc.math.mat4.toEulerXYZ(this._ltm, this.localEulerAngles);
+            return this.localEulerAngles;
+        },
+
         /**
          * @function
-         * @name pc.scene.GraphNode#getLocalTranslation^2
-         * @description Get the translation in local space for the specified GraphNode. By
-         * supplying a 3-dimensional vector as a parameter, this function will not 
-         * allocate internally and is therefore more optimal than the other 
-         * pc.scene.GraphNode#getLocalTranslation prototype.
-         * @param {pc.math.vec3} pos A pre-alloacted 3-dimensional vector to receive the
-         * local space translation of the graph node.
-         * @returns {pc.math.vec3} The local space translation of the graph node (simply a 
-         * reference to the parameter passed to the function).
+         * @name pc.scene.GraphNode#getLocalPosition
+         * @description Get the position in local space for the specified GraphNode. The position
+         * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
+         * To update the local position, use pc.scene.GraphNode#setLocalPosition.
+         * @returns {pc.math.vec3} The local space position of the graph node.
          * @author Will Eastcott
          */
-        getLocalTranslation: function () {
-            return this.translation;
+        getLocalPosition: function () {
+            return this.localPosition;
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#getLocalRotation
+         * @description Get the rotation in local space for the specified GraphNode. The rotation
+         * is returned as a quaternion. The returned quaternion should be considered read-only.
+         * To update the local rotation, use pc.scene.GraphNode#setLocalRotation.
+         * @returns {pc.math.quat} The local space rotation of the graph node as a quaternion.
+         * @author Will Eastcott
+         */
+        getLocalRotation: function () {
+            return this.localRotation;
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#getLocalScale
+         * @description Get the scale in local space for the specified GraphNode. The scale
+         * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
+         * To update the local scale, use pc.scene.GraphNode#setLocalScale.
+         * @returns {pc.math.vec3} The local space scale of the graph node.
+         * @author Will Eastcott
+         */
+        getLocalScale: function () {
+            return this.localScale;
         },
 
         /**
@@ -246,6 +281,12 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getLocalTransform: function () {
+            if (this.dirtyLocal) {
+                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this._ltm);
+
+                this.dirtyLocal = false;
+                this.dirtyWorld = true;
+            }
             return this._ltm;
         },
 
@@ -263,28 +304,28 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#getWorldTranslation
-         * @description Get the translation in world space for the specified GraphNode. This
-         * function internally allocates a 3-dimensional vector and copies the translational
+         * @name pc.scene.GraphNode#getWorldposition
+         * @description Get the position in world space for the specified GraphNode. This
+         * function internally allocates a 3-dimensional vector and copies the positional
          * components of the graph node's world transformation matrix into it. This vector
          * is returned by the function.
-         * @returns {pc.math.vec3} The world space translation of the graph node.
+         * @returns {pc.math.vec3} The world space position of the graph node.
          * @author Will Eastcott
          */
         /**
          * @function
-         * @name pc.scene.GraphNode#getWorldTranslation^2
-         * @description Get the translation in world space for the specified GraphNode. By
+         * @name pc.scene.GraphNode#getWorldposition^2
+         * @description Get the position in world space for the specified GraphNode. By
          * supplying a 3-dimensional vector as a parameter, this function will not 
          * allocate internally and is therefore more optimal than the other 
-         * pc.scene.GraphNode#getWorldTranslation prototype.
+         * pc.scene.GraphNode#getWorldposition prototype.
          * @param {pc.math.vec3} pos A pre-alloacted 3-dimensional vector to receive the
-         * world space translation of the graph node.
-         * @returns {pc.math.vec3} The world space translation of the graph node (simply a 
+         * world space position of the graph node.
+         * @returns {pc.math.vec3} The world space position of the graph node (simply a 
          * reference to the parameter passed to the function).
          * @author Will Eastcott
          */
-        getWorldTranslation: function () {
+        getWorldposition: function () {
             if (arguments.length === 1) {
                 var pos = arguments[0];
                 pos[0] = this._wtm[12];
@@ -330,51 +371,97 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#setLocalTranslation
-         * @description Sets the local space translation of the specified graph node.
-         * @param {pc.math.vec3} pos Translation vector of graph node in local-space.
+         * @name pc.scene.GraphNode#setLocalEulerAngles
+         * @description Sets the local space rotation of the specified graph node using euler angles.
+         * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
+         * @param {pc.math.vec3} e vector containing euler angles in XYZ order.
          * @author Will Eastcott
          */
         /**
          * @function
-         * @name pc.scene.GraphNode#setLocalTranslation^2
-         * @description Sets the local space translation of the specified graph node.
-         * @param {Number} x x-coordinate of local-space translation.
-         * @param {Number} y y-coordinate of local-space translation.
-         * @param {Number} z z-coordinate of local-space translation.
+         * @name pc.scene.GraphNode#setLocalEulerAngles^2
+         * @description Sets the local space rotation of the specified graph node using euler angles.
+         * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
+         * @param {Number} x rotation around x-axis in degrees.
+         * @param {Number} y rotation around y-axis in degrees.
+         * @param {Number} z rotation around z-axis in degrees.
          * @author Will Eastcott
          */
-        setLocalTranslation: function () {
+        setLocalEulerAngles: function () {
             if (arguments.length === 1) {
-                this.translation[0] = arguments[0][0];
-                this.translation[1] = arguments[0][1];
-                this.translation[2] = arguments[0][2];
+                pc.math.quat.setFromEulers(this.localRotation, arguments[0]);
             } else {
-                this.translation[0] = arguments[0];
-                this.translation[1] = arguments[1];
-                this.translation[2] = arguments[2];
+                pc.math.quat.setFromEulers(this.localRotation, arguments[0], arguments[1], arguments[2]);
             }
             this.dirtyLocal = true;
         },
 
-        setLocalRotation: function () {
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setLocalPosition
+         * @description Sets the local space position of the specified graph node.
+         * @param {pc.math.vec3} pos position vector of graph node in local space.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setLocalPosition^2
+         * @description Sets the local space position of the specified graph node.
+         * @param {Number} x x-coordinate of local-space position.
+         * @param {Number} y y-coordinate of local-space position.
+         * @param {Number} z z-coordinate of local-space position.
+         * @author Will Eastcott
+         */
+        setLocalPosition: function () {
             if (arguments.length === 1) {
-                pc.math.quat.copy(arguments[0], this.rotation);
+                this.localPosition[0] = arguments[0][0];
+                this.localPosition[1] = arguments[0][1];
+                this.localPosition[2] = arguments[0][2];
             } else {
-                pc.math.quat.setFromEulers(this.rotation, arguments[0], arguments[1], arguments[2]);
+                this.localPosition[0] = arguments[0];
+                this.localPosition[1] = arguments[1];
+                this.localPosition[2] = arguments[2];
             }
             this.dirtyLocal = true;
         },
 
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setLocalRotation
+         * @description Sets the local space rotation of the specified graph node.
+         * @param {pc.math.quat} q quaternion representing rotation of graph node in local space.
+         * @author Will Eastcott
+         */
+        setLocalRotation: function (q) {
+            pc.math.quat.copy(q, this.localRotation);
+            this.dirtyLocal = true;
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setLocalScale
+         * @description Sets the local space scale factor of the specified graph node.
+         * @param {pc.math.vec3} scale xyz-scale of graph node in local space.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setLocalScale^2
+         * @description Sets the local space scale factor of the specified graph node.
+         * @param {Number} x x-coordinate of local-space scale.
+         * @param {Number} y y-coordinate of local-space scale.
+         * @param {Number} z z-coordinate of local-space scale.
+         * @author Will Eastcott
+         */
         setLocalScale: function () {
             if (arguments.length === 1) {
-                this.scale[0] = arguments[0][0];
-                this.scale[1] = arguments[0][1];
-                this.scale[2] = arguments[0][2];
+                this.localScale[0] = arguments[0][0];
+                this.localScale[1] = arguments[0][1];
+                this.localScale[2] = arguments[0][2];
             } else {
-                this.scale[0] = arguments[0];
-                this.scale[1] = arguments[1];
-                this.scale[2] = arguments[2];
+                this.localScale[0] = arguments[0];
+                this.localScale[1] = arguments[1];
+                this.localScale[2] = arguments[2];
             }
             this.dirtyLocal = true;
         },
@@ -512,53 +599,8 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         syncHierarchy: function () {
-            this.sync();
-
-            // Sync subhierarchy
-            for (var i = 0, len = this._children.length; i < len; i++) {
-                this._children[i].syncHierarchy();
-            }
-        },
-
-        sync: function () {
             if (this.dirtyLocal) {
-                var qx = this.rotation[0];
-                var qy = this.rotation[1];
-                var qz = this.rotation[2];
-                var qw = this.rotation[3];
-
-                var x2 = qx + qx;
-                var y2 = qy + qy;
-                var z2 = qz + qz;
-                var xx = qx * x2;
-                var xy = qx * y2;
-                var xz = qx * z2;
-                var yy = qy * y2;
-                var yz = qy * z2;
-                var zz = qz * z2;
-                var wx = qw * x2;
-                var wy = qw * y2;
-                var wz = qw * z2;
-
-                this._ltm[0] = (1.0 - (yy + zz)) * this.scale[0];
-                this._ltm[1] = (xy - wz) * this.scale[0];
-                this._ltm[2] = (xz + wy) * this.scale[0];
-                this._ltm[3] = 0.0;
-
-                this._ltm[4] = (xy + wz) * this.scale[1];
-                this._ltm[5] = (1.0 - (xx + zz)) * this.scale[1];
-                this._ltm[6] = (yz - wx) * this.scale[1];
-                this._ltm[7] = 0.0;
-
-                this._ltm[8] = (xz - wy) * this.scale[2];
-                this._ltm[9] = (yz + wx) * this.scale[2];
-                this._ltm[10] = (1.0 - (xx + yy)) * this.scale[2];
-                this._ltm[11] = 0.0;
-
-                this._ltm[12] = this.translation[0];
-                this._ltm[13] = this.translation[1];
-                this._ltm[14] = this.translation[2];
-                this._ltm[15] = 1.0;
+                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this._ltm);
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
@@ -576,6 +618,11 @@ pc.extend(pc.scene, function () {
                 }
 
                 this.dirtyWorld = false;
+            }
+
+            // Sync subhierarchy
+            for (var i = 0, len = this._children.length; i < len; i++) {
+                this._children[i].syncHierarchy();
             }
         },
 
@@ -609,27 +656,27 @@ pc.extend(pc.scene, function () {
                     break;
             }
 
-            var m = pc.math.mat4.makeLookAt(this.translation, target, up);
-            pc.math.mat4.toQuat(m, this.rotation);
+            var m = pc.math.mat4.makeLookAt(this.localPosition, target, up);
+            pc.math.mat4.toQuat(m, this.localRotation);
         },
 
         /**
          * @function
          * @name pc.scene.GraphNode#translate
-         * @description Translates the graph node by the given translation vector.
-         * @param {pc.math.vec3} translation The translation vector to apply.
-         * @param {pc.scene.Space} space The coordinate system that the translation is relative to.
+         * @description Translates the graph node by the given position vector.
+         * @param {pc.math.vec3} position The position vector to apply.
+         * @param {pc.scene.Space} space The coordinate system that the position is relative to.
          * In left unspecified, local space is assumed.
          * @author Will Eastcott
          */
         /**
          * @function
          * @name pc.scene.GraphNode#translate^2
-         * @description Translates the graph node by the given translation vector.
-         * @param {Number} x x-component of the translation vector.
-         * @param {Number} y y-component of the translation vector.
-         * @param {Number} z z-component of the translation vector.
-         * @param {pc.scene.Space} space The coordinate system that the translation is relative to.
+         * @description Translates the graph node by the given position vector.
+         * @param {Number} x x-component of the position vector.
+         * @param {Number} y y-component of the position vector.
+         * @param {Number} z z-component of the position vector.
+         * @param {pc.scene.Space} space The coordinate system that the position is relative to.
          * In left unspecified, local space is assumed.
          * @author Will Eastcott
          */
@@ -653,17 +700,17 @@ pc.extend(pc.scene, function () {
             if (arguments.length >= 3) {
                 relativeTo = arguments[3];
                 if ((relativeTo === undefined) || (relativeTo === pc.scene.Space.LOCAL)) {
-                    this.translation[0] += arguments[0];
-                    this.translation[1] += arguments[1];
-                    this.translation[2] += arguments[2];
+                    this.localPosition[0] += arguments[0];
+                    this.localPosition[1] += arguments[1];
+                    this.localPosition[2] += arguments[2];
                     this.dirtyLocal = true;
                 }
             } else {
                 relativeTo = arguments[1];
                 if ((relativeTo === undefined) || (relativeTo === pc.scene.Space.LOCAL)) {
-                    this.translation[0] += arguments[0][0];
-                    this.translation[1] += arguments[0][1];
-                    this.translation[2] += arguments[0][2];
+                    this.localPosition[0] += arguments[0][0];
+                    this.localPosition[1] += arguments[0][1];
+                    this.localPosition[2] += arguments[0][2];
                     this.dirtyLocal = true;
                 }
             }
@@ -671,7 +718,7 @@ pc.extend(pc.scene, function () {
 
         rotate: function (x, y, z) {
             pc.math.quat.setFromEulers(tempQuat, x, y, z);
-            pc.math.quat.multiply(this.rotation, tempQuat, this.rotation);
+            pc.math.quat.multiply(this.localRotation, tempQuat, this.localRotation);
             this.dirtyLocal = true;
         }
     };

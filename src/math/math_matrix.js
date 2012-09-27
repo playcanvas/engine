@@ -1,4 +1,8 @@
 pc.math.mat3 = function () {
+    var scratchVecs = [];
+    for (var i = 0; i < 3; i++) {
+        scratchVecs.push(pc.math.vec3.create());
+    }
 
     // Public functions
     return {
@@ -26,6 +30,57 @@ pc.math.mat3 = function () {
             r[6] = m4[8];
             r[7] = m4[9];
             r[8] = m4[10];
+            return r;
+        },
+
+        getScale: function (m, r) {
+            if (r === undefined) {
+               r = pc.math.vec3.create();
+            }
+
+            var x = scratchVecs[0];
+            var y = scratchVecs[1];
+            var z = scratchVecs[2];
+            pc.math.vec3.set(x, m[0], m[1], m[2]);
+            pc.math.vec3.set(y, m[3], m[4], m[5]);
+            pc.math.vec3.set(z, m[6], m[7], m[8]);
+            r[0] = pc.math.vec3.length(x);
+            r[1] = pc.math.vec3.length(y);
+            r[2] = pc.math.vec3.length(z);
+
+            return r;
+        },
+
+        toEulerXYZ : function (m, r) {
+            if (r === undefined) {
+                r = pc.math.vec3.create();
+            }
+
+            var scale = pc.math.mat3.getScale(m);
+            
+            var x; 
+            var y = Math.asin(-m[2] / scale[0]);
+            var z;
+            var HALF_PI = Math.PI / 2;
+            if (y < HALF_PI) {
+                if (y > -HALF_PI) {
+                    x = Math.atan2(m[5] / scale[1], m[8] / scale[2]);
+                    z = Math.atan2(m[1] / scale[0], m[0] / scale[0]);
+                } else {
+                    // Not a unique solution
+                    z = 0;
+                    x = -Math.atan2(m[3] / scale[1], m[4] / scale[1]);
+                }
+            } else {
+                // Not a unique solution
+                z = 0;
+                x = Math.atan2(m[3] / scale[1], m[4] / scale[1]);        
+            }
+            
+            r[0] = x;
+            r[1] = y;
+            r[2] = z;
+
             return r;
         }
     }
@@ -971,23 +1026,47 @@ pc.math.mat4 = function () {
         },
 
         compose: function (t, r, s, result) {
-            var mat = pc.math.mat4;
             if (result === undefined) {
-                result = mat.create();
+                result = pc.math.mat4.create();
             }
 
-            var translate = composeScratchMats[0];
-            var rotate = composeScratchMats[1];
-            var scale = composeScratchMats[2];
-            var temp = composeScratchMats[3];
+            var qx = r[0];
+            var qy = r[1];
+            var qz = r[2];
+            var qw = r[3];
 
-            mat.makeTranslate(t[0], t[1], t[2], translate);
-            mat.fromEulerXYZ(r[0], r[1], r[2], rotate);
-            mat.makeScale(s[0], s[1], s[2], scale);
+            var x2 = qx + qx;
+            var y2 = qy + qy;
+            var z2 = qz + qz;
+            var xx = qx * x2;
+            var xy = qx * y2;
+            var xz = qx * z2;
+            var yy = qy * y2;
+            var yz = qy * z2;
+            var zz = qz * z2;
+            var wx = qw * x2;
+            var wy = qw * y2;
+            var wz = qw * z2;
 
-            // multiplied in order: translate * rotate * scale 
-            mat.multiply(rotate, scale, temp);
-            mat.multiply(translate, temp, result);
+            result[0] = (1.0 - (yy + zz)) * s[0];
+            result[1] = (xy - wz) * s[0];
+            result[2] = (xz + wy) * s[0];
+            result[3] = 0.0;
+
+            result[4] = (xy + wz) * s[1];
+            result[5] = (1.0 - (xx + zz)) * s[1];
+            result[6] = (yz - wx) * s[1];
+            result[7] = 0.0;
+
+            result[8] = (xz - wy) * s[2];
+            result[9] = (yz + wx) * s[2];
+            result[10] = (1.0 - (xx + yy)) * s[2];
+            result[11] = 0.0;
+
+            result[12] = t[0];
+            result[13] = t[1];
+            result[14] = t[2];
+            result[15] = 1.0;
 
             return result;
         }

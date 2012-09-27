@@ -1,5 +1,9 @@
 function FlyCam() {
     this.target = pc.math.vec3.create(0.0, 0.0, 0.0);
+
+    var angles = this.getLocalEulerAngles();
+    this.x = angles[0];
+    this.y = angles[1];
 }
 
 FlyCam = pc.inherits(FlyCam, pc.scene.CameraNode);
@@ -19,21 +23,11 @@ FlyCam.prototype.dolly = function (distance) {
 }
 
 FlyCam.prototype.orbit = function (rotation) {
-    var ltm = this.getLocalTransform();
-    
-    var eyePos = pc.math.vec3.create(ltm[12], ltm[13], ltm[14]);
-    var targetToEye = pc.math.vec3.create(0, 0, 0);
-    pc.math.vec3.subtract(eyePos, this.target, targetToEye);
+    this.x += pc.math.clamp(movement[0], -100.0, 100.0) * -0.025;
+    this.y -= pc.math.clamp(movement[1], -100.0, 100.0) * -0.025;
 
-    var rotMat1 = pc.math.mat4.makeRotate(-rotation[1], pc.math.mat4.getX(ltm));
-    var rotMat2 = pc.math.mat4.makeRotate(-rotation[0], [0, 1, 0]);
-    
-    var tempMat1 = pc.math.mat4.multiply(rotMat2, rotMat1);
-    targetToEye = pc.math.mat4.multiplyVec3(targetToEye, 1, tempMat1, targetToEye);
-    
-    pc.math.vec3.add(this.target, targetToEye, eyePos)
-    
-    pc.math.mat4.makeLookAt(eyePos, this.target, [0,1,0], ltm);
+    var r = this.getLocalRotation();
+//    pc.math.quat.transformVector(r, )
 }
 
 FlyCam.prototype.onMouseWheel = function (event) {
