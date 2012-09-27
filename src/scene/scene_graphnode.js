@@ -1,6 +1,5 @@
 pc.extend(pc.scene, function () {
 
-    var identity = pc.math.mat4.create();
     var tempVec = pc.math.vec3.create();
     var tempQuat = pc.math.quat.create();
 
@@ -20,8 +19,8 @@ pc.extend(pc.scene, function () {
 
         this.localEulerAngles = pc.math.vec3.create(0, 0, 0);
 
-        this._ltm = pc.math.mat4.create();
-        this._wtm = pc.math.mat4.create();
+        this.localTransform = pc.math.mat4.create();
+        this.worldTransform = pc.math.mat4.create();
 
         this._parent = null;
         this._children = [];
@@ -34,8 +33,8 @@ pc.extend(pc.scene, function () {
 
         _cloneInternal: function (clone) {
             clone._name = this._name;
-            pc.math.mat4.copy(this._ltm, clone._ltm);
-            pc.math.mat4.copy(this._wtm, clone._wtm);
+            pc.math.mat4.copy(this.localTransform, clone.localTransform);
+            pc.math.mat4.copy(this.worldTransform, clone.worldTransform);
             clone._labels = pc.extend(this._lables, {});
             clone._graphId = this._graphId;
         },
@@ -224,12 +223,12 @@ pc.extend(pc.scene, function () {
          */
         getLocalEulerAngles: function () {
             if (this.dirtyLocal) {
-                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this._ltm);
+                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this.localTransform);
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
             }
-            pc.math.mat4.toEulerXYZ(this._ltm, this.localEulerAngles);
+            pc.math.mat4.toEulerXYZ(this.localTransform, this.localEulerAngles);
             return this.localEulerAngles;
         },
 
@@ -282,12 +281,12 @@ pc.extend(pc.scene, function () {
          */
         getLocalTransform: function () {
             if (this.dirtyLocal) {
-                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this._ltm);
+                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this.localTransform);
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
             }
-            return this._ltm;
+            return this.localTransform;
         },
 
         /**
@@ -304,7 +303,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#getWorldposition
+         * @name pc.scene.GraphNode#getWorldPosition
          * @description Get the position in world space for the specified GraphNode. This
          * function internally allocates a 3-dimensional vector and copies the positional
          * components of the graph node's world transformation matrix into it. This vector
@@ -314,7 +313,7 @@ pc.extend(pc.scene, function () {
          */
         /**
          * @function
-         * @name pc.scene.GraphNode#getWorldposition^2
+         * @name pc.scene.GraphNode#getWorldPosition^2
          * @description Get the position in world space for the specified GraphNode. By
          * supplying a 3-dimensional vector as a parameter, this function will not 
          * allocate internally and is therefore more optimal than the other 
@@ -325,15 +324,15 @@ pc.extend(pc.scene, function () {
          * reference to the parameter passed to the function).
          * @author Will Eastcott
          */
-        getWorldposition: function () {
+        getWorldPosition: function () {
             if (arguments.length === 1) {
                 var pos = arguments[0];
-                pos[0] = this._wtm[12];
-                pos[1] = this._wtm[13];
-                pos[2] = this._wtm[14];
+                pos[0] = this.worldTransform[12];
+                pos[1] = this.worldTransform[13];
+                pos[2] = this.worldTransform[14];
                 return pos;
             } else {
-                return pc.math.vec3.create(this._wtm[12], this._wtm[13], this._wtm[14]);
+                return pc.math.vec3.create(this.worldTransform[12], this.worldTransform[13], this.worldTransform[14]);
             }
         },
 
@@ -345,7 +344,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getWorldTransform: function () {
-            return this._wtm;
+            return this.worldTransform;
         },
 
         /**
@@ -475,7 +474,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         setLocalTransform: function (ltm) {
-            this._ltm = ltm;
+            this.localTransform = ltm;
         },
 
         /**
@@ -600,7 +599,7 @@ pc.extend(pc.scene, function () {
          */
         syncHierarchy: function () {
             if (this.dirtyLocal) {
-                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this._ltm);
+                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this.localTransform);
 
                 this.dirtyLocal = false;
                 this.dirtyWorld = true;
@@ -608,9 +607,9 @@ pc.extend(pc.scene, function () {
 
             if (this.dirtyWorld) {
                 if (this._parent === null) { 
-                    pc.math.mat4.copy(this._ltm, this._wtm);
+                    pc.math.mat4.copy(this.localTransform, this.worldTransform);
                 } else {
-                    pc.math.mat4.multiply(this._parent._wtm, this._ltm, this._wtm);
+                    pc.math.mat4.multiply(this._parent.worldTransform, this.localTransform, this.worldTransform);
                 }
 
                 for (var i = 0, len = this._children.length; i < len; i++) {

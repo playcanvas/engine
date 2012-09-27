@@ -43,7 +43,7 @@ pc.extend(pc.resources, function () {
             entity.setLocalTransform(pc.math.mat4.clone(data.transform));    
         } else {
             entity.setLocalPosition(data.translate);
-            entity.setLocalRotation(data.rotate[0] * pc.math.RAD_TO_DEG, data.translate[1] * pc.math.RAD_TO_DEG, data.translate[2] * pc.math.RAD_TO_DEG);
+            entity.setLocalEulerAngles(data.rotate[0] * pc.math.RAD_TO_DEG, data.rotate[1] * pc.math.RAD_TO_DEG, data.rotate[2] * pc.math.RAD_TO_DEG);
             entity.setLocalScale(data.scale);
         }
 

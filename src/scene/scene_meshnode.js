@@ -75,11 +75,11 @@ pc.extend(pc.scene, function () {
                 var invBindPose = geom.getInverseBindPose();
                 var m4Mult = pc.math.mat4.multiply;
                 for (i = 0, numBones = this._bones.length; i < numBones; i++) {
-                    m4Mult(this._bones[i]._wtm, invBindPose[i], matrixPalette[i]);
+                    m4Mult(this._bones[i].worldTransform, invBindPose[i], matrixPalette[i]);
                 }
             } 
 
-            geom.dispatch(this._wtm, this._style);
+            geom.dispatch(this.worldTransform, this._style);
         }
         
         MeshNode._current = null;
@@ -143,8 +143,8 @@ pc.extend(pc.scene, function () {
         var volumeLocal = this._geometry.getVolume();
         if (volumeLocal && volumeLocal instanceof pc.shape.Sphere) {
             var volumeWorld = new pc.shape.Sphere();
-            pc.math.mat4.multiplyVec3(volumeLocal.center, 1.0, this._wtm, volumeWorld.center);
-            var scale = pc.math.mat4.getScale(this._wtm);
+            pc.math.mat4.multiplyVec3(volumeLocal.center, 1.0, this.worldTransform, volumeWorld.center);
+            var scale = pc.math.mat4.getScale(this.worldTransform);
             volumeWorld.radius = volumeLocal.radius * scale[0];
             return volumeWorld;
         }
@@ -204,7 +204,7 @@ pc.extend(pc.scene, function () {
     }
 
     MeshNode.prototype.syncAabb = function () {
-        this._aabb.setFromTransformedAabb(this._geometry._aabb, this._wtm);
+        this._aabb.setFromTransformedAabb(this._geometry._aabb, this.worldTransform);
     }
 
     MeshNode.prototype.getAabb = function () {
