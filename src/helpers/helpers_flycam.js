@@ -9,24 +9,20 @@ function FlyCam() {
 
 FlyCam = pc.inherits(FlyCam, pc.scene.CameraNode);
 
-FlyCam.prototype.pan = function(movement) {
-    var tx = pc.math.clamp(movement[0], -100.0, 100.0) * -0.025;
-    var ty = pc.math.clamp(movement[1], -100.0, 100.0) * 0.025;
-
-    this.translateLocal(tx, ty, 0);
+FlyCam.prototype.pan = function(movex, movey) {
+    // Pan around in the camera's local XY plane
+    this.translateLocal(movex, movey, 0);
 }
 
-FlyCam.prototype.dolly = function (distance) {
+FlyCam.prototype.dolly = function (movez) {
     // Dolly along the Z axis of the camera's local transform
-    var tz = pc.math.clamp(distance, -100.0, 100.0) * -0.025;
-
-    this.distance += tz;
-    this.translateLocal(0, 0, tz);
+    this.distance += movez;
+    this.translateLocal(0, 0, movez);
 }
 
-FlyCam.prototype.orbit = function (movement) {
-    this.x += movement[0] * 0.2;
-    this.y += movement[1] * 0.2;
+FlyCam.prototype.orbit = function (movex, movey) {
+    this.x += movex;
+    this.y += movey;
 
     var qx = pc.math.quat.create();
     var qy = pc.math.quat.create();
@@ -35,24 +31,23 @@ FlyCam.prototype.orbit = function (movement) {
     pc.math.quat.setFromAxisAngle(qy, [0, 1, 0], this.x);
     pc.math.quat.multiply(qx, qy, qxy);
 
-    this.setLocalPosition(0, 0, 0);
     this.setLocalRotation(qxy);
+    this.setLocalPosition(0, 0, 0);
     this.translateLocal(0, 0, this.distance);
 }
 
 FlyCam.prototype.onMouseWheel = function (event) {
-    var distance = event.wheel * 10;
-    this.dolly(distance);
+    this.dolly(event.wheel * -0.25);
 }
 
 FlyCam.prototype.onMouseMove = function (event) {
     // We can't rely on a right click because that has a 'special function'
     // in most (all?) browsers
     if (event.buttons[pc.input.MOUSE_BUTTON_LEFT] && event.buttons[pc.input.MOUSE_BUTTON_MIDDLE]) {
-        this.dolly(event.movementY);
+        this.dolly(event.movementY * -0.025);
     } else if (event.altKey && event.buttons[pc.input.MOUSE_BUTTON_LEFT]) {
-        this.orbit([event.movementX, event.movementY]);
+        this.orbit(event.movementX * 0.2, event.movementY * 0.2);
     } else if (event.altKey && event.buttons[pc.input.MOUSE_BUTTON_MIDDLE]) {
-        this.pan([event.movementX, event.movementY]);
+        this.pan(event.movementX * -0.025, event.movementY * 0.025);
     }
 }
