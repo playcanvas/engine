@@ -884,7 +884,7 @@ pc.math.mat4 = function () {
             r[6] = -cy*sx;
 
             r[8] = sx*sz - cx*cz*sy;
-            r[9] = cz*sy + cx*sy*sz;
+            r[9] = cz*sx + cx*sy*sz;
             r[10] = cx*cy;
 
             // Set non-rotational part to identity
