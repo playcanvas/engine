@@ -511,6 +511,9 @@ pc.extend(pc.scene, function () {
 
             this._children.push(node);
             node.setParent(this);
+
+            // The child (plus subhierarchy) will need world transforms to be recalculated
+            node.dirtyWorld = true;
         },
 
         /**
