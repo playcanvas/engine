@@ -97,16 +97,6 @@ pc.math.mat4 = function () {
         scratchVecs.push(pc.math.vec3.create());
     }
 
-    var fromEulerScratchMats = [];
-    for (var i = 0; i < 4; i++) {
-        fromEulerScratchMats.push(new Float32Array(16));
-    }
-
-    var composeScratchMats = [];
-    for (var i = 0; i < 4; i++) {
-        composeScratchMats.push(new Float32Array(16));
-    }
-
     // Public functions
     return {
 
@@ -876,16 +866,30 @@ pc.math.mat4 = function () {
                 r = pc.math.mat4.create();
             }
 
-            var xm = fromEulerScratchMats[0];
-            var ym = fromEulerScratchMats[1];
-            var zm = fromEulerScratchMats[2];
+            // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
+            var sx = Math.sin(x);
+            var cx = Math.cos(x);
+            var sy = Math.sin(y);
+            var cy = Math.cos(y);
+            var sz = Math.sin(z);
+            var cz = Math.cos(z);
 
-            pc.math.mat4.makeRotate(x, pc.math.vec3.xaxis, xm);
-            pc.math.mat4.makeRotate(y, pc.math.vec3.yaxis, ym);
-            pc.math.mat4.makeRotate(z, pc.math.vec3.zaxis, zm);
+            // Set rotation elements
+            r[0] = cy*cz;
+            r[1] = -cy*sz;
+            r[2] = sy;
 
-            pc.math.mat4.multiply(ym, xm, r);
-            pc.math.mat4.multiply(zm, r, r);
+            r[4] = cx*sz + cz*sx*sy;
+            r[5] = cx*cz - sx*sy*sz;
+            r[6] = -cy*sx;
+
+            r[8] = sx*sz - cx*cz*sy;
+            r[9] = cz*sy + cx*sy*sz;
+            r[10] = cx*cy;
+
+            // Set non-rotational part to identity
+            r[3] = r[7] = r[11] = r[12] = r[13] = r[14] = 0;
+            r[15] = 1;
 
             return r;
         },
