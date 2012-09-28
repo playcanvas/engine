@@ -110,17 +110,23 @@ pc.math.quat = function () {
             qr[3] = ww;
         },
 
-        transformVector: function (q, v) {
-            var vn = pc.math.vec3.normalise(v);
-         
-            var vecQuat = pc.math.quat.create(vn[0], vn[1], vn[2], 0);         
+        transformVector: function (q, v, r) {
+            if (r === undefined) {
+                r = pc.math.vec3.create();
+            }
+
+            var vecQuat = pc.math.quat.create(v[0], v[1], v[2], 0);         
             var resQuat = pc.math.quat.create();
 
             var conj = pc.math.quat.conjugate(q);
             pc.math.quat.multiply(vecQuat, conj, resQuat);
             pc.math.quat.multiply(q, resQuat, resQuat);
          
-            return pc.math.vec3.create(resQuat[0], resQuat[1], resQuat[2]);
+            r[0] = resQuat[0];
+            r[1] = resQuat[1];
+            r[2] = resQuat[2];
+
+            return r;
         },
 
         setFromEulers: function (q, ex, ey, ez) {
