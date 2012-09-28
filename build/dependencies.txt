@@ -95,7 +95,6 @@
 ../src/net/net_socket.js
 ../src/script/script_script.js
 ../src/script/resources/resources_script.js
-../src/helpers/helpers_flycam.js
 ../src/helpers/helpers_animframe.js
 ../src/framework/framework_fw.js
 ../src/framework/framework_link.prod.js
