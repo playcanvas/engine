@@ -75,6 +75,8 @@ pc.math.quat = function () {
          * @author Will Eastcott
          */
         create: function (x, y, z, w) {
+            // x, y, z are imaginary components
+            // w is the real component
             var q = new Float32Array(4);
             q[0] = x;
             q[1] = y;
@@ -129,6 +131,21 @@ pc.math.quat = function () {
             return r;
         },
 
+        setFromAxisAngle: function (q, v, angle) {
+            var sinAngle;
+            angle *= 0.5 * (Math.PI / 180.0);
+
+            var vn = pc.math.vec3.create();
+            pc.math.vec3.normalize(v, vn);
+         
+            sinAngle = Math.sin(angle);
+         
+            q[0] = vn[0] * sinAngle;
+            q[1] = vn[1] * sinAngle;
+            q[2] = vn[2] * sinAngle;
+            q[3] = Math.cos(angle);
+        },
+
         setFromEulers: function (q, ex, ey, ez) {
             ex = ex * Math.PI / 180.0;
             ey = ey * Math.PI / 180.0;
@@ -140,18 +157,23 @@ pc.math.quat = function () {
             var cy = Math.cos(ey * -0.5);
             var sz = Math.sin(ez * -0.5);
             var cz = Math.cos(ez * -0.5);
-
-            /* qx * qy */
+/*
+            // qx * qy
             var tx = sx * cy;
             var ty = cx * sy;
             var tz = sx * sy;
             var tw = cx * cy;
 
-            /* qt * qz */
+            // qt * qz
             q[0] = tx * cz + ty * sz;
             q[1] = ty * cz - tx * sz;
             q[2] = tw * sz + tz * cz;
             q[3] = tw * cz - tz * sz;
+*/
+            q[0] = sx * cy * cz + cx * sy * sz;
+            q[1] = cx * sy * cz - sx * cy * sz;
+            q[2] = cx * cy * sz + sx * sy * cz;
+            q[3] = cx * cy * cz - sx * sy * sz;
         },
 
         toMat3: function (q, r) {
