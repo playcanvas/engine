@@ -258,7 +258,12 @@ pc.extend(pc.input, function () {
     // Apply PointerLock shims
     (function () {
         // Old API
-        navigator.pointer = navigator.pointer || navigator.webkitPointer || navigator.mozPointer;
+        if (typeof navigator === 'undefined' || typeof document === 'undefined') {
+            // Not running in a browser
+            return;
+        }
+
+        navigator.pointer = navigator.pointer || navigator.webkitPointer || navigator.mozPointer;    
 
         // Events
         var pointerlockchange = function () {
