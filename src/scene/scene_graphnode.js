@@ -753,7 +753,7 @@ pc.extend(pc.scene, function () {
 
         rotateLocal: function (x, y, z) {
             pc.math.quat.setFromEulers(tempQuat, x, y, z);
-            pc.math.quat.multiply(this.localRotation, tempQuat, this.localRotation);
+            pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
             this.dirtyLocal = true;
         }
     };
