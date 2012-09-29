@@ -10,29 +10,36 @@ pc.extend(pc.scene, function () {
      */
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
+        this._labels = {};
+        this._graphId = -1;
 
+        // Local-space properties of transform (only first 3 are settable by the user)
         this.localPosition = pc.math.vec3.create(0, 0, 0);
         this.localRotation = pc.math.quat.create(0, 0, 0, 1);
         this.localScale = pc.math.vec3.create(1, 1, 1);
-        this.dirtyLocal = false;
-        this.dirtyWorld = false;
+        this.localEulerAngles = pc.math.vec3.create(0, 0, 0); // Only calculated on request
 
-        this.localEulerAngles = pc.math.vec3.create(0, 0, 0);
+        // World-space properties of transform
+        this.position = pc.math.vec3.create(0, 0, 0);
+        this.rotation = pc.math.quat.create(0, 0, 0, 1);
+        this.eulerAngles = pc.math.vec3.create(0, 0, 0);
 
         this.localTransform = pc.math.mat4.create();
+        this.dirtyLocal = false;
+
         this.worldTransform = pc.math.mat4.create();
+        this.dirtyWorld = false;
 
         this._parent = null;
         this._children = [];
-
-        this._labels = {};
-        this._graphId = -1;
     };
 
     GraphNode.prototype = {
 
         _cloneInternal: function (clone) {
             clone._name = this._name;
+            clone._labels = pc.extend(this._lables, {});
+            clone._graphId = this._graphId;
 
             pc.math.vec3.copy(this.localPosition, clone.localPosition);
             pc.math.quat.copy(this.localRotation, clone.localRotation);
@@ -44,9 +51,6 @@ pc.extend(pc.scene, function () {
 
             pc.math.mat4.copy(this.localTransform, clone.localTransform);
             pc.math.mat4.copy(this.worldTransform, clone.worldTransform);
-
-            clone._labels = pc.extend(this._lables, {});
-            clone._graphId = this._graphId;
         },
 
         clone: function () {
@@ -223,6 +227,22 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
+         * @name pc.scene.GraphNode#getEulerAngles
+         * @description Get the world space rotation for the specified GraphNode in Euler angle
+         * form. The order of the returned Euler angles is XYZ. The value returned by this function 
+         * should be considered read-only. In order to set the world-space rotation of the graph 
+         * node, use pc.scene.GraphNode#setEulerAngles.
+         * @returns {pc.math.vec3} The world space rotation of the graph node in Euler angle form.
+         * @author Will Eastcott
+         */
+        getEulerAngles: function () {
+            var worldTransform = this.getWorldTransform();
+            pc.math.mat4.toEulerXYZ(worldTransform, this.eulerAngles);
+            return this.eulerAngles;
+        },
+
+        /**
+         * @function
          * @name pc.scene.GraphNode#getLocalEulerAngles
          * @description Get the rotation in local space for the specified GraphNode. The rotation
          * is returned as eurler angles in a 3-dimensional vector where the order is XYZ. The 
@@ -313,37 +333,32 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#getWorldPosition
-         * @description Get the position in world space for the specified GraphNode. This
-         * function internally allocates a 3-dimensional vector and copies the positional
-         * components of the graph node's world transformation matrix into it. This vector
-         * is returned by the function.
+         * @name pc.scene.GraphNode#getPosition
+         * @description Get the world space position for the specified GraphNode. The
+         * value returned by this function should be considered read-only. In order to set
+         * the world-space position of the graph node, use pc.scene.GraphNode#setPosition.
          * @returns {pc.math.vec3} The world space position of the graph node.
          * @author Will Eastcott
          */
+        getPosition: function () {
+            var worldTransform = this.getWorldTransform();
+            pc.math.mat4.getTranslation(worldTransform, this.position);
+            return this.position;
+        },
+
         /**
          * @function
-         * @name pc.scene.GraphNode#getWorldPosition^2
-         * @description Get the position in world space for the specified GraphNode. By
-         * supplying a 3-dimensional vector as a parameter, this function will not 
-         * allocate internally and is therefore more optimal than the other 
-         * pc.scene.GraphNode#getWorldposition prototype.
-         * @param {pc.math.vec3} pos A pre-alloacted 3-dimensional vector to receive the
-         * world space position of the graph node.
-         * @returns {pc.math.vec3} The world space position of the graph node (simply a 
-         * reference to the parameter passed to the function).
+         * @name pc.scene.GraphNode#getRotation
+         * @description Get the world space rotation for the specified GraphNode in quaternion
+         * form. The value returned by this function should be considered read-only. In order 
+         * to set the world-space rotation of the graph node, use pc.scene.GraphNode#setRotation.
+         * @returns {pc.math.quat} The world space rotation of the graph node as a quaternion.
          * @author Will Eastcott
          */
-        getWorldPosition: function () {
-            if (arguments.length === 1) {
-                var pos = arguments[0];
-                pos[0] = this.worldTransform[12];
-                pos[1] = this.worldTransform[13];
-                pos[2] = this.worldTransform[14];
-                return pos;
-            } else {
-                return pc.math.vec3.create(this.worldTransform[12], this.worldTransform[13], this.worldTransform[14]);
-            }
+        getRotation: function () {
+            var worldTransform = this.getWorldTransform();
+            pc.math.mat4.toQuat(worldTransform, this.rotation);
+            return this.rotation;
         },
 
         /**
@@ -596,7 +611,7 @@ pc.extend(pc.scene, function () {
             if(this.hasLabel(label)) {
                 results.push(this);
             }
-            
+
             for(i = 0; i < length; ++i) {
                 results = this._children[i].findByLabel(label, results);
             }
