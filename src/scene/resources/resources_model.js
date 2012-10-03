@@ -108,26 +108,38 @@ pc.extend(pc.resources, function () {
     ModelResourceHandler.prototype.clone = function (model) {
         return model.clone();
     }
-        
+
+    ModelResourceHandler.prototype._setNodeData = function (node, data) {
+        node.setName(data.name);
+        node.addGraphId(data.uid);
+        if (data.transform) {
+            // Backwards compatibility code. Remove at some point...
+            var p = pc.math.mat4.getTranslation(data.transform);
+            var r = pc.math.mat4.toEulerXYZ(data.transform);
+            var s = pc.math.mat4.getScale(data.transform);
+            node.setLocalPosition(p);
+            node.setLocalEulerAngles(r[0] * pc.math.RAD_TO_DEG, r[1] * pc.math.RAD_TO_DEG, r[2] * pc.math.RAD_TO_DEG);
+            node.setLocalScale(s);
+        } else {
+            node.setLocalPosition(data.position);
+            node.setLocalEulerAngles(data.rotation[0], data.rotation[1], data.rotation[2]);
+            node.setLocalScale(data.scale);
+        }
+    },
+
     ModelResourceHandler.prototype._loadNode = function (model, modelData, nodeData) {
         var node = new pc.scene.GraphNode();
-        
-        // Node properties
-        node.setName(nodeData.name);
-        node.addGraphId(nodeData.uid);
-        node.setLocalTransform(pc.math.mat4.clone(nodeData.transform));
-    
+
+        this._setNodeData(node, nodeData);
+
         return node;
     };
     
     ModelResourceHandler.prototype._loadCamera = function (model, modelData, cameraData) {
         var camera = new pc.scene.CameraNode();
 
-        // Node properties
-        camera.setName(cameraData.name);
-        camera.addGraphId(cameraData.uid);
-        camera.setLocalTransform(pc.math.mat4.clone(cameraData.transform));
-    
+        this._setNodeData(camera, cameraData);
+
         // Camera properties
         var projection = this._jsonToProjectionType[cameraData.projection];
         camera.setProjection(projection);
@@ -150,12 +162,9 @@ pc.extend(pc.resources, function () {
 
     ModelResourceHandler.prototype._loadLight = function (model, modelData, lightData) {
         var light = new pc.scene.LightNode();
-            
-        // Node properties
-        light.setName(lightData.name);
-        light.addGraphId(lightData.uid);
-        light.setLocalTransform(pc.math.mat4.clone(lightData.transform));
-    
+
+        this._setNodeData(light, lightData);
+
         // Translate the light type
         var type = this._jsonToLightType[lightData.light_type];
 
@@ -179,12 +188,9 @@ pc.extend(pc.resources, function () {
     
     ModelResourceHandler.prototype._loadMesh = function (model, modelData, meshData) {
         var mesh = new pc.scene.MeshNode();
-            
-        // Node properties
-        mesh.setName(meshData.name);
-        mesh.addGraphId(meshData.uid);
-        mesh.setLocalTransform(pc.math.mat4.clone(meshData.transform));
-    
+
+        this._setNodeData(mesh, meshData);
+
         // Mesh properties
         var geometryId = meshData.geometry;
         var geometry   = model.getGeometries()[geometryId];

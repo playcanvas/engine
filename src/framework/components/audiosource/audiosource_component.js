@@ -59,7 +59,7 @@ pc.extend(pc.fw, function () {
                 
                 // Update channel position if this is a 3d sound
                 if (componentData.channel instanceof pc.audio.Channel3d) {
-                    var pos = entity.getWorldPosition();
+                    var pos = entity.getPosition();
                     componentData.channel.setPosition(pos);
                 }
             }
@@ -83,7 +83,7 @@ pc.extend(pc.fw, function () {
                     this.set(entity, 'currentSource', name);
                     this.set(entity, 'channel', channel);
                 } else {
-                    var pos = entity.getWorldPosition();
+                    var pos = entity.getPosition();
                     var channel = this.manager.playSound3d(componentData['sources'][name], pos, componentData);
                     this.set(entity, 'currentSource', name);
                     this.set(entity, 'channel', channel);

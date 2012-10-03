@@ -111,8 +111,8 @@ if (typeof(Box2D) !== 'undefined') {
 
             initBodyDef: function (entity, bodyDef, componentData) {
                 entity.syncHierarchy();
-                entity.getWorldPosition(position);
-                pc.math.mat4.toEulerXYZ(entity.getWorldTransform(), rotation);
+                pc.math.vec3.copy(entity.getPosition(), position);
+                pc.math.vec3.copy(entity.getEulerAngles(), rotation);
 
                 bodyDef.type = componentData['static'] ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
                 bodyDef.position.Set(position[this.xi], position[this.yi]);
@@ -368,32 +368,19 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             updateTransform: function (entity, body) {
-                var setWorldTransform = function (entity, wtm) {
-                    var parent = entity.getParent();
-                    if (parent) {
-                        var pw = parent.getWorldTransform();
-                        pc.math.mat4.invert(pw, transform);
-                        pc.math.mat4.multiply(transform, wtm, entity.getLocalTransform());
-                    } else {
-                        pc.math.mat4.copy(wtm, entity.getLocalTransform());
-                    }
-                    pc.math.mat4.copy(wtm, entity.getWorldTransform());
-                };
-
-                var wtm = entity.getWorldTransform();
+                var entityPos = entity.getPosition();
                 var position2d = body.GetPosition();
 
                 position[this.xi] = position2d.x;
-                position[this.ri] = wtm[13];
+                position[this.ri] = entityPos[1];
                 position[this.yi] = position2d.y;
 
                 rotation[this.xi] = 0;
                 rotation[this.ri] = -body.GetAngle();
                 rotation[this.yi] = 0;
 
-                pc.math.mat4.getScale(wtm, scale);
-                pc.math.mat4.compose(position, rotation, scale, newWtm);
-                setWorldTransform(entity, newWtm);
+                entity.setPosition(position);
+                entity.setEulerAngles(rotation);
             },
 
             update: function (dt) {

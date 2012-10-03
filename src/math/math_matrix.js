@@ -1,4 +1,8 @@
 pc.math.mat3 = function () {
+    var scratchVecs = [];
+    for (var i = 0; i < 3; i++) {
+        scratchVecs.push(pc.math.vec3.create());
+    }
 
     // Public functions
     return {
@@ -27,6 +31,57 @@ pc.math.mat3 = function () {
             r[7] = m4[9];
             r[8] = m4[10];
             return r;
+        },
+
+        getScale: function (m, r) {
+            if (r === undefined) {
+               r = pc.math.vec3.create();
+            }
+
+            var x = scratchVecs[0];
+            var y = scratchVecs[1];
+            var z = scratchVecs[2];
+            pc.math.vec3.set(x, m[0], m[1], m[2]);
+            pc.math.vec3.set(y, m[3], m[4], m[5]);
+            pc.math.vec3.set(z, m[6], m[7], m[8]);
+            r[0] = pc.math.vec3.length(x);
+            r[1] = pc.math.vec3.length(y);
+            r[2] = pc.math.vec3.length(z);
+
+            return r;
+        },
+
+        toEulerXYZ : function (m, r) {
+            if (r === undefined) {
+                r = pc.math.vec3.create();
+            }
+
+            var scale = pc.math.mat3.getScale(m);
+            
+            var x; 
+            var y = Math.asin(-m[2] / scale[0]);
+            var z;
+            var HALF_PI = Math.PI / 2;
+            if (y < HALF_PI) {
+                if (y > -HALF_PI) {
+                    x = Math.atan2(m[5] / scale[1], m[8] / scale[2]);
+                    z = Math.atan2(m[1] / scale[0], m[0] / scale[0]);
+                } else {
+                    // Not a unique solution
+                    z = 0;
+                    x = -Math.atan2(m[3] / scale[1], m[4] / scale[1]);
+                }
+            } else {
+                // Not a unique solution
+                z = 0;
+                x = Math.atan2(m[3] / scale[1], m[4] / scale[1]);        
+            }
+            
+            r[0] = x;
+            r[1] = y;
+            r[2] = z;
+
+            return r;
         }
     }
 } ();
@@ -40,16 +95,6 @@ pc.math.mat4 = function () {
     var scratchVecs = [];
     for (var i = 0; i < 3; i++) {
         scratchVecs.push(pc.math.vec3.create());
-    }
-
-    var fromEulerScratchMats = [];
-    for (var i = 0; i < 4; i++) {
-        fromEulerScratchMats.push(new Float32Array(16));
-    }
-
-    var composeScratchMats = [];
-    for (var i = 0; i < 4; i++) {
-        composeScratchMats.push(new Float32Array(16));
     }
 
     // Public functions
@@ -201,56 +246,58 @@ pc.math.mat4 = function () {
                 r = pc.math.mat4.create();
             }
 
-            var a11 = a[0];
-            var a21 = a[1];
-            var a31 = a[2];
-            var a41 = a[3];
-            var a12 = a[4];
-            var a22 = a[5];
-            var a32 = a[6];
-            var a42 = a[7];
-            var a13 = a[8];
-            var a23 = a[9];
-            var a33 = a[10];
-            var a43 = a[11];
-            var a14 = a[12];
-            var a24 = a[13];
-            var a34 = a[14];
-            var a44 = a[15];
+            var a00 = a[0];
+            var a01 = a[1];
+            var a02 = a[2];
+            var a03 = a[3];
+            var a10 = a[4];
+            var a11 = a[5];
+            var a12 = a[6];
+            var a13 = a[7];
+            var a20 = a[8];
+            var a21 = a[9];
+            var a22 = a[10];
+            var a23 = a[11];
+            var a30 = a[12];
+            var a31 = a[13];
+            var a32 = a[14];
+            var a33 = a[15];
 
-            var b11 = b[0];
-            var b21 = b[1];
-            var b31 = b[2];
-            var b41 = b[3];
-            var b12 = b[4];
-            var b22 = b[5];
-            var b32 = b[6];
-            var b42 = b[7];
-            var b13 = b[8];
-            var b23 = b[9];
-            var b33 = b[10];
-            var b43 = b[11];
-            var b14 = b[12];
-            var b24 = b[13];
-            var b34 = b[14];
-            var b44 = b[15];
+            var b0 = b[0];
+            var b1 = b[1];
+            var b2 = b[2];
+            var b3 = b[3];
+            r[0]  = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
+            r[1]  = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
+            r[2]  = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
+            r[3]  = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
 
-            r[0]  = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
-            r[1]  = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
-            r[2]  = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
-            r[3]  = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
-            r[4]  = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
-            r[5]  = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
-            r[6]  = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
-            r[7]  = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
-            r[8]  = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
-            r[9]  = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
-            r[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
-            r[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
-            r[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
-            r[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
-            r[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
-            r[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
+            b0 = b[4];
+            b1 = b[5];
+            b2 = b[6];
+            b3 = b[7];
+            r[4]  = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
+            r[5]  = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
+            r[6]  = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
+            r[7]  = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
+
+            b0 = b[8];
+            b1 = b[9];
+            b2 = b[10];
+            b3 = b[11];
+            r[8]  = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
+            r[9]  = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
+            r[10] = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
+            r[11] = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
+
+            b0 = b[12];
+            b1 = b[13];
+            b2 = b[14];
+            b3 = b[15];
+            r[12] = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
+            r[13] = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
+            r[14] = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
+            r[15] = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
 
             return r;
         },
@@ -476,20 +523,22 @@ pc.math.mat4 = function () {
 
             var x = axis[0], y = axis[1], z = axis[2];
             var c = Math.cos(angle);
-            var c1 = 1-c;
             var s = Math.sin(angle);
+            var t = 1-c;
+            var tx = t * x;
+            var ty = t * y;
 
-            r[0] = x*x*c1+c;
-            r[1] = y*x*c1+z*s;
-            r[2] = z*x*c1-y*s;
+            r[0] = tx*x+c;
+            r[1] = tx*y+s*z;
+            r[2] = tx*z-s*y;
             r[3] = 0;
-            r[4] = x*y*c1-z*s;
-            r[5] = y*y*c1+c;
-            r[6] = y*z*c1+x*s;
+            r[4] = tx*y-s*z;
+            r[5] = ty*y+c;
+            r[6] = ty*z+s*x;
             r[7] = 0;
-            r[8] = x*z*c1+y*s;
-            r[9] = y*z*c1-x*s;
-            r[10] = z*z*c1+c;
+            r[8] = tx*z+s*y;
+            r[9] = ty*z-x*s;
+            r[10] = t*z*z+c;
             r[11] = 0;
             r[12] = 0;
             r[13] = 0;
@@ -821,16 +870,50 @@ pc.math.mat4 = function () {
                 r = pc.math.mat4.create();
             }
 
-            var xm = fromEulerScratchMats[0];
-            var ym = fromEulerScratchMats[1];
-            var zm = fromEulerScratchMats[2];
+            // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
+            var sx = Math.sin(x);
+            var cx = Math.cos(x);
+            var sy = Math.sin(y);
+            var cy = Math.cos(y);
+            var sz = Math.sin(z);
+            var cz = Math.cos(z);
 
-            pc.math.mat4.makeRotate(x, pc.math.vec3.xaxis, xm);
-            pc.math.mat4.makeRotate(y, pc.math.vec3.yaxis, ym);
-            pc.math.mat4.makeRotate(z, pc.math.vec3.zaxis, zm);
+            // Set rotation elements
+            r[0] = cy*cz;
+            r[1] = cx*sz + cz*sx*sy;
+            r[2] = sx*sz - cx*cz*sy;
 
-            pc.math.mat4.multiply(ym, xm, r);
-            pc.math.mat4.multiply(zm, r, r);
+            r[4] = -cy*sz;
+            r[5] = cx*cz - sx*sy*sz;
+            r[6] = cz*sx + cx*sy*sz;
+
+            r[8] = sy;
+            r[9] = -cy*sx;
+            r[10] = cx*cy;
+
+/*
+            r[0] = cx*cy;
+            r[1] = cy*sx;
+            r[2] = -sy;
+
+            r[4] = cx*sy*sz - cz*sx;
+            r[5] = cx*cz + sx*sy*sz;
+            r[6] = cy*sz;
+
+            r[8] = sx*sz + cx*cz*sy;
+            r[9] = cz*sx*sy - cx*cz;
+            r[10] = cy*cz;
+
+            // Set non-rotational part to identity
+            r[3] = r[7] = r[11] = r[12] = r[13] = r[14] = 0;
+            r[15] = 1;
+
+            var rx = pc.math.mat4.makeRotate(x, [1, 0, 0]);
+            var ry = pc.math.mat4.makeRotate(y, [0, 1, 0]);
+            var rz = pc.math.mat4.makeRotate(z, [0, 0, 1]);
+            pc.math.mat4.multiply(z, y, r);
+            pc.math.mat4.multiply(r, x, r);
+*/
 
             return r;
         },
@@ -839,7 +922,7 @@ pc.math.mat4 = function () {
             if (r === undefined) {
                 r = pc.math.vec3.create();
             }
-            
+
             var scale = pc.math.mat4.getScale(m);
             
             var x; 
@@ -864,13 +947,13 @@ pc.math.mat4 = function () {
             r[0] = x;
             r[1] = y;
             r[2] = z;
-            
+
             return r;
         },
-    
+
         /**
          * @function
-         * @name pc.math.mat4.toQuat
+         * @name pc.math.quat.fromMat4
          * @description Converts the specified 4x4 matrix to a quaternion. Note that since
          * a quaternion is purely a representation for orientation, only the translational part
          * of the matrix is lost.
@@ -886,11 +969,11 @@ pc.math.mat4 = function () {
          * var rot = pc.math.mat4.makeRotate(Math.PI, yaxis);
          *
          * // Allow toQuat to create a new quaternion internally
-         * var q1 = pc.math.mat4.toQuat(rot);
+         * var q1 = pc.math.quat.fromMat4(rot);
          *
          * // Supply a quaternion to receive the result of the conversion
          * var q2 = pc.math.quat.create();
-         * pc.math.mat4.toQuat(m, q2);
+         * pc.math.quat.fromMat4(m, q2);
          * @author Will Eastcott
          */
         toQuat: function (m, r) {
@@ -898,15 +981,15 @@ pc.math.mat4 = function () {
                 r = pc.math.quat.create();
             }
 
-            var nxt = [ 1, 2, 0 ];
-            var tr = m[0] + m[5] + m[10];
+            // http://www.cs.ucr.edu/~vbz/resources/quatut.pdf
+            var tr, s;
 
-            if (tr > 0.0)
+            tr = m[0] + m[5] + m[10];
+            if (tr >= 0.0)
             {
-                var s = Math.sqrt(tr + m[15]);
+                s = Math.sqrt(tr + m[15]);
                 r[3] = s * 0.5;
                 s = 0.5 / s;
-
                 r[0] = (m[6] - m[9]) * s;
                 r[1] = (m[8] - m[2]) * s;
                 r[2] = (m[1] - m[4]) * s;
@@ -971,23 +1054,47 @@ pc.math.mat4 = function () {
         },
 
         compose: function (t, r, s, result) {
-            var mat = pc.math.mat4;
             if (result === undefined) {
-                result = mat.create();
+                result = pc.math.mat4.create();
             }
 
-            var translate = composeScratchMats[0];
-            var rotate = composeScratchMats[1];
-            var scale = composeScratchMats[2];
-            var temp = composeScratchMats[3];
+            var qx = r[0];
+            var qy = r[1];
+            var qz = r[2];
+            var qw = r[3];
 
-            mat.makeTranslate(t[0], t[1], t[2], translate);
-            mat.fromEulerXYZ(r[0], r[1], r[2], rotate);
-            mat.makeScale(s[0], s[1], s[2], scale);
+            var x2 = qx + qx;
+            var y2 = qy + qy;
+            var z2 = qz + qz;
+            var xx = qx * x2;
+            var xy = qx * y2;
+            var xz = qx * z2;
+            var yy = qy * y2;
+            var yz = qy * z2;
+            var zz = qz * z2;
+            var wx = qw * x2;
+            var wy = qw * y2;
+            var wz = qw * z2;
 
-            // multiplied in order: translate * rotate * scale 
-            mat.multiply(rotate, scale, temp);
-            mat.multiply(translate, temp, result);
+            result[0] = (1.0 - (yy + zz)) * s[0];
+            result[1] = (xy + wz) * s[0];
+            result[2] = (xz - wy) * s[0];
+            result[3] = 0.0;
+
+            result[4] = (xy - wz) * s[1];
+            result[5] = (1.0 - (xx + zz)) * s[1];
+            result[6] = (yz + wx) * s[1];
+            result[7] = 0.0;
+
+            result[8] = (xz + wy) * s[2];
+            result[9] = (yz - wx) * s[2];
+            result[10] = (1.0 - (xx + yy)) * s[2];
+            result[11] = 0.0;
+
+            result[12] = t[0];
+            result[13] = t[1];
+            result[14] = t[2];
+            result[15] = 1.0;
 
             return result;
         }

@@ -24,6 +24,19 @@ pc.math.quat = function () {
             return new Float32Array(q);
         },
 
+        conjugate: function (q, r) {
+            if (r === undefined) {
+                r = pc.math.quat.create();
+            }
+
+            r[0] = -q[0];
+            r[1] = -q[1];
+            r[2] = -q[2];
+            r[3] = q[3];
+
+            return r;
+        },
+
         /**
          * @function
          * @name pc.math.quat.copy
@@ -61,13 +74,169 @@ pc.math.quat = function () {
          * var q2 = pc.math.quat.create(-0.11,-0.15,-0.46,0.87);
          * @author Will Eastcott
          */
-        create: function (x, y, z, w) {
+        create: function () {
             var q = new Float32Array(4);
-            q[0] = x;
-            q[1] = y;
-            q[2] = z;
-            q[3] = w;
+
+            // x, y, z are imaginary components
+            // w is the real component
+            if (arguments.length === 0) {
+                q[0] = 0;
+                q[1] = 0;
+                q[2] = 0;
+                q[3] = 1;
+            } else if (arguments.length === 4) {
+                q[0] = arguments[0];
+                q[1] = arguments[1];
+                q[2] = arguments[2];
+                q[3] = arguments[3];
+            }
             return q;
+        },
+
+        transformVector: function (q, v, r) {
+            if (r === undefined) {
+                r = pc.math.vec3.create();
+            }
+
+            var vecQuat = pc.math.quat.create(v[0], v[1], v[2], 0);         
+            var resQuat = pc.math.quat.create();
+
+            var conj = pc.math.quat.conjugate(q);
+            pc.math.quat.multiply(vecQuat, conj, resQuat);
+            pc.math.quat.multiply(q, resQuat, resQuat);
+         
+            r[0] = resQuat[0];
+            r[1] = resQuat[1];
+            r[2] = resQuat[2];
+
+            return r;
+        },
+
+        multiply: function (q1, q2, r) {
+
+            var xx = q1[3] * q2[0] +
+                     q1[0] * q2[3] +
+                     q1[1] * q2[2] -
+                     q1[2] * q2[1];
+
+            var yy = q1[3] * q2[1] +
+                     q1[1] * q2[3] +
+                     q1[2] * q2[0] -
+                     q1[0] * q2[2];
+
+            var zz = q1[3] * q2[2] +
+                     q1[2] * q2[3] +
+                     q1[0] * q2[1] -
+                     q1[1] * q2[0];
+
+            var ww = q1[3] * q2[3] -
+                     q1[0] * q2[0] -
+                     q1[1] * q2[1] -
+                     q1[2] * q2[2];
+
+            r[0] = xx;
+            r[1] = yy;
+            r[2] = zz;
+            r[3] = ww;
+        },
+
+        setFromAxisAngle: function (q, v, angle) {
+            var halfAngle = 0.5 * angle * (Math.PI / 180.0);
+
+            var sa = Math.sin(halfAngle);
+            var ca = Math.cos(halfAngle);
+
+            q[0] = sa * v[0];
+            q[1] = sa * v[1];
+            q[2] = sa * v[2];
+            q[3] = ca;
+        },
+
+        setFromEulers: function (q, ex, ey, ez) {
+/*
+            ex = 0.5 * ex * Math.PI / 180.0;
+            ey = 0.5 * ey * Math.PI / 180.0;
+            ez = 0.5 * ez * Math.PI / 180.0;
+
+            var sx = Math.sin(ex);
+            var cx = Math.cos(ex);
+            var sy = Math.sin(ey);
+            var cy = Math.cos(ey);
+            var sz = Math.sin(ez);
+            var cz = Math.cos(ez);
+
+            q[0] = sx * cy * cz + cx * sy * sz;
+            q[1] = cx * sy * cz - sx * cy * sz;
+            q[2] = cx * cy * sz + sx * sy * cz;
+            q[3] = cx * cy * cz - sx * sy * sz;
+*/
+
+/*
+            var rx = pc.math.mat4.makeRotate(ex*(Math.PI/180.0), [1, 0, 0]);
+            var ry = pc.math.mat4.makeRotate(ey*(Math.PI/180.0), [0, 1, 0]);
+            var rz = pc.math.mat4.makeRotate(ez*(Math.PI/180.0), [0, 0, 1]);
+            var r = pc.math.mat4.multiply(rz, ry);
+            pc.math.mat4.multiply(r, rx, r);
+            pc.math.mat4.toQuat(r, q);
+*/
+            var qx = pc.math.quat.create();
+            var qy = pc.math.quat.create();
+            var qz = pc.math.quat.create();
+            pc.math.quat.setFromAxisAngle(qx, [1, 0, 0], ex);
+            pc.math.quat.setFromAxisAngle(qy, [0, 1, 0], ey);
+            pc.math.quat.setFromAxisAngle(qz, [0, 0, 1], ez);
+            pc.math.quat.multiply(qz, qy, q);
+            pc.math.quat.multiply(q, qx, q);
+        },
+
+        fromEulerXYZ: function (q, r) {
+            if (r === undefined) {
+                r = pc.math.vec3.create();
+            }
+
+            r[0] = Math.asin(2 * ( q[0] * q[2] - q[3] * q[1] ) );
+            r[1] = Math.atan2(2 * q[0] * q[3] + 2 * q[1] * q[3], 1 - 2 * (sqz  + sqw));
+            r[2] = Math.atan2(2 * q[0] * q[1] + 2 * q[2] * q[3], 1 - 2 * (sqy + sqz));
+
+            return r;
+        },
+
+        toMat3: function (q, r) {
+            if (r === undefined) {
+                r = pc.math.mat4.create();
+            }
+            var norm = q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
+            var s = (norm == 0.0) ? 0.0 : (2.0 / norm);
+
+            var xs = q[0] * s;
+            var ys = q[1] * s;
+            var zs = q[2] * s;
+
+            var wx = q[3] * xs;
+            var wy = q[3] * ys;
+            var wz = q[3] * zs;
+
+            var xx = q[0] * xs;
+            var yy = q[1] * ys;
+            var zz = q[2] * zs;
+
+            var yz = q[1] * zs; //crossx
+            var xz = q[2] * xs; //crossy
+            var xy = q[0] * ys; //crossz
+
+            r[0] = 1.0 - (yy + zz);
+            r[1] = xy - wz;
+            r[2] = xz + wy;
+            
+            r[3] = xy + wz;
+            r[4] = 1.0 - (xx + zz);
+            r[5] = yz - wx;
+
+            r[6] = xz - wy;
+            r[7] = yz + wx;
+            r[8] = 1.0 - (xx + yy);
+            
+            return r;
         },
 
         /**
@@ -96,8 +265,10 @@ pc.math.quat = function () {
             if (r === undefined) {
                 r = pc.math.mat4.create();
             }
-            var norm = q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
-            var s = (norm == 0.0) ? 0.0 : (2.0 / norm);
+
+            // http://www.cs.ucr.edu/~vbz/resources/quatut.pdf
+            var Nq = q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
+            var s = (Nq > 0.0) ? (2.0 / Nq) : 0.0 ;
 
             var xs = q[0] * s;
             var ys = q[1] * s;
@@ -111,23 +282,25 @@ pc.math.quat = function () {
             var yy = q[1] * ys;
             var zz = q[2] * zs;
 
-            var yz = q[1] * zs; //crossx
-            var xz = q[2] * xs; //crossy
-            var xy = q[0] * ys; //crossz
+            var yz = q[1] * zs;
+            var xz = q[2] * xs;
+            var xy = q[0] * ys;
 
             r[0] = 1.0 - (yy + zz);
-            r[1] = xy - wz;
-            r[2] = xz + wy;
-            
-            r[4] = xy + wz;
+            r[1] = xy + wz;
+            r[2] = xz - wy;
+            r[3] = 0.0;
+            r[4] = xy - wz;
             r[5] = 1.0 - (xx + zz);
-            r[6] = yz - wx;
-
-            r[8] = xz - wy;
-            r[9] = yz + wx;
+            r[6] = yz + wx;
+            r[7] = 0.0;
+            r[8] = xz + wy;
+            r[9] = yz - wx;
             r[10] = 1.0 - (xx + yy);
-
-            r[12] = r[13] = r[14] = r[3] = r[7] = r[11] = 0.0;
+            r[11] = 0.0;
+            r[12] = 0.0;
+            r[13] = 0.0;
+            r[14] = 0.0;
             r[15] = 1.0;
             
             return r;
