@@ -386,27 +386,6 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.GraphNode#setParent
-         * @description Set the parent node of this node. Note, this does not update the children of the parent
-         * @param {pc.scene.GraphNode} node The node to use as the parent
-         */
-        setParent: function (node) {
-            this._parent = node;
-        },
-    
-        /**
-         * @function
-         * @name pc.scene.GraphNode#setChildren
-         * @description Set the child array of this node. Note, this does not update the parent value of the children.
-         * @param {Array} children 
-         * @author Will Eastcott
-         */
-        setChildren: function (children) {
-            this._children = children;
-        },
-
-        /**
-         * @function
          * @name pc.scene.GraphNode#setLocalEulerAngles
          * @description Sets the local space rotation of the specified graph node using euler angles.
          * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
@@ -619,7 +598,7 @@ pc.extend(pc.scene, function () {
             }
 
             this._children.push(node);
-            node.setParent(this);
+            node._parent = this;
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node.dirtyWorld = true;
@@ -634,9 +613,9 @@ pc.extend(pc.scene, function () {
         removeChild: function (child) {
             var i;
             var length = this._children.length;
-            
+
             // Clear parent
-            child.setParent(null);
+            child._parent = null;
             
             // Remove from child list
             for(i = 0; i < length; ++i) {
@@ -784,21 +763,17 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#translate
-         * @description Translates the graph node by the given position vector.
-         * @param {pc.math.vec3} position The position vector to apply.
-         * @param {pc.scene.Space} space The coordinate system that the position is relative to.
-         * In left unspecified, local space is assumed.
+         * @description Translates the graph node in world space by the specified translation vector.
+         * @param {pc.math.vec3} translation The world space translation vector to apply.
          * @author Will Eastcott
          */
         /**
          * @function
          * @name pc.scene.GraphNode#translate^2
-         * @description Translates the graph node by the given position vector.
-         * @param {Number} x x-component of the position vector.
-         * @param {Number} y y-component of the position vector.
-         * @param {Number} z z-component of the position vector.
-         * @param {pc.scene.Space} space The coordinate system that the position is relative to.
-         * In left unspecified, local space is assumed.
+         * @description Translates the graph node in world space by the specified translation vector.
+         * @param {Number} x x-component of the translation vector.
+         * @param {Number} y y-component of the translation vector.
+         * @param {Number} z z-component of the translation vector.
          * @author Will Eastcott
          */
         translate: function () {
@@ -817,12 +792,26 @@ pc.extend(pc.scene, function () {
                     break;
             }
 
-            this.localPosition[0] += x;
-            this.localPosition[1] += y;
-            this.localPosition[2] += z;
-            this.dirtyLocal = true;
+            var pos = this.getPosition();
+            this.setPosition(pos[0] + x, pos[1] + y, pos[2] + z);
         },
 
+        /**
+         * @function
+         * @name pc.scene.GraphNode#translateLocal
+         * @description Translates the graph node in local space by the specified translation vector.
+         * @param {pc.math.vec3} translation The local space translation vector to apply.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#translateLocal^2
+         * @description Translates the graph node in local space by the specified translation vector.
+         * @param {Number} x x-component of the translation vector.
+         * @param {Number} y y-component of the translation vector.
+         * @param {Number} z z-component of the translation vector.
+         * @author Will Eastcott
+         */
         translateLocal: function () {
             var x = 0, y = 0, z = 0;
             var localTransform = this.getLocalTransform();
