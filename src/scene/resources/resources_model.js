@@ -1193,22 +1193,31 @@ pc.extend(pc.resources, function () {
             // Read the GraphNode properties
             var nodeType  = this.readU32();
             var name      = this.readStringChunk();
-            var transform = pc.math.mat4.create();
-            for (var i = 0; i < 16; i++) {
-                transform[i] = this.readF32();
-            }
+            var px = this.readF32();
+            var py = this.readF32();
+            var pz = this.readF32();
+            var rx = this.readF32();
+            var ry = this.readF32();
+            var rz = this.readF32();
+            var sx = this.readF32();
+            var sy = this.readF32();
+            var sz = this.readF32();
 
             var node;
             switch (nodeType) {
                 case 0: // GraphNode
                     node = new pc.scene.GraphNode();
                     node.setName(name);
-                    node.setLocalTransform(transform);
+                    node.setLocalPosition(px, py, pz);
+                    node.setLocalEulerAngles(rx, ry, rz);
+                    node.setLocalScale(sx, sy, sz);
                     break;
                 case 1: // Camera
                     node = new pc.scene.CameraNode();
                     node.setName(name);
-                    node.setLocalTransform(transform);
+                    node.setLocalPosition(px, py, pz);
+                    node.setLocalEulerAngles(rx, ry, rz);
+                    node.setLocalScale(sx, sy, sz);
 
                     var projection = this.readU32();
                     var nearClip = this.readF32();
@@ -1234,7 +1243,9 @@ pc.extend(pc.resources, function () {
                 case 2: // Light
                     node = new pc.scene.LightNode();
                     node.setName(name);
-                    node.setLocalTransform(transform);
+                    node.setLocalPosition(px, py, pz);
+                    node.setLocalEulerAngles(rx, ry, rz);
+                    node.setLocalScale(sx, sy, sz);
 
                     var type = this.readU16();
                     var enabled = this.readU8();
@@ -1263,7 +1274,9 @@ pc.extend(pc.resources, function () {
                 case 3: // Mesh
                     node = new pc.scene.MeshNode();
                     node.setName(name);
-                    node.setLocalTransform(transform);
+                    node.setLocalPosition(px, py, pz);
+                    node.setLocalEulerAngles(rx, ry, rz);
+                    node.setLocalScale(sx, sy, sz);
 
                     // Mesh specific properties
                     var geomIndex = this.readU32();
