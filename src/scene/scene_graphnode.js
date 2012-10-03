@@ -1,5 +1,6 @@
 pc.extend(pc.scene, function () {
 
+    var tempMat = pc.math.mat4.create();
     var tempVec = pc.math.vec3.create();
     var tempQuat = pc.math.quat.create();
 
@@ -510,6 +511,100 @@ pc.extend(pc.scene, function () {
          */
         setName: function (name) {
             this._name = name;
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setPosition
+         * @description Sets the world space position of the specified graph node.
+         * @param {pc.math.vec3} position world space position (xyz) of graph node.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setPosition^2
+         * @description Sets the world space position of the specified graph node.
+         * @param {Number} x x-coordinate of world-space position.
+         * @param {Number} y y-coordinate of world-space position.
+         * @param {Number} z z-coordinate of world-space position.
+         * @author Will Eastcott
+         */
+        setPosition: function () {
+            if (arguments.length === 1) {
+                tempVec[0] = arguments[0][0];
+                tempVec[1] = arguments[0][1];
+                tempVec[2] = arguments[0][2];
+            } else {
+                tempVec[0] = arguments[0];
+                tempVec[1] = arguments[1];
+                tempVec[2] = arguments[2];
+            }
+
+            if (this._parent === null) {
+                pc.math.vec3.copy(tempVec, this.localPosition);
+            } else {
+                var parentWtm = this._parent.getWorldTransform();
+                pc.math.mat4.invert(parentWtm, tempMat);
+                pc.math.mat4.multiplyVec3(tempVec, 1, tempMat, this.localPosition);
+            }
+            this.dirtyLocal = true;
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setRotation
+         * @description Sets the world space rotation of the specified graph node.
+         * @param {pc.math.vec3} position world space rotation (xyz) of graph node.
+         * @author Will Eastcott
+         */
+        setRotation: function (rot) {
+            if (this._parent === null) {
+                pc.math.quat.copy(rot, this.localRotation);
+            } else {
+                var parentRot = this._parent.getRotation();
+                pc.math.quat.invert(parentRot, tempQuat);
+                pc.math.quat.multiply(rot, tempQuat, this.localRotation);
+            }
+            this.dirtyLocal = true;
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setEulerAngles
+         * @description Sets the world space orientation of the specified graph node
+         * using Euler angles. Angles are specified in degress in XYZ order.
+         * @param {pc.math.vec3} angles Euler angles in degrees (XYZ order).
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setEulerAngles^2
+         * @description Sets the world space orientation of the specified graph node
+         * using Euler angles. Angles are specified in degress in XYZ order.
+         * @param {Number} ex Rotation around world space X axis in degrees.
+         * @param {Number} ey Rotation around world space Y axis in degrees.
+         * @param {Number} ez Rotation around world space Z axis in degrees.
+         * @author Will Eastcott
+         */
+        setEulerAngles: function () {
+            if (arguments.length === 1) {
+                tempVec[0] = arguments[0][0];
+                tempVec[1] = arguments[0][1];
+                tempVec[2] = arguments[0][2];
+            } else {
+                tempVec[0] = arguments[0];
+                tempVec[1] = arguments[1];
+                tempVec[2] = arguments[2];
+            }
+
+            pc.math.quat.setFromEulers(this.localRotation, tempVec);
+
+            if (this._parent !== null) {
+                var parentRot = this._parent.getRotation();
+                pc.math.quat.invert(parentRot, tempQuat);
+                pc.math.quat.multiply(this.localRotation, tempQuat, this.localRotation);
+            }
+            this.dirtyLocal = true;
         },
 
         /**
