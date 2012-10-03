@@ -26,13 +26,29 @@ test("clone", function() {
 	}
 });
 	
-test("multiply", function() {
+test("multiply: I*I = I", function() {
     var m1 = pc.math.mat4.create();
     var m2 = pc.math.mat4.create();
     var m3 = pc.math.mat4.create();
 
     var r = pc.math.mat4.multiply(m1, m2);
     QUnit.deepEqual(r, m3);
+});
+
+test("multiply: I*A = A", function() {
+    var m1 = pc.math.mat4.create();
+    var m2 = pc.math.mat4.makeRotate(Math.PI / 8, [0, 1, 0]);
+
+    var r = pc.math.mat4.multiply(m1, m2);
+    QUnit.deepEqual(r, m2);
+});
+
+test("multiply: A*I = A", function() {
+    var m1 = pc.math.mat4.makeRotate(Math.PI / 8, [0, 1, 0]);
+    var m2 = pc.math.mat4.create();
+
+    var r = pc.math.mat4.multiply(m1, m2);
+    QUnit.deepEqual(r, m1);
 });
 
 test("multplyVec3", function() {
@@ -47,7 +63,7 @@ test("multplyVec3", function() {
     approx(r[1], 1);
     approx(r[2], 0);
 });
-	
+
 test("multplyVec3: src and result same", function() {
     var t = pc.math.mat4.create();
     var v = pc.math.vec3.create(1,0,0);
@@ -378,7 +394,7 @@ test("fromEuler and back", function () {
     };
     
     var m1 = [0.7071067811865476,0,0.7071067811865476,0,0,1,0,0,-0.7071067811865476,0,0.7071067811865476,0, 0,0,0,1];
-    var m2
+    var m2;
 
     var r = pc.math.mat4.toEulerXYZ(m1);
     m2 = pc.math.mat4.fromEulerXYZ(r[0], r[1], r[2]);
@@ -387,6 +403,16 @@ test("fromEuler and back", function () {
 });
 
 test("compose", function() {
+    var clip = function (m) {
+        var i,l = m.length;
+        var a = []
+        for(i = 0;i < l; i++) {
+            a[i] = parseFloat(m[i].toFixed(3));
+        }
+        
+        return a;
+    };
+
     var tx = 10;
     var ty = 20;
     var tz = 30;
@@ -404,8 +430,46 @@ test("compose", function() {
 
     for (var i = 0; i < m1.length; i++) {
         QUnit.close(m1[i], m2[i], 0.0001);
-    }    
-});    
+    }
+
+    t = pc.math.vec3.create(tx, ty, tz);
+    r = pc.math.quat.create(0, Math.sqrt(0.5), 0, Math.sqrt(0.5));
+    s = pc.math.vec3.create(2, 3, 4);
+    m1 = pc.math.mat4.compose(t, r, s);
+    m2 = [0, 0, -2, 0, 0, 3, 0, 0, 4, 0, 0, 0, 10, 20, 30, 1];
+
+    QUnit.deepEqual(clip(m1),clip(m2));
+});
+
+test("toQuat", function () { 
+    // Indentity matrix to indentity quaternion
+    var m = pc.math.mat4.create();
+    var q = pc.math.mat4.toQuat(m);
+
+    QUnit.equal(q[0], 0);
+    QUnit.equal(q[1], 0);
+    QUnit.equal(q[2], 0);
+    QUnit.equal(q[3], 1);
+
+    // 180 degrees around +ve X
+    m = pc.math.mat4.makeRotate(Math.PI, [1, 0, 0]);
+    q = pc.math.mat4.toQuat(m);
+
+    QUnit.equal(q[0], 1);
+    QUnit.equal(q[1], 0);
+    QUnit.equal(q[2], 0);
+    QUnit.close(q[3], 0, 0.0001);
+
+    // -90 degrees around +ve Z
+    m = pc.math.mat4.makeRotate(-Math.PI / 2.0, [0, 0, 1]);
+    q = pc.math.mat4.toQuat(m);
+
+    QUnit.equal(q[0], 0);
+    QUnit.equal(q[1], 0);
+    QUnit.close(q[2], -Math.sqrt(0.5), 0.0001);
+    QUnit.close(q[3], Math.sqrt(0.5), 0.0001);
+});
+
 
 /*
 

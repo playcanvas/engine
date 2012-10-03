@@ -44,13 +44,17 @@ pc.extend(pc.scene, function () {
             pc.math.vec3.copy(this.localPosition, clone.localPosition);
             pc.math.quat.copy(this.localRotation, clone.localRotation);
             pc.math.vec3.copy(this.localScale, clone.localScale);
-            clone.dirtyLocal = clone.dirtyLocal;
-            clone.dirtyWorld = clone.dirtyWorld;
-
             pc.math.vec3.copy(this.localEulerAngles, clone.localEulerAngles);
 
+            pc.math.vec3.copy(this.position, clone.position);
+            pc.math.quat.copy(this.rotation, clone.rotation);
+            pc.math.vec3.copy(this.eulerAngles, clone.eulerAngles);
+
             pc.math.mat4.copy(this.localTransform, clone.localTransform);
+            clone.dirtyLocal = clone.dirtyLocal;
+
             pc.math.mat4.copy(this.worldTransform, clone.worldTransform);
+            clone.dirtyWorld = clone.dirtyWorld;
         },
 
         clone: function () {
@@ -369,6 +373,13 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getWorldTransform: function () {
+            var current = this;
+            while (current !== null) {
+                if (current._parent === null) {
+                    current.syncHierarchy();
+                }
+                current = current._parent;
+            }
             return this.worldTransform;
         },
 
@@ -488,18 +499,6 @@ pc.extend(pc.scene, function () {
                 this.localScale[2] = arguments[2];
             }
             this.dirtyLocal = true;
-        },
-
-        /**
-         * @function
-         * @name pc.scene.GraphNode#setLocalTransform
-         * @description Sets the local space transform (relative to the parent graph node's
-         * world transform) of the specified graph node.
-         * @param {pc.math.mat4} ltm Local transformation matrix to apply.
-         * @author Will Eastcott
-         */
-        setLocalTransform: function (ltm) {
-            this.localTransform = ltm;
         },
 
         /**
@@ -761,8 +760,33 @@ pc.extend(pc.scene, function () {
         },
 
         rotate: function (x, y, z) {
-            pc.math.quat.setFromEulers(tempQuat, x, y, z);
-            pc.math.quat.multiply(this.localRotation, tempQuat, this.localRotation);
+            if (this._parent === null) {
+                var rot = pc.math.quat.create();
+                pc.math.quat.setFromEulers(rot, x, y, z);
+                pc.math.quat.multiply(rot, this.localRotation, this.localRotation);
+            } else {
+                var rot = pc.math.quat.create();
+                pc.math.quat.setFromEulers(rot, x, y, z);
+
+                var invParRot = this._parent.getRotation();
+                pc.math.quat.conjugate(invParRot, invParRot);
+
+                var temp = pc.math.quat.create();
+                pc.math.quat.multiply(this.getRotation(), rot, temp);
+                pc.math.quat.multiply(temp, invParRot, this.localRotation);
+
+/*
+                var wtm = this.getWorldTransform();
+                var parentWtm = this._parent.getWorldTransform();
+                var invParentWtm = pc.math.mat4.invert(parentWtm);
+                var rot = pc.math.mat4.fromEulerXYZ(x * pc.math.DEG_TO_RAD, y * pc.math.DEG_TO_RAD, z * pc.math.DEG_TO_RAD);
+                var invParentWtmRot = pc.math.mat4.multiply(invParentWtm, rot);
+                var newLocal = pc.math.mat4.multiply(invParentWtmRot, wtm);
+                pc.math.mat4.toQuat(newLocal, this.localRotation);
+                var e = pc.math.mat4.toEulerXYZ(newLocal);
+                this.dirtyLocal = true;
+ */
+            }
             this.dirtyLocal = true;
         },
 
