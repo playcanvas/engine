@@ -38,13 +38,14 @@ pc.extend(pc.resources, function () {
                 var key = new pc.anim.Key();
 
                 var k = n.keys[j];
-                var q = k.quat;
                 var p = k.pos;
+                var r = k.rot;
                 var s = k.scale;
                 var t = k.time;
 
-                key._quat  = pc.math.quat.create(q[0], q[1], q[2], q[3]);
                 key._pos   = pc.math.vec3.create(p[0], p[1], p[2]);
+                key._quat  = pc.math.quat.create();
+                pc.math.quat.setFromEulers(key._quat, r[0], r[1], r[2]);
                 key._scale = pc.math.vec3.create(s[0], s[1], s[2]);
                 key._time  = t;
 
