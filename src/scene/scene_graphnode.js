@@ -533,7 +533,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#setRotation
          * @description Sets the world space rotation of the specified graph node.
-         * @param {pc.math.vec3} position world space rotation (xyz) of graph node.
+         * @param {pc.math.vec3} rot World space rotation (xyz) of graph node.
          * @author Will Eastcott
          */
         setRotation: function (rot) {
@@ -829,35 +829,41 @@ pc.extend(pc.scene, function () {
                     break;
             }
 
-            this.localPosition[0] += x * localTransform[0] +
-                                     y * localTransform[4] +
-                                     z * localTransform[8];
-
-            this.localPosition[1] += x * localTransform[1] +
-                                     y * localTransform[5] +
-                                     z * localTransform[9];
-
-            this.localPosition[2] += x * localTransform[2] +
-                                     y * localTransform[6] +
-                                     z * localTransform[10];
+            var localTranslation = pc.math.quat.transformVector(this.getRotation(), tempVec);
+            pc.math.vec3.add(this.localPosition, localTranslation, this.localPosition);
             this.dirtyLocal = true;
         },
 
+        /**
+         * @function
+         * @name pc.scene.GraphNode#rotate
+         * @description Rotates the graph node in world space by the specified Euler angles.
+         * Eulers are specified in degrees in XYZ order.
+         * @param {pc.math.vec3} rot World space rotation (xyz) of graph node.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#rotate^2
+         * @description Rotates the graph node in world space by the specified Euler angles.
+         * Eulers are specified in degrees in XYZ order.
+         * @param {Number} ex Rotation around world space X axis in degrees.
+         * @param {Number} ey Rotation around world space Y axis in degrees.
+         * @param {Number} ez Rotation around world space Z axis in degrees.
+         * @author Will Eastcott
+         */
         rotate: function (x, y, z) {
-            if (this._parent === null) {
-                var rot = pc.math.quat.create();
-                pc.math.quat.setFromEulers(rot, x, y, z);
-                pc.math.quat.multiply(rot, this.localRotation, this.localRotation);
-            } else {
-                var rot = pc.math.quat.create();
-                pc.math.quat.setFromEulers(rot, x, y, z);
+            pc.math.quat.setFromEulers(tempQuat, x, y, z);
 
+            if (this._parent === null) {
+                pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
+            } else {
                 var invParRot = this._parent.getRotation();
                 pc.math.quat.conjugate(invParRot, invParRot);
 
                 var temp = pc.math.quat.create();
-                pc.math.quat.multiply(this.getRotation(), rot, temp);
-                pc.math.quat.multiply(temp, invParRot, this.localRotation);
+                pc.math.quat.multiply(this.getRotation(), tempQuat, tempQuat);
+                pc.math.quat.multiply(tempQuat, invParRot, this.localRotation);
 
 /*
                 var wtm = this.getWorldTransform();
@@ -874,6 +880,24 @@ pc.extend(pc.scene, function () {
             this.dirtyLocal = true;
         },
 
+        /**
+         * @function
+         * @name pc.scene.GraphNode#rotateLocal
+         * @description Rotates the graph node in local space by the specified Euler angles.
+         * Eulers are specified in degrees in XYZ order.
+         * @param {pc.math.vec3} rot Local space rotation (xyz) of graph node.
+         * @author Will Eastcott
+         */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#rotateLocal^2
+         * @description Rotates the graph node in local space by the specified Euler angles.
+         * Eulers are specified in degrees in XYZ order.
+         * @param {Number} ex Rotation around local space X axis in degrees.
+         * @param {Number} ey Rotation around local space Y axis in degrees.
+         * @param {Number} ez Rotation around local space Z axis in degrees.
+         * @author Will Eastcott
+         */
         rotateLocal: function (x, y, z) {
             pc.math.quat.setFromEulers(tempQuat, x, y, z);
             pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
