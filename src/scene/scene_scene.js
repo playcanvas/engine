@@ -439,7 +439,7 @@ pc.extend(pc.scene, function () {
                         pc.math.mat4.multiply(scaleShift, shadowCamViewProj, light._shadowMatrix);
 
                         // Point the camera along direction of light
-                        pc.math.mat4.copy(shadowCamWtm, shadowCam._wtm);
+                        pc.math.mat4.copy(shadowCamWtm, shadowCam.getWorldTransform());
 
                         shadowCam.frameBegin();
                         if (device.extDepthTexture) {
