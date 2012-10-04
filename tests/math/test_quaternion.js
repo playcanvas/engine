@@ -154,6 +154,24 @@ test("setFromEulers: useful normalized quaternions", function () {
     QUnit.close(q[3], Math.sqrt(0.5), 0.0001);
 });
 
+test("transformVector", function () {
+    var q = pc.math.quat.create();
+    var v = pc.math.vec3.create(0, 0, 1);
+
+    // Identity quaternion, no rotation
+    var r = pc.math.quat.transformVector(q, v);
+    QUnit.equal(r[0], 0);
+    QUnit.equal(r[1], 0);
+    QUnit.equal(r[2], 1);
+
+    // Identity quaternion, no rotation
+    pc.math.quat.setFromEulers(q, 180, 0, 0);
+    var r = pc.math.quat.transformVector(q, v);
+    QUnit.close(r[0], 0, 0.0001);
+    QUnit.close(r[1], 0, 0.0001);
+    QUnit.close(r[2], -1, 0.0001);
+});
+
 test("setFromAxisAngle", function () {
     // Identity
     var qi = pc.math.quat.create();
@@ -179,3 +197,4 @@ test("setFromAxisAngle", function () {
     var qe = pc.math.quat.create();
     pc.math.quat.setFromEulers(qe, 45, 55, 65);
 });
+

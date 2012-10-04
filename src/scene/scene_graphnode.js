@@ -818,19 +818,18 @@ pc.extend(pc.scene, function () {
 
             switch (arguments.length) {
                 case 1:
-                    x = arguments[0][0];
-                    y = arguments[0][1];
-                    z = arguments[0][2];
+                    tempVec[0] = arguments[0][0];
+                    tempVec[1] = arguments[0][1];
+                    tempVec[2] = arguments[0][2];
                     break;
                 case 3:
-                    x = arguments[0];
-                    y = arguments[1];
-                    z = arguments[2];
+                    tempVec[0] = arguments[0];
+                    tempVec[1] = arguments[1];
+                    tempVec[2] = arguments[2];
                     break;
             }
 
-            var localTranslation = pc.math.quat.transformVector(this.getRotation(), tempVec);
-            pc.math.vec3.add(this.localPosition, localTranslation, this.localPosition);
+            pc.math.vec3.add(tempVec, this.localPosition, this.localPosition);
             this.dirtyLocal = true;
         },
 
@@ -864,18 +863,6 @@ pc.extend(pc.scene, function () {
                 var temp = pc.math.quat.create();
                 pc.math.quat.multiply(this.getRotation(), tempQuat, tempQuat);
                 pc.math.quat.multiply(tempQuat, invParRot, this.localRotation);
-
-/*
-                var wtm = this.getWorldTransform();
-                var parentWtm = this._parent.getWorldTransform();
-                var invParentWtm = pc.math.mat4.invert(parentWtm);
-                var rot = pc.math.mat4.fromEulerXYZ(x * pc.math.DEG_TO_RAD, y * pc.math.DEG_TO_RAD, z * pc.math.DEG_TO_RAD);
-                var invParentWtmRot = pc.math.mat4.multiply(invParentWtm, rot);
-                var newLocal = pc.math.mat4.multiply(invParentWtmRot, wtm);
-                pc.math.mat4.toQuat(newLocal, this.localRotation);
-                var e = pc.math.mat4.toEulerXYZ(newLocal);
-                this.dirtyLocal = true;
- */
             }
             this.dirtyLocal = true;
         },
@@ -900,7 +887,7 @@ pc.extend(pc.scene, function () {
          */
         rotateLocal: function (x, y, z) {
             pc.math.quat.setFromEulers(tempQuat, x, y, z);
-            pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
+            pc.math.quat.multiply(this.localRotation, tempQuat, this.localRotation);
             this.dirtyLocal = true;
         }
     };

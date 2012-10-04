@@ -98,16 +98,19 @@ pc.math.quat = function () {
                 r = pc.math.vec3.create();
             }
 
-            var vecQuat = pc.math.quat.create(v[0], v[1], v[2], 0);         
-            var resQuat = pc.math.quat.create();
+            var x = v[0], y = v[1], z = v[2];
+            var qx = q[0], qy = q[1], qz = q[2], qw = q[3];
 
-            var conj = pc.math.quat.conjugate(q);
-            pc.math.quat.multiply(vecQuat, conj, resQuat);
-            pc.math.quat.multiply(q, resQuat, resQuat);
-         
-            r[0] = resQuat[0];
-            r[1] = resQuat[1];
-            r[2] = resQuat[2];
+            // calculate quat * vec
+            var ix = qw * x + qy * z - qz * y;
+            var iy = qw * y + qz * x - qx * z;
+            var iz = qw * z + qx * y - qy * x;
+            var iw = -qx * x - qy * y - qz * z;
+
+            // calculate result * inverse quat
+            r[0] = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+            r[1] = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+            r[2] = iz * qw + iw * -qz + ix * -qy - iy * -qx;
 
             return r;
         },
