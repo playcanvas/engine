@@ -114,7 +114,7 @@ pc.math.quat = function () {
             r[2] = -q[2]*invDot;
             r[3] = q[3]*invDot;
             return r;
-        };
+        },
 
         transformVector: function (q, v, r) {
             if (r === undefined) {
