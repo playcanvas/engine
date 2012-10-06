@@ -72,9 +72,9 @@ pc.extend(pc.fw, function () {
                 var entity = components[id].entity;
                 var componentData = components[id].component;
 
-                var transform = entity.getWorldTransform();
+                var position = entity.getPosition();
 
-                this.renderable.setLocalTransform(transform);
+                this.renderable.setLocalPosition(position);
                 this.renderable.syncHierarchy();
                 this.renderable.dispatch();
             }
