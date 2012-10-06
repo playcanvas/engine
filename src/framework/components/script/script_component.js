@@ -127,9 +127,7 @@ pc.extend(pc.fw, function () {
         var componentData = this.getComponentData(entity);
         var urls = newValue;
         var prefix = pc.content.source || "";
-        if(pc.type(urls) == "string") {
-            urls = urls.split(",");
-        }
+
         var options = {
             batch: entity.getRequestBatch()
         };
