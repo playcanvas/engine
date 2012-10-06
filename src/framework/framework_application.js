@@ -440,7 +440,7 @@ pc.extend(pc.fw, function () {
                     this._updateEntity(msg.content.id, msg.content.components);
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
-                    this._updateEntityTransform(msg.content.id, msg.content.translate, msg.content.rotate, msg.content.scale);
+                    this._updateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME:
                     var entity = this.context.root.findOne("getGuid", msg.content.id);
@@ -536,7 +536,7 @@ pc.extend(pc.fw, function () {
             var entity = this.context.root.findByGuid(guid);
             if(entity) {
                 entity.setLocalPosition(position[0], position[1], position[2]);
-                entity.setLocalEulerAngles(rotation[0] * pc.math.RAD_TO_DEG, rotation[1] * pc.math.RAD_TO_DEG, rotation[2] * pc.math.RAD_TO_DEG);
+                entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
                 entity.setLocalScale(scale[0], scale[1], scale[2]);
 
                 // TODO: I don't like referencing a specific system here, but the body2d system won't pick up changes to the ltm 

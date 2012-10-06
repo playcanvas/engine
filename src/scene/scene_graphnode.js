@@ -404,7 +404,7 @@ pc.extend(pc.scene, function () {
          */
         setLocalEulerAngles: function () {
             if (arguments.length === 1) {
-                pc.math.quat.setFromEulers(this.localRotation, arguments[0]);
+                pc.math.quat.setFromEulers(this.localRotation, arguments[0][0], arguments[0][1], arguments[0][2]);
             } else {
                 pc.math.quat.setFromEulers(this.localRotation, arguments[0], arguments[1], arguments[2]);
             }
