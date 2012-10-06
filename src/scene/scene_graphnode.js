@@ -542,7 +542,7 @@ pc.extend(pc.scene, function () {
             } else {
                 var parentRot = this._parent.getRotation();
                 pc.math.quat.invert(parentRot, tempQuat);
-                pc.math.quat.multiply(rot, tempQuat, this.localRotation);
+                pc.math.quat.multiply(tempQuat, rot, this.localRotation);
             }
             this.dirtyLocal = true;
         },
@@ -576,12 +576,12 @@ pc.extend(pc.scene, function () {
                 tempVec[2] = arguments[2];
             }
 
-            pc.math.quat.setFromEulers(this.localRotation, tempVec);
+            pc.math.quat.setFromEulers(this.localRotation, tempVec[0], tempVec[1], tempVec[2]);
 
             if (this._parent !== null) {
                 var parentRot = this._parent.getRotation();
                 pc.math.quat.invert(parentRot, tempQuat);
-                pc.math.quat.multiply(this.localRotation, tempQuat, this.localRotation);
+                pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
             }
             this.dirtyLocal = true;
         },
@@ -857,12 +857,8 @@ pc.extend(pc.scene, function () {
             if (this._parent === null) {
                 pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
             } else {
-                var invParRot = this._parent.getRotation();
-                pc.math.quat.conjugate(invParRot, invParRot);
-
-                var temp = pc.math.quat.create();
-                pc.math.quat.multiply(this.getRotation(), tempQuat, tempQuat);
-                pc.math.quat.multiply(tempQuat, invParRot, this.localRotation);
+                pc.math.quat.multiply(tempQuat, this.getRotation(), tempQuat);
+                this.setRotation(tempQuat);
             }
             this.dirtyLocal = true;
         },
