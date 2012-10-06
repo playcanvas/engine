@@ -93,6 +93,29 @@ pc.math.quat = function () {
             return q;
         },
 
+        invert: function(q, r) {
+            var qx = q[0];
+            var qy = q[1];
+            var qz = q[2];
+            var qw = q[3];
+
+            var dot = qx*qx + qy*qy + qz*qz + qw*qw;
+            var invDot = dot ? 1.0/dot : 0;
+
+            if (!r || q === r) {
+                q[0] *= -invDot;
+                q[1] *= -invDot;
+                q[2] *= -invDot;
+                q[3] *= invDot;
+                return q;
+            }
+            r[0] = -q[0]*invDot;
+            r[1] = -q[1]*invDot;
+            r[2] = -q[2]*invDot;
+            r[3] = q[3]*invDot;
+            return r;
+        };
+
         transformVector: function (q, v, r) {
             if (r === undefined) {
                 r = pc.math.vec3.create();
