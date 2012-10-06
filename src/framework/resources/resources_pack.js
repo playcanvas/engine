@@ -60,14 +60,9 @@ pc.extend(pc.resources, function () {
 
         entity.setName(data['name']);
         entity.setGuid(data['resource_id']);
-        if (data.transform) {
-            // TODO: decompose matrix and set position, rotation and scale
-            entity.setLocalTransform(pc.math.mat4.clone(data.transform));    
-        } else {
-            entity.setLocalPosition(data.translate);
-            entity.setLocalEulerAngles(data.rotate[0] * pc.math.RAD_TO_DEG, data.rotate[1] * pc.math.RAD_TO_DEG, data.rotate[2] * pc.math.RAD_TO_DEG);
-            entity.setLocalScale(data.scale);
-        }
+        entity.setLocalPosition(data.position);
+        entity.setLocalEulerAngles(data.rotation);
+        entity.setLocalScale(data.scale);
         
         if (data.labels) {
             data.labels.forEach(function (label) {
