@@ -243,6 +243,8 @@ pc.extend(pc.scene, function () {
         getEulerAngles: function () {
             var worldTransform = this.getWorldTransform();
             pc.math.mat4.toEulerXYZ(worldTransform, this.eulerAngles);
+            // TODO: remove change toEulerXYZ to return degrees and remove this conversion
+            pc.math.vec3.scale(this.eulerAngles, pc.math.RAD_TO_DEG, this.eulerAngles);
             return this.eulerAngles;
         },
 
@@ -264,6 +266,8 @@ pc.extend(pc.scene, function () {
                 this.dirtyWorld = true;
             }
             pc.math.mat4.toEulerXYZ(this.localTransform, this.localEulerAngles);
+            // TODO: remove change toEulerXYZ to return degrees and remove this conversion
+            pc.math.vec3.scale(this.localEulerAngles, pc.math.RAD_TO_DEG, this.localEulerAngles);
             return this.localEulerAngles;
         },
 
