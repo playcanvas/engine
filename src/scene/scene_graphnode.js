@@ -795,7 +795,6 @@ pc.extend(pc.scene, function () {
                     z = arguments[2];
                     break;
             }
-
             var pos = this.getPosition();
             this.setPosition(pos[0] + x, pos[1] + y, pos[2] + z);
         },
@@ -817,9 +816,6 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         translateLocal: function () {
-            var x = 0, y = 0, z = 0;
-            var localTransform = this.getLocalTransform();
-
             switch (arguments.length) {
                 case 1:
                     tempVec[0] = arguments[0][0];
@@ -833,7 +829,8 @@ pc.extend(pc.scene, function () {
                     break;
             }
 
-            pc.math.vec3.add(tempVec, this.localPosition, this.localPosition);
+            pc.math.quat.transformVector(this.getLocalRotation(), tempVec, tempVec);
+            pc.math.vec3.add(this.localPosition, tempVec, this.localPosition);
             this.dirtyLocal = true;
         },
 
