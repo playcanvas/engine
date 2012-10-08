@@ -858,8 +858,24 @@ pc.extend(pc.scene, function () {
             if (this._parent === null) {
                 pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
             } else {
-                pc.math.quat.multiply(tempQuat, this.getRotation(), tempQuat);
-                this.setRotation(tempQuat);
+/*
+                var worldRot = this.getRotation();
+                var parentRot = this._parent.getRotation();
+                var invParentRot = pc.math.quat.create();
+
+                var newWorldRot = pc.math.quat.create();
+                pc.math.quat.invert(parentRot, invParentRot);
+
+                pc.math.quat.multiply(invParentRot, tempQuat, newWorldRot);
+                pc.math.quat.multiply(tempQuat, worldRot, this.localRotation);
+*/
+
+                var rot = pc.math.mat4.fromEulerXYZ(x*pc.math.DEG_TO_RAD, y*pc.math.DEG_TO_RAD, z*pc.math.DEG_TO_RAD);
+                var invParentWtm = pc.math.mat4.invert(this.getParent().getWorldTransform());
+                var updatedTransform = pc.math.mat4.multiply(invParentWtm, rot);
+                pc.math.mat4.multiply(updatedTransform, this.getWorldTransform(), updatedTransform);
+                pc.math.mat4.toQuat(updatedTransform, this.localRotation);
+                pc.math.vec4.normalize(this.localRotation, this.localRotation);
             }
             this.dirtyLocal = true;
         },
