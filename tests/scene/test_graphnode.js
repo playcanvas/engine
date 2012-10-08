@@ -242,14 +242,14 @@ test('GraphNode: translateLocal in hierarchy', function () {
     g.translateLocal(10, 20, 30);
 
     pos = g.getPosition();
-    QUnit.close(pos[0], 20, 0.001);
-    QUnit.close(pos[1], 0, 0.001);
-    QUnit.close(pos[2], 60, 0.001);
+    QUnit.close(pos[0], 0, 0.001);
+    QUnit.close(pos[1], 40, 0.001);
+    QUnit.close(pos[2], 0, 0.001);
 
     pos = g.getLocalPosition();
-    QUnit.close(pos[0], 10, 0.001);
+    QUnit.close(pos[0], -10, 0.001);
     QUnit.close(pos[1], 20, 0.001);
-    QUnit.close(pos[2], 30, 0.001);
+    QUnit.close(pos[2], -30, 0.001);
 
 });
 
