@@ -18,13 +18,13 @@ pc.extend(pc.fw, function () {
     pc.fw.LiveLinkMessage.register("UPDATE_ENTITY");
 
 
-    var LiveLinkUpdateEntityTransformMessage = function (id, translate, rotate, scale) {
+    var LiveLinkUpdateEntityTransformMessage = function (id, position, rotation, scale) {
         this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM;
         
         this.content = {
             id: id,
-            translate: translate,
-            rotate: rotate,
+            position: position,
+            rotation: rotation,
             scale: scale
         }
     };

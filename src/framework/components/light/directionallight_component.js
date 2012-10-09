@@ -22,7 +22,7 @@ pc.extend(pc.fw, function () {
             0.25, -8, -2, 0, -10, -2,    // Arrowhead tip
             0, -10, -2, -0.25, -8, -2    // Arrowhead tip
         ];
-        var rot = pc.math.mat4.makeRotate(Math.PI * 2 / 3, [0, 1, 0]);
+        var rot = pc.math.mat4.makeRotate(120, [0, 1, 0]);
         for (var i = 0; i < 16; i++) {
             var pos = pc.math.vec3.create(vertexData[(i+8)*3], vertexData[(i+8)*3+1], vertexData[(i+8)*3+2]);
             var posRot = pc.math.mat4.multiplyVec3(pos, 1.0, rot);

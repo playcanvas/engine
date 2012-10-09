@@ -108,26 +108,38 @@ pc.extend(pc.resources, function () {
     ModelResourceHandler.prototype.clone = function (model) {
         return model.clone();
     }
-        
+
+    ModelResourceHandler.prototype._setNodeData = function (node, data) {
+        node.setName(data.name);
+        node.addGraphId(data.uid);
+        if (data.transform) {
+            // Backwards compatibility code. Remove at some point...
+            var p = pc.math.mat4.getTranslation(data.transform);
+            var r = pc.math.mat4.toEulerXYZ(data.transform);
+            var s = pc.math.mat4.getScale(data.transform);
+            node.setLocalPosition(p);
+            node.setLocalEulerAngles(r);
+            node.setLocalScale(s);
+        } else {
+            node.setLocalPosition(data.position);
+            node.setLocalEulerAngles(data.rotation);
+            node.setLocalScale(data.scale);
+        }
+    },
+
     ModelResourceHandler.prototype._loadNode = function (model, modelData, nodeData) {
         var node = new pc.scene.GraphNode();
-        
-        // Node properties
-        node.setName(nodeData.name);
-        node.addGraphId(nodeData.uid);
-        node.setLocalTransform(pc.math.mat4.clone(nodeData.transform));
-    
+
+        this._setNodeData(node, nodeData);
+
         return node;
     };
     
     ModelResourceHandler.prototype._loadCamera = function (model, modelData, cameraData) {
         var camera = new pc.scene.CameraNode();
 
-        // Node properties
-        camera.setName(cameraData.name);
-        camera.addGraphId(cameraData.uid);
-        camera.setLocalTransform(pc.math.mat4.clone(cameraData.transform));
-    
+        this._setNodeData(camera, cameraData);
+
         // Camera properties
         var projection = this._jsonToProjectionType[cameraData.projection];
         camera.setProjection(projection);
@@ -150,12 +162,9 @@ pc.extend(pc.resources, function () {
 
     ModelResourceHandler.prototype._loadLight = function (model, modelData, lightData) {
         var light = new pc.scene.LightNode();
-            
-        // Node properties
-        light.setName(lightData.name);
-        light.addGraphId(lightData.uid);
-        light.setLocalTransform(pc.math.mat4.clone(lightData.transform));
-    
+
+        this._setNodeData(light, lightData);
+
         // Translate the light type
         var type = this._jsonToLightType[lightData.light_type];
 
@@ -179,12 +188,9 @@ pc.extend(pc.resources, function () {
     
     ModelResourceHandler.prototype._loadMesh = function (model, modelData, meshData) {
         var mesh = new pc.scene.MeshNode();
-            
-        // Node properties
-        mesh.setName(meshData.name);
-        mesh.addGraphId(meshData.uid);
-        mesh.setLocalTransform(pc.math.mat4.clone(meshData.transform));
-    
+
+        this._setNodeData(mesh, meshData);
+
         // Mesh properties
         var geometryId = meshData.geometry;
         var geometry   = model.getGeometries()[geometryId];
@@ -1187,22 +1193,31 @@ pc.extend(pc.resources, function () {
             // Read the GraphNode properties
             var nodeType  = this.readU32();
             var name      = this.readStringChunk();
-            var transform = pc.math.mat4.create();
-            for (var i = 0; i < 16; i++) {
-                transform[i] = this.readF32();
-            }
+            var px = this.readF32();
+            var py = this.readF32();
+            var pz = this.readF32();
+            var rx = this.readF32();
+            var ry = this.readF32();
+            var rz = this.readF32();
+            var sx = this.readF32();
+            var sy = this.readF32();
+            var sz = this.readF32();
 
             var node;
             switch (nodeType) {
                 case 0: // GraphNode
                     node = new pc.scene.GraphNode();
                     node.setName(name);
-                    node.setLocalTransform(transform);
+                    node.setLocalPosition(px, py, pz);
+                    node.setLocalEulerAngles(rx, ry, rz);
+                    node.setLocalScale(sx, sy, sz);
                     break;
                 case 1: // Camera
                     node = new pc.scene.CameraNode();
                     node.setName(name);
-                    node.setLocalTransform(transform);
+                    node.setLocalPosition(px, py, pz);
+                    node.setLocalEulerAngles(rx, ry, rz);
+                    node.setLocalScale(sx, sy, sz);
 
                     var projection = this.readU32();
                     var nearClip = this.readF32();
@@ -1228,7 +1243,9 @@ pc.extend(pc.resources, function () {
                 case 2: // Light
                     node = new pc.scene.LightNode();
                     node.setName(name);
-                    node.setLocalTransform(transform);
+                    node.setLocalPosition(px, py, pz);
+                    node.setLocalEulerAngles(rx, ry, rz);
+                    node.setLocalScale(sx, sy, sz);
 
                     var type = this.readU16();
                     var enabled = this.readU8();
@@ -1257,7 +1274,9 @@ pc.extend(pc.resources, function () {
                 case 3: // Mesh
                     node = new pc.scene.MeshNode();
                     node.setName(name);
-                    node.setLocalTransform(transform);
+                    node.setLocalPosition(px, py, pz);
+                    node.setLocalEulerAngles(rx, ry, rz);
+                    node.setLocalScale(sx, sy, sz);
 
                     // Mesh specific properties
                     var geomIndex = this.readU32();

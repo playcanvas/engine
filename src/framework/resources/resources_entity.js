@@ -38,13 +38,11 @@ pc.extend(pc.resources, function () {
 
         entity.setName(data.name);
         entity.setGuid(guid);
-        if (data.transform) {
-            entity.setLocalTransform(pc.math.mat4.clone(data.transform));    
-        } else {
-            entity.setLocalTransform(pc.math.mat4.clone(pc.math.mat4.compose(data['translate'], data['rotate'], data['scale'])));
-        }
-        
-        
+
+        entity.setLocalPosition(data.position);
+        entity.setLocalEulerAngles(data.rotation);
+        entity.setLocalScale(data.scale);
+
         if (data.labels) {
             data.labels.forEach(function (label) {
                 entity.addLabel(label);

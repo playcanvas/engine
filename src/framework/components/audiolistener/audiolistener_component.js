@@ -4,7 +4,6 @@ pc.extend(pc.fw, function () {
         
         this.manager = manager;
         this.current = null;
-        this.worldPos = pc.math.vec3.create();
     };        
     AudioListenerComponentSystem = pc.inherits(AudioListenerComponentSystem, pc.fw.ComponentSystem);
         
@@ -21,9 +20,10 @@ pc.extend(pc.fw, function () {
 
     AudioListenerComponentSystem.prototype.update = function (dt) {
         if (this.current) {
+            var position = this.current.getPosition();
+            this.manager.listener.setPosition(position);
+
             var wtm = this.current.getWorldTransform();
-            this.current.getWorldPosition(this.worldPos);
-            this.manager.listener.setPosition(this.worldPos);
             this.manager.listener.setOrientation(wtm);
         }
     };
@@ -31,8 +31,8 @@ pc.extend(pc.fw, function () {
     AudioListenerComponentSystem.prototype.setCurrentListener = function (entity) {
         if (this.hasComponent(entity)) {
             this.current = entity;
-            this.current.getWorldPosition(this.worldPos);
-            this.manager.listener.setPosition(this.worldPos);
+            var position = this.current.getPosition();
+            this.manager.listener.setPosition(position);
         }
     };
 

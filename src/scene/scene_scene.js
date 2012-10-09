@@ -18,7 +18,7 @@ pc.extend(pc.scene, function () {
     var scaleShift = pc.math.mat4.multiply(shift, scale);
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-    var camToLight = pc.math.mat4.makeRotate(-Math.PI / 2.0, [1, 0, 0]);
+    var camToLight = pc.math.mat4.makeRotate(-90, [1, 0, 0]);
     var shadowCamWtm = pc.math.mat4.create();
     var shadowCamView = pc.math.mat4.create();
     var shadowCamViewProj = pc.math.mat4.create();
@@ -439,7 +439,7 @@ pc.extend(pc.scene, function () {
                         pc.math.mat4.multiply(scaleShift, shadowCamViewProj, light._shadowMatrix);
 
                         // Point the camera along direction of light
-                        pc.math.mat4.copy(shadowCamWtm, shadowCam._wtm);
+                        pc.math.mat4.copy(shadowCamWtm, shadowCam.getWorldTransform());
 
                         shadowCam.frameBegin();
                         if (device.extDepthTexture) {

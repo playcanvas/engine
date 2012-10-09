@@ -3,6 +3,22 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.77.0
+-------
+* [BREAKING] All pc.math library functions take degrees instead of radians
+* [BREAKING] Removed GraphNode methods setParent() and setChildren()
+* [BREAKING] Update binary model format to use new transform components
+* [BREAKING] Update animation format to use eulers instead of quaternions for rotations 
+* Split LTM out into distinct position, rotation, scale components, generate LTM/WTM only when dirty
+* Added methods to quaternion invert(), setFromEulers(), transformVector()
+* Change Pack format to use position, rotation, scale instead of translate, rotate, scale
+* Optimized mat4.fromEulerXYZ()
+* Added GraphNode method translateLocal(), rotateLocal(), rotate()
+* Added GraphNode methods get/setLocalEulerAngles()
+* No longer overwrite the exports property in engine as this breaks some nodejs modules
+* Script component urls field is now a proper array instead of a comma-separated string
+
+-------
 v0.76.0
 -------
 * Engine now loads in nodejs environment

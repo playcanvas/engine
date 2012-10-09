@@ -137,7 +137,6 @@ var pc = {
         return result;
     } ();
 
-if (typeof exports === 'undefined') {
-    exports = this;
+if (typeof exports !== 'undefined') {
+    exports.pc = pc;
 }
-exports.pc = pc;
