@@ -182,7 +182,7 @@ if (typeof(Box2D) !== 'undefined') {
                 pc.math.vec3.copy(entity.getEulerAngles(), rotation);
                 rotation[this.xi] = 0;
                 rotation[this.yi] = 0;
-                pc.math.quat.setFromEulers(constrainedRotation, rotation);
+                pc.math.quat.setFromEulers(constrainedRotation, rotation[0], rotation[1], rotation[2]);
 
                 pc.math.mat4.compose(entity.getPosition(), constrainedRotation, scale, transform);
 
