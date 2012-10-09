@@ -85,7 +85,7 @@ pc.extend(pc.fw, function () {
         }
     };
 
-    ScriptComponentSystem.prototype.updateFixed = function (dt) {
+    ScriptComponentSystem.prototype.fixedUpdate = function (dt) {
         var components = this.getComponents();
 
         for (var id in components) {
@@ -95,8 +95,8 @@ pc.extend(pc.fw, function () {
 
                 for (name in componentData.instances) {
                     if (componentData.instances.hasOwnProperty(name)) {
-                        if (componentData.instances[name].instance.updateFixed) {
-                            componentData.instances[name].instance.updateFixed(dt);
+                        if (componentData.instances[name].instance.fixedUpdate) {
+                            componentData.instances[name].instance.fixedUpdate(dt);
                         }                        
                     }
                 }

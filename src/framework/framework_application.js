@@ -170,7 +170,7 @@ pc.extend(pc.fw, function () {
             var context = this.context;
 
             // Perform ComponentSystem update
-            pc.fw.ComponentSystem.updateFixed(1.0 / 60.0, context, this._inTools);
+            pc.fw.ComponentSystem.fixedUpdate(1.0 / 60.0, context, this._inTools);
             pc.fw.ComponentSystem.update(dt, context, this._inTools);
 
             // fire update event
