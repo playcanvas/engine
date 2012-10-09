@@ -60,8 +60,7 @@ test("setFromEulers", function () {
         var q2 = pc.math.quat.create();
         var m = pc.math.mat4.create();
 
-        pc.math.quat.setFromEulers(q1, x * pc.math.RAD_TO_DEG, y * pc.math.RAD_TO_DEG, z * pc.math.RAD_TO_DEG);
-        var mr = pc.math.mat4.makeRotate(x, [1, 0, 0]);
+        pc.math.quat.setFromEulers(q1, x, y, z);
         pc.math.mat4.fromEulerXYZ(x, y, z, m);
         pc.math.mat4.toQuat(m, q2);
 
@@ -72,12 +71,12 @@ test("setFromEulers", function () {
     }
 
     testAngles(0, 0, 0);
-    testAngles(Math.PI / 2.0, 0, 0);
+    testAngles(90, 0, 0);
     testAngles(0.1, 0, 0);
     testAngles(0, 0.2, 0);
     testAngles(0, 0, 0.3);
     testAngles(0.1, 0.2, 0.3);
-    testAngles(-Math.PI / 2.0, -Math.PI / 2.0, 0);
+    testAngles(-90, -90, 0);
 });
 
 test("setFromEulers: useful normalized quaternions", function () { 

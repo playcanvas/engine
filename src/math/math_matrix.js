@@ -225,7 +225,7 @@ pc.math.mat4 = function () {
          * @returns {Array} The result of the multiplication (effectively a reference to the r parameter).
          * @example
          * var a = pc.math.mat4.makeTranslate(10, 20, 30);
-         * var b = pc.math.mat4.makeRotate(Math.PI, [0, 1, 0]);
+         * var b = pc.math.mat4.makeRotate(180, [0, 1, 0]);
          *
          * // Generate result into an existing matrix
          * var r = pc.math.mat4.create();
@@ -505,7 +505,7 @@ pc.math.mat4 = function () {
          * @function
          * @name pc.math.mat4.makeRotate
          * @description Generates a rotation matrix.
-         * @param {Number} angle The angle of rotation in radians.
+         * @param {Number} angle The angle of rotation in degrees.
          * @param {Array} axis The normalized axis vector around which to rotate.
          * @param {Array} r An optional 4x4 matrix to receive the generated rotation matrix.
          * @returns {Array} The generated rotation matrix.
@@ -513,7 +513,7 @@ pc.math.mat4 = function () {
          * var yaxis = pc.math.vec3.create(0, 1, 0);
          *
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rotation = pc.math.mat4.makeRotate(Math.PI, yaxis);
+         * var rotation = pc.math.mat4.makeRotate(180, yaxis);
          * @author Will Eastcott
          */
         makeRotate: function (angle, axis, r) {
@@ -522,6 +522,7 @@ pc.math.mat4 = function () {
             }
 
             var x = axis[0], y = axis[1], z = axis[2];
+            angle *= pc.math.DEG_TO_RAD;
             var c = Math.cos(angle);
             var s = Math.sin(angle);
             var t = 1-c;
@@ -637,7 +638,7 @@ pc.math.mat4 = function () {
          * var yaxis = pc.math.vec3.create(0, 1, 0);
          *
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = pc.math.mat4.makeRotate(Math.PI, yaxis);
+         * var rot = pc.math.mat4.makeRotate(180, yaxis);
          *
          * // Transpose in place
          * pc.math.mat4.transpose(rot, rot);
@@ -680,7 +681,7 @@ pc.math.mat4 = function () {
          * var yaxis = pc.math.vec3.create(0, 1, 0);
          *
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = pc.math.mat4.makeRotate(Math.PI, yaxis);
+         * var rot = pc.math.mat4.makeRotate(180, yaxis);
          *
          * // Invert in place
          * pc.math.mat4.invert(rot, rot);
@@ -770,7 +771,7 @@ pc.math.mat4 = function () {
          * var yaxis = pc.math.vec3.create(0, 1, 0);
          *
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = pc.math.mat4.makeRotate(Math.PI, yaxis);
+         * var rot = pc.math.mat4.makeRotate(180, yaxis);
          *
          * // Query the x-axis component
          * var x = pc.math.mat4.getX(rot);
@@ -798,7 +799,7 @@ pc.math.mat4 = function () {
          * var yaxis = pc.math.vec3.create(0, 1, 0);
          *
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = pc.math.mat4.makeRotate(Math.PI, yaxis);
+         * var rot = pc.math.mat4.makeRotate(180, yaxis);
          *
          * // Query the y-axis component
          * var y = pc.math.mat4.getY(rot);
@@ -826,7 +827,7 @@ pc.math.mat4 = function () {
          * var zaxis = pc.math.vec3.create(0, 1, 0);
          *
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = pc.math.mat4.makeRotate(Math.PI, zaxis);
+         * var rot = pc.math.mat4.makeRotate(180, zaxis);
          *
          * // Query the z-axis component
          * var z = pc.math.mat4.getZ(rot);
@@ -870,6 +871,11 @@ pc.math.mat4 = function () {
                 r = pc.math.mat4.create();
             }
 
+            // Convert degrees to radians for trig functions
+            x *= pc.math.DEG_TO_RAD;
+            y *= pc.math.DEG_TO_RAD;
+            z *= pc.math.DEG_TO_RAD;
+
             // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
             var sx = Math.sin(x);
             var cx = Math.cos(x);
@@ -891,34 +897,10 @@ pc.math.mat4 = function () {
             r[9] = -cy*sx;
             r[10] = cx*cy;
 
-/*
-            r[0] = cx*cy;
-            r[1] = cy*sx;
-            r[2] = -sy;
-
-            r[4] = cx*sy*sz - cz*sx;
-            r[5] = cx*cz + sx*sy*sz;
-            r[6] = cy*sz;
-
-            r[8] = sx*sz + cx*cz*sy;
-            r[9] = cz*sx*sy - cx*cz;
-            r[10] = cy*cz;
-
-            // Set non-rotational part to identity
-            r[3] = r[7] = r[11] = r[12] = r[13] = r[14] = 0;
-            r[15] = 1;
-
-            var rx = pc.math.mat4.makeRotate(x, [1, 0, 0]);
-            var ry = pc.math.mat4.makeRotate(y, [0, 1, 0]);
-            var rz = pc.math.mat4.makeRotate(z, [0, 0, 1]);
-            pc.math.mat4.multiply(z, y, r);
-            pc.math.mat4.multiply(r, x, r);
-*/
-
             return r;
         },
 
-        toEulerXYZ : function (m, r) {
+        toEulerXYZ: function (m, r) {
             if (r === undefined) {
                 r = pc.math.vec3.create();
             }
@@ -944,9 +926,9 @@ pc.math.mat4 = function () {
                 x = Math.atan2(m[4] / scale[1], m[5] / scale[1]);        
             }
             
-            r[0] = x;
-            r[1] = y;
-            r[2] = z;
+            r[0] = x * pc.math.RAD_TO_DEG;
+            r[1] = y * pc.math.RAD_TO_DEG;
+            r[2] = z * pc.math.RAD_TO_DEG;
 
             return r;
         },
@@ -966,7 +948,7 @@ pc.math.mat4 = function () {
          * var yaxis = pc.math.vec3.create(0, 1, 0);
          *
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = pc.math.mat4.makeRotate(Math.PI, yaxis);
+         * var rot = pc.math.mat4.makeRotate(180, yaxis);
          *
          * // Allow toQuat to create a new quaternion internally
          * var q1 = pc.math.quat.fromMat4(rot);

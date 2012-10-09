@@ -243,8 +243,6 @@ pc.extend(pc.scene, function () {
         getEulerAngles: function () {
             var worldTransform = this.getWorldTransform();
             pc.math.mat4.toEulerXYZ(worldTransform, this.eulerAngles);
-            // TODO: remove change toEulerXYZ to return degrees and remove this conversion
-            pc.math.vec3.scale(this.eulerAngles, pc.math.RAD_TO_DEG, this.eulerAngles);
             return this.eulerAngles;
         },
 
@@ -266,8 +264,6 @@ pc.extend(pc.scene, function () {
                 this.dirtyWorld = true;
             }
             pc.math.mat4.toEulerXYZ(this.localTransform, this.localEulerAngles);
-            // TODO: remove change toEulerXYZ to return degrees and remove this conversion
-            pc.math.vec3.scale(this.localEulerAngles, pc.math.RAD_TO_DEG, this.localEulerAngles);
             return this.localEulerAngles;
         },
 
@@ -870,7 +866,7 @@ pc.extend(pc.scene, function () {
                 pc.math.quat.multiply(tempQuat, worldRot, this.localRotation);
 */
 
-                var rot = pc.math.mat4.fromEulerXYZ(x*pc.math.DEG_TO_RAD, y*pc.math.DEG_TO_RAD, z*pc.math.DEG_TO_RAD);
+                var rot = pc.math.mat4.fromEulerXYZ(x, y, z);
                 var invParentWtm = pc.math.mat4.invert(this.getParent().getWorldTransform());
                 var updatedTransform = pc.math.mat4.multiply(invParentWtm, rot);
                 pc.math.mat4.multiply(updatedTransform, this.getWorldTransform(), updatedTransform);

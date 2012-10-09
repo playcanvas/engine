@@ -116,7 +116,7 @@ if (typeof(Box2D) !== 'undefined') {
 
                 bodyDef.type = componentData['static'] ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
                 bodyDef.position.Set(position[this.xi], position[this.yi]);
-                bodyDef.angle = -rotation[this.ri];
+                bodyDef.angle = -rotation[this.ri] * pc.math.DEG_TO_RAD;
                 bodyDef.userData = entity;
             },
 
@@ -341,7 +341,7 @@ if (typeof(Box2D) !== 'undefined') {
                     pos.x = x;
                     pos.y = y;
 
-                    body.SetPositionAndAngle(pos, a);
+                    body.SetPositionAndAngle(pos, a * pc.math.DEG_TO_RAD);
 
                     this.updateTransform(entity, body);
                 }
@@ -376,7 +376,7 @@ if (typeof(Box2D) !== 'undefined') {
                 position[this.yi] = position2d.y;
 
                 rotation[this.xi] = 0;
-                rotation[this.ri] = -body.GetAngle();
+                rotation[this.ri] = -body.GetAngle() * pc.math.RAD_TO_DEG;
                 rotation[this.yi] = 0;
 
                 entity.setPosition(position);

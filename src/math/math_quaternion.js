@@ -198,9 +198,9 @@ pc.math.quat = function () {
 */
 
 /*
-            var rx = pc.math.mat4.makeRotate(ex*(Math.PI/180.0), [1, 0, 0]);
-            var ry = pc.math.mat4.makeRotate(ey*(Math.PI/180.0), [0, 1, 0]);
-            var rz = pc.math.mat4.makeRotate(ez*(Math.PI/180.0), [0, 0, 1]);
+            var rx = pc.math.mat4.makeRotate(ex, [1, 0, 0]);
+            var ry = pc.math.mat4.makeRotate(ey, [0, 1, 0]);
+            var rz = pc.math.mat4.makeRotate(ez, [0, 0, 1]);
             var r = pc.math.mat4.multiply(rz, ry);
             pc.math.mat4.multiply(r, rx, r);
             pc.math.mat4.toQuat(r, q);

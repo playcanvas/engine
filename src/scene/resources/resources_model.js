@@ -118,11 +118,11 @@ pc.extend(pc.resources, function () {
             var r = pc.math.mat4.toEulerXYZ(data.transform);
             var s = pc.math.mat4.getScale(data.transform);
             node.setLocalPosition(p);
-            node.setLocalEulerAngles(r[0] * pc.math.RAD_TO_DEG, r[1] * pc.math.RAD_TO_DEG, r[2] * pc.math.RAD_TO_DEG);
+            node.setLocalEulerAngles(r);
             node.setLocalScale(s);
         } else {
             node.setLocalPosition(data.position);
-            node.setLocalEulerAngles(data.rotation[0], data.rotation[1], data.rotation[2]);
+            node.setLocalEulerAngles(data.rotation);
             node.setLocalScale(data.scale);
         }
     },

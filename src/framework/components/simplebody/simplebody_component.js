@@ -53,7 +53,7 @@ pc.extend(pc.fw, function () {
                 component.torque[0] = 0; component.torque[1] = 0; component.torque[2] = 0;
                 
                 // Re-create transform
-                pc.math.mat4.makeRotate(component.angles[1], pc.math.vec3.create(0,1,0), rotate);
+                pc.math.mat4.makeRotate(component.angles[1] * pc.math.RAD_TO_DEG, pc.math.vec3.create(0,1,0), rotate);
                 pc.math.mat4.makeTranslate(position[0], position[1], position[2], translate);
                 pc.math.mat4.multiply(translate, rotate, transform);
                 

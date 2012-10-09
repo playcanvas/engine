@@ -56,7 +56,7 @@ if (typeof(Box2D) !== 'undefined') {
         // Shared vectors to avoid excessive allocation
         var position = pc.math.vec3.create();
         var rotation = pc.math.vec3.create();
-        var scale = pc.math.vec3.create();
+        var scale = pc.math.vec3.create(1, 1, 1);
         var transform = pc.math.mat4.create();
 
         var pos2d = new b2Vec2();
@@ -153,46 +153,38 @@ if (typeof(Box2D) !== 'undefined') {
 
             renderCircle: function (entity, data, vertexBuffer, indexBuffer) {
                 var positions = new Float32Array(vertexBuffer.lock());
-                    positions[0] = 0;
-                    positions[1] = 0;
-                    positions[2] = 0;
+                positions[0] = 0;
+                positions[1] = 0;
+                positions[2] = 0;
 
-                    var r = data['radius'];
-                    var numVerts = vertexBuffer.getNumVertices();
-                    for (var i = 0; i < numVerts-1; i++) {
-                        var theta = 2 * Math.PI * (i / (numVerts-2));
-                        var x = r * Math.cos(theta);
-                        var z = r * Math.sin(theta);
-                        positions[(i+1)*3+0] = x;
-                        positions[(i+1)*3+1] = 0;
-                        positions[(i+1)*3+2] = z;
-                    }
-                    vertexBuffer.unlock();
+                var r = data['radius'];
+                var numVerts = vertexBuffer.getNumVertices();
+                for (var i = 0; i < numVerts-1; i++) {
+                    var theta = 2 * Math.PI * (i / (numVerts-2));
+                    var x = r * Math.cos(theta);
+                    var z = r * Math.sin(theta);
+                    positions[(i+1)*3+0] = x;
+                    positions[(i+1)*3+1] = 0;
+                    positions[(i+1)*3+2] = z;
+                }
+                vertexBuffer.unlock();
 
-                    // Render a representation of the light
-                    var device = pc.gfx.Device.getCurrent();
-                    device.setProgram(this._gfx.program);
-                    device.setIndexBuffer(indexBuffer);
-                    device.setVertexBuffer(vertexBuffer, 0);
+                // Render a representation of the light
+                var device = pc.gfx.Device.getCurrent();
+                device.setProgram(this._gfx.program);
+                device.setIndexBuffer(indexBuffer);
+                device.setVertexBuffer(vertexBuffer, 0);
 
-                    transform = entity.getWorldTransform();
+                pc.math.mat4.compose(entity.getPosition(), entity.getRotation(), scale, transform);
 
-
-                    var wtm = entity.getWorldTransform();
-
-                    pc.math.mat4.getTranslation(wtm, position);
-                    pc.math.mat4.toEulerXYZ(wtm, rotation); //r[this.xi] = 0; r[this.yi] = 0;
-                    pc.math.vec3.set(scale, 1, 1, 1);
-                    pc.math.mat4.compose(position, rotation, scale, transform);
-
-                    device.scope.resolve("matrix_model").setValue(transform);
-                    device.scope.resolve("uColor").setValue(this._gfx.color);
-                    device.draw({
-                        type: pc.gfx.PrimType.LINES,
-                        base: 0,
-                        count: indexBuffer.getNumIndices(),
-                        indexed: true
-                    });
+                device.scope.resolve("matrix_model").setValue(transform);
+                device.scope.resolve("uColor").setValue(this._gfx.color);
+                device.draw({
+                    type: pc.gfx.PrimType.LINES,
+                    base: 0,
+                    count: indexBuffer.getNumIndices(),
+                    indexed: true
+                });
             },
 
             onSetFixtureValue: function (entity, name, oldValue, newValue) {
