@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.77.1
+-------
+* [FIX] Rendering collisionrects works again
+
+-------
 v0.77.0
 -------
 * [BREAKING] All pc.math library functions take degrees instead of radians
