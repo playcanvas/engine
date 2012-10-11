@@ -90,25 +90,25 @@ pc.extend(pc.fw, function () {
     
     /**
      * @function
-     * @name pc.fw.ComponentSystem.updateFixed
-     * @description Update all ComponentSystems from a single ComponentSystemRegistry that have an updateFixed() method 
+     * @name pc.fw.ComponentSystem.fixedUpdate
+     * @description Update all ComponentSystems from a single ComponentSystemRegistry that have an fixedUpdate() method 
      * @param {Object} dt The fixed time delta set to 1/60 seconds by default.
      * @param {pc.fw.ApplicationContext} context The ApplicationContext with the ComponentSystemRegistry 
      * @param {Boolean} inTools If true then call toolsUpdate instead of normal update. 
      */
-    ComponentSystem.updateFixed = function (dt, context, inTools) {
+    ComponentSystem.fixedUpdate = function (dt, context, inTools) {
         var name;
         var registry = context.systems;
         
         for (name in registry) {
             if (registry.hasOwnProperty(name)) {
                 if(!inTools) {
-                    if (registry[name].updateFixed) {
-                        registry[name].updateFixed(dt);
+                    if (registry[name].fixedUpdate) {
+                        registry[name].fixedUpdate(dt);
                     }           
                 } else {
-                    if (registry[name].toolsUpdateFixed) {
-                        registry[name].toolsUpdateFixed(dt);
+                    if (registry[name].toolsFixedUpdate) {
+                        registry[name].toolsFixedUpdate(dt);
                     }                               
                 }
             }
