@@ -227,6 +227,28 @@ pc.math.quat = function () {
             return r;
         },
 
+        normalize: function (q, r) {
+            if (!r) { r = q; }
+
+            var x = q[0], y = q[1], z = q[2], w = q[3];
+            var len = Math.sqrt(x * x + y * y + z * z + w * w);
+
+            if (len === 0) {
+                r[0] = 0;
+                r[1] = 0;
+                r[2] = 0;
+                r[3] = 0;
+                return r;
+            }
+            len = 1 / len;
+            r[0] = x * len;
+            r[1] = y * len;
+            r[2] = z * len;
+            r[3] = w * len;
+
+            return r;
+        },
+
         toMat3: function (q, r) {
             if (r === undefined) {
                 r = pc.math.mat4.create();
