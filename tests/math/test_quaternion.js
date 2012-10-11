@@ -224,3 +224,77 @@ test("setFromAxisAngle", function () {
     pc.math.quat.setFromEulers(qe, 45, 55, 65);
 });
 
+test("toEulers", function () {
+    var q;
+    var e = pc.math.vec3.create();
+
+    // Identity quaternion, no rotation
+    q = pc.math.quat.create(0, 0, 0, 1);
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 0);
+
+    // 180° turn around X axis
+    q = pc.math.quat.create(1, 0, 0, 0);
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 180);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 0);
+
+    // 180° turn around Y axis
+    q = pc.math.quat.create(0, 1, 0, 0);
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 180);
+    QUnit.equal(e[2], 0);
+
+    // 180° turn around Z axis
+    q = pc.math.quat.create(0, 0, 1, 0);
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 180);
+
+    // 90° turn around X axis
+    q = pc.math.quat.create(Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 90);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 0);
+
+    // 90° turn around Y axis
+    q = pc.math.quat.create(0, Math.sqrt(0.5), 0, Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 90);
+    QUnit.equal(e[2], 0);
+
+    // 90° turn around Z axis
+    q = pc.math.quat.create(0, 0, Math.sqrt(0.5), Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 90);
+
+    // -90° turn around X axis
+    q = pc.math.quat.create(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], -90);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 0);
+
+    // -90° turn around Y axis
+    q = pc.math.quat.create(0, -Math.sqrt(0.5), 0, Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], -90);
+    QUnit.equal(e[2], 0);
+
+    // -90° turn around Z axis
+    q = pc.math.quat.create(0, 0, -Math.sqrt(0.5), Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], -90);
+});

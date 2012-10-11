@@ -258,13 +258,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getLocalEulerAngles: function () {
-            if (this.dirtyLocal) {
-                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this.localTransform);
-
-                this.dirtyLocal = false;
-                this.dirtyWorld = true;
-            }
-            pc.math.mat4.toEulerXYZ(this.localTransform, this.localEulerAngles);
+            pc.math.quat.toEulers(this.localRotation, this.localEulerAngles);
             return this.localEulerAngles;
         },
 

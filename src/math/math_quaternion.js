@@ -215,14 +215,32 @@ pc.math.quat = function () {
             pc.math.quat.multiply(q, qx, q);
         },
 
-        fromEulerXYZ: function (q, r) {
+        toEulers: function (q, r) {
             if (r === undefined) {
                 r = pc.math.vec3.create();
             }
 
-            r[0] = Math.asin(2 * ( q[0] * q[2] - q[3] * q[1] ) );
-            r[1] = Math.atan2(2 * q[0] * q[3] + 2 * q[1] * q[3], 1 - 2 * (sqz  + sqw));
-            r[2] = Math.atan2(2 * q[0] * q[1] + 2 * q[2] * q[3], 1 - 2 * (sqy + sqz));
+            var qx = q[0], qy = q[1], qz = q[2], qw = q[3];
+
+            var a2 = 2 * (qw * qy - qx * qz);
+            var x, y, z;
+            if (a2 <= -0.99999) {
+                x = 2 * Math.atan2(qx, qw);
+                y = -Math.PI / 2;
+                z = 0;
+            } else if (a2 >= 0.99999) {
+                x = 2 * Math.atan2(qx, qw);
+                y = Math.PI / 2;
+                z = 0;
+            } else {
+                x = Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
+                y = Math.asin(a2);
+                z = Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+            }
+
+            r[0] = x * pc.math.RAD_TO_DEG;
+            r[1] = y * pc.math.RAD_TO_DEG;
+            r[2] = z * pc.math.RAD_TO_DEG;
 
             return r;
         },
