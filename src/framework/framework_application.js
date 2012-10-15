@@ -535,9 +535,9 @@ pc.extend(pc.fw, function () {
         _updateEntityTransform: function (guid, position, rotation, scale) {
             var entity = this.context.root.findByGuid(guid);
             if(entity) {
-                entity.setLocalPosition(position[0], position[1], position[2]);
-                entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
-                entity.setLocalScale(scale[0], scale[1], scale[2]);
+                entity.setLocalPosition(position);
+                entity.setLocalEulerAngles(rotation);
+                entity.setLocalScale(scale);
 
                 // TODO: I don't like referencing a specific system here, but the body2d system won't pick up changes to the ltm 
                 // unless we tell it directly. (Because it is simulating from the physics world). Perhaps we could do this 

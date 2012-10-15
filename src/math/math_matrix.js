@@ -877,25 +877,25 @@ pc.math.mat4 = function () {
             z *= pc.math.DEG_TO_RAD;
 
             // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
-            var sx = Math.sin(x);
-            var cx = Math.cos(x);
-            var sy = Math.sin(y);
-            var cy = Math.cos(y);
-            var sz = Math.sin(z);
-            var cz = Math.cos(z);
+            var s1 = Math.sin(x);
+            var c1 = Math.cos(x);
+            var s2 = Math.sin(y);
+            var c2 = Math.cos(y);
+            var s3 = Math.sin(z);
+            var c3 = Math.cos(z);
 
             // Set rotation elements
-            r[0] = cy*cz;
-            r[1] = cx*sz + cz*sx*sy;
-            r[2] = sx*sz - cx*cz*sy;
+            r[0] = c2*c3;
+            r[1] = c1*s3 + c3*s1*s2;
+            r[2] = s1*s3 - c1*c3*s2;
 
-            r[4] = -cy*sz;
-            r[5] = cx*cz - sx*sy*sz;
-            r[6] = cz*sx + cx*sy*sz;
+            r[4] = -c2*s3;
+            r[5] = c1*c3 - s1*s2*s3;
+            r[6] = c3*s1 + c1*s2*s3;
 
-            r[8] = sy;
-            r[9] = -cy*sx;
-            r[10] = cx*cy;
+            r[8] = s2;
+            r[9] = -c2*s1;
+            r[10] = c1*c2;
 
             return r;
         },
@@ -963,74 +963,86 @@ pc.math.mat4 = function () {
                 r = pc.math.quat.create();
             }
 
+            var m00 = m[0], m01 = m[1], m02 = m[2];
+            var m10 = m[4], m11 = m[5], m12 = m[6];
+            var m20 = m[8], m21 = m[9], m22 = m[10];
+
+            var lx = Math.sqrt(m00 * m00 + m01 * m01 + m02 * m02);
+            var ly = Math.sqrt(m10 * m10 + m11 * m11 + m12 * m12);
+            var lz = Math.sqrt(m20 * m20 + m21 * m21 + m22 * m22);
+            m00 /= lx; m01 /= lx; m02 /= lx;
+            m10 /= ly; m11 /= ly; m12 /= ly;
+            m20 /= lz; m21 /= lz; m22 /= lz;
+
             // http://www.cs.ucr.edu/~vbz/resources/quatut.pdf
             var tr, s;
 
-            tr = m[0] + m[5] + m[10];
+            tr = m00 + m11 + m22;
             if (tr >= 0.0)
             {
-                s = Math.sqrt(tr + m[15]);
+                s = Math.sqrt(tr + 1.0);
                 r[3] = s * 0.5;
                 s = 0.5 / s;
-                r[0] = (m[6] - m[9]) * s;
-                r[1] = (m[8] - m[2]) * s;
-                r[2] = (m[1] - m[4]) * s;
+                r[0] = (m12 - m21) * s;
+                r[1] = (m20 - m02) * s;
+                r[2] = (m01 - m10) * s;
             }
             else
             {
                 var rs;
-                if (m[0] > m[5])
+                if (m00 > m11)
                 {
-                    if (m[0] > m[10])
+                    if (m00 > m22)
                     {
                         // XDiagDomMatrix
-                        rs = (m[0] - (m[5] + m[10])) + 1.0;
+                        rs = (m00 - (m11 + m22)) + 1.0;
                         rs = Math.sqrt(rs);
 
                         r[0] = rs * 0.5;
                         rs = 0.5 / rs;
-                        r[3] = (m[6] - m[9]) * rs;
-                        r[1] = (m[1] + m[4]) * rs;
-                        r[2] = (m[2] + m[8]) * rs;
+                        r[3] = (m12 - m21) * rs;
+                        r[1] = (m01 + m10) * rs;
+                        r[2] = (m02 + m20) * rs;
                     }
                     else
                     {
                         // ZDiagDomMatrix
-                        rs = (m[10] - (m[0] + m[5])) + 1.0;
+                        rs = (m22 - (m00 + m11)) + 1.0;
                         rs = Math.sqrt(rs);
 
                         r[2] = rs * 0.5;
                         rs = 0.5 / rs;
-                        r[3] = (m[1] - m[4]) * rs;
-                        r[0] = (m[8] + m[2]) * rs;
-                        r[1] = (m[9] + m[6]) * rs;
+                        r[3] = (m01 - m10) * rs;
+                        r[0] = (m20 + m02) * rs;
+                        r[1] = (m21 + m12) * rs;
                     }
                 }
-                else if (m[5] > m[10])
+                else if (m11 > m22)
                 {
                     // YDiagDomMatrix
-                    rs = (m[5] - (m[10] + m[0])) + 1.0;
+                    rs = (m11 - (m22 + m00)) + 1.0;
                     rs = Math.sqrt(rs);
 
                     r[1] = rs * 0.5;
                     rs = 0.5 / rs;
-                    r[3] = (m[8] - m[2]) * rs;
-                    r[2] = (m[6] + m[9]) * rs;
-                    r[0] = (m[4] + m[1]) * rs;
+                    r[3] = (m20 - m02) * rs;
+                    r[2] = (m12 + m21) * rs;
+                    r[0] = (m10 + m01) * rs;
                 }
                 else
                 {
                     // ZDiagDomMatrix
-                    rs = (m[10] - (m[0] + m[5])) + 1.0;
+                    rs = (m22 - (m00 + m11)) + 1.0;
                     rs = Math.sqrt(rs);
 
                     r[2] = rs * 0.5;
                     rs = 0.5 / rs;
-                    r[3] = (m[1] - m[4]) * rs;
-                    r[0] = (m[8] + m[2]) * rs;
-                    r[1] = (m[9] + m[6]) * rs;
+                    r[3] = (m01 - m10) * rs;
+                    r[0] = (m20 + m02) * rs;
+                    r[1] = (m21 + m12) * rs;
                 }            
             }
+
 
             return r;
         },
