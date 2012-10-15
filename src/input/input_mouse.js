@@ -54,7 +54,7 @@ pc.extend(pc.input, function () {
      * event.targetX - The X coordinate relative to the event target element
      * event.targetY - The Y coordinate relative to the event target element
      * event.wheel - The change in mouse wheel value (if there is one) Normalized between -1 and 1
-     * event.buttons - The current state of all mouse buttons
+     * event._buttons - The current state of all mouse buttons
      * event.movementX/Y - This is added if not present in the current browser and is the movement since the last 
      * @param {pc.input.Mouse} mouse A pc.input.Mouse instance, needed to get the button state from
      * @param {MouseEvent} event The mouse event to extend
@@ -82,7 +82,7 @@ pc.extend(pc.input, function () {
             event.movementY = offset.y - mouse._offsetY;
         }
 
-        event.buttons = mouse._buttons;
+        event._buttons = mouse._buttons;
         return event;
     };
 
