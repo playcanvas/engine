@@ -41,9 +41,9 @@ test("mousedown: fires", function () {
         equal(event.x, 0);
         equal(event.y, 0);
         equal(event.button, pc.input.MOUSE_BUTTON_MIDDLE);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_LEFT], false);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_MIDDLE], true);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_LEFT], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_MIDDLE], true);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
         ok(event.event);
     });
     
@@ -63,9 +63,9 @@ test("mouseup: fires", function () {
         equal(event.x, 0);
         equal(event.y, 0);
         equal(event.button, pc.input.MOUSE_BUTTON_MIDDLE);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_LEFT], false);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_LEFT], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
         ok(event.event);
     });
     
@@ -87,9 +87,9 @@ test("mousemove: fires", function () {
         equal(event.deltaX, 0);
         equal(event.deltaY, 0);
         equal(event.button, pc.input.MOUSE_BUTTON_NONE);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_LEFT], false);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_LEFT], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
         ok(event.event);
     });
     
@@ -109,9 +109,9 @@ test("mousewheel: fires", function () {
         equal(event.x, 0);
         equal(event.deltaWheel, 1);
         equal(event.button, pc.input.MOUSE_BUTTON_NONE);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_LEFT], false);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
-        equal(event.buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_LEFT], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_MIDDLE], false);
+        equal(event._buttons[pc.input.MOUSE_BUTTON_RIGHT], false);
     });
     
     simMouseWheel(document.body;

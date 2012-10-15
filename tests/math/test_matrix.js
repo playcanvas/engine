@@ -376,8 +376,8 @@ test("fromEulerXYZ", function () {
     mrx = pc.math.mat4.makeRotate(x, [1, 0, 0]);
     mry = pc.math.mat4.makeRotate(y, [0, 1, 0]);
     mrz = pc.math.mat4.makeRotate(z, [0, 0, 1]);
-    mr = pc.math.mat4.multiply(mrx, mry);
-    pc.math.mat4.multiply(mr, mrz, mr);
+    mr = pc.math.mat4.multiply(mrz, mry);
+    pc.math.mat4.multiply(mr, mrx, mr);
     QUnit.deepEqual(clip(m), clip(mr));
 });
 
@@ -442,6 +442,7 @@ test("compose", function() {
 
 test("toQuat", function () { 
     // Indentity matrix to indentity quaternion
+    var s;
     var m = pc.math.mat4.create();
     var q = pc.math.mat4.toQuat(m);
 
@@ -462,6 +463,18 @@ test("toQuat", function () {
     // -90 degrees around +ve Z
     m = pc.math.mat4.makeRotate(-90, [0, 0, 1]);
     q = pc.math.mat4.toQuat(m);
+
+    QUnit.equal(q[0], 0);
+    QUnit.equal(q[1], 0);
+    QUnit.close(q[2], -Math.sqrt(0.5), 0.0001);
+    QUnit.close(q[3], Math.sqrt(0.5), 0.0001);
+
+    // 45 degrees around +ve Z, scaled
+    s = pc.math.mat4.makeScale(2, 2, 2);
+    m = pc.math.mat4.makeRotate(-90, [0, 0, 1]);
+    pc.math.mat4.multiply(m, s, m);
+    q = pc.math.mat4.toQuat(m);
+    pc.math.quat.normalize(q, q);
 
     QUnit.equal(q[0], 0);
     QUnit.equal(q[1], 0);

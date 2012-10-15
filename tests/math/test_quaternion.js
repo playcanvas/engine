@@ -54,6 +54,33 @@ test("multiply", function () {
     QUnit.close(qr[3], q4[3], 0.0001);
 });
 
+test("multiply: same order as matrix mult", function () { 
+    var q1 = pc.math.quat.create();
+    var q2 = pc.math.quat.create();
+    var q3 = pc.math.quat.create();
+    var q4 = pc.math.quat.create();
+
+    var m1 = pc.math.mat4.create();
+    var m2 = pc.math.mat4.create();
+    var m3 = pc.math.mat4.create();
+    var m4 = pc.math.mat4.create();
+
+    pc.math.quat.setFromEulers(q1, 10, 20, 0);
+    pc.math.quat.setFromEulers(q2, 0, 50, 0);
+    pc.math.quat.multiply(q1, q2, q3);
+    pc.math.quat.toMat4(q3, m4);
+
+    pc.math.mat4.fromEulerXYZ(10, 20, 0, m1);
+    pc.math.mat4.fromEulerXYZ(0, 50, 0, m2);
+    pc.math.mat4.multiply(m1, m2, m3);
+    pc.math.mat4.toQuat(m3, q4);
+
+    QUnit.close(q3[0], q4[0], 0.0001);
+    QUnit.close(q3[1], q4[1], 0.0001);
+    QUnit.close(q3[2], q4[2], 0.0001);
+    QUnit.close(q3[3], q4[3], 0.0001);
+});
+
 test("setFromEulers", function () { 
     function testAngles(x, y, z) {
         var q1 = pc.math.quat.create();
@@ -75,8 +102,8 @@ test("setFromEulers", function () {
     testAngles(0.1, 0, 0);
     testAngles(0, 0.2, 0);
     testAngles(0, 0, 0.3);
-    testAngles(0.1, 0.2, 0.3);
-    testAngles(-90, -90, 0);
+    testAngles(1, 2, 3);
+    testAngles(10, 10, 0);
 });
 
 test("setFromEulers: useful normalized quaternions", function () { 
@@ -197,3 +224,77 @@ test("setFromAxisAngle", function () {
     pc.math.quat.setFromEulers(qe, 45, 55, 65);
 });
 
+test("toEulers", function () {
+    var q;
+    var e = pc.math.vec3.create();
+
+    // Identity quaternion, no rotation
+    q = pc.math.quat.create(0, 0, 0, 1);
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 0);
+
+    // 180° turn around X axis
+    q = pc.math.quat.create(1, 0, 0, 0);
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 180);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 0);
+
+    // 180° turn around Y axis
+    q = pc.math.quat.create(0, 1, 0, 0);
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 180);
+    QUnit.equal(e[2], 0);
+
+    // 180° turn around Z axis
+    q = pc.math.quat.create(0, 0, 1, 0);
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 180);
+
+    // 90° turn around X axis
+    q = pc.math.quat.create(Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 90);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 0);
+
+    // 90° turn around Y axis
+    q = pc.math.quat.create(0, Math.sqrt(0.5), 0, Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 90);
+    QUnit.equal(e[2], 0);
+
+    // 90° turn around Z axis
+    q = pc.math.quat.create(0, 0, Math.sqrt(0.5), Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 90);
+
+    // -90° turn around X axis
+    q = pc.math.quat.create(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], -90);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 0);
+
+    // -90° turn around Y axis
+    q = pc.math.quat.create(0, -Math.sqrt(0.5), 0, Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], -90);
+    QUnit.equal(e[2], 0);
+
+    // -90° turn around Z axis
+    q = pc.math.quat.create(0, 0, -Math.sqrt(0.5), Math.sqrt(0.5));
+    pc.math.quat.toEulers(q, e);
+    QUnit.equal(e[0], 0);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], -90);
+});

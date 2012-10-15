@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.78.1
+-------
+* [FIX][BREAKING] Renamed MouseEvent.buttons to MouseEvent._buttons to avoid clash with new FireFox event property
+
+-------
 v0.78.0
 -------
 * [BREAKING] Renamed ScriptObject method updateFixed() to fixedUpdate()

@@ -2,7 +2,8 @@ pc.extend(pc.scene, function () {
 
     var tempMat = pc.math.mat4.create();
     var tempVec = pc.math.vec3.create();
-    var tempQuat = pc.math.quat.create();
+    var tempQuatA = pc.math.quat.create();
+    var tempQuatB = pc.math.quat.create();
 
     /**
      * @name pc.scene.GraphNode
@@ -257,13 +258,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         getLocalEulerAngles: function () {
-            if (this.dirtyLocal) {
-                pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this.localTransform);
-
-                this.dirtyLocal = false;
-                this.dirtyWorld = true;
-            }
-            pc.math.mat4.toEulerXYZ(this.localTransform, this.localEulerAngles);
+            pc.math.quat.toEulers(this.localRotation, this.localEulerAngles);
             return this.localEulerAngles;
         },
 
@@ -541,8 +536,8 @@ pc.extend(pc.scene, function () {
                 pc.math.quat.copy(rot, this.localRotation);
             } else {
                 var parentRot = this._parent.getRotation();
-                pc.math.quat.invert(parentRot, tempQuat);
-                pc.math.quat.multiply(tempQuat, rot, this.localRotation);
+                pc.math.quat.invert(parentRot, tempQuatA);
+                pc.math.quat.multiply(tempQuatA, rot, this.localRotation);
             }
             this.dirtyLocal = true;
         },
@@ -580,8 +575,8 @@ pc.extend(pc.scene, function () {
 
             if (this._parent !== null) {
                 var parentRot = this._parent.getRotation();
-                pc.math.quat.invert(parentRot, tempQuat);
-                pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
+                pc.math.quat.invert(parentRot, tempQuatA);
+                pc.math.quat.multiply(tempQuatA, this.localRotation, this.localRotation);
             }
             this.dirtyLocal = true;
         },
@@ -849,29 +844,17 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         rotate: function (x, y, z) {
-            pc.math.quat.setFromEulers(tempQuat, x, y, z);
+            pc.math.quat.setFromEulers(tempQuatA, x, y, z);
 
             if (this._parent === null) {
-                pc.math.quat.multiply(tempQuat, this.localRotation, this.localRotation);
+                pc.math.quat.multiply(tempQuatA, this.localRotation, this.localRotation);
             } else {
-/*
                 var worldRot = this.getRotation();
                 var parentRot = this._parent.getRotation();
-                var invParentRot = pc.math.quat.create();
 
-                var newWorldRot = pc.math.quat.create();
-                pc.math.quat.invert(parentRot, invParentRot);
-
-                pc.math.quat.multiply(invParentRot, tempQuat, newWorldRot);
-                pc.math.quat.multiply(tempQuat, worldRot, this.localRotation);
-*/
-
-                var rot = pc.math.mat4.fromEulerXYZ(x, y, z);
-                var invParentWtm = pc.math.mat4.invert(this.getParent().getWorldTransform());
-                var updatedTransform = pc.math.mat4.multiply(invParentWtm, rot);
-                pc.math.mat4.multiply(updatedTransform, this.getWorldTransform(), updatedTransform);
-                pc.math.mat4.toQuat(updatedTransform, this.localRotation);
-                pc.math.vec4.normalize(this.localRotation, this.localRotation);
+                pc.math.quat.invert(parentRot, tempQuatB);
+                pc.math.quat.multiply(tempQuatB, tempQuatA, tempQuatA);
+                pc.math.quat.multiply(tempQuatA, worldRot, this.localRotation);
             }
             this.dirtyLocal = true;
         },
@@ -895,8 +878,8 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         rotateLocal: function (x, y, z) {
-            pc.math.quat.setFromEulers(tempQuat, x, y, z);
-            pc.math.quat.multiply(this.localRotation, tempQuat, this.localRotation);
+            pc.math.quat.setFromEulers(tempQuatA, x, y, z);
+            pc.math.quat.multiply(this.localRotation, tempQuatA, this.localRotation);
             this.dirtyLocal = true;
         }
     };
