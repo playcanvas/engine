@@ -68,6 +68,7 @@ test("RAD_TO_DEG", function () {
    equal(rad * pc.math.RAD_TO_DEG, 180); 
 });
 
+/*
 test("unproject", function () {
    var transform = pc.math.mat4.makeTranslate(0,0,10);
    var modelview = pc.math.mat4.invert(transform);
@@ -90,3 +91,4 @@ test("unproject", function () {
    // TODO: write tests
     
 });
+*/
