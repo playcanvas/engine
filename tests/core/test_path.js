@@ -1,7 +1,7 @@
 module('pc.path');
 
 test("path.getDirectory ", function() {
-	same("folder", pc.path.getDirectory("folder/file.txt"));
+	equal("folder", pc.path.getDirectory("folder/file.txt"));
 	same("folder", pc.path.getDirectory("folder/another"));
 	same("folder/another", pc.path.getDirectory("folder/another/"));
 	same("", pc.path.getDirectory(""));
