@@ -110,26 +110,3 @@ test("atan2", function () {
 
   equal(pc.math.atan2(y, x), Math.atan2(y, x) * pc.math.RAD_TO_DEG);
 });
-
-test("unproject", function () {
-   var transform = pc.math.mat4.makeTranslate(0,0,10);
-   var modelview = pc.math.mat4.invert(transform);
-   var viewport = {
-       x: 0,
-       y: 0,
-       width: 800,
-       height: 600
-   }
-   var fov = 45;
-   var nearClip = 1;
-   var farClip = 100;
-   var projection = pc.math.mat4.makePerspective(fov, viewport.width / viewport.height, nearClip, farClip);
-   var screen = pc.math.vec3.create(0,0,-10);
-   var world = pc.math.vec3.create(0,0,0);
-   
-   
-   pc.math.unproject(screen, modelview, projection, viewport, world);
-   
-   // TODO: write tests
-    
-});
