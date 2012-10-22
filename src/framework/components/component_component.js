@@ -29,7 +29,6 @@ pc.extend(pc.fw, function () {
         this.getComponents = function () {
             return _components;
         };
-        this._getComponents = this.getComponents;
         
         /**
          * @function
@@ -47,7 +46,6 @@ pc.extend(pc.fw, function () {
                     return null;
             }
         };  
-        this._getComponentData = this.getComponentData;
         
         //Add support for events
         pc.extend(this, pc.events);
@@ -159,7 +157,7 @@ pc.extend(pc.fw, function () {
         
         for (name in registry) {
             if (registry.hasOwnProperty(name)) {
-                if(registry[name]._getComponentData(entity)) {
+                if(registry[name].getComponentData(entity)) {
                     registry[name].deleteComponent(entity);
                 }
             }
@@ -175,7 +173,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} entity The Entity to check for a Component
      */   
     ComponentSystem.prototype.hasComponent = function (entity) {
-        return (this._getComponentData(entity) !== null);
+        return (this.getComponentData(entity) !== null);
     }
     
     ComponentSystem.prototype.initialiseComponent = function (entity, componentData, data, properties) {
@@ -215,7 +213,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} entity The Entity to delete a Component from
      */
     ComponentSystem.prototype.deleteComponent = function (entity) {
-        var component = this._getComponentData(entity);
+        var component = this.getComponentData(entity);
         this.removeComponent(entity);
     };
     
@@ -227,7 +225,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.ComponentData} data The ComponentData to be added
      */
     ComponentSystem.prototype.addComponent = function (entity, data) {
-        var components = this._getComponents();
+        var components = this.getComponents();
         components[entity.getGuid()] = {
             entity: entity,
             component: data
@@ -241,7 +239,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} entity The Entity to remove the Component from
      */
     ComponentSystem.prototype.removeComponent = function (entity) {
-        var components = this._getComponents();
+        var components = this.getComponents();
         delete components[entity.getGuid()];
     };
     
@@ -256,7 +254,7 @@ pc.extend(pc.fw, function () {
      */
     ComponentSystem.prototype.set = function (entity, name, value) {
         var oldValue;
-        var componentData = this._getComponentData(entity);
+        var componentData = this.getComponentData(entity);
         
         if(componentData) {
 
@@ -280,7 +278,7 @@ pc.extend(pc.fw, function () {
      * @return {Object} Value of property or null if property or component doesn't exist
      */
     ComponentSystem.prototype.get = function (entity, name) {
-        var componentData = this._getComponentData(entity);
+        var componentData = this.getComponentData(entity);
         if(componentData) {
             // Check for accessor first (an accessor is a function with the same name but a leading underscore)
             if(this["_" + name] && typeof(this["_" + name]) === "function") {
