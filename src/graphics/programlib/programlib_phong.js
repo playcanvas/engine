@@ -506,15 +506,6 @@ pc.gfx.programlib.phong = {
         code += "\n"; // End of uniform declarations
 
         if (numShadowLights > 0) {
-            if (!pc.gfx.Device.getCurrent().extDepthTexture) {
-                code += "float upackRgbaDepthToFloat(const in vec4 rgba_depth)\n";
-                code += "{\n";
-                code += "    const vec4 bit_shift = vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0);\n";
-                code += "    float depth = dot(rgba_depth, bit_shift);\n";
-                code += "    return depth;\n";
-                code += "}\n\n";
-            }
-
             code += "float calculateShadowFactor(const in vec4 sc, const in vec3 sp, const in sampler2D sm)\n";
             code += "{\n";
             code += "    float depth;\n";
@@ -566,31 +557,34 @@ pc.gfx.programlib.phong = {
                     code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xEast, yNorth)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
                 } else {
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xWest, ySouth)));\n";
+                    // Vector equivalent to vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0)";
+                    code += "        const vec4 bit_shift = vec4(5.96046e-08, 1.52588e-05, 0.00390625, 1.0);\n";
+
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xWest, ySouth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(0.0, ySouth)));\n";
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(0.0, ySouth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xEast, ySouth)));\n";
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xEast, ySouth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xWest, 0.0)));\n";
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xWest, 0.0)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy));\n";
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xEast, 0.0)));\n";
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xEast, 0.0)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xWest, yNorth)));\n";
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xWest, yNorth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(0.0, yNorth)));\n";
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(0.0, yNorth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy + vec2(xEast, yNorth)));\n";
+                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xEast, yNorth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
                 }
                 code += "        return shadowAccum;\n";

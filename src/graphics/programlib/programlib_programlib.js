@@ -63,10 +63,10 @@ pc.gfx.programlib = {
                 if (pc.gfx.Device.getCurrent().extDepthTexture) {
                     code += '    gl_FragData[0] = vec4(1.0);\n';
                 } else {
-                    code += '    const vec4 bitShift = vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0);\n';
-                    code += '    const vec4 bitMask  = vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0);\n';
-                    code += '    vec4 packedDepth = fract(gl_FragCoord.z * bitShift);\n';
-                    code += '    gl_FragData[0] = packedDepth - packedDepth.xxyz * bitMask;\n';
+                    // Using a bit-shift of vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0)
+                    // and a bit-mask of    vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0)
+                    code += '    vec4 packedDepth = fract((gl_FragCoord.z * vec4(1.67772e+07, 65536.0, 256.0, 1.0)));\n';
+                    code += '    gl_FragData[0] = (packedDepth - (packedDepth.xxyz * vec4(0.0, 0.00390625, 0.00390625, 0.00390625)));\n'
                 }
                 break;
 
