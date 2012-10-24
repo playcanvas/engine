@@ -302,7 +302,7 @@ pc.scene.procedural.createTorus = function (opts) {
     });
 }
 
-pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments) {
+pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments, roundedCaps) {
     // Variable declarations
     var i, j;
     var x, y, z, u, v;
@@ -315,82 +315,161 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
     var uvs = [];
     var indices = [];
     var cosTheta, sinTheta;
+    var sinPhi, cosPhi;
 
     // Define the body of the cone/cylinder
-    for (i = 0; i <= heightSegments; i++) {
-        for (j = 0; j <= capSegments; j++) {
-            // Sweep the cone body from the positive Y axis to match a 3DS Max cone/cylinder
-            theta = (j / capSegments) * 2.0 * Math.PI - Math.PI;
+    if (height > 0) {
+        for (i = 0; i <= heightSegments; i++) {
+            for (j = 0; j <= capSegments; j++) {
+                // Sweep the cone body from the positive Y axis to match a 3DS Max cone/cylinder
+                theta = (j / capSegments) * 2.0 * Math.PI - Math.PI;
+                sinTheta = Math.sin(theta);
+                cosTheta = Math.cos(theta);
+                bottom = pc.math.vec3.create(sinTheta * baseRadius, -height / 2.0, cosTheta * baseRadius);
+                top    = pc.math.vec3.create(sinTheta * peakRadius,  height / 2.0, cosTheta * peakRadius);
+                pc.math.vec3.lerp(bottom, top, i / heightSegments, pos);
+                pc.math.vec3.subtract(top, bottom, bottomToTop);
+                pc.math.vec3.normalize(bottomToTop, bottomToTop);
+                tangent = pc.math.vec3.create(cosTheta, 0.0, -sinTheta);
+                pc.math.vec3.cross(tangent, bottomToTop, norm);
+                pc.math.vec3.normalize(norm, norm);
+
+                positions.push(pos[0], pos[1], pos[2]);
+                normals.push(norm[0], norm[1], norm[2]);
+                uvs.push(j / capSegments, i / heightSegments);
+
+                if ((i < heightSegments) && (j < capSegments)) {
+                    var first, second, third, fourth;
+                    first   = ((i))     * (capSegments + 1) + ((j));
+                    second  = ((i))     * (capSegments + 1) + ((j + 1));
+                    third   = ((i + 1)) * (capSegments + 1) + ((j));
+                    fourth  = ((i + 1)) * (capSegments + 1) + ((j + 1));
+
+                    indices.push(first, second, third); 
+                    indices.push(second, fourth, third); 
+                }
+            }
+        }
+    }
+
+    if (roundedCaps) {
+        var latitudeBands = Math.floor(capSegments / 2);
+        var longitudeBands = capSegments;
+        var capOffset = height / 2;
+
+        // Generate top cap
+        for (var lat = 0; lat <= latitudeBands; lat++) {
+            theta = (lat * Math.PI * 0.5) / latitudeBands;
             sinTheta = Math.sin(theta);
             cosTheta = Math.cos(theta);
-            bottom = pc.math.vec3.create(sinTheta * baseRadius, -height / 2.0, cosTheta * baseRadius);
-            top    = pc.math.vec3.create(sinTheta * peakRadius,  height / 2.0, cosTheta * peakRadius);
-            pc.math.vec3.lerp(bottom, top, i / heightSegments, pos);
-            pc.math.vec3.subtract(top, bottom, bottomToTop);
-            pc.math.vec3.normalize(bottomToTop, bottomToTop);
-            tangent = pc.math.vec3.create(cosTheta, 0.0, -sinTheta);
-            pc.math.vec3.cross(tangent, bottomToTop, norm);
-            pc.math.vec3.normalize(norm, norm);
 
-            positions.push(pos[0], pos[1], pos[2]);
-            normals.push(norm[0], norm[1], norm[2]);
-            uvs.push(j / capSegments, i / heightSegments);
+            for (var lon = 0; lon <= longitudeBands; lon++) {
+                // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
+                phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2.0;
+                sinPhi = Math.sin(phi);
+                cosPhi = Math.cos(phi);
 
-            if ((i < heightSegments) && (j < capSegments)) {
-                var first, second, third, fourth;
-                first   = ((i))     * (capSegments + 1) + ((j));
-                second  = ((i))     * (capSegments + 1) + ((j + 1));
-                third   = ((i + 1)) * (capSegments + 1) + ((j));
-                fourth  = ((i + 1)) * (capSegments + 1) + ((j + 1));
+                x = cosPhi * sinTheta;
+                y = cosTheta;
+                z = sinPhi * sinTheta;
+                u = 1.0 - lon / longitudeBands;
+                v = 1.0 - lat / latitudeBands;
 
-                indices.push(first, second, third); 
-                indices.push(second, fourth, third); 
+                positions.push(x * peakRadius, y * peakRadius + capOffset, z * peakRadius);
+                normals.push(x, y, z);
+                uvs.push(u, v);
+            }
+        }
+
+        var offset = (heightSegments + 1) * (capSegments + 1);
+        for (lat = 0; lat < latitudeBands; ++lat) {
+            for (lon = 0; lon < longitudeBands; ++lon) {
+                first  = (lat * (longitudeBands+1)) + lon;
+                second = first + longitudeBands + 1;
+
+                indices.push(offset + first + 1, offset + second, offset + first);
+                indices.push(offset + first + 1, offset + second + 1, offset + second);
+            }
+        }
+
+        // Generate bottom cap
+        for (var lat = 0; lat <= latitudeBands; lat++) {
+            theta = Math.PI * 0.5 + (lat * Math.PI * 0.5) / latitudeBands;
+            sinTheta = Math.sin(theta);
+            cosTheta = Math.cos(theta);
+
+            for (var lon = 0; lon <= longitudeBands; lon++) {
+                // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
+                phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2.0;
+                sinPhi = Math.sin(phi);
+                cosPhi = Math.cos(phi);
+
+                x = cosPhi * sinTheta;
+                y = cosTheta;
+                z = sinPhi * sinTheta;
+                u = 1.0 - lon / longitudeBands;
+                v = 1.0 - lat / latitudeBands;
+
+                positions.push(x * peakRadius, y * peakRadius - capOffset, z * peakRadius);
+                normals.push(x, y, z);
+                uvs.push(u, v);
+            }
+        }
+
+        offset = (heightSegments + 1) * (capSegments + 1) + (longitudeBands + 1) * (latitudeBands + 1);
+        for (lat = 0; lat < latitudeBands; ++lat) {
+            for (lon = 0; lon < longitudeBands; ++lon) {
+                first  = (lat * (longitudeBands+1)) + lon;
+                second = first + longitudeBands + 1;
+
+                indices.push(offset + first + 1, offset + second, offset + first);
+                indices.push(offset + first + 1, offset + second + 1, offset + second);
+            }
+        }
+    } else {
+        // Generate bottom cap
+        var offset = (heightSegments + 1) * (capSegments + 1);
+        if (baseRadius > 0.0) {
+            for (i = 0; i <= capSegments; i++) {
+                theta = (i / capSegments) * 2.0 * Math.PI;
+                x = Math.sin(theta);
+                y = -height / 2.0;
+                z = Math.cos(theta);
+                u = 1.0 - (x + 1.0) / 2.0;
+                v = (z + 1.0) / 2.0;
+
+                positions.push(x * baseRadius, y, z * baseRadius);
+                normals.push(0.0, -1.0, 0.0);
+                uvs.push(u, v);
+
+                if (i > 1) {
+                    indices.push(offset, offset + i, offset + i - 1);
+                }
+            }
+        }
+
+        // Generate top cap
+        offset += (capSegments + 1);
+        if (peakRadius > 0.0) {
+            for (i = 0; i <= capSegments; i++) {
+                theta = (i / capSegments) * 2.0 * Math.PI;
+                x = Math.sin(theta);
+                y = height / 2.0;
+                z = Math.cos(theta);
+                u = 1.0 - (x + 1.0) / 2.0;
+                v = (z + 1.0) / 2.0;
+
+                positions.push(x * peakRadius, y, z * peakRadius);
+                normals.push(0.0, 1.0, 0.0);
+                uvs.push(u, v);
+                
+                if (i > 1) {
+                    indices.push(offset, offset + i - 1, offset + i);
+                }
             }
         }
     }
 
-    // Generate bottom cap
-    var offset = (heightSegments + 1) * (capSegments + 1);
-    if (baseRadius > 0.0) {
-        for (i = 0; i <= capSegments; i++) {
-            theta = (i / capSegments) * 2.0 * Math.PI;
-            x = Math.sin(theta);
-            y = -height / 2.0;
-            z = Math.cos(theta);
-            u = 1.0 - (x + 1.0) / 2.0;
-            v = (z + 1.0) / 2.0;
-
-            positions.push(x * baseRadius, y, z * baseRadius);
-            normals.push(0.0, -1.0, 0.0);
-            uvs.push(u, v);
-
-            if (i > 1) {
-                indices.push(offset, offset + i, offset + i - 1);
-            }
-        }
-    }
-
-    // Generate top cap
-    offset += (capSegments + 1);
-    if (peakRadius > 0.0) {
-        for (i = 0; i <= capSegments; i++) {
-            theta = (i / capSegments) * 2.0 * Math.PI;
-            x = Math.sin(theta);
-            y = height / 2.0;
-            z = Math.cos(theta);
-            u = 1.0 - (x + 1.0) / 2.0;
-            v = (z + 1.0) / 2.0;
-
-            positions.push(x * peakRadius, y, z * peakRadius);
-            normals.push(0.0, 1.0, 0.0);
-            uvs.push(u, v);
-            
-            if (i > 1) {
-                indices.push(offset, offset + i - 1, offset + i);
-            }
-        }
-    }
-    
     return {
         positions: positions,
         normals: normals,
@@ -426,7 +505,47 @@ pc.scene.procedural.createCylinder = function (opts) {
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var vertexData = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments);
+    var vertexData = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
+
+    var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
+
+    return pc.scene.procedural.createGeometry(vertexData.positions, {
+        material:  material,
+        normals:   vertexData.normals,
+        tangents:  tangents,
+        uvs:       vertexData.uvs,
+        indices:   vertexData.indices
+    });
+}
+
+/**
+ * @function
+ * @name pc.scene.procedural.createCapsule
+ * @description <p>Creates a procedural capsule-shaped geometry.</p>
+ * <p>The size, shape and tesselation properties of the capsule can be controlled via function parameters.
+ * By default, the function will create a capsule standing vertically centred on the XZ-plane with a radius
+ * of 0.25, a height of 1.0, 1 height segment and 10 cap segments.</p>
+ * <p>Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent information
+ * is generated into the vertex buffer of the capsule's geometry.</p>
+ * @param {Object} opts An object that specifies optional inputs for the function as follows:
+ * @param {pc.scene.Material} opts.material The material to assign to the generated capsule's submesh.
+ * @param {Number} opts.radius The radius of the tube forming the body of the capsule (defaults to 0.3).
+ * @param {Number} opts.height The length of the body of the capsule from tip to tip (defaults to 1.0).
+ * @param {Number} opts.heightSegments The number of divisions along the tubular length of the capsule (defaults to 1).
+ * @param {Number} opts.sides The number of divisions around the tubular body of the capsule (defaults to 10).
+ * @returns {pc.scene.Geometry} A new cylinder-shaped geometry.
+ * @author Will Eastcott
+ */
+pc.scene.procedural.createCapsule = function (opts) {
+    // Check the supplied options and provide defaults for unspecified ones
+    var material = opts && opts.material !== undefined ? opts.material : null;
+    var radius = opts && opts.radius !== undefined ? opts.radius : 0.3;
+    var height = opts && opts.height !== undefined ? opts.height : 1.0;
+    var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
+    var sides = opts && opts.sides !== undefined ? opts.sides : 10;
+
+    // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
+    var vertexData = pc.scene.procedural._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
     var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
 
@@ -467,7 +586,7 @@ pc.scene.procedural.createCone = function (opts) {
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
 
-    var vertexData = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments);
+    var vertexData = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
     var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
 
