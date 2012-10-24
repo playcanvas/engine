@@ -68,27 +68,45 @@ test("RAD_TO_DEG", function () {
    equal(rad * pc.math.RAD_TO_DEG, 180); 
 });
 
-/*
-test("unproject", function () {
-   var transform = pc.math.mat4.makeTranslate(0,0,10);
-   var modelview = pc.math.mat4.invert(transform);
-   var viewport = {
-       x: 0,
-       y: 0,
-       width: 800,
-       height: 600
-   }
-   var fov = 45;
-   var nearClip = 1;
-   var farClip = 100;
-   var projection = pc.math.mat4.makePerspective(fov, viewport.width / viewport.height, nearClip, farClip);
-   var screen = pc.math.vec3.create(0,0,-10);
-   var world = pc.math.vec3.create(0,0,0);
-   
-   
-   pc.math.unproject(screen, modelview, projection, viewport, world);
-   
-   // TODO: write tests
-    
+test("sin", function () {
+  var d = 56;
+
+  equal(pc.math.sin(56), Math.sin(d * pc.math.DEG_TO_RAD));
 });
-*/
+
+test("cos", function () {
+  var d = 56;
+
+  equal(pc.math.cos(56), Math.cos(d * pc.math.DEG_TO_RAD));
+});
+
+test("tan", function () {
+  var d = 56;
+
+  equal(pc.math.tan(56), Math.tan(d * pc.math.DEG_TO_RAD));
+});
+
+test("asin", function () {
+  var n = 0.5;
+
+  equal(pc.math.asin(n), Math.asin(n) * pc.math.RAD_TO_DEG);
+});
+
+test("asin", function () {
+  var n = 0.5;
+
+  equal(pc.math.acos(n), Math.acos(n) * pc.math.RAD_TO_DEG);
+});
+
+test("atan", function () {
+  var n = 0.5;
+
+  equal(pc.math.atan(n), Math.atan(n) * pc.math.RAD_TO_DEG);
+});
+
+test("atan2", function () {
+  var x = 1;
+  var y = 2;
+
+  equal(pc.math.atan2(y, x), Math.atan2(y, x) * pc.math.RAD_TO_DEG);
+});
