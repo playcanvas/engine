@@ -15,13 +15,13 @@ pc.extend(pc.fw, function () {
         componentData.camera = new pc.scene.CameraNode();
         componentData.camera.setRenderTarget(new pc.gfx.RenderTarget(componentData.buffer));
 
-        this.initialiseComponent(entity, componentData, data, []);
+        this.initializeComponent(entity, componentData, data, []);
 
         return componentData;
     };
 
     CubeMapComponentSystem.prototype.deleteComponent = function (entity) {
-        var data = this._getComponentData(entity);
+        var data = this.getComponentData(entity);
 
         this.removeComponent(entity);
     };
@@ -32,7 +32,7 @@ pc.extend(pc.fw, function () {
         var id;
         var entity;
         var componentData;
-        var components = this._getComponents();
+        var components = this.getComponents();
         var transform;
 
         if (this.renderingCubeMap) return;

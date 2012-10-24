@@ -26,7 +26,7 @@ pc.extend(pc.fw, function () {
         var componentData = new pc.fw.ModelComponentData();
 
         var attribs = ['asset', 'castShadows', 'receiveShadows'];
-        this.initialiseComponent(entity, componentData, data, attribs);
+        this.initializeComponent(entity, componentData, data, attribs);
 
         return componentData;
     };

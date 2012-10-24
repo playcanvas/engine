@@ -86,7 +86,7 @@ if (typeof(Box2D) !== 'undefined') {
                 var componentData = new pc.fw.Body2dComponentData();
 
                 var attribs = ['static'];
-                this.initialiseComponent(entity, componentData, data, attribs);
+                this.initializeComponent(entity, componentData, data, attribs);
 
                 // Create a static body at the current position
                 var bodyDef = new b2BodyDef();

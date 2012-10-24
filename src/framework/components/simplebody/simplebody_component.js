@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
     SimpleBodyComponentSystem.prototype.createComponent = function(entity, data) {
         var componentData = new pc.fw.SimpleBodyComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['mass', 'inertia', 'velocity', 'force', 'angles', 'angVelocity', 'torque']);
+        this.initializeComponent(entity, componentData, data, ['mass', 'inertia', 'velocity', 'force', 'angles', 'angVelocity', 'torque']);
 
         return componentData;
     };

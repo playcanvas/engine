@@ -11,7 +11,7 @@ pc.extend(pc.fw, function () {
         var componentData = new pc.fw.AudioListenerComponentData();
 
         data = data || {};
-        this.initialiseComponent(entity, componentData, data, []);
+        this.initializeComponent(entity, componentData, data, []);
 
         this.setCurrentListener(entity);   
 

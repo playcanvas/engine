@@ -176,12 +176,12 @@ pc.extend(pc.fw, function () {
         return (this.getComponentData(entity) !== null);
     }
     
-    ComponentSystem.prototype.initialiseComponent = function (entity, componentData, data, properties) {
+    ComponentSystem.prototype.initializeComponent = function (entity, componentData, data, properties) {
         this.addComponent(entity, componentData);
         
         data = data || {};
         
-        // initialise
+        // initialize
         properties.forEach(function(value, index, arr) {
             if (typeof data[value] !== 'undefined') {
                 this.set(entity, value, data[value]);

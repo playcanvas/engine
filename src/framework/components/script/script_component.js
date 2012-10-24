@@ -18,7 +18,7 @@ pc.extend(pc.fw, function () {
     ScriptComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.ScriptComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['runInTools', 'urls']);
+        this.initializeComponent(entity, componentData, data, ['runInTools', 'urls']);
 
         return componentData;
     };

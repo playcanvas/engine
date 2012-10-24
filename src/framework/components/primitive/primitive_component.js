@@ -37,7 +37,7 @@ pc.extend(pc.fw, function () {
         componentData.material = material;
 
         var attribs = ['castShadows', 'color', 'receiveShadows', 'type'];
-        this.initialiseComponent(entity, componentData, data, attribs);
+        this.initializeComponent(entity, componentData, data, attribs);
 
         return componentData;
     };      

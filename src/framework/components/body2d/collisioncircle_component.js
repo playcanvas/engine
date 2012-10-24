@@ -94,7 +94,7 @@ if (typeof(Box2D) !== 'undefined') {
                 var componentData = new pc.fw.CollisionCircleComponentData();
 
                 var attribs = ['density', 'friction', 'restitution', 'radius'];
-                this.initialiseComponent(entity, componentData, data, attribs);
+                this.initializeComponent(entity, componentData, data, attribs);
 
                 var fixtureDef = new b2FixtureDef();
                 this.initFixtureDef(entity, fixtureDef, componentData);

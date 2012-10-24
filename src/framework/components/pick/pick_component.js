@@ -35,7 +35,7 @@ pc.extend(pc.fw, function () {
         material.setParameter('material_opacity', 1)
         componentData.material = material;
 
-        this.initialiseComponent(entity, componentData, data, []);
+        this.initializeComponent(entity, componentData, data, []);
 
         return componentData;
     };
@@ -52,7 +52,7 @@ pc.extend(pc.fw, function () {
         if (this.display) {
             // Render the pick shapes here
             var componentData;
-            var components = this._getComponents();
+            var components = this.getComponents();
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;

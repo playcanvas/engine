@@ -101,7 +101,7 @@ pc.extend(pc.fw, function () {
         data.camera = new pc.scene.CameraNode();
 
         var attribs = ['camera', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
-        this.initialiseComponent(entity, componentData, data, attribs);
+        this.initializeComponent(entity, componentData, data, attribs);
 
         if (!window.pc.apps.designer && this.get(entity, "activate") && !entity.hasLabel("pc:designer")) {
             this.setCurrent(entity);

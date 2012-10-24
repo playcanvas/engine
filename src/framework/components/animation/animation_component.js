@@ -41,7 +41,7 @@ pc.extend(pc.fw, function () {
     AnimationComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.AnimationComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['activate', 'loop', 'speed', 'assets']);
+        this.initializeComponent(entity, componentData, data, ['activate', 'loop', 'speed', 'assets']);
 
         return componentData;
     };

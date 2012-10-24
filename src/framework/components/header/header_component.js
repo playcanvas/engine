@@ -15,7 +15,7 @@ pc.extend(pc.fw, function () {
     HeaderComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.HeaderComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['name', 'description']);
+        this.initializeComponent(entity, componentData, data, ['name', 'description']);
 
         return componentData;
     };

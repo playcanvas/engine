@@ -113,7 +113,7 @@ pc.extend(pc.fw, function () {
     StaticCubeMapComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.StaticCubeMapComponentData();
 
-        this.initialiseComponent(entity, componentData, data, _cubeMapNames);
+        this.initializeComponent(entity, componentData, data, _cubeMapNames);
 
         return componentData;
     };

@@ -15,7 +15,7 @@ pc.extend(pc.fw, function () {
     BloomComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.BloomComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['bloomThreshold', 'blurAmount', 'bloomIntensity', 'baseIntensity', 'bloomSaturation', 'baseSaturation']);
+        this.initializeComponent(entity, componentData, data, ['bloomThreshold', 'blurAmount', 'bloomIntensity', 'baseIntensity', 'bloomSaturation', 'baseSaturation']);
 
         return componentData;
     };

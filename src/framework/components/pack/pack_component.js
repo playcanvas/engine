@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
     PackComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.PackComponentData();
 
-        this.initialiseComponent(entity, componentData, data, []);
+        this.initializeComponent(entity, componentData, data, []);
     
         return componentData;
     }

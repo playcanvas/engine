@@ -81,7 +81,7 @@ pc.extend(pc.fw, function () {
         data.light = light;
 
         var attribs = ['light', 'enable', 'color', 'intensity', 'castShadows'];
-        this.initialiseComponent(entity, componentData, data, attribs);
+        this.initializeComponent(entity, componentData, data, attribs);
 
         return componentData;
     };
@@ -99,7 +99,7 @@ pc.extend(pc.fw, function () {
         var id;
         var entity;
         var componentData;
-        var components = this._getComponents();
+        var components = this.getComponents();
         var transform;
         var device;
         var program = this.renderable.program;
