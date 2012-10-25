@@ -877,24 +877,24 @@ pc.math.mat4 = function () {
             z *= pc.math.DEG_TO_RAD;
 
             // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
-            var s1 = Math.sin(x);
-            var c1 = Math.cos(x);
-            var s2 = Math.sin(y);
-            var c2 = Math.cos(y);
-            var s3 = Math.sin(z);
-            var c3 = Math.cos(z);
+            var s1 = Math.sin(-x);
+            var c1 = Math.cos(-x);
+            var s2 = Math.sin(-y);
+            var c2 = Math.cos(-y);
+            var s3 = Math.sin(-z);
+            var c3 = Math.cos(-z);
 
             // Set rotation elements
             r[0] = c2*c3;
-            r[1] = c1*s3 + c3*s1*s2;
-            r[2] = s1*s3 - c1*c3*s2;
+            r[1] = -c2*s3;
+            r[2] = s2;
 
-            r[4] = -c2*s3;
+            r[4] = c1*s3 + c3*s1*s2;
             r[5] = c1*c3 - s1*s2*s3;
-            r[6] = c3*s1 + c1*s2*s3;
+            r[6] = -c2*s1;
 
-            r[8] = s2;
-            r[9] = -c2*s1;
+            r[8] = s1*s3 - c1*c3*s2;
+            r[9] = c3*s1 + c1*s2*s3;
             r[10] = c1*c2;
 
             return r;

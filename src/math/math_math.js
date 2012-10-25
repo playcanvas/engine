@@ -153,6 +153,81 @@ pc.math = {
     random: function (min, max) {
         var diff = max - min;
         return Math.random() * diff + min;        
+    },
+
+    /**
+    * @function
+    * @name pc.math.sin
+    * @description Sine function using Degrees
+    * @param a Angle in degrees
+    */
+    sin: function (a) {
+        return Math.sin(a * pc.math.DEG_TO_RAD);
+    },
+
+    /**
+    * @function
+    * @name pc.math.cos
+    * @description Cosine function using Degrees
+    * @param a Angle in degrees
+    */
+    cos: function (a) {
+        return Math.cos(a * pc.math.DEG_TO_RAD);
+    },
+
+    /**
+    * @function
+    * @name pc.math.tan
+    * @description Tangent function using Degrees
+    * @param a Angle in degrees
+    */
+    tan: function (a) {
+        return Math.tan(a * pc.math.DEG_TO_RAD);
+    },
+
+    /**
+    * @function
+    * @name pc.math.asin
+    * @description Arcsine function using degrees
+    * @param x A number between -1 and 1
+    * @returns Angle in degrees
+    */
+    asin: function (x) {
+        return Math.asin(x) * pc.math.RAD_TO_DEG;
+    },
+
+    /**
+    * @function
+    * @name pc.math.acos
+    * @description Arccosine function using degrees
+    * @param x A number between -1 and 1
+    * @returns Angle in degrees
+    */
+    acos: function (x) {
+        return Math.acos(x) * pc.math.RAD_TO_DEG;
+    },
+
+    /**
+    * @function
+    * @name pc.math.atan
+    * @description Arctangent function using degrees
+    * @param x A number between -1 and 1
+    * @returns Angle in degrees
+    */
+    atan: function (x) {
+        return Math.atan(x) * pc.math.RAD_TO_DEG;
+    },
+
+    /**
+    * @function
+    * @name pc.math.atan2
+    * @description Arctangent function using degrees which takes 2 arguments
+    * @param y A number
+    * @param x A number
+    * @returns Angle in degrees
+    */
+    atan2: function (y, x) {
+        return Math.atan2(y, x) * pc.math.RAD_TO_DEG;
     }
 };
 

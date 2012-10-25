@@ -179,7 +179,6 @@ pc.math.quat = function () {
         },
 
         setFromEulers: function (q, ex, ey, ez) {
-/*
             ex = 0.5 * ex * Math.PI / 180.0;
             ey = 0.5 * ey * Math.PI / 180.0;
             ez = 0.5 * ez * Math.PI / 180.0;
@@ -191,28 +190,10 @@ pc.math.quat = function () {
             var sz = Math.sin(ez);
             var cz = Math.cos(ez);
 
-            q[0] = sx * cy * cz + cx * sy * sz;
-            q[1] = cx * sy * cz - sx * cy * sz;
-            q[2] = cx * cy * sz + sx * sy * cz;
-            q[3] = cx * cy * cz - sx * sy * sz;
-*/
-
-/*
-            var rx = pc.math.mat4.makeRotate(ex, [1, 0, 0]);
-            var ry = pc.math.mat4.makeRotate(ey, [0, 1, 0]);
-            var rz = pc.math.mat4.makeRotate(ez, [0, 0, 1]);
-            var r = pc.math.mat4.multiply(rz, ry);
-            pc.math.mat4.multiply(r, rx, r);
-            pc.math.mat4.toQuat(r, q);
-*/
-            var qx = pc.math.quat.create();
-            var qy = pc.math.quat.create();
-            var qz = pc.math.quat.create();
-            pc.math.quat.setFromAxisAngle(qx, [1, 0, 0], ex);
-            pc.math.quat.setFromAxisAngle(qy, [0, 1, 0], ey);
-            pc.math.quat.setFromAxisAngle(qz, [0, 0, 1], ez);
-            pc.math.quat.multiply(qz, qy, q);
-            pc.math.quat.multiply(q, qx, q);
+            q[0] = sx * cy * cz - cx * sy * sz;
+            q[1] = cx * sy * cz + sx * cy * sz;
+            q[2] = cx * cy * sz - sx * sy * cz;
+            q[3] = cx * cy * cz + sx * sy * sz;
         },
 
         toEulers: function (q, r) {

@@ -242,12 +242,12 @@ test("toEulers", function () {
     QUnit.equal(e[1], 0);
     QUnit.equal(e[2], 0);
 
-    // 180° turn around Y axis
+    // 180° turn around Y axis (note that 0, 180, 0 is equivalent to 180, 0, 180)
     q = pc.math.quat.create(0, 1, 0, 0);
     pc.math.quat.toEulers(q, e);
-    QUnit.equal(e[0], 0);
-    QUnit.equal(e[1], 180);
-    QUnit.equal(e[2], 0);
+    QUnit.equal(e[0], 180);
+    QUnit.equal(e[1], 0);
+    QUnit.equal(e[2], 180);
 
     // 180° turn around Z axis
     q = pc.math.quat.create(0, 0, 1, 0);
