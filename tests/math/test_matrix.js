@@ -369,9 +369,9 @@ test("fromEulerXYZ", function () {
     QUnit.deepEqual(clip(m), [0.707,0.707,0,0, -0.707,0.707,0,0, 0,0,1,0, 0,0,0,1]);
 
     // Arbitrary rotation
-    x = 60;
-    y = 45;
-    z = 36;
+    x = 33;
+    y = 44;
+    z = 55;
     m = pc.math.mat4.fromEulerXYZ(x,y,z);
     mrx = pc.math.mat4.makeRotate(x, [1, 0, 0]);
     mry = pc.math.mat4.makeRotate(y, [0, 1, 0]);

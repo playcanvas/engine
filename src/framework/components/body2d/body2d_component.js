@@ -321,18 +321,21 @@ if (typeof(Box2D) !== 'undefined') {
             * @name pc.fw.Body2dComponentSystem#setAngle
             * @description Set the angle of the body
             * @param {pc.fw.Entity} entity The Entity to change
-            * @param {Number} a The new angle
+            * @param {Number} a The new angle, in degrees
             */
             setAngle: function (entity, a) {
                 var body = this.get(entity, 'body');
                 if(body) {
                     body.SetAwake(true);
-                    body.SetAngle(a);
+                    body.SetAngle(a * pc.math.DEG_TO_RAD);
 
                     this.updateTransform(entity, body);
                 }
             },
 
+            /**
+            * angle in degrees
+            */
             setPositionAndAngle: function (entity, x, y, a) {
                 var body = this.get(entity, 'body');
                 if (body) {
@@ -347,8 +350,11 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
+            /**
+            * Return angle in degrees
+            */
             getAngle: function (entity) {
-                return this.get(entity, 'body').GetAngle();
+                return this.get(entity, 'body').GetAngle() * pc.math.RAD_TO_DEG;
             },
 
             /**

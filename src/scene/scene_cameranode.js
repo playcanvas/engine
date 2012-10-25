@@ -145,23 +145,47 @@ pc.extend(pc.scene, function () {
     };
 
     /**
-     * Convert a point from 2D screen space to 3D world space
-     * @param {Number} x x coordinate on screen
-     * @param {Number} y y coordinate on scree
-     * @param {Number} z The distance from the camera in world space to create the new point
+     * @function
+     * @name pc.scene.CameraNode#screenToWorld
+     * @description Convert a point from 2D screen space to 3D world space.
+     * @param {Number} x x coordinate on screen.
+     * @param {Number} y y coordinate on screen.
+     * @param {Number} z The distance from the camera in world space to create the new point.
+     * @param {pc.math.vec3} worldCoord [Optional] 3D vector to recieve world coordinate result.
+     * @returns {pc.math.vec3} The world space coordinate.
      */
-    CameraNode.prototype.screenToWorld = function (x,y,z) {  
-        var output = pc.math.vec3.create();
+    CameraNode.prototype.screenToWorld = function (x, y, z, worldCoord) {
+        if (typeof worldCoord === 'undefined') {
+            worldCoord = v3.create();
+        }
+
+        var projMat = this.getProjectionMatrix();
         var wtm = this.getWorldTransform();
-        var width = this._renderTarget.getWidth();
-        var height = this._renderTarget.getHeight(); 
-        var viewport = this._renderTarget.getViewport();
-        var projMat = pc.math.mat4.makePerspective(this._fov, width / height, this._nearClip, this._farClip);
-        var viewMat = pc.math.mat4.invert(wtm);
+        m4.invert(wtm, this._viewMat);
+        m4.multiply(projMat, this._viewMat, this._viewProjMat);
+        var invViewProjMat = m4.invert(this._viewProjMat);
 
-        unproject(pc.math.vec3.create(x,y,z), modelview, projection, viewport, output);
+        var gd = pc.gfx.Device.getCurrent();
+        var width = parseFloat(gd.canvas.style.width);
+        var height = parseFloat(gd.canvas.style.height);
 
-        return output;
+        var far = v3.create(x / width * 2 - 1, (height - y) / height * 2 - 1, 1);
+        var farW = m4.multiplyVec3(far, 1.0, invViewProjMat);
+
+        var w = far[0] * invViewProjMat[3] +
+                far[1] * invViewProjMat[7] +
+                far[2] * invViewProjMat[11] +
+                invViewProjMat[15];
+
+        v3.scale(farW, 1 / w, farW);
+
+        var eye = this.getPosition();
+        var t = z / this._farClip;
+        worldCoord[0] = eye[0] + t * (farW[0] - eye[0]);
+        worldCoord[1] = eye[1] + t * (farW[1] - eye[1]);
+        worldCoord[2] = eye[2] + t * (farW[2] - eye[2]);
+
+        return worldCoord;
     };
 
     /**
