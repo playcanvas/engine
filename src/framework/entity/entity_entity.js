@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
      */
     var Entity = function(){
         this._guid = pc.guid.create(); // Globally Unique Identifier 
-        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.  
+        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
     };
     Entity = pc.inherits(Entity, pc.scene.GraphNode);
     
