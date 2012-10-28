@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.79.0
+-------
+* [FIX] Body2d works in degrees everywhere
+* [FIX] pc.math.mat4.fromEulersXYZ
+* Fixed math unit tests
+* Added trig functions in degrees pc.math.sin/cos/tan/asin/acos/atan/atan2
+* Some shader optimizations
+
+-------
 v0.78.1
 -------
 * [FIX][BREAKING] Renamed MouseEvent.buttons to MouseEvent._buttons to avoid clash with new FireFox event property
