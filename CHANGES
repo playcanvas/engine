@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.79.2
+-------
+* Restrict bone limit a little further to allow for more complex shaders.
+
+-------
 v0.79.1
 -------
 * Limit the number of supported bones per skin in order to get around a performance issue on the Mac Mini 2009.
