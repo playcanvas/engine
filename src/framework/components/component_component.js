@@ -7,8 +7,8 @@ pc.extend(pc.fw, function () {
     };
 
     pc.extend(ComponentSystem, {
-        initialize: function () {
-
+        initialize: function (root) {
+            ComponentSystem.fire('initialize', root);
         },
 
         /**
@@ -16,9 +16,9 @@ pc.extend(pc.fw, function () {
         */
         update: function (dt, context, inTools) {
             if (inTools) {
-                this.fire('toolsUpdate', dt);
+                ComponentSystem.fire('toolsUpdate', dt);
             } else {
-                this.fire('update', dt);
+                ComponentSystem.fire('update', dt);
             }
         },
 
@@ -26,27 +26,17 @@ pc.extend(pc.fw, function () {
         * Update all ComponentSystems
         */
         fixedUpdate: function (dt) {
-
+            ComponentSystem.fire('fixedUpdate', dt);
         },
 
         /**
         * Update all ComponentSystems
         */
         postUpdate: function (dt) {
-
-        },
-
-        /**
-        * Render all ComponentSystems
-        */
-        render: function (inTools) {
-            if (inTools) {
-                this.fire('toolsRender');
-            } else {
-                this.fire('render');
-            }
+            ComponentSystem.fire('postUpdate', dt);
         }
     });
+    pc.extend(ComponentSystem, pc.events);
 
     ComponentSystem.prototype = {
         /**
@@ -101,9 +91,9 @@ pc.extend(pc.fw, function () {
             // initialize
             properties.forEach(function(value) {
                 if (typeof data[value] !== 'undefined') {
-                    component.set(value, data[value]);
+                    component[value] = data[value];
                 } else {
-                    component.set(value, component.data[value]);                
+                    component[value] = component.data[value];
                 }
                 
             }, this);
@@ -148,33 +138,62 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        get: function (name) {
-            var componentData = this.data;
-            if(componentData) {
-                // Check for accessor first (an accessor is a function with the same name but a leading underscore)
-                if(this["_" + name] && typeof(this["_" + name]) === "function") {
-                    // found an accessor on the Component
-                    return this["_" + name](componentData);
-                } else if(componentData[name] !== undefined) {
-                    return componentData[name];
-                } 
-            }        
+        assignSchema: function (schema) {
+            // Create getter/setter pairs for each property defined in the schema
+            schema.forEach(function (prop) {
+                Object.defineProperty(this, prop.name, {
+                    get: function () {
+                        return this.data[prop.name];
+                    },
+                    set: function (value) {
+                        var oldValue = this.data[prop.name];
+                        this.data[prop.name] = value;
+                        this.fire('set', prop.name, oldValue, value);                            
+                    }
+                });
+            }.bind(this));
+
+            // Expose properties to the Designer
+            this.exposeProperties(schema);
         },
 
-        set: function (name, value) {
-            var oldValue;
-            var componentData = this.data
-            if(componentData) {
-                oldValue = componentData[name];
-                // Check for an accessor first, (an accessor is a function with the same name but a leading underscore)
-                if(this["_" + name] && typeof(this["_" + name]) === "function") {
-                    this["_" + name](componentData, value);
-                } else if(componentData[name] !== undefined) {
-                    componentData[name] = value;
-                }
-                this.fire('set', name, oldValue, value)
-            }        
-        }
+        exposeProperties: function (schema) {
+            if (schema.exposed !== false) {
+                editor.link.addComponentType(this.system.id);
+                
+                schema.forEach(function (prop) {
+                    editor.link.expose(this.system.id, prop);
+                }.bind(this));                
+            }
+        },
+
+        // get: function (name) {
+        //     var componentData = this.data;
+        //     if(componentData) {
+        //         // Check for accessor first (an accessor is a function with the same name but a leading underscore)
+        //         if(this["_" + name] && typeof(this["_" + name]) === "function") {
+        //             // found an accessor on the Component
+        //             return this["_" + name](componentData);
+        //         } else if(componentData[name] !== undefined) {
+        //             return componentData[name];
+        //         } 
+        //     }        
+        // },
+
+        // set: function (name, value) {
+        //     var oldValue;
+        //     var componentData = this.data
+        //     if(componentData) {
+        //         oldValue = componentData[name];
+        //         // Check for an accessor first, (an accessor is a function with the same name but a leading underscore)
+        //         if(this["_" + name] && typeof(this["_" + name]) === "function") {
+        //             this["_" + name](componentData, value);
+        //         } else if(componentData[name] !== undefined) {
+        //             componentData[name] = value;
+        //         }
+        //         this.fire('set', name, oldValue, value)
+        //     }        
+        // }
     };
 
     return {

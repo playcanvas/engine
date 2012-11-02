@@ -1,7 +1,9 @@
 pc.extend(pc.fw, function () {
     function ScriptComponentData() {
+        // serialized
         this.urls = [];
-        this.runInTools = false;
+
+        // not serialized
         this.instances = {};
         this._scripts = [];
     }
@@ -12,14 +14,14 @@ pc.extend(pc.fw, function () {
     };
     
 }());
-editor.link.addComponentType("script");
+// editor.link.addComponentType("script");
 
-editor.link.expose({
-    system: "script",
-    variable: "urls",
-    name: "urls",
-    displayName: "URLs",
-    description: "Attach scripts to this Entity",
-    type: "script_urls",
-    defaultValue: []
-});
+// editor.link.expose({
+//     system: "script",
+//     variable: "urls",
+//     name: "urls",
+//     displayName: "URLs",
+//     description: "Attach scripts to this Entity",
+//     type: "script_urls",
+//     defaultValue: []
+// });

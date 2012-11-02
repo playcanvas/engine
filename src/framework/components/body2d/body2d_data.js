@@ -16,13 +16,13 @@ pc.extend(pc.fw, function () {
         Body2dComponentData: Body2dComponentData
     };
 }());
-editor.link.addComponentType("body2d");
+// editor.link.addComponentType("body2d");
 
-editor.link.expose({
-    system: "body2d",
-    variable: "static",
-    displayName: "Static",
-    description: "Static bodies are immovable and do not collide with other static bodies.",
-    type: "boolean",
-    defaultValue: true
-});
+// editor.link.expose({
+//     system: "body2d",
+//     variable: "static",
+//     displayName: "Static",
+//     description: "Static bodies are immovable and do not collide with other static bodies.",
+//     type: "boolean",
+//     defaultValue: true
+// });

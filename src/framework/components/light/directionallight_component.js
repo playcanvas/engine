@@ -1,5 +1,43 @@
 pc.extend(pc.fw, function () {
     var DirectionalLightComponent = function DirectionalLightComponent(entity) {
+        var schema = [{
+            name: "enable",
+            displayName: "Enable",
+            description: "Enable or disable the light",
+            type: "boolean",
+            defaultValue: true
+        }, {
+            name: "color",
+            displayName: "Color",
+            description: "Light color",
+            type: "rgb",
+            defaultValue: "0xffffff"
+
+        }, {
+            name: "intensity",
+            displayName: "Intensity",
+            description: "Factors the light color",
+            type: "number",
+            defaultValue: 1,
+            options: {
+                min: 0,
+                max: 10,
+                step: 0.05
+            }
+
+        }, {
+            name: "castShadows",
+            displayName: "Cast shadows",
+            description: "Cast shadows from this light",
+            type: "boolean",
+            defaultValue: false
+        }, {
+            name: 'light',
+            exposed: false
+        }];
+        
+        this.assignSchema(schema);
+
         // Handle changes to the 'castShadows' value
         this.bind("set_castShadows", this.onSetCastShadows.bind(this));
         // Handle changes to the 'color' value

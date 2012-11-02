@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
                 context.root.addChild(pack['hierarchy']);
                 
                 // Initialise any systems with an initialize() method after pack is loaded
-                pc.fw.ComponentSystem.initialize();
+                pc.fw.ComponentSystem.initialize(pack['hierarchy']);
                 
                 // callback
                 if (success) {

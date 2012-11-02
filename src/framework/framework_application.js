@@ -97,7 +97,6 @@ pc.extend(pc.fw, function () {
 
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
         var bloomsys = new pc.fw.BloomComponentSystem(this.context);
-        var headersys = new pc.fw.HeaderComponentSystem(this.context);
         var modelsys = new pc.fw.ModelComponentSystem(this.context);
         var camerasys = new pc.fw.CameraComponentSystem(this.context);
         var cubemapsys = new pc.fw.CubeMapComponentSystem(this.context);
@@ -109,7 +108,6 @@ pc.extend(pc.fw, function () {
         var packsys = new pc.fw.PackComponentSystem(this.context);
         var skyboxsys = new pc.fw.SkyboxComponentSystem(this.context);
         var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
-        //var simplebodysys = new pc.fw.SimpleBodyComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
@@ -171,6 +169,7 @@ pc.extend(pc.fw, function () {
             // Perform ComponentSystem update
             pc.fw.ComponentSystem.fixedUpdate(1.0 / 60.0, context, this._inTools);
             pc.fw.ComponentSystem.update(dt, context, this._inTools);
+            pc.fw.ComponentSystem.postUpdate(dt, context, this._inTools);
 
             // fire update event
             this.fire("update", dt);
@@ -205,11 +204,7 @@ pc.extend(pc.fw, function () {
             if (cameraEntity) {
                 context.systems.camera.frameBegin();
 
-                pc.fw.ComponentSystem.render(context, this._inTools);
-                
-                var cameraNode = cameraEntity.camera.get('camera');
-                
-                context.scene.dispatch(cameraNode);
+                context.scene.dispatch(cameraEntity.camera.camera);
                 context.scene.flush();
 
                 context.systems.camera.frameEnd();            

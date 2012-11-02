@@ -25,47 +25,47 @@ pc.extend(pc.fw, function() {
         AnimationComponentData: AnimationComponentData 
     };
 }());
-editor.link.addComponentType("animation");
+// editor.link.addComponentType("animation");
 
-editor.link.expose({
-    system: "animation",
-    variable: "assets",
-    displayName: "Asset",
-    description: "Animation Asset",
-    type: "asset",
-    options: {
-        max: 100
-    },
-    defaultValue: null
-});
+// editor.link.expose({
+//     system: "animation",
+//     variable: "assets",
+//     displayName: "Asset",
+//     description: "Animation Asset",
+//     type: "asset",
+//     options: {
+//         max: 100
+//     },
+//     defaultValue: null
+// });
 
-editor.link.expose({
-    system: "animation",
-    variable: "speed",
-    displayName: "Speed Factor",
-    description: "Scale the animation playback speed",
-    type: "number",
-    options: {
-        min: 0.0,
-        step: 0.1
-    },
-    defaultValue: 1.0
-});
+// editor.link.expose({
+//     system: "animation",
+//     variable: "speed",
+//     displayName: "Speed Factor",
+//     description: "Scale the animation playback speed",
+//     type: "number",
+//     options: {
+//         min: 0.0,
+//         step: 0.1
+//     },
+//     defaultValue: 1.0
+// });
 
-editor.link.expose({
-    system: "animation",
-    variable: "loop",
-    displayName: "Loop",
-    description: "Loop the animation back to the start on completion",
-    type: "boolean",
-    defaultValue: true
-});
+// editor.link.expose({
+//     system: "animation",
+//     variable: "loop",
+//     displayName: "Loop",
+//     description: "Loop the animation back to the start on completion",
+//     type: "boolean",
+//     defaultValue: true
+// });
 
-editor.link.expose({
-    system: "animation",
-    variable: "activate",
-    displayName: "Activate",
-    description: "Play the configured animation on load",
-    type: "boolean",
-    defaultValue: true
-});
+// editor.link.expose({
+//     system: "animation",
+//     variable: "activate",
+//     displayName: "Activate",
+//     description: "Play the configured animation on load",
+//     type: "boolean",
+//     defaultValue: true
+// });

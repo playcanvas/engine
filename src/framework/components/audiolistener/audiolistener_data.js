@@ -7,4 +7,4 @@ pc.extend(pc.fw, function () {
         AudioListenerComponentData: AudioListenerComponentData
     };
 }());
-editor.link.addComponentType("audiolistener");
+//editor.link.addComponentType("audiolistener");

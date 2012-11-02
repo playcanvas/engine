@@ -9,23 +9,23 @@ pc.extend(pc.fw, function () {
         HeaderComponentData: HeaderComponentData
     };
 }());
-editor.link.addComponentType("header");
+// editor.link.addComponentType("header");
 
 
-editor.link.expose({
-    system: "header",
-    variable: "name",
-    displayName: "Name",
-    description: "Name of the component",
-    type: "string",
-    defaultValue: "Untitled"
-});
+// editor.link.expose({
+//     system: "header",
+//     variable: "name",
+//     displayName: "Name",
+//     description: "Name of the component",
+//     type: "string",
+//     defaultValue: "Untitled"
+// });
 
-editor.link.expose({
-    system: "header",
-    variable: "description",
-    displayName: "Description",
-    description: "Description of the component",
-    type: "string",
-    defaultValue: ""
-});
+// editor.link.expose({
+//     system: "header",
+//     variable: "description",
+//     displayName: "Description",
+//     description: "Description of the component",
+//     type: "string",
+//     defaultValue: ""
+// });
