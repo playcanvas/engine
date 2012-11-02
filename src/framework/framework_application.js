@@ -95,7 +95,6 @@ pc.extend(pc.fw, function () {
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
 
-        // Create systems
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
         var bloomsys = new pc.fw.BloomComponentSystem(this.context);
         var headersys = new pc.fw.HeaderComponentSystem(this.context);
@@ -202,13 +201,15 @@ pc.extend(pc.fw, function () {
 
             pc.gfx.Device.setCurrent(this.graphicsDevice);
 
-            var currentCamera = context.systems.camera.getCurrent();
-            if (currentCamera) {
+            var cameraEntity = context.systems.camera.current;
+            if (cameraEntity) {
                 context.systems.camera.frameBegin();
 
                 pc.fw.ComponentSystem.render(context, this._inTools);
-                var camera = context.systems.camera.get(currentCamera, 'camera');
-                context.scene.dispatch(camera);
+                
+                var cameraNode = cameraEntity.camera.get('camera');
+                
+                context.scene.dispatch(cameraNode);
                 context.scene.flush();
 
                 context.systems.camera.frameEnd();            

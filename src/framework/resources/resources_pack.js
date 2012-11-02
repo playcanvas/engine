@@ -96,9 +96,9 @@ pc.extend(pc.resources, function () {
         var systems = this._registry.getComponentSystemOrder();
         var i, len = systems.length;
         for (i = 0; i < len; i++) {
-            var component = data.components[systems[i]];
-            if (component) {
-                this._registry[systems[i]].createComponent(entity, component);
+            var componentData = data.components[systems[i]];
+            if (componentData) {
+                this._registry[systems[i]].addComponent(entity, componentData);
             }
         }
 

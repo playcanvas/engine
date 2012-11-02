@@ -7,6 +7,20 @@
  * Do not distribute.
  */
 var pc = {
+        /**
+        * @name pc.config
+        * @description Configuration data made available to the application from the server
+        * @param bootstrap
+        * @param frame Options set from the containing frame
+        * @param frame.url The URL of the containing frame 
+        * @param api_url
+        * @param corazon
+        * @param username
+        * @param repository
+        * @param script_prefix
+        */
+        config: {},
+
         common: {},
         /**
          * Storage for the applications using the PlayCanvas Engine

@@ -16,6 +16,7 @@ pc.extend(pc.fw, function () {
     ComponentSystemRegistry.prototype.add = function (name, system) {
         if(!this[name]) {
             this[name] = system;
+            system.name = name;
         } else {
             throw new Error(pc.string.format("ComponentSystem name '{0}' already registered or not allowed", name));
         }

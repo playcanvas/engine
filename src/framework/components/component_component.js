@@ -1,321 +1,184 @@
 pc.extend(pc.fw, function () {
-    /**
-     * @name pc.fw.ComponentSystem
-     * @constructor Base constructor for all Component Systems.
-     * @class The ComponentSystem contains the code and functionality for a particular aspect of a game objects behaviour.
-     * The ComponentSystem class contains functionality but no data, it is matched with a ComponentData class which contains
-     * all data but no functionality/code.
-     * @example
-     * var entity = ... (get the entity from somewhere)
-     * var context = ... (your pc.fw.ApplicationContext)
-     * 
-     * var fov = context.systems.camera.get(entity, "fov");
-     * fov = 120; // Change the camera FOV (field of view)
-     * context.systems.camera.set(entity, "fov", fov):
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext used for this ComponentSystem
-     */
-    var ComponentSystem = function ComponentSystem(context) {
-        var _components = {};
-        this._name = "";
+    var ComponentSystem = function (context) {
         this.context = context;
-        
-        /**
-         * @function
-         * @private
-         * @name pc.fw.ComponentSystem#getComponents
-         * @description Get a Object containing all entities and the ComponentData for this ComponentSystem
-         * @returns {Object}  An Object containing {Entity, ComponentData} objects keyed by the Entity's guid
-         */
-        this.getComponents = function () {
-            return _components;
-        };
-        
-        /**
-         * @function
-         * @private
-         * @name pc.fw.ComponentSystem#getComponentData
-         * @description Get the ComponentData object for this Entity and ComponentSystem.
-         * Note, that editing the ComponentData should be done through the ComponentSystem.set and ComponentSystem.get methods, in order for changes events to be fired
-         * @param {pc.fw.Entity} entity The Entity to get the ComponentData for
-         * @returns {pc.fw.ComponentData} The ComponentData object for this entity
-         */
-        this.getComponentData = function (entity) {
-                if (_components[entity.getGuid()]) {
-                    return _components[entity.getGuid()].component;
-                } else {
-                    return null;
-            }
-        };  
-        
-        //Add support for events
+        this.dataStore = {};
+
         pc.extend(this, pc.events);
-        
-        this.bind("set", function (entity, name, newValue, oldValue) {
-            // Re-fire a set event but with the name customized to the value being changed.
-            // So Component authors can bind to events for each data value e.g. this.bind("set_type", ...);
-            this.fire("set_" + name, entity, name, newValue, oldValue);
+    };
+
+    pc.extend(ComponentSystem, {
+        initialize: function () {
+
+        },
+
+        /**
+        * Update all ComponentSystems
+        */
+        update: function (dt, context, inTools) {
+            if (inTools) {
+                this.fire('toolsUpdate', dt);
+            } else {
+                this.fire('update', dt);
+            }
+        },
+
+        /**
+        * Update all ComponentSystems
+        */
+        fixedUpdate: function (dt) {
+
+        },
+
+        /**
+        * Update all ComponentSystems
+        */
+        postUpdate: function (dt) {
+
+        },
+
+        /**
+        * Render all ComponentSystems
+        */
+        render: function (inTools) {
+            if (inTools) {
+                this.fire('toolsRender');
+            } else {
+                this.fire('render');
+            }
+        }
+    });
+
+    ComponentSystem.prototype = {
+        /**
+        * @name pc.fw.ComponentSystem#store
+        * @description The store where all pc.fw.ComponentData objects are kept
+        */
+        get store() {
+            return this.dataStore;
+        },
+
+        /**
+        * @name pc.fw.ComponentSystem#addComponent
+        * @description Create new pc.fw.Component and pc.fw.ComponentData instances and attach them to the entity
+        */
+        addComponent: function (entity, data) {
+            var component = new this.ComponentType(this, entity);
+            var componentData = new this.DataType();
+
+            this.dataStore[entity.getGuid()] = {
+                entity: entity,
+                data: componentData
+            };
+
+            entity[this.id] = component;
+
+            this.initializeComponentData(component, data, []);
+
+            this.fire('add', entity, component);
+
+            return component;
+        },
+
+        /**
+        * @name pc.fw.ComponentSystem#removeComponent
+        * @description Remove the pc.fwComponent from the entity and delete the associated pc.fw.ComponentData
+        */
+        removeComponent: function (entity) {
+            var record = this.dataStore[entity.getGuid()];
+            delete this.dataStore[entity.getGuid()];
+            delete entity[this.id];
+            this.fire('remove', entity, record.data);                
+        },
+
+        /**
+        * @name pc.fw.ComponentSystem#initializeComponentData
+        * @description Called during addComponent() to initialize the pc.fw.ComponentData in the store
+        * This can be overridden by derived ComponentSystems and either called by the derived System or replaced entirely
+        */
+        initializeComponentData: function (component, data, properties) {
+            data = data || {};
+            
+            // initialize
+            properties.forEach(function(value) {
+                if (typeof data[value] !== 'undefined') {
+                    component.set(value, data[value]);
+                } else {
+                    component.set(value, component.data[value]);                
+                }
+                
+            }, this);
+        },
+
+        // update: function (dt) {
+
+        // },
+
+        // fixedUpdate: function (dt) {
+
+        // },
+
+        // postUpdate: function (dt) {
+
+        // },
+
+        // render: function () {
+
+        // }
+    };
+
+
+    var Component = function (system, entity) {
+        this.system = system;
+        this.entity = entity;
+
+        pc.extend(this, pc.events);
+
+        this.bind("set", function (name, oldValue, newValue) {
+            this.fire("set_" + name, oldValue, newValue);
         });
     };
-    
-    /* Static */
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem.update
-     * @description Update all ComponentSystems from a single ComponentSystemRegistry  that have an update() method 
-     * @param {Object} dt The time delta since the last update
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext with the ComponentSystemRegistry 
-     * @param {Boolean} inTools If true then call toolsUpdate instead of normal update. 
-     */
-    ComponentSystem.update = function (dt, context, inTools) {
-        var name;
-        var registry = context.systems;
-        
-        for (name in registry) {
-            if (registry.hasOwnProperty(name)) {
-                if(!inTools) {
-                    if (registry[name].update) {
-                        registry[name].update(dt);
-                    }           
-                } else {
-                    if (registry[name].toolsUpdate) {
-                        registry[name].toolsUpdate(dt);
-                    }                               
-                }
-            }
-        }
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem.fixedUpdate
-     * @description Update all ComponentSystems from a single ComponentSystemRegistry that have an fixedUpdate() method 
-     * @param {Object} dt The fixed time delta set to 1/60 seconds by default.
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext with the ComponentSystemRegistry 
-     * @param {Boolean} inTools If true then call toolsUpdate instead of normal update. 
-     */
-    ComponentSystem.fixedUpdate = function (dt, context, inTools) {
-        var name;
-        var registry = context.systems;
-        
-        for (name in registry) {
-            if (registry.hasOwnProperty(name)) {
-                if(!inTools) {
-                    if (registry[name].fixedUpdate) {
-                        registry[name].fixedUpdate(dt);
-                    }           
-                } else {
-                    if (registry[name].toolsFixedUpdate) {
-                        registry[name].toolsFixedUpdate(dt);
-                    }                               
-                }
-            }
-        }
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem.render
-     * @description Render all ComponentSystems from a single ComponentSystemRegistry that have a render() method
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext
-     * @param {Boolean} tools If true also call toolRender() function for tools specfic rendering
-     */
-    ComponentSystem.render = function (context, inTools) {
-        var name;
-        var registry = context.systems;
-        
-        for (name in registry) {
-            if (registry.hasOwnProperty(name)) {
-                if (registry[name].render) {
-                    registry[name].render();
-                }                    
-                if(inTools && registry[name].toolsRender) {
-                    registry[name].toolsRender();
-                }
-            }
-        }   
-    };
-    
-    ComponentSystem.toolUpdate = function (dt, context) {
-        
-    };
-    
-    ComponentSystem.toolRender = function (context) {
-        
-    };
-     
-    /**
-     * Delete all components for this Entity
-     * @param {pc.fw.Entity} entity
-     * @param {pc.fw.ComponentSystemRegistry} registry The registry containing the ComponentSystem
-     * @function
-     * @name pc.fw.ComponentSystem.deleteComponents
-     */
-    ComponentSystem.deleteComponents = function (entity, registry) {
-        var name;
-        var component;
-        
-        for (name in registry) {
-            if (registry.hasOwnProperty(name)) {
-                if(registry[name].getComponentData(entity)) {
-                    registry[name].deleteComponent(entity);
-                }
-            }
-        }
-    }
-    
-    /* Instance */
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#hasComponent
-     * @description Check if the Entity has a this Component.
-     * @param {pc.fw.Entity} entity The Entity to check for a Component
-     */   
-    ComponentSystem.prototype.hasComponent = function (entity) {
-        return (this.getComponentData(entity) !== null);
-    }
-    
-    ComponentSystem.prototype.initializeComponent = function (entity, componentData, data, properties) {
-        this.addComponent(entity, componentData);
-        
-        data = data || {};
-        
-        // initialize
-        properties.forEach(function(value, index, arr) {
-            if (typeof data[value] !== 'undefined') {
-                this.set(entity, value, data[value]);
+
+    Component.prototype = {
+        get data() {
+            var record = this.system.store[this.entity.getGuid()];
+            if (record) {
+                return record.data;
             } else {
-                this.set(entity, value, componentData[value]);                
+                return null;
             }
-            
-        }, this);
-        
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#createComponent
-     * @description Create a new ComponentSystem attached to the entity. 
-     * When calling this the Entity hierarchy is already in place.  Components are created in a specific order
-     * as defined by `ComponentSystemRegistry.getComponentSystemOrder()`
-     * @param {pc.fw.Entity} entity Create a new ComponentData attached to this Entity
-     * @param {Object} data Data to initialize the ComponentData with
-     */
-    ComponentSystem.prototype.createComponent = function (entity, data) {  
-        throw new Error("createComponent not implemented");
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#deleteComponent
-     * @description Delete this ComponentSystem's Component from this entity
-     * @param {pc.fw.Entity} entity The Entity to delete a Component from
-     */
-    ComponentSystem.prototype.deleteComponent = function (entity) {
-        var component = this.getComponentData(entity);
-        this.removeComponent(entity);
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#addComponent
-     * @description Add a Component to this Entity by attaching a ComponentData object to it.
-     * @param {pc.fw.Entity} entity The Entity to add the Component to
-     * @param {pc.fw.ComponentData} data The ComponentData to be added
-     */
-    ComponentSystem.prototype.addComponent = function (entity, data) {
-        var components = this.getComponents();
-        components[entity.getGuid()] = {
-            entity: entity,
-            component: data
-        };
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#removeComponent
-     * @description Remove a Component from this Entity
-     * @param {pc.fw.Entity} entity The Entity to remove the Component from
-     */
-    ComponentSystem.prototype.removeComponent = function (entity) {
-        var components = this.getComponents();
-        delete components[entity.getGuid()];
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#set
-     * @description Set a value in the ComponentData. 
-     * This method will silently continue even if the entity doesn't have the component required.
-     * @param {pc.fw.Entity} entity The Entity to modify
-     * @param {String} name The name of the property to modify
-     * @param {Object} value The new value for the property
-     */
-    ComponentSystem.prototype.set = function (entity, name, value) {
-        var oldValue;
-        var componentData = this.getComponentData(entity);
-        
-        if(componentData) {
+        },
 
-            oldValue = componentData[name];
-            // Check for an accessor first, (an accessor is a function with the same name but a leading underscore)
-            if(this["_" + name] && typeof(this["_" + name]) === "function") {
-                this["_" + name](componentData, value);
-            } else if(componentData[name] !== undefined) {
-                componentData[name] = value;
-            }
-            this.fire('set', entity, name, oldValue, value)
+        get: function (name) {
+            var componentData = this.data;
+            if(componentData) {
+                // Check for accessor first (an accessor is a function with the same name but a leading underscore)
+                if(this["_" + name] && typeof(this["_" + name]) === "function") {
+                    // found an accessor on the Component
+                    return this["_" + name](componentData);
+                } else if(componentData[name] !== undefined) {
+                    return componentData[name];
+                } 
+            }        
+        },
+
+        set: function (name, value) {
+            var oldValue;
+            var componentData = this.data
+            if(componentData) {
+                oldValue = componentData[name];
+                // Check for an accessor first, (an accessor is a function with the same name but a leading underscore)
+                if(this["_" + name] && typeof(this["_" + name]) === "function") {
+                    this["_" + name](componentData, value);
+                } else if(componentData[name] !== undefined) {
+                    componentData[name] = value;
+                }
+                this.fire('set', name, oldValue, value)
+            }        
         }
     };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#get
-     * @description Return a value from the ComponentData
-     * @param {pc.fw.Entity} entity The Entity to access
-     * @param {String} name The name of the property to access
-     * @return {Object} Value of property or null if property or component doesn't exist
-     */
-    ComponentSystem.prototype.get = function (entity, name) {
-        var componentData = this.getComponentData(entity);
-        if(componentData) {
-            // Check for accessor first (an accessor is a function with the same name but a leading underscore)
-            if(this["_" + name] && typeof(this["_" + name]) === "function") {
-                // found an accessor on the Component
-                return this["_" + name](componentData);
-            } else if(componentData[name] !== undefined) {
-                return componentData[name];
-            } 
-        }
-    };
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#initialize
-     * @description Initialize Components for a particular hierarchy of Entities. This is called after an Entity hierarchy has been loaded.
-     * @param {pc.fw.Entity} root The root of the hierarchy to initialize 
-     */
-    ComponentSystem.prototype.initialize = null;
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#update
-     * @description Update all Components for one time step
-     * @param {Number} dt The time since the last update
-     */
-    ComponentSystem.prototype.update = null;
-    
-    /**
-     * @function
-     * @name pc.fw.ComponentSystem#render
-     * @description Do any specialized rendering for this Component System
-     */
-    ComponentSystem.prototype.render = null;
-    
+
     return {
-        ComponentSystem: ComponentSystem
+        ComponentSystem: ComponentSystem,
+        Component: Component
     };
-    
 }());
-

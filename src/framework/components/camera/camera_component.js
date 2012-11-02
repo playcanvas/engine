@@ -1,4 +1,49 @@
 pc.extend(pc.fw, function () {
+    var CameraComponent = function CameraComponent(entity) {
+        // Bind event to update hierarchy if camera node changes
+        this.bind("set_camera", this.onSetCamera.bind(this));
+        this.bind("set_clearColor", this.onSetClearColor.bind(this));
+        this.bind("set_fov", this.onSetFov.bind(this));
+        this.bind("set_orthoHeight", this.onSetOrthoHeight.bind(this));
+        this.bind("set_nearClip", this.onSetNearClip.bind(this));
+        this.bind("set_farClip", this.onSetFarClip.bind(this));
+        this.bind("set_projection", this.onSetProjection.bind(this));
+    };
+    CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
+
+    pc.extend(CameraComponent.prototype, {
+        onSetCamera: function (oldValue, newValue) {
+            // remove old camera node from hierarchy and add new one
+            if (oldValue) {
+                this.entity.removeChild(oldValue);
+            }        
+            this.entity.addChild(newValue);
+        },
+        onSetClearColor: function (oldValue, newValue) {
+            var color = parseInt(newValue);
+            this.data.camera.getClearOptions().color = [
+                ((color >> 24) & 0xff) / 255.0,
+                ((color >> 16) & 0xff) / 255.0,
+                ((color >> 8) & 0xff) / 255.0,
+                ((color) & 0xff) / 255.0
+            ];
+        },
+        onSetFov: function (oldValue, newValue) {
+            this.data.camera.setFov(newValue);
+        },
+        onSetOrthoHeight: function (oldValue, newValue) {
+            this.data.camera.setOrthoHeight(newValue);
+        },
+        onSetNearClip: function (oldValue, newValue) {
+            this.data.camera.setNearClip(newValue);
+        },
+        onSetFarClip: function (oldValue, newValue) {
+            this.data.camera.setFarClip(newValue);
+        },
+        onSetProjection: function (oldValue, newValue) {
+            this.data.camera.setProjection(newValue);
+        }
+    });
 
     /**
      * @name pc.fw.CameraComponentSystem
@@ -12,218 +57,136 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var CameraComponentSystem = function (context) {
-        context.systems.add("camera", this);
+        this.id = 'camera'
+        context.systems.add(this.id, this);
+        this.ComponentType = pc.fw.CameraComponent;
+        this.DataType = pc.fw.CameraComponentData;
 
-        pc.extend(this, {
-            _currentNode: null, // The current camera node
-            _currentEntity: null, // The current camera entity
-            _renderable: null, // gfx resources for rendering frustum in tools
-            
-            _clearColor: function (componentData, clearColor) {
-                if (pc.isDefined(clearColor)) {
-                    var color = parseInt(clearColor);
-                    componentData.camera.getClearOptions().color = [
-                        ((color >> 24) & 0xff) / 255.0,
-                        ((color >> 16) & 0xff) / 255.0,
-                        ((color >> 8) & 0xff) / 255.0,
-                        ((color) & 0xff) / 255.0
-                    ];
-                } else {
-                    return componentData.camera.getClearOptions().color;
-                }
-            },
+        this.bind('remove', this.onRemove.bind(this));
 
-            _fov: function (componentData, fov) {
-                if (pc.isDefined(fov)) {
-                    componentData.fov = fov;
-                    componentData.camera.setFov(fov);
-                } else {
-                    return componentData.camera.getFov();
-                }
-            },
-
-            _orthoHeight: function (componentData, oh) {
-                if (pc.isDefined(oh)) {
-                    componentData.orthoHeight = oh;
-                    componentData.camera.setOrthoHeight(oh);
-                } else {
-                    return componentData.orthoHeight;
-                }
-            },
-
-            _nearClip: function (componentData, nearClip) {
-                if (pc.isDefined(nearClip)) {
-                    componentData.nearClip = nearClip;
-                    componentData.camera.setNearClip(nearClip);
-                } else {
-                    return componentData.camera.getNearClip();
-                }
-            },
-
-            _farClip: function (componentData, farClip) {
-                if (pc.isDefined(farClip)) {
-                    componentData.farClip = farClip;
-                    componentData.camera.setFarClip(farClip);
-                } else {
-                    return componentData.camera.getFarClip();
-                }
-            },
-
-            _offscreen: function (componentData, offscreen) {
-                if (pc.isDefined(offscreen)) {
-                    componentData.offscreen = offscreen;
-                } else {
-                    return componentData.offscreen;
-                }
-            },
-
-            _projection: function (componentData, projection) {
-                if (pc.isDefined(projection)) {
-                    componentData.projection = projection;
-                    componentData.camera.setProjection(projection);
-                } else {
-                    return componentData.camera.getProjection();
-                }
-            }
-        });
-        
-        // Bind event to update hierarchy if camera node changes
-        this.bind("set_camera", this.onSetCamera.bind(this));
+        this._currentEntity = null;
+        this._currentNode = null;
+        this._renderable = null;
     };
-    
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
     
-    CameraComponentSystem.prototype.createComponent = function (entity, data) {
-        var componentData = new pc.fw.CameraComponentData();
+    Object.defineProperty(CameraComponentSystem.prototype, 'current', {
+        get: function () {
+            return this._currentEntity;
+        },
+        set: function (entity) {
+            if (entity === null) {
+                this._currentEntity = null;
+                this._currentNode = null;
+                return;
+            }
 
-        // Add new camera node and ensure it is first in the property list
-        data = data || {};
-        data.camera = new pc.scene.CameraNode();
-
-        var attribs = ['camera', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
-        this.initializeComponent(entity, componentData, data, attribs);
-
-        if (!window.pc.apps.designer && this.get(entity, "activate") && !entity.hasLabel("pc:designer")) {
-            this.setCurrent(entity);
+            if (!entity.camera) {
+                throw Error("Entity must have camera Component")
+            }
+            
+            this._currentEntity = entity;
+            this._currentNode = entity.camera.data.camera;
         }
-        
-        return componentData;
-    };
+    });
 
-    CameraComponentSystem.prototype.deleteComponent = function (entity) {
-        var data = this.getComponentData(entity);
-
-        if (data.camera) {
-            entity.removeChild(data.camera);
-            data.camera = null;    
-        }
-
-        this.removeComponent(entity);
-    };
+    pc.extend(CameraComponentSystem.prototype, {
+        initializeComponentData: function (component, data, properties) {
+            data = data || {};
+            data.camera = new pc.scene.CameraNode();
     
-    CameraComponentSystem.prototype.toolsRender = function (fn) {
-        var components = this.getComponents();
-        for (var id in components) {
-            if (components.hasOwnProperty(id)) {
-                var entity = components[id].entity;
+            properties = ['camera', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
+    
+            CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-                if (!entity.hasLabel("pc:designer")) {
-                    var componentData = components[id].component;
-                    componentData.camera.drawFrustum();
+            if (!window.pc.apps.designer && component.get("activate") && !component.entity.hasLabel("pc:designer")) {
+                this.current = component.entity;
+            }
+        },
+        
+        /**
+         * Start rendering the frame for the camera on the top of the stack
+         * @function
+         * @name pc.fw.CameraComponentSystem#frameBegin
+         */
+        frameBegin: function (clear) {
+            var camera = this._currentNode;
+            if (!camera) {
+                return;
+            }
+
+            var device = pc.gfx.Device.getCurrent();
+            var w = device.canvas.width;
+            var h = device.canvas.height;
+            var target = camera.getRenderTarget();
+            var viewport = target.getViewport();
+            var texture = target.getFrameBuffer().getTexture();
+            var offscreen = this._currentEntity.camera.data.offscreen;
+            if (offscreen) {
+                if (!texture || (viewport.width !== w) || (viewport.height !== h)) {
+                    var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
+                    var offscreenTexture = offscreenBuffer.getTexture();
+                    offscreenTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
+                    offscreenTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+                    camera.setRenderTarget(new pc.gfx.RenderTarget(offscreenBuffer));
+                }
+            } else {
+                if (texture) {
+                    var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
+                    camera.setRenderTarget(new pc.gfx.RenderTarget(backBuffer));
+                }
+            }
+
+            var viewport = camera.getRenderTarget().getViewport();
+            var aspect = viewport.width / viewport.height;
+            if (aspect !== camera.getAspectRatio()) {
+                camera.setAspectRatio(aspect);
+            }
+
+            camera.frameBegin(clear);
+        },
+
+        /**
+         * End rendering the frame for the camera on the top of the stack
+         * @function
+         * @name pc.fw.CameraComponentSystem#frameEnd
+         */
+        frameEnd: function () {
+            var camera = this._currentNode;
+            if (!camera) {
+                return;
+            }
+
+            camera.frameEnd();        
+        },
+
+        onRemove: function (entity, data) {
+            // If this is the current camera then clear it
+            if (this._currentEntity === entity) {
+                this.current = null;
+            }
+
+            entity.removeChild(data.camera);
+            data.camera = null;
+        },
+    
+        toolsRender: function (fn) {
+            var components = this.getComponents();
+            for (var id in components) {
+                if (components.hasOwnProperty(id)) {
+                    var entity = components[id].entity;
+
+                    if (!entity.hasLabel("pc:designer")) {
+                        var componentData = components[id].component;
+                        componentData.camera.drawFrustum();
+                    }
                 }
             }
         }
-    };
+    });
 
-    /**
-     * @function
-     * @name pc.fw.CameraComponentSystem#getCurrent
-     * @description return the current camera Entity
-     * @returns {pc.fw.Entity} The current camera Entity
-     */
-    CameraComponentSystem.prototype.getCurrent = function () {
-        return this._currentEntity;
-    };
-    
-    /**
-     * @function 
-     * @name pc.fw.CameraComponentSystem#setCurrent
-     * @description Set the the currently active camera Entity
-     * @param {pc.fw.Entity} entity An Entity with a camera Component.
-     */
-    CameraComponentSystem.prototype.setCurrent = function (entity) {
-        if (!this.hasComponent(entity)) {
-            throw Error("Entity must have camera Component")
-        }
-        this._currentEntity = entity;
-        this._currentNode = this.getComponentData(entity).camera;
-    };
-    
-    /**
-     * Start rendering the frame for the camera on the top of the stack
-     * @function
-     * @name pc.fw.CameraComponentSystem#frameBegin
-     */
-    CameraComponentSystem.prototype.frameBegin = function (clear) {
-        var camera = this._currentNode;
-        if (!camera) {
-            return;
-        }
-
-        var device = pc.gfx.Device.getCurrent();
-        var w = device.canvas.width;
-        var h = device.canvas.height;
-        var target = camera.getRenderTarget();
-        var viewport = target.getViewport();
-        var texture = target.getFrameBuffer().getTexture();
-        var offscreen = this.getComponentData(this._currentEntity).offscreen;
-        if (offscreen) {
-            if (!texture || (viewport.width !== w) || (viewport.height !== h)) {
-                var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
-                var offscreenTexture = offscreenBuffer.getTexture();
-                offscreenTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
-                offscreenTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
-                camera.setRenderTarget(new pc.gfx.RenderTarget(offscreenBuffer));
-            }
-        } else {
-            if (texture) {
-                var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
-                camera.setRenderTarget(new pc.gfx.RenderTarget(backBuffer));
-            }
-        }
-
-        var viewport = camera.getRenderTarget().getViewport();
-        var aspect = viewport.width / viewport.height;
-        if (aspect !== camera.getAspectRatio()) {
-            camera.setAspectRatio(aspect);
-        }
-
-        camera.frameBegin(clear);
-    };
-
-    /**
-     * End rendering the frame for the camera on the top of the stack
-     * @function
-     * @name pc.fw.CameraComponentSystem#frameEnd
-     */
-    CameraComponentSystem.prototype.frameEnd = function () {
-        var camera = this._currentNode;
-        if (!camera) {
-            return;
-        }
-
-        camera.frameEnd();        
-    };
-    
-    CameraComponentSystem.prototype.onSetCamera = function (entity, name, oldValue, newValue) {
-        // remove old camera node from hierarchy and add new one
-        if (oldValue) {
-            entity.removeChild(oldValue);
-        }        
-        entity.addChild(newValue);
-    };
-    
     return {
+        CameraComponent: CameraComponent,
         CameraComponentSystem: CameraComponentSystem
     }; 
 }());
