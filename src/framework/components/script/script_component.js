@@ -18,7 +18,7 @@ pc.extend(pc.fw, function () {
     ScriptComponent = pc.inherits(ScriptComponent, pc.fw.Component);
 
     pc.extend(ScriptComponent.prototype, {
-/**
+        /**
          * @function
          * @name pc.fw.ScriptComponent#send
          * @description Send a message to a script attached to the entity.
@@ -140,7 +140,7 @@ pc.extend(pc.fw, function () {
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['runInTools', 'urls'];
-            ScriptComponentSystem._super.initializeComponentData(component, data, properties);
+            ScriptComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
         /**
