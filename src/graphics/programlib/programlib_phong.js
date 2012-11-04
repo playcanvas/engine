@@ -788,7 +788,7 @@ pc.gfx.programlib.phong = {
                     code += "            float att = ((light" + i + "_radius - d) / light" + i + "_radius);\n";
 //                    code += "            float att = light" + i + "_attenuate ? 1.0 : calculateAttenuation(N, light" + i + "_range, ;\n";
                     if (i >= totalDirs + totalPnts) {
-                        code += "            float cosAngle = dot(-lightDir, vLight" + i + "SpotDir);\n";
+                        code += "            float cosAngle = dot(-lightDir, normalize(vLight" + i + "SpotDir));\n";
                         code += "            float cosInnerAngle = light" + i + "_innerConeAngle;\n";
                         code += "            float cosOuterAngle = light" + i + "_outerConeAngle;\n";
                         code += "            att *= clamp((cosAngle - cosOuterAngle) / (cosInnerAngle - cosOuterAngle), 0.0, 1.0);\n";

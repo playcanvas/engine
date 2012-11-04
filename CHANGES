@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.79.3
+-------
+* [FIX] Spotlighting now correctly normalizes the spot direction after it is passed to the fragment shader.
+
+-------
 v0.79.2
 -------
 * Restrict bone limit a little further to allow for more complex shaders.

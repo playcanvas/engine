@@ -53,6 +53,8 @@ pc.extend(pc.scene, function () {
         this._viewInvId = scope.resolve("matrix_viewInverse");
         this._viewProjId = scope.resolve("matrix_viewProjection");
         this._viewPosId = scope.resolve("view_position");
+        this._nearClipId = scope.resolve("camera_near");
+        this._farClipId = scope.resolve("camera_far");
 
         this._projMatDirty = true;
         this._projMat = m4.create();
@@ -246,6 +248,10 @@ pc.extend(pc.scene, function () {
         this._viewPosition[1] = wtm[13];
         this._viewPosition[2] = wtm[14];
         this._viewPosId.setValue(this._viewPosition);
+
+        // Near and far clip values
+        this._nearClipId.setValue(this._nearClip);
+        this._farClipId.setValue(this._farClip);
 
         this._frustum.update(projMat, this._viewMat);
     };

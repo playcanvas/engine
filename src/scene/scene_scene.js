@@ -560,7 +560,7 @@ pc.extend(pc.scene, function () {
                         directional._shadowCamera._renderTarget._frameBuffer.getTexture();
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
                 scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
-                scope.resolve(light + "_shadowParams").setValue([shadowMap.getWidth(), shadowMap.getHeight(), -0.0005]);
+                scope.resolve(light + "_shadowParams").setValue([directional._shadowWidth, directional._shadowHeight, directional._shadowBias]);
             }
         }
     };
@@ -618,7 +618,7 @@ pc.extend(pc.scene, function () {
                         spot._shadowCamera._renderTarget._frameBuffer.getTexture();
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
                 scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
-                scope.resolve(light + "_shadowParams").setValue([shadowMap.getWidth(), shadowMap.getHeight(), -0.0005]);
+                scope.resolve(light + "_shadowParams").setValue([spot._shadowWidth, spot._shadowHeight, spot._shadowBias]);
             }
         }
     };
