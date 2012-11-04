@@ -1,17 +1,4 @@
 pc.extend(pc.fw, function () {
-    var _createGfxResources = function () {
-        var lightMat = new pc.scene.Material();
-        lightMat.setProgramName("basic");
-        lightMat.setParameter("uColor",  [1, 1, 0, 1]);
-
-        var sphereGeom = pc.scene.procedural.createSphere({material: lightMat});
-        
-        var sphereMesh = new pc.scene.MeshNode();
-        sphereMesh.setGeometry(sphereGeom);
-        
-        return sphereMesh;
-    };
-
     /**
      * @name pc.fw.PointLightComponentSystem
      * @constructor Create a new PointLightComponentSystem
@@ -19,11 +6,51 @@ pc.extend(pc.fw, function () {
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
      */
-    var PointLightComponentSystem = function (context) {
-        this.context = context;
-        context.systems.add("pointlight", this);
+    var PointLightComponent = function (system, entity) {
+        var schema = [{
+            name: "enable",
+            displayName: "Enable",
+            description: "Enable or disable the light",
+            type: "boolean",
+            defaultValue: true
+        }, {
+            name: "color",
+            displayName: "Color",
+            description: "Light color",
+            type: "rgb",
+            defaultValue: "0xffffff"
+        }, {
+            name: "intensity",
+            displayName: "Intensity",
+            description: "Factors the light color",
+            type: "number",
+            defaultValue: 1,
+            options: {
+                min: 0,
+                max: 10,
+                step: 0.05
+            }
+        }, {
+            name: "castShadows",
+            displayName: "Cast shadows",
+            description: "Cast shadows from this light",
+            type: "boolean",
+            defaultValue: false
+        }, {
+            name: "attenuationEnd",
+            displayName: "Attenuation End",
+            description: "The distance from the light where its contribution falls to zero",
+            type: "number",
+            defaultValue: 10,
+            options: {
+                min: 0
+            }
+        }, {
+            name: 'light', 
+            exposed: false
+        }];
 
-        this.renderable = _createGfxResources();
+        this.assignSchema(schema);
 
         // Handle changes to the 'attenuationEnd' value
         this.bind("set_attenuationEnd", this.onSetAttenuationEnd.bind(this));
@@ -39,65 +66,18 @@ pc.extend(pc.fw, function () {
         this.bind("set_light", this.onSetLight.bind(this));
     };
         
-    PointLightComponentSystem = pc.inherits(PointLightComponentSystem, pc.fw.ComponentSystem);
+    PointLightComponent = pc.inherits(PointLightComponent, pc.fw.Component);
 
-    PointLightComponentSystem.prototype.createComponent = function (entity, data) {
-        var componentData = new pc.fw.PointLightComponentData();
+    pc.extend(PointLightComponent.prototype, {
+        onSetAttenuationEnd: function (oldValue, newValue) {
+            this.light.setAttenuationEnd(newValue);
+        },
 
-        var light = new pc.scene.LightNode();
-        light.setType(pc.scene.LightType.POINT);
-
-        data = data || {};
-        data.light = light;
-
-        var attribs = ['light', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd'];
-        this.initializeComponent(entity, componentData, data, attribs);
-
-        return componentData;
-    };
-    
-    PointLightComponentSystem.prototype.deleteComponent = function (entity) {
-        var componentData = this.getComponentData(entity);
-        entity.removeChild(componentData.light);
-        componentData.light.setEnabled(false);
-        delete componentData.light;
-
-        this.removeComponent(entity);
-    };
-
-    PointLightComponentSystem.prototype.toolsRender = function (fn) {
-        var components = this.getComponents();
-        for (var id in components) {
-            if (components.hasOwnProperty(id)) {
-                var entity = components[id].entity;
-                var componentData = components[id].component;
-
-                var position = entity.getPosition();
-
-                this.renderable.setLocalPosition(position);
-                this.renderable.syncHierarchy();
-                this.renderable.dispatch();
-            }
-        }
-    };
-
-    PointLightComponentSystem.prototype.onSetAttenuationEnd = function (entity, name, oldValue, newValue) {
-        if (newValue) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setAttenuationEnd(newValue);
-        }
-    };
-
-    PointLightComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
-        if (newValue !== undefined) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setCastShadows(newValue);
-        }
-    };
-    
-    PointLightComponentSystem.prototype.onSetColor = function (entity, name, oldValue, newValue) {
-        if (newValue) {
-            var componentData = this.getComponentData(entity);
+        onSetCastShadows: function (oldValue, newValue) {
+            this.light.setCastShadows(newValue);
+        },
+        
+        onSetColor: function (oldValue, newValue) {
             var rgb = parseInt(newValue);
             rgb = pc.math.intToBytes24(rgb);
             var color = [
@@ -105,36 +85,30 @@ pc.extend(pc.fw, function () {
                 rgb[1] / 255,
                 rgb[2] / 255
             ];
-            componentData.light.setColor(color);
-        }
-    };
+            this.light.setColor(color);
+        },
 
-    PointLightComponentSystem.prototype.onSetEnable = function (entity, name, oldValue, newValue) {
-        if (newValue !== undefined) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setEnabled(newValue);
-        }
-    };
+        onSetEnable: function (oldValue, newValue) {
+            this.light.setEnabled(newValue);
+        },
 
-    PointLightComponentSystem.prototype.onSetIntensity = function (entity, name, oldValue, newValue) {
-        if (newValue !== undefined) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setIntensity(newValue);
-        }
-    };
+        onSetIntensity: function (oldValue, newValue) {
+            this.light.setIntensity(newValue);
+        },
 
-    PointLightComponentSystem.prototype.onSetLight = function (entity, name, oldValue, newValue) {
-        if (oldValue) {
-            entity.removeChild(oldValue);
-            this.context.scene.removeLight(oldValue);
+        onSetLight: function (oldValue, newValue) {
+            if (oldValue) {
+                this.entity.removeChild(oldValue);
+                this.system.context.scene.removeLight(oldValue);
+            }
+            if (newValue) {
+                this.entity.addChild(newValue);
+                this.system.context.scene.addLight(newValue);
+            }
         }
-        if (newValue) {
-            entity.addChild(newValue);
-            this.context.scene.addLight(newValue);
-        }
-    };
-    
+    });
+
     return {
-        PointLightComponentSystem: PointLightComponentSystem
+        PointLightComponent: PointLightComponent
     }; 
 }());

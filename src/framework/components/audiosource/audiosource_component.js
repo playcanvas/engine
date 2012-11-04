@@ -6,241 +6,264 @@ pc.extend(pc.fw, function () {
      * @param {pc.audio.AudioContext} audioContext AudioContext object used to create sources and filters
      * @extends pc.fw.ComponentSystem
      */
-    var AudioSourceComponentSystem = function (context, manager) {
-        context.systems.add("audiosource", this);
-        
-        this.manager = manager;
-        
-        this.bind("set_assets", this.onSetAssets);
-        this.bind("set_loop", this.onSetLoop);
-        this.bind("set_volume", this.onSetVolume);
-        this.bind("set_minDistance", this.onSetMinDistance);
-        this.bind("set_maxDistance", this.onSetMaxDistance);
-        this.bind("set_rollOffFactor", this.onSetRollOffFactor);
-    };
-    AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.fw.ComponentSystem);
-        
-    AudioSourceComponentSystem.prototype.createComponent = function (entity, data) {
-        var componentData = new pc.fw.AudioSourceComponentData();
-
-        data = data || {};
-        this.initializeComponent(entity, componentData, data, ['assets', 'volume', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor']);
-    
-        this.set(entity, 'paused', !data['activate']);
-        
-        return componentData;
-    };
-
-    AudioSourceComponentSystem.prototype.initialize = function(root) {
-        var componentData = this.getComponentData(root);
-        if (componentData) {
-            if (componentData['activate']) {
-                this.play(root, componentData['currentSource']);
+    var AudioSourceComponent = function () {
+        var schema = [{
+            name: "assets",
+            displayName: "Assets",
+            description: "Audio assets",
+            type: "asset",
+            options: {
+                max: 100
+            },
+            defaultValue: []
+        }, {
+            name: "volume",
+            displayName: "Volume",
+            description: "The sound volume",
+            type: "number",
+            options: {
+                max: 1,
+                min: 0,
+                step: 0.1
+            },
+            defaultValue: 1
+        }, {
+            name: "loop",
+            displayName: "Loop",
+            description: "Set whether sound loops or not",
+            type: "boolean",
+            defaultValue: false
+        }, {
+            name: "activate",
+            displayName: "Activate",
+            description: "Play first audio sample when scene loads",
+            type: "boolean",
+            defaultValue: true
+        }, {
+            name: "3d",
+            displayName: "3d",
+            description: "3d sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-3d sounds are uniform aross space",
+            type: "boolean",
+            defaultValue: true
+        }, {
+            name: "minDistance",
+            displayName: "Min Distance",
+            description: "Distance from listener under which the sound is at full volume",
+            type: "number",
+            defaultValue: 1,
+            options: {
+                min: 0
             }
-        }
-        
-        var children = root.getChildren();
-        var i, len = children.length;
-        for (i = 0; i < len; i++) {
-            if (children[i] instanceof pc.fw.Entity) {
-                this.initialize(children[i]);    
+        }, {
+            name: "maxDistance",
+            displayName: "Max Distance",
+            description: "Distance from listener over which the sound cannot be heard",
+            type: "number",
+            defaultValue: 10000,
+            options: {
+                min: 0
             }
-        } 
-    };
-    
-    AudioSourceComponentSystem.prototype.update = function(dt) {
-        var components = this.getComponents();
-        var components = this.getComponents();
+        }, {
+            name: "rollOffFactor",
+            displayName: "Roll-off factor",
+            description: "Strength of the roll off",
+            type: "number",
+            defaultValue: 1,
+            options: {
+                min: 0
+            }
+        }, {
+            name: "paused",
+            exposed: false
+        }, {
+            name: "sources",
+            exposed: false,
+            readOnly: true
+        }, {
+            name: "currentSource",
+            exposed: false,
+            readOnly: true
+        }, {
+            name: "channel",
+            exposed: false,
+            readOnly: true
+        }];
 
-        for (var id in components) {
-            if (components.hasOwnProperty(id)) {
-                var entity = components[id].entity;
-                var componentData = this.getComponentData(entity);
-                
-                // Update channel position if this is a 3d sound
-                if (componentData.channel instanceof pc.audio.Channel3d) {
-                    var pos = entity.getPosition();
-                    componentData.channel.setPosition(pos);
-                }
-            }
-        }
+        this.assignSchema(schema);
+
+        this.bind("set_assets", this.onSetAssets.bind(this));
+        this.bind("set_loop", this.onSetLoop.bind(this));
+        this.bind("set_volume", this.onSetVolume.bind(this));
+        this.bind("set_minDistance", this.onSetMinDistance.bind(this));
+        this.bind("set_maxDistance", this.onSetMaxDistance.bind(this));
+        this.bind("set_rollOffFactor", this.onSetRollOffFactor.bind(this));
     };
-    
-    /**
-    * @function
-    * @name pc.fw.AudioSourceComponentSystem#play
-    * @description Begin playback of an audio asset in the component attached to an entity
-    * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
-    * @param {String} name The name of the Asset to play
-    */
-    AudioSourceComponentSystem.prototype.play = function(entity, name) {
-        if(this.hasComponent(entity)) {
-            this.set(entity, 'paused', false);
-            var componentData = this.getComponentData(entity);
+    AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.fw.Component);
+        
+    pc.extend(AudioSourceComponent.prototype, {
+       /**
+        * @function
+        * @name pc.fw.AudioSourceComponent#play
+        * @description Begin playback of an audio asset in the component attached to an entity
+        * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
+        * @param {String} name The name of the Asset to play
+        */
+        play: function(name) {
+            this.entity.paused = false;
+
+            var componentData = this.data;
             if(componentData['sources'][name]) {
                 if (!componentData['3d']) {
                     var channel = this.manager.playSound(componentData['sources'][name], componentData);
-                    this.set(entity, 'currentSource', name);
-                    this.set(entity, 'channel', channel);
+                    componentData.currentSource = name;
+                    componentData.channel = channel;
                 } else {
-                    var pos = entity.getPosition();
-                    var channel = this.manager.playSound3d(componentData['sources'][name], pos, componentData);
-                    this.set(entity, 'currentSource', name);
-                    this.set(entity, 'channel', channel);
+                    var pos = this.entity.getPosition();
+                    var channel = this.system.manager.playSound3d(componentData['sources'][name], pos, componentData);
+                    componentData.currentSource = name;
+                    componentData.channel = channel;
                 }
             }
-        }
-    };
-    
-    /**
-    * @function
-    * @name pc.fw.AudioSourceComponentSystem#pause
-    * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling play()
-    * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
-    */
-    AudioSourceComponentSystem.prototype.pause = function(entity) {
-        if(this.hasComponent(entity)) {
-            var channel = this.get(entity, 'channel');
-            if (channel) {
-                channel.pause();    
-            }
-        }
-    };
-
-    /**
-    * @function
-    * @name pc.fw.AudioSourceComponentSystem#stop
-    * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
-    * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
-    */
-    AudioSourceComponentSystem.prototype.stop = function(entity) {
-        if(this.hasComponent(entity)) {
-            var channel = this.get(entity, 'channel');
-            if(channel) {
-                channel.stop();    
-            }
-        }
-    };
+        },
         
-    /**
-     * @name pc.fw.AudioSourceComponentSystem#setVolume()
-     * @function
-     * @description Set the volume for the entire AudioSource system. All sources will have their volume limited to this value
-     * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
-     */
-    AudioSourceComponentSystem.prototype.setVolume = function(value) {
-        this.manager.setVolume(value);
-    };
-    
-    AudioSourceComponentSystem.prototype.onSetAssets = function (entity, name, oldValue, newValue) {
-        var componentData = this.getComponentData(entity);
-        var newAssets = [];
-        var i, len = newValue.length;
-        
-        if (len) {
-            for(i = 0; i < len; i++) {
-                if (oldValue.indexOf(newValue[i]) < 0) {
-                    newAssets.push(newValue[i]);
-                }
+        /**
+        * @function
+        * @name pc.fw.AudioSourceComponent#pause
+        * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling play()
+        * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
+        */
+        pause: function(entity) {
+            if (this.channel) {
+                this.channel.pause();    
             }
-        }
-        
-        if(!this._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
-            this._loadAudioSourceAssets(entity, newAssets);   
-        }
-    };
-    
-    AudioSourceComponentSystem.prototype.onSetLoop = function (entity, name, oldValue, newValue) {
-        if (oldValue != newValue) {
-            var channel = this.get(entity, 'channel');
-            if (channel) {
-                channel.setLoop(newValue);
-            }
-        }
-    };
+        },
 
-    AudioSourceComponentSystem.prototype.onSetVolume = function (entity, name, oldValue, newValue) {
-        if (oldValue != newValue) {
-            var channel = this.get(entity, 'channel');
-            if (channel) {
-                channel.setVolume(newValue);
+        /**
+        * @function
+        * @name pc.fw.AudioSourceComponent#stop
+        * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
+        * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
+        */
+        stop: function(entity) {
+            if(this.channel) {
+                this.channel.stop();    
             }
-        }
-    };
-
-    AudioSourceComponentSystem.prototype.onSetMaxDistance = function (entity, name, oldValue, newValue) {
-        if (oldValue != newValue) {
-            var channel = this.get(entity, 'channel');
-            if (channel instanceof pc.audio.Channel3d) {
-                channel.setMaxDistance(newValue);
-            }
-        }
-    };
-
-
-    AudioSourceComponentSystem.prototype.onSetMinDistance = function (entity, name, oldValue, newValue) {
-        if (oldValue != newValue) {
-            var channel = this.get(entity, 'channel');
-            if (channel instanceof pc.audio.Channel3d) {
-                channel.setMinDistance(newValue);
-            }
-        }
-    };
-
-    AudioSourceComponentSystem.prototype.onSetRollOffFactor = function (entity, name, oldValue, newValue) {
-        if (oldValue != newValue) {
-            var channel = this.get(entity, 'channel');
-            if (channel instanceof pc.audio.Channel3d) {
-                channel.setRollOffFactor(newValue);
-            }
-        }
-    };
-     
-    AudioSourceComponentSystem.prototype._loadAudioSourceAssets = function (entity, guids) {
-        var requests = guids.map(function (guid) {
-            return new pc.resources.AssetRequest(guid);
-        });
-        var options = {
-            batch: entity.getRequestBatch()
-        };
-        
-        this.context.loader.request(requests, function (assetResources) {
-            var requests = [];
-            var names = [];
+        },
             
-            guids.forEach(function (guid) {
-                var asset = assetResources[guid];
-                requests.push(new pc.resources.AudioRequest(asset.getFileUrl()));
-                names.push(asset.name);
+        /**
+         * @name pc.fw.AudioSourceComponent#setVolume()
+         * @function
+         * @description Set the volume for the entire AudioSource system. All sources will have their volume limited to this value
+         * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
+         */
+        setVolume: function(value) {
+            this.system.manager.setVolume(value);
+        },
+        
+        onSetAssets: function (oldValue, newValue) {
+            var componentData = this.data
+            var newAssets = [];
+            var i, len = newValue.length;
+            
+            if (len) {
+                for(i = 0; i < len; i++) {
+                    if (oldValue.indexOf(newValue[i]) < 0) {
+                        newAssets.push(newValue[i]);
+                    }
+                }
+            }
+            
+            if(!this._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
+                this.loadAudioSourceAssets(newAssets);
+            }
+        },
+        
+        onSetLoop: function (oldValue, newValue) {
+            if (oldValue != newValue) {
+                if (this.channel) {
+                    this.channel.setLoop(newValue);
+                }
+            }
+        },
+
+        onSetVolume: function (oldValue, newValue) {
+            if (oldValue != newValue) {
+                if (this.channel) {
+                    this.channel.setVolume(newValue);
+                }
+            }
+        },
+
+        onSetMaxDistance: function (oldValue, newValue) {
+            if (oldValue != newValue) {
+                if (this.channel instanceof pc.audio.Channel3d) {
+                    this.channel.setMaxDistance(newValue);
+                }
+            }
+        },
+        
+        onSetMinDistance: function (oldValue, newValue) {
+            if (oldValue != newValue) {
+                if (this.channel instanceof pc.audio.Channel3d) {
+                    this.channel.setMinDistance(newValue);
+                }
+            }
+        },
+
+        onSetRollOffFactor: function (oldValue, newValue) {
+            if (oldValue != newValue) {
+                if (this.channel instanceof pc.audio.Channel3d) {
+                    this.channel.setRollOffFactor(newValue);
+                }
+            }
+        },
+         
+        loadAudioSourceAssets: function (guids) {
+            var requests = guids.map(function (guid) {
+                return new pc.resources.AssetRequest(guid);
             });
+            var options = {
+                batch: this.entity.getRequestBatch()
+            };
             
-            this.context.loader.request(requests, function (audioResources) {
-                var sources = {};
-                for (var i = 0; i < requests.length; i++) {
-                    sources[names[i]] = audioResources[requests[i].identifier];
-                }
-                // set the current source to the first entry (before calling set, so that it can play if needed)
-                if(names.length) {
-                    this.set(entity, 'currentSource', names[0]);
-                }
-                this.set(entity, 'sources', sources);
+            this.system.context.loader.request(requests, function (assetResources) {
+                var requests = [];
+                var names = [];
+                
+                guids.forEach(function (guid) {
+                    var asset = assetResources[guid];
+                    requests.push(new pc.resources.AudioRequest(asset.getFileUrl()));
+                    names.push(asset.name);
+                });
+                
+                this.system.context.loader.request(requests, function (audioResources) {
+                    var sources = {};
+                    for (var i = 0; i < requests.length; i++) {
+                        sources[names[i]] = audioResources[requests[i].identifier];
+                    }
+                    // set the current source to the first entry (before calling set, so that it can play if needed)
+                    if(names.length) {
+                        this.data.currentSource = names[0];
+                    }
+                    this.data.sources = sources;
 
-                if (!options.batch && this.get(entity, 'activate')) {
-                    this.play(entity, names[0]);
-                }
+                    if (!options.batch && this.activate) {
+                        this.play(names[0]);
+                    }
+                }.bind(this), function (errors) {
+                    
+                }, function (progress) {
+                    
+                }, options);
             }.bind(this), function (errors) {
                 
             }, function (progress) {
                 
             }, options);
-        }.bind(this), function (errors) {
-            
-        }, function (progress) {
-            
-        }, options);                    
-    };
-    
+        }
+    });
+
     return {
-        AudioSourceComponentSystem: AudioSourceComponentSystem
+        AudioSourceComponent: AudioSourceComponent
     };
 }());

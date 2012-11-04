@@ -141,16 +141,25 @@ pc.extend(pc.fw, function () {
         assignSchema: function (schema) {
             // Create getter/setter pairs for each property defined in the schema
             schema.forEach(function (prop) {
-                Object.defineProperty(this, prop.name, {
-                    get: function () {
-                        return this.data[prop.name];
-                    },
-                    set: function (value) {
-                        var oldValue = this.data[prop.name];
-                        this.data[prop.name] = value;
-                        this.fire('set', prop.name, oldValue, value);                            
-                    }
-                });
+                var set;
+                if (prop.readOnly) {
+                    Object.defineProperty(this, prop.name, {
+                        get: function () {
+                            return this.data[prop.name];
+                        }
+                    });
+                } else {
+                    Object.defineProperty(this, prop.name, {
+                        get: function () {
+                            return this.data[prop.name];
+                        },
+                        set: function (value) {
+                            var oldValue = this.data[prop.name];
+                            this.data[prop.name] = value;
+                            this.fire('set', prop.name, oldValue, value);                            
+                        }
+                    });
+                };
             }.bind(this));
 
             // Expose properties to the Designer
