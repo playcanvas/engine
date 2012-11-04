@@ -43,6 +43,9 @@ pc.extend(pc.scene, function () {
         // Shadow mapping resources
         this._shadowCamera = null;
         this._shadowMatrix = pc.math.mat4.create();
+        this._shadowWidth = 1024;
+        this._shadowHeight = 1024;
+        this._shadowBias = -0.0005;
     };
     LightNode = pc.inherits(LightNode, pc.scene.GraphNode);
 
@@ -217,16 +220,21 @@ pc.extend(pc.scene, function () {
         this._attenuationStart = radius;
     }
 
+    LightNode.prototype._createShadowMap = function () {
+        var shadowBuffer = new pc.gfx.FrameBuffer(this._shadowWidth, this._shadowHeight, true);
+
+        var shadowTexture = shadowBuffer.getTexture();
+        shadowTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
+        shadowTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+
+        return shadowBuffer;
+    };
+
     LightNode.prototype._createShadowCamera = function () {
         if (this._shadowCamera)
             return;
 
-        // SHADOW TODO: Make the shadowmap dimensions controllable
-        // Also, it may be better to keep shadow algorithm implementation details out of the light class
-        var shadowBuffer = new pc.gfx.FrameBuffer(1024, 1024, true);
-        var shadowTexture = shadowBuffer.getTexture();
-        shadowTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
-        shadowTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+        var shadowBuffer = this._createShadowMap();
 
         // We don't need to clear the color buffer if we're rendering a depth map
         var device = pc.gfx.Device.getCurrent();
@@ -240,7 +248,22 @@ pc.extend(pc.scene, function () {
             flags: flags
         });
 
-        this._shadowCamera = shadowCam;
+        return shadowCam;
+    };
+
+    LightNode.prototype.setShadowBias = function (bias) {
+        this._shadowBias = bias;
+    };
+
+    LightNode.prototype.setShadowResolution = function (width, height) {
+        if ((width !== this._shadowWidth) && (height !== this._shadowHeight)) {
+            this._shadowWidth = width;
+            this._shadowHeight = height;
+            if (this._shadowCamera) {
+                var shadowBuffer = this._createShadowMap();
+                this._shadowCamera.setRenderTarget(new pc.gfx.RenderTarget(shadowBuffer));
+            }
+        }
     };
 
     /**
@@ -255,7 +278,7 @@ pc.extend(pc.scene, function () {
 
         // No support for point lights yet
         if (this._castShadows && this._type !== pc.scene.LightType.POINT) {
-            this._createShadowCamera();
+            this._shadowCamera = this._createShadowCamera();
         } else {
             this._shadowCamera = null;
         }
@@ -353,7 +376,7 @@ pc.extend(pc.scene, function () {
             this._type = type;
 
             if (this._castShadows && type !== pc.scene.LightType.POINT) {
-                this._createShadowCamera();
+                this._shadowCamera = this._createShadowCamera();
             }
         }
     };
