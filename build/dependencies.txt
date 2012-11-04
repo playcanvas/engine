@@ -112,7 +112,9 @@
 ../src/framework/components/animation/animation_component.js
 ../src/framework/components/animation/animation_system.js
 ../src/framework/components/animation/animation_data.js
+../src/framework/components/bloom/bloom_system.js
 ../src/framework/components/bloom/bloom_component.js
+../src/framework/components/bloom/bloom_data.js
 ../src/framework/components/model/model_component.js
 ../src/framework/components/model/model_system.js
 ../src/framework/components/skybox/skybox_component.js
@@ -152,7 +154,6 @@
 ../src/framework/livelink/livelink_open_entity_message.js
 ../src/framework/entity/entity_entity.js
 ../src/framework/asset/asset_asset.js
-../src/framework/components/bloom/bloom_data.js
 ../src/framework/components/script/script_data.js
 ../src/framework/components/simplebody/simplebody_data.js
 ../src/framework/components/camera/camera_data.js
