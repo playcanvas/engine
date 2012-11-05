@@ -5,6 +5,8 @@ pc.extend(pc.fw, function () {
 
         pc.extend(this, pc.events);
 
+        this.buildAccessors(this.system.schema);
+
         this.bind("set", function (name, oldValue, newValue) {
             this.fire("set_" + name, name, oldValue, newValue);
         });
@@ -20,7 +22,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        assignSchema: function (schema) {
+        buildAccessors: function (schema) {
             // Create getter/setter pairs for each property defined in the schema
             schema.forEach(function (prop) {
                 var set;
@@ -43,19 +45,6 @@ pc.extend(pc.fw, function () {
                     });
                 };
             }.bind(this));
-
-            // Expose properties to the Designer
-            this.exposeProperties(schema);
-        },
-
-        exposeProperties: function (schema) {
-            if (schema.exposed !== false) {
-                editor.link.addComponentType(this.system.id);
-                
-                schema.forEach(function (prop) {
-                    editor.link.expose(this.system.id, prop);
-                }.bind(this));                
-            }
         },
 
         // get: function (name) {

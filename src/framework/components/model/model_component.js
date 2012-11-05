@@ -6,35 +6,6 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var ModelComponent = function ModelComponent (system, entity) {
-        var schema = [{
-            name: "asset",
-            displayName: "Asset",
-            description: "Model Asset to render",
-            type: "asset",
-            options: {
-                max: 1,
-                type: 'model'
-            },
-            defaultValue: null
-        }, {
-            name: "castShadows",
-            displayName: "Cast shadows",
-            description: "Occlude light from shadow casting lights",
-            type: "boolean",
-            defaultValue: false
-        }, {
-            name: "receiveShadows",
-            displayName: "Receive shadows",
-            description: "Receive shadows cast from occluders",
-            type: "boolean",
-            defaultValue: true
-        }, {
-            name: "model",
-            exposed: false
-        }];
-
-        this.assignSchema(schema);
-
         // Handle changes to the 'asset' value
         this.bind("set_asset", this.onSetAsset.bind(this));
         // Handle changes to the 'castShadows' value

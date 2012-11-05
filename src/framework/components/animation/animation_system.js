@@ -13,6 +13,74 @@ pc.extend(pc.fw, function () {
         this.ComponentType = pc.fw.AnimationComponent;
         this.DataType = pc.fw.AnimationComponentData;
         
+        this.schema = [{
+            name: "assets",
+            displayName: "Asset",
+            description: "Animation Asset",
+            type: "asset",
+            options: {
+                max: 100
+            },
+            defaultValue: null
+        }, {
+            name: "speed",
+            displayName: "Speed Factor",
+            description: "Scale the animation playback speed",
+            type: "number",
+            options: {
+                min: 0.0,
+                step: 0.1
+            },
+            defaultValue: 1.0
+        }, {
+            name: "loop",
+            displayName: "Loop",
+            description: "Loop the animation back to the start on completion",
+            type: "boolean",
+            defaultValue: true
+        }, {
+            name: "activate",
+            displayName: "Activate",
+            description: "Play the configured animation on load",
+            type: "boolean",
+            defaultValue: true
+        }, {
+            name: "animations",
+            exposed: false,
+        }, {
+            name: "skeleton",
+            exposed: false,
+        }, {
+            name: "model",
+            exposed: false,
+        }, {
+            name: "prevAnim",
+            exposed: false,
+        }, {
+            name: "currAnim",
+            exposed: false,
+        }, {
+            name: "fromSkel",
+            exposed: false,
+        }, {
+            name: "toSkel",
+            exposed: false,
+        }, {
+            name: "blending",
+            exposed: false,
+        }, {
+            name: "blendTime",
+            exposed: false,
+        }, {
+            name: "blendTimeRemaining",
+            exposed: false,
+        }, {
+            name: "playing",
+            exposed: false,
+        }];
+
+        this.exposeProperties();
+
         this.bind('remove', this.onRemove.bind(this));
         this.bind('update', this.onUpdate.bind(this));
 

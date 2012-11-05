@@ -26,50 +26,6 @@ if (typeof(Box2D) !== 'undefined') {
          * @extends pc.fw.ComponentSystem
          */
         var CollisionCircleComponent = function CollisionCircleComponent () {
-            var schema = [{
-                name: "density",
-                displayName: "Density",
-                description: "The density of the body, this determine the mass",
-                type: "number",
-                options: {
-                    min: 0,
-                    step: 0.01
-                },
-                defaultValue: 1
-            }, {
-                name: "friction",
-                displayName: "Friction",
-                description: "The friction when the body slides along another body",
-                type: "number",
-                options: {
-                    min: 0,
-                    step: 0.01
-                },
-                defaultValue: 0.5
-            }, {
-                name: "restitution",
-                displayName: "Restitution",
-                description: "The restitution determines the elasticity of collisions. 0 means an object doesn't bounce at all, a value of 1 will be a perfect reflection",
-                type: "number",
-                options: {
-                    min: 0,
-                    step: 0.01
-                },
-                defaultValue: 0
-            }, {
-                name: "radius",
-                displayName: "Radius",
-                description: "The size of the Rect in the x-axis",
-                type: "number",
-                options: {
-                    min: 0,
-                    step: 0.1,
-                },
-                defaultValue: 1
-            }];
-
-            this.assignSchema(schema);
-
             // Indexes for converting between 2D and 3D co-ords
             this.xi = 0; // 3D index that corresponds to 2D x-axis
             this.yi = 2; // 3D index that corresponds to 2D y-axis

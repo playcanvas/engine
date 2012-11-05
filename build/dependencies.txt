@@ -143,6 +143,7 @@
 ../src/framework/components/script/script_data.js
 ../src/framework/components/pack/pack_component.js
 ../src/framework/components/pack/pack_data.js
+../src/framework/components/pick/pick_system.js
 ../src/framework/components/pick/pick_component.js
 ../src/framework/components/pick/pick_data.js
 ../src/framework/components/header/header_component.js
@@ -152,6 +153,7 @@
 ../src/framework/components/audiolistener/audiolistener_system.js
 ../src/framework/components/audiolistener/audiolistener_component.js
 ../src/framework/components/audiolistener/audiolistener_data.js
+../src/framework/components/primitive/primitive_system.js
 ../src/framework/components/primitive/primitive_component.js
 ../src/framework/components/primitive/primitive_data.js
 ../src/framework/components/designer/designer_component.js

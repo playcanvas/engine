@@ -13,14 +13,90 @@ pc.extend(pc.fw, function () {
     var CameraComponentSystem = function (context) {
         this.id = 'camera'
         context.systems.add(this.id, this);
+        
         this.ComponentType = pc.fw.CameraComponent;
         this.DataType = pc.fw.CameraComponentData;
 
-        this.bind('remove', this.onRemove.bind(this));
+        this.schema = [{
+            name: "clearColor",
+            displayName: "Clear Color",
+            description: "Clear Color",
+            type: "rgba",
+            defaultValue: "0xbabab1ff"
+        }, {
+            name: "projection",
+            displayName: "Projection",
+            description: "Projection type of camera",
+            type: "enumeration",
+            options: {
+                enumerations: [{
+                    name: 'Perspective',
+                    value: 0
+                }, {
+                    name: 'Orthographic',
+                    value: 1
+                }]
+            },
+            defaultValue: 0
+        }, {
+            name: "fov",
+            displayName: "Field of View",
+            description: "Field of view in Y axis",
+            type: "number",
+            defaultValue: 45,
+            options: {
+                min: 0,
+                max: 90
+            }            
+        }, {
+            name: "orthoHeight",
+            displayName: "Ortho Height",
+            description: "View window half extent of camera in Y axis",
+            type: "number",
+            defaultValue: 100
+        }, {
+            name: "nearClip",
+            displayName: "Near Clip",
+            description: "Near clipping distance",
+            type: "number",
+            defaultValue: 0.1,
+            options: {
+                min: 0
+            }
+        }, {
+            name: "farClip",
+            displayName: "Far Clip",
+            description: "Far clipping distance",
+            type: "number",
+            defaultValue: 1000,
+            options: {
+                min: 0
+            }
+        }, {
+            name: "activate",
+            displayName: "Activate",
+            description: "Activate camera when scene loads",
+            type: "boolean",
+            defaultValue: true            
+        }, {
+            name: "offscreen",
+            displayName: "Offscreen",
+            description: "Render to an offscreen buffer",
+            type: "boolean",
+            defaultValue: false
+        }, {
+            name: "camera",
+            exposed: false
+        }];
+
+        this.exposeProperties();
 
         this._currentEntity = null;
         this._currentNode = null;
         this._renderable = null;
+
+        this.bind('remove', this.onRemove.bind(this));
+
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
     

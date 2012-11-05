@@ -13,6 +13,51 @@ pc.extend(pc.fw, function () {
         this.ComponentType = pc.fw.PointLightComponent;
         this.DataType = pc.fw.PointLightComponentData;
 
+        this.schema = [{
+            name: "enable",
+            displayName: "Enable",
+            description: "Enable or disable the light",
+            type: "boolean",
+            defaultValue: true
+        }, {
+            name: "color",
+            displayName: "Color",
+            description: "Light color",
+            type: "rgb",
+            defaultValue: "0xffffff"
+        }, {
+            name: "intensity",
+            displayName: "Intensity",
+            description: "Factors the light color",
+            type: "number",
+            defaultValue: 1,
+            options: {
+                min: 0,
+                max: 10,
+                step: 0.05
+            }
+        }, {
+            name: "castShadows",
+            displayName: "Cast shadows",
+            description: "Cast shadows from this light",
+            type: "boolean",
+            defaultValue: false
+        }, {
+            name: "attenuationEnd",
+            displayName: "Attenuation End",
+            description: "The distance from the light where its contribution falls to zero",
+            type: "number",
+            defaultValue: 10,
+            options: {
+                min: 0
+            }
+        }, {
+            name: 'light', 
+            exposed: false
+        }];
+
+        this.exposeProperties();
+
         this.renderable = _createGfxResources();
 
         this.bind('remove', this.onRemove.bind(this));

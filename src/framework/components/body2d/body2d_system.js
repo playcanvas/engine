@@ -35,6 +35,24 @@ if (typeof(Box2D) !== 'undefined') {
             this.ComponentType = pc.fw.Body2dComponent;
             this.DataType = pc.fw.Body2dComponentData;
 
+            this.schema = [{
+                name: "static",
+                displayName: "Static",
+                description: "Static bodies are immovable and do not collide with other static bodies.",
+                type: "boolean",
+                defaultValue: true
+            }, {
+                name: "body",
+                exposed: false,
+                readOnly: true
+            }, {
+                name: "bodyDef",
+                exposed: false,
+                readOnly: true
+            }];
+
+            this.exposeProperties();
+
             this.debugRender = false;
             this._gfx = _createGfxResources();      // debug gfx resources
             this._rayStart = pc.math.vec3.create(); // for debugging raycasts

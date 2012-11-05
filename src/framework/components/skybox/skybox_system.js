@@ -14,6 +14,73 @@ pc.extend(pc.fw, function () {
         this.ComponentType = pc.fw.SkyboxComponent;
         this.DataType = pc.fw.SkyboxComponentData;
 
+        this.schema = [{
+             name: "posx",
+             displayName: "POSX",
+             description: "URL of the positive X face of skybox cubemap",
+             type: "asset",
+                options: {
+                    max: 1
+                },
+                defaultValue: null  
+            }, {
+             name: "negx",
+             displayName: "NEGX",
+             description: "URL of the negative X face of skybox cubemap",
+                type: "asset",
+                options: {
+                    max: 1
+                },
+                defaultValue: null  
+            }, {
+             name: "posy",
+             displayName: "POSY",
+             description: "URL of the positive Y face of skybox cubemap",
+                type: "asset",
+                options: {
+                    max: 1
+                },
+                defaultValue: null  
+            }, {
+             name: "negy",
+             displayName: "NEGY",
+             description: "URL of the negative Y face of skybox cubemap",
+                type: "asset",
+                options: {
+                    max: 1
+                },
+                defaultValue: null  
+            }, {
+             name: "posz",
+             displayName: "POSZ",
+             description: "URL of the positive Z face of skybox cubemap",
+                type: "asset",
+                options: {
+                    max: 1
+                },
+                defaultValue: null  
+            }, {
+             name: "negz",
+             displayName: "NEGZ",
+             description: "URL of the negative Z face of skybox cubemap",
+                type: "asset",
+                options: {
+                    max: 1
+                },
+                defaultValue: null  
+            }, {
+                name: 'skybox',
+                exposed: false,
+                readOnly: true
+            }, {
+                name: 'assets',
+                exposed: false,
+                readOnly: true
+            }
+        ];
+
+        this.exposeProperties();
+
         pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
     }
     SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);

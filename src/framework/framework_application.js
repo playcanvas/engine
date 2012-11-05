@@ -511,13 +511,14 @@ pc.extend(pc.fw, function () {
          */
         _updateComponent: function(guid, componentName, attributeName, value) {
             var entity = this.context.root.findOne("getGuid", guid);
-            var system;
+            //var system;
                 
             if (entity) {
                 if(componentName) {
-                    system = this.context.systems[componentName];
-                    if(system) {
-                        system.set(entity, attributeName, value);
+                    //system = this.context.systems[componentName];
+                    if(entity[componentName]) {
+                        entity[componentName][attributeName] = value;
+                        //system.set(entity, attributeName, value);
                     } else {
                         logWARNING(pc.string.format("No component system called '{0}' exists", componentName))
                     }
@@ -539,31 +540,29 @@ pc.extend(pc.fw, function () {
                 // unless we tell it directly. (Because it is simulating from the physics world). Perhaps we could do this 
                 // by firing an event which the body system subscribes to instead. But I do we really want entities (or nodes) firing
                 // an event everytime the transform is updated, sounds slow. Perhaps we can fire an event from in here.
-                if (this.context.systems.body2d) {
-                    entity.syncHierarchy();
-                    this.context.systems.body2d.setTransform(entity, entity.getWorldTransform());
-                    this.context.systems.body2d.setLinearVelocity(entity, 0, 0);
-                    this.context.systems.body2d.setAngularVelocity(entity, 0);
+                if (this.context.systems.body2d && entity.body2d) {
+                    entity.body2d.setTransform(entity, entity.getWorldTransform());
+                    entity.body2d.setLinearVelocity(entity, 0, 0);
+                    entity.body2d.setAngularVelocity(entity, 0);
                 }
-                
             }
         },
         
-        _updateEntityAttribute: function (guid, accessor, value) {
-            var entity = this.context.root.findOne("getGuid", guid);
+        // _updateEntityAttribute: function (guid, accessor, value) {
+        //     var entity = this.context.root.findOne("getGuid", guid);
             
-            if(entity) {
-                if(pc.type(entity[accessor]) != "function") {
-                    logWARNING(pc.string.format("{0} is not an accessor function", accessor));
-                }
+        //     if(entity) {
+        //         if(pc.type(entity[accessor]) != "function") {
+        //             logWARNING(pc.string.format("{0} is not an accessor function", accessor));
+        //         }
                 
-                if(pc.string.startsWith(accessor, "reparent")) {
-                    entity[accessor](value, this.context);
-                } else {
-                    entity[accessor](value);                
-                }
-            }
-        },
+        //         if(pc.string.startsWith(accessor, "reparent")) {
+        //             entity[accessor](value, this.context);
+        //         } else {
+        //             entity[accessor](value);                
+        //         }
+        //     }
+        // },
         
         _reparentEntity: function (guid, parentId, index) {
             var entity = this.context.root.findByGuid(guid);
@@ -591,9 +590,12 @@ pc.extend(pc.fw, function () {
                 for(i = 0; i < len; i++) {
                     type = order[i];
                     if(components.hasOwnProperty(type) && this.context.systems.hasOwnProperty(type)) {
-                       if(!this.context.systems[type].hasComponent(entity)) {
-                            this.context.systems[type].createComponent(entity);
+                        if (!entity[type]) {
+                            this.context.systems[type].addComponent(entity, {});
                         }
+                       // if(!this.context.systems[type].hasComponent(entity)) {
+                       //      this.context.systems[type].createComponent(entity);
+                       //  }
                     }
                 }
                 
@@ -603,9 +605,8 @@ pc.extend(pc.fw, function () {
                     }
 
                     if(this.context.systems.hasOwnProperty(type)) {
-                        if(!components.hasOwnProperty(type) && 
-                            this.context.systems[type].hasComponent(entity)) {
-                            this.context.systems[type].deleteComponent(entity);
+                        if(!components.hasOwnProperty(type) && entity[type]) {
+                            this.context.systems[type].removeComponent(entity);
                         }
                     }
                 }

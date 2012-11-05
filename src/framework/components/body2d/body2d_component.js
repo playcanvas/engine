@@ -29,24 +29,6 @@ if (typeof(Box2D) !== 'undefined') {
          * @extends pc.fw.ComponentSystem
          */
         var Body2dComponent = function Body2dComponent (context) {
-            var schema = [{
-                name: "static",
-                displayName: "Static",
-                description: "Static bodies are immovable and do not collide with other static bodies.",
-                type: "boolean",
-                defaultValue: true
-            }, {
-                name: "body",
-                expose: false,
-                readOnly: true
-            }, {
-                name: "bodyDef",
-                expose: false,
-                readOnly: true
-            }];
-
-            this.assignSchema(schema);
-
             // Indexes for converting between 2D and 3D co-ords
             this.xi = 0; // 3D index that corresponds to 2D x-axis
             this.yi = 2; // 3D index that corresponds to 2D y-axis

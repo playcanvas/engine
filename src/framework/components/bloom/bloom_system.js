@@ -14,6 +14,75 @@ pc.extend(pc.fw, function () {
         this.ComponentType = pc.fw.BloomComponent;
         this.DataType = pc.fw.BloomComponentData;
 
+        this.schema = [{
+         name: "bloomThreshold",
+         displayName: "Bloom Threshold",
+            description: "The luminance threshold above which blooming is applied",
+            type: "number",
+            options: {
+                max: 1,
+                min: 0,
+                step: 0.05
+            },
+            defaultValue: 0.25
+        }, {
+         name: "blurAmount",
+         displayName: "Blur Amount",
+            description: "The luminance threshold above which blooming is applied",
+            type: "number",
+            options: {
+                max: 10,
+                min: 1,
+                step: 0.5
+            },
+            defaultValue: 4
+        }, { 
+         name: "bloomIntensity",
+         displayName: "Bloom Intensity",
+         description: "TBD",
+            type: "number",
+            options: {
+                max: 3,
+                min: 0,
+                step: 0.05
+            },
+            defaultValue: 1.25
+        }, {
+         name: "baseIntensity",
+         displayName: "Base Intensity",
+         description: "TBD",
+            type: "number",
+            options: {
+                max: 3,
+                min: 0,
+                step: 0.05
+            },
+            defaultValue: 1
+        }, {
+         name: "bloomSaturation",
+         displayName: "Bloom Saturation",
+         description: "TBD",
+            type: "number",
+            options: {
+                max: 3,
+                min: 0,
+                step: 0.05
+            },
+            defaultValue: 1
+        }, {
+         name: "baseSaturation",
+         displayName: "Base Saturation",
+         description: "TBD",
+            type: "number",
+            options: {
+                max: 3,
+                min: 0,
+                step: 0.05
+            },
+            defaultValue: 1
+        }];
+        this.exposeProperties();
+
         pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
     }
     BloomComponentSystem = pc.inherits(BloomComponentSystem, pc.fw.ComponentSystem);

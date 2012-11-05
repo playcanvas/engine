@@ -100,7 +100,18 @@ pc.extend(pc.fw, function () {
                 }
                 
             }, this);
-        }
+        },
+
+        exposeProperties: function () {
+            editor.link.addComponentType(this.id);
+                
+            this.schema.forEach(function (prop) {
+                if (prop.exposed !== false) {
+                    editor.link.expose(this.id, prop);    
+                }
+            }.bind(this));                
+        },
+
     };
 
     // Add event support

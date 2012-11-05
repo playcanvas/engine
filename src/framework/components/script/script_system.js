@@ -13,18 +13,36 @@ pc.extend(pc.fw, function () {
         this.ComponentType = pc.fw.ScriptComponent;
         this.DataType = pc.fw.ScriptComponentData;
 
-        this.bind('remove', this.onRemove.bind(this));
+        this.schema = [{
+            name: "urls",
+            displayName: "URLs",
+            description: "Attach scripts to this Entity",
+            type: "script_urls",
+            defaultValue: []
+        }, {
+            name: 'instances',
+            exposed: false
+        }, {
+            name: 'runInTools',
+            description: 'Allows scripts to be loaded and executed while in the tools',
+            defaultValue: false,
+            exposed: false
+        }];
 
+        this.exposeProperties();
+
+        this.bind('remove', this.onRemove.bind(this));
         pc.fw.ComponentSystem.bind('initialize', this.onInitialize.bind(this));
         pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
         pc.fw.ComponentSystem.bind('fixedUpdate', this.onFixedUpdate.bind(this));
         pc.fw.ComponentSystem.bind('postUpdate', this.onPostUpdate.bind(this));
+        pc.fw.ComponentSystem.bind('toolsUpdate', this.onToolsUpdate.bind(this));
     }
     ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.fw.ComponentSystem);
 
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['urls'];
+            properties = ['runInTools', 'urls'];
             ScriptComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -107,6 +125,10 @@ pc.extend(pc.fw, function () {
             this.fire('postUpdate', dt);
         },
 
+        onToolsUpdate: function (dt) {
+            this.fire('toolsUpdate', dt);
+        },
+
         /**
         * @private
         * @function
@@ -158,6 +180,9 @@ pc.extend(pc.fw, function () {
                         }
                         if (instance.instance.postUpdate) {
                             this.bind('postUpdate', instance.instance.postUpdate.bind(instance.instance));
+                        }
+                        if (instance.instance.toolsUpdate) {
+                            this.bind('toolsUpdate', instance.instance.toolsUpdate.bind(instance.instance));
                         }
                     }
 

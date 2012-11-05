@@ -1,7 +1,5 @@
 pc.extend(pc.fw, function () {
     var AudioListenerComponent = function () {
-        var schema = [];
-        this.assignSchema(schema);
     };
     AudioListenerComponent = pc.inherits(AudioListenerComponent, pc.fw.Component);
 

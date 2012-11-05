@@ -1,18 +1,5 @@
 pc.extend(pc.fw, function () {
     var ScriptComponent = function ScriptComponent(entity) {
-        var schema = [{
-            name: "urls",
-            displayName: "URLs",
-            description: "Attach scripts to this Entity",
-            type: "script_urls",
-            defaultValue: []
-        }, {
-            name: 'instances',
-            exposed: false
-        }];
-
-        this.assignSchema(schema);
-
         this.bind("set_urls", this.onSetUrls.bind(this));
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.fw.Component);
@@ -84,7 +71,7 @@ pc.extend(pc.fw, function () {
                 batch: this.entity.getRequestBatch()
             };
             
-            if (!this.system._inTools) {
+            if (!this.system._inTools || this.runInTools) {
                 // Load and register new scripts and instances
                 urls.forEach(function (url, index, arr) {
                     var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
