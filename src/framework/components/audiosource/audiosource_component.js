@@ -160,7 +160,7 @@ pc.extend(pc.fw, function () {
             this.system.manager.setVolume(value);
         },
         
-        onSetAssets: function (oldValue, newValue) {
+        onSetAssets: function (name, oldValue, newValue) {
             var componentData = this.data
             var newAssets = [];
             var i, len = newValue.length;
@@ -178,7 +178,7 @@ pc.extend(pc.fw, function () {
             }
         },
         
-        onSetLoop: function (oldValue, newValue) {
+        onSetLoop: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
                 if (this.channel) {
                     this.channel.setLoop(newValue);
@@ -186,7 +186,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetVolume: function (oldValue, newValue) {
+        onSetVolume: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
                 if (this.channel) {
                     this.channel.setVolume(newValue);
@@ -194,7 +194,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetMaxDistance: function (oldValue, newValue) {
+        onSetMaxDistance: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
                 if (this.channel instanceof pc.audio.Channel3d) {
                     this.channel.setMaxDistance(newValue);
@@ -202,7 +202,7 @@ pc.extend(pc.fw, function () {
             }
         },
         
-        onSetMinDistance: function (oldValue, newValue) {
+        onSetMinDistance: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
                 if (this.channel instanceof pc.audio.Channel3d) {
                     this.channel.setMinDistance(newValue);
@@ -210,7 +210,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetRollOffFactor: function (oldValue, newValue) {
+        onSetRollOffFactor: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
                 if (this.channel instanceof pc.audio.Channel3d) {
                     this.channel.setRollOffFactor(newValue);

@@ -76,7 +76,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetUrls: function(oldValue, newValue) {
+        onSetUrls: function(name, oldValue, newValue) {
             var urls = newValue;
             var prefix = pc.content.source || "";
 

@@ -53,13 +53,13 @@ pc.extend(pc.fw, function () {
     DirectionalLightComponent = pc.inherits(DirectionalLightComponent, pc.fw.Component);
 
     pc.extend(DirectionalLightComponent.prototype, {
-        onSetCastShadows: function (oldValue, newValue) {
+        onSetCastShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
                 this.data.light.setCastShadows(newValue);
             }
         },
         
-        onSetColor: function (oldValue, newValue) {
+        onSetColor: function (name, oldValue, newValue) {
             if (newValue) {
                 var rgb = parseInt(newValue);
                 rgb = pc.math.intToBytes24(rgb);
@@ -72,19 +72,19 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetEnable: function (oldValue, newValue) {
+        onSetEnable: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
                 this.data.light.setEnabled(newValue);
             }
         },
 
-        onSetIntensity: function (oldValue, newValue) {
+        onSetIntensity: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
                 this.data.light.setIntensity(newValue);
             }
         },
 
-        onSetLight: function (oldValue, newValue) {
+        onSetLight: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.entity.removeChild(oldValue);
                 this.system.context.scene.removeLight(oldValue);

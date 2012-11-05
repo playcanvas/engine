@@ -93,7 +93,7 @@ if (typeof(Box2D) !== 'undefined') {
         
         pc.extend(CollisionRectComponent.prototype, {
 
-            onSetDensity: function (oldValue, newValue) {
+            onSetDensity: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }
@@ -105,7 +105,7 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
-            onSetFriction: function (oldValue, newValue) {
+            onSetFriction: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }
@@ -117,7 +117,7 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
-            onSetRestitution: function (oldValue, newValue) {
+            onSetRestitution: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }
@@ -129,7 +129,7 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
-            onSetX: function (oldValue, newValue) {
+            onSetX: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }
@@ -145,7 +145,7 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
-            onSetY: function (oldValue, newValue) {
+            onSetY: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }

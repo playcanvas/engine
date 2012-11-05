@@ -94,15 +94,15 @@ pc.extend(pc.fw, function () {
     SpotLightComponent = pc.inherits(SpotLightComponent, pc.fw.Component);
 
     pc.extend(SpotLightComponent.prototype, {
-        onSetAttenuationEnd: function (oldValue, newValue) {
+        onSetAttenuationEnd: function (name, oldValue, newValue) {
             this.data.light.setAttenuationEnd(newValue);
         },
 
-        onSetCastShadows: function (oldValue, newValue) {
+        onSetCastShadows: function (name, oldValue, newValue) {
             this.data.light.setCastShadows(newValue);
         },
 
-        onSetColor: function (oldValue, newValue) {
+        onSetColor: function (name, oldValue, newValue) {
             var rgb = parseInt(newValue);
             rgb = pc.math.intToBytes24(rgb);
             var color = [
@@ -113,23 +113,23 @@ pc.extend(pc.fw, function () {
             this.data.light.setColor(color);
         },
 
-        onSetInnerConeAngle: function (oldValue, newValue) {
+        onSetInnerConeAngle: function (name, oldValue, newValue) {
             this.data.light.setInnerConeAngle(newValue);
         },
 
-        onSetOuterConeAngle: function (oldValue, newValue) {
+        onSetOuterConeAngle: function (name, oldValue, newValue) {
             this.data.light.setOuterConeAngle(newValue);
         },
 
-        onSetEnable: function (oldValue, newValue) {
+        onSetEnable: function (name, oldValue, newValue) {
             this.data.light.setEnabled(newValue);
         },
 
-        onSetIntensity: function (oldValue, newValue) {
+        onSetIntensity: function (name, oldValue, newValue) {
             this.data.light.setIntensity(newValue);
         },
 
-        onSetLight: function (oldValue, newValue) {
+        onSetLight: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.entity.removeChild(oldValue);
                 this.system.context.scene.removeLight(oldValue);

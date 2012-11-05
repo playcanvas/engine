@@ -306,7 +306,7 @@ if (typeof(Box2D) !== 'undefined') {
                 this.entity.setEulerAngles(rotation);
             },
 
-            onSetStatic: function (oldValue, newValue) {
+            onSetStatic: function (name, oldValue, newValue) {
                 var body = this.entity.body2d.body;
                 if (body) {
                     if (newValue) {

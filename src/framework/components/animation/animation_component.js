@@ -175,7 +175,7 @@ pc.extend(pc.fw, function () {
             }, options);        
         },
 
-        onSetAnimations: function (oldValue, newValue) {
+        onSetAnimations: function (name, oldValue, newValue) {
             if (newValue === undefined) {
                 var data = this.data;
                 var name;
@@ -188,12 +188,12 @@ pc.extend(pc.fw, function () {
                 }
             }
         },
-        onSetAssets: function (oldValue, newValue) {
+        onSetAssets: function (name, oldValue, newValue) {
             if (pc.isDefined(newValue)) {
                 this.loadAnimationAssets(newValue);
             }
         },
-        onSetLoop: function (oldValue, newValue) {
+        onSetLoop: function (name, oldValue, newValue) {
             if (pc.isDefined(newValue)) {
                 if (this.data.skeleton) {
                     this.data.skeleton.setLooping(this.data.loop);
@@ -201,7 +201,7 @@ pc.extend(pc.fw, function () {
             }
 
         },
-        onSetCurrentTime: function (oldValue, newValue) {
+        onSetCurrentTime: function (name, oldValue, newValue) {
             this.data.skeleton.setCurrentTime(newValue);
             this.data.skeleton.addTime(0); // update
             this.data.skeleton.updateGraph();

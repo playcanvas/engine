@@ -92,7 +92,7 @@ pc.extend(pc.fw, function () {
             }, options);
         },
 
-        onSetAsset: function (oldValue, newValue) {
+        onSetAsset: function (name, oldValue, newValue) {
             if(newValue) {
                 this.loadModelAsset(newValue);
             } else {
@@ -100,7 +100,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetCastShadows: function (oldValue, newValue) {
+        onSetCastShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
                 if (this.data.model) {
                     var meshes = this.data.model.getMeshes();
@@ -111,7 +111,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetModel: function (oldValue, newValue) {
+        onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.system.context.scene.removeModel(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
@@ -137,7 +137,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetReceiveShadows: function (oldValue, newValue) {
+        onSetReceiveShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
                 if (this.data.model) {
                     var meshes = this.data.model.getMeshes();

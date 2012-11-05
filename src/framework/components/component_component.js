@@ -6,7 +6,7 @@ pc.extend(pc.fw, function () {
         pc.extend(this, pc.events);
 
         this.bind("set", function (name, oldValue, newValue) {
-            this.fire("set_" + name, oldValue, newValue);
+            this.fire("set_" + name, name, oldValue, newValue);
         });
     };
 

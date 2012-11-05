@@ -68,7 +68,7 @@ pc.extend(pc.fw, function () {
          * @name pc.fw.PrimitiveComponentSystem#onSetType
          * @description Handle changes to the 'type' variable
          */
-        onSetType: function (oldValue, newValue) {
+        onSetType: function (name, oldValue, newValue) {
             var data = this.data;//this.getComponentData(entity);
 
             if (newValue) {
@@ -128,7 +128,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetCastShadows: function (oldValue, newValue) {
+        onSetCastShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
                 var componentData = this.data;
                 if (componentData.model) {
@@ -146,7 +146,7 @@ pc.extend(pc.fw, function () {
          * @name pc.fw.PrimitiveComponentSystem#onSetColor
          * @description Handle changes to the 'color' variable
          */
-        onSetColor: function (oldValue, newValue) {
+        onSetColor: function (name, oldValue, newValue) {
             var data = this.data;
             var rbg = 0;
             var color = [0,0,0];
@@ -165,7 +165,7 @@ pc.extend(pc.fw, function () {
             data.material.setParameter('material_ambient', color);
         },
 
-        onSetModel: function (oldValue, newValue) {
+        onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.entity.removeChild(oldValue.getGraph());
                 this.system.context.scene.removeModel(oldValue);
@@ -188,7 +188,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetReceiveShadows: function (oldValue, newValue) {
+        onSetReceiveShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
                 var componentData = this.data;
                 if (componentData.model) {

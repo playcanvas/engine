@@ -83,7 +83,7 @@ if (typeof(Box2D) !== 'undefined') {
         CollisionCircleComponent = pc.inherits(CollisionCircleComponent, pc.fw.Component);
         
         pc.extend(CollisionCircleComponent.prototype, {
-            onSetDensity: function (oldValue, newValue) {
+            onSetDensity: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }
@@ -99,7 +99,7 @@ if (typeof(Box2D) !== 'undefined') {
                 }                
             },
 
-            onSetFriction: function (oldValue, newValue) {
+            onSetFriction: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }
@@ -115,7 +115,7 @@ if (typeof(Box2D) !== 'undefined') {
                 }                
             },
 
-            onSetRestitution: function (oldValue, newValue) {
+            onSetRestitution: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }
@@ -131,7 +131,7 @@ if (typeof(Box2D) !== 'undefined') {
                 }                
             },
 
-            onSetRadius: function (oldValue, newValue) {
+            onSetRadius: function (name, oldValue, newValue) {
                 if (!this.entity.body2d) {
                     return;
                 }
