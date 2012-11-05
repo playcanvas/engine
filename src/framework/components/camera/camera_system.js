@@ -96,6 +96,7 @@ pc.extend(pc.fw, function () {
         this._renderable = null;
 
         this.bind('remove', this.onRemove.bind(this));
+        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
 
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
@@ -200,15 +201,18 @@ pc.extend(pc.fw, function () {
             data.camera = null;
         },
     
-        toolsRender: function (fn) {
-            var components = this.getComponents();
+        toolsUpdate: function (fn) {
+            var components = this.store;
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
 
                     if (!entity.hasLabel("pc:designer")) {
-                        var componentData = components[id].component;
-                        componentData.camera.drawFrustum();
+                        this.context.scene.enqueue('opaque', function (componentData) {
+                            return function () {
+                                componentData.camera.drawFrustum();        
+                            };
+                        }(components[id].data));
                     }
                 }
             }
