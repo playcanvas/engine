@@ -33,7 +33,7 @@ pc.extend(pc.fw, function () {
         onRemove: function (entity, data) {
             entity.removeChild(data.light);
             data.light.setEnabled(false);
-            delete componentData.light;
+            delete data.light;
         },
 
         toolsRender: function (fn) {

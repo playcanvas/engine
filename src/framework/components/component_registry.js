@@ -55,7 +55,7 @@ pc.extend(pc.fw, function () {
 
                 if (pa < pb) {
                     return -1;
-                } else if (pb > pa) {
+                } else if (pa > pb) {
                     return 1;
                 }
 
