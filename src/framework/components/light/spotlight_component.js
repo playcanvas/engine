@@ -7,7 +7,6 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var SpotLightComponent = function (context) {
-        this.renderable = _createGfxResources();
 
         // Handle changes to the 'attenuationEnd' value
         this.bind("set_attenuationEnd", this.onSetAttenuationEnd.bind(this));
@@ -75,43 +74,6 @@ pc.extend(pc.fw, function () {
             }
         }
     });
-
-    var _createGfxResources = function () {
-        // Create the graphical resources required to render a light
-        var device = pc.gfx.Device.getCurrent();
-        var library = device.getProgramLibrary();
-        var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
-        var format = new pc.gfx.VertexFormat();
-        format.begin();
-        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-        format.end();
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 42, pc.gfx.VertexBufferUsage.DYNAMIC);
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 88);
-        var inds = new Uint8Array(indexBuffer.lock());
-        // Spot cone side lines
-        inds[0] = 0;
-        inds[1] = 1;
-        inds[2] = 0;
-        inds[3] = 11;
-        inds[4] = 0;
-        inds[5] = 21;
-        inds[6] = 0;
-        inds[7] = 31;
-        // Spot cone circle - 40 segments
-        for (var i = 0; i < 40; i++) {
-            inds[8 + i * 2 + 0] = i + 1;
-            inds[8 + i * 2 + 1] = i + 2;
-        }
-        indexBuffer.unlock();
-
-        // Set the resources on the component
-        return {
-            program: program,
-            vertexBuffer: vertexBuffer,
-            indexBuffer: indexBuffer
-        };
-    };
-    
     return {
         SpotLightComponent: SpotLightComponent
     }; 

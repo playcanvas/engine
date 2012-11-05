@@ -54,6 +54,7 @@ pc.extend(pc.fw, function () {
         this.renderable = _createGfxResources();
 
         this.bind('remove', this.onRemove.bind(this));
+        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
     };
         
     DirectionalLightComponentSystem = pc.inherits(DirectionalLightComponentSystem, pc.fw.ComponentSystem);
@@ -77,35 +78,33 @@ pc.extend(pc.fw, function () {
             data.light = null;
         },
 
-        toolsRender: function (fn) {
+        toolsUpdate: function (fn) {
             var id;
             var entity;
-            var componentData;
-            var components = this.getComponents();
-            var transform;
-            var device;
-            var program = this.renderable.program;
-            var vertexBuffer = this.renderable.vertexBuffer;
+            var components = this.store;
 
             for (id in components) {
                 if (components.hasOwnProperty(id)) {
                     entity = components[id].entity;
-                    componentData = components[id].component;
+            
+                    this.context.scene.enqueue('opaque', function (renderable, transform) {
+                        return function () {
+                            // Render a representation of the light
+                            var device = pc.gfx.Device.getCurrent();
+                            device.setProgram(renderable.program);
+                            device.setVertexBuffer(renderable.vertexBuffer, 0);
+                            
+                            device.scope.resolve("matrix_model").setValue(transform);
+                            device.scope.resolve("uColor").setValue([1, 1, 0, 1]);
+                            device.draw({
+                                type: pc.gfx.PrimType.LINES,
+                                base: 0,
+                                count: renderable.vertexBuffer.getNumVertices(),
+                                indexed: false
+                            });
 
-                    // Render a representation of the light
-                    device = pc.gfx.Device.getCurrent();
-                    device.setProgram(program);
-                    device.setVertexBuffer(vertexBuffer, 0);
-                    
-                    transform = entity.getWorldTransform();
-                    device.scope.resolve("matrix_model").setValue(transform);
-                    device.scope.resolve("uColor").setValue([1, 1, 0, 1]);
-                    device.draw({
-                        type: pc.gfx.PrimType.LINES,
-                        base: 0,
-                        count: vertexBuffer.getNumVertices(),
-                        indexed: false
-                    });
+                        } 
+                    }(this.renderable, entity.getWorldTransform()));
                 }
             }
         },

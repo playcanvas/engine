@@ -61,6 +61,7 @@ pc.extend(pc.fw, function () {
         this.renderable = _createGfxResources();
 
         this.bind('remove', this.onRemove.bind(this));
+        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
     };
     PointLightComponentSystem = pc.inherits(PointLightComponentSystem, pc.fw.ComponentSystem);
 
@@ -81,18 +82,20 @@ pc.extend(pc.fw, function () {
             delete data.light;
         },
 
-        toolsRender: function (fn) {
-            var components = this.getComponents();
+        toolsUpdate: function (fn) {
+            var components = this.store;
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
-                    var componentData = components[id].component;
+                    var componentData = components[id].data;
 
-                    var position = entity.getPosition();
-
-                    this.renderable.setLocalPosition(position);
-                    this.renderable.syncHierarchy();
-                    this.renderable.dispatch();
+                    this.context.scene.enqueue('opaque', function (renderable, position) {
+                        return function () {
+                            renderable.setLocalPosition(position);
+                            renderable.syncHierarchy();
+                            renderable.dispatch();                            
+                        };
+                    }(this.renderable, entity.getPosition()));                    
                 }
             }
         }

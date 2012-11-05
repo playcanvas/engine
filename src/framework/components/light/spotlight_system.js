@@ -10,6 +10,8 @@ pc.extend(pc.fw, function () {
         this.id = "spotlight";
         context.systems.add(this.id, this);
 
+        this.renderable = _createGfxResources();
+
         this.ComponentType = pc.fw.SpotLightComponent;
         this.DataType = pc.fw.SpotLightComponentData;
 
@@ -79,6 +81,7 @@ pc.extend(pc.fw, function () {
         this.exposeProperties();
 
         this.bind('remove', this.onRemove.bind(this));
+        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
     };
     SpotLightComponentSystem = pc.inherits(SpotLightComponentSystem, pc.fw.ComponentSystem);
 
@@ -101,53 +104,56 @@ pc.extend(pc.fw, function () {
             delete data.light;
         },
 
-        toolsRender: function (fn) {
-            var components = this.getComponents();
+        toolsUpdate: function (fn) {
+            var components = this.store;
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
-                    var componentData = components[id].component;
-                    var program = this.renderable.program;
-                    var indexBuffer = this.renderable.indexBuffer;
-                    var vertexBuffer = this.renderable.vertexBuffer;
+                    var componentData = components[id].data;
 
-                    var light = componentData.light;
-                    var oca = Math.PI * light.getOuterConeAngle() / 180;
-                    var ae = light.getAttenuationEnd();
-                    var y = -ae * Math.cos(oca);
-                    var r = ae * Math.sin(oca);
+                    this.context.scene.enqueue('opaque', function (renderable, light, transform) {
+                        return function () {
+                            var program = renderable.program;
+                            var indexBuffer = renderable.indexBuffer;
+                            var vertexBuffer = renderable.vertexBuffer;
 
-                    var positions = new Float32Array(vertexBuffer.lock());
-                    positions[0] = 0;
-                    positions[1] = 0;
-                    positions[2] = 0;
-                    var numVerts = vertexBuffer.getNumVertices();
-                    for (var i = 0; i < numVerts-1; i++) {
-                        var theta = 2 * Math.PI * (i / (numVerts-2));
-                        var x = r * Math.cos(theta);
-                        var z = r * Math.sin(theta);
-                        positions[(i+1)*3+0] = x;
-                        positions[(i+1)*3+1] = y;
-                        positions[(i+1)*3+2] = z;
-                    }
-                    vertexBuffer.unlock();
+                            var oca = Math.PI * light.getOuterConeAngle() / 180;
+                            var ae = light.getAttenuationEnd();
+                            var y = -ae * Math.cos(oca);
+                            var r = ae * Math.sin(oca);
 
-                    // Render a representation of the light
-                    var device = pc.gfx.Device.getCurrent();
-                    device.setProgram(program);
-                    device.setIndexBuffer(indexBuffer);
-                    device.setVertexBuffer(vertexBuffer, 0);
+                            var positions = new Float32Array(vertexBuffer.lock());
+                            positions[0] = 0;
+                            positions[1] = 0;
+                            positions[2] = 0;
+                            var numVerts = vertexBuffer.getNumVertices();
+                            for (var i = 0; i < numVerts-1; i++) {
+                                var theta = 2 * Math.PI * (i / (numVerts-2));
+                                var x = r * Math.cos(theta);
+                                var z = r * Math.sin(theta);
+                                positions[(i+1)*3+0] = x;
+                                positions[(i+1)*3+1] = y;
+                                positions[(i+1)*3+2] = z;
+                            }
+                            vertexBuffer.unlock();
 
-                    transform = entity.getWorldTransform();
-                    device.scope.resolve("matrix_model").setValue(transform);
-                    var c = light.getColor();
-                    device.scope.resolve("uColor").setValue([c[0], c[1], c[2], 1]);
-                    device.draw({
-                        type: pc.gfx.PrimType.LINES,
-                        base: 0,
-                        count: indexBuffer.getNumIndices(),
-                        indexed: true
-                    });
+                            // Render a representation of the light
+                            var device = pc.gfx.Device.getCurrent();
+                            device.setProgram(program);
+                            device.setIndexBuffer(indexBuffer);
+                            device.setVertexBuffer(vertexBuffer, 0);
+
+                            device.scope.resolve("matrix_model").setValue(transform);
+                            var c = light.getColor();
+                            device.scope.resolve("uColor").setValue([c[0], c[1], c[2], 1]);
+                            device.draw({
+                                type: pc.gfx.PrimType.LINES,
+                                base: 0,
+                                count: indexBuffer.getNumIndices(),
+                                indexed: true
+                            });                            
+                        }
+                    }(this.renderable, componentData.light, entity.getWorldTransform()));
                 }
             }
         },
