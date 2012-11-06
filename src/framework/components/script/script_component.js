@@ -42,26 +42,26 @@ pc.extend(pc.fw, function () {
          * // Call doDamage(10) on all 'enemy' scripts
          * entityEntity.script.broadcast('enemy', 'doDamage', 10);
          */
-        broadcast: function (name, functionName) {
-            var args = pc.makeArray(arguments).slice(1);
+        // broadcast: function (name, functionName) {
+        //     var args = pc.makeArray(arguments).slice(1);
             
-            var id, entity, componentData, fn;
-            var dataStore = this.system.store;
-            var results = [];
+        //     var id, entity, componentData, fn;
+        //     var dataStore = this.system.store;
+        //     var results = [];
             
-            for (id in dataStore) {
-                if (dataStore.hasOwnProperty(id)) {
-                    entity = dataStore[id].entity;
-                    data = dataStore[id].data;
-                    if (data.instances[name]) {
-                        fn = data.instances[name].instance[functionName];
-                        if(fn) {
-                            fn.apply(data.instances[name].instance, args);
-                        }
-                    }
-                }
-            }
-        },
+        //     for (id in dataStore) {
+        //         if (dataStore.hasOwnProperty(id)) {
+        //             entity = dataStore[id].entity;
+        //             data = dataStore[id].data;
+        //             if (data.instances[name]) {
+        //                 fn = data.instances[name].instance[functionName];
+        //                 if(fn) {
+        //                     fn.apply(data.instances[name].instance, args);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // },
 
         onSetUrls: function(name, oldValue, newValue) {
             var urls = newValue;
