@@ -6,7 +6,6 @@ pc.extend(pc.fw, function () {
         this.bind('set_assets', this.onSetAssets.bind(this));
         // Handle changes to the 'loop' value
         this.bind('set_loop', this.onSetLoop.bind(this));
-
     };
     AnimationComponent = pc.inherits(AnimationComponent, pc.fw.Component);
 
@@ -21,6 +20,13 @@ pc.extend(pc.fw, function () {
          * animation state to the start of the animation being set.
          */
         play: function (name, blendTime) {
+            if (!this.data.animations[name]) {
+                console.error(pc.string.format("Trying to play animation '{0}' which doesn't exist", name));
+                return;
+            }
+
+            blendTime = blendTime || 0;
+            
             var data = this.data;
 
             data.prevAnim = data.currAnim;
@@ -44,7 +50,7 @@ pc.extend(pc.fw, function () {
 
             data.playing = true;
         },
-        
+
         getAnimation: function (name) {
             return this.data.animations[name];
         },
@@ -108,35 +114,48 @@ pc.extend(pc.fw, function () {
         },
 
         onSetAnimations: function (name, oldValue, newValue) {
-            if (newValue === undefined) {
-                var data = this.data;
-                var name;
-                for (name in data.animations) {
-                    // Set the first loaded animation as the current
-                    if (data.activate) {
-                        this.play(entity, name);
-                    }
-                    break;
+            var data = this.data;
+            var name;
+            for (name in data.animations) {
+                // Set the first loaded animation as the current
+                if (data.activate) {
+                    this.play(name, 0);
                 }
+                break;
             }
         },
         onSetAssets: function (name, oldValue, newValue) {
-            if (pc.isDefined(newValue)) {
-                this.loadAnimationAssets(newValue);
-            }
+            this.loadAnimationAssets(newValue);
         },
+        
         onSetLoop: function (name, oldValue, newValue) {
-            if (pc.isDefined(newValue)) {
-                if (this.data.skeleton) {
-                    this.data.skeleton.setLooping(this.data.loop);
-                }
+            if (this.data.skeleton) {
+                this.data.skeleton.setLooping(this.data.loop);
             }
-
         },
+
         onSetCurrentTime: function (name, oldValue, newValue) {
             this.data.skeleton.setCurrentTime(newValue);
             this.data.skeleton.addTime(0); // update
             this.data.skeleton.updateGraph();
+        }
+    });
+
+    Object.defineProperties(AnimationComponent.prototype, {
+        currentTime: {
+            get: function () {
+                return this.data.skeleton.getCurrentTime();
+            },
+            set: function (currentTime) {
+                this.data.skeleton.setCurrentTime(currentTime);
+                this.data.skeleton.addTime(0);
+                this.data.skeleton.updateGraph();                
+            }
+        },
+        duration: {
+            get: function () {
+                return this.data.animations[this.data.currAnim].getDuration();
+            }
         }
     });
 

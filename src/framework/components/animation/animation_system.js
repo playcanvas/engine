@@ -46,37 +46,47 @@ pc.extend(pc.fw, function () {
             defaultValue: true
         }, {
             name: "animations",
-            exposed: false,
+            exposed: false
         }, {
             name: "skeleton",
             exposed: false,
+            readOnly: true
         }, {
             name: "model",
             exposed: false,
+            readOnly: true
         }, {
             name: "prevAnim",
             exposed: false,
+            readOnly: true
         }, {
             name: "currAnim",
             exposed: false,
+            readOnly: true
         }, {
             name: "fromSkel",
             exposed: false,
+            readOnly: true
         }, {
             name: "toSkel",
             exposed: false,
+            readOnly: true
         }, {
             name: "blending",
             exposed: false,
+            readOnly: true
         }, {
             name: "blendTime",
             exposed: false,
+            readOnly: true
         }, {
             name: "blendTimeRemaining",
             exposed: false,
+            readOnly: true
         }, {
             name: "playing",
             exposed: false,
+            readOnly: true
         }];
 
         this.exposeProperties();
@@ -84,6 +94,7 @@ pc.extend(pc.fw, function () {
         this.bind('remove', this.onRemove.bind(this));
         this.bind('update', this.onUpdate.bind(this));
 
+        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
         // // Handle changes to the 'animations' value
         // this.bind('set_animations', this.onSetAnimations.bind(this));
         // // Handle changes to the 'assets' value
