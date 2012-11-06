@@ -125,6 +125,7 @@
 ../src/framework/components/camera/camera_system.js
 ../src/framework/components/camera/camera_component.js
 ../src/framework/components/camera/camera_data.js
+../src/framework/components/cubemap/cubemap_system.js
 ../src/framework/components/cubemap/cubemap_component.js
 ../src/framework/components/cubemap/cubemap_data.js
 ../src/framework/components/staticcubemap/staticcubemap_system.js
