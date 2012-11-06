@@ -141,6 +141,7 @@
 ../src/framework/components/script/script_system.js
 ../src/framework/components/script/script_component.js
 ../src/framework/components/script/script_data.js
+../src/framework/components/pack/pack_system.js
 ../src/framework/components/pack/pack_component.js
 ../src/framework/components/pack/pack_data.js
 ../src/framework/components/pick/pick_system.js
