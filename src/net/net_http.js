@@ -327,11 +327,14 @@ pc.extend(pc.net, function () {
             } else if (this.isBinaryContentType(contentType)) {
                 response = xhr.response;
             } else {
-                if (xhr.responseType === 'document') {
+                if (xhr.responseType === Http.ResponseType.DOCUMENT) {
                     // It's an XML response
                     response = xhr.responseXML;
                 }
-                else {
+                else if (xhr.responseType === Http.ResponseType.ARRAY_BUFFER) {
+                    logWARNING(pc.string.format('responseType: {0} being served with Content-Type: {1}', Http.ResponseType.ARRAY_BUFFER, contentType));
+                    response = xhr.response;
+                } else {
                     // It's raw data
                     response = xhr.responseText;
                 }

@@ -39,8 +39,6 @@ pc.extend(pc, function () {
          * @returns {Function} New instance of Self which inherits from Super
          */
         inherits: function (Self, Super) {
-            //var Func;
-            //var Base = Self;
             var Temp = function () {};
             var Func = function () {
                 Super.apply(this, arguments);
@@ -50,6 +48,7 @@ pc.extend(pc, function () {
             Func._super = Super.prototype;
             Temp.prototype = Super.prototype;
             Func.prototype = new Temp();
+
             return Func;
         }
     }

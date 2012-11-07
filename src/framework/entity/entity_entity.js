@@ -19,7 +19,8 @@ pc.extend(pc.fw, function () {
      */
     var Entity = function(){
         this._guid = pc.guid.create(); // Globally Unique Identifier 
-        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.  
+        this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
+        this.c = {}; // Component storage
     };
     Entity = pc.inherits(Entity, pc.scene.GraphNode);
     
@@ -111,12 +112,14 @@ pc.extend(pc.fw, function () {
         }
     };
     
-    Entity.prototype.close = function (registry) {
+    Entity.prototype.close = function () {
         var parent = this.getParent();
         var childGuids;
         
         // Remove all components
-        pc.fw.ComponentSystem.deleteComponents(this, registry);
+        for (name in this.c) {
+            this.c[name].system.removeComponent(this);
+        }
 
         // Detach from parent
         if(parent) {

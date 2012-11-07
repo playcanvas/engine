@@ -18,19 +18,8 @@ pc.extend(pc.fw, function () {
                 // add to hierarchy
                 context.root.addChild(pack['hierarchy']);
                 
-                // and update world transforms
-                // context.root.syncHierarchy();
-
                 // Initialise any systems with an initialize() method after pack is loaded
-                var system;
-                for (system in context.systems) {
-                    if (context.systems.hasOwnProperty(system)) {
-                        if (context.systems[system].initialize) {
-                            context.systems[system].initialize(pack['hierarchy']);
-                        }
-                        
-                    }
-                }
+                pc.fw.ComponentSystem.initialize(pack['hierarchy']);
                 
                 // callback
                 if (success) {

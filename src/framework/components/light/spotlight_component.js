@@ -1,52 +1,12 @@
 pc.extend(pc.fw, function () {
-    var _createGfxResources = function () {
-        // Create the graphical resources required to render a light
-        var device = pc.gfx.Device.getCurrent();
-        var library = device.getProgramLibrary();
-        var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
-        var format = new pc.gfx.VertexFormat();
-        format.begin();
-        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-        format.end();
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 42, pc.gfx.VertexBufferUsage.DYNAMIC);
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 88);
-        var inds = new Uint8Array(indexBuffer.lock());
-        // Spot cone side lines
-        inds[0] = 0;
-        inds[1] = 1;
-        inds[2] = 0;
-        inds[3] = 11;
-        inds[4] = 0;
-        inds[5] = 21;
-        inds[6] = 0;
-        inds[7] = 31;
-        // Spot cone circle - 40 segments
-        for (var i = 0; i < 40; i++) {
-            inds[8 + i * 2 + 0] = i + 1;
-            inds[8 + i * 2 + 1] = i + 2;
-        }
-        indexBuffer.unlock();
-
-        // Set the resources on the component
-        return {
-            program: program,
-            vertexBuffer: vertexBuffer,
-            indexBuffer: indexBuffer
-        };
-    };
-
     /**
-     * @name pc.fw.SpotLightComponentSystem
-     * @constructor Create a new SpotLightComponentSystem
+     * @name pc.fw.SpotLightComponent
+     * @constructor Create a new SpotLightComponent
      * @class A Light Component is used to dynamically light the scene.
      * @param {Object} context
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.fw.Component
      */
-    var SpotLightComponentSystem = function (context) {
-        this.context = context;
-        context.systems.add("spotlight", this);
-
-        this.renderable = _createGfxResources();
+    var SpotLightComponent = function (context) {
 
         // Handle changes to the 'attenuationEnd' value
         this.bind("set_attenuationEnd", this.onSetAttenuationEnd.bind(this));
@@ -65,101 +25,18 @@ pc.extend(pc.fw, function () {
         // Handle changes to the 'outerConeAngle' value
         this.bind("set_outerConeAngle", this.onSetOuterConeAngle.bind(this));
     };
+    SpotLightComponent = pc.inherits(SpotLightComponent, pc.fw.Component);
 
-    SpotLightComponentSystem = pc.inherits(SpotLightComponentSystem, pc.fw.ComponentSystem);
+    pc.extend(SpotLightComponent.prototype, {
+        onSetAttenuationEnd: function (name, oldValue, newValue) {
+            this.data.light.setAttenuationEnd(newValue);
+        },
 
-    SpotLightComponentSystem.prototype.createComponent = function (entity, data) {
-        var componentData = new pc.fw.SpotLightComponentData();
+        onSetCastShadows: function (name, oldValue, newValue) {
+            this.data.light.setCastShadows(newValue);
+        },
 
-        var light = new pc.scene.LightNode();
-        light.setType(pc.scene.LightType.SPOT);
-
-        data = data || {};
-        data.light = light;
-
-        var attribs = ['light', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd', 'innerConeAngle', 'outerConeAngle'];
-        this.initialiseComponent(entity, componentData, data, attribs);
-
-        return componentData;
-    };
-    
-    SpotLightComponentSystem.prototype.deleteComponent = function (entity) {
-        var componentData = this.getComponentData(entity);
-        entity.removeChild(componentData.light);
-        componentData.light.setEnabled(false);
-        delete componentData.light;
-
-        this.removeComponent(entity);
-    };
-
-    SpotLightComponentSystem.prototype.toolsRender = function (fn) {
-        var components = this.getComponents();
-        for (var id in components) {
-            if (components.hasOwnProperty(id)) {
-                var entity = components[id].entity;
-                var componentData = components[id].component;
-                var program = this.renderable.program;
-                var indexBuffer = this.renderable.indexBuffer;
-                var vertexBuffer = this.renderable.vertexBuffer;
-
-                var light = componentData.light;
-                var oca = Math.PI * light.getOuterConeAngle() / 180;
-                var ae = light.getAttenuationEnd();
-                var y = -ae * Math.cos(oca);
-                var r = ae * Math.sin(oca);
-
-                var positions = new Float32Array(vertexBuffer.lock());
-                positions[0] = 0;
-                positions[1] = 0;
-                positions[2] = 0;
-                var numVerts = vertexBuffer.getNumVertices();
-                for (var i = 0; i < numVerts-1; i++) {
-                    var theta = 2 * Math.PI * (i / (numVerts-2));
-                    var x = r * Math.cos(theta);
-                    var z = r * Math.sin(theta);
-                    positions[(i+1)*3+0] = x;
-                    positions[(i+1)*3+1] = y;
-                    positions[(i+1)*3+2] = z;
-                }
-                vertexBuffer.unlock();
-
-                // Render a representation of the light
-                var device = pc.gfx.Device.getCurrent();
-                device.setProgram(program);
-                device.setIndexBuffer(indexBuffer);
-                device.setVertexBuffer(vertexBuffer, 0);
-
-                transform = entity.getWorldTransform();
-                device.scope.resolve("matrix_model").setValue(transform);
-                var c = light.getColor();
-                device.scope.resolve("uColor").setValue([c[0], c[1], c[2], 1]);
-                device.draw({
-                    type: pc.gfx.PrimType.LINES,
-                    base: 0,
-                    count: indexBuffer.getNumIndices(),
-                    indexed: true
-                });
-            }
-        }
-    };
-
-    SpotLightComponentSystem.prototype.onSetAttenuationEnd = function (entity, name, oldValue, newValue) {
-        if (newValue) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setAttenuationEnd(newValue);
-        }
-    };
-
-    SpotLightComponentSystem.prototype.onSetCastShadows = function (entity, name, oldValue, newValue) {
-        if (newValue !== undefined) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setCastShadows(newValue);
-        }
-    };
-
-    SpotLightComponentSystem.prototype.onSetColor = function (entity, name, oldValue, newValue) {
-        if (newValue) {
-            var componentData = this.getComponentData(entity);
+        onSetColor: function (name, oldValue, newValue) {
             var rgb = parseInt(newValue);
             rgb = pc.math.intToBytes24(rgb);
             var color = [
@@ -167,50 +44,37 @@ pc.extend(pc.fw, function () {
                 rgb[1] / 255,
                 rgb[2] / 255
             ];
-            componentData.light.setColor(color);
-        }
-    };
+            this.data.light.setColor(color);
+        },
 
-    SpotLightComponentSystem.prototype.onSetInnerConeAngle = function (entity, name, oldValue, newValue) {
-        if (newValue !== undefined) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setInnerConeAngle(newValue);
-        }
-    };
+        onSetInnerConeAngle: function (name, oldValue, newValue) {
+            this.data.light.setInnerConeAngle(newValue);
+        },
 
-    SpotLightComponentSystem.prototype.onSetOuterConeAngle = function (entity, name, oldValue, newValue) {
-        if (newValue !== undefined) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setOuterConeAngle(newValue);
-        }
-    };
+        onSetOuterConeAngle: function (name, oldValue, newValue) {
+            this.data.light.setOuterConeAngle(newValue);
+        },
 
-    SpotLightComponentSystem.prototype.onSetEnable = function (entity, name, oldValue, newValue) {
-        if (newValue !== undefined) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setEnabled(newValue);
-        }
-    };
+        onSetEnable: function (name, oldValue, newValue) {
+            this.data.light.setEnabled(newValue);
+        },
 
-    SpotLightComponentSystem.prototype.onSetIntensity = function (entity, name, oldValue, newValue) {
-        if (newValue !== undefined) {
-            var componentData = this.getComponentData(entity);
-            componentData.light.setIntensity(newValue);
-        }
-    };
+        onSetIntensity: function (name, oldValue, newValue) {
+            this.data.light.setIntensity(newValue);
+        },
 
-    SpotLightComponentSystem.prototype.onSetLight = function (entity, name, oldValue, newValue) {
-        if (oldValue) {
-            entity.removeChild(oldValue);
-            this.context.scene.removeLight(oldValue);
+        onSetLight: function (name, oldValue, newValue) {
+            if (oldValue) {
+                this.entity.removeChild(oldValue);
+                this.system.context.scene.removeLight(oldValue);
+            }
+            if (newValue) {
+                this.entity.addChild(newValue);
+                this.system.context.scene.addLight(newValue);
+            }
         }
-        if (newValue) {
-            entity.addChild(newValue);
-            this.context.scene.addLight(newValue);
-        }
-    };
-    
+    });
     return {
-        SpotLightComponentSystem: SpotLightComponentSystem
+        SpotLightComponent: SpotLightComponent
     }; 
 }());
