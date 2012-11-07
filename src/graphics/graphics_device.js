@@ -186,6 +186,10 @@ pc.extend(pc.gfx, function () {
         this.extTextureFloat = gl.getExtension("OES_texture_float");
         this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
         this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
+        this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
+        if (!this.extTextureFilterAnisotropic) {
+            this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+        }
 
         // Create the default render target
         var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
