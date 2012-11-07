@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.81.0
+-------
+* Added support for anisotropic texture filtering.
+
+-------
 v0.80.0
 -------
 * [BREAKING] New API Components and ComponentSystems
