@@ -148,31 +148,6 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
-            // toolsRender: function () {
-            //     var id;
-            //     var entity;
-            //     var componentData;
-            //     var components = this.getComponents();
-
-            //     for (id in components) {
-            //         if (components.hasOwnProperty(id)) {
-            //             entity = components[id].entity;
-            //             componentData = components[id].component;
-
-            //             var indexBuffer = this._gfx.rectIndexBuffer;
-            //             var vertexBuffer = this._gfx.rectVertexBuffer;
-
-            //             this.renderRect(entity, componentData, vertexBuffer, indexBuffer);
-            //         }
-            //     }
-            // },
-
-            // render: function () {
-            //     if (this.debugRender) {
-            //         this.toolsRender();
-            //     }
-            // },
-
             renderRect: function (entity, data, vertexBuffer, indexBuffer) {
                 this.context.scene.enqueue("overlay", function () {
                     var positions = new Float32Array(vertexBuffer.lock());
@@ -195,13 +170,6 @@ if (typeof(Box2D) !== 'undefined') {
                     device.setProgram(this._gfx.program);
                     device.setIndexBuffer(indexBuffer);
                     device.setVertexBuffer(vertexBuffer, 0);
-
-                    // pc.math.vec3.copy(entity.getEulerAngles(), rotation);
-                    // rotation[this.xi] = 0;
-                    // rotation[this.yi] = 0;
-                    // pc.math.quat.setFromEulers(constrainedRotation, rotation[0], rotation[1], rotation[2]);
-
-                    // pc.math.mat4.compose(entity.getPosition(), constrainedRotation, scale, transform);
 
                     pc.math.mat4.compose(entity.getPosition(), entity.getRotation(), scale, transform);
 

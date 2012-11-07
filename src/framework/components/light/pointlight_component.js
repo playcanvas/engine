@@ -1,10 +1,11 @@
 pc.extend(pc.fw, function () {
     /**
-     * @name pc.fw.PointLightComponentSystem
-     * @constructor Create a new PointLightComponentSystem
-     * @class A Light Component is used to dynamically light the scene.
-     * @param {Object} context
-     * @extends pc.fw.ComponentSystem
+     * @name pc.fw.PointLightComponent
+     * @constructor Create a new PointLightComponent
+     * @class The Point Light Component attaches a Point Light node to the Entity
+     * @param {pc.fw.PointLightComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.fw.Entity} entity The Entity that this Component is attached to
+     * @extends pc.fw.Component
      */
     var PointLightComponent = function (system, entity) {
         // Handle changes to the 'attenuationEnd' value

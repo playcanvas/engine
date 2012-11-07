@@ -1,9 +1,9 @@
 pc.extend(pc.fw, function () {
     /**
-     * @name pc.fw.ModelComponentSystem
+     * @name pc.fw.ModelComponent
      * @constructor Create a new ModelComponentSystem
      * @class Allows an Entity to render a model
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.fw.Component
      */
     var ModelComponent = function ModelComponent (system, entity) {
         // Handle changes to the 'asset' value

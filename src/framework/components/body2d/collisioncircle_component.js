@@ -19,11 +19,11 @@ if (typeof(Box2D) !== 'undefined') {
 
         /**
          * @private
-         * @name pc.fw.CollisionCircleComponentSystem
-         * @constructor Create a new CollisionCircleComponentSystem
+         * @name pc.fw.CollisionCircleComponent
+         * @constructor Create a new CollisionCircleComponent
          * @class 
          * @param {Object} context
-         * @extends pc.fw.ComponentSystem
+         * @extends pc.fw.Component
          */
         var CollisionCircleComponent = function CollisionCircleComponent () {
             // Indexes for converting between 2D and 3D co-ords
@@ -102,24 +102,6 @@ if (typeof(Box2D) !== 'undefined') {
                     body.SetAwake(true);
                 }
             }
-
-            // TODO: supply the name into the set_* events so we can use these again
-            // onSetFixtureValue: function (entity, name, oldValue, newValue) {
-            //     var body = this.context.systems.body2d.get(entity, 'body');
-            //     if (body) {
-            //         // We only support a single fixture at the moment
-            //         var fixture = body.GetFixtureList();
-            //         var accessors = {
-            //             density: fixture.SetDensity,
-            //             friction: fixture.SetFriction,
-            //             restitution: fixture.SetRestitution
-            //         };
-            //         accessors[name].call(fixture, newValue);
-            //         // Update the body with changes
-            //         body.ResetMassData();
-            //     }
-            // },
-
         });
 
         return {

@@ -1,4 +1,7 @@
 pc.extend(pc.fw, function () {
+    /**
+    * @name pc.fw.AudioListenerComponent
+    */
     var AudioListenerComponent = function () {
     };
     AudioListenerComponent = pc.inherits(AudioListenerComponent, pc.fw.Component);

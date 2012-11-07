@@ -1,4 +1,9 @@
 pc.extend(pc.fw, function () {
+    /**
+    * @name pc.fw.ComponentSystem
+    * @class ComponentSystems contain the logic and functionality to update all Components of a particular type
+    * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application
+    */
     var ComponentSystem = function (context) {
         this.context = context;
         this.dataStore = {};

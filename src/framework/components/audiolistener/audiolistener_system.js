@@ -1,4 +1,7 @@
 pc.extend(pc.fw, function () {
+    /**
+    * @name pc.fw.AudioListenerComponentSystem
+    */
     var AudioListenerComponentSystem = function (context, manager) {
         this.id = "audiolistener";
         context.systems.add(this.id, this);

@@ -1,4 +1,8 @@
 pc.extend(pc.fw, function () {
+    /**
+    * @name pc.fw.PrimitiveComponent
+    * @extends pc.fw.Component
+    */    
     var PrimitiveComponent = function PrimitiveComponent(entity) {
         // Handle changes to the 'castShadows' value
         this.bind("set_castShadows", this.onSetCastShadows.bind(this));
@@ -16,7 +20,7 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @private
-         * @name pc.fw.PrimitiveComponentSystem#onSetType
+         * @name pc.fw.PrimitiveComponent#onSetType
          * @description Handle changes to the 'type' variable
          */
         onSetType: function (name, oldValue, newValue) {
@@ -94,7 +98,7 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @private
-         * @name pc.fw.PrimitiveComponentSystem#onSetColor
+         * @name pc.fw.PrimitiveComponent#onSetColor
          * @description Handle changes to the 'color' variable
          */
         onSetColor: function (name, oldValue, newValue) {

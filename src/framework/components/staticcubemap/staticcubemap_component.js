@@ -1,13 +1,9 @@
 pc.extend(pc.fw, function () {
-
-    
-    
     /**
-     * @name pc.fw.StaticCubeMapComponentSystem
-     * @constructor Create a new StaticCubeMapComponentSystem
+     * @name pc.fw.StaticCubeMapComponent
+     * @constructor Create a new StaticCubeMapComponent
      * @class Creates a static cubemap from assigned images
-     * @param {pc.fw.ApplicationContext} context
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.fw.Component
      */
     var StaticCubeMapComponent = function StaticCubeMapComponent () {
         this.bind("set", this.onSet.bind(this));
@@ -27,7 +23,6 @@ pc.extend(pc.fw, function () {
                 };
                 
                 // clear existing cubemap
-                //this.set(entity, "cubemap", null);
                 this.cubemap = null;
 
                 if(guid) {
@@ -42,7 +37,6 @@ pc.extend(pc.fw, function () {
                                 return asset.getFileUrl(); 
                             });
                             var cubemap = _createCubemap(this.entity, this.system.context, urls);
-                            //this.set(entity, "cubemap", cubemap);
                             this.cubemap = cubemap;
                         }
                     }.bind(this), function (errors) {

@@ -1,9 +1,9 @@
 pc.extend(pc.fw, function () {
     /**
      * @name pc.fw.AnimationComponentSystem
-     * @constructor Create a new AnimationComponentSystem
-     * @class Allows an Entity to render a model
-     * @param {Object} context
+     * @constructor Create an AnimationComponentSystem
+     * @class The AnimationComponentSystem is manages creating and deleting AnimationComponents
+     * @param {pc.fw.ApplicationContext} context The ApplicationContext for the current application 
      * @extends pc.fw.ComponentSystem
      */
     var AnimationComponentSystem = function AnimationComponentSystem (context) {
@@ -95,32 +95,6 @@ pc.extend(pc.fw, function () {
         this.bind('update', this.onUpdate.bind(this));
 
         pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
-        // // Handle changes to the 'animations' value
-        // this.bind('set_animations', this.onSetAnimations.bind(this));
-        // // Handle changes to the 'assets' value
-        // this.bind('set_assets', this.onSetAssets.bind(this));
-        // // Handle changes to the 'loop' value
-        // this.bind('set_loop', this.onSetLoop.bind(this));
-        
-        // // Define accessor functions for animation properties
-        // this._currentTime = function (componentData, currentTime) {
-        //     if (pc.isDefined(currentTime)) {
-        //         componentData.skeleton.setCurrentTime(currentTime);
-        //         componentData.skeleton.addTime(0); // update
-        //         componentData.skeleton.updateGraph();
-        //     } else {
-        //         return componentData.skeleton.getCurrentTime();
-        //     }
-        // }
-        
-        // this._duration = function (componentData, duration) {
-        //     if (pc.isDefined(duration)) {
-        //         throw Error("'duration' is read only");
-        //     } else {
-        //         return componentData.animations[componentData.currAnim].getDuration();
-        //     }
-            
-        // }
     };
     AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.fw.ComponentSystem);
     

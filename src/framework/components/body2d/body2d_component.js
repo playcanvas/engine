@@ -22,11 +22,11 @@ if (typeof(Box2D) !== 'undefined') {
 
         /**
          * @private
-         * @name pc.fw.Body2dComponentSystem
-         * @constructor Create a new Body2dComponentSystem
+         * @name pc.fw.Body2dComponent
+         * @constructor Create a new Body2dComponent
          * @class 
          * @param {Object} context
-         * @extends pc.fw.ComponentSystem
+         * @extends pc.fw.Component
          */
         var Body2dComponent = function Body2dComponent (context) {
             // Indexes for converting between 2D and 3D co-ords
@@ -39,31 +39,6 @@ if (typeof(Box2D) !== 'undefined') {
         Body2dComponent = pc.inherits(Body2dComponent, pc.fw.Component);
         
         pc.extend(Body2dComponent.prototype, {
-            // addCollision: function (collision) {
-            //     // Create body from fixturedef and bodydef
-            //     this.body = this.system.addBody(this.bodyDef, collision.fixtureDef);
-            // },
-
-            // addBody: function (bodyDef, fixtureDef) {
-            //     var body = this.b2World.CreateBody(bodyDef);
-            //     body.CreateFixture(fixtureDef);
-            //     return body;            
-            // },
-
-            // removeBody: function(body) {
-            //     this.b2World.DestroyBody(body)
-            // },
-
-            /**
-            * @private
-            * @name pc.fw.Body2dComponentSystem#setGravity
-            * @description Set the gravity vector for the 2D physics world
-            */
-            // setGravity: function (x, y) {
-            //     pos2d.Set(x,y);
-            //     this.b2World.SetGravity(pos2d);
-            // },
-
             /**
             * @private
             * @name pc.fw.Body2dComponentSystem#applyForce
@@ -114,51 +89,6 @@ if (typeof(Box2D) !== 'undefined') {
                     });
                 }
             },
-
-            /**
-            * @private
-            * @name pc.fw.Body2dComponentSystem#raycast
-            * @description Raycast the world for entities that intersect with the ray. Your callback controls whether you get the closest entity, 
-            * any entity or n-entities. Entities that contain the starting point are ignored
-            * @param {Function} callback Callback with signature `callback(entity, point, normal, fraction)`. The callback should return the 
-            * the new length of the ray as a fraction of original length. So, returning 0, terminates; returning 1, continues with original ray,
-            * returning current fraction will find the closest entity.
-            */
-            // raycast: function (callback, start, end) {
-            //     var s = new b2Vec2();
-            //     var e = new b2Vec2();
-                
-            //     this.to2d(start, s);
-            //     this.to2d(end, e);
-
-            //     pc.math.vec3.copy(start, this._rayStart);
-            //     pc.math.vec3.copy(end, this._rayEnd);
-
-            //     this.b2World.RayCast(callback, s, e);
-            // },
-
-            /**
-            * @private
-            * @name pc.fw.Body2dComponentSystem#raycastFirst
-            * @description Raycast into the world (in 2D) and return the first Entity hit
-            * @param {pc.math.vec3} start The ray start position
-            * @param {pc.math.vec3} end The ray end position
-            * @param {pc.fw.Entity} ignore An entity to ignore
-            * @returns {pc.fw.Entity} The first Entity with a 2D collision shape hit by the ray.
-            */
-            // raycastFirst: function (start, end, ignore) {
-            //     var result;
-            //     var fraction = 1;
-            //     this.raycast(function (fixture, point, normal, f) {
-            //         var e = fixture.GetUserData();
-            //         if (e !== ignore && f < fraction) {
-            //             result = e;
-            //             fraction = f;
-            //         }
-            //         return 1;
-            //     }, start, end);
-            //     return result;
-            // },
 
             /**
             * @private

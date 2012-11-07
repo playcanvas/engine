@@ -1,5 +1,13 @@
 pc.extend(pc.fw, function () {
-    var AnimationComponent = function () {
+    /**
+    * @name pc.fw.AnimationComponent
+    * @constructor Create a new AnimationComponent
+    * @class The Animation Component allows playback of animation files on models
+    * @param {pc.fw.AnimationComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.fw.Entity} entity The Entity that this Component is attached to
+    * @extends pc.fw.Component
+    */
+    var AnimationComponent = function (system, entity) {
         // Handle changes to the 'animations' value
         this.bind('set_animations', this.onSetAnimations.bind(this));
         // Handle changes to the 'assets' value
@@ -12,11 +20,10 @@ pc.extend(pc.fw, function () {
     pc.extend(AnimationComponent.prototype, {
         /**
          * @function 
-         * @name pc.fw.AnimationComponentSystem#play
-         * @description Sets the currently playing animation on the specified entity.
-         * @param {pc.fw.Entity} entity An Entity with a camera Component.
-         * @param {String} name The name of the animation asset to set.
-         * @param {Number} blendTime (Optional) The time in seconds to blend from the current
+         * @name pc.fw.AnimationComponent#play
+         * @description Start playing an animation
+         * @param {String} name The name of the animation asset to begin playing.
+         * @param {Number} [blendTime] The time in seconds to blend from the current 
          * animation state to the start of the animation being set.
          */
         play: function (name, blendTime) {
@@ -51,6 +58,13 @@ pc.extend(pc.fw, function () {
             data.playing = true;
         },
 
+        /**
+        * @function
+        * @name pc.fw.AnimationComponent#getAnimation
+        * @description Return an animation
+        * @param The name of the animation asset
+        * @returns {pc.anim.Animation} An Animation
+        */
         getAnimation: function (name) {
             return this.data.animations[name];
         },

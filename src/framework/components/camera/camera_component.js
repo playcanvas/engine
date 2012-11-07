@@ -1,4 +1,8 @@
 pc.extend(pc.fw, function () {
+    /**
+    * @name pc.fw.CameraComponent
+    * @extends pc.fw.Component
+    */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
         this.bind("set_camera", this.onSetCamera.bind(this));

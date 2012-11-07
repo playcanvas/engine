@@ -15,14 +15,3 @@ pc.extend(pc.fw, function () {
     };
     
 }());
-// editor.link.addComponentType("script");
-
-// editor.link.expose({
-//     system: "script",
-//     variable: "urls",
-//     name: "urls",
-//     displayName: "URLs",
-//     description: "Attach scripts to this Entity",
-//     type: "script_urls",
-//     defaultValue: []
-// });

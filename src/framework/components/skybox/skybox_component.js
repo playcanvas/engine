@@ -4,7 +4,7 @@ pc.extend(pc.fw, function () {
      * @constructor Create a new SkyboxComponentS
      * @class Renders a cube skybox
      * @param {pc.fw.ApplicationContext} context
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.fw.Component
      */
     var SkyboxComponent = function SkyboxComponent () {
         this.bind("set", this.onSet.bind(this));

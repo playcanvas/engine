@@ -1,4 +1,8 @@
 pc.extend(pc.fw, function () {
+    /**
+    * @name pc.fw.DirectionalLightComponent
+    * @extends pc.fw.Component
+    */
     var DirectionalLightComponent = function DirectionalLightComponent(entity) {
         // Handle changes to the 'castShadows' value
         this.bind("set_castShadows", this.onSetCastShadows.bind(this));

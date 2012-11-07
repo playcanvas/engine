@@ -1,5 +1,5 @@
 pc.extend(pc.fw, function () {
-/**
+    /**
      * @name pc.fw.CameraComponentSystem
      * @class A Camera Component is used to render the scene.
      * The CameraComponentSystem allows access to all individual Camera Components. 

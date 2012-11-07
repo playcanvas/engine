@@ -149,7 +149,6 @@
 ../src/framework/components/pick/pick_system.js
 ../src/framework/components/pick/pick_component.js
 ../src/framework/components/pick/pick_data.js
-../src/framework/components/header/header_component.js
 ../src/framework/components/audiosource/audiosource_system.js
 ../src/framework/components/audiosource/audiosource_component.js
 ../src/framework/components/audiosource/audiosource_data.js

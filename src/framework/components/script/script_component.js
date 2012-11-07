@@ -1,5 +1,13 @@
 pc.extend(pc.fw, function () {
-    var ScriptComponent = function ScriptComponent(entity) {
+    /**
+    * @name pc.fw.ScriptComponent
+    * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own javascript files
+    * to be executed with access to the Entity.
+    * @param {pc.fw.ScriptComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
+    * @extends pc.fw.Component
+    */
+    var ScriptComponent = function ScriptComponent(system, entity) {
         this.bind("set_urls", this.onSetUrls.bind(this));
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.fw.Component);
@@ -30,38 +38,6 @@ pc.extend(pc.fw, function () {
                 
             }
         },
-                
-        /**
-         * @function
-         * @name pc.fw.ScriptComponentSystem#broadcast
-         * @description Send a message to all Script Objects with a specific name.
-         * Sending a message is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present
-         * @param {String} name The name of the script to send the message to
-         * @param {String} functionName The name of the functio nto call on the Script Object
-         * @example
-         * // Call doDamage(10) on all 'enemy' scripts
-         * entityEntity.script.broadcast('enemy', 'doDamage', 10);
-         */
-        // broadcast: function (name, functionName) {
-        //     var args = pc.makeArray(arguments).slice(1);
-            
-        //     var id, entity, componentData, fn;
-        //     var dataStore = this.system.store;
-        //     var results = [];
-            
-        //     for (id in dataStore) {
-        //         if (dataStore.hasOwnProperty(id)) {
-        //             entity = dataStore[id].entity;
-        //             data = dataStore[id].data;
-        //             if (data.instances[name]) {
-        //                 fn = data.instances[name].instance[functionName];
-        //                 if(fn) {
-        //                     fn.apply(data.instances[name].instance, args);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // },
 
         onSetUrls: function(name, oldValue, newValue) {
             var urls = newValue;

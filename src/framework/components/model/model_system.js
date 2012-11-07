@@ -51,10 +51,7 @@ pc.extend(pc.fw, function () {
         },
 
         removeComponent: function (entity, data) {
-            // TODO: I'm sure this will fail
             entity.model.asset = null;
-            // this.set(entity, 'asset', null);
-            // this.removeComponent(entity);
         }
     });
 

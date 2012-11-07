@@ -1,12 +1,12 @@
 pc.extend(pc.fw, function () {
     /**
-     * @name pc.fw.AudioSourceComponentSystem
-     * @constructor AudioSourceComponentSystem controls playback of an audio sample 
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext
-     * @param {pc.audio.AudioContext} audioContext AudioContext object used to create sources and filters
-     * @extends pc.fw.ComponentSystem
+     * @name pc.fw.AudioSourceComponent
+     * @constructor The AudioSource Component controls playback of an audio sample
+     * @param {pc.fw.AudioSourceComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.fw.Entity} entity The entity that the Component is attached to
+     * @extends pc.fw.Component
      */
-    var AudioSourceComponent = function () {
+    var AudioSourceComponent = function (system, entity) {
         this.bind("set_assets", this.onSetAssets.bind(this));
         this.bind("set_loop", this.onSetLoop.bind(this));
         this.bind("set_volume", this.onSetVolume.bind(this));

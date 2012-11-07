@@ -4,7 +4,7 @@ pc.extend(pc.fw, function () {
      * @constructor Create a new PackComponent
      * @class A Pack Component indicates the root of an Entity hierarchy that can be edited in the PlayCanvas Designer
      * @param {Object} context
-     * @extends pc.fw.PackComponent
+     * @extends pc.fw.Component
      */
     var PackComponent = function PackComponent() {
         

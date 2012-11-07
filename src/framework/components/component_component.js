@@ -1,4 +1,12 @@
 pc.extend(pc.fw, function () {
+    /**
+    * @name pc.fw.Component
+    * @constructor Base constructor for a Component
+    * @class Components are used to attach functionality onto Entities. Components
+    * can receive update events each frame, and expose properties to the tools.
+    * @param {pc.fw.ComponentSystem} system The ComponentSystem used to create this Component
+    * @param {pc.fw.Entity} entity The Entity that this Component is attached to
+    */
     var Component = function (system, entity) {
         this.system = system;
         this.entity = entity;
@@ -45,35 +53,7 @@ pc.extend(pc.fw, function () {
                     });
                 };
             }.bind(this));
-        },
-
-        // get: function (name) {
-        //     var componentData = this.data;
-        //     if(componentData) {
-        //         // Check for accessor first (an accessor is a function with the same name but a leading underscore)
-        //         if(this["_" + name] && typeof(this["_" + name]) === "function") {
-        //             // found an accessor on the Component
-        //             return this["_" + name](componentData);
-        //         } else if(componentData[name] !== undefined) {
-        //             return componentData[name];
-        //         } 
-        //     }        
-        // },
-
-        // set: function (name, value) {
-        //     var oldValue;
-        //     var componentData = this.data
-        //     if(componentData) {
-        //         oldValue = componentData[name];
-        //         // Check for an accessor first, (an accessor is a function with the same name but a leading underscore)
-        //         if(this["_" + name] && typeof(this["_" + name]) === "function") {
-        //             this["_" + name](componentData, value);
-        //         } else if(componentData[name] !== undefined) {
-        //             componentData[name] = value;
-        //         }
-        //         this.fire('set', name, oldValue, value)
-        //     }        
-        // }
+        }
     };
 
     return {

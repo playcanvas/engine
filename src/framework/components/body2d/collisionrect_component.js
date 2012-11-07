@@ -18,7 +18,7 @@ if (typeof(Box2D) !== 'undefined') {
         var pos2d = new b2Vec2();
         /**
          * @private
-         * @name pc.fw.CollisionRectComponentSystem
+         * @name pc.fw.CollisionRectComponent
          * @constructor Create a new CollisionRectComponent
          * @class 
          * @extends pc.fw.Component
@@ -106,52 +106,7 @@ if (typeof(Box2D) !== 'undefined') {
 
                     body.SetAwake(true);
                 }
-            },
-
-            // TODO: Perhaps pass the name of the variable into the set_* events?
-            // onSetFixtureValue: function (oldValue, newValue) {
-            //     if (!this.entity.body2d) {
-            //         return;
-            //     }
-
-            //     var body = this.entity.body2d.body;
-            //     if (body) {
-            //         // We only support a single fixture at the moment
-            //         var fixture = body.GetFixtureList();
-            //         var accessors = {
-            //             density: fixture.SetDensity,
-            //             friction: fixture.SetFriction,
-            //             restitution: fixture.SetRestitution
-            //         };
-            //         accessors[name].call(fixture, newValue);
-            //         // Update the body with changes
-            //         body.ResetMassData();
-            //     }
-            // },
-
-            // onSetShapeValue: function (oldValue, newValue) {
-            //     if (!this.entity.body2d) {
-            //         return;
-            //     }
-                
-            //     var body = this.entity.body2d.body;
-            //     if (body) {
-            //         // We only support a single fixture at the moment
-            //         var fixture = body.GetFixtureList();
-            //         var shape = fixture.GetShape();
-                    
-            //         var b = {
-            //             x: this.x,
-            //             y: this.y
-            //         };
-
-            //         b[name] = newValue;
-                    
-            //         shape.SetAsBox(b.x, b.y);
-
-            //         body.SetAwake(true);
-            //     }
-            // }
+            }
         });
 
         return {
