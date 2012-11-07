@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.81.1
+-------
+* [FIX] Fog GLSL fixed.
+
+-------
 v0.81.0
 -------
 * Added support for anisotropic texture filtering.
