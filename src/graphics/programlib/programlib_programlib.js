@@ -59,6 +59,16 @@ pc.gfx.programlib = {
                 code += 'precision mediump float;\n\n';
                 break;
 
+/*
+            case 'fs_depth_decl':
+                if (!pc.gfx.Device.getCurrent().extDepthTexture) {
+                    code += 'uniform float camera_near;\n';
+                    code += 'uniform float camera_far;\n';
+                    code += 'varying vec4 vPositionE;\n\n';
+                }
+                break;
+*/
+
             case 'fs_depth_write':
                 if (pc.gfx.Device.getCurrent().extDepthTexture) {
                     code += '    gl_FragData[0] = vec4(1.0);\n';
@@ -67,6 +77,16 @@ pc.gfx.programlib = {
                     // and a bit-mask of    vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0)
                     code += '    vec4 packedDepth = fract((gl_FragCoord.z * vec4(1.67772e+07, 65536.0, 256.0, 1.0)));\n';
                     code += '    gl_FragData[0] = (packedDepth - (packedDepth.xxyz * vec4(0.0, 0.00390625, 0.00390625, 0.00390625)));\n'
+                    /*
+                    code += '    float linearDepth = 1.0 / (camera_far - camera_near);\n';
+                    code += '    float r = length(vPositionE) * linearDepth;\n';
+                    code += '    float g = fract(r * 255.0);\n';
+                    code += '    float b = fract(g * 255.0);\n';
+                    code += '    float a = fract(b * 255.0);\n';
+                    code += '    vec4 packedDepth = vec4(r, g, b, a);\n';
+                    code += '    const vec4 bias = vec4(1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0, 0.0);\n';
+                    code += '    gl_FragData[0] =  packedDepth - (packedDepth.yzww * bias);\n';
+                    */
                 }
                 break;
 

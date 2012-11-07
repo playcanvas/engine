@@ -353,6 +353,11 @@ pc.extend(pc.gfx, function () {
         numUniforms -= 1;     // Eye position
         numUniforms -= 4 * 4; // Up to 4 texture transforms
         this.boneLimit = Math.floor(numUniforms / 4);
+        // HACK: If the number of bones is above ~120-124, performance on the Mac Mini
+        // degrades drastically
+        if (this.boneLimit > 110) {
+            this.boneLimit = 110;
+        }
 
         pc.extend(this, pc.events);
         
