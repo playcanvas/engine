@@ -7,4 +7,4 @@ pc.extend(pc.fw, function () {
         AudioZoneComponentData: AudioZoneComponentData
     };
 }());
-editor.link.addComponentType("audiozone");
+//editor.link.addComponentType("audiozone");

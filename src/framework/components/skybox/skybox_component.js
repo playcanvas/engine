@@ -1,23 +1,91 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc.fw, function () {    
+    /**
+     * @name pc.fw.SkyboxComponent
+     * @constructor Create a new SkyboxComponentS
+     * @class Renders a cube skybox
+     * @param {pc.fw.ApplicationContext} context
+     * @extends pc.fw.Component
+     */
+    var SkyboxComponent = function SkyboxComponent () {
+        this.bind("set", this.onSet.bind(this));
+    }
+    SkyboxComponent = pc.inherits(SkyboxComponent, pc.fw.Component);
 
-    var _cubeMapNames = [
-        'posx',
-        'negx',
-        'posy',
-        'negy',
-        'posz',
-        'negz'
-    ];
+    pc.extend(SkyboxComponent.prototype, {
+        onSet: function (name, oldValue, newValue) {
+            function _loadTextureAsset(name, guid) {
+                if(!guid)
+                    return;
+
+                var index = CUBE_MAP_NAMES.indexOf(name);
+                var assets = this.entity.skybox.assets;
+                var options = {
+                    batch: this.entity.getRequestBatch()
+                };
+                
+                // clear existing skybox
+                this.data.skybox = null;
+                
+                if(guid) {
+                    this.system.context.loader.request(new pc.resources.AssetRequest(guid), function (resources) {
+                        assets[index] = resources[guid];
+                        this.data.assets = assets;
+                        
+                        // Once all assets are loaded create the skybox
+                        if(assets[0] && assets[1] && assets[2] 
+                        && assets[3] && assets[4] && assets[5]) {
+                            var urls = assets.map(function (asset) { 
+                                return asset.getFileUrl();
+                            });
+                            this.data.skybox = _createSkybox(this.entity, this.system.context, urls);
+                        }
+
+                    }.bind(this), function (errors) {
+                        
+                    }, function (progress) {
+                        
+                    }, options);
+                } else {
+                    delete assets[index];
+                }
+            };
+            
+            var functions = {
+                "posx": function (entity, name, oldValue, newValue) { 
+                        _loadTextureAsset.call(this, name, newValue) 
+                    },
+                "negx": function (entity, name, oldValue, newValue) { 
+                        _loadTextureAsset.call(this, name, newValue) 
+                    },
+                "posy": function (entity, name, oldValue, newValue) { 
+                        _loadTextureAsset.call(this, name, newValue) 
+                    },
+                "negy": function (entity, name, oldValue, newValue) { 
+                        _loadTextureAsset.call(this, name, newValue) 
+                    },
+                "posz": function (entity, name, oldValue, newValue) { 
+                        _loadTextureAsset.call(this, name, newValue) 
+                    },
+                "negz": function (entity, name, oldValue, newValue) { 
+                        _loadTextureAsset.call(this, name, newValue) 
+                    }
+            }
+
+            if (functions[name]) {
+                functions[name].call(this, this.entity, name, oldValue, newValue);
+            }
+        }    
+    });
 
     // Private    
     var _createSkybox = function (entity, context, urls) {
         var library = pc.gfx.Device.getCurrent().getProgramLibrary();
         var program = library.getProgram('skybox');
 
-		var texture = new pc.gfx.TextureCube();
+        var texture = new pc.gfx.TextureCube();
         texture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
         texture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
-		
+        
         var skyMat = new pc.scene.Material();
         skyMat.setState({
             cull: false,
@@ -26,22 +94,22 @@ pc.extend(pc.fw, function () {
         skyMat.setProgram(program);
         skyMat.setParameter("texture_cubeMap", texture);
 
-		var requests = urls.map(function (url) {
-			return new pc.resources.ImageRequest(url);
-		});
-		var options = {
-			batch: entity.getRequestBatch()
-		};
-		context.loader.request(requests, function (resources) {
-			var images = urls.map(function (url) {
-				return resources[url];
-			});
-			texture.setSource(images);
-		}, function (errors) {
-			
-		}, function (progress) {
-			
-		}, options);
+        var requests = urls.map(function (url) {
+            return new pc.resources.ImageRequest(url);
+        });
+        var options = {
+            batch: entity.getRequestBatch()
+        };
+        context.loader.request(requests, function (resources) {
+            var images = urls.map(function (url) {
+                return resources[url];
+            });
+            texture.setSource(images);
+        }, function (errors) {
+            
+        }, function (progress) {
+            
+        }, options);
 
         var geom = pc.scene.procedural.createBox({material: skyMat, halfExtents: [1, 1, 1]});
         
@@ -50,130 +118,18 @@ pc.extend(pc.fw, function () {
         
         return skybox;
     };
-    
-    function _onSet(entity, name, oldValue, newValue) {
-        function _loadTextureAsset(name, guid) {
-            if(!guid)
-                return;
 
-            var index = _cubeMapNames.indexOf(name);
-            var assets = this.get(entity, "assets");
-            var options = {
-            	batch: entity.getRequestBatch()
-            };
-            // clear existing skybox
-            this.set(entity, "skybox", null);
-
-            if(guid) {
-            	this.context.loader.request(new pc.resources.AssetRequest(guid), function (resources) {
-                	assets[index] = resources[guid];
-                	this.set(entity, "assets", assets);
-                    if(assets[0] && assets[1] && assets[2] 
-                    && assets[3] && assets[4] && assets[5]) {
-                        var urls = assets.map(function (asset) { 
-                            return asset.getFileUrl();
-                        });
-                        var skybox = _createSkybox(entity, this.context, urls);
-                        this.set(entity, "skybox", skybox);
-                    }
-                }.bind(this), function (errors) {
-                	
-                }, function (progress) {
-                	
-                }, options);
-            } else {
-                delete assets[index];
-            }
-        };
-        
-        var functions = {
-            "posx": function (entity, name, oldValue, newValue) { 
-                    _loadTextureAsset.call(this, name, newValue) 
-                },
-            "negx": function (entity, name, oldValue, newValue) { 
-                    _loadTextureAsset.call(this, name, newValue) 
-                },
-            "posy": function (entity, name, oldValue, newValue) { 
-                    _loadTextureAsset.call(this, name, newValue) 
-                },
-            "negy": function (entity, name, oldValue, newValue) { 
-                    _loadTextureAsset.call(this, name, newValue) 
-                },
-            "posz": function (entity, name, oldValue, newValue) { 
-                    _loadTextureAsset.call(this, name, newValue) 
-                },
-            "negz": function (entity, name, oldValue, newValue) { 
-                    _loadTextureAsset.call(this, name, newValue) 
-                }
-        }
-
-        if (functions[name]) {
-            functions[name].call(this, entity, name, oldValue, newValue);
-        }
-    }
-    
-    /**
-     * @name pc.fw.SkyboxComponentSystem
-     * @constructor Create a new SkyboxComponentSystem
-     * @class Renders a cube skybox
-     * @param {pc.fw.ApplicationContext} context
-     * @extends pc.fw.ComponentSystem
-     */
-    var SkyboxComponentSystem = function SkyboxComponentSystem (context) {
-        context.systems.add("skybox", this);
-
-        this.bind("set", _onSet.bind(this));
-    }
-    SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);
-
-    SkyboxComponentSystem.prototype.createComponent = function (entity, data) {
-        var componentData = new pc.fw.SkyboxComponentData();
-
-        this.initialiseComponent(entity, componentData, data, _cubeMapNames);
-
-        return componentData;
-    };
-
-    SkyboxComponentSystem.prototype.deleteComponent = function (entity) {
-        var component = this.getComponentData(entity);
-        delete component.skybox;
-        this.removeComponent(entity);
-    };
-
-    SkyboxComponentSystem.prototype.update = function (dt) {
-        var components = this.getComponents();
-
-        for (var id in components) {
-            if (components.hasOwnProperty(id)) {
-                var entity = components[id].entity;
-                var componentData = components[id].component;
-
-                if (componentData.skybox) {
-                    this.context.scene.enqueue('first', (function (context, skybox) {
-                            return function () {
-                                // Create a transform that will scale the skybox to always sit
-                                // in between the near and far clip planes
-                                var camSys = context.systems.camera;
-                                var currentCamera = camSys.getCurrent();
-                                var near = camSys.get(currentCamera, 'nearClip');
-                                var far = camSys.get(currentCamera, 'farClip');
-                                var average = (near + far) * 0.5;
-
-                                // Set the scale - easy since the matrix is identity
-                                var wtm = skybox.getWorldTransform();
-                                wtm[0] = average;
-                                wtm[5] = average;
-                                wtm[10] = average;
-                                skybox.dispatch();
-                            }
-                        })(this.context, componentData.skybox));
-                }
-            }
-        }
-    };
+    var CUBE_MAP_NAMES = [
+        'posx',
+        'negx',
+        'posy',
+        'negy',
+        'posz',
+        'negz'
+    ];
 
     return {
-        SkyboxComponentSystem: SkyboxComponentSystem
+        SkyboxComponent: SkyboxComponent
     }
 }());
 

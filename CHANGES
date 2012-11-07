@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.80.0
+-------
+* [BREAKING] New API Components and ComponentSystems
+* [BREAKING] Removed deprecated 'header' Component
+* [BREAKING] Removed all render() methods from Component systems and scripts
+* Attach pc.fw.Component for each system that is attached to an Entity
+* Generate getter/setter properties on Components for properties that are defined in the Component schema
+* Updated all existing Component Systems to work with new system
+* Components and scripts updates are driven by events now. Only events that are registered will be called
+* Added postUpdate() event called after all update() events
+
+-------
 v0.79.3
 -------
 * [FIX] Spotlighting now correctly normalizes the spot direction after it is passed to the fragment shader.

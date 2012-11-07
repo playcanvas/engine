@@ -93,12 +93,12 @@ pc.extend(pc.resources, function () {
         entity.setRequestBatch(options.batch);
 
         // Create Components in order
-        var systems = this._registry.getComponentSystemOrder();
+        var systems = this._registry.list();
         var i, len = systems.length;
         for (i = 0; i < len; i++) {
-            var component = data.components[systems[i]];
-            if (component) {
-                this._registry[systems[i]].createComponent(entity, component);
+            var componentData = data.components[systems[i].id];
+            if (componentData) {
+                this._registry[systems[i].id].addComponent(entity, componentData);    
             }
         }
 

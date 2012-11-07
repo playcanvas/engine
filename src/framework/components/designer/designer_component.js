@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
     DesignerComponentSystem.prototype.createComponent = function (entity, data) {
         var componentData = new pc.fw.DesignerComponentData();
 
-        this.initialiseComponent(entity, componentData, data, ['fillWindow', 'width', 'height']);
+        this.initializeComponent(entity, componentData, data, ['fillWindow', 'width', 'height']);
 
         return componentData;
     }

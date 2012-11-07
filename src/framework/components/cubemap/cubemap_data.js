@@ -12,4 +12,3 @@ pc.extend(pc.fw, function () {
         CubeMapComponentData: CubeMapComponentData
     };
 }());
-editor.link.addComponentType("cubemap");

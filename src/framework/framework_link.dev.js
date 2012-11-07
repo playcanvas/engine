@@ -25,24 +25,20 @@ pc.extend(editor, function () {
      * Expose a property of an object to the editor. This property will appear in the attribute editor control
      * @param {Object} details
      */
-    LinkInterface.prototype.expose = function (details) {    
-        if(!details.system) {
-            throw new Error("Missing option 'system'");    
-        }
-        
-        if(!details.variable) {
-            throw new Error("Missing option 'variable'");
+    LinkInterface.prototype.expose = function (system, details) {    
+        if(!details.name) {
+            throw new Error("Missing option 'name'");
         }
         
         // Add default values
         details.options = details.options || {};        
 
 
-        if (!this.exposed[details.system][details.variable]) {
-            this.exposed[details.system][details.variable] = {};
+        if (!this.exposed[system][details.name]) {
+            this.exposed[system][details.name] = {};
         }
         
-        this.exposed[details.system][details.variable] = details;
+        this.exposed[system][details.name] = details;
     };
     
     /**

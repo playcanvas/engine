@@ -41,7 +41,7 @@ test("constructor.name works for Base and Derived", function () {
     equal(d.constructor.name, "Derived");
 })
 
-test("constructor not called during initialisation", function () {
+test("constructor not called during initialisation", 0, function () {
     var TestBase = function () {
         ok(false);
     };
