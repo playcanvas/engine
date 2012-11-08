@@ -193,6 +193,9 @@ pc.extend(pc.scene, function () {
         this._width = width;
         this._height = height;
         var pickBuffer = new pc.gfx.FrameBuffer(this._width, this._height, true);
+        var pickBufferTexture = pickBuffer.getTexture();
+        pickBufferTexture.setFilterMode(pc.gfx.TextureFilter.NEAREST, pc.gfx.TextureFilter.NEAREST);
+        pickBufferTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
         this._pickBufferTarget = new pc.gfx.RenderTarget(pickBuffer);
     };
 
