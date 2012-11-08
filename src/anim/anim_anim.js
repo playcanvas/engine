@@ -1,5 +1,5 @@
 /**
- * @namespace Namespace for functionality related to keyframed skeletal animation.
+ * @namespace Low-level Animation API
  * @name pc.anim
  */
 pc.anim = {};

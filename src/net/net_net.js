@@ -1,6 +1,6 @@
 /**
  * @name pc.net
- * @namespace Sending and receiving data over the network
+ * @namespace HTTP, WebSockets API
  */
 pc.net = function () {
     return {};

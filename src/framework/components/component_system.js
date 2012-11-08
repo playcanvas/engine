@@ -1,7 +1,7 @@
 pc.extend(pc.fw, function () {
     /**
     * @name pc.fw.ComponentSystem
-    * @class ComponentSystems contain the logic and functionality to update all Components of a particular type
+    * @class Component Systems contain the logic and functionality to update all Components of a particular type
     * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application
     */
     var ComponentSystem = function (context) {
@@ -46,16 +46,30 @@ pc.extend(pc.fw, function () {
     // Instance methods
     ComponentSystem.prototype = {
         /**
+        * @field
+        * @type Array
         * @name pc.fw.ComponentSystem#store
-        * @description The store where all pc.fw.ComponentData objects are kept
+        * @description The store where all {@link pc.fw.ComponentData} objects are kept
         */
         get store() {
             return this.dataStore;
         },
 
         /**
+        * @function
         * @name pc.fw.ComponentSystem#addComponent
-        * @description Create new pc.fw.Component and pc.fw.ComponentData instances and attach them to the entity
+        * @description Create new {@link pc.fw.Component} and {@link pc.fw.ComponentData} instances and attach them to the entity
+        * @param {pc.fw.Entity} entity The Entity to attach this component to
+        * @param {Object} data The source data with which to create the compoent
+        * @returns {pc.fw.Component} Returns a component of type defined by the component system
+        * @example 
+        *   var data = {
+        *       type: 'Box',
+        *       color: '0xff0000'
+        *   };
+        *   var entity = new pc.fw.Entity();
+        *   context.systems.primitive.addComponent(entity, data);
+        *   // entity.primitive now set to a PrimitiveComponent
         */
         addComponent: function (entity, data) {
             var component = new this.ComponentType(this, entity);
@@ -77,8 +91,13 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @function
         * @name pc.fw.ComponentSystem#removeComponent
-        * @description Remove the pc.fwComponent from the entity and delete the associated pc.fw.ComponentData
+        * @description Remove the {@link pc.fw.Component} from the entity and delete the associated {@link pc.fw.ComponentData}
+        * @param {pc.fw.Entity} entity The entity to remove the component from
+        * @example
+        * context.systems.primitive.removeComponent(this.entity);
+        * // this.entity.primitive === undefined
         */
         removeComponent: function (entity) {
             var record = this.dataStore[entity.getGuid()];
@@ -89,9 +108,11 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @private
+        * @function
         * @name pc.fw.ComponentSystem#initializeComponentData
-        * @description Called during addComponent() to initialize the pc.fw.ComponentData in the store
-        * This can be overridden by derived ComponentSystems and either called by the derived System or replaced entirely
+        * @description Called during {@link pc.fw.ComponentSystem#addComponent} to initialize the {@link pc.fw.ComponentData} in the store
+        * This can be overridden by derived Component Systems and either called by the derived System or replaced entirely
         */
         initializeComponentData: function (component, data, properties) {
             data = data || {};
@@ -107,6 +128,12 @@ pc.extend(pc.fw, function () {
             }, this);
         },
 
+        /**
+        * @private
+        * @function
+        * @name pc.fw.ComponentSystem#exposeProperties
+        * @description Expose properties into the Tools, set 'exposed: false' in to prevent properties appearing in the tools
+        */
         exposeProperties: function () {
             editor.link.addComponentType(this.id);
                 

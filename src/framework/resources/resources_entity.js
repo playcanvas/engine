@@ -98,7 +98,9 @@ pc.extend(pc.resources, function () {
     };
     
     /**
-     * @name pc.fw.Entity.patchChildren
+     * @private
+     * @function
+     * @name pc.resources.EntityResourceHandler.patchChildren
      * @description Final step when loading an entity, to add child Entities to parent 
      * Convert a Entity that has been loaded from serialized data (which has it's child resource_ids stored in the __children property)
      * into an proper tree by adding the entities from the supplied list as children and removing the temporary __children property.

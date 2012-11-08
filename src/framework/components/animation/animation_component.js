@@ -1,11 +1,16 @@
 pc.extend(pc.fw, function () {
     /**
+    * @component Animation
     * @name pc.fw.AnimationComponent
     * @constructor Create a new AnimationComponent
-    * @class The Animation Component allows playback of animation files on models
-    * @param {pc.fw.AnimationComponentSystem} system The ComponentSystem that created this Component
+    * @class The Animation Component allows an Entity to playback animations on models
+    * @param {pc.fw.AnimationComponentSystem} system The {@link pc.fw.ComponentSystem} that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to
     * @extends pc.fw.Component
+    * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
+    * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
+    * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded
+    * @property {Array} assets The array of animation assets
     */
     var AnimationComponent = function (system, entity) {
         // Handle changes to the 'animations' value
@@ -62,7 +67,7 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.AnimationComponent#getAnimation
         * @description Return an animation
-        * @param The name of the animation asset
+        * @param {String} name The name of the animation asset
         * @returns {pc.anim.Animation} An Animation
         */
         getAnimation: function (name) {

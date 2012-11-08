@@ -1,6 +1,6 @@
 /**
- * @namespace
  * @name pc.shape
+ * @namespace Shape Primitives API
  * @description Create primitive shapes such as spheres and cubes in 3D and check intersection with points, rays and other shapes
  */
 pc.shape = function () {

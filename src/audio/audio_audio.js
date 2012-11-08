@@ -1,7 +1,7 @@
 /**
-* @namespace
+* @namespace Low-level audio API
 * @name pc.audio
-* @description Low-level audio API
+* @description 
 */
 pc.audio = function () {
 

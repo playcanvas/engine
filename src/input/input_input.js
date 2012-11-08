@@ -1,5 +1,5 @@
 /**
- * @namespace Objects for capturing and responding to input from the user
+ * @namespace Keyboard, Mouse, Touch and Gamepad
  * @name pc.input
  */
 pc.input = {};

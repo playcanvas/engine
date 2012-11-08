@@ -1,11 +1,14 @@
 pc.extend(pc.fw, function () {
     /**
+     * @component
      * @name pc.fw.StaticCubeMapComponent
-     * @constructor Create a new StaticCubeMapComponent
      * @class Creates a static cubemap from assigned images
+     * @constructor Create a new StaticCubeMapComponent
+    * @param {pc.fw.StaticCubeMapComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
      * @extends pc.fw.Component
      */
-    var StaticCubeMapComponent = function StaticCubeMapComponent () {
+    var StaticCubeMapComponent = function StaticCubeMapComponent (system, entity) {
         this.bind("set", this.onSet.bind(this));
     };
     StaticCubeMapComponent = pc.inherits(StaticCubeMapComponent, pc.fw.Component);

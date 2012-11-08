@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+    * @component
     * @name pc.fw.ScriptComponent
     * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own javascript files
     * to be executed with access to the Entity.

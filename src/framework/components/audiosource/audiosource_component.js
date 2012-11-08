@@ -5,6 +5,14 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.AudioSourceComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The entity that the Component is attached to
      * @extends pc.fw.Component
+     * @property {Array} assets The list of audio assets
+     * @property {Boolean} activate If true the audio will begin playing as soon as the Pack is loaded
+     * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
+     * @property {Boolean} loop If true the audio will restart when it finishes playing
+     * @property {Boolean} 3d If true the audio will play back at the location of the Entity in space, so the audio will be affect by the position of the {@link pc.fw.AudioListenerComponent}
+     * @property {Number} minDistance The minimum distance from the listener at which audio falloff begins.
+     * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore
+     * @property {Number} rollOffFactor The factor used in the falloff equation.
      */
     var AudioSourceComponent = function (system, entity) {
         this.bind("set_assets", this.onSetAssets.bind(this));
@@ -89,7 +97,7 @@ pc.extend(pc.fw, function () {
                 }
             }
             
-            if(!this._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
+            if(!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
                 this.loadAudioSourceAssets(newAssets);
             }
         },

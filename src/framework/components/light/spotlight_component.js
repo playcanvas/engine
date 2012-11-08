@@ -1,12 +1,14 @@
 pc.extend(pc.fw, function () {
     /**
+     * @component
      * @name pc.fw.SpotLightComponent
      * @constructor Create a new SpotLightComponent
      * @class A Light Component is used to dynamically light the scene.
-     * @param {Object} context
+    * @param {pc.fw.SpotlightComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
      * @extends pc.fw.Component
      */
-    var SpotLightComponent = function (context) {
+    var SpotLightComponent = function (system, entity) {
 
         // Handle changes to the 'attenuationEnd' value
         this.bind("set_attenuationEnd", this.onSetAttenuationEnd.bind(this));

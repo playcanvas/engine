@@ -1,7 +1,7 @@
 
 /**
  * @name pc.scene
- * @namespace Namespace for scene graph management and rendering
+ * @namespace Scene Graph API
  */
 pc.scene = {};
 
