@@ -22,8 +22,7 @@ pc.extend(pc.fw, function () {
             exposed: false
         }, {
             name: 'material',
-            exposed: false,
-            readOnly: true
+            exposed: false
         }];
 
         this.exposeProperties();
@@ -34,7 +33,7 @@ pc.extend(pc.fw, function () {
         };
         this.display = false;
 
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+        pc.fw.ComponentSystem.bind('toolsUpdate', this.onUpdate.bind(this));
         this.bind('remove', this.onRemove.bind(this));
     };
     
@@ -67,7 +66,7 @@ pc.extend(pc.fw, function () {
             if (this.display) {
                 // Render the pick shapes here
                 var componentData;
-                var components = this.getComponents();
+                var components = this.store;
                 for (var id in components) {
                     if (components.hasOwnProperty(id)) {
                         var entity = components[id].entity;
@@ -91,6 +90,7 @@ pc.extend(pc.fw, function () {
                 this.layers[layer] = [];
             }
             this.layers[layer].push(shape.model);
+            this.context.scene.addModel(shape.model);
         },
 
         deleteShapes: function (layer, shapes) {
@@ -102,6 +102,7 @@ pc.extend(pc.fw, function () {
                 if (index !== -1) {
                     layerModels.splice(index, 1);
                 }
+                this.context.scene.removeModel(model);
             }
         },
 
