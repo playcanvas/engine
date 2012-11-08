@@ -1,4 +1,7 @@
 pc.extend(pc.fw, function () {
+
+    var time;
+
     /**
      * @name pc.fw.Application
      * @class Default application which performs general setup code and initiates the main game loop
@@ -218,17 +221,18 @@ pc.extend(pc.fw, function () {
          * the next tick. Override this if you have a custom Application.
          */
         tick: function () {
-            this.lastTime = this.currTime || Date.now();
-            this.currTime = Date.now();
+            // Submit a request to queue up a new animation frame immediately
+            requestAnimationFrame(this.tick.bind(this), this.canvas);
 
-            var dt = (this.currTime - this.lastTime) * 0.001;
+            var now = new Date().getTime();
+            var dt = now - (time || now);
+ 
+            time = now;
+
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
             
             this.update(dt);
             this.render();
-
-            // Submit a request to queue up a new animation frame immediately
-            requestAnimationFrame(this.tick.bind(this), this.canvas);
         },
 
         /**
