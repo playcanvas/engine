@@ -1,9 +1,17 @@
 pc.extend(pc.fw, function () {
     /**
+    * @component
     * @name pc.fw.DirectionalLightComponent
+    * @class The Directional Light Component enables the Entity to light the scene. The light is directional only so the position of the Entity has no effect.
+    * @param {pc.fw.DirectionalLightComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
+    * @property {Boolean} enable Enable the light.
+    * @property {String} color The color of the light
+    * @property {Number} intensity The intensity of the light
+    * @property {Boolean} castShadows Enable shadow casting from this light
     */
-    var DirectionalLightComponent = function DirectionalLightComponent(entity) {
+    var DirectionalLightComponent = function DirectionalLightComponent(system, entity) {
         // Handle changes to the 'castShadows' value
         this.bind("set_castShadows", this.onSetCastShadows.bind(this));
         // Handle changes to the 'color' value

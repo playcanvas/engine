@@ -1,6 +1,6 @@
 /**
  * @name pc.guid
- * @namespace A GUID is a Globally Unique ID. 
+ * @namespace
  * @description Basically a very large random number (128-bit) which means the probability of creating two that clash is vanishingly small.
  * GUIDs are used as the unique identifiers for Entities.
  */

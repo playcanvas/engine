@@ -1,6 +1,6 @@
 /**
  * @name pc.time
- * @namespace Time functions
+ * @namespace Time API
  */
 pc.time = function () {
 

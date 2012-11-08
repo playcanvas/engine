@@ -1,6 +1,7 @@
 /**
  * @name pc.resources
- * @namespace Functions for loading resources, particularly loading javascript files and attaching them to the page.
+ * @namespace Resource loading API
+ * @description Functions for loading resources, particularly loading javascript files and attaching them to the page.
  */
 pc.resources = function () {
 
@@ -11,23 +12,24 @@ pc.resources = function () {
      * the request() method. Callbacks are provided to tell you if there were errors, notify you of progress and tell you that the batch of requests is complete.
      * @example
      *   var loader = pc.resources.ResourceLoader();
-     *      // Add a handler for request Image resources
+     *   
+     *   // Add a handler for request Image resources
      *   loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
      *   
      *   var requests = [
-     *         new pc.resources.ImageRequest("http://example.com/image1.png")
-     *         new pc.resources.ImageRequest("http://example.com/image2.png")
-     *   ]
+     *       new pc.resources.ImageRequest("http://example.com/image1.png")
+     *       new pc.resources.ImageRequest("http://example.com/image2.png")
+     *   ];
      * 
-     *      loader.request(requests, function (resources) {
-     *         // Both resources are ready to use now
-     *         var image1 = resources["http://example.com/image1.png"]; // This is an Image() object
-     *         var image2 = resources["http://example.com/image2.png"];
-     *      }, function (errors) {
-     *         errors.forEach(function (error) {
-     *             log.error(error);
-     *   }, this), function (progress) {
-     *      });
+     *   loader.request(requests, function (resources) {
+     *       // Both resources are ready to use now
+     *       var image1 = resources["http://example.com/image1.png"]; // This is an Image() object
+     *       var image2 = resources["http://example.com/image2.png"];
+     *   }, function (errors) {
+     *       errors.forEach(function (error) {
+     *          log.error(error);
+     *       }, this), function (progress) {
+     *   });
      */
     var ResourceLoader = function (options) {
         options = options || {};
@@ -55,8 +57,8 @@ pc.resources = function () {
      * @name pc.resources.ResourceLoader#registerHandler
      * @description Register a handler for a new type of resource. To register a handler you need to provided an instance of a ResourceHandler, 
      * and the ResourceRequest type to be associated with the handler.
-     * @param {ResourceRequest} RequestType The type of request to associate with this handler
-     * @param {ResourceHandler} handler A ResourceHandler instance.
+     * @param {pc.resources.ResourceRequest} RequestType The type of request to associate with this handler
+     * @param {pc.resources.ResourceHandler} handler A ResourceHandler instance.
      */
     ResourceLoader.prototype.registerHandler = function (RequestType, handler) {
         var request = new RequestType();        
@@ -106,6 +108,7 @@ pc.resources = function () {
     * @name pc.resources.ResourceLoader#getCanonicalIdentifier
     * @description Returns the canonical identifier for a given identifier. If two files are registered with the same hash but different urls
     * one of them will be assigned the canonical, all requests will be made to the canonical identifier so that multiple requests are cached correctly.
+    * @returns {String} The canonical identifier use which is used to as the key for resources in the cache
     */
     ResourceLoader.prototype.getCanonicalIdentifier = function(identifier) {
         var hash = this.getHash(identifier);
@@ -664,10 +667,10 @@ pc.resources = function () {
     }
     
     /**
-     * @function
      * @name pc.resources.ResourceRequest
-     * @description A request for a single resource, located by a unique identifier.
-     * @param identifier Used by the request handler to locate and access the resource. Usually this will be the URL or GUID of the resource.
+     * @class A request for a single resource, located by a unique identifier.
+     * @constructor Create a new request for a resoiurce
+     * @param {String} identifier Used by the request handler to locate and access the resource. Usually this will be the URL or GUID of the resource.
      */
     var ResourceRequest = function ResourceRequest(identifier) {
         this.identifier = identifier; // The identifier for this resource

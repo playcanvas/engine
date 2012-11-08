@@ -1,6 +1,9 @@
 pc.extend(pc.fw, function () {
     /**
     * @name pc.fw.AudioListenerComponentSystem
+    * @class Component System for adding and removing {@link pc.fw.AudioComponent} objects to Enities.
+    * @constructor Create a new AudioListenerComponentSystem
+    * @extends pc.fw.ComponentSystem
     */
     var AudioListenerComponentSystem = function (context, manager) {
         this.id = "audiolistener";

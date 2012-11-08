@@ -1,11 +1,8 @@
 pc.extend(pc.fw, function () {
     /**
      * @name pc.fw.CameraComponentSystem
-     * @class A Camera Component is used to render the scene.
-     * The CameraComponentSystem allows access to all individual Camera Components. 
-     * It also manages the currently active Camera, using setCurrent() and getCurrent() and controls the rendering part of the frame 
-     * with beginFrame()/endFrame().
-     * See {@link pc.fw.CameraComponentData} for properties of the Camera Component
+     * @class Used to add and remove {@link pc.fw.CameraComponent}s from Entities.
+     * It also manages the currently active camera and controls the rendering part of the frame with beginFrame()/endFrame().
      * @constructor Create a new CameraComponentSystem
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
@@ -101,6 +98,15 @@ pc.extend(pc.fw, function () {
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
     
+    /**
+    * @property
+    * @name pc.fw.CameraComponentSystem#current
+    * @description Get or set the current camera. Use this property to set which Camera Entity is used to render the scene. This must be set to an Entity with a {@link pc.fw.CameraComponent}.
+    * @type pc.fw.Entity 
+    * @example 
+    * var e = context.root.findByName('A Camera');
+    * context.systems.camera.current = e;
+    */
     Object.defineProperty(CameraComponentSystem.prototype, 'current', {
         get: function () {
             return this._currentEntity;
@@ -136,7 +142,7 @@ pc.extend(pc.fw, function () {
         },
         
         /**
-         * Start rendering the frame for the camera on the top of the stack
+         * Start rendering the frame for the current camera
          * @function
          * @name pc.fw.CameraComponentSystem#frameBegin
          */
@@ -178,7 +184,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-         * End rendering the frame for the camera on the top of the stack
+         * End rendering the frame for the current camera
          * @function
          * @name pc.fw.CameraComponentSystem#frameEnd
          */

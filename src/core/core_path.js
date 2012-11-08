@@ -1,6 +1,6 @@
 /**
  * @name pc.path
- * @namespace Code for manipulating file and resource paths
+ * @namespace File path API
  */
 pc.path = function () {
     return {

@@ -1,6 +1,6 @@
 /**
- * @namespace Functionality for starting the user scripted part of the engine
  * @name pc.script
+ * @namespace User Scripts
  */
 pc.script = (function () {
     var _main = null;
@@ -30,7 +30,7 @@ pc.script = (function () {
         /**
          * @function
          * @name pc.script.create
-         * Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
+         * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
          * instanciated when attached to Entities.
          * @param {Object} name The name of the script object.
          * @param {Object} callback The callback function which is passed an {pc.fw.ApplicationContext} object, 
@@ -42,8 +42,8 @@ pc.script = (function () {
          *      // store entity
          *      this.entity = entity;
          *      
-         *      // use context ...
-         *      context.components.model.createComponent(entity);
+         *      // use context
+         *      context.components.model.addComponent(entity, {...});
          *  };
          *  
          *  return Scriptable;

@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @component
      * @name pc.fw.PointLightComponent
      * @constructor Create a new PointLightComponent
      * @class The Point Light Component attaches a Point Light node to the Entity

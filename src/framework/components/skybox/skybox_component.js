@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {    
     /**
+     * @component
      * @name pc.fw.SkyboxComponent
      * @constructor Create a new SkyboxComponentS
      * @class Renders a cube skybox

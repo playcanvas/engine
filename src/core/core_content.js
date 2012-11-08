@@ -1,5 +1,5 @@
 /**
- * @namespace Contains directories for accessing content
+ * @namespace
  * @name pc.content
  */
 pc.content = function () {

@@ -1,9 +1,16 @@
 pc.extend(pc.fw, function () {
     /**
+     * @component
      * @name pc.fw.ModelComponent
      * @constructor Create a new ModelComponentSystem
-     * @class Allows an Entity to render a model
+     * @class Enables an Entity to render a model. This Component attaches additional model geometry in to the scene graph below the Entity.
+    * @param {pc.fw.ModelComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
      * @extends pc.fw.Component
+     * @property {String} asset The GUID of the asset for the model
+     * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
+     * @property {Boolean} receiveShadows If true, shadows will be cast on this model
+     * @property {pc.scene.Model} model The mode; node that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity) {
         // Handle changes to the 'asset' value

@@ -1,6 +1,7 @@
 /**
  * @name pc
- * @namespace Root namespace for the PlayCanvas engine
+ * @namespace PlayCanvas Engine
+ * @description Root namespace for the PlayCanvas Engine
  * @preserve PlayCanvas Engine v__CURRENT_SDK_VERSION__ revision __MERCURIAL_REVISION__
  * http://playcanvas.com
  * Copyright 2011-2012 PlayCanvas Ltd. All rights reserved.

@@ -98,6 +98,7 @@ pc.extend(pc.fw, function () {
     };
     
     /**
+     * @function
      * @name pc.fw.Entity#reparent
      * @description Remove Entity from current parent and add as child to new parent
      * @param {pc.scene.GraphNode} parent New parent to attach Entity to 

@@ -143,12 +143,14 @@ pc.extend(pc.input, function () {
         
         /**
         * @function 
-        * @name pc.input.Mouse#enablePointerLock(success, error)
+        * @name pc.input.Mouse#enablePointerLock
         * @description Request that the browser hides the mouse cursor and locks the mouse to the element. 
         * Allowing raw access to mouse input without risking the mouse exiting the element.
-        * Notes: 
-        * - In some browsers this will only work when the browser is running in fullscreen mode. See `pc.fw.Application#enableFullscreen`
-        * - Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+        * Notes: <br />
+        * <ul>
+        * <li>In some browsers this will only work when the browser is running in fullscreen mode. See `pc.fw.Application#enableFullscreen`
+        * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
+        * </ul>
         * @param {Function} [success] Function called if the request for mouse lock is successful.
         * @param {Function} [error] Function called if the request for mouse lock is unsuccessful.
         */
@@ -175,7 +177,7 @@ pc.extend(pc.input, function () {
 
         /**
         * @function
-        * @name pc.input.Mouse#disablePointerLock()
+        * @name pc.input.Mouse#disablePointerLock
         * @description Return control of the mouse cursor to the user
         * @param {Function} [success] Function called when the mouse lock is disabled
         */
