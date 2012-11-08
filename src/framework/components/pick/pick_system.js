@@ -90,7 +90,10 @@ pc.extend(pc.fw, function () {
                 this.layers[layer] = [];
             }
             this.layers[layer].push(shape.model);
-            this.context.scene.addModel(shape.model);
+            
+            if (this.display) {
+                this.context.scene.addModel(shape.model);    
+            }
         },
 
         deleteShapes: function (layer, shapes) {
@@ -102,7 +105,9 @@ pc.extend(pc.fw, function () {
                 if (index !== -1) {
                     layerModels.splice(index, 1);
                 }
-                this.context.scene.removeModel(model);
+                if(this.display) {
+                    this.context.scene.removeModel(model);    
+                }
             }
         },
 
