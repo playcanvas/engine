@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.81.2
+-------
+* [FIX] AudioSourceComponent play function fixed for 2D sounds.
+
+-------
 v0.81.1
 -------
 * [FIX] Fog GLSL fixed.
