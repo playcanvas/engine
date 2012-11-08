@@ -225,7 +225,7 @@ pc.extend(pc.fw, function () {
             requestAnimationFrame(this.tick.bind(this), this.canvas);
 
             var now = new Date().getTime();
-            var dt = now - (time || now);
+            var dt = (now - (time || now)) / 1000.0;
  
             time = now;
 
