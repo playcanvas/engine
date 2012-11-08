@@ -42,7 +42,7 @@ pc.gfx.programlib = {
                 break;
 
             case 'fs_fog_decl':
-                code += 'uniform vec4 fog_color;\n';
+                code += 'uniform vec3 fog_color;\n';
                 code += 'uniform float fog_density;\n\n';
                 break;
 

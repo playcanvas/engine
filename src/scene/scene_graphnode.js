@@ -753,6 +753,7 @@ pc.extend(pc.scene, function () {
 
             var m = pc.math.mat4.makeLookAt(this.localPosition, target, up);
             pc.math.mat4.toQuat(m, this.localRotation);
+            this.dirtyLocal = true;
         },
 
         /**

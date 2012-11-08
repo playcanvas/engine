@@ -38,7 +38,7 @@ pc.extend(pc.fw, function () {
             var componentData = this.data;
             if(componentData['sources'][name]) {
                 if (!componentData['3d']) {
-                    var channel = this.manager.playSound(componentData['sources'][name], componentData);
+                    var channel = this.system.manager.playSound(componentData['sources'][name], componentData);
                     componentData.currentSource = name;
                     componentData.channel = channel;
                 } else {

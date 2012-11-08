@@ -82,6 +82,17 @@ pc.extend(pc.gfx, function () {
         this._magFilter = pc.gfx.TextureFilter.LINEAR;
     };
 
+    Texture.getMaxSupportedAnisotropy = function () {
+        var maxAnisotropy = 1;
+        var device = pc.gfx.Device.getCurrent();
+        var glExt = device.extTextureFilterAnisotropic;
+        if (glExt) {
+            var gl = device.gl;
+            maxAnisotropy = gl.getParameter(glExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+        }
+        return maxAnisotropy;
+    };
+
     Texture.prototype = {
         /**
          * @function
@@ -259,6 +270,16 @@ pc.extend(pc.gfx, function () {
             gl.texParameteri(this._target, gl.TEXTURE_MAG_FILTER, _filterLookup[magFilter]);
             this._minFilter = minFilter;
             this._magFilter = magFilter;
+        },
+
+        setMaxAnisotropy: function (maxAnisotropy) {
+            var device = pc.gfx.Device.getCurrent();
+            var glExt = device.extTextureFilterAnisotropic;
+            if (glExt) {
+                this.bind();
+                var gl = device.gl;
+                gl.texParameterf(gl.TEXTURE_2D, glExt.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+            }
         },
 
         /**

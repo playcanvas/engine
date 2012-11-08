@@ -3,6 +3,31 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.81.4
+-------
+* [FIX] GraphNode#lookAt now correctly marks the local transform as dirty.
+
+-------
+v0.81.3
+-------
+* [FIX] Prevent audio sources from playing in Designer.
+
+-------
+v0.81.2
+-------
+* [FIX] AudioSourceComponent play function fixed for 2D sounds.
+
+-------
+v0.81.1
+-------
+* [FIX] Fog GLSL fixed.
+
+-------
+v0.81.0
+-------
+* Added support for anisotropic texture filtering.
+
+-------
 v0.80.0
 -------
 * [BREAKING] New API Components and ComponentSystems
