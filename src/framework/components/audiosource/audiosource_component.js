@@ -89,7 +89,7 @@ pc.extend(pc.fw, function () {
                 }
             }
             
-            if(!this._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
+            if(!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
                 this.loadAudioSourceAssets(newAssets);
             }
         },
