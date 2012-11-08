@@ -141,7 +141,7 @@ pc.extend(pc.fw, function () {
          * entityEntity.script.broadcast('enemy', 'doDamage', 10);
          */
         broadcast: function (name, functionName) {
-            var args = pc.makeArray(arguments).slice(1);
+            var args = pc.makeArray(arguments).slice(2);
             
             var id, data, fn;
             var dataStore = this.store;

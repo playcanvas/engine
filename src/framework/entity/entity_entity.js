@@ -132,7 +132,7 @@ pc.extend(pc.fw, function () {
         var child;
         while(child = children.shift()) {
             if(child instanceof pc.fw.Entity) {
-                child.close(registry);
+                child.close();
             }
         }
     };
