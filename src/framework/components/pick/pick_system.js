@@ -25,7 +25,8 @@ pc.extend(pc.fw, function () {
             exposed: false
         }];
 
-        this.exposeProperties();
+        // TODO: Fix pick component in Designer
+        // this.exposeProperties();
     
         // Dictionary of layers: name -> array of models
         this.layers = {
