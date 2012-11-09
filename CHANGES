@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.81.7
+-------
+* [FIX] cubemap component works again.
+
+-------
 v0.81.6
 -------
 * [FIX] script.broadcast fixed.

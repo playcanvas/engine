@@ -30,6 +30,9 @@ pc.extend(pc.fw, function () {
             data.cubemap.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
             data.cubemap.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
             data.camera = new pc.scene.CameraNode();
+            data.camera.setNearClip(0.01);
+            data.camera.setFarClip(100);
+            data.camera.setAspectRatio(1);
             data.camera.setRenderTarget(new pc.gfx.RenderTarget(data.buffer));
         
             CubeMapComponentSystem._super.initializeComponentData.call(this, component, data, ['buffer', 'cubemap', 'camera']);
@@ -48,120 +51,65 @@ pc.extend(pc.fw, function () {
             for (id in components) {
                 if (components.hasOwnProperty(id)) {
                     entity = components[id].entity;
-                    transform = entity.getWorldTransform();
                     componentData = components[id].data;
 
-                    this.context.systems.camera.frameEnd();
+                    this.context.scene.enqueue("first", (function(data, ent, ctx) {
+                            return function () {
+                                ctx.systems.camera.frameEnd();
 
-                    var model;
-                    // Get the model from either the model or primitive component
-                    if (entity.model) {
-                        model = entity.model.model
-                    } else if (entity.primitive) {
-                        model = entity.primitive.model;
-                    }
+                                var model;
+                                // Get the model from either the model or primitive component
+                                if (ent.model) {
+                                    model = ent.model.model
+                                } else if (ent.primitive) {
+                                    model = ent.primitive.model;
+                                }
 
-                    // TODO: This needs to be changed to use scene.enqueue
-                    if (model) {
-                        this.context.scene.removeModel(model);
+                                // TODO: This needs to be changed to use scene.enqueue
+                                if (model) {
+                                    ctx.scene.removeModel(model);
 
-                        var lookAts = [
-                          { target: [ 1, 0, 0], up: [0,-1, 0]},
-                          { target: [-1, 0, 0], up: [0,-1, 0]},
-                          { target: [ 0, 1, 0], up: [0, 0, 1]},
-                          { target: [ 0,-1, 0], up: [0, 0,-1]},
-                          { target: [ 0, 0, 1], up: [0,-1, 0]},
-                          { target: [ 0, 0,-1], up: [0,-1, 0]}
-                        ];
-                        var pos = pc.math.mat4.getTranslation(transform);
+                                    var lookAts = [
+                                      { target: [ 1, 0, 0], up: [0,-1, 0]},
+                                      { target: [-1, 0, 0], up: [0,-1, 0]},
+                                      { target: [ 0, 1, 0], up: [0, 0, 1]},
+                                      { target: [ 0,-1, 0], up: [0, 0,-1]},
+                                      { target: [ 0, 0, 1], up: [0,-1, 0]},
+                                      { target: [ 0, 0,-1], up: [0,-1, 0]}
+                                    ];
+                                    var pos = ent.getPosition();
 
-                        // for (var face = 0; face < 6; face++) {
-                        //     componentData.buffer.setActiveBuffer(face);
-                        //     var look = pc.math.mat4.makeLookAt([0, 0, 0], lookAts[face].target, lookAts[face].up);
-                        //     look[12] = pos[0];
-                        //     look[13] = pos[1] + 0.5;
-                        //     look[14] = pos[2];
-                        //     componentData.camera.setLocalTransform(look);
-                        //     componentData.camera.syncHierarchy();
-                        //     componentData.camera.frameBegin();
-                        //     pc.fw.ComponentSystem.render(this.context, false);
-                        //     this.context.scene.dispatch(componentData.camera);
-                        //     this.context.scene.flush();
-                        //     componentData.camera.frameEnd();
-                        // }
+                                    for (var face = 0; face < 6; face++) {
+                                        // Set the face of the cubemap
+                                        data.buffer.setActiveBuffer(face);
 
-                        this.context.scene.addModel(model);
-                    }
+                                        // Point the camera in the right direction
+                                        data.camera.setPosition(pos);
+                                        data.camera.lookAt(lookAts[face].target, lookAts[face].up);
+                                        data.camera.syncHierarchy();
 
-                    this.context.systems.camera.frameBegin(false);
+                                        // Render the scene
+                                        data.camera.frameBegin();
+                                        var models = ctx.scene.getModels();
+                                        for (var i = 0; i < models.length; i++) {
+                                            models[i].dispatch();
+                                        }
+                                        data.camera.frameEnd();
+                                    }
+
+                                    ctx.scene.addModel(model);
+                                }
+
+                                ctx.systems.camera.frameBegin(false);
+                            }
+                        })(componentData, entity, this.context));
                 }
             }
 
             this.renderingCubeMap = false;
         }
     });
-    
-    // CubeMapComponentSystem.prototype.update = function (dt) {};
 
-    // CubeMapComponentSystem.prototype.render = function () {
-    //     var id;
-    //     var entity;
-    //     var componentData;
-    //     var components = this.getComponents();
-    //     var transform;
-
-    //     if (this.renderingCubeMap) return;
-    //     this.renderingCubeMap = true;
-
-    //     for (id in components) {
-    //         if (components.hasOwnProperty(id)) {
-    //             entity = components[id].entity;
-    //             transform = entity.getWorldTransform();
-    //             componentData = components[id].component;
-
-    //             this.context.systems.camera.frameEnd();
-
-    //             var model = this.context.systems.model.get(entity, "model");
-    //             if (model) {
-    //                 this.context.scene.removeModel(model);
-    //             }
-
-    //             var lookAts = [
-    //               { target: [ 1, 0, 0], up: [0,-1, 0]},
-    //               { target: [-1, 0, 0], up: [0,-1, 0]},
-    //               { target: [ 0, 1, 0], up: [0, 0, 1]},
-    //               { target: [ 0,-1, 0], up: [0, 0,-1]},
-    //               { target: [ 0, 0, 1], up: [0,-1, 0]},
-    //               { target: [ 0, 0,-1], up: [0,-1, 0]}
-    //             ];
-    //             var pos = pc.math.mat4.getTranslation(transform);
-
-    //             for (var face = 0; face < 6; face++) {
-    //                 componentData.buffer.setActiveBuffer(face);
-    //                 var look = pc.math.mat4.makeLookAt([0, 0, 0], lookAts[face].target, lookAts[face].up);
-    //                 look[12] = pos[0];
-    //                 look[13] = pos[1] + 0.5;
-    //                 look[14] = pos[2];
-    //                 componentData.camera.setLocalTransform(look);
-    //                 componentData.camera.syncHierarchy();
-    //                 componentData.camera.frameBegin();
-    //                 pc.fw.ComponentSystem.render(this.context, false);
-    //                 this.context.scene.dispatch(componentData.camera);
-    //                 this.context.scene.flush();
-    //                 componentData.camera.frameEnd();
-    //             }
-
-    //             if (model) {
-    //                 this.context.scene.addModel(model);
-    //             }
-
-    //             this.context.systems.camera.frameBegin(false);
-    //         }
-    //     }
-
-    //     this.renderingCubeMap = false;
-    // };
-    
     return {
         CubeMapComponentSystem: CubeMapComponentSystem
     }; 
