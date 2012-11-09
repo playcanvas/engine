@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.81.7
+-------
+* [FIX] cubemap component works again.
+
+-------
+v0.81.6
+-------
+* [FIX] script.broadcast fixed.
+* [FIX] PickSystem debug rendering works.
+* [FIX] Set correct filter/address modes on pick buffer texture.
+
+-------
 v0.81.5
 -------
 * Lots of documentation changes to go with the new documentation template
