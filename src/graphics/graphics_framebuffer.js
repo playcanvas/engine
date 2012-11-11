@@ -22,12 +22,12 @@ pc.extend(pc.gfx, function () {
             }
 
             if (isCube) {
-                this._colorTexture = new pc.gfx.TextureCube(width, height, pc.gfx.TextureFormat.RGBA);
+                this._colorTexture = new pc.gfx.TextureCube(width, height, pc.gfx.PixelFormat.R8_G8_B8_A8);
             } else {
-                this._colorTexture = new pc.gfx.Texture2D(width, height, pc.gfx.TextureFormat.RGBA);
+                this._colorTexture = new pc.gfx.Texture2D(width, height, pc.gfx.PixelFormat.R8_G8_B8_A8);
             }
             if (depth && device.extDepthTexture) {
-                this._depthTexture = new pc.gfx.Texture2D(width, height, pc.gfx.TextureFormat.DEPTH);
+                this._depthTexture = new pc.gfx.Texture2D(width, height, pc.gfx.PixelFormat.DEPTH);
                 this._depthTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
                 this._depthTexture.setFilterMode(pc.gfx.TextureFilter.NEAREST, pc.gfx.TextureFilter.NEAREST);
             }
