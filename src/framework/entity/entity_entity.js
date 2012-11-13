@@ -113,7 +113,12 @@ pc.extend(pc.fw, function () {
         }
     };
     
-    Entity.prototype.close = function () {
+    /**
+    * @function
+    * @name pc.fw.Entity#destroy
+    * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
+    */
+    Entity.prototype.destroy = function () {
         var parent = this.getParent();
         var childGuids;
         
@@ -132,7 +137,7 @@ pc.extend(pc.fw, function () {
         var child;
         while(child = children.shift()) {
             if(child instanceof pc.fw.Entity) {
-                child.close();
+                child.destroy();
             }
         }
     };
