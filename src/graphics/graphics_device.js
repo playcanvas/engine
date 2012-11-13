@@ -878,6 +878,18 @@ pc.extend(pc.gfx, function () {
         }
     };
 
+    Object.defineProperty(Device.prototype, 'maxSupportedMaxAnisotropy', {
+        get: function() {
+            var maxAnisotropy = 1;
+            var glExt = this.extTextureFilterAnisotropic;
+            if (glExt) {
+                var gl = this.gl;
+                maxAnisotropy = gl.getParameter(glExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+            }
+            return maxAnisotropy;
+        }
+    });
+
     return {
         UnsupportedBrowserError: UnsupportedBrowserError,
         ContextCreationError: ContextCreationError,

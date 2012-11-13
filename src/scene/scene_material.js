@@ -97,7 +97,7 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.Material#setParameter
      * @description Sets a shader parameter on a material.
      * @name {string} name The name of the parameter to set.
-     * @name {number|Array|pc.gfx.Texture2D|pc.gfx.TextureCube} data The value for the specified parameter.
+     * @name {number|Array|pc.gfx.Texture} data The value for the specified parameter.
      * @author Will Eastcott
      */
     Material.prototype.setParameter = function (name, data) {
