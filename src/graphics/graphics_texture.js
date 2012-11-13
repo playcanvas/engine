@@ -3,7 +3,16 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Texture
      * @class A texture is a container for texel data that can be utilized in a fragment shader.
      * Typically, the texel data represents an image that is mapped over geometry.
-     * @param {boolean} isCube Optional parameter. True if the texture is a cubemap and false otherwise. Defaults to false.
+     * @param {Object} options Options that control the main properties of a texture.
+     * @property {Number} minFilter The minification filter to be applied to the texture (see pc.gfx.FILTER_*).
+     * @property {Number} magFilter The magnification filter to be applied to the texture (see pc.gfx.FILTER_*).
+     * @property {Number} addressU The addressing mode to be applied to the texture (see pc.gfx.ADDRESS_*).
+     * @property {Number} addressV The addressing mode to be applied to the texture (see pc.gfx.ADDRESS_*).
+     * @property {Number} maxAnisotropy Integer value specifying the level of anisotropic to apply to the texture 
+     * ranging from 1 (no anisotropic filtering) to pc.gfx.Device.maxSupportedMaxAnisotropy.
+     * @property {Number} width [Read only] The width of the based mip level in pixels.
+     * @property {Number} height [Read only] The height of the based mip level in pixels.
+     * @property {Number} format [Read only] The pixel format of the texture (see pc.gfx.PIXELFORMAT_*).
      * @author Will Eastcott
      */
     var Texture = function (options) {
@@ -232,7 +241,7 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Texture#lock
-         * @description 
+         * @description Locks a miplevel of the texture, returning a typed array to be filled with pixel data.
          * @param {Object} options Optional options object. Valid properties are as follows:
          * @param {Number} options.level The mip level to lock with 0 being the top level. Defaults to 0.
          * @param {Number} options.face If the texture is a cubemap, this is the index of the face to lock.
@@ -337,7 +346,8 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Texture#setSource
-         * @description
+         * @description Set the pixel data of the texture from an canvas, image, video DOM element. If the
+         * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
          * @param {Array} source Array of 6 HTMLCanvasElement, HTMLImageElement or HTMLVideoElement objects.
          * for the specified texture.
          * @author Will Eastcott
@@ -383,7 +393,7 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Texture#unlock
-         * @description 
+         * @description Unlocks the currently locked mip level and uploads it to VRAM.
          * @author Will Eastcott
          */
         unlock: function () {
