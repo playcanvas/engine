@@ -300,7 +300,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.TextureCube#load
+         * @name pc.gfx.Texture#load
          * @description Load 6 Image resources to use as the sources of the texture.
          * @param {Array} urls A list of 6 URLs for the image resources to load
          * @param {pc.resources.ResourceLoader} loader The ResourceLoader to fetch the resources with
@@ -336,7 +336,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.TextureCube#setSource
+         * @name pc.gfx.Texture#setSource
          * @description
          * @param {Array} source Array of 6 HTMLCanvasElement, HTMLImageElement or HTMLVideoElement objects.
          * for the specified texture.
@@ -345,8 +345,8 @@ pc.extend(pc.gfx, function () {
         setSource: function (source) {
             if (this._cubemap) {
                 // Check a valid source has been passed in
-                logASSERT(Object.prototype.toString.apply(source) === '[object Array]', "pc.gfx.TextureCube: setSource: supplied source is not an array");
-                logASSERT(source.length === 6, "pc.gfx.TextureCube: setSource: supplied source does not have 6 entries.");
+                logASSERT(Object.prototype.toString.apply(source) === '[object Array]', "pc.gfx.Texture: setSource: supplied source is not an array");
+                logASSERT(source.length === 6, "pc.gfx.Texture: setSource: supplied source does not have 6 entries.");
                 var validTypes = 0;
                 var validDimensions = true;
                 var width = source[0].width;
@@ -360,8 +360,8 @@ pc.extend(pc.gfx, function () {
                     if (source[i].width !== width) validDimensions = false;
                     if (source[i].height !== height) validDimensions = false;
                 }
-                logASSERT(validTypes === 6, "pc.gfx.TextureCube: setSource: Not all supplied source elements are of required type (canvas, image or video).");
-                logASSERT(validDimensions,  "pc.gfx.TextureCube: setSource: Not all supplied source elements share the same dimensions.");
+                logASSERT(validTypes === 6, "pc.gfx.Texture: setSource: Not all supplied source elements are of required type (canvas, image or video).");
+                logASSERT(validDimensions,  "pc.gfx.Texture: setSource: Not all supplied source elements share the same dimensions.");
 
                 // If there are mip levels allocated, blow them away
                 this._width  = source[0].width;
