@@ -190,6 +190,31 @@ pc.extend(pc.gfx, function () {
         if (!this.extTextureFilterAnisotropic) {
             this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
         }
+        this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
+        if (this.extCompressedTextureS3TC) {
+            var formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
+            var formatMsg = "WebGL compressed texture formats:";
+            for (var i = 0; i < formats.length; i++) {
+                switch (formats[i]) {
+                    case this.extCompressedTextureS3TC.COMPRESSED_RGB_S3TC_DXT1_EXT:
+                        formatMsg += ' COMPRESSED_RGB_S3TC_DXT1_EXT';
+                        break;
+                    case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT1_EXT:
+                        formatMsg += ' COMPRESSED_RGBA_S3TC_DXT1_EXT';
+                        break;
+                    case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT3_EXT:
+                        formatMsg += ' COMPRESSED_RGBA_S3TC_DXT3_EXT';
+                        break;
+                    case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT5_EXT:
+                        formatMsg += ' COMPRESSED_RGBA_S3TC_DXT5_EXT';
+                        break;
+                    default:
+                        formatMsg += ' UNKOWN(' + formats[i] + ')';
+                        break;
+                }
+            }
+            logINFO(formatMsg);
+        }
 
         // Create the default render target
         var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
@@ -206,7 +231,7 @@ pc.extend(pc.gfx, function () {
         this.commitFunction[pc.gfx.ShaderInputType.INT  ] = function (locationId, value) { self.gl.uniform1i(locationId, value); };
         this.commitFunction[pc.gfx.ShaderInputType.FLOAT] = function (locationId, value) { 
             if (typeof value == "number") 
-                self.gl.uniform1f(locationId, value); 
+                self.gl.uniform1f(locationId, value);
             else
                 self.gl.uniform1fv(locationId, value); 
             };

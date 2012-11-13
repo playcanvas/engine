@@ -10,7 +10,7 @@ pc.scene.materialplugin.phong.isTransparent = function (material) {
         return true;
     }
     if (parameters["texture_diffuseMap"] !== undefined) {
-        if (parameters["texture_diffuseMap"]._data.getFormat() === pc.gfx.TextureFormat.RGBA)
+        if (parameters["texture_diffuseMap"]._data.getFormat() === pc.gfx.PixelFormat.R8_G8_B8_A8)
             return true;
     }
     return false;

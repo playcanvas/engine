@@ -13,15 +13,18 @@ pc.gfx.TextureLock = {
  * Constants for texture format.
  * @enum {number}
  */
-pc.gfx.TextureFormat = {
-    /** 24-bit RGB format. */
-    RGB: 0,
-    /** 32-bit RGBA format. */
-    RGBA: 1,
-    /** 8-bit luminance (greyscale) format. */
-    LUMINANCE: 2,
-    /** 32-bit depth value */
-    DEPTH: 3
+pc.gfx.PixelFormat = {
+    A8: 0,
+    L8: 1,
+    L8_A8: 2,
+    R5_G6_B5: 3,
+    R5_G5_B5_A1: 4,
+    R4_G4_B4_A4: 5,
+    R8_G8_B8: 6,
+    R8_G8_B8_A8: 7,
+    DXT1: 8,
+    DXT3: 9,
+    DXT5: 10
 };
 
 /**
@@ -29,11 +32,18 @@ pc.gfx.TextureFormat = {
  * @enum {number}
  */
 pc.gfx.TextureAddress = {
-    /** Ignores the integer part of texture coordinates, using only the fractional part. */
+    /** 
+     * Ignores the integer part of texture coordinates, using only the fractional part. 
+     */
     REPEAT: 0,
-    /** 32-bit RGBA format. */
+    /** 
+     * Clamps texture coordinate to the range 0 to 1. 
+     */
     CLAMP_TO_EDGE: 1,
-    /** 8-bit luminance (greyscale) format. */
+    /**  
+     * Texture coordinate to be set to the fractional part if the integer part is even; if the integer part is odd,
+     * then the texture coordinate is set to 1 minus the fractional part. 
+     */
     MIRRORED_REPEAT: 2
 };
 
@@ -59,9 +69,17 @@ pc.gfx.TextureFilter = {
 pc.extend(pc.gfx, function () {
     // Private variables
     var _formatSize = [];
-    _formatSize[pc.gfx.TextureFormat.RGB] = 3;
-    _formatSize[pc.gfx.TextureFormat.RGBA] = 4;
-    _formatSize[pc.gfx.TextureFormat.LUMINANCE] = 1;
+    _formatSize[pc.gfx.PixelFormat.A8] = 1;
+    _formatSize[pc.gfx.PixelFormat.L8] = 1;
+    _formatSize[pc.gfx.PixelFormat.L8_A8] = 2;
+    _formatSize[pc.gfx.PixelFormat.R5_G6_B5] = 2;
+    _formatSize[pc.gfx.PixelFormat.R5_G5_B5_A1] = 2;
+    _formatSize[pc.gfx.PixelFormat.R4_G4_B4_A4] = 2;
+    _formatSize[pc.gfx.PixelFormat.R8_G8_B8] = 3;
+    _formatSize[pc.gfx.PixelFormat.R8_G8_B8_A8] = 4;
+    _formatSize[pc.gfx.PixelFormat.DXT1] = 1;
+    _formatSize[pc.gfx.PixelFormat.DXT3] = 1;
+    _formatSize[pc.gfx.PixelFormat.DXT5] = 1;
 
     /**
      * @name pc.gfx.Texture
@@ -75,6 +93,7 @@ pc.extend(pc.gfx, function () {
 
         this._name = null;
         this._textureId = gl.createTexture();
+
         // These values are the defaults as specified by the WebGL spec
         this._addressu  = pc.gfx.TextureAddress.REPEAT;
         this._addressv  = pc.gfx.TextureAddress.REPEAT;
@@ -146,7 +165,11 @@ pc.extend(pc.gfx, function () {
             this._levels = [];
 
             var numBytes = this._width * this._height * _formatSize[this._format];
-            this._levels[0] = new ArrayBuffer(numBytes);
+            this._levels[0] = 
+                ((this._format === pc.gfx.PixelFormat.R5_G6_B5) ||
+                 (this._format === pc.gfx.PixelFormat.R5_G5_B5_A1) ||
+                 (this._format === pc.gfx.PixelFormat.R4_G4_B4_A4)) ?
+                    new Uint16Array(this._width * this._height) : new Uint8Array(numBytes);
         },
 
         /**
@@ -274,11 +297,75 @@ pc.extend(pc.gfx, function () {
 
         setMaxAnisotropy: function (maxAnisotropy) {
             var device = pc.gfx.Device.getCurrent();
-            var glExt = device.extTextureFilterAnisotropic;
-            if (glExt) {
+            var ext = device.extTextureFilterAnisotropic;
+            if (ext) {
                 this.bind();
                 var gl = device.gl;
-                gl.texParameterf(gl.TEXTURE_2D, glExt.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+                gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+            }
+        },
+
+        setFormat: function (format) {
+            this._format = format;
+            this._compressed = ((format === pc.gfx.PixelFormat.DXT1) ||
+                                (format === pc.gfx.PixelFormat.DXT3) ||
+                                (format === pc.gfx.PixelFormat.DXT5));
+
+            var device = pc.gfx.Device.getCurrent();
+            var gl = device.gl;
+            switch(this._format) {
+                case pc.gfx.PixelFormat.A8:
+                    this._glFormat = gl.ALPHA;
+                    this._glInternalFormat = gl.ALPHA;
+                    this._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PixelFormat.L8:
+                    this._glFormat = gl.LUMINANCE;
+                    this._glInternalFormat = gl.LUMINANCE;
+                    this._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PixelFormat.L8_A8:
+                    this._glFormat = gl.LUMINANCE_ALPHA;
+                    this._glInternalFormat = gl.LUMINANCE_ALPHA;
+                    this._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PixelFormat.R5_G6_B5:
+                    this._glFormat = gl.RGB;
+                    this._glInternalFormat = gl.RGB;
+                    this._glPixelType = gl.UNSIGNED_SHORT_5_6_5;
+                    break;
+                case pc.gfx.PixelFormat.R5_G5_B5_A1:
+                    this._glFormat = gl.RGBA;
+                    this._glInternalFormat = gl.RGBA;
+                    this._glPixelType = gl.UNSIGNED_SHORT_5_5_5_1;
+                    break;
+                case pc.gfx.PixelFormat.R4_G4_B4_A4:
+                    this._glFormat = gl.RGBA;
+                    this._glInternalFormat = gl.RGBA;
+                    this._glPixelType = gl.UNSIGNED_SHORT_4_4_4_4;
+                    break;
+                case pc.gfx.PixelFormat.R8_G8_B8:
+                    this._glFormat = gl.RGB;
+                    this._glInternalFormat = gl.RGB;
+                    this._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PixelFormat.R8_G8_B8_A8:
+                    this._glFormat = gl.RGBA;
+                    this._glInternalFormat = gl.RGBA;
+                    this._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PixelFormat.DXT1:
+                    var ext = device.extCompressedTextureS3TC;
+                    this._glInternalFormat = ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
+                    break;
+                case pc.gfx.PixelFormat.DXT3:
+                    var ext = device.extCompressedTextureS3TC;
+                    this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                    break;
+                case pc.gfx.PixelFormat.DXT5:
+                    var ext = device.extCompressedTextureS3TC;
+                    this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                    break;
             }
         },
 
@@ -286,7 +373,7 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.Texture#getFormat
          * @description Returns the format of the specified texture.
-         * @returns {pc.gfx.TextureFormat} The format of the specified texture.
+         * @returns {pc.gfx.PixelFormat} The format of the specified texture.
          * @author Will Eastcott
          */
         getFormat: function () {
@@ -329,7 +416,7 @@ pc.extend(pc.gfx, function () {
         // Set the new texture to be 1x1 and white
         this._width = width || 1;
         this._height = height || 1;
-        this._format = format || pc.gfx.TextureFormat.RGB;
+        this.setFormat(format || pc.gfx.PixelFormat.R8_G8_B8);
         this.upload();
     };
 
@@ -366,7 +453,7 @@ pc.extend(pc.gfx, function () {
         setSource: function (source) {
             // Check a valid source has been passed in
             logASSERT((source instanceof HTMLCanvasElement) || (source instanceof HTMLImageElement) || (source instanceof HTMLVideoElement), 
-                "pc.gfx.TextureCube: setSource: supplied source is not an instance of HTMLCanvasElement, HTMLImageElement or HTMLVideoElement.");
+                "pc.gfx.Texture2D: setSource: supplied source is not an instance of HTMLCanvasElement, HTMLImageElement or HTMLVideoElement.");
 
             // If there are mip levels allocated, blow them away
             if (this._levels !== undefined) {
@@ -380,7 +467,7 @@ pc.extend(pc.gfx, function () {
                     return str.indexOf(suffix, str.length - suffix.length) !== -1;
                 }
                 var srcLower = source.src.toLowerCase();
-                this._format = (_endsWith(srcLower, '.jpg') || _endsWith(srcLower, '.gif')) ? pc.gfx.TextureFormat.RGB : pc.gfx.TextureFormat.RGBA;
+                this.setFormat((_endsWith(srcLower, '.jpg') || _endsWith(srcLower, '.gif')) ? pc.gfx.PixelFormat.R8_G8_B8 : pc.gfx.PixelFormat.R8_G8_B8_A8);
             }
             this._source = source;
 
@@ -397,26 +484,26 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         upload: function () {
-            var gl = pc.gfx.Device.getCurrent().gl;
-            var _formatLookup = [gl.RGB, gl.RGBA, gl.LUMINANCE, gl.DEPTH_COMPONENT];
-            var _typeLookup = [gl.UNSIGNED_BYTE, gl.UNSIGNED_BYTE, gl.UNSIGNED_BYTE, gl.UNSIGNED_SHORT];
-            var glFormat = _formatLookup[this._format];
-            var glType = _typeLookup[this._format];
-
             this.bind();
+
+            var gl = pc.gfx.Device.getCurrent().gl;
 
             if (this._source !== undefined) {
                 // Upload the image, canvas or video
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, glFormat, glType, this._source);
+                gl.texImage2D(gl.TEXTURE_2D, 0, this._glInternalFormat, this._glFormat, this._glPixelType, this._source);
             } else if (this._levels !== undefined) {
                 // Upload the byte array
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, this._width, this._height, 0, glFormat, glType, new Uint8Array(this._levels[0]));
+                if (this._compressed) {
+                    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, this._glInternalFormat, this._width, this._height, 0, this._levels[0]);
+                } else {
+                    gl.texImage2D(gl.TEXTURE_2D, 0, this._glInternalFormat, this._width, this._height, 0, this._glFormat, this._glPixelType, this._levels[0]);
+                }
             } else {
                 // Upload the byte array
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                gl.texImage2D(gl.TEXTURE_2D, 0, glFormat, this._width, this._height, 0, glFormat, glType, null);
+                gl.texImage2D(gl.TEXTURE_2D, 0, this._glInternalFormat, this._width, this._height, 0, this._glFormat, this._glPixelType, null);
             }
 
             if (this.isPowerOfTwo() && (this._source || this._levels)) {
@@ -436,7 +523,7 @@ pc.extend(pc.gfx, function () {
         this._target = gl.TEXTURE_CUBE_MAP;
         this._width = width || 1;
         this._height = height || 1;
-        this._format = format || pc.gfx.TextureFormat.RGB;
+        this.setFormat(format || pc.gfx.PixelFormat.R8_G8_B8);
         this.upload();
     };
 
@@ -507,7 +594,7 @@ pc.extend(pc.gfx, function () {
 
             this._width  = source[0].width;
             this._height = source[0].height;
-            this._format = pc.gfx.TextureFormat.RGBA;
+            this.setFormat(pc.gfx.PixelFormat.R8_G8_B8_A8);
             this._source = source;
 
             this.upload();
@@ -523,27 +610,24 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         upload: function () {
-            var gl = pc.gfx.Device.getCurrent().gl;
-            var _formatLookup = [gl.RGB, gl.RGBA, gl.LUMINANCE];
-            var glFormat = _formatLookup[this._format];
-
             this.bind();
 
+            var gl = pc.gfx.Device.getCurrent().gl;
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
             if (this._source !== undefined) {
                 // Upload the image, canvas or video
                 for (var face = 0; face < 6; face++) {
-                    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, glFormat, glFormat, gl.UNSIGNED_BYTE, this._source[face]);
+                    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, this._glInternalFormat, this._glFormat, this._glPixelType, this._source[face]);
                 }
             } else if (this._levels !== undefined) {
                 // Upload the byte array
                 for (var face = 0; face < 6; face++) {
-                    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, glFormat, this._width, this._height, 0, glFormat, gl.UNSIGNED_BYTE, new Uint8Array(this._levels[face][0]));
+                    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, this._glInternalFormat, this._width, this._height, 0, this._glFormat, this._glPixelType, new Uint8Array(this._levels[face][0]));
                 }
             } else {
                 // Initialize cube faces to null
                 for (var face = 0; face < 6; face++) {
-                    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, glFormat, this._width, this._height, 0, glFormat, gl.UNSIGNED_BYTE, null);
+                    gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, this._glInternalFormat, this._width, this._height, 0, this._glFormat, this._glPixelType, null);
                 }
             }
             
