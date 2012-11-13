@@ -33,7 +33,7 @@ pc.extend(pc.resources, function () {
         * @name pc.resources.TextureCache#addTexture
         * @description Add a texture to the cache
         * @param {String} url The url of the texture being cached
-        * @param {pc.gfx.Texture2D} texture The texture object to cache
+        * @param {pc.gfx.Texture} texture The texture object to cache
         */
         addTexture: function (url, texture) {
             var hash = this.loader.getHash(url);

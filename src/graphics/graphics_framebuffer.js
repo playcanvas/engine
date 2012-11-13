@@ -10,6 +10,8 @@ pc.extend(pc.gfx, function () {
      * represented as a 2D surface.
      */
     var FrameBuffer = function (width, height, depth, isCube) {
+        if (typeof isCube === 'undefined') isCube = false;
+
         if ((width !== undefined) && (height !== undefined)) {
             var device = pc.gfx.Device.getCurrent();
             var gl = device.gl;
@@ -21,15 +23,21 @@ pc.extend(pc.gfx, function () {
                 this._depthBuffers = [];
             }
 
-            if (isCube) {
-                this._colorTexture = new pc.gfx.TextureCube(width, height, pc.gfx.PixelFormat.R8_G8_B8_A8);
-            } else {
-                this._colorTexture = new pc.gfx.Texture2D(width, height, pc.gfx.PixelFormat.R8_G8_B8_A8);
-            }
+            this._colorTexture = new pc.gfx.Texture({
+                width: width, 
+                height: height, 
+                format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+                cubemap: isCube
+            });
+            this._colorTexture.upload();
             if (depth && device.extDepthTexture) {
-                this._depthTexture = new pc.gfx.Texture2D(width, height, pc.gfx.PixelFormat.DEPTH);
-                this._depthTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
-                this._depthTexture.setFilterMode(pc.gfx.TextureFilter.NEAREST, pc.gfx.TextureFilter.NEAREST);
+                this._depthTexture = new pc.gfx.Texture({
+                    width: width, 
+                    height: height, 
+                    format: pc.gfx.PIXELFORMAT_D16,
+                    cubemap: isCube
+                });
+                this._depthTexture.upload();
             }
 
             var numBuffers = isCube ? 6 : 1;
@@ -44,14 +52,14 @@ pc.extend(pc.gfx, function () {
                 gl.framebufferTexture2D(gl.FRAMEBUFFER,
                                         gl.COLOR_ATTACHMENT0,
                                         isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
-                                        this._colorTexture._textureId,
+                                        this._colorTexture._glTextureId,
                                         0);
                 if (depth) {
                     if (device.extDepthTexture) {
                         gl.framebufferTexture2D(gl.FRAMEBUFFER,
                                                 gl.DEPTH_ATTACHMENT,
                                                 isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
-                                                this._depthTexture._textureId, 
+                                                this._depthTexture._glTextureId, 
                                                 0);
                     } else {
                         this._depthBuffers[i] = gl.createRenderbuffer();
