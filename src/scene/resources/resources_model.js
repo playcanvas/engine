@@ -212,8 +212,8 @@ pc.extend(pc.resources, function () {
      * @param [options.batch] An existing request batch handle to add the texture request to 
      */
     ModelResourceHandler.prototype._loadTexture = function (model, modelData, textureData, options) {
-        var addressu  = this._jsonToAddressMode[textureData.addressu];
-        var addressv  = this._jsonToAddressMode[textureData.addressv];
+        var addressU  = this._jsonToAddressMode[textureData.addressu];
+        var addressV  = this._jsonToAddressMode[textureData.addressv];
         var minFilter = this._jsonToFilterMode[textureData.minfilter];
         var magFilter = this._jsonToFilterMode[textureData.magfilter];
         
@@ -232,8 +232,8 @@ pc.extend(pc.resources, function () {
                 format: format
             });
             texture.name = textureData.name;
-            texture.addressU = addressu;
-            texture.addressV = addressv;
+            texture.addressU = addressU;
+            texture.addressV = addressV;
             texture.magFilter = magFilter;
             texture.minFilter = minFilter;
 
@@ -923,8 +923,8 @@ pc.extend(pc.resources, function () {
                     format: format
                 });
                 texture.name = name;
-                texture.addressU = addrModeU;
-                texture.addressV = addrModeV;
+                texture.addressU = addressU;
+                texture.addressV = addressV;
                 texture.minFilter = minFilter;
                 texture.magFilter = magFilter;
 
