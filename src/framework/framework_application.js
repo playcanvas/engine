@@ -544,9 +544,9 @@ pc.extend(pc.fw, function () {
                 // by firing an event which the body system subscribes to instead. But I do we really want entities (or nodes) firing
                 // an event everytime the transform is updated, sounds slow. Perhaps we can fire an event from in here.
                 if (this.context.systems.body2d && entity.body2d) {
-                    entity.body2d.setTransform(entity, entity.getWorldTransform());
-                    entity.body2d.setLinearVelocity(entity, 0, 0);
-                    entity.body2d.setAngularVelocity(entity, 0);
+                    entity.body2d.setTransform(entity.getWorldTransform());
+                    entity.body2d.setLinearVelocity(0, 0);
+                    entity.body2d.setAngularVelocity(0);
                 }
             }
         },
