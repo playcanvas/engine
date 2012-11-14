@@ -217,8 +217,11 @@ pc.gfx.post.bloom = function () {
 
             for (var i = 0; i < 2; i++) {
                 var buffer = new pc.gfx.FrameBuffer(width >> 1, height >> 1, false);
-                buffer.getTexture().setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
-                buffer.getTexture().setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+                var buffTex = buffer.getTexture();
+                buffTex.minFilter = pc.gfx.FILTER_LINEAR;
+                buffTex.magFilter = pc.gfx.FILTER_LINEAR;
+                buffTex.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+                buffTex.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
                 targets.push(new pc.gfx.RenderTarget(buffer));
             }
             

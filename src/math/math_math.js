@@ -121,30 +121,53 @@ pc.math = {
         }
         return ((r << 16) | (g << 8) | b);
     },
-    
-    unproject: function (screen, view, projection, viewport, worldCoord) {
-        if (worldCoord === undefined) {
-            worldCoord = pc.math.vec3.create();
-        }
-        var viewProj = pc.math.mat4.multiply(projection, view);
-        var invViewProj = pc.math.mat4.invert(viewProj);
-    
-        // Screen coordinate -> normalized device coordinates (-1.0 .. 1.0)
-        var invec = pc.math.vec3.create(
-                                    ((screen[0]-viewport.x)/viewport.width)  * 2.0 - 1.0, 
-                                    ((screen[1]-viewport.y)/viewport.height) * 2.0 - 1.0, 
-                                    2.0*screen[2]-1.0);
-        var outvec = pc.math.mat4.multiplyVec3(invec, 1.0, invViewProj);
-    
-        if (outvec[3] === 0.0)
-            return null;
-        outvec[3] = 1.0 / outvec[3];
-        worldCoord[0] = outvec[0] * outvec[3];
-        worldCoord[1] = outvec[1] * outvec[3];
-        worldCoord[2] = outvec[2] * outvec[3];
-        return worldCoord;
+
+    /**
+     * @function
+     * @name pc.math.lerp
+     * @description Calculates the linear interpolation of two numbers.
+     * @param {Number} a Number to linearly interpolate from.
+     * @param {Number} b Number to linearly interpolate to.
+     * @param {Number} alpha The value controlling the result of interpolation. When alpha is 0,
+     * a is returned. When alpha is 1, b is returned. Between 0 and 1, a linear interpolation between
+     * a and b is returned. alpha is clamped between 0 and 1. 
+     */
+    lerp: function (a, b, alpha) {
+        return a + (b - a) * pc.math.clamp(alpha, 0, 1);
     },
-    
+
+    /**
+     * @function
+     * @name pc.math.lerpAngle
+     * @description Calculates the linear interpolation of two angles ensuring that interpolation
+     * is correctly performed across the 360 to 0 degree boundary. Angles are supplied in degrees.
+     * @param {Number} a Angle (in degrees) to linearly interpolate from.
+     * @param {Number} b Angle (in degrees) to linearly interpolate to.
+     * @param {Number} alpha The value controlling the result of interpolation. When alpha is 0,
+     * a is returned. When alpha is 1, b is returned. Between 0 and 1, a linear interpolation between
+     * a and b is returned. alpha is clamped between 0 and 1. 
+     */
+    lerpAngle: function (a, b, alpha) {
+        if (b - a > 180 ) {
+            b -= 360;
+        }
+        if (b - a < -180 ) {
+            b += 360;
+        }
+        return pc.math.lerp(a, b, pc.math.clamp(alpha, 0, 1));
+    },
+
+    /**
+     * @function
+     * @name pc.math.pot
+     * @description Returns true if argument is a power-of-two and false otherwise.
+     * @param {Number} x Number to check for power-of-two property.
+     * @returns {Boolean} true if power-of-two and false otherwise. 
+     */
+    pot: function (x) {
+        return (!(x === 0) && !(x & (x - 1)));
+    },
+
     /**
      * @function
      * @name pc.math.random

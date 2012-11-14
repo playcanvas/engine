@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.82.0
+-------
+* [BREAKING] Renamed Entity#close to Entity#destroy
+* [BREAKING] New pc.gfx.Texture API. Much simpler interface more based around properties. pc.gfx.Texture2D and pc.gfx.TextureCube collapsed back into pc.gfx.Texture.
+* Added much greater control over the pixel format of textures. The API now support creation of L8, L8A8, R5G6B5, R5G5B5A1, R4G4B4A1, R8G8B8 and R8G8B8A8 textures.
+* Don't expose PickComponent in designer. It doens't work
+
+-------
 v0.81.7
 -------
 * [FIX] cubemap component works again.

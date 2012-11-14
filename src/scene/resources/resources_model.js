@@ -32,18 +32,18 @@ pc.extend(pc.resources, function () {
         }
         
         this._jsonToAddressMode = {
-            "repeat": pc.gfx.TextureAddress.REPEAT,
-            "clamp":  pc.gfx.TextureAddress.CLAMP_TO_EDGE,
-            "mirror": pc.gfx.TextureAddress.MIRRORED_REPEAT
+            "repeat": pc.gfx.ADDRESS_REPEAT,
+            "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
+            "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
         }
         
         this._jsonToFilterMode = {
-            "nearest":             pc.gfx.TextureFilter.NEAREST,
-            "linear":              pc.gfx.TextureFilter.LINEAR,
-            "nearest_mip_nearest": pc.gfx.TextureFilter.NEAREST_MIPMAP_NEAREST,
-            "linear_mip_nearest":  pc.gfx.TextureFilter.LINEAR_MIPMAP_NEAREST,
-            "nearest_mip_linear":  pc.gfx.TextureFilter.NEAREST_MIPMAP_LINEAR,
-            "linear_mip_linear":   pc.gfx.TextureFilter.LINEAR_MIPMAP_LINEAR
+            "nearest":             pc.gfx.FILTER_NEAREST,
+            "linear":              pc.gfx.FILTER_LINEAR,
+            "nearest_mip_nearest": pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST,
+            "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
+            "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
+            "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
         }
         
         this._jsonToProjectionType = {
@@ -226,7 +226,7 @@ pc.extend(pc.resources, function () {
 
         // Texture not in cache, we need to create a new one and load it.
         if (!texture) {
-            texture = new pc.gfx.Texture2D();
+            texture = new pc.gfx.Texture();
 
             // add to textureCache cache
             if (this._textureCache) {
@@ -244,9 +244,11 @@ pc.extend(pc.resources, function () {
                 // no progress features
             }, options);
             
-            texture.setName(textureData.name);
-            texture.setAddressMode(addressu, addressv);
-            texture.setFilterMode(minFilter, magFilter);
+            texture.name = textureData.name;
+            texture.addressU = addressu;
+            texture.addressV = addressv;
+            texture.magFilter = magFilter;
+            texture.minFilter = minFilter;
         }
 
         return texture;
@@ -912,7 +914,7 @@ pc.extend(pc.resources, function () {
             }
             
             if (!texture) {
-                texture = new pc.gfx.Texture2D();
+                texture = new pc.gfx.Texture();
                 
                 // Add to textureCache cache  
                 if (this.textureCache) {

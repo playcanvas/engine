@@ -724,7 +724,7 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#lookAt
-         * @description Reorients the graph node so that the z axis points towards the target.
+         * @description Reorients the graph node so that the negative z axis points towards the target.
          * @param {pc.math.vec3} target The world space coordinate to 'look at'.
          * @param {pc.math.vec3} up The up vector for the look at transform. If left unspecified,
          * this is set to the world space y axis.

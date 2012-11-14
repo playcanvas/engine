@@ -88,7 +88,26 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.Picker#getSelection
      * @description Return the list of models selected by the specified rectangle in the previously prepared
      * pick buffer. 
-     * @returns {pc.gfx.FrameBuffer} The rectangular selection region.
+     * @param {Object} rect The selection rectangle.
+     * @param {Number} rect.x The left edge of the rectangle
+     * @param {Number} rect.y The bottom edge of the rectangle
+     * @param {Number} [rect.width] The width of the rectangle
+     * @param {Number} [rect.height] The height of the rectangle
+     * @returns {Array} An array of models that are in the selection
+     * @example
+     * // Get the selection at the point (10,20)
+     * var selection = picker.getSelection({
+     *     x: 10,
+     *     y: 20
+     * });
+     * 
+     * // Get all models in rectangle with corners at (10,20) and (20,40)
+     * var selection = picker.getSelection({
+     *     x: 10,
+     *     y: 20,
+     *     width: 10,
+     *     height: 20
+     * });
      */
     Picker.prototype.getSelection = function (rect) {
         rect.width = rect.width || 1;
@@ -135,8 +154,8 @@ pc.extend(pc.scene, function () {
      * of the supplied camera. Once the pick buffer has been prepared, pc.scene.Picker#getSelection can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change 
      * in any way, pc.scene.Picker#prepare does not need to be called again.
-     * @param {pc.scene.CameraNode} camera The viewpoint for the pick buffer.
-     * @param {Array} models Array of models that are to be pickable.
+     * @param {pc.scene.CameraNode} camera The camera used to render the scene, note this is the CameraNode, not an Entity
+     * @param {pc.scene.Model[]} models Array of models that are to be pickable.
      */
     Picker.prototype.prepare = function (camera, models) {
         this._models = models;
@@ -194,8 +213,10 @@ pc.extend(pc.scene, function () {
         this._height = height;
         var pickBuffer = new pc.gfx.FrameBuffer(this._width, this._height, true);
         var pickBufferTexture = pickBuffer.getTexture();
-        pickBufferTexture.setFilterMode(pc.gfx.TextureFilter.NEAREST, pc.gfx.TextureFilter.NEAREST);
-        pickBufferTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+        pickBufferTexture.minFilter = pc.gfx.FILTER_NEAREST;
+        pickBufferTexture.magFilter = pc.gfx.FILTER_NEAREST;
+        pickBufferTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        pickBufferTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         this._pickBufferTarget = new pc.gfx.RenderTarget(pickBuffer);
     };
 
