@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.82.4
+-------
+* [FIX] Prevent rendering of collisioncircle components unless debugRender flag is set
+
+-------
 v0.82.3
 -------
 * [FIX] All components properly updated to new texture API.
