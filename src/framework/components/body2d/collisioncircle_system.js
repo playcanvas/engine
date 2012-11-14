@@ -86,6 +86,7 @@ if (typeof(Box2D) !== 'undefined') {
             this.ri = 1; // 3D index that corresponds to the rotation axis
 
             pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+            pc.fw.ComponentSystem.bind('toolsUpdate', this.onToolsUpdate.bind(this));
         };
         CollisionCircleComponentSystem = pc.inherits(CollisionCircleComponentSystem, pc.fw.ComponentSystem);
         
@@ -126,6 +127,13 @@ if (typeof(Box2D) !== 'undefined') {
                         this.renderCircle(components[id].entity, components[id].data, this._gfx.vertexBuffer, this._gfx.indexBuffer);
                     }                    
                 }
+            },
+
+            onToolsUpdate: function (dt) {
+                var components = this.store;
+                for (id in components) {
+                    this.renderCircle(components[id].entity, components[id].data, this._gfx.vertexBuffer, this._gfx.indexBuffer);
+                }                    
             },
 
             renderCircle: function (entity, data, vertexBuffer, indexBuffer) {

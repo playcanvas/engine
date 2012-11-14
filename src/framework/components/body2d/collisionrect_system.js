@@ -102,6 +102,8 @@ if (typeof(Box2D) !== 'undefined') {
             this.bind('remove', this.onRemove.bind(this));
 
             pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+            pc.fw.ComponentSystem.bind('toolsUpdate', this.onToolsUpdate.bind(this));
+              
         };
         CollisionRectComponentSystem = pc.inherits(CollisionRectComponentSystem, pc.fw.ComponentSystem);
         
@@ -145,6 +147,13 @@ if (typeof(Box2D) !== 'undefined') {
                     for (id in components) {
                         this.renderRect(components[id].entity, components[id].data, this._gfx.rectVertexBuffer, this._gfx.rectIndexBuffer);
                     }
+                }
+            },
+
+            onToolsUpdate: function (dt) {
+                var components = this.store;
+                for (id in components) {
+                    this.renderRect(components[id].entity, components[id].data, this._gfx.rectVertexBuffer, this._gfx.rectIndexBuffer);
                 }
             },
 
