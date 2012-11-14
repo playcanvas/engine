@@ -158,7 +158,7 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             renderRect: function (entity, data, vertexBuffer, indexBuffer) {
-                this.context.scene.enqueue("overlay", function () {
+                this.context.scene.enqueue("opaque", function () {
                     var positions = new Float32Array(vertexBuffer.lock());
 
                     positions[0]  = -data['x'];
