@@ -226,7 +226,16 @@ pc.extend(pc.resources, function () {
 
         // Texture not in cache, we need to create a new one and load it.
         if (!texture) {
-            texture = new pc.gfx.Texture();
+            var ext = pc.path.getExtension(url);
+            var format = (ext === '.png') ? pc.gfx.PIXELFORMAT_R8_G8_B8_A8 : pc.gfx.PIXELFORMAT_R8_G8_B8;
+            texture = new pc.gfx.Texture({
+                format: format
+            });
+            texture.name = textureData.name;
+            texture.addressU = addressu;
+            texture.addressV = addressv;
+            texture.magFilter = magFilter;
+            texture.minFilter = minFilter;
 
             // add to textureCache cache
             if (this._textureCache) {
@@ -243,12 +252,6 @@ pc.extend(pc.resources, function () {
             }, function (progress) {
                 // no progress features
             }, options);
-            
-            texture.name = textureData.name;
-            texture.addressU = addressu;
-            texture.addressV = addressv;
-            texture.magFilter = magFilter;
-            texture.minFilter = minFilter;
         }
 
         return texture;
@@ -901,10 +904,10 @@ pc.extend(pc.resources, function () {
             var header    = this.readChunkHeader();
             var name      = this.readStringChunk();
             var filename  = this.readStringChunk();
-            var addrModeU = this.readU8();
-            var addrModeV = this.readU8();
-            var filterMin = this.readU8();
-            var filterMax = this.readU8();
+            var addressU  = this.readU8();
+            var addressV  = this.readU8();
+            var minFilter = this.readU8();
+            var magFilter = this.readU8();
 
             var url = this.options.directory + "/" + filename;
             
@@ -914,17 +917,21 @@ pc.extend(pc.resources, function () {
             }
             
             if (!texture) {
-                texture = new pc.gfx.Texture();
-                
+                var ext = pc.path.getExtension(url);
+                var format = (ext === '.png') ? pc.gfx.PIXELFORMAT_R8_G8_B8_A8 : pc.gfx.PIXELFORMAT_R8_G8_B8;
+                texture = new pc.gfx.Texture({
+                    format: format
+                });
+                texture.name = name;
+                texture.addressU = addrModeU;
+                texture.addressV = addrModeV;
+                texture.minFilter = minFilter;
+                texture.magFilter = magFilter;
+
                 // Add to textureCache cache  
                 if (this.textureCache) {
                     this.textureCache.addTexture(url, texture);
                 }
-
-                texture.setName(name);
-                texture.setAddressMode(addrModeU, addrModeV);
-                texture.setFilterMode(filterMin, filterMax);
-
 
                 // Make a new request for the Image resource at the same priority as the Model was requested.
                 this.loader.request([new pc.resources.ImageRequest(url)], this.options.priority, function (resources) {

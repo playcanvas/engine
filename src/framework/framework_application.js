@@ -453,8 +453,7 @@ pc.extend(pc.fw, function () {
                     var entity = this.context.root.findOne("getGuid", msg.content.id);
                     if(entity) {
                         logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid())); 
-                        entity.close(this.context.systems);
-                        //this.printHierarchy(this.context.root);
+                        entity.destroy();
                     }
                     break;
                 case pc.fw.LiveLinkMessageType.OPEN_ENTITY:

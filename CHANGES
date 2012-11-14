@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.82.1
+-------
+* Fix binary stream reader to use new texture API.
+* Fixed reference to entity.close()
+
+-------
 v0.82.0
 -------
 * [BREAKING] Renamed Entity#close to Entity#destroy
