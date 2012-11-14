@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.82.3
+-------
+* [FIX] All components properly updated to new texture API.
+
+-------
 v0.82.2
 -------
 * [FIX] Additional typo in binary texture stream reader.

@@ -163,8 +163,10 @@ pc.extend(pc.fw, function () {
                 if (!texture || (viewport.width !== w) || (viewport.height !== h)) {
                     var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
                     var offscreenTexture = offscreenBuffer.getTexture();
-                    offscreenTexture.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
-                    offscreenTexture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+                    offscreenTexture.minFilter = pc.gfx.FILTER_LINEAR;
+                    offscreenTexture.magFilter = pc.gfx.FILTER_LINEAR;
+                    offscreenTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+                    offscreenTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
                     camera.setRenderTarget(new pc.gfx.RenderTarget(offscreenBuffer));
                 }
             } else {
