@@ -90,9 +90,14 @@ pc.extend(pc.fw, function () {
 
     // Private    
     var _createCubemap = function (entity, context, urls) {
-        var texture = new pc.gfx.TextureCube();
-        texture.setFilterMode(pc.gfx.TextureFilter.LINEAR_MIPMAP_LINEAR, pc.gfx.TextureFilter.LINEAR);
-        texture.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+        var texture = new pc.gfx.Texture({
+            format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+            cubemap: true
+        });
+        texture.minFilter = pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR;
+        texture.magFilter = pc.gfx.FILTER_LINEAR;
+        texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         
         var requests = urls.map(function (url) {
             return new pc.resources.ImageRequest(url);
