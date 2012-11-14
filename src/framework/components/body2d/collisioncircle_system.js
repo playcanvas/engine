@@ -120,9 +120,11 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             onUpdate: function (dt) {
-                var components = this.store;
-                for (id in components) {
-                    this.renderCircle(components[id].entity, components[id].data, this._gfx.vertexBuffer, this._gfx.indexBuffer);
+                if (this.debugRender) {
+                    var components = this.store;
+                    for (id in components) {
+                        this.renderCircle(components[id].entity, components[id].data, this._gfx.vertexBuffer, this._gfx.indexBuffer);
+                    }                    
                 }
             },
 
