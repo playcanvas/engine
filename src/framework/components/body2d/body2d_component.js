@@ -124,7 +124,7 @@ if (typeof(Box2D) !== 'undefined') {
                 pc.math.mat4.getTranslation(transform, position);
                 pc.math.mat4.toEulerXYZ(transform, rotation);
 
-                this.setPositionAndAngle(this.entity, position[this.xi], position[this.yi], -rotation[this.ri]);
+                this.setPositionAndAngle(position[this.xi], position[this.yi], -rotation[this.ri]);
             },
 
             /**
