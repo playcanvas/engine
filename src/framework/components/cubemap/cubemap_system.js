@@ -27,8 +27,11 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             data.buffer = new pc.gfx.FrameBuffer(256, 256, true, true);
             data.cubemap = data.buffer.getTexture();
-            data.cubemap.setFilterMode(pc.gfx.TextureFilter.LINEAR, pc.gfx.TextureFilter.LINEAR);
-            data.cubemap.setAddressMode(pc.gfx.TextureAddress.CLAMP_TO_EDGE, pc.gfx.TextureAddress.CLAMP_TO_EDGE);
+            data.cubemap.minFilter = pc.gfx.FILTER_LINEAR;
+            data.cubemap.magFilter = pc.gfx.FILTER_LINEAR;
+            data.cubemap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+            data.cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+
             data.camera = new pc.scene.CameraNode();
             data.camera.setNearClip(0.01);
             data.camera.setFarClip(100);

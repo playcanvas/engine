@@ -3,6 +3,22 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.82.3
+-------
+* [FIX] All components properly updated to new texture API.
+
+-------
+v0.82.2
+-------
+* [FIX] Additional typo in binary texture stream reader.
+
+-------
+v0.82.1
+-------
+* [FIX] binary stream reader to use new texture API.
+* Fixed reference to entity.close()
+
+-------
 v0.82.0
 -------
 * [BREAKING] Renamed Entity#close to Entity#destroy
