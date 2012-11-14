@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.82.5
+-------
+* [FIX] 2D collision works again in the Designer
+
+-------
 v0.82.4
 -------
 * [FIX] Prevent rendering of collisioncircle components unless debugRender flag is set
