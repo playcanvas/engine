@@ -3,18 +3,30 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.Entity
      * @class The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
      * it from other Entities, and associates it with tool-time data on the server.
-     * A game object in the engine consists of an Entity which provides the transform matrix and can be added into the scene graph; 
-     * logic provided provided by a pc.fw.ComponentSystem object; and data provided by a  pc.fw.ComponentData object.
+     * An object in your game consists of an {@link pc.fw.Entity}, and a set of {@link pc.fw.Component}s which are 
+     * managed by a {@link pc.fw.ComponentSystem}.
+     * The Entity uniquely identifies the object and also provides a transform for position and orientation 
+     * an inherits from {@pc.scene.GraphNode} so can be added into the scene graph.
+     * The Component and ComponentSystem provide provide the logic to give an Entity a specific type of behaviour. e.g. the ability to 
+     * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`) 
+     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.fw.ApplicationContext}
+     * 
      * Every object created in the PlayCanvas Designer is an Entity.
-     * 
-     * Use the Entity object to access Component logic and data
+     *
      * @example
-     * var entity = ... // Get your entity
-     * var context = ... // Get your pc.fw.ApplicationContext
+     * var entity = new pc.fw.Entity();
+     * var context = ... // Get the pc.fw.ApplicationContext
+     *
+     * // Add a Component to the Entity 
+     * context.systems.camera.addComponent(entity, {
+     *   fov: 45,
+     *   nearClip: 1,
+     *   farClip: 10000
+     * });
      * 
-     * var fov = context.components.camera.get(entity, "fov"); // Get the fov (field of view) value from entity's camera component
-     * fov = 90;
-     * context.components.camera.set(entity, "fov", fov); // Set the fov value for entity's camera component.
+     * // Add the Entity into the scene graph
+     * context.root.addChild(entity);
+     *
      * @extends pc.scene.GraphNode
      */
     var Entity = function(){
