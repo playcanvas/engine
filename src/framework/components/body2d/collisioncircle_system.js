@@ -85,6 +85,8 @@ if (typeof(Box2D) !== 'undefined') {
             this.yi = 2; // 3D index that corresponds to 2D y-axis
             this.ri = 1; // 3D index that corresponds to the rotation axis
 
+            this.bind('remove', this.onRemove.bind(this));
+
             pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
             pc.fw.ComponentSystem.bind('toolsUpdate', this.onToolsUpdate.bind(this));
         };
@@ -108,6 +110,12 @@ if (typeof(Box2D) !== 'undefined') {
                 fixtureDef.shape = new b2CircleShape();
                 fixtureDef.shape.SetRadius(component.radius);
                 fixtureDef.userData = entity;
+            },
+
+            onRemove: function (entity, data) {
+                if (entity.body2d) {
+                    this.context.systems.body2d.removeBody(entity.body2d.body);
+                }
             },
 
             /**

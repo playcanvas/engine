@@ -128,7 +128,9 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             onRemove: function (entity, data) {
-                this.context.systems.body2d.removeBody(entity.body2d.body);
+                if (entity.body2d) {
+                    this.context.systems.body2d.removeBody(entity.body2d.body);    
+                }
             },
 
             /**
