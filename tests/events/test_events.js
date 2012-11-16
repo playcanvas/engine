@@ -200,7 +200,7 @@ test("Bind same function different scope", function () {
   o.bind('test', fn, o);
   o.bind('test', fn, m);
 
-  
+
   o.unbind("test", fn, o);
 
   equal(o._callbacks['test'].length, 1);
@@ -213,3 +213,18 @@ test("Fire with nothing bound", 0, function() {
     
     o.fire("test");
 })
+
+test("Unbind within a callback doesn't skip", function () {
+  var o = {};
+  o = pc.extend(o, pc.events);
+
+  o.bind('test', function () {
+    o.unbind('test');
+  });
+
+  o.bind('test', function () {
+    ok(true);
+  });
+
+  o.fire('test');
+});

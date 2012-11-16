@@ -81,14 +81,15 @@ pc.events = function () {
             var index;
             var length;
             var args = pc.makeArray(arguments);
-
+            var callbacks;
             args.shift();
             
             if(this._callbacks && this._callbacks[name]) {
-                length = this._callbacks[name].length;
+                callbacks = this._callbacks[name].slice(); // clone list so that deleting inside callbacks works
+                length = callbacks.length;
                 for(index = 0; index < length; ++index) {
-                    var scope = this._callbacks[name][index].scope;
-                    this._callbacks[name][index].callback.apply(scope, args);
+                    var scope = callbacks[index].scope;
+                    callbacks[index].callback.apply(scope, args);
                 }            
             }
             
