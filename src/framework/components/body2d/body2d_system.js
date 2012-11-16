@@ -105,7 +105,9 @@ if (typeof(Box2D) !== 'undefined') {
             },
 
             onRemove: function (entity, data) {
-                this.removeBody(data.body);
+                if (data.body) {
+                    this.removeBody(data.body);    
+                }                
                 data.body = null;
             },
 
