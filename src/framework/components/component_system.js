@@ -75,6 +75,8 @@ pc.extend(pc.fw, function () {
             var component = new this.ComponentType(this, entity);
             var componentData = new this.DataType();
 
+            data = data || {};
+            
             this.dataStore[entity.getGuid()] = {
                 entity: entity,
                 data: componentData

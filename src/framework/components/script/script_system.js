@@ -56,6 +56,16 @@ pc.extend(pc.fw, function () {
         onRemove: function (entity, data) {
             for (name in data.instances) {
                 if (data.instances.hasOwnProperty(name)) {
+                    
+                    // Unbind any instance events that were bound when the script was created
+                    var events = ['update', 'fixedUpdate', 'postUpdate', 'toolsUpdate'];
+                    events.forEach(function (eventName) {
+                        if (data.instances[name].instance[eventName]) {
+                            console.log(pc.string.format('unbinding event {0} for {1}:{2}', eventName, name, entity.getGuid()));
+                            this.unbind(eventName, data.instances[name].instance[eventName], data.instances[name].instance);
+                        }
+                    }, this);
+
                     if(data.instances[name].instance.destroy) {
                         data.instances[name].instance.destroy();
                     }
@@ -204,16 +214,17 @@ pc.extend(pc.fw, function () {
 
                         // Attach events for update, fixedUpdate and postUpdate methods in script instance
                         if (instance.instance.update) {
-                            this.bind('update', instance.instance.update.bind(instance.instance));
+                            console.log(pc.string.format('binding update for {0}:{1}', instanceName, entity.getGuid()));
+                            this.bind('update', instance.instance.update, instance.instance);
                         }
                         if (instance.instance.fixedUpdate) {
-                            this.bind('fixedUpdate', instance.instance.fixedUpdate.bind(instance.instance));
+                            this.bind('fixedUpdate', instance.instance.fixedUpdate, instance.instance);
                         }
                         if (instance.instance.postUpdate) {
-                            this.bind('postUpdate', instance.instance.postUpdate.bind(instance.instance));
+                            this.bind('postUpdate', instance.instance.postUpdate, instance.instance);
                         }
                         if (instance.instance.toolsUpdate) {
-                            this.bind('toolsUpdate', instance.instance.toolsUpdate.bind(instance.instance));
+                            this.bind('toolsUpdate', instance.instance.toolsUpdate, instance.instance);
                         }
                     }
 

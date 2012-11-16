@@ -1,3 +1,5 @@
+var context;
+
 module('pc.fw.ScriptComponent', {
     setup: function () {
         var scene = new pc.scene.Scene();
@@ -11,6 +13,11 @@ module('pc.fw.ScriptComponent', {
         pc.resources = _resources
         delete _resources;
         delete context;
+
+        pc.fw.ComponentSystem.unbind('update');
+        pc.fw.ComponentSystem.unbind('fixedUpdate');
+        pc.fw.ComponentSystem.unbind('postUpdate');
+        pc.fw.ComponentSystem.unbind('toolsUpdate');
     }
 });
 
@@ -24,44 +31,29 @@ test("new", function () {
     });
 });
 
-test("createComponent: no data", function () {
+test("addComponent: no data", function () {
     jack(function() {
         pc.resources = jack.create("pc.resources", ["ResourceLoader"]);
         
         var sc = new pc.fw.ScriptComponentSystem(context);
         var e = new pc.fw.Entity();
         
-        var c = sc.createComponent(e);
+        var c = sc.addComponent(e);
         ok(c);
         equal(c.urls.length, 0);
         
     });    
-})
+});
 
 asyncTest("send() - send a message, check its return value", function () {
     var sc = new pc.fw.ScriptComponentSystem(context);
 
     var e = new pc.fw.Entity();
-    var c = sc.createComponent(e);
-    sc.set(e, "urls", "script.js");
+    var c = sc.addComponent(e);
+    e.script.urls = ['script.js'];
     var count = 0;
     setTimeout(function () {
-        var r = sc.send(e, "test_script", "sum", 1, 2);    
-        equal(r, 3);
-        start();    
-    }, 1000);
-});
-
-
-asyncTest("message() - for compatibility message() still works", function () {
-    var sc = new pc.fw.ScriptComponentSystem(context);
-
-    var e = new pc.fw.Entity();
-    var c = sc.createComponent(e);
-    sc.set(e, "urls", "script.js");
-    var count = 0;
-    setTimeout(function () {
-        var r = sc.send(e, "test_script", "sum", 1, 2);    
+        var r = e.script.send("test_script", "sum", 1, 2);    
         equal(r, 3);
         start();    
     }, 1000);
@@ -75,8 +67,8 @@ asyncTest("broadcast() - send many messages, test they were received", function 
     
     for(i = 0; i < length; ++i) {
         entities[i] = new pc.fw.Entity();
-        comps[i] = sc.createComponent(entities[i]);
-        sc.set(entities[i], "urls", "script.js");
+        comps[i] = sc.addComponent(entities[i]);
+        entities[i].script.urls = ['script.js'];
     }
 
     var count = 0;
@@ -87,6 +79,94 @@ asyncTest("broadcast() - send many messages, test they were received", function 
         for(i = 0; i < length; ++i) {
             equal(comps[i].instances['test_script'].instance.v, "value");
         }
+        start();
+    }, 1000);
+});
+
+
+asyncTest("update event registered", function () {
+    var e = new pc.fw.Entity();
+
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        urls: ['script.js']
+    });
+
+    setTimeout(function () {
+        sc.onInitialize(e);
+        equal(sc._callbacks['update'].length, 1);
+        equal(sc._callbacks['postUpdate'].length, 1);
+        equal(sc._callbacks['fixedUpdate'].length, 1);
+        start();
+    }, 1000);
+});
+
+
+asyncTest("update event unregistered on remove", function () {
+    var e = new pc.fw.Entity();
+
+    var sc = new pc.fw.ScriptComponentSystem(context);
+    sc.addComponent(e, {
+        urls: ['script.js']
+    });
+
+    setTimeout(function () {
+        sc.onInitialize(e);
+
+        sc.removeComponent(e);
+
+        equal(sc._callbacks['update'].length, 0);
+        equal(sc._callbacks['postUpdate'].length, 0);
+        equal(sc._callbacks['fixedUpdate'].length, 0);
+        
+        start();
+    }, 1000);
+});
+
+asyncTest("Correct event is unregistered with multiple instances.", function () {
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    var e1 = new pc.fw.Entity();
+    e1.setName('e1');
+    sc.addComponent(e1, {
+        urls: ['script.js']
+    });
+    context.root.addChild(e1);
+
+    var e2 = new pc.fw.Entity();
+    e2.setName('e2');
+    sc.addComponent(e2, {
+        urls: ['script.js']
+    });
+    context.root.addChild(e2);
+    
+    setTimeout(function () {
+        sc.onInitialize(context.root);
+
+        sc.removeComponent(e2);
+
+        equal(sc._callbacks['update'][0].scope.entity.getGuid(), e1.getGuid());
+        
+        start();
+    }, 1000);
+});
+
+asyncTest("update event called with correct this", 1, function () {
+    var e = new pc.fw.Entity();
+
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        urls: ['script.js']
+    });
+
+    setTimeout(function () {
+        sc.onInitialize(e);
+
+        // Test in script.js
+        pc.fw.ComponentSystem.update(0.1, context);
+        
         start();
     }, 1000);
 });

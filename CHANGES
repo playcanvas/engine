@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.83.0
+-------
+* pc.event.bind() and pc.event.unbind() now take an optional scope parameter to use as 'this' when firing.
+* Optimized GraphNode#getWorldTransform. It no longer syncs the entire hierarchy, just the path from the root to the queried node
+* [FIX] Script updates were called after the script component had been removed because events weren't unbound properly
+* [FIX] Deleting Script Component within update no longer skips an update
+* [FIX] Deleting Body2d Component with no collision body no longer crashes
+
+-------
 v0.82.6
 -------
 * [FIX] Rotating Body2d Components in Designer works
