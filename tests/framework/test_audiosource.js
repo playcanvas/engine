@@ -17,11 +17,11 @@ test("new", function () {
     ok(context.systems.audiosource);
 });
 
-test("createComponent: no data", function () {
+test("addComponent: no data", function () {
     var asc = new pc.fw.AudioSourceComponentSystem(context);
     var e = new pc.fw.Entity();
     
-    var comp = asc.createComponent(e);
+    var comp = asc.addComponent(e);
     
     ok(comp);
     equal(0, comp['assets'].length);
@@ -34,7 +34,7 @@ test("createComponent: no data", function () {
     equal(10000, comp['maxDistance']);
 });
 
-test("createComponent: data", function () {
+test("addComponent: data", function () {
     var asc = new pc.fw.AudioSourceComponentSystem(context);
     var e = new pc.fw.Entity();
     var data = {
@@ -43,12 +43,12 @@ test("createComponent: data", function () {
         '3d': false,
         activate: false
     }    
-    var comp = asc.createComponent(e, data);
+    var comp = asc.addComponent(e, data);
     
     ok(comp);
     equal(null, comp['channel'])
-    equal(data['activate'], asc.get(e, "activate"));
-    equal(data['3d'], asc.get(e, "3d"));
-    equal(data['volume'], asc.get(e, "volume"));
-    equal(data['loop'], asc.get(e, "loop"));    
+    equal(data['activate'],  e.audiosource.activate);
+    equal(data['3d'], e.audiosource['3d']);
+    equal(data['volume'], e.audiosource.volume);
+    equal(data['loop'], e.audiosource.loop);
 });

@@ -23,7 +23,7 @@ test("deleteComponent: model and entity removed", function () {
     jack(function () {
         var mc = new pc.fw.ModelComponentSystem(context);
         var entity = new pc.fw.Entity();
-        var model = jack.create("model", ["getGraph", "getMeshes"]);
+        var model = jack.create("model", ["getGraph", "getMeshes", "getLights"]);
         var node = new pc.scene.GraphNode();
         jack.expect("model.getGraph")
             .exactly("2 time")
@@ -31,18 +31,23 @@ test("deleteComponent: model and entity removed", function () {
                 return node;
             });
         jack.expect("model.getMeshes")
-            .exactly("1 time"),
+            .exactly("1 time")
             .mock(function () {
                 return [];
             });
-        var compData = mc.createComponent(entity);
+        jack.expect("model.getLights")
+            .exactly("2 times")
+            .mock(function () {
+                return [];
+            });
+        var compData = mc.addComponent(entity);
         
-        mc.set(entity, "model", model);
-        var data = mc._getComponentData(entity);
+        entity.model.model = model;
+        var data = entity.model.data;
         
         //equal(data.model, model);
     
-        mc.deleteComponent(entity);
+        mc.removeComponent(entity);
         
         equal(data.model, null);
         equal(entity.getChildren().length, 0);
@@ -56,11 +61,11 @@ test("deleteComponent: no model", function () {
         var mc = new pc.fw.ModelComponentSystem(context);
         var entity = new pc.fw.Entity();
 
-        var compData = mc.createComponent(entity);
-        var data = mc._getComponentData(entity);
+        var compData = mc.addComponent(entity);
+        var data = entity.model.data;
         equal(data.model, null);
     
-        mc.deleteComponent(entity);
+        mc.removeComponent(entity);
         
         equal(data.model, null);
         equal(entity.getChildren().length, 0);

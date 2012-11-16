@@ -23,7 +23,7 @@ test("Bind an event", function() {
    o.bind("test", cb);
    
    ok(o._callbacks["test"]);
-   strictEqual(o._callbacks["test"][0], cb);
+   strictEqual(o._callbacks["test"][0].callback, cb);
 });
 
 test("Bind and fire", function() {
@@ -58,7 +58,38 @@ test("Bind and unbind", function() {
    o.unbind("test", f1);
    
    strictEqual(o._callbacks["test"].length, 1);
-   strictEqual(o._callbacks["test"][0], f2);
+   strictEqual(o._callbacks["test"][0].callback, f2);
+});
+
+test("Bind and unbind, last", function() {
+   var o = {};
+   
+   o = pc.extend(o, pc.events);
+   
+   var f1 = function() {};
+   var f2 = function() {};
+   
+   o.bind("test", f1);
+   o.bind("test", f2);
+   strictEqual(o._callbacks["test"].length, 2);
+
+   o.unbind("test", f2);
+   
+   strictEqual(o._callbacks["test"].length, 1);
+   strictEqual(o._callbacks["test"][0].callback, f1);
+});
+
+test("Bind with scope", function() {
+   var o = {};
+   var m = {};
+
+   o = pc.extend(o, pc.events);
+   
+   o.bind("test", function() {
+    strictEqual(this, m);
+   }, m);
+      
+   o.fire('test');
 });
 
 test("Bind, unbind all", function() {
@@ -122,7 +153,61 @@ test("Bind two functions to same event", function() {
    equal(r.b, true);
 });
 
-test("Fire with nothing bound", function() {
+test("Bind same function twice", function() {
+  var count = 0;
+  var fn = function () {
+    count++;
+  }
+
+  var o = {};
+  o = pc.extend(o, pc.events);
+
+  o.bind('test', fn);
+  o.bind('test', fn);
+
+  o.fire('test');
+
+  equal(count, 2);
+});
+
+test("Bind/Unbind same function twice", function() {
+  var count = 0;
+  var fn = function () {
+    count++;
+  }
+
+  var o = {};
+  o = pc.extend(o, pc.events);
+
+  o.bind('test', fn);
+  o.bind('test', fn);
+
+  o.unbind("test", fn);
+
+  equal(o._callbacks['test'].length, 0);
+});
+
+test("Bind same function different scope", function () {
+  var count = 0;
+  var fn = function () {
+    count++;
+  }
+
+  var o = {};
+  var m = {};
+  o = pc.extend(o, pc.events);
+
+  o.bind('test', fn, o);
+  o.bind('test', fn, m);
+
+  
+  o.unbind("test", fn, o);
+
+  equal(o._callbacks['test'].length, 1);
+});
+
+
+test("Fire with nothing bound", 0, function() {
     var o = {}
     o = pc.extend(o, pc.events);
     
