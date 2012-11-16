@@ -4,6 +4,7 @@ pc.extend(pc.scene, function () {
     var tempVec = pc.math.vec3.create();
     var tempQuatA = pc.math.quat.create();
     var tempQuatB = pc.math.quat.create();
+    var syncList = [];
 
     /**
      * @name pc.scene.GraphNode
@@ -370,11 +371,13 @@ pc.extend(pc.scene, function () {
          */
         getWorldTransform: function () {
             var current = this;
+            syncList.length = 0;
             while (current !== null) {
-                if (current._parent === null) {
-                    current.syncHierarchy();
-                }
+                syncList.push(current);
                 current = current._parent;
+            }
+            for (var i = syncList.length - 1; i >= 0; i--) {
+                syncList[i].sync();
             }
             return this.worldTransform;
         },
@@ -687,13 +690,7 @@ pc.extend(pc.scene, function () {
             return results;
         },
 
-        /**
-         * @function
-         * @name pc.scene.GraphNode#syncHierarchy
-         * @description Updates the world transformation matrices at this node and all of its descendants.
-         * @author Will Eastcott
-         */
-        syncHierarchy: function () {
+        sync: function () {
             if (this.dirtyLocal) {
                 pc.math.mat4.compose(this.localPosition, this.localRotation, this.localScale, this.localTransform);
 
@@ -708,12 +705,22 @@ pc.extend(pc.scene, function () {
                     pc.math.mat4.multiply(this._parent.worldTransform, this.localTransform, this.worldTransform);
                 }
 
+                this.dirtyWorld = false;
+
                 for (var i = 0, len = this._children.length; i < len; i++) {
                     this._children[i].dirtyWorld = true;
                 }
-
-                this.dirtyWorld = false;
             }
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#syncHierarchy
+         * @description Updates the world transformation matrices at this node and all of its descendants.
+         * @author Will Eastcott
+         */
+        syncHierarchy: function () {
+            this.sync();
 
             // Sync subhierarchy
             for (var i = 0, len = this._children.length; i < len; i++) {
