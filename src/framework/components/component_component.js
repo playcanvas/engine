@@ -21,6 +21,14 @@ pc.extend(pc.fw, function () {
     };
 
     Component.prototype = {
+        /**
+        * @property
+        * @name pc.fw.Component#data
+        * @description Access the {@link pc.fw.ComponentData} directly. Usually you should
+        * access the data properties via the individual properties as modifying this data directly 
+        * will not fire 'set' events.
+        * @type {Object}
+        */
         get data() {
             var record = this.system.store[this.entity.getGuid()];
             if (record) {

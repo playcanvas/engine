@@ -61,7 +61,7 @@ pc.extend(pc.fw, function () {
         * @description Create new {@link pc.fw.Component} and {@link pc.fw.ComponentData} instances and attach them to the entity
         * @param {pc.fw.Entity} entity The Entity to attach this component to
         * @param {Object} data The source data with which to create the compoent
-        * @returns {pc.fw.Component} Returns a component of type defined by the component system
+        * @returns {pc.fw.Component} Returns a Component of type defined by the component system
         * @example 
         *   var data = {
         *       type: 'Box',

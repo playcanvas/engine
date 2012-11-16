@@ -3,6 +3,22 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.82.6
+-------
+* [FIX] Rotating Body2d Components in Designer works
+* [FIX] Convert between Eulers and single Angle for Body2d Components more robustly
+
+-------
+v0.82.5
+-------
+* [FIX] 2D collision works again in the Designer
+
+-------
+v0.82.4
+-------
+* [FIX] Prevent rendering of collisioncircle components unless debugRender flag is set
+
+-------
 v0.82.3
 -------
 * [FIX] All components properly updated to new texture API.

@@ -95,7 +95,10 @@ if (typeof(Box2D) !== 'undefined') {
 
                 bodyDef.type = component.static ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
                 bodyDef.position.Set(position[this.xi], position[this.yi]);
-                bodyDef.angle = rotation[this.ri] * pc.math.DEG_TO_RAD;
+                
+                var angle = component._eulersToAngle(rotation);
+
+                bodyDef.angle = -angle * pc.math.DEG_TO_RAD;
                 bodyDef.userData = component.entity;
 
                 component.data.bodyDef = bodyDef;

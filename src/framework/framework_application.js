@@ -5,41 +5,21 @@ pc.extend(pc.fw, function () {
     /**
      * @name pc.fw.Application
      * @class Default application which performs general setup code and initiates the main game loop
-     * <pre class="code" lang="javascript">
-     * // Create application
-     * var app = new pc.fw.Application(canvas, options);
-     * // Start game loop
-     * app.start()
-     * </pre>
-     * 
-     * To create custom applications derive a new Application class and override the update and render methods
-     * 
-     * <pre class="code" lang="javascript">
-     * var MyApplication = function () {
-     * };
-     * MyApplication = pc.inherits(MyApplication, pc.fw.Application);
-     * 
-     * MyApplication.prototype.update = function () {
-     *   // custom update code
-     * }
-     * 
-     * MyApplication.prototype.render = function () {
-     *   // custom render code
-     * }
-     * 
-     * var app = new MyApplication(canvas, options);
-     * app.start();
-     * </pre>
      * @constructor Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
-     * @param {String} options.dataDir Path to the directory where data is.
      * @param {Object} [options.config] Configuration options for the application
      * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
      * @param {pc.input.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
      * @param {pc.input.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
      * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
      * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
+     *
+     * @example
+     * // Create application
+     * var app = new pc.fw.Application(canvas, options);
+     * // Start game loop
+     * app.start()
      */
     var Application = function (canvas, options) {
         this._inTools = false;
@@ -544,9 +524,9 @@ pc.extend(pc.fw, function () {
                 // by firing an event which the body system subscribes to instead. But I do we really want entities (or nodes) firing
                 // an event everytime the transform is updated, sounds slow. Perhaps we can fire an event from in here.
                 if (this.context.systems.body2d && entity.body2d) {
-                    entity.body2d.setTransform(entity, entity.getWorldTransform());
-                    entity.body2d.setLinearVelocity(entity, 0, 0);
-                    entity.body2d.setAngularVelocity(entity, 0);
+                    entity.body2d.setTransform(entity.getWorldTransform());
+                    entity.body2d.setLinearVelocity(0, 0);
+                    entity.body2d.setAngularVelocity(0);
                 }
             }
         },

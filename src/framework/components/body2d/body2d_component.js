@@ -37,7 +37,7 @@ if (typeof(Box2D) !== 'undefined') {
             this.bind('set_static', this.onSetStatic.bind(this));
         };
         Body2dComponent = pc.inherits(Body2dComponent, pc.fw.Component);
-        
+
         pc.extend(Body2dComponent.prototype, {
             /**
             * @private
@@ -124,7 +124,9 @@ if (typeof(Box2D) !== 'undefined') {
                 pc.math.mat4.getTranslation(transform, position);
                 pc.math.mat4.toEulerXYZ(transform, rotation);
 
-                this.setPositionAndAngle(this.entity, position[this.xi], position[this.yi], -rotation[this.ri]);
+                var angle = this._eulersToAngle(rotation);
+
+                this.setPositionAndAngle(position[this.xi], position[this.yi], -angle);
             },
 
             /**
@@ -204,6 +206,8 @@ if (typeof(Box2D) !== 'undefined') {
 
             updateTransform: function (body) {
                 var entityPos = this.entity.getPosition();
+                var angles = this.entity.getLocalEulerAngles();
+
                 var position2d = body.GetPosition();
 
                 position[this.xi] = position2d.x;
@@ -229,8 +233,16 @@ if (typeof(Box2D) !== 'undefined') {
                 }
             },
 
+            _eulersToAngle: function (rotation) {
+                var angle = rotation[this.ri];
+                if (rotation[this.xi] > 179.9 && rotation[this.yi] > 179.9) {
+                    angle = 180 - rotation[this.ri];
+                }
+
+                return angle;
+            }
         });
-        
+    
         return {
             Body2dComponent: Body2dComponent
         };
