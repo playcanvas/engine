@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.83.1
+-------
+* [FIX] Removed some debug comments
+
+-------
 v0.83.0
 -------
 * pc.event.bind() and pc.event.unbind() now take an optional scope parameter to use as 'this' when firing.

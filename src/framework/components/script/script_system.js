@@ -61,7 +61,6 @@ pc.extend(pc.fw, function () {
                     var events = ['update', 'fixedUpdate', 'postUpdate', 'toolsUpdate'];
                     events.forEach(function (eventName) {
                         if (data.instances[name].instance[eventName]) {
-                            console.log(pc.string.format('unbinding event {0} for {1}:{2}', eventName, name, entity.getGuid()));
                             this.unbind(eventName, data.instances[name].instance[eventName], data.instances[name].instance);
                         }
                     }, this);
@@ -214,7 +213,6 @@ pc.extend(pc.fw, function () {
 
                         // Attach events for update, fixedUpdate and postUpdate methods in script instance
                         if (instance.instance.update) {
-                            console.log(pc.string.format('binding update for {0}:{1}', instanceName, entity.getGuid()));
                             this.bind('update', instance.instance.update, instance.instance);
                         }
                         if (instance.instance.fixedUpdate) {
