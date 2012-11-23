@@ -4,6 +4,8 @@ pc.extend(pc.input, function () {
     * @class Input handler for access GamePad input
     */ 
     var GamePads = function () {
+        this.gamepadsSupported = !!navigator.webkitGetGamepads;
+
         this.current = [];
         this.previous = [];
 
@@ -122,14 +124,14 @@ pc.extend(pc.input, function () {
         */
         poll: function () {
             var pads = [];
-            var pad = navigator.webkitGamepads || navigator.mozGamepads || navigator.gamepads;
-            if (pad) {
-                var i, len = pad.length;
+            if (this.gamepadsSupported) {
+                var padDevices = navigator.webkitGetGamepads();
+                var i, len = padDevices.length;
                 for (i = 0; i < len; i++) {
-                    if (pad[i]) {
+                    if (padDevices[i]) {
                         pads.push({
-                            map: this.getMap(pad[i]),
-                            pad: pad[i]
+                            map: this.getMap(padDevices[i]),
+                            pad: padDevices[i]
                         });
                     }
                 }
