@@ -1,24 +1,19 @@
 pc.extend(pc.scene, function () {
 
-    var _transparencyDefault = function (material) {
-        return false;
-    };
-
     /**
      * @name pc.scene.Material
      * @class A material.
      */
     var Material = function Material() {
-        this._name             = null;
+        this.name = null;
+        this.transparent = false;
+
         this._programName      = null;
         this._parameters       = {};
         this._state            = {};
         this._program          = null; // Set if the material has a vanilla program attached
         this._programs         = {};   // Set from a program generator
-        this._transparencyFunc = _transparencyDefault;
     };
-
-    Material.transparencyDefault = _transparencyDefault;
 
     /**
      * @function
@@ -30,7 +25,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     Material.prototype.getName = function () {
-        return this._name;
+        return this.name;
     };
 
     /**
@@ -42,29 +37,11 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     Material.prototype.setName = function (name) {
-        this._name = name;
+        this.name = name;
     };
     
     Material.prototype.setProgramName = function (name) {
-        if (pc.scene.materialplugin[name]) {
-            var func = pc.scene.materialplugin[name].isTransparent;
-            if (func) {
-                this.setTransparencyFunc(func);
-            }
-        }
         this._programName = name;
-    };
-
-    Material.prototype.isTransparent = function () {
-        return this._transparencyFunc(this);
-    };
-
-    Material.prototype.setTransparencyFunc = function (func) {
-        this._transparencyFunc = func ? func : _transparencyDefault;
-    };
-
-    Material.prototype.getTransparencyFunc = function () {
-        return this._transparencyFunc;
     };
 
     // Parameter management

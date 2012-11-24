@@ -368,7 +368,7 @@ pc.extend(pc.scene, function () {
             var submeshes = this.getSubMeshes();
             for (var i = 0; i < submeshes.length; i++) {
                 var material = submeshes[i].material;
-                if (material.isTransparent())
+                if (material.transparent)
                     return true;
             }
             return false;
