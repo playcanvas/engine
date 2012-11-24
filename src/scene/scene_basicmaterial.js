@@ -2,11 +2,11 @@ pc.extend(pc.scene, function () {
 
     /**
      * @name pc.scene.BasicMaterial
-     * @class A Basic material is the main, general purpose material that is most often used for rendering. 
-     * It can approximate a wide variety of surface types and can simlulate dynamic reflected light.
-     * @property {Float32Array} ambient The ambient color of the material (RGB, where each component is 0 to 1).
-     * @property {pc.gfx.Texture} lightMap The light map of the material. This must be a 2D texture rather 
-     * than a cube map.
+     * @class A Basic material is is for rendering unlit geometry, either using a constant color or a
+     * color map modulated with a color.
+     * @property {Float32Array} color The flat color of the material (RGBA, where each component is 0 to 1).
+     * @property {pc.gfx.Texture} colorMap The color map of the material. If specified, the color map is 
+     * modulated by the color property.
      * @author Will Eastcott
      */
     var BasicMaterial = function () {
@@ -25,6 +25,7 @@ pc.extend(pc.scene, function () {
                 this.deleteParameter('texture_diffuseMap');
             }
             this.setParameter('uColor', color);
+            this.transparent = (color[3] < 1);
         }
     });
 

@@ -258,9 +258,12 @@ pc.extend(pc.resources, function () {
     };
     
     ModelResourceHandler.prototype._loadMaterial = function(model, modelData, materialData) {
-        var material = new pc.scene.Material();
-        material.setName(materialData.name);
-        material.setProgramName(materialData.shader);
+        var material = (materialData.shader === 'phong') ? new pc.scene.PhongMaterial() : new pc.scene.Material();
+        if (materialData.shader !== 'phong') {
+            material.setProgramName(materialData.shader);
+        }
+
+        material.name = materialData.name;
 
         // Read each shader parameter
         for (var i = 0; i < materialData.parameters.length; i++) {
@@ -1052,8 +1055,8 @@ pc.extend(pc.resources, function () {
             var shader    = this.readStringChunk();
             var numParams = this.readU32();
 
-            var material = new pc.scene.Material();
-            material.setName(name);
+            var material = (shader === 'phong') ? new pc.scene.PhongMaterial() : new pc.scene.Material();
+            material.name = name;
             material.setProgramName(shader);
 
             // Read each shader parameter
