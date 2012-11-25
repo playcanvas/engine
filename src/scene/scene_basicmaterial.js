@@ -11,19 +11,21 @@ pc.extend(pc.scene, function () {
      */
     var BasicMaterial = function () {
         this.setProgramName('basic');
-        this.setParameter('uColor', new Float32Array([1, 1, 1, 1]));
+
+        this._color = new Float32Array([1, 1, 1, 1]);
+        this._colorMap = null;
+
+        this.setParameter('uColor', this._color);
     };
 
     BasicMaterial = pc.inherits(BasicMaterial, pc.scene.Material);
 
     Object.defineProperty(BasicMaterial.prototype, 'color', {
         get: function() { 
-            return this.getParameter('uColor');
+            return this._color;
         },
         set: function(color) {
-            if (this.getParameter('texture_diffuseMap')) {
-                this.deleteParameter('texture_diffuseMap');
-            }
+            this._color = color;
             this.setParameter('uColor', color);
             this.transparent = (color[3] < 1);
         }
@@ -33,11 +35,15 @@ pc.extend(pc.scene, function () {
         get: function() { 
             return this.getParameter('texture_diffuseMap'); 
         },
-        set: function(diffuseMap) {
-            if (this.getParameter('uColor')) {
-                this.deleteParameter('uColor');
+        set: function(colorMap) {
+            this._colorMap = colorMap;
+            if (diffuseMap === null) {
+                if (this.getParameter('texture_diffuseMap')) {
+                    this.deleteParameter('texture_diffuseMap');
+                }
+            } else {
+                this.setParameter('texture_diffuseMap', colorMap);
             }
-            this.setParameter('texture_diffuseMap', diffuseMap);
         }
     });
 
