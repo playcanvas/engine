@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.84.1
+-------
+* [FIX] Animation component now plays an animation on set in the connected game.
+
+-------
 v0.84.0
 -------
 * New material APIs. See pc.scene.PhongMaterial, DepthMaterial, PickMaterial and BasicMaterial.
