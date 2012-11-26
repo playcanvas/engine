@@ -119,6 +119,13 @@ pc.extend(pc.fw, function () {
                         animations[assetNames[i]] = animResources[requests[i].identifier];
                     }
                     this.animations = animations;
+                    // If we have animations _and_ a model, we can create the skeletons
+                    if (this.entity.model) {
+                        var m = model.model;
+                        if (m) {
+                            this.entity.animation.setModel(m);
+                        }
+                     }
                     //this.set(entity, 'animations', animations);
                 }.bind(this), function (errors) {
                     
