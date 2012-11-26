@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.84.0
+-------
+* New material APIs. See pc.scene.PhongMaterial, DepthMaterial, PickMaterial and BasicMaterial.
+* [FIX] Updated pad handling in pc.input to the latest GamePad spec.
+
+-------
 v0.83.1
 -------
 * [FIX] Removed some debug comments
