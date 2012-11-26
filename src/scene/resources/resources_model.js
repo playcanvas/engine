@@ -1114,70 +1114,69 @@ pc.extend(pc.resources, function () {
 
                 switch (param.name) {
                     case 'material_ambient': 
-                        material.ambient = pc.math.vec3.clone(param.data); 
+                        material.ambient = param.data;
                         break;
                     case 'material_diffuse': 
-                        material.diffuse = pc.math.vec3.clone(param.data); 
+                        material.diffuse = param.data;
                         break;
                     case 'texture_diffuseMap': 
-                        material.diffuseMap = model.getTextures()[param.data]; 
+                        material.diffuseMap = param.data;
                         break;
                     case 'texture_diffuseMapTransform': 
-                        material.diffuseMapTransform = pc.math.mat4.clone(param.data); 
+                        material.diffuseMapTransform = param.data;
                         break;
                     case 'material_specular': 
-                        material.specular = pc.math.vec3.clone(param.data); 
+                        material.specular = param.data;
                         break;
                     case 'texture_specularMap': 
-                        material.specularMap = model.getTextures()[param.data]; 
+                        material.specularMap = param.data;
                         break;
                     case 'texture_specularMapTransform': 
-                        material.specularMapTransform = pc.math.mat4.clone(param.data); 
+                        material.specularMapTransform = param.data;
                         break;
                     case 'material_shininess':
                         material.shininess = param.data;
                         break;
                     case 'material_emissive':
-                        material.emissive = pc.math.vec3.clone(param.data); 
+                        material.emissive = param.data;
                         break;
                     case 'texture_emissiveMap': 
-                        material.emissiveMap = model.getTextures()[param.data]; 
+                        material.emissiveMap = param.data;
                         break;
                     case 'texture_emissiveMapTransform': 
-                        material.emissiveMapTransform = pc.math.mat4.clone(param.data); 
+                        material.emissiveMapTransform = param.data;
                         break;
                     case 'material_opacity':
                         material.opacity = param.data;
                         break;
                     case 'texture_opacityMap': 
-                        material.opacityMap = model.getTextures()[param.data]; 
+                        material.opacityMap = param.data;
                         break;
                     case 'texture_opacityMapTransform': 
-                        material.opacityMapTransform = pc.math.mat4.clone(param.data); 
+                        material.opacityMapTransform = param.data;
                         break;
                     case 'texture_sphereMap': 
-                        material.reflectionMap = model.getTextures()[param.data];
+                        material.reflectionMap = param.data;
                         break;
                     case 'texture_cubeMap': 
-                        material.reflectionMap = model.getTextures()[param.data];
+                        material.reflectionMap = param.data;
                         break;
                     case 'texture_normalMap': 
-                        material.normalMap = model.getTextures()[param.data]; 
+                        material.normalMap = param.data;
                         break;
                     case 'texture_normalMapTransform': 
-                        material.normalMapTransform = pc.math.mat4.clone(param.data); 
+                        material.normalMapTransform = param.data;
                         break;
                     case 'texture_parallaxMap': 
-                        material.parallaxMap = model.getTextures()[param.data]; 
+                        material.parallaxMap = param.data;
                         break;
                     case 'texture_parallaxMapTransform': 
-                        material.parallaxMapTransform = pc.math.mat4.clone(param.data); 
+                        material.parallaxMapTransform = param.data;
                         break;
                     case 'texture_lightMap': 
-                        material.lightMap = model.getTextures()[param.data];
+                        material.lightMap = param.data;
                         break;
                 }
-                material.setParameter(param.name, param.data);
             }
 
             material.update();
