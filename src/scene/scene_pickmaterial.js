@@ -10,7 +10,6 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     var PickMaterial = function () {
-        this.setProgramName('pick');
         this.setParameter('uColor', new Float32Array([0, 0, 0, 1]));
     };
 

@@ -8,7 +8,6 @@ pc.extend(pc.scene, function () {
         this.name = null;
         this.transparent = false;
 
-        this._programName      = null;
         this._parameters       = {};
         this._state            = {};
         this._program          = null; // Set if the material has a vanilla program attached
@@ -38,10 +37,6 @@ pc.extend(pc.scene, function () {
      */
     Material.prototype.setName = function (name) {
         this.name = name;
-    };
-    
-    Material.prototype.setProgramName = function (name) {
-        this._programName = name;
     };
 
     // Parameter management

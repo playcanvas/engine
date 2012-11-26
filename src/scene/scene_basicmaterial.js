@@ -10,8 +10,6 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     var BasicMaterial = function () {
-        this.setProgramName('basic');
-
         this._color = new Float32Array([1, 1, 1, 1]);
         this._colorMap = null;
 

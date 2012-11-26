@@ -5,9 +5,7 @@ pc.extend(pc.scene, function () {
      * @class A Depth material is for rendering depth information.
      * @author Will Eastcott
      */
-    var DepthMaterial = function () {
-        this.setProgramName('depth');
-    };
+    var DepthMaterial = function () {};
 
     DepthMaterial = pc.inherits(DepthMaterial, pc.scene.Material);
 

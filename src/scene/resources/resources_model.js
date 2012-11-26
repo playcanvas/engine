@@ -258,30 +258,80 @@ pc.extend(pc.resources, function () {
     };
     
     ModelResourceHandler.prototype._loadMaterial = function(model, modelData, materialData) {
-        var material = (materialData.shader === 'phong') ? new pc.scene.PhongMaterial() : new pc.scene.Material();
-        if (materialData.shader !== 'phong') {
-            material.setProgramName(materialData.shader);
-        }
-
+        var material = new pc.scene.PhongMaterial();
         material.name = materialData.name;
 
         // Read each shader parameter
         for (var i = 0; i < materialData.parameters.length; i++) {
             var param = materialData.parameters[i];
-            if (param.type === "sampler") {
-                var texture = model.getTextures()[param.data];
-                if (texture === undefined) {
-                    logERROR("Texture " + modelData[param.data].uri + " not found in model's texture dictionary.");
-                }
-                material.setParameter(param.name, texture);
-            } else {
-                if (param.type === 'float') {
-                    material.setParameter(param.name, param.data);
-                } else {
-                    material.setParameter(param.name, pc.math[param.type].clone(param.data));
-                }
+            switch (param.name) {
+                case 'material_ambient': 
+                    material.ambient = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'material_diffuse': 
+                    material.diffuse = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'texture_diffuseMap': 
+                    material.diffuseMap = model.getTextures()[param.data]; 
+                    break;
+                case 'texture_diffuseMapTransform': 
+                    material.diffuseMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'material_specular': 
+                    material.specular = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'texture_specularMap': 
+                    material.specularMap = model.getTextures()[param.data]; 
+                    break;
+                case 'texture_specularMapTransform': 
+                    material.specularMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'material_shininess':
+                    material.shininess = param.data;
+                    break;
+                case 'material_emissive':
+                    material.emissive = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'texture_emissiveMap': 
+                    material.emissiveMap = model.getTextures()[param.data]; 
+                    break;
+                case 'texture_emissiveMapTransform': 
+                    material.emissiveMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'material_opacity':
+                    material.opacity = param.data;
+                    break;
+                case 'texture_opacityMap': 
+                    material.opacityMap = model.getTextures()[param.data]; 
+                    break;
+                case 'texture_opacityMapTransform': 
+                    material.opacityMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'texture_sphereMap': 
+                    material.reflectionMap = model.getTextures()[param.data];
+                    break;
+                case 'texture_cubeMap': 
+                    material.reflectionMap = model.getTextures()[param.data];
+                    break;
+                case 'texture_normalMap': 
+                    material.normalMap = model.getTextures()[param.data]; 
+                    break;
+                case 'texture_normalMapTransform': 
+                    material.normalMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'texture_parallaxMap': 
+                    material.parallaxMap = model.getTextures()[param.data]; 
+                    break;
+                case 'texture_parallaxMapTransform': 
+                    material.parallaxMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'texture_lightMap': 
+                    material.lightMap = model.getTextures()[param.data];
+                    break;
             }
         }
+
+        material.update();
     
         return material;
     };
@@ -1055,15 +1105,82 @@ pc.extend(pc.resources, function () {
             var shader    = this.readStringChunk();
             var numParams = this.readU32();
 
-            var material = (shader === 'phong') ? new pc.scene.PhongMaterial() : new pc.scene.Material();
+            var material = new pc.scene.PhongMaterial();
             material.name = name;
-            material.setProgramName(shader);
 
             // Read each shader parameter
             for (var i = 0; i < numParams; i++) {
                 var param = this.readMaterialParamChunk();
+
+                switch (param.name) {
+                    case 'material_ambient': 
+                        material.ambient = pc.math.vec3.clone(param.data); 
+                        break;
+                    case 'material_diffuse': 
+                        material.diffuse = pc.math.vec3.clone(param.data); 
+                        break;
+                    case 'texture_diffuseMap': 
+                        material.diffuseMap = model.getTextures()[param.data]; 
+                        break;
+                    case 'texture_diffuseMapTransform': 
+                        material.diffuseMapTransform = pc.math.mat4.clone(param.data); 
+                        break;
+                    case 'material_specular': 
+                        material.specular = pc.math.vec3.clone(param.data); 
+                        break;
+                    case 'texture_specularMap': 
+                        material.specularMap = model.getTextures()[param.data]; 
+                        break;
+                    case 'texture_specularMapTransform': 
+                        material.specularMapTransform = pc.math.mat4.clone(param.data); 
+                        break;
+                    case 'material_shininess':
+                        material.shininess = param.data;
+                        break;
+                    case 'material_emissive':
+                        material.emissive = pc.math.vec3.clone(param.data); 
+                        break;
+                    case 'texture_emissiveMap': 
+                        material.emissiveMap = model.getTextures()[param.data]; 
+                        break;
+                    case 'texture_emissiveMapTransform': 
+                        material.emissiveMapTransform = pc.math.mat4.clone(param.data); 
+                        break;
+                    case 'material_opacity':
+                        material.opacity = param.data;
+                        break;
+                    case 'texture_opacityMap': 
+                        material.opacityMap = model.getTextures()[param.data]; 
+                        break;
+                    case 'texture_opacityMapTransform': 
+                        material.opacityMapTransform = pc.math.mat4.clone(param.data); 
+                        break;
+                    case 'texture_sphereMap': 
+                        material.reflectionMap = model.getTextures()[param.data];
+                        break;
+                    case 'texture_cubeMap': 
+                        material.reflectionMap = model.getTextures()[param.data];
+                        break;
+                    case 'texture_normalMap': 
+                        material.normalMap = model.getTextures()[param.data]; 
+                        break;
+                    case 'texture_normalMapTransform': 
+                        material.normalMapTransform = pc.math.mat4.clone(param.data); 
+                        break;
+                    case 'texture_parallaxMap': 
+                        material.parallaxMap = model.getTextures()[param.data]; 
+                        break;
+                    case 'texture_parallaxMapTransform': 
+                        material.parallaxMapTransform = pc.math.mat4.clone(param.data); 
+                        break;
+                    case 'texture_lightMap': 
+                        material.lightMap = model.getTextures()[param.data];
+                        break;
+                }
                 material.setParameter(param.name, param.data);
             }
+
+            material.update();
 
             return material;
         },
