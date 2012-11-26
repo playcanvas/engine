@@ -119,13 +119,6 @@ pc.extend(pc.fw, function () {
                         animations[assetNames[i]] = animResources[requests[i].identifier];
                     }
                     this.animations = animations;
-                    // If we have animations _and_ a model, we can create the skeletons
-                    if (this.entity.model) {
-                        var m = model.model;
-                        if (m) {
-                            this.entity.animation.setModel(m);
-                        }
-                     }
                     //this.set(entity, 'animations', animations);
                 }.bind(this), function (errors) {
                     
@@ -142,6 +135,15 @@ pc.extend(pc.fw, function () {
         onSetAnimations: function (name, oldValue, newValue) {
             var data = this.data;
             var name;
+
+            // If we have animations _and_ a model, we can create the skeletons
+            if (this.entity.model) {
+                var m = model.model;
+                if (m) {
+                    this.entity.animation.setModel(m);
+                }
+            }
+
             for (name in data.animations) {
                 // Set the first loaded animation as the current
                 if (data.activate) {
