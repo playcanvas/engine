@@ -137,8 +137,9 @@ pc.extend(pc.fw, function () {
             var name;
 
             // If we have animations _and_ a model, we can create the skeletons
-            if (this.entity.model) {
-                var m = model.model;
+            var modelComponent = this.entity.model;
+            if (modelComponent) {
+                var m = modelComponent.model;
                 if (m) {
                     this.entity.animation.setModel(m);
                 }
