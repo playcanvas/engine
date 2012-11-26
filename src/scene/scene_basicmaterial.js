@@ -10,40 +10,29 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     var BasicMaterial = function () {
-        this._color = new Float32Array([1, 1, 1, 1]);
-        this._colorMap = null;
+        this.color = pc.math.vec4.create(1, 1, 1, 1);
+        this.colorMap = null;
 
-        this.setParameter('uColor', this._color);
+        this.update();
     };
 
     BasicMaterial = pc.inherits(BasicMaterial, pc.scene.Material);
 
-    Object.defineProperty(BasicMaterial.prototype, 'color', {
-        get: function() { 
-            return this._color;
-        },
-        set: function(color) {
-            this._color = color;
-            this.setParameter('uColor', color);
-            this.transparent = (color[3] < 1);
-        }
-    });
+    BasicMaterial.prototype.update = function () {
+        this.clearParameters();
 
-    Object.defineProperty(BasicMaterial.prototype, 'colorMap', {
-        get: function() { 
-            return this.getParameter('texture_diffuseMap'); 
-        },
-        set: function(colorMap) {
-            this._colorMap = colorMap;
-            if (diffuseMap === null) {
-                if (this.getParameter('texture_diffuseMap')) {
-                    this.deleteParameter('texture_diffuseMap');
-                }
-            } else {
-                this.setParameter('texture_diffuseMap', colorMap);
+        this.setParameter('uColor', this.color);
+        if (this.colorMap) {
+            this.setParameter('texture_diffuseMap', this.colorMap);
+        }
+
+        this.transparent = (this.color[3] < 1);
+        if (this.colorMap) {
+            if (this.colorMap.format === pc.gfx.PIXELFORMAT_R8_G8_B8_A8) {
+                this.transparent = true;
             }
         }
-    });
+    }
 
     BasicMaterial.prototype.getProgram = function (mesh) {
         var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';

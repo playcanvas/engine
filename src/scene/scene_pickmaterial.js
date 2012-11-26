@@ -10,19 +10,20 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     var PickMaterial = function () {
-        this.setParameter('uColor', new Float32Array([0, 0, 0, 1]));
+        this.color = pc.math.vec4.create(0, 0, 0, 1);
+
+        this.update();
     };
 
     PickMaterial = pc.inherits(PickMaterial, pc.scene.Material);
 
-    Object.defineProperty(PickMaterial.prototype, 'color', {
-        get: function() { 
-            return this.getParameter('uColor');
-        },
-        set: function(color) {
-            this.setParameter('uColor', color);
-        }
-    });
+    PickMaterial.prototype.update = function () {
+        this.clearParameters();
+
+        this.setParameter('uColor', this.color);
+
+        this.transparent = false;
+    }
 
     PickMaterial.prototype.getProgram = function (mesh) {
         var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';

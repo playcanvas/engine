@@ -181,6 +181,7 @@ pc.extend(pc.scene, function () {
             this.pickColor[2] = (count & 0xff) / 255.0;
             this.pickColor[3] = 1.0;
             this.pickMaterial.color = this.pickColor;
+            this.pickMaterial.update();
             model.dispatch();
             count++;
         }
