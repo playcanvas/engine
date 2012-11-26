@@ -50,8 +50,8 @@ pc.extend(pc.scene, function () {
      * @param {Number} height The height of the pick buffer in pixels.
      */
     var Picker = function(width, height) {
-        this._pickMaterial = new pc.scene.Material();
-        this._pickMaterial.setProgramName('pick');
+        this.pickMaterial = new pc.scene.PickMaterial();
+        this.pickColor = new Float32Array(4);
 
         this._models = null;
 
@@ -161,7 +161,7 @@ pc.extend(pc.scene, function () {
         this._models = models;
 
         // Set the pick material on all models in the scene
-        _setPickMaterial(models, this._pickMaterial);
+        _setPickMaterial(models, this.pickMaterial);
 
         // Cache camera properties
         var prevRenderTarget = camera.getRenderTarget();
@@ -176,13 +176,12 @@ pc.extend(pc.scene, function () {
         var count = 0;
         for (var i = 0; i < models.length; i++) {
             var model = models[i];
-            var pickColor = [
-                ((count >> 16) & 0xff) / 255.0, 
-                ((count >> 8) & 0xff) / 255.0, 
-                (count & 0xff) / 255.0, 
-                1.0
-            ];
-            this._pickMaterial.setParameter("uColor", pickColor);
+            this.pickColor[0] = ((count >> 16) & 0xff) / 255.0;
+            this.pickColor[1] = ((count >> 8) & 0xff) / 255.0;
+            this.pickColor[2] = (count & 0xff) / 255.0;
+            this.pickColor[3] = 1.0;
+            this.pickMaterial.color = this.pickColor;
+            this.pickMaterial.update();
             model.dispatch();
             count++;
         }

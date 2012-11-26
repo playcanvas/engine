@@ -156,8 +156,7 @@ pc.extend(pc.scene, function () {
         this._localLights = [[], []]; // All currently enabled points and spots
 
         // Shadows
-        this._shadowMaterial = new pc.scene.Material();
-        this._shadowMaterial.setProgramName('depth');
+        this._shadowMaterial = new pc.scene.DepthMaterial();
         this._shadowState = {
             blend: false
         };

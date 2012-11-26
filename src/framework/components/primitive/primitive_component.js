@@ -114,20 +114,18 @@ pc.extend(pc.fw, function () {
         onSetColor: function (name, oldValue, newValue) {
             var data = this.data;
             var rbg = 0;
-            var color = [0,0,0];
+            var color = new Float32Array([0, 0, 0]);
             
-            if(newValue) {
+            if (newValue) {
                 rgb = parseInt(newValue);
                 rgb = pc.math.intToBytes24(rgb);
-                color = [
-                    rgb[0] / 255,
-                    rgb[1] / 255,
-                    rgb[2] / 255
-                ];
+                color[0] = rgb[0] / 255;
+                color[1] = rgb[1] / 255;
+                color[2] = rgb[2] / 255;
             }
 
-            data.material.setParameter('material_diffuse', color);
-            data.material.setParameter('material_ambient', color);
+            data.material.ambient = color;
+            data.material.diffuse = color;
         },
 
         onSetModel: function (name, oldValue, newValue) {

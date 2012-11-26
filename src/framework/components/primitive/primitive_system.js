@@ -68,15 +68,7 @@ pc.extend(pc.fw, function () {
 
     pc.extend(PrimitiveComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            var material = new pc.scene.Material();
-            material.setProgramName('phong');
-            material.setParameter('material_diffuse', [1,1,1]);
-            material.setParameter('material_ambient', [1,1,1]);
-            material.setParameter('material_specular', [0,0,0]);
-            material.setParameter('material_emissive', [0,0,0]);
-            material.setParameter('material_shininess', 0);
-            material.setParameter('material_opacity', 1)
-            data.material = material;
+            data.material = new pc.scene.PhongMaterial();
 
             properties = ['material', 'castShadows', 'color', 'receiveShadows', 'type'];
             PrimitiveComponentSystem._super.initializeComponentData.call(this, component, data, properties);

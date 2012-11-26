@@ -102,9 +102,8 @@ pc.extend(pc.fw, function () {
     });
 
     var _createGfxResources = function () {
-        var lightMat = new pc.scene.Material();
-        lightMat.setProgramName("basic");
-        lightMat.setParameter("uColor",  [1, 1, 0, 1]);
+        var lightMat = new pc.scene.BasicMaterial();
+        lightMat.color = new Float32Array([1, 1, 0, 1]);
 
         var sphereGeom = pc.scene.procedural.createSphere({material: lightMat});
         
