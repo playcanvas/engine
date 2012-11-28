@@ -126,6 +126,7 @@ pc.extend(pc.fw, function () {
 
             data.material.ambient = color;
             data.material.diffuse = color;
+            data.material.update();
         },
 
         onSetModel: function (name, oldValue, newValue) {
