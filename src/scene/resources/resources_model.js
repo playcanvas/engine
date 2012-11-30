@@ -194,8 +194,10 @@ pc.extend(pc.resources, function () {
         // Mesh properties
         var geometryId = meshData.geometry;
         var geometry   = model.getGeometries()[geometryId];
-        mesh.setGeometry(geometry);
-    
+//        mesh.setGeometry(geometry);
+        for (var i = 0; i < geometry.length; i++) {
+            mesh.addMeshInstance(geometry[i]);
+        }
         return mesh;
     };
     
@@ -352,8 +354,7 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData, buffers) {
-        var geometry = new pc.scene.Geometry();
-    
+
         // Skinning data
         if (geomData.inverse_bind_pose !== undefined) {
             var inverseBindPose = [];
@@ -428,22 +429,32 @@ pc.extend(pc.resources, function () {
         }
         iterator.end();
     
-        geometry.getVertexBuffers().push(vertexBuffer);
-
         // Create the index buffer
         var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, geomData.indices.data.length);
         var dst = new Uint16Array(indexBuffer.lock());
         dst.set(geomData.indices.data);
         indexBuffer.unlock();
-        geometry.setIndexBuffer(indexBuffer);
+
+        var geometry = [];
 
         // Create and read each submesh
         for (var i = 0; i < geomData.submeshes.length; i++) {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
     
-            geometry.getSubMeshes().push(subMesh);
+            var mesh = new pc.scene.Mesh();
+            mesh.vertexBuffer = vertexBuffer;
+            mesh.indexBuffer = indexBuffer;
+            mesh.primType = subMesh.primitive.type;
+            mesh.base = subMesh.primitive.base;
+            mesh.count = subMesh.primitive.count;
+            mesh.indexed = true;
+
+            var meshInstance = new pc.scene.MeshInstance(mesh, subMesh.material);
+
+            geometry.push(meshInstance);
         }
 
+/*
         // Set the local space axis-aligned bounding box of the geometry
         if (geomData.bbox) {
             var min = geomData.bbox.min;
@@ -462,6 +473,7 @@ pc.extend(pc.resources, function () {
                 geometry.partitionSkin(maxBones);
             }
         }
+*/
 
         return geometry;
     };
@@ -568,7 +580,7 @@ pc.extend(pc.resources, function () {
         if (modelData.graph !== undefined) {
             var graph = _loadHierarchy(modelData.graph);
             model.setGraph(graph);
-
+/*
             // Resolve bone IDs to actual graph nodes
             var meshes = model.getMeshes();
             for (i = 0; i < meshes.length; i++) {
@@ -583,7 +595,7 @@ pc.extend(pc.resources, function () {
                     }
                 }
             }
-
+*/
             // Resolve camera aim/up graph node IDs to actual graph nodes            
             _resolveCameraIds(graph);
 
@@ -593,7 +605,7 @@ pc.extend(pc.resources, function () {
         model.getGraph().syncHierarchy();
         var meshes = model.getMeshes();
         for (i = 0; i < meshes.length; i++) {
-            meshes[i].syncAabb();
+//            meshes[i].syncAabb();
         }
 
         return model;

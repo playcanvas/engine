@@ -143,6 +143,8 @@ pc.extend(pc.scene, function () {
      * @class A scene.
      */
     var Scene = function Scene() {
+        this.meshInstances = [];
+
         // Models
         this._models = [];
         this._alphaMeshes = [];
@@ -243,6 +245,87 @@ pc.extend(pc.scene, function () {
 	        this._models[i].getGraph().syncHierarchy();
 	    }
 	};
+
+    var PROGRAM_MASK = 0xf00;
+    var MATERIAL_MASK = 0xf0;
+    var BUFFER_MASK = 0xf;
+
+    Scene.prototype.render = function () {
+
+        pc.scene.Scene.current = this;
+
+        this._globalLights.length = 0;
+        this._localLights[0].length = 0;
+        this._localLights[1].length = 0;
+        var castShadows = false;
+        var lights = this._lights;
+        for (i = 0, len = lights.length; i < len; i++) {
+            var light = lights[i];
+            if (light.getCastShadows()) {
+                castShadows = true;
+            }
+            if (light.getEnabled()) {
+                if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
+                    if (light.getCastShadows()) {
+                        this._globalLights.push(light);
+                    } else {
+                        this._globalLights.unshift(light);
+                    }
+                } else {
+                    this._localLights[light.getType() === pc.scene.LightType.POINT ? 0 : 1].push(light);
+                }
+            }
+        }
+
+        this.dispatchGlobalLights();
+        this.dispatchLocalLights();
+
+        var i, j, instances, numInstances;
+        instances = this.meshInstances;
+
+        // Build mesh instance list (ideally done by visibility query)
+        instances.length = 0;
+        for (i = this._models.length - 1; i >= 0; i--) {
+            var meshes = this._models[i].getMeshes();
+            for (j = meshes.length - 1; j >= 0; j--) {
+                var mesh = meshes[j];
+                for (k = mesh.meshInstances.length - 1; k >= 0; k--) {
+                    instances.push(mesh.meshInstances[k]);
+                }
+            }
+        }
+
+        instances.sort(function (instanceA, instanceB) {
+            return instanceA.key - instanceB.key;
+        });
+
+        var device = pc.gfx.Device.getCurrent();
+        var modelMatrixId = device.scope.resolve('matrix_model');
+        var instance, mesh, material, prevMaterial = null;
+
+        for (i = 0, numInstances = instances.length; i < numInstances; i++) {
+            instance = instances[i];
+            mesh = instance.mesh;
+            material = instance.material;
+
+            modelMatrixId.setValue(instance.node.worldTransform);
+
+            if (material !== prevMaterial) {
+                device.setProgram(material.getProgram(instance.node));
+                material.setParameters();
+            }
+            prevMaterial = material;
+
+            device.setVertexBuffer(mesh.vertexBuffer, 0);
+            device.setIndexBuffer(mesh.indexBuffer);
+            device.draw({
+                type: mesh.primType, 
+                base: mesh.base, 
+                count: mesh.count, 
+                indexed: mesh.indexed
+            });
+        }
+    };
 
     /**
      * @function

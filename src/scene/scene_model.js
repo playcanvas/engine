@@ -8,7 +8,7 @@ pc.extend(pc.scene, function () {
 	    this._textures   = [];
 	    this._materials  = [];
 	    this._geometries = [];
-	
+
 	    this._cameras    = [];
 	    this._lights     = [];
 	    this._meshes     = [];
@@ -115,7 +115,7 @@ pc.extend(pc.scene, function () {
         }
 
         clone.setGraph(_duplicate(this.getGraph()));
-
+/*
         // Resolve bone IDs to actual graph nodes
         var meshes = clone.getMeshes();
         for (var i = 0; i < meshes.length; i++) {
@@ -137,11 +137,11 @@ pc.extend(pc.scene, function () {
                 }
             }
         }
-
+*/
         clone.getGraph().syncHierarchy();
         var meshes = clone.getMeshes();
         for (var i = 0; i < meshes.length; i++) {
-            meshes[i].syncAabb();
+  //          meshes[i].syncAabb();
         }
 
         return clone;

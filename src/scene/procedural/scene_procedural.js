@@ -202,29 +202,20 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
         indexBuffer.unlock();
     }
 
-    var submesh = {
-        material: material,
-        primitive: {
-            type: pc.gfx.PrimType.TRIANGLES,
-            base: 0,
-            count: indexed ? indices.length : numVertices,
-            indexed: indexed
-        }
-    };
-
     var boundingSphere = new pc.shape.Sphere();
     boundingSphere.compute(positions);
 
     var aabb = new pc.shape.Aabb();
     aabb.compute(positions);
 
-    var geometry = new pc.scene.Geometry();
-    geometry.setVertexBuffers([vertexBuffer]);
-    geometry.setIndexBuffer(indexBuffer);
-    geometry.setSubMeshes([submesh]);
-    geometry.setVolume(boundingSphere);
-    geometry.setAabb(aabb);
-    return geometry;
+    var mesh = new pc.scene.Mesh();
+    mesh.vertexBuffer = vertexBuffer;
+    mesh.indexBuffer = indexBuffer;
+    mesh.primType = pc.gfx.PrimType.TRIANGLES;
+    mesh.base = 0;
+    mesh.count = indexed ? indices.length : numVertices;
+    mesh.indexed = indexed;
+    return mesh;
 }
 
 /**

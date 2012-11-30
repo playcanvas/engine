@@ -9,6 +9,8 @@ pc.extend(pc.scene, function () {
      * @class A mesh.
      */
     var MeshNode = function MeshNode() {
+        this.meshInstances = [];
+
         this._geometry = null;
         this._style = RenderStyle.NORMAL;
         this._castShadows = false;
@@ -33,7 +35,10 @@ pc.extend(pc.scene, function () {
         MeshNode._super._cloneInternal.call(this, clone);
 
         // Clone MeshNode properties
-        clone.setGeometry(this.getGeometry());
+//        clone.setGeometry(this.getGeometry());
+        for (var i = 0; i < this.meshInstances.length; i++) {
+            clone.addMeshInstance(new pc.scene.MeshInstance(this.meshInstances[i].mesh, this.meshInstances[i].material));
+        }
         clone.setRenderStyle(this.getRenderStyle());
         clone.setReceiveShadows(this.getReceiveShadows());
         clone.setCastShadows(this.getCastShadows());
@@ -42,6 +47,11 @@ pc.extend(pc.scene, function () {
         // (normally in Model#clone) where a graph is supplied to find bones
         // matching the bone IDs on the geometry.
     };
+
+    MeshNode.prototype.addMeshInstance = function (instance) {
+        instance.node = this;
+        this.meshInstances.push(instance);
+    }
 
     /**
      * @function

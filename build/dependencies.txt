@@ -69,6 +69,7 @@
 ../src/scene/scene_phongmaterial.js
 ../src/scene/scene_pickmaterial.js
 ../src/scene/scene_geometry.js
+../src/scene/scene_mesh.js
 ../src/scene/scene_meshnode.js
 ../src/scene/scene_model.js
 ../src/scene/scene_pick.js

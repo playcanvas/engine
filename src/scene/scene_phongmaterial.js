@@ -175,22 +175,23 @@ pc.extend(pc.scene, function () {
                     numDirs++;
                 }
             }
-            for (i = 0; i < mesh._localLights[0].length; i++) {
-                if (mesh._localLights[0][i].getCastShadows()) {
+            for (i = 0; i < scene._localLights[0].length; i++) {
+                if (scene._localLights[0][i].getCastShadows()) {
                     numSPnts++;
                 } else {
                     numPnts++;
                 }
             }
-            for (i = 0; i < mesh._localLights[1].length; i++) {
-                if (mesh._localLights[1][i].getCastShadows()) {
+            for (i = 0; i < scene._localLights[1].length; i++) {
+                if (scene._localLights[1][i].getCastShadows()) {
                     numSSpts++;
                 } else {
                     numSpts++;
                 }
             }
         }
-        var skinned = mesh.getGeometry().isSkinned();
+//        var skinned = mesh.getGeometry().isSkinned();
+        var skinned = false;
         var device = pc.gfx.Device.getCurrent();
         var currState = device.getCurrentState();
         var key = '';
