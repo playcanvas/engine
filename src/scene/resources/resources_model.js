@@ -354,18 +354,6 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData, buffers) {
-
-        // Skinning data
-        if (geomData.inverse_bind_pose !== undefined) {
-            var inverseBindPose = [];
-            for (var i = 0; i < geomData.inverse_bind_pose.length; i++) {
-                inverseBindPose[i] = pc.math.mat4.clone(geomData.inverse_bind_pose[i]);
-            }
-            geometry.setInverseBindPose(inverseBindPose);
-
-            geometry._boneIds = geomData.bone_ids;
-        }
-
         // Calculate tangents if we have positions, normals and texture coordinates
         var positions = null, normals = null, uvs = null, tangents = null;
         for (var i = 0; i < geomData.attributes.length; i++) {
@@ -435,6 +423,18 @@ pc.extend(pc.resources, function () {
         dst.set(geomData.indices.data);
         indexBuffer.unlock();
 
+        // Skinning data
+        var skin;
+        if (geomData.inverse_bind_pose !== undefined) {
+            var inverseBindPose = [];
+            for (var i = 0; i < geomData.inverse_bind_pose.length; i++) {
+                inverseBindPose[i] = pc.math.mat4.clone(geomData.inverse_bind_pose[i]);
+            }
+
+            skin = new pc.scene.Skin(inverseBindPose, geomData.bone_ids);
+            model._skins.push(skin);
+        }
+
         var geometry = [];
 
         // Create and read each submesh
@@ -448,6 +448,7 @@ pc.extend(pc.resources, function () {
             mesh.base = subMesh.primitive.base;
             mesh.count = subMesh.primitive.count;
             mesh.indexed = true;
+            mesh.skin = skin;
 
             var meshInstance = new pc.scene.MeshInstance(mesh, subMesh.material);
 
@@ -580,22 +581,18 @@ pc.extend(pc.resources, function () {
         if (modelData.graph !== undefined) {
             var graph = _loadHierarchy(modelData.graph);
             model.setGraph(graph);
-/*
-            // Resolve bone IDs to actual graph nodes
-            var meshes = model.getMeshes();
-            for (i = 0; i < meshes.length; i++) {
-                var mesh = meshes[i];
-                var geom = mesh.getGeometry();
-                if (geom._boneIds !== undefined) {
-                    mesh._bones = [];
-                    for (var j = 0; j < geom._boneIds.length; j++) {
-                        var id = geom._boneIds[j];
-                        var bone = graph.findByGraphId(id);
-                        mesh._bones.push(bone);
-                    }
+
+            // Need to update JSON file format to have bone names instead of graph IDs
+            for (var i = 0; i < model._skins.length; i++) {
+                var skin = model._skins[i];
+                for (var j = 0; j < skin.boneNames.length; j++) {
+                    skin.boneNames[j] = graph.findByGraphId(skin.boneNames[j]).getName();
                 }
             }
-*/
+
+            // Resolve bone IDs to actual graph nodes
+            model.resolveBoneNames();
+
             // Resolve camera aim/up graph node IDs to actual graph nodes            
             _resolveCameraIds(graph);
 
@@ -1471,27 +1468,14 @@ pc.extend(pc.resources, function () {
             this.model.setGraph(nodes[0]);
 
             // Resolve bone IDs to actual graph nodes
-            var meshes = this.model.getMeshes();
-            var graph = this.model.getGraph();
-            for (i = 0; i < meshes.length; i++) {
-                var mesh = meshes[i];
-                var geom = mesh.getGeometry();
-                if (geom._boneNames !== undefined) {
-                    mesh._bones = [];
-                    for (var j = 0; j < geom._boneNames.length; j++) {
-                        var boneName = geom._boneNames[j];
-                        var bone = graph.findByName(boneName);
-                        mesh._bones.push(bone);
-                    }
-                }
-            }
-
+            this.model.resolveBoneNames();
+/*
             this.model.getGraph().syncHierarchy();
             var meshes = this.model.getMeshes();
             for (i = 0; i < meshes.length; i++) {
                 meshes[i].syncAabb();
             }
-
+*/
             return this.model;
         }
     };

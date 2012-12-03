@@ -8,6 +8,7 @@ pc.extend(pc.scene, function () {
 	    this._textures   = [];
 	    this._materials  = [];
 	    this._geometries = [];
+	    this._skins      = [];
 
 	    this._cameras    = [];
 	    this._lights     = [];
@@ -96,6 +97,10 @@ pc.extend(pc.scene, function () {
         clone._materials = this._materials.slice(0);
         clone._geometries = this._geometries.slice(0);
 
+        for (var i = 0; i < this._skins.length; i++) {
+        	clone._skins.push(this._skins[i].clone());
+        }
+
         var _duplicate = function (node) {
             var newNode = node.clone();
 
@@ -115,29 +120,10 @@ pc.extend(pc.scene, function () {
         }
 
         clone.setGraph(_duplicate(this.getGraph()));
-/*
+
         // Resolve bone IDs to actual graph nodes
-        var meshes = clone.getMeshes();
-        for (var i = 0; i < meshes.length; i++) {
-            var mesh = meshes[i];
-            var geom = mesh.getGeometry();
-            if (geom._boneIds !== undefined) {
-                mesh._bones = [];
-                for (var j = 0; j < geom._boneIds.length; j++) {
-                    var id = geom._boneIds[j];
-                    var bone = clone.getGraph().findByGraphId(id);
-                    mesh._bones.push(bone);
-                }
-            } else if (geom._boneNames !== undefined) {
-                mesh._bones = [];
-                for (var j = 0; j < geom._boneNames.length; j++) {
-                    var id = geom._boneNames[j];
-                    var bone = clone.getGraph().findByName(id);
-                    mesh._bones.push(bone);
-                }
-            }
-        }
-*/
+        clone.resolveBoneNames();
+
         clone.getGraph().syncHierarchy();
         var meshes = clone.getMeshes();
         for (var i = 0; i < meshes.length; i++) {
@@ -145,6 +131,22 @@ pc.extend(pc.scene, function () {
         }
 
         return clone;
+    };
+
+	Model.prototype.resolveBoneNames = function () {
+		var i, j;
+
+        var skins = this._skins;
+        var graph = this.getGraph();
+        for (i = 0; i < skins.length; i++) {
+            var skin = skins[i];
+            skin.bones = [];
+            for (j = 0; j < skin.boneNames.length; j++) {
+                var id = skin.boneNames[j];
+                var bone = graph.findByName(id);
+                skin.bones.push(bone);
+            }
+        }
     };
 
 	return {

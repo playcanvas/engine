@@ -214,7 +214,7 @@ pc.extend(pc.scene, function () {
     }
 
     MeshNode.prototype.syncAabb = function () {
-        this._aabb.setFromTransformedAabb(this._geometry._aabb, this.worldTransform);
+//        this._aabb.setFromTransformedAabb(this._geometry._aabb, this.worldTransform);
     }
 
     MeshNode.prototype.getAabb = function () {

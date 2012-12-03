@@ -190,8 +190,7 @@ pc.extend(pc.scene, function () {
                 }
             }
         }
-//        var skinned = mesh.getGeometry().isSkinned();
-        var skinned = false;
+        var skinned = (mesh.skin !== undefined);
         var device = pc.gfx.Device.getCurrent();
         var currState = device.getCurrentState();
         var key = '';
