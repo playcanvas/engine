@@ -424,7 +424,7 @@ pc.extend(pc.resources, function () {
         indexBuffer.unlock();
 
         // Skinning data
-        var skin;
+        var skin, skinInstance;
         if (geomData.inverse_bind_pose !== undefined) {
             var inverseBindPose = [];
             for (var i = 0; i < geomData.inverse_bind_pose.length; i++) {
@@ -432,7 +432,9 @@ pc.extend(pc.resources, function () {
             }
 
             skin = new pc.scene.Skin(inverseBindPose, geomData.bone_ids);
+            skinInstance = new pc.scene.SkinInstance(skin);
             model._skins.push(skin);
+            model._skinInstances.push(skinInstance);
         }
 
         var geometry = [];
@@ -440,17 +442,17 @@ pc.extend(pc.resources, function () {
         // Create and read each submesh
         for (var i = 0; i < geomData.submeshes.length; i++) {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
-    
+
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = vertexBuffer;
             mesh.indexBuffer = indexBuffer;
             mesh.primType = subMesh.primitive.type;
             mesh.base = subMesh.primitive.base;
             mesh.count = subMesh.primitive.count;
-            mesh.indexed = true;
             mesh.skin = skin;
 
             var meshInstance = new pc.scene.MeshInstance(mesh, subMesh.material);
+            meshInstance.skinInstance = skinInstance;
 
             geometry.push(meshInstance);
         }

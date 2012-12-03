@@ -298,11 +298,13 @@ pc.extend(pc.scene, function () {
         // Update all skin matrix palettes
         for (i = this._models.length - 1; i >= 0; i--) {
             var skins = this._models[i]._skins;
+            var skinInstances = this._models[i]._skinInstances;
+            var m4Mult = pc.math.mat4.multiply;
             for (j = skins.length - 1; j >= 0; j--) {
                 var skin = skins[j];
-                var m4Mult = pc.math.mat4.multiply;
-                for (k = skin.bones.length - 1; k >= 0; k--) {
-                    m4Mult(skin.bones[k].worldTransform, skin.inverseBindPose[k], skin.matrixPaletteEntryF32[k]);
+                var skinInstance = skinInstances[j];
+                for (k = skinInstance.bones.length - 1; k >= 0; k--) {
+                    m4Mult(skinInstance.bones[k].worldTransform, skin.inverseBindPose[k], skinInstance.matrixPaletteEntryF32[k]);
                 }
             }
         }
@@ -323,7 +325,7 @@ pc.extend(pc.scene, function () {
 
             modelMatrixId.setValue(instance.node.worldTransform);
             if (mesh.skin) {
-                poseMatrixId.setValue(mesh.skin.matrixPaletteF32);
+                poseMatrixId.setValue(instance.skinInstance.matrixPaletteF32);
             }
 
             if (material !== prevMaterial) {
@@ -338,7 +340,7 @@ pc.extend(pc.scene, function () {
                 type: mesh.primType, 
                 base: mesh.base, 
                 count: mesh.count, 
-                indexed: mesh.indexed
+                indexed: (mesh.indexBuffer !== null)
             });
         }
     };
