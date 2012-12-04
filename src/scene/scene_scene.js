@@ -3,7 +3,10 @@
  * @name pc.scene
  * @namespace Scene Graph API
  */
-pc.scene = {};
+pc.scene = {
+    RENDERSTYLE_NORMAL: 0,
+    RENDERSTYLE_WIREFRAME: 1
+};
 
 pc.scene.Space = {
     LOCAL: 0,
@@ -331,8 +334,8 @@ pc.extend(pc.scene, function () {
             if (material !== prevMaterial) {
                 device.setProgram(material.getProgram(mesh));
                 material.setParameters();
+                device.updateLocalState(material.getState());
             }
-            prevMaterial = material;
 
             device.setVertexBuffer(mesh.vertexBuffer, 0);
             device.setIndexBuffer(mesh.indexBuffer);
@@ -342,6 +345,10 @@ pc.extend(pc.scene, function () {
                 count: mesh.count, 
                 indexed: (mesh.indexBuffer !== null)
             });
+
+            device.clearLocalState();
+
+            prevMaterial = material;
         }
     };
 
