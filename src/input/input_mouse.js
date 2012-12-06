@@ -1,21 +1,113 @@
 pc.extend(pc.input, function () {    
-      
+    /**
+    * @name pc.input.MouseEvent
+    * @class MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
+    * @constructor Create an new MouseEvent
+    * @param {pc.input.Mouse} mouse The Mouse device that is firing this event
+    * @param {MouseEvent} event The original browser event that fired
+    * @property {Number} x The x co-ordinate of the mouse pointer relative to the element pc.input.Mouse is attached to
+    * @property {Number} y The y co-ordinate of the mouse pointer relative to the element pc.input.Mouse is attached to
+    * @property {Number} dx The change in x co-ordinate since the last mouse event
+    * @property {Number} dy The change in y co-ordinate since the last mouse event
+    * @property {pc.input.MOUSEBUTTON} button The button 
+    * @property {Number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events
+    * @property {DOMElement} element The element that the mouse was fired from
+    * @property {Boolean} ctrlKey True if the ctrl key was pressed when this event was fired
+    * @property {Boolean} shiftKey True if the shift key was pressed when this event was fired
+    * @property {Boolean} altKey True if the alt key was pressed when this event was fired
+    * @property {Boolean} metaKey True if the meta key was pressed when this event was fired
+    * @property {MouseEvent} event The original browser event
+    * @since 0.88.0
+    */
+    var MouseEvent = function (mouse, event) {
+        var coords = {
+            x: 0,
+            y: 0
+        };
+
+        if (event) {
+            if ( event instanceof MouseEvent) {
+                throw Error("Expected MouseEvent")
+            }
+            coords = pc.input.getTargetCoords(event);
+        } else {
+            event = {};
+        }
+
+        this.x = coords.x;
+        this.y = coords.y;
+
+        // FF uses 'detail' and returns a value in 'no. of lines' to scroll
+        // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
+        if (event.detail) {
+            this.wheel = -1 * event.detail;
+        } else if (event.wheelDelta) {
+            this.wheel = event.wheelDelta / 120;
+        } else {
+            this.wheel = 0;
+        }
+        
+        // Get the movement delta in this event
+        if (pc.input.Mouse.isPointerLocked()) {
+            this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
+            this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
+        } else {
+            this.dx = this.x - mouse._lastX;
+            this.dy = this.y - mouse._lastY;
+        }
+
+        this.button = event.button;
+        this.buttons = 0;
+        this.element = event.target;
+
+        this.ctrlKey = event.ctrlKey || false;
+        this.altKey = event.altKey || false;
+        this.shiftKey = event.shiftKey || false;
+        this.metaKey = event.metaKey || false;
+
+        this.event = event;
+    };
     
+    // Events Documentation   
+    /**
+    * @event
+    * @name pc.input.Mouse#mousemove
+    * @description Fired when the mouse is moved
+    * @param {pc.input.MouseEvent} event The MouseEvent object
+    */
+
+    /** 
+    * @event
+    * @name pc.input.Mouse#mousedown
+    * @description Fired when a mouse button is pressed
+    * @param {pc.input.MouseEvent} event The MouseEvent object
+    */
+
+    /** 
+    * @event
+    * @name pc.input.Mouse#mouseup
+    * @description Fired when a mouse button is released
+    * @param {pc.input.MouseEvent} event The MouseEvent object
+    */
+
+    /** 
+    * @event
+    * @name pc.input.Mouse#mousewheel
+    * @description Fired when a mouse wheel is moved
+    * @param {pc.input.MouseEvent} event The MouseEvent object
+    */
+
     /**
      * @name pc.input.Mouse
-     * @description Create a new Mouse object
-     * @class Capture and respond to mouse events.
+     * @class A Mouse Device, bound to a DOM Element
+     * @constructor Create a new Mouse device
      * @param {DOMElement} [element] The DOMElement that the mouse events are attached to
-     * @param {Boolean} [_new] Use new mouse events (to be removed with old designer)
      */
-    var Mouse = function (element, options) {
-        options = options || {};
+    var Mouse = function (element) {
 
         // Clear the mouse state
-        this._positionY    = 0;
-        this._positionX    = 0;
-        this._offsetX      = 0;
-        this._offsetY      = 0;
+        this._lastX      = 0;
+        this._lastY      = 0;
         this._buttons      = [false,false,false];
         this._lastbuttons  = [];
         
@@ -39,7 +131,7 @@ pc.extend(pc.input, function () {
     /**
     * @function 
     * @name pc.input.Mouse.isPointerLocked
-    * @description Return True if the pointer is currently locked
+    * @description Check if the mouse pointer has been locked, using {@link pc.input.Mouse#enabledPointerLock}
     * @returns {Boolean} True if locked
     */
     Mouse.isPointerLocked =  function () {
@@ -47,6 +139,8 @@ pc.extend(pc.input, function () {
     };
 
     /**
+     * @private
+     * @deprecated
      * @function
      * @name pc.input.Mouse.createMouseEvent
      * @description Extend the browser mouse event with some additional cross-browser values.
@@ -111,7 +205,7 @@ pc.extend(pc.input, function () {
         /**
          * @function
          * @name pc.input.Mouse#detach
-         * @description Remove mouse events from the DOMElement
+         * @description Remove mouse events from the element that it is attached to
          */
         detach: function () {
             this._element.removeEventListener("mouseup", this._upHandler);
@@ -145,10 +239,10 @@ pc.extend(pc.input, function () {
         * @function 
         * @name pc.input.Mouse#enablePointerLock
         * @description Request that the browser hides the mouse cursor and locks the mouse to the element. 
-        * Allowing raw access to mouse input without risking the mouse exiting the element.
+        * Allowing raw access to mouse movement input without risking the mouse exiting the element.
         * Notes: <br />
         * <ul>
-        * <li>In some browsers this will only work when the browser is running in fullscreen mode. See `pc.fw.Application#enableFullscreen`
+        * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.fw.Application#enableFullscreen}
         * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
         * </ul>
         * @param {Function} [success] Function called if the request for mouse lock is successful.
@@ -207,7 +301,8 @@ pc.extend(pc.input, function () {
          * @function
          * @name pc.input.Mouse#isPressed
          * @description Returns true if the mouse button is currently pressed
-         * @param {Object} button
+         * @param {pc.input.MOUSEBUTTON} button
+         * @returns {Boolean} True if the mouse button is current pressed
          */
         isPressed: function (button) {
             return this._buttons[button];
@@ -217,7 +312,8 @@ pc.extend(pc.input, function () {
          * @function
          * @name pc.input.Mouse#wasPressed
          * @description Returns true if the mouse button was pressed this frame (since the last call to update).
-         * @param {Object} button
+         * @param {pc.input.MOUSEBUTTON} button
+         * @returns {Boolean} True if the mouse button was pressed since the last update
          */
         wasPressed: function (button) {
             return (this._buttons[button] && !this._lastbuttons[button]);
@@ -228,7 +324,7 @@ pc.extend(pc.input, function () {
             this._buttons[event.button] = false;
 
             // send 'mouseup' event
-            this.fire(pc.input.EVENT_MOUSE_UP, pc.input.Mouse.createMouseEvent(this, event));
+            this.fire(pc.input.EVENT_MOUSEUP, new MouseEvent(this, event));
         },
         
         
@@ -236,24 +332,20 @@ pc.extend(pc.input, function () {
             // Store which button has affected
             this._buttons[event.button] = true;
 
-            this.fire(pc.input.EVENT_MOUSE_DOWN, pc.input.Mouse.createMouseEvent(this, event));
+            this.fire(pc.input.EVENT_MOUSEDOWN, new MouseEvent(this, event));
         },
         
-        _handleMove: function (event) {
-            // Update the current position
-            this._positionX = event.clientX;
-            this._positionY = event.clientY;
-            
-            this.fire(pc.input.EVENT_MOUSE_MOVE, pc.input.Mouse.createMouseEvent(this, event));
+        _handleMove: function (event) {            
+            var e = new MouseEvent(this, event);
+            this.fire(pc.input.EVENT_MOUSEMOVE, e);
 
             // Store the last offset position to calculate deltas
-            offset = pc.input.getTargetCoords(event);
-            this._offsetX = offset.x;
-            this._offsetY = offset.y;
+            this._lastX = e.x;
+            this._lastY = e.y;
         },
 
         _handleWheel: function (event) {
-            this.fire(pc.input.EVENT_MOUSE_WHEEL, pc.input.Mouse.createMouseEvent(this, event));
+            this.fire(pc.input.EVENT_MOUSEWHEEL, new MouseEvent(this, event));
         },
     };
 
@@ -333,22 +425,54 @@ pc.extend(pc.input, function () {
     // Public Interface
     return  {
         /**
-         * @name pc.input.EVENT_MOUSE_UP
-         * @description Name of mouse up event
+         * @enum pc.input.EVENT
+         * @name pc.input.EVENT_MOUSEDOWN
+         * @description Name of event fired when a mouse button is pressed
          */
-        EVENT_MOUSE_UP: "mouseup",
-        EVENT_MOUSE_DOWN: "mousedown",
-        EVENT_MOUSE_MOVE: "mousemove",
-        EVENT_MOUSE_WHEEL: "mousewheel",
+        EVENT_MOUSEDOWN: "mousedown",
+        /**
+         * @enum pc.input.EVENT
+         * @name pc.input.EVENT_MOUSEMOVE
+         * @description Name of event fired when the mouse is moved
+         */
+        EVENT_MOUSEMOVE: "mousemove",
+        /**
+         * @enum pc.input.EVENT
+         * @name pc.input.EVENT_MOUSEUP
+         * @description Name of event fired when a mouse button is released
+         */
+        EVENT_MOUSEUP: "mouseup",
+        /**
+         * @enum pc.input.EVENT
+         * @name pc.input.EVENT_MOUSEWHEEL
+         * @description Name of event fired when the mouse wheel is rotated
+         */
+        EVENT_MOUSEWHEEL: "mousewheel",
         
         /**
-         * @name pc.input.MOUSE_BUTTON_NONE
-         * @description Value of pc.input.MouseEvent#button when no mouse button is pressed
+         * @enum pc.input.MOUSEBUTTON
+         * @name pc.input.MOUSEBUTTON_NONE
+         * @description Value of {@link pc.input.MouseEvent#button} when no mouse button is pressed
          */
-        MOUSE_BUTTON_NONE: -1,
-        MOUSE_BUTTON_LEFT: 0,
-        MOUSE_BUTTON_MIDDLE: 1,
-        MOUSE_BUTTON_RIGHT: 2,
+        MOUSEBUTTON_NONE: -1,
+        /**
+         * @enum pc.input.MOUSEBUTTON
+         * @name pc.input.MOUSEBUTTON_LEFT
+         * @description Value of {@link pc.input.MouseEvent#button} when the left mouse button is pressed
+         */
+        MOUSEBUTTON_LEFT: 0,
+        /**
+         * @enum pc.input.MOUSEBUTTON
+         * @name pc.input.MOUSEBUTTON_MIDDLE
+         * @description Value of {@link pc.input.MouseEvent#button} when the middle mouse button is pressed
+         */
+        MOUSEBUTTON_MIDDLE: 1,
+        /**
+         * @enum pc.input.MOUSEBUTTON
+         * @name pc.input.MOUSEBUTTON_RIGHT
+         * @description Value of {@link pc.input.MouseEvent#button} when the right mouse button is pressed
+         */
+        MOUSEBUTTON_RIGHT: 2,
         
         Mouse: Mouse,
 
