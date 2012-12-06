@@ -210,11 +210,11 @@ pc.scene.procedural.createGeometry = function (positions, opts) {
 
     var mesh = new pc.scene.Mesh();
     mesh.vertexBuffer = vertexBuffer;
-    mesh.indexBuffer = indexBuffer;
-    mesh.primType = pc.gfx.PrimType.TRIANGLES;
-    mesh.base = 0;
-    mesh.count = indexed ? indices.length : numVertices;
-    mesh.indexed = indexed;
+    mesh.indexBuffer[0] = indexBuffer;
+    mesh.primitive[0].type = pc.gfx.PrimType.TRIANGLES;
+    mesh.primitive[0].base = 0;
+    mesh.primitive[0].count = indexed ? indices.length : numVertices;
+    mesh.primitive[0].indexed = indexed;
     return mesh;
 }
 

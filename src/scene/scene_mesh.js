@@ -2,15 +2,17 @@ pc.extend(pc.scene, function () {
 
     var Mesh = function () {
         this.vertexBuffer = null;
-        this.indexBuffer = null;
-        this.primType = 0;
-        this.base = 0;
-        this.count = 0;
+        this.indexBuffer = [ null ];
+        this.primitive = [{
+        	type: 0,
+        	base: 0,
+        	count: 0
+        }];
         this.skin = null;
     };
 
     var MeshInstance = function (mesh, material) {
-        this.node = null; // or could store the ref to the mesh node's transform...
+        this.node = null;
         this.renderStyle = pc.scene.RENDERSTYLE_NORMAL;
         this.mesh = mesh;
         this.material = material;

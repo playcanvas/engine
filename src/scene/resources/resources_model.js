@@ -445,16 +445,19 @@ pc.extend(pc.resources, function () {
 
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = vertexBuffer;
-            mesh.indexBuffer = indexBuffer;
-            mesh.primType = subMesh.primitive.type;
-            mesh.base = subMesh.primitive.base;
-            mesh.count = subMesh.primitive.count;
+            mesh.indexBuffer[0] = indexBuffer;
+            mesh.primitive[0].type = subMesh.primitive.type;
+            mesh.primitive[0].base = subMesh.primitive.base;
+            mesh.primitive[0].count = subMesh.primitive.count;
+            mesh.primitive[0].indexed = true;
             mesh.skin = skin;
+
+            mesh._material = subMesh.material;
 
             var meshInstance = new pc.scene.MeshInstance(mesh, subMesh.material);
             meshInstance.skinInstance = skinInstance;
 
-            geometry.push(meshInstance);
+            geometry.push(mesh);
         }
 
 /*

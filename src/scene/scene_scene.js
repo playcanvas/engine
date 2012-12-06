@@ -319,7 +319,7 @@ pc.extend(pc.scene, function () {
         var device = pc.gfx.Device.getCurrent();
         var modelMatrixId = device.scope.resolve('matrix_model');
         var poseMatrixId = device.scope.resolve('matrix_pose[0]');
-        var instance, mesh, material, prevMaterial = null;
+        var instance, mesh, material, prevMaterial = null, style;
 
         for (i = 0, numInstances = instances.length; i < numInstances; i++) {
             instance = instances[i];
@@ -337,14 +337,11 @@ pc.extend(pc.scene, function () {
                 device.updateLocalState(material.getState());
             }
 
+            style = instance.renderStyle;
+
             device.setVertexBuffer(mesh.vertexBuffer, 0);
-            device.setIndexBuffer(mesh.indexBuffer);
-            device.draw({
-                type: mesh.primType, 
-                base: mesh.base, 
-                count: mesh.count, 
-                indexed: (mesh.indexBuffer !== null)
-            });
+            device.setIndexBuffer(mesh.indexBuffer[style]);
+            device.draw(mesh.primitive[style]);
 
             device.clearLocalState();
 
