@@ -103,7 +103,7 @@ pc.extend(pc.input, function () {
 
     /**
      * @name pc.input.Mouse
-     * @class A Mouse Device, bound to a DOM Element
+     * @class A Mouse Device, bound to a DOM Element.
      * @constructor Create a new Mouse device
      * @param {DOMElement} [element] The DOMElement that the mouse events are attached to
      */
@@ -416,25 +416,25 @@ pc.extend(pc.input, function () {
         /**
          * @enum pc.input.MOUSEBUTTON
          * @name pc.input.MOUSEBUTTON_NONE
-         * @description Value of {@link pc.input.MouseEvent#button} when no mouse button is pressed
+         * @description No mouse buttons pressed
          */
         MOUSEBUTTON_NONE: -1,
         /**
          * @enum pc.input.MOUSEBUTTON
          * @name pc.input.MOUSEBUTTON_LEFT
-         * @description Value of {@link pc.input.MouseEvent#button} when the left mouse button is pressed
+         * @description The left mouse button
          */
         MOUSEBUTTON_LEFT: 0,
         /**
          * @enum pc.input.MOUSEBUTTON
          * @name pc.input.MOUSEBUTTON_MIDDLE
-         * @description Value of {@link pc.input.MouseEvent#button} when the middle mouse button is pressed
+         * @description The middle mouse button
          */
         MOUSEBUTTON_MIDDLE: 1,
         /**
          * @enum pc.input.MOUSEBUTTON
          * @name pc.input.MOUSEBUTTON_RIGHT
-         * @description Value of {@link pc.input.MouseEvent#button} when the right mouse button is pressed
+         * @description The right mouse button
          */
         MOUSEBUTTON_RIGHT: 2,
         

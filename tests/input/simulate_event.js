@@ -16,14 +16,26 @@ function simulate(element, eventName)
     if (document.createEvent)
     {
         oEvent = document.createEvent(eventType);
-        if (eventType == 'HTMLEvents')
-        {
+        if (eventType == 'HTMLEvents') {
             oEvent.initEvent(eventName, options.bubbles, options.cancelable);
         }
-        else
-        {
+        else if (eventType === 'MouseEvents') {
             oEvent.initMouseEvent(eventName, options.bubbles, options.cancelable, document.defaultView, options.detail, options.pointerX, options.pointerY, options.pointerX, options.pointerY, options.ctrlKey, options.altKey, options.shiftKey, options.metaKey, options.button, element);
+        } else if (eventType === 'KeyboardEvent') {
+            defaults = extend({}, defaultKeyboardOptions);
+            options = extend(defaults, arguments[2] || {});
+            if (oEvent.initKeyEvent) {
+                oEvent.initKeyEvent(eventName, options.bubbles, options.cancelable, document.defaultView, options.ctrl, options.shift, options.alt, options.meta, options.keyCode, options.charCode);    
+            } else {
+                oEvent = document.createEvent("Events");
+                // initKeyboardEvent doesn't work property in Chrome, fudge it using plain event
+                oEvent.initEvent(eventName, options.bubbles, options.cancelable);
+                oEvent.keyCode = options.keyCode;
+                oEvent.which = options.keyCode;
+            }
+            
         }
+
         element.dispatchEvent(oEvent);
     }
     else
@@ -45,8 +57,10 @@ function extend(destination, source) {
 
 var eventMatchers = {
     'HTMLEvents': /^(?:load|unload|abort|error|select|change|submit|reset|focus|blur|resize|scroll)$/,
-    'MouseEvents': /^(?:click|dblclick|mouse(?:down|up|over|move|out|wheel))$/
+    'MouseEvents': /^(?:click|dblclick|mouse(?:down|up|over|move|out|wheel))$/,
+    'KeyboardEvent': /^(?:keydown|keypress|keyup)$/
 }
+
 var defaultOptions = {
     pointerX: 0,
     pointerY: 0,
@@ -58,4 +72,19 @@ var defaultOptions = {
     metaKey: false,
     bubbles: true,
     cancelable: true
-}
+};
+
+var defaultKeyboardOptions = {
+    bubbles: true,
+    cancelable: true,
+    charCode: 0,
+    keyCode: 0,
+    location: 0,
+    modifiers: '',
+    repeat: false,
+    locale: '',
+    ctrl: false,
+    alt: false,
+    shift: false,
+    meta: false
+};

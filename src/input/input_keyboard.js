@@ -1,6 +1,22 @@
 pc.extend(pc.input, function(){
     
     /**
+    * @name pc.input.KeyboardEvent
+    * @class The KeyboardEvent is passed into all event callbacks from the {@link pc.input.Keyboard}. It corresponds to a key press or release.
+    * @constructor Create a new KeyboardEvent
+    * @param {pc.input.Keyboard} keyboard The keyboard object which is firing the event.
+    * @param {KeyboardEvent} event The original browser event that was fired.
+    * @property {pc.input.KEY} key The keyCode of the key that has changed.
+    * @property {DOMElement} element The element that fired the keyboard event.
+    * @property {KeyboardEvent} event The original browser event which was fired.
+    */
+    var KeyboardEvent = function (keyboard, event) {
+        this.key = event.keyCode;
+        this.element = event.target;
+        this.event = event;
+    };
+
+    /**
      * @function
      * @name pc.input.toKeyCode
      * @description Convert a string or keycode to a keycode
@@ -35,11 +51,28 @@ pc.extend(pc.input, function(){
     };
 
     /**
-     * @class Handle input from the Keyboard. Allows you to detect the state of the key presses. 
+    * @event
+    * @name pc.input.Keyboard#keydown
+    * @description Event fired when a key is pressed.
+    * @param {pc.input.KeyboardEvent} event The Keyboard event object
+    */
+
+    /**
+    * @event
+    * @name pc.input.Keyboard#keyup
+    * @description Event fired when a key is released.
+    * @param {pc.input.KeyboardEvent} event The Keyboard event object
+    */
+
+    /**
+     * @name pc.input.Keyboard
+     * @class A Keyboard device bound to a DOMElement. Allows you to detect the state of the key presses. 
      * Note, Keyboard object must be attached to a DOMElement before it can detect any key presses. 
      * @constructor Create a new Keyboard object
-     * @name pc.input.Keyboard
-     * @param {DOMElement} [element] Automatically call attach(element).
+     * @param {DOMElement} [element] Element to attach Keyboard to. <br />Note: Elements like <div> can't accept focus by default. To use keyboard events on an element like this it must have a value of 'tabindex' e.g. tabindex="0". For more details: <a href="http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html">http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html</a>
+     * @param {Object} [options]
+     * @param {Boolean} [options.preventDefault] Call preventDefault() in key event handlers. This stops the default action of the event occuring. e.g. Ctrl+T will not open a new browser tab
+     * @param {Boolean} [options.stopPropagation] Call stopPropagation() in key event handlers. This stops the event bubbling up the DOM so no parent handlers will be notified of the event
      */
     var Keyboard = function(element, options) {
         options = options || {};
@@ -62,6 +95,12 @@ pc.extend(pc.input, function(){
         this.stopPropagation = options.stopPropagation || false;
     };
     
+    /**
+    * @function
+    * @name pc.input.Keyboard#attach
+    * @description Attach the keyboard event handlers to a DOMElement
+    * @param {DOMElement} element The element to listen for keyboard events on.
+    */
     Keyboard.prototype.attach = function (element) {
         if(this._element) {
             // remove previous attached element
@@ -73,6 +112,11 @@ pc.extend(pc.input, function(){
         this._element.addEventListener("keyup", this._keyUpHandler, false);        
     }
     
+    /**
+    * @function
+    * @name pc.input.Keyboard#detach
+    * @description Detach the keyboard event handlers from the element it is attached to.
+    */
     Keyboard.prototype.detach = function () {
         this._element.removeEventListener("keydown", this._keyDownHandler);
         this._element.removeEventListener("keypress", this._keyPressHandler);
@@ -81,6 +125,7 @@ pc.extend(pc.input, function(){
     }
     
     /**
+     * @private
      * @function
      * @name pc.input.Keyboard#toKeyIdentifier
      * @description Convert a key code into a key identifier
@@ -114,11 +159,9 @@ pc.extend(pc.input, function(){
         this._keymap[id] = true;
             
         // Patch on the keyIdentifier property in non-webkit browsers
-        event.keyIdentifier = event.keyIdentifier || id;
+        //event.keyIdentifier = event.keyIdentifier || id;
         
-        this.fire("keydown", {
-            event: event
-        });
+        this.fire("keydown", new KeyboardEvent(this, event));
         
         if (this.preventDefault) {
             event.preventDefault();
@@ -135,11 +178,9 @@ pc.extend(pc.input, function(){
         delete this._keymap[id];
 
         // Patch on the keyIdentifier property in non-webkit browsers
-        event.keyIdentifier = event.keyIdentifier || id;
+        //event.keyIdentifier = event.keyIdentifier || id;
         
-        this.fire("keyup", {
-            event: event
-        });
+        this.fire("keyup", new KeyboardEvent(this, event));
 
         if (this.preventDefault) {
             event.preventDefault();
@@ -154,11 +195,9 @@ pc.extend(pc.input, function(){
         var id = event.keyIdentifier || this.toKeyIdentifier(code);
         
         // Patch on the keyIdentifier property in non-webkit browsers
-        event.keyIdentifier = event.keyIdentifier || id;
+        //event.keyIdentifier = event.keyIdentifier || id;
         
-        this.fire("keypress", {
-            event: event
-        });
+        this.fire("keypress", new KeyboardEvent(this, event));
 
         if (this.preventDefault) {
             event.preventDefault();
@@ -173,7 +212,6 @@ pc.extend(pc.input, function(){
      * @function
      * @name pc.input.Keyboard#update
      * @description Called once per frame to update internal state
-     * @param {Object} dt
      */
     Keyboard.prototype.update = function (dt) {
         var prop;
@@ -189,7 +227,7 @@ pc.extend(pc.input, function(){
      * @function
      * @name pc.input.Keyboard#isPressed
      * @description Return true if the key is currently down
-     * @param {String | Number} key The character string or key code of the key
+     * @param {pc.input.KEY} key The keyCode of the key to test.
      * @return {Boolean} True if the key was pressed, false if not
      */
     Keyboard.prototype.isPressed = function (key) {
@@ -203,7 +241,7 @@ pc.extend(pc.input, function(){
      * @function
      * @name pc.input.Keyboard#wasPressed
      * @description Returns true if the key was pressed since the last update.
-     * @param {String | Number} key The character string or key code of the key 
+     * @param {pc.input.KEY} key The keyCode of the key to test.
      * @return {Boolean} true if the key was pressed
      */
     Keyboard.prototype.wasPressed = function (key) {
@@ -212,10 +250,21 @@ pc.extend(pc.input, function(){
         
         return (!!(this._keymap[id]) && !!!(this._lastmap[id]));
     };
-            
-    // Public Interface
+
     return {
         Keyboard: Keyboard,
+        /**
+         * @enum pc.input.EVENT
+         * @name pc.input.EVENT_KEYDOWN
+         * @description Name of event fired when a key is pressed
+         */
+         EVENT_KEYDOWN: 'keydown',
+        /**
+         * @enum pc.input.EVENT
+         * @name pc.input.EVENT_KEYUP
+         * @description Name of event fired when a key is released
+         */
+         EVENT_KEYUP: 'keyup',
 
         /**
          * @enum pc.input.KEY
