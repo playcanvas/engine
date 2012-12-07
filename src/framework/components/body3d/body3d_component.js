@@ -135,7 +135,7 @@ if (typeof(Ammo) !== 'undefined') {
 
                     var isStatic = entity.body3d.static;
                     var mass = isStatic ? 0 : entity.body3d.mass;
-                    
+
                     var localInertia = new Ammo.btVector3(0, 0, 0);
                     if (!isStatic) {
                         shape.calculateLocalInertia(mass, localInertia);
@@ -178,7 +178,7 @@ if (typeof(Ammo) !== 'undefined') {
 
                     body.activate();
 
-                    this.updateTransform(body);
+                    this.entity.setPosition(x, y, z);
                 }
             },
 
@@ -198,7 +198,7 @@ if (typeof(Ammo) !== 'undefined') {
 
                     body.activate();
 
-                    this.updateTransform(body);
+                    this.entity.setEulerAngles(x, y, z);
                 }
             },
 
@@ -259,10 +259,15 @@ if (typeof(Ammo) !== 'undefined') {
             onSetMass: function (name, oldValue, newValue) {
                 var body = this.data.body;
                 if (body) {
+                    this.system.removeBody(body);
+
                     var mass = newValue;
+                    var localInertia = new Ammo.btVector3(0, 0, 0);
                     body.getCollisionShape().calculateLocalInertia(mass, localInertia);
                     body.setMassProps(mass, localInertia);
                     body.updateInertiaTensor();
+
+                    this.system.addBody(body);
                 }                
             },
 
