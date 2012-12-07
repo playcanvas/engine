@@ -56,8 +56,12 @@ pc.extend(pc.input, function () {
             this.dy = this.y - mouse._lastY;
         }
 
-        this.button = event.button;
-        this.buttons = 0;
+        if (event.type === 'mousedown' || event.type === 'mouseup') {
+            this.button = event.button;    
+        } else {
+            this.button = pc.input.MOUSEBUTTON_NONE;
+        }
+        this.buttons = mouse._buttons.slice(0);        
         this.element = event.target;
 
         this.ctrlKey = event.ctrlKey || false;
@@ -109,7 +113,7 @@ pc.extend(pc.input, function () {
         this._lastX      = 0;
         this._lastY      = 0;
         this._buttons      = [false,false,false];
-        this._lastbuttons  = [];
+        this._lastbuttons  = [false, false, false];
         
 
         // Setup event handlers so they are bound to the correct 'this'
@@ -136,48 +140,6 @@ pc.extend(pc.input, function () {
     */
     Mouse.isPointerLocked =  function () {
         return !!document.pointerLockElement;
-    };
-
-    /**
-     * @private
-     * @deprecated
-     * @function
-     * @name pc.input.Mouse.createMouseEvent
-     * @description Extend the browser mouse event with some additional cross-browser values.
-     * This identical to a DOM MouseEvent with some additional values
-     * event.targetX - The X coordinate relative to the event target element
-     * event.targetY - The Y coordinate relative to the event target element
-     * event.wheel - The change in mouse wheel value (if there is one) Normalized between -1 and 1
-     * event._buttons - The current state of all mouse buttons
-     * event.movementX/Y - This is added if not present in the current browser and is the movement since the last 
-     * @param {pc.input.Mouse} mouse A pc.input.Mouse instance, needed to get the button state from
-     * @param {MouseEvent} event The mouse event to extend
-     * @returns {MouseEvent} The original event with added/edited parameters
-     */
-    Mouse.createMouseEvent = function (mouse, event) {
-        var offset = pc.input.getTargetCoords(event);
-        event.targetX = offset.x;
-        event.targetY = offset.y;
-
-        if (event.detail) {
-            event.wheel = -1 * pc.math.clamp(event.detail, -1, 1); // detail appears to be unbounded, so we'll just clamp into range.
-        } else if (event.wheelDelta) {
-            event.wheel = event.wheelDelta / 120; // Convert to -1 to 1
-        } else {
-            event.wheel = 0;
-        }
-        
-        // Get the movement delta in this event
-        if (pc.input.Mouse.isPointerLocked()) {
-            event.movementX = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
-            event.movementY = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
-        } else {
-            event.movementX = offset.x - mouse._offsetX;
-            event.movementY = offset.y - mouse._offsetY;
-        }
-
-        event._buttons = mouse._buttons;
-        return event;
     };
 
     Mouse.prototype = {
@@ -294,7 +256,9 @@ pc.extend(pc.input, function () {
          */
         update: function (dt) {
             // Copy current button state
-            this._lastbuttons = this._buttons.slice(0);
+            this._lastbuttons[0] = this._buttons[0];
+            this._lastbuttons[1] = this._buttons[1];
+            this._lastbuttons[2] = this._buttons[2];
         },
         
         /**
