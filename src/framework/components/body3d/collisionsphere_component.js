@@ -16,20 +16,10 @@ if (typeof(Ammo) !== 'undefined') {
         pc.extend(CollisionSphereComponent.prototype, {
 
             onSetRadius: function (name, oldValue, newValue) {
-                if (!this.entity.body3d) {
-                    return;
-                }
-
-                var body = this.entity.body3d.body;
-                if (body) {
-                    /*
-                    var fixture = body.GetFixtureList();
-                    var shape = fixture.GetShape();
-                    
-                    shape.SetRadius(this.radius);
-
-                    body.SetAwake(true);
-                    */
+                if (this.entity.body3d) {
+                    this.data.shape = new Ammo.btSphereShape(newValue);
+                    this.entity.body3d.createBody();
+                    this.entity.body3d.body.activate();
                 }
             }
         });

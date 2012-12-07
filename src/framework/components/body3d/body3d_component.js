@@ -129,6 +129,10 @@ if (typeof(Ammo) !== 'undefined') {
                 }
 
                 if (shape) {
+                    if (entity.body3d.body) {
+                        this.system.removeBody(entity.body3d.body);
+                    }
+
                     mass = entity.body3d.static ? 0 : entity.body3d.mass;
 
                     var localInertia = new Ammo.btVector3(0, 0, 0);
@@ -148,6 +152,13 @@ if (typeof(Ammo) !== 'undefined') {
                     var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
                     var body = new Ammo.btRigidBody(bodyInfo);
+                    if (mass === 0) {
+                        body.setRestitution(1);
+                    } else {
+                        body.setRestitution(entity.body3d.restitution);
+                    }
+                    body.setFriction(entity.body3d.friction);
+
                     this.system.addBody(body);
 
                     entity.body3d.body = body;
@@ -268,7 +279,11 @@ if (typeof(Ammo) !== 'undefined') {
             onSetRestitution: function (name, oldValue, newValue) {
                 var body = this.data.body;
                 if (body) {
-                    body.setRestitution(newValue);
+                    if (this.data.static) {
+                        body.setRestitution(1);
+                    } else {
+                        body.setRestitution(newValue);
+                    }
                 }                
             },
 

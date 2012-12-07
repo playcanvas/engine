@@ -18,34 +18,26 @@ if (typeof(Ammo) !== 'undefined') {
         pc.extend(CollisionBoxComponent.prototype, {
 
             onSetX: function (name, oldValue, newValue) {
-                if (!this.entity.body3d) {
-                    return;
-                }
-
-                var body = this.entity.body3d.body;
-                if (body) {
+                if (this.entity.body3d) {
+                    this.data.shape = new Ammo.btBoxShape(new Ammo.btVector3(newValue, this.data.y, this.data.z));
+                    this.entity.body3d.createBody();
+                    this.entity.body3d.body.activate();
                 }
             },
 
             onSetY: function (name, oldValue, newValue) {
-                if (!this.entity.body3d) {
-                    return;
-                }
-                
-                var body = this.entity.body3d.body;
-
-                if (body) {
+                if (this.entity.body3d) {
+                    this.data.shape = new Ammo.btBoxShape(new Ammo.btVector3(this.data.x, newValue, this.data.z));
+                    this.entity.body3d.createBody();
+                    this.entity.body3d.body.activate();
                 }
             },
 
             onSetZ: function (name, oldValue, newValue) {
-                if (!this.entity.body3d) {
-                    return;
-                }
-                
-                var body = this.entity.body3d.body;
-
-                if (body) {
+                if (this.entity.body3d) {
+                    this.data.shape = new Ammo.btBoxShape(new Ammo.btVector3(this.data.x, this.data.y, newValue));
+                    this.entity.body3d.createBody();
+                    this.entity.body3d.body.activate();
                 }
             }
         });
