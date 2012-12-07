@@ -133,10 +133,11 @@ if (typeof(Ammo) !== 'undefined') {
                         this.system.removeBody(entity.body3d.body);
                     }
 
-                    mass = entity.body3d.static ? 0 : entity.body3d.mass;
-
+                    var isStatic = entity.body3d.static;
+                    var mass = isStatic ? 0 : entity.body3d.mass;
+                    
                     var localInertia = new Ammo.btVector3(0, 0, 0);
-                    if (mass > 0) {
+                    if (!isStatic) {
                         shape.calculateLocalInertia(mass, localInertia);
                     }
 
@@ -152,11 +153,7 @@ if (typeof(Ammo) !== 'undefined') {
                     var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
                     var body = new Ammo.btRigidBody(bodyInfo);
-                    if (mass === 0) {
-                        body.setRestitution(1);
-                    } else {
-                        body.setRestitution(entity.body3d.restitution);
-                    }
+                    body.setRestitution(isStatic ? 1 : entity.body3d.restitution);
                     body.setFriction(entity.body3d.friction);
 
                     this.system.addBody(body);
