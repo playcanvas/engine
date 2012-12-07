@@ -175,8 +175,11 @@ if (typeof(Ammo) !== 'undefined') {
             },
 
             onUpdate: function (dt) {
-                var components = this.store;
+                // Update the transforms of all bodies
+                this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
 
+                // Update the transforms of all entities referencing a body
+                var components = this.store;
                 for (id in components) {
                     if (components.hasOwnProperty(id)) {
                         var entity = components[id].entity;
@@ -186,8 +189,6 @@ if (typeof(Ammo) !== 'undefined') {
                         }
                     }
                 }
-
-                this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
             },
 
             render: function () {
