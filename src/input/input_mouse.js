@@ -388,6 +388,9 @@ pc.extend(pc.input, function () {
 
     // Public Interface
     return  {
+        Mouse: Mouse,
+        MouseEvent: MouseEvent,
+
         /**
          * @enum pc.input.EVENT
          * @name pc.input.EVENT_MOUSEDOWN
@@ -438,8 +441,6 @@ pc.extend(pc.input, function () {
          */
         MOUSEBUTTON_RIGHT: 2,
         
-        Mouse: Mouse,
-
         /**
          * @private
          * @function
