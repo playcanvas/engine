@@ -7,7 +7,7 @@
  * Class = Class.extendsFrom(Base)
  * </code></pre>
  * @param {Object} Super
- * @depracated
+ * @deprecated
  */
 Function.prototype.extendsFrom = function (Super) {
     var Self;
