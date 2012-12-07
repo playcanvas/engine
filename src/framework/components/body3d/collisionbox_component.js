@@ -24,12 +24,6 @@ if (typeof(Ammo) !== 'undefined') {
 
                 var body = this.entity.body3d.body;
                 if (body) {
-                    var fixture = body.GetFixtureList();
-                    var shape = fixture.GetShape();
-                    
-                    shape.SetAsBox(newValue, this.y);
-
-                    body.SetAwake(true);
                 }
             },
 
@@ -41,12 +35,6 @@ if (typeof(Ammo) !== 'undefined') {
                 var body = this.entity.body3d.body;
 
                 if (body) {
-                    var fixture = body.GetFixtureList();
-                    var shape = fixture.GetShape();
-                    
-                    shape.SetAsBox(this.x, newValue);
-
-                    body.SetAwake(true);
                 }
             },
 
@@ -58,12 +46,6 @@ if (typeof(Ammo) !== 'undefined') {
                 var body = this.entity.body3d.body;
 
                 if (body) {
-                    var fixture = body.GetFixtureList();
-                    var shape = fixture.GetShape();
-                    
-                    shape.SetAsBox(this.x, newValue);
-
-                    body.SetAwake(true);
                 }
             }
         });

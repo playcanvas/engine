@@ -183,8 +183,10 @@ if (typeof(Ammo) !== 'undefined') {
             setRotation: function (x, y, z) {
                 var body = this.entity.body3d.body;
                 if (body) {
+                    pc.math.quat.setFromEulers(quat, x, y, z);
+
                     var transform = body.getWorldTransform();
-                    transform.setOrigin(new Ammo.btVector3(x, y, z));
+                    transform.setRotation(new Ammo.btQuaternion(quat[0], quat[1], quat[2], quat[3]));
 
                     body.activate();
 
@@ -247,7 +249,7 @@ if (typeof(Ammo) !== 'undefined') {
             },
 
             onSetMass: function (name, oldValue, newValue) {
-                var body = this.body;
+                var body = this.data.body;
                 if (body) {
                     var mass = newValue;
                     body.getCollisionShape().calculateLocalInertia(mass, localInertia);
@@ -257,37 +259,22 @@ if (typeof(Ammo) !== 'undefined') {
             },
 
             onSetFriction: function (name, oldValue, newValue) {
-                var body = this.entity.body3d.body;
+                var body = this.data.body;
                 if (body) {
-                    // We only support a single fixture at the moment
-                    var fixture = body.GetFixtureList();
-                    fixture.SetFriction(newValue);
-
-                    // Update the body with changes
-                    body.ResetMassData();
+                    body.setFriction(newValue);
                 }                
             },
 
             onSetRestitution: function (name, oldValue, newValue) {
-                var body = this.entity.body3d.body;
+                var body = this.data.body;
                 if (body) {
-                    // We only support a single fixture at the moment
-                    var fixture = body.GetFixtureList();
-                    fixture.SetRestitution(newValue);
-
-                    // Update the body with changes
-                    body.ResetMassData();
+                    body.setRestitution(newValue);
                 }                
             },
 
             onSetStatic: function (name, oldValue, newValue) {
-                var body = this.entity.body3d.body;
+                var body = this.data.body;
                 if (body) {
-                    if (newValue) {
-                        body.SetType(b2Body.b2_staticBody);
-                    } else {
-                        body.SetType(b2Body.b2_dynamicBody);
-                    }
                 }
             }
         });

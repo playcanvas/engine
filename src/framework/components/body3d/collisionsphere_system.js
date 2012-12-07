@@ -57,8 +57,8 @@ if (typeof(Ammo) !== 'undefined') {
 
                 CollisionSphereComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-                if (this.entity.body3d) {
-                    this.entity.body3d.createBody();
+                if (component.entity.body3d) {
+                    component.entity.body3d.createBody();
                 }
             },
 

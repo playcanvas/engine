@@ -22,12 +22,14 @@ if (typeof(Ammo) !== 'undefined') {
 
                 var body = this.entity.body3d.body;
                 if (body) {
+                    /*
                     var fixture = body.GetFixtureList();
                     var shape = fixture.GetShape();
                     
                     shape.SetRadius(this.radius);
 
                     body.SetAwake(true);
+                    */
                 }
             }
         });
