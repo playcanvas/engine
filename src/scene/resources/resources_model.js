@@ -187,18 +187,19 @@ pc.extend(pc.resources, function () {
     };
     
     ModelResourceHandler.prototype._loadMesh = function (model, modelData, meshData) {
-        var mesh = new pc.scene.MeshNode();
+        var node = new pc.scene.GraphNode();
 
-        this._setNodeData(mesh, meshData);
+        this._setNodeData(node, meshData);
 
         // Mesh properties
         var geometryId = meshData.geometry;
         var geometry   = model.getGeometries()[geometryId];
-//        mesh.setGeometry(geometry);
+
         for (var i = 0; i < geometry.length; i++) {
-            mesh.addMeshInstance(geometry[i]);
+            var meshInstance = new pc.scene.MeshInstance(node, geometry[i], geometry[i]._material);
+            model.meshInstances.push(meshInstance);
         }
-        return mesh;
+        return node;
     };
     
     /**
@@ -434,7 +435,6 @@ pc.extend(pc.resources, function () {
             skin = new pc.scene.Skin(inverseBindPose, geomData.bone_ids);
             skinInstance = new pc.scene.SkinInstance(skin);
             model._skins.push(skin);
-            model._skinInstances.push(skinInstance);
         }
 
         var geometry = [];
@@ -453,9 +453,6 @@ pc.extend(pc.resources, function () {
             mesh.skin = skin;
 
             mesh._material = subMesh.material;
-
-            var meshInstance = new pc.scene.MeshInstance(mesh, subMesh.material);
-            meshInstance.skinInstance = skinInstance;
 
             geometry.push(mesh);
         }
@@ -588,8 +585,8 @@ pc.extend(pc.resources, function () {
             model.setGraph(graph);
 
             // Need to update JSON file format to have bone names instead of graph IDs
-            for (var i = 0; i < model._skins.length; i++) {
-                var skin = model._skins[i];
+            for (var i = 0; i < model.skins.length; i++) {
+                var skin = model.skins[i];
                 for (var j = 0; j < skin.boneNames.length; j++) {
                     skin.boneNames[j] = graph.findByGraphId(skin.boneNames[j]).getName();
                 }

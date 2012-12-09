@@ -4,8 +4,9 @@
  * @namespace Scene Graph API
  */
 pc.scene = {
-    RENDERSTYLE_NORMAL: 0,
-    RENDERSTYLE_WIREFRAME: 1
+    RENDERSTYLE_SOLID: 0,
+    RENDERSTYLE_WIREFRAME: 1,
+    RENDERSTYLE_POINTS: 2
 };
 
 pc.scene.Space = {
@@ -14,6 +15,10 @@ pc.scene.Space = {
 };
 
 pc.extend(pc.scene, function () {
+
+    function sortByMaterial(instanceA, instanceB) {
+        return instanceA.key - instanceB.key;
+    }
 
     // Global shadowmap resources
     var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
@@ -284,37 +289,26 @@ pc.extend(pc.scene, function () {
         this.dispatchLocalLights();
 
         var i, j, k, instances, numInstances;
-        instances = this.meshInstances;
-
-        // Build mesh instance list (ideally done by visibility query)
-        instances.length = 0;
-        for (i = this._models.length - 1; i >= 0; i--) {
-            var meshes = this._models[i].getMeshes();
-            for (j = meshes.length - 1; j >= 0; j--) {
-                var mesh = meshes[j];
-                for (k = mesh.meshInstances.length - 1; k >= 0; k--) {
-                    instances.push(mesh.meshInstances[k]);
-                }
-            }
-        }
 
         // Update all skin matrix palettes
         for (i = this._models.length - 1; i >= 0; i--) {
-            var skins = this._models[i]._skins;
-            var skinInstances = this._models[i]._skinInstances;
-            var m4Mult = pc.math.mat4.multiply;
-            for (j = skins.length - 1; j >= 0; j--) {
-                var skin = skins[j];
-                var skinInstance = skinInstances[j];
-                for (k = skinInstance.bones.length - 1; k >= 0; k--) {
-                    m4Mult(skinInstance.bones[k].worldTransform, skin.inverseBindPose[k], skinInstance.matrixPaletteEntryF32[k]);
-                }
+            var skinInstances = this._models[i].skinInstances;
+            for (j = skinInstances.length - 1; j >= 0; j--) {
+                skinInstances[j].updateMatrixPalette();
             }
         }
 
-        instances.sort(function (instanceA, instanceB) {
-            return instanceA.key - instanceB.key;
-        });
+        // Build mesh instance list (ideally done by visibility query)
+        instances = this.meshInstances;
+        instances.length = 0;
+        for (i = this._models.length - 1; i >= 0; i--) {
+            var model = this._models[i];
+            for (j = model.meshInstances.length - 1; j >= 0; j--) {
+                instances.push(this._models[i].meshInstances[j]);
+            }
+        }
+
+        instances.sort(sortByMaterial);
 
         var device = pc.gfx.Device.getCurrent();
         var modelMatrixId = device.scope.resolve('matrix_model');
@@ -327,7 +321,7 @@ pc.extend(pc.scene, function () {
             material = instance.material;
 
             modelMatrixId.setValue(instance.node.worldTransform);
-            if (mesh.skin) {
+            if (instance.skinInstance) {
                 poseMatrixId.setValue(instance.skinInstance.matrixPaletteF32);
             }
 

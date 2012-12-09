@@ -4,82 +4,77 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.Model
      * @class A model.
      */
-	var Model = function Model() {
-	    this._textures   = [];
-	    this._materials  = [];
-	    this._geometries = [];
-	    this._skins      = [];
-	    this._skinInstances = [];
+    var Model = function Model() {
+        this.textures   = [];
+        this.materials  = [];
+        this.geometries = [];
+        this.skins      = [];
 
-	    this._cameras    = [];
-	    this._lights     = [];
-	    this._meshes     = [];
-	    this._graph      = null;
+        this.skinInstances = [];
+        this.meshInstances = [];
+
+        this.cameras    = [];
+        this.lights     = [];
+        this.meshes     = [];
+        this.graph      = null;
 	}
 
 	Model.prototype.getGraph = function () {
-	    return this._graph;
+	    return this.graph;
 	};
 	
 	Model.prototype.setGraph = function (graph) {
-	    this._graph = graph;
+	    this.graph = graph;
 	};
 	
 	Model.prototype.getCameras = function () {
-	    return this._cameras;
+	    return this.cameras;
 	};
 	
 	Model.prototype.setCameras = function (cameras) {
-	    this._cameras = cameras;
+	    this.cameras = cameras;
 	};
 	
 	Model.prototype.getLights = function () {
-	    return this._lights;
+	    return this.lights;
 	};
 	
 	Model.prototype.setLights = function (lights) {
-	    this._lights = lights;
+	    this.lights = lights;
 	};
 	
 	Model.prototype.getMeshes = function () {
-	    return this._meshes;
+	    return this.meshes;
 	};
 	
 	Model.prototype.setMeshes = function (meshes) {
-	    this._meshes = meshes;
+	    this.meshes = meshes;
 	};
 	
 	Model.prototype.getTextures = function () {
-	    return this._textures;
+	    return this.textures;
 	};
 	
 	Model.prototype.setTextures = function (textures) {
-	    this._textures = textures;
+	    this.textures = textures;
 	};
 	
 	Model.prototype.getMaterials = function () {
-	    return this._materials;
+	    return this.materials;
 	};
 	
 	Model.prototype.setMaterials = function (materials) {
-	    this._materials = materials;
+	    this.materials = materials;
 	};
 	
 	Model.prototype.getGeometries = function () {
-	    return this._geometries;
+	    return this.geometries;
 	};
 	
 	Model.prototype.setGeometries = function (geometries) {
-	    this._geometries = geometries;
+	    this.geometries = geometries;
 	};
 	
-	Model.prototype.dispatch = function () {
-	    var i, len;
-	    for (i = 0, len = this._meshes.length; i < len; i++) {
-	        this._meshes[i].dispatch();
-	    }
-	};
-
     /**
      * @function
      * @name pc.scene.Model#clone
@@ -94,13 +89,13 @@ pc.extend(pc.scene, function () {
 	Model.prototype.clone = function () {
         var clone = new pc.scene.Model();
 
-        clone._textures = this._textures.slice(0);
-        clone._materials = this._materials.slice(0);
-        clone._geometries = this._geometries.slice(0);
-        clone._skins = this._skins.slice(0);
+        clone.textures = this.textures.slice(0);
+        clone.materials = this.materials.slice(0);
+        clone.geometries = this.geometries.slice(0);
+        clone.skins = this.skins.slice(0);
 
-        for (var i = 0; i < this._skins.length; i++) {
-        	clone._skinInstances.push(new pc.scene.SkinInstance(clone._skins[i]));
+        for (var i = 0; i < this.skins.length; i++) {
+        	clone.skinInstances.push(new pc.scene.SkinInstance(clone.skins[i]));
         }
 
         var self = this;
@@ -116,7 +111,7 @@ pc.extend(pc.scene, function () {
                 clone.getMeshes().push(newNode);
                 for (var i = 0; i < node.meshInstances.length; i++) {
                 	if (node.meshInstances[i].skinInstance) {
-	                	newNode.meshInstances[i].skinInstance = clone._skinInstances[self._skinInstances.indexOf(node.meshInstances[i].skinInstance)];
+	                	newNode.meshInstances[i].skinInstance = clone.skinInstances[self.skinInstances.indexOf(node.meshInstances[i].skinInstance)];
                 	}
                 }
             }
@@ -146,8 +141,8 @@ pc.extend(pc.scene, function () {
 	Model.prototype.resolveBoneNames = function () {
 		var i, j;
 
-        var skins = this._skins;
-        var skinInstances = this._skinInstances;
+        var skins = this.skins;
+        var skinInstances = this.skinInstances;
         var graph = this.getGraph();
         for (i = 0; i < skins.length; i++) {
             var skin = skins[i];

@@ -11,14 +11,19 @@ pc.extend(pc.scene, function () {
         this.skin = null;
     };
 
-    var MeshInstance = function (mesh, material) {
-        this.node = null;
-        this.renderStyle = pc.scene.RENDERSTYLE_NORMAL;
-        this.mesh = mesh;
-        this.material = material;
+    var MeshInstance = function (node, mesh, material) {
+        this.node = node;           // The node that defines the transform of the mesh instance
+        this.mesh = mesh;           // The mesh that this instance renders
+        this.material = material;   // The material with which to render this instance
+
+        // Render options
+        this.renderStyle = pc.scene.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this.receiveShadow = true;
-        this.key = material.id; // 64-bit integer key
+
+        // 64-bit integer key that defines render order of this mesh instance
+        this.key = material.id; 
+
         this.skinInstance = null;
     };
 
@@ -39,6 +44,8 @@ pc.extend(pc.scene, function () {
     };
 
     var SkinInstance = function (skin) {
+        this.skin = skin;
+
         // Unique per clone
         this.bones = [];
 
@@ -50,6 +57,17 @@ pc.extend(pc.scene, function () {
             this.matrixPaletteEntryF32[i] = new Float32Array(this.matrixPalette, i * 16 * 4, 16);
         }
     };
+
+    SkinInstance.prototype = {
+        updateMatrixPalette: function () {
+            for (var i = this.bones.length - 1; i >= 0; i--) {
+                pc.math.mat4.multiply(this.bones[i].worldTransform,
+                                      this.skin.inverseBindPose[i],
+                                      this.matrixPaletteEntryF32[i]);
+            }
+        }
+    }
+
 
     return {
         Mesh: Mesh,
