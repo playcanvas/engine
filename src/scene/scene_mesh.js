@@ -9,6 +9,7 @@ pc.extend(pc.scene, function () {
         	count: 0
         }];
         this.skin = null;
+        this.aabb = null;
     };
 
     var MeshInstance = function (node, mesh, material) {
@@ -25,7 +26,16 @@ pc.extend(pc.scene, function () {
         this.key = material.id; 
 
         this.skinInstance = null;
+
+        this.aabb = new pc.shape.Aabb();
     };
+
+    MeshInstance.prototype = {
+        syncAabb: function () {
+            this.aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+        }
+    }
+
 
     /*
     Object.defineProperty(MeshInstance.prototype, 'renderStyle', {

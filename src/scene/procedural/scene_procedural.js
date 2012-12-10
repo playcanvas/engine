@@ -197,8 +197,10 @@ pc.scene.procedural.createMesh = function (positions, opts) {
         indexBuffer.unlock();
     }
 
+/*
     var boundingSphere = new pc.shape.Sphere();
     boundingSphere.compute(positions);
+*/
 
     var aabb = new pc.shape.Aabb();
     aabb.compute(positions);
@@ -210,6 +212,7 @@ pc.scene.procedural.createMesh = function (positions, opts) {
     mesh.primitive[0].base = 0;
     mesh.primitive[0].count = indexed ? indices.length : numVertices;
     mesh.primitive[0].indexed = indexed;
+    mesh.aabb = aabb;
     return mesh;
 }
 

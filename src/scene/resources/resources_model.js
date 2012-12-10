@@ -193,10 +193,13 @@ pc.extend(pc.resources, function () {
 
         // Mesh properties
         var geometryId = meshData.geometry;
-        var geometry   = model.getGeometries()[geometryId];
+        var geometry   = model.geometries[geometryId];
 
         for (var i = 0; i < geometry.length; i++) {
             var meshInstance = new pc.scene.MeshInstance(node, geometry[i], geometry[i]._material);
+            if (geometry[i].skin) {
+                meshInstance.skinInstance = new pc.scene.SkinInstance(geometry[i].skin);
+            }
             model.meshInstances.push(meshInstance);
         }
         return node;
@@ -433,9 +436,16 @@ pc.extend(pc.resources, function () {
             }
 
             skin = new pc.scene.Skin(inverseBindPose, geomData.bone_ids);
-            skinInstance = new pc.scene.SkinInstance(skin);
-            model._skins.push(skin);
+            model.skins.push(skin);
         }
+
+        // Set the local space axis-aligned bounding box of the geometry
+        var min = geomData.bbox.min;
+        var max = geomData.bbox.max;
+        var aabb = new pc.shape.Aabb(
+            pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+            pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+        );
 
         var geometry = [];
 
@@ -450,7 +460,8 @@ pc.extend(pc.resources, function () {
             mesh.primitive[0].base = subMesh.primitive.base;
             mesh.primitive[0].count = subMesh.primitive.count;
             mesh.primitive[0].indexed = true;
-            mesh.skin = skin;
+            mesh.skin = skin ? skin : null;
+            mesh.aabb = aabb;
 
             mesh._material = subMesh.material;
 
@@ -458,17 +469,6 @@ pc.extend(pc.resources, function () {
         }
 
 /*
-        // Set the local space axis-aligned bounding box of the geometry
-        if (geomData.bbox) {
-            var min = geomData.bbox.min;
-            var max = geomData.bbox.max;
-            var aabb = new pc.shape.Aabb(
-                pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
-            );
-            geometry.setAabb(aabb);
-        }
-
         if (geometry.isSkinned()) {
             var device = pc.gfx.Device.getCurrent();
             var maxBones = device.getBoneLimit();
@@ -510,10 +510,10 @@ pc.extend(pc.resources, function () {
             }
         }
 
-        var geometries = model.getGeometries();
+        model.geometries = [];
         for (i = 0; i < modelData.geometries.length; i++) {
             var geomData = modelData.geometries[i];
-            geometries.push(this._loadGeometry(model, modelData, geomData));
+            model.geometries.push(this._loadGeometry(model, modelData, geomData));
         }
     
         var _jsonToLoader = {
@@ -533,8 +533,6 @@ pc.extend(pc.resources, function () {
                     model.getCameras().push(node);
                 else if (node instanceof pc.scene.LightNode)
                     model.getLights().push(node);
-                else if (node instanceof pc.scene.MeshNode)
-                    model.getMeshes().push(node);
 
                 // Now create and load each child
                 if (nodeData.children !== undefined) {
@@ -602,9 +600,10 @@ pc.extend(pc.resources, function () {
         }
 
         model.getGraph().syncHierarchy();
-        var meshes = model.getMeshes();
-        for (i = 0; i < meshes.length; i++) {
-//            meshes[i].syncAabb();
+
+        var meshInstances = model.meshInstances;
+        for (i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].syncAabb();
         }
 
         return model;

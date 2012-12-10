@@ -120,12 +120,12 @@ pc.extend(pc.scene, function () {
         clone.resolveBoneNames();
 
         clone.getGraph().syncHierarchy();
-/*        
-        var meshes = clone.getMeshes();
-        for (var i = 0; i < meshes.length; i++) {
-            meshes[i].syncAabb();
+
+        var meshInstances = clone.meshInstances;
+        for (i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].syncAabb();
         }
-*/
+
         return clone;
     };
 
