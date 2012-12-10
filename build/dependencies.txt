@@ -168,6 +168,15 @@
 ../src/framework/components/body2d/collisioncircle_system.js
 ../src/framework/components/body2d/collisioncircle_component.js
 ../src/framework/components/body2d/collisioncircle_data.js
+../src/framework/components/body3d/body3d_system.js
+../src/framework/components/body3d/body3d_component.js
+../src/framework/components/body3d/body3d_data.js
+../src/framework/components/body3d/collisionbox_system.js
+../src/framework/components/body3d/collisionbox_component.js
+../src/framework/components/body3d/collisionbox_data.js
+../src/framework/components/body3d/collisionsphere_system.js
+../src/framework/components/body3d/collisionsphere_component.js
+../src/framework/components/body3d/collisionsphere_data.js
 ../src/framework/livelink/livelink_livelink.js
 ../src/framework/livelink/livelink_message.js
 ../src/framework/livelink/livelink_update_component_message.js
