@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.85.1
+-------
+* Update Body3d transforms after stepping simulation
+
+-------
 v0.85.0
 -------
 * [BREAKING] Mouse and Keyboard events are now passed pc.input.MouseEvent and pc.input.KeyboardEvent respectively. The original browser event is available as the 'event' property.
