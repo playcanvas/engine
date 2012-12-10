@@ -229,8 +229,8 @@ pc.extend(pc.resources, function () {
             texture.name = textureData.name;
             texture.addressU = this._jsonToAddressMode[textureData.addressu];
             texture.addressV = this._jsonToAddressMode[textureData.addressv];
-            texture.magFilter = this._jsonToFilterMode[textureData.minfilter];
-            texture.minFilter = this._jsonToFilterMode[textureData.magfilter];
+            texture.minFilter = this._jsonToFilterMode[textureData.minfilter];
+            texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
 
             // add to textureCache cache
             if (this._textureCache) {
