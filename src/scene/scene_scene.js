@@ -153,6 +153,10 @@ pc.extend(pc.scene, function () {
     var Scene = function Scene() {
         this.meshInstances = [];
 
+        var device = pc.gfx.Device.getCurrent();
+        this.modelMatrixId = device.scope.resolve('matrix_model');
+        this.poseMatrixId = device.scope.resolve('matrix_pose[0]');
+
         // Models
         this._models = [];
         this._alphaMeshes = [];
@@ -311,18 +315,16 @@ pc.extend(pc.scene, function () {
         instances.sort(sortByMaterial);
 
         var device = pc.gfx.Device.getCurrent();
-        var modelMatrixId = device.scope.resolve('matrix_model');
-        var poseMatrixId = device.scope.resolve('matrix_pose[0]');
-        var instance, mesh, material, prevMaterial = null, style;
+        var meshInstance, mesh, material, prevMaterial = null, style;
 
         for (i = 0, numInstances = instances.length; i < numInstances; i++) {
-            instance = instances[i];
-            mesh = instance.mesh;
-            material = instance.material;
+            meshInstance = instances[i];
+            mesh = meshInstance.mesh;
+            material = meshInstance.material;
 
-            modelMatrixId.setValue(instance.node.worldTransform);
-            if (instance.skinInstance) {
-                poseMatrixId.setValue(instance.skinInstance.matrixPaletteF32);
+            this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+            if (meshInstance.skinInstance) {
+                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
             }
 
             if (material !== prevMaterial) {
@@ -331,7 +333,7 @@ pc.extend(pc.scene, function () {
                 device.updateLocalState(material.getState());
             }
 
-            style = instance.renderStyle;
+            style = meshInstance.renderStyle;
 
             device.setVertexBuffer(mesh.vertexBuffer, 0);
             device.setIndexBuffer(mesh.indexBuffer[style]);

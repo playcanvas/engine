@@ -7,7 +7,6 @@ pc.extend(pc.scene, function () {
     var Model = function Model() {
         this.textures   = [];
         this.materials  = [];
-        this.geometries = [];
         this.skins      = [];
 
         this.skinInstances = [];
@@ -15,7 +14,6 @@ pc.extend(pc.scene, function () {
 
         this.cameras    = [];
         this.lights     = [];
-        this.meshes     = [];
         this.graph      = null;
 	}
 
@@ -43,14 +41,6 @@ pc.extend(pc.scene, function () {
 	    this.lights = lights;
 	};
 	
-	Model.prototype.getMeshes = function () {
-	    return this.meshes;
-	};
-	
-	Model.prototype.setMeshes = function (meshes) {
-	    this.meshes = meshes;
-	};
-	
 	Model.prototype.getTextures = function () {
 	    return this.textures;
 	};
@@ -65,14 +55,6 @@ pc.extend(pc.scene, function () {
 	
 	Model.prototype.setMaterials = function (materials) {
 	    this.materials = materials;
-	};
-	
-	Model.prototype.getGeometries = function () {
-	    return this.geometries;
-	};
-	
-	Model.prototype.setGeometries = function (geometries) {
-	    this.geometries = geometries;
 	};
 	
     /**
@@ -91,30 +73,31 @@ pc.extend(pc.scene, function () {
 
         clone.textures = this.textures.slice(0);
         clone.materials = this.materials.slice(0);
-        clone.geometries = this.geometries.slice(0);
         clone.skins = this.skins.slice(0);
-
-        for (var i = 0; i < this.skins.length; i++) {
-        	clone.skinInstances.push(new pc.scene.SkinInstance(clone.skins[i]));
-        }
-
-        var self = this;
+/*
+            else if (node instanceof pc.scene.MeshNode) {
+                clone.getMeshes().push(newNode);
+                for (var i = 0; i < node.meshInstances.length; i++) {
+                    if (node.meshInstances[i].skinInstance) {
+                        newNode.meshInstances[i].skinInstance = clone.skinInstances[self.skinInstances.indexOf(node.meshInstances[i].skinInstance)];
+                    }
+                }
+            }
+*/
+        // Duplicate the node hierarchy
+        var srcNodes = [];
+        var cloneNodes = [];
 
         var _duplicate = function (node) {
             var newNode = node.clone();
 
+            srcNodes.push(node);
+            cloneNodes.push(newNode);
+
             if (node instanceof pc.scene.CameraNode)
-                clone.getCameras().push(newNode);
+                clone.cameras.push(newNode);
             else if (node instanceof pc.scene.LightNode)
-                clone.getLights().push(newNode);
-            else if (node instanceof pc.scene.MeshNode) {
-                clone.getMeshes().push(newNode);
-                for (var i = 0; i < node.meshInstances.length; i++) {
-                	if (node.meshInstances[i].skinInstance) {
-	                	newNode.meshInstances[i].skinInstance = clone.skinInstances[self.skinInstances.indexOf(node.meshInstances[i].skinInstance)];
-                	}
-                }
-            }
+                clone.lights.push(newNode);
 
             var children = node.getChildren();
             for (var i = 0; i < children.length; i++) {
@@ -123,18 +106,26 @@ pc.extend(pc.scene, function () {
 
             return newNode;
         }
+        clone.graph = _duplicate(this.graph);
 
-        clone.setGraph(_duplicate(this.getGraph()));
+        // Clone the mesh instances
+        for (var i = 0; i < this.meshInstances.length; i++) {
+            var meshInstance = this.meshInstances[i];
+            var nodeIndex = srcNodes.indexOf(meshInstance.node);
+            var cloneInstance = new pc.scene.MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
+            clone.meshInstances.push(cloneInstance);
+        }
 
         // Resolve bone IDs to actual graph nodes
         clone.resolveBoneNames();
 
         clone.getGraph().syncHierarchy();
+/*        
         var meshes = clone.getMeshes();
         for (var i = 0; i < meshes.length; i++) {
-  //          meshes[i].syncAabb();
+            meshes[i].syncAabb();
         }
-
+*/
         return clone;
     };
 
