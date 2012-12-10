@@ -9,6 +9,8 @@ pc.extend(pc.scene, function () {
         	count: 0
         }];
         this.skin = null;
+
+        // AABB for object space mesh vertices
         this.aabb = null;
     };
 
@@ -27,6 +29,7 @@ pc.extend(pc.scene, function () {
 
         this.skinInstance = null;
 
+        // World space AABB
         this.aabb = new pc.shape.Aabb();
     };
 

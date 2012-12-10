@@ -198,7 +198,8 @@ pc.extend(pc.resources, function () {
         for (var i = 0; i < geometry.length; i++) {
             var meshInstance = new pc.scene.MeshInstance(node, geometry[i], geometry[i]._material);
             if (geometry[i].skin) {
-                meshInstance.skinInstance = new pc.scene.SkinInstance(geometry[i].skin);
+                var skinIndex = model.skins.indexOf(geometry[i].skin);
+                meshInstance.skinInstance = model.skinInstances[skinIndex];
             }
             model.meshInstances.push(meshInstance);
         }
@@ -437,6 +438,7 @@ pc.extend(pc.resources, function () {
 
             skin = new pc.scene.Skin(inverseBindPose, geomData.bone_ids);
             model.skins.push(skin);
+            model.skinInstances.push(new pc.scene.SkinInstance(skin));
         }
 
         // Set the local space axis-aligned bounding box of the geometry

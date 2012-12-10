@@ -5,22 +5,23 @@ pc.extend(pc.scene, function () {
      * @class A model.
      */
     var Model = function Model() {
-        this.textures   = [];
-        this.materials  = [];
-        this.skins      = [];
+        this.textures = [];
+        this.materials = [];
 
+        this.skins = [];
         this.skinInstances = [];
+
         this.meshInstances = [];
 
-        this.cameras    = [];
-        this.lights     = [];
-        this.graph      = null;
+        this.cameras = [];
+        this.lights = [];
+        this.graph = null;
 	}
 
 	Model.prototype.getGraph = function () {
 	    return this.graph;
 	};
-	
+
 	Model.prototype.setGraph = function (graph) {
 	    this.graph = graph;
 	};
@@ -74,6 +75,10 @@ pc.extend(pc.scene, function () {
         clone.textures = this.textures.slice(0);
         clone.materials = this.materials.slice(0);
         clone.skins = this.skins.slice(0);
+
+        for (var i = 0; i < clone.skins.length; i++) {
+            clone.skinInstances.push(new pc.scene.SkinInstance(clone.skins[i]));
+        }
 /*
             else if (node instanceof pc.scene.MeshNode) {
                 clone.getMeshes().push(newNode);
@@ -114,6 +119,11 @@ pc.extend(pc.scene, function () {
             var nodeIndex = srcNodes.indexOf(meshInstance.node);
             var cloneInstance = new pc.scene.MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
             clone.meshInstances.push(cloneInstance);
+
+            if (meshInstance.skinInstance) {
+                var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
+                cloneInstance.skinInstance = clone.skinInstances[skinInstanceIndex];
+            }
         }
 
         // Resolve bone IDs to actual graph nodes
