@@ -25,7 +25,8 @@ pc.extend(pc.scene, function () {
         this.receiveShadow = true;
 
         // 64-bit integer key that defines render order of this mesh instance
-        this.key = material.id; 
+        this.key = 0;
+        this.updateKey();
 
         this.skinInstance = null;
 
@@ -36,19 +37,20 @@ pc.extend(pc.scene, function () {
     MeshInstance.prototype = {
         syncAabb: function () {
             this.aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+        },
+
+        updateKey: function () {
+            // Key definition:
+            // Bit
+            // 31     - sign bit (leave)
+            // 30     - 1 opaque, 0 transparent
+            // 0 - 29 - Material ID (if oqaque) or 0 (if transparent - will be depth)
+            var material = this.material;
+            this.key = material.transparent ? 
+                0x00000000 :
+                (material.id & 0x3fffffff) | 0x40000000; 
         }
     }
-
-
-    /*
-    Object.defineProperty(MeshInstance.prototype, 'renderStyle', {
-        get: function () { return this.renderStyle; },
-        set: function (style) {
-            this.renderStyle = style;
-            this.mesh = this.meshes[this.renderStyle];
-        }
-    });
-    */
 
     var Skin = function (ibp, boneNames) {
         // Constant between clones

@@ -1,7 +1,7 @@
 
 /**
  * @name pc.scene
- * @namespace Scene Graph API
+ * @namespace High level Graphics API
  */
 pc.scene = {
     RENDERSTYLE_SOLID: 0,
@@ -9,15 +9,10 @@ pc.scene = {
     RENDERSTYLE_POINTS: 2
 };
 
-pc.scene.Space = {
-    LOCAL: 0,
-    WORLD: 1
-};
-
 pc.extend(pc.scene, function () {
 
     function sortByMaterial(instanceA, instanceB) {
-        return instanceA.key - instanceB.key;
+        return instanceB.key - instanceA.key;
     }
 
     // Global shadowmap resources
@@ -751,20 +746,7 @@ pc.extend(pc.scene, function () {
         pc.scene.Scene.current = null;
 	};	
 
-	return {
-		Scene: Scene,
-		/**
-		 * Constants for render order.
-		 * @enum {number}
-		 */
-		RenderOrder: {
-		    /** Queue items in any order. */
-		    ANY: 0,
-		    /** Queue items in back to front Z order. This correctly composits transparent geometry. */
-		    BACK_TO_FRONT: 1,
-		    /** Queue items in front to back Z order. This reduces pixel fill since fewer Z-buffer tests should pass. */
-		    FRONT_TO_BACK: 2
-		}
-	};
-	
+    return {
+        Scene: Scene
+    };
 }());
