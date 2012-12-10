@@ -60,7 +60,23 @@ pc.extend(pc.fw, function () {
             exposed: false
         }];
 
-        this.exposeProperties();        
+        this.exposeProperties();
+
+        this.box = pc.scene.procedural.createBox({
+            halfExtents: [0.5,0.5,0.5]
+        });
+        this.sphere = pc.scene.procedural.createSphere({
+            radius: 0.5
+        });
+        this.cone = pc.scene.procedural.createCone({
+            baseRadius: 0.5,
+            peakRadius: 0,
+            height: 1
+        });
+        this.cylinder = pc.scene.procedural.createCylinder({
+            radius: 0.5,
+            height: 1
+        });
 
         this.bind('remove', this.onRemove.bind(this));
     };
