@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.85.2
+-------
+* [FIX] Texture filters set incorrectly on JSON model load.
+
+-------
 v0.85.1
 -------
 * Update Body3d transforms after stepping simulation
