@@ -79,16 +79,7 @@ pc.extend(pc.scene, function () {
         for (var i = 0; i < clone.skins.length; i++) {
             clone.skinInstances.push(new pc.scene.SkinInstance(clone.skins[i]));
         }
-/*
-            else if (node instanceof pc.scene.MeshNode) {
-                clone.getMeshes().push(newNode);
-                for (var i = 0; i < node.meshInstances.length; i++) {
-                    if (node.meshInstances[i].skinInstance) {
-                        newNode.meshInstances[i].skinInstance = clone.skinInstances[self.skinInstances.indexOf(node.meshInstances[i].skinInstance)];
-                    }
-                }
-            }
-*/
+
         // Duplicate the node hierarchy
         var srcNodes = [];
         var cloneNodes = [];

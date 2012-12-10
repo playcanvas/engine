@@ -197,11 +197,6 @@ pc.scene.procedural.createMesh = function (positions, opts) {
         indexBuffer.unlock();
     }
 
-/*
-    var boundingSphere = new pc.shape.Sphere();
-    boundingSphere.compute(positions);
-*/
-
     var aabb = new pc.shape.Aabb();
     aabb.compute(positions);
 
