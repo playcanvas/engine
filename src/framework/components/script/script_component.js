@@ -63,6 +63,7 @@ pc.extend(pc.fw, function () {
                             // If there is no request batch, then this is not part of a load request and so we need 
                             // to register the instances immediately to call the initialize function
                             if (!options.batch) {
+                                //this.system.onInitialize(this.entity);
                                 this.system._registerInstances(this.entity);
                             }                        
                         }
