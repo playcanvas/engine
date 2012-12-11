@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.85.4
+-------
+* [FIX] Script instance initialize() method is called when an Entity is created over LiveLink
+
+-------
 v0.85.3
 -------
 * [FIX] Point lights render with the right color in Designer again.
