@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.85.3
+-------
+* [FIX] Point lights render with the right color in Designer again.
+* [FIX] pc.input.Controller now handles mouse move properly again.
+
+-------
 v0.85.2
 -------
 * [FIX] Texture filters set incorrectly on JSON model load.
