@@ -239,12 +239,12 @@ pc.extend(pc.input, function () {
             switch (source) {
                 case 'mousex':
                     controller._mouse.bind(pc.input.EVENT_MOUSEMOVE, function (e) {
-                        controller._axesValues[name][i] = e.movementX / 10;
+                        controller._axesValues[name][i] = e.dx / 10;
                     });
                     break;
                 case 'mousey':
                     controller._mouse.bind(pc.input.EVENT_MOUSEMOVE, function (e) {
-                        controller._axesValues[name][i] = e.movementY / 10;
+                        controller._axesValues[name][i] = e.dy / 10;
                     });
                     break;
                 case 'key':
