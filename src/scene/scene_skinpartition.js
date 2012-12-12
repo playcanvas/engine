@@ -135,7 +135,7 @@ pc.extend(pc.scene, function () {
         var geomIndices = new Uint16Array(indexBuffer.lock());
         for (var i = 0; i < meshes.length; i++) {
             var mesh = meshes[i];
-            var primitive = mesh.primitive;
+            var primitive = mesh.primitive[0];
             for (var iIndex = primitive.base; iIndex < primitive.base + primitive.count; ) {
                 // Extact primitive  
                 // Convert vertices  
@@ -167,7 +167,7 @@ pc.extend(pc.scene, function () {
                 // If the primitive was not added to an existing bone partition, we need to make a new bone partition and add the primitive to it  
                 if (!added) {
                     var partition = new SkinPartition();
-                    partition.material = meshInstance.material;
+                    partition.material = mesh._material;
                     partition.addPrimitive(primitiveVertices, primitiveIndices, boneLimit);  
                     partitions.push(partition);
                 }
@@ -228,7 +228,7 @@ pc.extend(pc.scene, function () {
             var lockedBuffer = partitionedVb.lock();
             var byteArray = new Uint8Array(lockedBuffer);
             for (var j = 0; j < partitionedVertices.length; j++) {
-                byteArray.set(new Uint8Array(partitionedVertices[j].vertexData[i]), j * vertexBuffer.getFormat().size);
+                byteArray.set(new Uint8Array(partitionedVertices[j].vertexData[i]), j * partitionedVb.getFormat().size);
             }
             partitionedVb.unlock();
             partitionedVbs.push(partitionedVb);
@@ -252,6 +252,7 @@ pc.extend(pc.scene, function () {
         // Phase 5:
         // Build new mesh array
         var partitionedMeshes = [];
+        var base = 0;
 
         for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
             var partition = partitions[iPartition];
@@ -267,17 +268,19 @@ pc.extend(pc.scene, function () {
 
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = partitionedVbs[0];
-            mesh.indexBuffer = partitionedIb;
-            mesh.primitive.type = pc.gfx.PrimType.TRIANGLES;
-            mesh.primitive.base = indices.length;
-            mesh.primitive.count = partition.indexCount;
-            mesh.primitive.indexed = true;
+            mesh.indexBuffer[0] = partitionedIb;
+            mesh.primitive[0].type = pc.gfx.PrimType.TRIANGLES;
+            mesh.primitive[0].base = base;
+            mesh.primitive[0].count = partition.indexCount;
+            mesh.primitive[0].indexed = true;
             mesh.skin = partitionedSkin;
             mesh.aabb = meshes[0].aabb;
 
             mesh._material = partition.material;
 
             partitionedMeshes.push(mesh);
+
+            base += partition.indexCount;
         }
 
         return partitionedMeshes;

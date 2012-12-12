@@ -472,13 +472,13 @@ pc.extend(pc.resources, function () {
             var device = pc.gfx.Device.getCurrent();
             var maxBones = device.getBoneLimit();
             if (geomData.inverse_bind_pose.length > maxBones) {
-                meshes = pc.scene.partitionSkin(maxBones, vertexBuffer, indexBuffer, meshes, skin);
+                meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
             }
 
             for (var i = 0; i < meshes.length; i++) {
                 skin = meshes[i].skin;
                 var skinIndex = model.skins.indexOf(skin);
-                if (skinIndex !== -1) {
+                if (skinIndex === -1) {
                     model.skins.push(skin);
                     skinInstance = new pc.scene.SkinInstance(skin);
                     model.skinInstances.push(skinInstance);
