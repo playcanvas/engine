@@ -6,7 +6,12 @@
 pc.scene = {
     RENDERSTYLE_SOLID: 0,
     RENDERSTYLE_WIREFRAME: 1,
-    RENDERSTYLE_POINTS: 2
+    RENDERSTYLE_POINTS: 2,
+
+    LAYER_HUD: 0,
+    LAYER_FX: 1,
+    LAYER_WORLD: 2,
+    LAYER_SKYBOX: 3
 };
 
 pc.extend(pc.scene, function () {
@@ -266,10 +271,6 @@ pc.extend(pc.scene, function () {
 	        this._models[i].getGraph().syncHierarchy();
 	    }
 	};
-
-    var PROGRAM_MASK = 0xf00;
-    var MATERIAL_MASK = 0xf0;
-    var BUFFER_MASK = 0xf;
 
     Scene.prototype.render = function () {
 

@@ -20,6 +20,7 @@ pc.extend(pc.scene, function () {
         this.material = material;   // The material with which to render this instance
 
         // Render options
+        this.layer = pc.scene.LAYER_WORLD;
         this.renderStyle = pc.scene.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this.receiveShadow = true;
@@ -42,13 +43,15 @@ pc.extend(pc.scene, function () {
         updateKey: function () {
             // Key definition:
             // Bit
-            // 31     - sign bit (leave)
-            // 30     - 1 opaque, 0 transparent
-            // 0 - 29 - Material ID (if oqaque) or 0 (if transparent - will be depth)
+            // 31      - sign bit (leave)
+            // 28 - 30 - layer
+            // 26 - 27 - translucency type (opaque: 3, normal, additive, subtractive)
+            // 0 - 25  - Material ID (if oqaque) or 0 (if transparent - will be depth)
             var material = this.material;
-            this.key = material.transparent ? 
-                0x00000000 :
-                (material.id & 0x3fffffff) | 0x40000000; 
+            this.key = 
+                (this.layer << 28) |
+                ((material.transparent ? 0 : 3) << 26) |
+                ((material.id & 0x1fffff) << 0); 
         }
     };
 
