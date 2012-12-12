@@ -68,9 +68,9 @@
 ../src/scene/scene_depthmaterial.js
 ../src/scene/scene_phongmaterial.js
 ../src/scene/scene_pickmaterial.js
-../src/scene/scene_geometry.js
 ../src/scene/scene_mesh.js
-../src/scene/scene_meshnode.js
+../src/scene/scene_skin.js
+../src/scene/scene_skinpartition.js
 ../src/scene/scene_model.js
 ../src/scene/scene_pick.js
 ../src/scene/procedural/scene_procedural.js

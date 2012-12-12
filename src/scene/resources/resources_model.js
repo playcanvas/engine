@@ -205,7 +205,7 @@ pc.extend(pc.resources, function () {
         }
         return node;
     };
-    
+
     /**
      * @function
      * @name pc.resources.ModelResourceHandler#_loadTexture
@@ -437,8 +437,6 @@ pc.extend(pc.resources, function () {
             }
 
             skin = new pc.scene.Skin(inverseBindPose, geomData.bone_ids);
-            model.skins.push(skin);
-            model.skinInstances.push(new pc.scene.SkinInstance(skin));
         }
 
         // Set the local space axis-aligned bounding box of the geometry
@@ -449,7 +447,7 @@ pc.extend(pc.resources, function () {
             pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
         );
 
-        var geometry = [];
+        var meshes = [];
 
         // Create and read each submesh
         for (var i = 0; i < geomData.submeshes.length; i++) {
@@ -467,20 +465,28 @@ pc.extend(pc.resources, function () {
 
             mesh._material = subMesh.material;
 
-            geometry.push(mesh);
+            meshes.push(mesh);
         }
 
-/*
-        if (geometry.isSkinned()) {
+        if (geomData.inverse_bind_pose !== undefined) {
             var device = pc.gfx.Device.getCurrent();
             var maxBones = device.getBoneLimit();
-            if (geometry.getInverseBindPose().length > maxBones) {
-                geometry.partitionSkin(maxBones);
+            if (geomData.inverse_bind_pose.length > maxBones) {
+                meshes = pc.scene.partitionSkin(maxBones, vertexBuffer, indexBuffer, meshes, skin);
+            }
+
+            for (var i = 0; i < meshes.length; i++) {
+                skin = meshes[i].skin;
+                var skinIndex = model.skins.indexOf(skin);
+                if (skinIndex !== -1) {
+                    model.skins.push(skin);
+                    skinInstance = new pc.scene.SkinInstance(skin);
+                    model.skinInstances.push(skinInstance);
+                }
             }
         }
-*/
 
-        return geometry;
+        return meshes;
     };
 
     /**
