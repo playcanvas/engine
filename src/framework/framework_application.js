@@ -720,13 +720,13 @@ pc.extend(pc.fw, function () {
 
     return {
         FillMode: {
-            NONE: 0,
-            FILL_WINDOW: 1,
-            KEEP_ASPECT: 2
+            NONE: 'NONE',
+            FILL_WINDOW: 'FILL_WINDOW',
+            KEEP_ASPECT: 'KEEP_ASPECT'
         },
         ResolutionMode: {
-            AUTO: 0,
-            FIXED: 1
+            AUTO: 'AUTO',
+            FIXED: 'FIXED'
         },
         Application: Application
     };
