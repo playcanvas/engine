@@ -204,12 +204,20 @@ pc.extend(pc.scene, function () {
     };
 
     Scene.prototype.addModel = function (model) {
-        this._models.push(model);
+        var index = this._models.indexOf(model);
+        if (index === -1) {
+            this._models.push(model);
+            for (var i = 0; i < model.meshInstances.length; i++) {
+                if (this.meshInstances.indexOf(model.meshInstances[i]) === -1) {
+                    this.meshInstances.push(model.meshInstances[i]);
+                }
+            }
 
-        // Add all model lights to the scene
-        var lights = model.getLights();
-        for (var i = 0, len = lights.length; i < len; i++) {
-            this.addLight(lights[i]);
+            // Add all model lights to the scene
+            var lights = model.getLights();
+            for (var i = 0, len = lights.length; i < len; i++) {
+                this.addLight(lights[i]);
+            }
         }
     };
 
@@ -217,6 +225,12 @@ pc.extend(pc.scene, function () {
         var index = this._models.indexOf(model);
         if (index !== -1) {
             this._models.splice(index, 1);
+            for (var i = 0; i < model.meshInstances.length; i++) {
+                index = this.meshInstances.indexOf(model.meshInstances[i]);
+                if (index !== -1) {
+                    this.meshInstances.splice(index, 1);
+                }
+            }
 
             // Remove all model lights from the scene
             var lights = model.getLights();
@@ -298,22 +312,13 @@ pc.extend(pc.scene, function () {
         }
 
         // Build mesh instance list (ideally done by visibility query)
-        instances = this.meshInstances;
-        instances.length = 0;
-        for (i = this._models.length - 1; i >= 0; i--) {
-            var model = this._models[i];
-            for (j = model.meshInstances.length - 1; j >= 0; j--) {
-                instances.push(this._models[i].meshInstances[j]);
-            }
-        }
-
-        instances.sort(sortByMaterial);
+        this.meshInstances.sort(sortByMaterial);
 
         var device = pc.gfx.Device.getCurrent();
         var meshInstance, mesh, material, prevMaterial = null, style;
 
-        for (i = 0, numInstances = instances.length; i < numInstances; i++) {
-            meshInstance = instances[i];
+        for (i = 0, numInstances = this.meshInstances.length; i < numInstances; i++) {
+            meshInstance = this.meshInstances[i];
             mesh = meshInstance.mesh;
             material = meshInstance.material;
 

@@ -1,43 +1,5 @@
 pc.extend(pc.scene, function () {
 
-    var _setPickMaterial = function (models, material) {
-        // Iterate all models and add pick material for rendering to pick buffer.
-        for (var i = 0; i < models.length; i++) {
-            var model = models[i];
-            var geometries = model.getGeometries();
-            for (var j = 0; j < geometries.length; j++) {
-                var geometry = geometries[j];
-                var submeshes = geometry.getSubMeshes();
-                for (var k = 0; k < submeshes.length; k++) {
-                    var submesh = submeshes[k];
-                    if (typeof submesh._cachedMaterial === 'undefined') {
-                        submesh._cachedMaterial = submesh.material;
-                        submesh.material = material;
-                    }
-                }
-            }
-        }
-    };
-    
-    var _restoreCachedMaterials = function (models) {
-        // Remove picking material and restore original
-        for (var i = 0; i < models.length; i++) {
-            var model = models[i];
-            var geometries = model.getGeometries();
-            for (var j = 0; j < geometries.length; j++) {
-                var geometry = geometries[j];
-                var submeshes = geometry.getSubMeshes();
-                for (var k = 0; k < submeshes.length; k++) {
-                    var submesh = submeshes[k];
-                    if (typeof submesh._cachedMaterial !== 'undefined') {
-                        submesh.material = submesh._cachedMaterial;
-                        delete submesh._cachedMaterial;
-                    }
-                }
-            }
-        }
-    };
-
     /**
      * @name pc.scene.Picker
      * @class Picker object used to identify Entities from the pixel co-ordinate on screen
@@ -50,10 +12,18 @@ pc.extend(pc.scene, function () {
      * @param {Number} height The height of the pick buffer in pixels.
      */
     var Picker = function(width, height) {
-        this.pickMaterial = new pc.scene.PickMaterial();
+        var device = pc.gfx.Device.getCurrent();
+        var library = device.getProgramLibrary();
+        this.pickProgStatic = library.getProgram('pick', {
+            skin: false
+        });
+        this.pickProgSkin = library.getProgram('pick', {
+            skin: true
+        });
+
         this.pickColor = new Float32Array(4);
 
-        this._models = null;
+        this.scene = null;
 
         this._clearOptions = {
             color: [1.0, 1.0, 1.0, 1.0],
@@ -86,14 +56,14 @@ pc.extend(pc.scene, function () {
     /**
      * @function
      * @name pc.scene.Picker#getSelection
-     * @description Return the list of models selected by the specified rectangle in the previously prepared
-     * pick buffer. 
+     * @description Return the list of mesh instances selected by the specified rectangle in the
+     * previously prepared pick buffer.
      * @param {Object} rect The selection rectangle.
      * @param {Number} rect.x The left edge of the rectangle
      * @param {Number} rect.y The bottom edge of the rectangle
      * @param {Number} [rect.width] The width of the rectangle
      * @param {Number} [rect.height] The height of the rectangle
-     * @returns {Array} An array of models that are in the selection
+     * @returns {Array} An array of mesh instances that are in the selection
      * @example
      * // Get the selection at the point (10,20)
      * var selection = picker.getSelection({
@@ -127,9 +97,9 @@ pc.extend(pc.scene, function () {
             var index = pixel[0] << 16 | pixel[1] << 8 | pixel[2];
             // White is 'no selection'
             if (index !== 0xffffff) {
-                var selectedModel = this._models[index];
-                if (selection.indexOf(selectedModel) === -1) {
-                    selection.push(selectedModel);
+                var selectedMeshInstance = this.scene.meshInstances[index];
+                if (selection.indexOf(selectedMeshInstance) === -1) {
+                    selection.push(selectedMeshInstance);
                 }
             }
         }
@@ -155,13 +125,10 @@ pc.extend(pc.scene, function () {
      * called multiple times on the same picker object. Therefore, if the models or camera do not change 
      * in any way, pc.scene.Picker#prepare does not need to be called again.
      * @param {pc.scene.CameraNode} camera The camera used to render the scene, note this is the CameraNode, not an Entity
-     * @param {pc.scene.Model[]} models Array of models that are to be pickable.
+     * @param {pc.scene.Scene} scene The scene containing the pickable mesh instances.
      */
-    Picker.prototype.prepare = function (camera, models) {
-        this._models = models;
-
-        // Set the pick material on all models in the scene
-        _setPickMaterial(models, this.pickMaterial);
+    Picker.prototype.prepare = function (camera, scene) {
+        this.scene = scene;
 
         // Cache camera properties
         var prevRenderTarget = camera.getRenderTarget();
@@ -172,18 +139,35 @@ pc.extend(pc.scene, function () {
         camera.setClearOptions(this._clearOptions);
         camera.frameBegin();
 
-        // Render all render components in a different color and store a lookup
-        var count = 0;
-        for (var i = 0; i < models.length; i++) {
-            var model = models[i];
-            this.pickColor[0] = ((count >> 16) & 0xff) / 255.0;
-            this.pickColor[1] = ((count >> 8) & 0xff) / 255.0;
-            this.pickColor[2] = (count & 0xff) / 255.0;
+        // Build mesh instance list (ideally done by visibility query)
+        var i;
+        var mesh, meshInstance;
+        var meshInstances = scene.meshInstances;
+        var numMeshInstances = meshInstances.length;
+        var device = pc.gfx.Device.getCurrent();
+        var modelMatrixId = device.scope.resolve('matrix_model');
+        var poseMatrixId = device.scope.resolve('matrix_pose[0]');
+        var pickColorId = device.scope.resolve('uColor');
+
+        for (i = 0; i < numMeshInstances; i++) {
+            meshInstance = meshInstances[i];
+            mesh = meshInstance.mesh;
+
+            modelMatrixId.setValue(meshInstance.node.worldTransform);
+            if (meshInstance.skinInstance) {
+                poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+            }
+
+            this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;
+            this.pickColor[1] = ((i >> 8) & 0xff) / 255.0;
+            this.pickColor[2] = (i & 0xff) / 255.0;
             this.pickColor[3] = 1.0;
-            this.pickMaterial.color = this.pickColor;
-            this.pickMaterial.update();
-            model.dispatch();
-            count++;
+            pickColorId.setValue(this.pickColor);
+            device.setProgram(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
+
+            device.setVertexBuffer(mesh.vertexBuffer, 0);
+            device.setIndexBuffer(mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID]);
+            device.draw(mesh.primitive[pc.scene.RENDERSTYLE_SOLID]);
         }
 
         camera.frameEnd();
@@ -191,9 +175,6 @@ pc.extend(pc.scene, function () {
         // Restore camera
         camera.setRenderTarget(prevRenderTarget);
         camera.setClearOptions(prevClearOptions);
-
-        // Restore materials
-        _restoreCachedMaterials(models);
     };
 
     /**
