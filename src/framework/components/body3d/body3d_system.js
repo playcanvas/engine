@@ -84,11 +84,14 @@ pc.extend(pc.fw, function () {
             var solver = new Ammo.btSequentialImpulseConstraintSolver();
             this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
             this.dynamicsWorld.setGravity(new Ammo.btVector3(this.gravityX, this.gravityY, this.gravityZ));
+            
+            // Only bind 'update' if Ammo is loaded
+            pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
         }
 
         this.bind('remove', this.onRemove.bind(this));
 
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+        
     };
     Body3dComponentSystem = pc.inherits(Body3dComponentSystem, pc.fw.ComponentSystem);
     
