@@ -160,6 +160,11 @@ pc.extend(pc.fw, function () {
                     var meshInstance = model.meshInstances[0];
                     var vertexBuffer = meshInstance.mesh.vertexBuffer;
 
+                    var oca = Math.PI * componentData.outerConeAngle / 180;
+                    var ae = componentData.attenuationEnd;
+                    var y = -ae * Math.cos(oca);
+                    var r = ae * Math.sin(oca);
+
                     var positions = new Float32Array(vertexBuffer.lock());
                     positions[0] = 0;
                     positions[1] = 0;
