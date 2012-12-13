@@ -51,9 +51,6 @@ pc.extend(pc.fw, function () {
             options: {
                 min: 0
             }
-        }, {
-            name: 'light', 
-            exposed: false
         }];
 
         this.exposeProperties();

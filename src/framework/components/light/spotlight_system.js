@@ -10,8 +10,6 @@ pc.extend(pc.fw, function () {
         this.id = "spotlight";
         context.systems.add(this.id, this);
 
-        this.renderable = _createGfxResources();
-
         this.ComponentType = pc.fw.SpotLightComponent;
         this.DataType = pc.fw.SpotLightComponentData;
 
@@ -73,9 +71,6 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 max: 90
             }
-        }, {
-            name: "light",
-            exposed: false
         }];
 
         this.exposeProperties();
