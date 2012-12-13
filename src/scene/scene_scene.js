@@ -37,62 +37,12 @@ pc.extend(pc.scene, function () {
         frustumPoints.push(pc.math.vec3.create());
     }
 
-    function _setShadowMapMaterial(scene, material) {
-        var models = scene._models;
-        for (var i = 0; i < models.length; i++) {
-            var model = models[i];
-            var geometries = model.getGeometries();
-            for (var j = 0; j < geometries.length; j++) {
-                var geometry = geometries[j];
-                var subMeshes = geometry.getSubMeshes();
-                for (var k = 0; k < subMeshes.length; k++) {
-                    var subMesh = subMeshes[k];
-
-                    if (typeof(subMesh._cachedMaterial) === 'undefined') {
-                        subMesh._cachedMaterial = subMesh.material;
-                        subMesh.material = material;
-                    }
-                }
-            }
-        }
-    }
-
-    function _restoreMaterials(scene) {
-        var models = scene._models;
-        for (var i = 0; i < models.length; i++) {
-            var model = models[i];
-            var geometries = model.getGeometries();
-            for (var j = 0; j < geometries.length; j++) {
-                var geometry = geometries[j];
-                var subMeshes = geometry.getSubMeshes();
-                for (var k = 0; k < subMeshes.length; k++) {
-                    var subMesh = subMeshes[k];
-
-                    if (typeof(subMesh._cachedMaterial) !== 'undefined') {
-                        subMesh.material = subMesh._cachedMaterial;
-                        delete subMesh._cachedMaterial;                        
-                    }
-                }
-            }
-        }
-    }
-
-    function _calculateShadowMeshAabb(scene) {
-        var meshes = scene._shadowMeshes;
-        if (meshes.length > 0) {
-            scene._shadowAabb.copy(meshes[0].getAabb());
-            for (var i = 1; i < meshes.length; i++) {
-                scene._shadowAabb.add(meshes[i].getAabb());
-            }
-        }
-    }
-
     function _calculateSceneAabb(scene) {
-        var meshes = scene._opaqueMeshes;
-        if (meshes.length > 0) {
-            scene._sceneAabb.copy(meshes[0].getAabb());
-            for (var i = 1; i < meshes.length; i++) {
-                scene._sceneAabb.add(meshes[i].getAabb());
+        var meshInstances = scene.meshInstances;
+        if (meshInstances.length > 0) {
+            scene._sceneAabb.copy(meshInstances[0].aabb);
+            for (var i = 1; i < meshInstances.length; i++) {
+                scene._sceneAabb.add(meshInstances[i].aabb);
             }
         }
     }
@@ -152,6 +102,7 @@ pc.extend(pc.scene, function () {
      */
     var Scene = function Scene() {
         this.meshInstances = [];
+        this.shadowCasters = [];
 
         var device = pc.gfx.Device.getCurrent();
         this.modelMatrixId = device.scope.resolve('matrix_model');
@@ -159,9 +110,6 @@ pc.extend(pc.scene, function () {
 
         // Models
         this._models = [];
-        this._alphaMeshes = [];
-        this._opaqueMeshes = [];
-        this._shadowMeshes = [];
 
         // Lights
         this._lights = [];
@@ -170,38 +118,18 @@ pc.extend(pc.scene, function () {
         this._localLights = [[], []]; // All currently enabled points and spots
 
         // Shadows
-        this._shadowMaterial = new pc.scene.DepthMaterial();
+        var library = device.getProgramLibrary();
+        this._depthProgStatic = library.getProgram('depth', {
+            skin: false
+        });
+        this._depthProgSkin = library.getProgram('depth', {
+            skin: true
+        });
         this._shadowState = {
             blend: false
         };
         this._shadowAabb = new pc.shape.Aabb();
         this._sceneAabb = new pc.shape.Aabb();
-
-        // Initialize dispatch queues
-        this._queues = {};
-        this._priorities = [];
-        this.addQueue({ name: "first", priority: 1.0 });
-        this.addQueue({ name: "opaque", priority: 2.0 });
-        this.addQueue({ name: "transparent", priority: 3.0 });
-        this.addQueue({ name: "last", priority: 4.0 });
-        this.addQueue({ name: "post", priority: 5.0 });
-        this.addQueue({ name: "overlay", priority: 6.0 });
-    };
-
-    Scene.prototype.addQueue = function (queue) {
-        var sortQueuesOnPriority = function (queueA, queueB) {
-            var priorityA = queueA.priority;
-            var priorityB = queueB.priority;
-            return priorityA > priorityB;
-        }
-
-        this._queues[queue.name] = { renderFuncs: [], priority: queue.priority };
-        this._priorities.push(queue);
-        this._priorities.sort(sortQueuesOnPriority);
-    };
-
-    Scene.prototype.getQueuePriority = function (queueName) {
-        return this._queues[queueName].priority;
     };
 
     Scene.prototype.getModels = function () {
@@ -209,12 +137,22 @@ pc.extend(pc.scene, function () {
     };
 
     Scene.prototype.addModel = function (model) {
+        // Check the model is not already in the scene
         var index = this._models.indexOf(model);
         if (index === -1) {
             this._models.push(model);
+
+            // Insert the model's mesh instances into lists ready for rendering
+            var meshInstance;
             for (var i = 0; i < model.meshInstances.length; i++) {
-                if (this.meshInstances.indexOf(model.meshInstances[i]) === -1) {
-                    this.meshInstances.push(model.meshInstances[i]);
+                meshInstance = model.meshInstances[i];
+                if (this.meshInstances.indexOf(meshInstance) === -1) {
+                    this.meshInstances.push(meshInstance);
+                }
+                if (meshInstance.castShadow) {
+                    if (this.shadowCasters.indexOf(meshInstance) === -1) {
+                        this.shadowCasters.push(meshInstance);
+                    }
                 }
             }
 
@@ -227,13 +165,24 @@ pc.extend(pc.scene, function () {
     };
 
     Scene.prototype.removeModel = function (model) {
+        // Verify the model is in the scene
         var index = this._models.indexOf(model);
         if (index !== -1) {
             this._models.splice(index, 1);
+
+            // Remove the model's mesh instances from render queues
+            var meshInstance;
             for (var i = 0; i < model.meshInstances.length; i++) {
-                index = this.meshInstances.indexOf(model.meshInstances[i]);
+                meshInstance = model.meshInstances[i];
+                index = this.meshInstances.indexOf(meshInstance);
                 if (index !== -1) {
                     this.meshInstances.splice(index, 1);
+                }
+                if (meshInstance.castShadow) {
+                    index = this.shadowCasters.indexOf(meshInstance);
+                    if (index !== -1) {
+                        this.shadowCasters.splice(index, 1);
+                    }
                 }
             }
 
@@ -272,7 +221,7 @@ pc.extend(pc.scene, function () {
 	    }
 	};
 
-    Scene.prototype.render = function () {
+    Scene.prototype.render = function (camera) {
 
         pc.scene.Scene.current = this;
 
@@ -299,10 +248,9 @@ pc.extend(pc.scene, function () {
             }
         }
 
-        this.dispatchGlobalLights();
-        this.dispatchLocalLights();
-
-        var i, j, k, instances, numInstances;
+        var i, j, numInstances;
+        var device = pc.gfx.Device.getCurrent();
+        var meshInstance, mesh, material, prevMaterial = null, style;
 
         // Update all skin matrix palettes
         for (i = this._models.length - 1; i >= 0; i--) {
@@ -312,11 +260,121 @@ pc.extend(pc.scene, function () {
             }
         }
 
-        // Build mesh instance list (ideally done by visibility query)
+        var calcBbox = false;
+        _getFrustumPoints(camera, frustumPoints);
+
+        // Render all shadowmaps
+        for (i = 0; i < lights.length; i++) {
+            var light = lights[i];
+            var type = light.getType();
+
+            if (type === pc.scene.LightType.POINT) {
+                continue;
+            }
+
+            if (light.getCastShadows() && light.getEnabled()) {
+                var shadowCam = light._shadowCamera;
+
+                if (type === pc.scene.LightType.DIRECTIONAL) {
+                    if (!calcBbox) {
+                        _calculateSceneAabb(this);
+                        calcBbox = true;
+                    }
+
+                    var worldToLight = pc.math.mat4.invert(light.worldTransform);
+                    var camToWorld = camera.worldTransform;
+                    var c2l = pc.math.mat4.multiply(worldToLight, camToWorld);
+                    for (j = 0; j < 8; j++) {
+                        pc.math.mat4.multiplyVec3(frustumPoints[j], 1.0, c2l, frustumPoints[j]);
+                    }
+
+                    var minx = 1000000;
+                    var maxx = -1000000;
+                    var miny = 1000000;
+                    var maxy = -1000000;
+                    for (j = 0; j < 8; j++) {
+                        var p = frustumPoints[j];
+                        if (p[0] < minx) minx = p[0];
+                        if (p[0] > maxx) maxx = p[0];
+                        if (p[1] < miny) miny = p[1];
+                        if (p[1] > maxy) maxy = p[1];
+                    }
+
+                    pc.math.mat4.copy(light.worldTransform, shadowCamWtm);
+                    shadowCamWtm[12] = this._sceneAabb.center[0];
+                    shadowCamWtm[13] = this._sceneAabb.center[1];
+                    shadowCamWtm[14] = this._sceneAabb.center[2];
+                    pc.math.mat4.multiply(shadowCamWtm, camToLight, shadowCamWtm);
+
+                    var extent = pc.math.vec3.length(this._sceneAabb.halfExtents);
+                    shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
+                    shadowCam.setNearClip(-extent);
+                    shadowCam.setFarClip(extent);
+                    shadowCam.setAspectRatio(1);
+                    shadowCam.setOrthoHeight(extent);
+                } else if (type === pc.scene.LightType.SPOT) {
+                    shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
+                    shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
+                    shadowCam.setFarClip(light.getAttenuationEnd());
+                    shadowCam.setAspectRatio(1);
+                    shadowCam.setFov(light.getOuterConeAngle() * 2);
+
+                    var lightWtm = light.worldTransform;
+                    pc.math.mat4.multiply(lightWtm, camToLight, shadowCamWtm);
+                }
+
+                pc.math.mat4.invert(shadowCamWtm, shadowCamView);
+                pc.math.mat4.multiply(shadowCam.getProjectionMatrix(), shadowCamView, shadowCamViewProj);
+                pc.math.mat4.multiply(scaleShift, shadowCamViewProj, light._shadowMatrix);
+
+                // Point the camera along direction of light
+                pc.math.mat4.copy(shadowCamWtm, shadowCam.worldTransform);
+
+                shadowCam.frameBegin();
+
+                if (device.extDepthTexture) {
+                    device.gl.colorMask(false, false, false, false);
+                }
+
+                device.updateLocalState(this._shadowState);
+
+                for (i = 0, numInstances = this.meshInstances.length; i < numInstances; i++) {
+                    meshInstance = this.meshInstances[i];
+                    mesh = meshInstance.mesh;
+                    material = meshInstance.material;
+
+                    this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                    if (meshInstance.skinInstance) {
+                        this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                        device.setProgram(this._depthProgSkin);
+                    } else {
+                        device.setProgram(this._depthProgStatic);
+                    }
+
+                    style = meshInstance.renderStyle;
+
+                    device.setVertexBuffer(mesh.vertexBuffer, 0);
+                    device.setIndexBuffer(mesh.indexBuffer[style]);
+                    device.draw(mesh.primitive[style]);
+                }
+
+                device.clearLocalState();
+
+                if (device.extDepthTexture) {
+                    device.gl.colorMask(true, true, true, true);
+                }
+
+                shadowCam.frameEnd();
+            }
+        }
+
+        // Sort meshes into the correct render order
         this.meshInstances.sort(sortByMaterial);
 
-        var device = pc.gfx.Device.getCurrent();
-        var meshInstance, mesh, material, prevMaterial = null, style;
+        camera.frameBegin();
+
+        this.dispatchGlobalLights();
+        this.dispatchLocalLights();
 
         for (i = 0, numInstances = this.meshInstances.length; i < numInstances; i++) {
             meshInstance = this.meshInstances[i];
@@ -344,80 +402,12 @@ pc.extend(pc.scene, function () {
 
             prevMaterial = material;
         }
+
+        camera.frameEnd();
     };
 
-    /**
-     * @function
-     * @name pc.scene.Scene#dispatch
-     * @description Queues the meshes in a scene for rendering. This function does not actually
-     * cause the meshes in the scene to be rendered. Instead, it inserts all opaque meshes into
-     * a front-to-back render queue and all transparent meshes into a back-to-front render queue.
-     * To actually render the contents of the render queues, call pc.scene.Scene#flush.
-     * @param {pc.scene.CameraNode} camera The camera rendering the scene.
-     * @author Will Eastcott
-     */
-	Scene.prototype.dispatch = function (camera) {
-	    var i, j, k, len, model, numModels, mesh, numMeshes;
 
-        var alphaMeshes = this._alphaMeshes;
-        var opaqueMeshes = this._opaqueMeshes;
-
-        alphaMeshes.length = 0;
-        opaqueMeshes.length = 0;
-
-        this._globalLights.length = 0;
-        this._localLights[0].length = 0;
-        this._localLights[1].length = 0;
-        var castShadows = false;
-        var lights = this._lights;
-        for (i = 0, len = lights.length; i < len; i++) {
-            var light = lights[i];
-            if (light.getCastShadows()) {
-                castShadows = true;
-            }
-            if (light.getEnabled()) {
-                if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
-                    if (light.getCastShadows()) {
-                        this._globalLights.push(light);
-                    } else {
-                        this._globalLights.unshift(light);
-                    }
-                } else {
-                    this._localLights[light.getType() === pc.scene.LightType.POINT ? 0 : 1].push(light);
-                }
-            }
-        }
-
-//	    var frustum = camera.getFrustum();
-        for (i = 0, numModels = this._models.length; i < numModels; i++) {
-            model = this._models[i];
-            meshes = model.getMeshes();
-            for (j = 0, numMeshes = meshes.length; j < numMeshes; j++) {
-                var visible = true;
-                mesh = meshes[j];
-                mesh.syncAabb();
-                /*
-                var volume = mesh.getVolume();
-                if (volume) {
-                    if (volume instanceof pc.shape.Sphere) {
-                        visible = (frustum.containsSphere(volume) !== 0);
-                    }
-                }
-                if (true) {
-                */
-                    mesh._localLights = this._localLights;
-                    if (!mesh.getGeometry().hasAlpha()) {
-                        opaqueMeshes.push(mesh);
-                    } else {
-                        alphaMeshes.push(mesh);
-                /*
-                    }
-                */
-                }
-            }
-        }
-
-	    var self = this;
+/*
         var camMat = camera.getWorldTransform();
 	
 	    // Sort alpha meshes back to front
@@ -440,155 +430,7 @@ pc.extend(pc.scene, function () {
 	    }
 	    alphaMeshes.sort(sortBackToFront);
 	    opaqueMeshes.sort(sortBackToFront);
-
-        // Enqueue rendering of all shadowmaps
-        var self = this;        
-        if (castShadows) {
-            this.enqueue("first", function () {
-                camera.frameEnd();
-
-                // Store an array of shadow casters
-                var shadowMeshes = self._shadowMeshes;
-                shadowMeshes.length = 0;
-
-                if (alphaMeshes.length > 0) {
-                    for (j = alphaMeshes.length - 1; j >= 0; j--) {
-                        if (alphaMeshes[j].getCastShadows()) {
-                            shadowMeshes.push(alphaMeshes[j]);
-                        }
-                    }
-                }
-                if (opaqueMeshes.length > 0) {
-                    for (j = opaqueMeshes.length - 1; j >= 0; j--) {
-                        if (opaqueMeshes[j].getCastShadows()) {
-                            shadowMeshes.push(opaqueMeshes[j]);
-                        }
-                    }
-                }
-
-                // Disable blending
-                var device = pc.gfx.Device.getCurrent();
-                var oldBlend = device.getGlobalState().blend;
-                device.updateGlobalState(self._shadowState);
-
-                _setShadowMapMaterial(self, self._shadowMaterial);
-                var calcBbox = false;
-
-                _getFrustumPoints(camera, frustumPoints);
-                
-                for (i = 0; i < self._lights.length; i++) {
-                    var light = self._lights[i];
-                    var type = light.getType();
-
-                    if (type === pc.scene.LightType.POINT) {
-                        continue;
-                    }
-
-                    if (light.getCastShadows() && light.getEnabled()) {
-                        var shadowCam = light._shadowCamera;
-
-                        if (type === pc.scene.LightType.DIRECTIONAL) {
-                            if (!calcBbox) {
-                                _calculateSceneAabb(self);
-                                calcBbox = true;
-                            }
-
-                            var worldToLight = pc.math.mat4.invert(light.getWorldTransform());
-                            var camToWorld = camera.getWorldTransform();
-                            var c2l = pc.math.mat4.multiply(worldToLight, camToWorld);
-                            for (k = 0; k < 8; k++) {
-                                pc.math.mat4.multiplyVec3(frustumPoints[k], 1.0, c2l, frustumPoints[k]);
-                            }
-
-                            var minx = 1000000;
-                            var maxx = -1000000;
-                            var miny = 1000000;
-                            var maxy = -1000000;
-                            for (k = 0; k < 8; k++) {
-                                var p = frustumPoints[k];
-                                if (p[0] < minx) minx = p[0];
-                                if (p[0] > maxx) maxx = p[0];
-                                if (p[1] < miny) miny = p[1];
-                                if (p[1] > maxy) maxy = p[1];
-                            }
-
-                            pc.math.mat4.copy(light.getWorldTransform(), shadowCamWtm);
-                            shadowCamWtm[12] = self._sceneAabb.center[0];
-                            shadowCamWtm[13] = self._sceneAabb.center[1];
-                            shadowCamWtm[14] = self._sceneAabb.center[2];
-                            pc.math.mat4.multiply(shadowCamWtm, camToLight, shadowCamWtm);
-
-                            var extent = pc.math.vec3.length(self._sceneAabb.halfExtents);
-                            shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
-                            shadowCam.setNearClip(-extent);
-                            shadowCam.setFarClip(extent);
-                            shadowCam.setAspectRatio(1);
-                            shadowCam.setOrthoHeight(extent);
-                        } else if (type === pc.scene.LightType.SPOT) {
-                            shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
-                            shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
-                            shadowCam.setFarClip(light.getAttenuationEnd());
-                            shadowCam.setAspectRatio(1);
-                            shadowCam.setFov(light.getOuterConeAngle() * 2);
-
-                            var lightWtm = light.getWorldTransform();
-                            pc.math.mat4.multiply(lightWtm, camToLight, shadowCamWtm);
-                        }
-
-                        pc.math.mat4.invert(shadowCamWtm, shadowCamView);
-                        pc.math.mat4.multiply(shadowCam.getProjectionMatrix(), shadowCamView, shadowCamViewProj);
-                        pc.math.mat4.multiply(scaleShift, shadowCamViewProj, light._shadowMatrix);
-
-                        // Point the camera along direction of light
-                        pc.math.mat4.copy(shadowCamWtm, shadowCam.getWorldTransform());
-
-                        shadowCam.frameBegin();
-                        if (device.extDepthTexture) {
-                            device.gl.colorMask(false, false, false, false);
-                        }
-                        for (k = 0; k < shadowMeshes.length; k++) {
-                            shadowMeshes[k].dispatch();
-                        }
-                        if (device.extDepthTexture) {
-                            device.gl.colorMask(true, true, true, true);
-                        }
-                        shadowCam.frameEnd();
-                    }
-                }
-                _restoreMaterials(self);
-
-                // Restore previous blend state
-                device.updateGlobalState({blend: oldBlend});
-
-                camera.frameBegin(false);
-            });
-        }
-
-        // Enqueue opaque meshes
-        this.enqueue("opaque", function() {
-            // Lights get dispatched after the shadowmap generation is done.
-            // By this point, the shadow matrices for the lights  have been
-            // calculated.
-            if (opaqueMeshes.length > 0) {
-                // Render front to back
-                for (i = opaqueMeshes.length - 1; i >= 0; i--) {
-                    opaqueMeshes[i].dispatch();
-                }
-            }
-        });
-
-        // Enqueue alpha meshes
-        this.enqueue("transparent", function() {
-            // Render back to front
-            for (i = 0, numMeshes = alphaMeshes.length; i < numMeshes; i++) {
-                alphaMeshes[i].dispatch();
-            }
-        });
-    };
-	
-	Scene.prototype.enqueue = function (queueName, renderFunc) {
-	    this._queues[queueName].renderFuncs.push(renderFunc);
-	};
+*/
 
     /**
      * @function
@@ -723,34 +565,6 @@ pc.extend(pc.scene, function () {
             }
         }
     };
-
-    /**
-     * @function
-     * @name pc.scene.Scene#flush
-     * @description Calls all functions inserted into the scene's render queues. The queues are
-     * iterated in priority order (a queue with a smaller value for priority being processed before 
-     * a queue with a larger value).
-     * @author Will Eastcott
-     */
-	Scene.prototype.flush = function () {
-        pc.scene.Scene.current = this;
-
-        this.dispatchGlobalLights();
-        this.dispatchLocalLights();
-
-	    for (var i = 0; i < this._priorities.length; i++) {
-	        var queueName = this._priorities[i].name;
-	        var queue = this._queues[queueName];
-	        var funcs = queue.renderFuncs;
-	        for (var j = 0; j < funcs.length; j++) {
-	            var func = funcs[j];
-	            func();
-	        }
-	        queue.renderFuncs.length = 0;
-	    }
-
-        pc.scene.Scene.current = null;
-	};	
 
     return {
         Scene: Scene
