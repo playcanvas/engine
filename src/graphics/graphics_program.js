@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    var id = 0;
+
     /**
      * @name pc.gfx.Program
      * @class A program representing a compiled and linked vertex and fragment shader pair.
@@ -6,6 +8,8 @@ pc.extend(pc.gfx, function () {
      * @param {pc.gfx.Shader} fragmentShader
      */
     var Program = function (vertexShader, fragmentShader) {
+        this.id = id++;
+
         this.attributes = [];
         this.samplers   = [];
         this.uniforms   = [];

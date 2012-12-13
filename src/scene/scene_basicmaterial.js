@@ -35,7 +35,8 @@ pc.extend(pc.scene, function () {
     }
 
     BasicMaterial.prototype.getProgram = function (mesh) {
-        var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';
+//        var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';
+        var key = 'static';
 
         var program = this._programs[key];
         if (program) {
@@ -43,7 +44,8 @@ pc.extend(pc.scene, function () {
         }
 
         var device = pc.gfx.Device.getCurrent();
-        var skinned = mesh.getGeometry().isSkinned();
+//        var skinned = mesh.getGeometry().isSkinned();
+        var skinned = false;
         var options = {
             skin: skinned
         };

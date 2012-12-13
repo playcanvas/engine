@@ -1,4 +1,5 @@
 pc.extend(pc.scene, function () {
+    var id = 0;
 
     /**
      * @name pc.scene.Material
@@ -7,6 +8,7 @@ pc.extend(pc.scene, function () {
     var Material = function Material() {
         this.name = null;
         this.transparent = false;
+        this.id = id++;
 
         this._parameters       = {};
         this._state            = {};
