@@ -3,6 +3,36 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.85.4
+-------
+* [FIX] Script instance initialize() method is called when an Entity is created over LiveLink
+
+-------
+v0.85.3
+-------
+* [FIX] Point lights render with the right color in Designer again.
+* [FIX] pc.input.Controller now handles mouse move properly again.
+
+-------
+v0.85.2
+-------
+* [FIX] Texture filters set incorrectly on JSON model load.
+
+-------
+v0.85.1
+-------
+* Update Body3d transforms after stepping simulation
+
+-------
+v0.85.0
+-------
+* [BREAKING] Mouse and Keyboard events are now passed pc.input.MouseEvent and pc.input.KeyboardEvent respectively. The original browser event is available as the 'event' property.
+* [BREAKING] Some pc.input enumerations have changed now EVENT_MOUSEMOVE, etc and MOUSEBUTTON_LEFT, etc. They are also featured in the documentation now.
+* Initial work on Body3d component
+* [FIX] A problem with editing packs in forked depots has been resolved
+* [FIX] Primitive Component color works correctly
+
+-------
 v0.84.1
 -------
 * [FIX] Animation component now plays an animation on set in the connected game.

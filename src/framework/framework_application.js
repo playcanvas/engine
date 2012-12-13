@@ -101,6 +101,12 @@ pc.extend(pc.fw, function () {
             var collisionrectsys = new pc.fw.CollisionRectComponentSystem(this.context);
             var collisioncirclesys = new pc.fw.CollisionCircleComponentSystem(this.context);
         }
+        if (typeof(Ammo) !== "undefined") {
+            // Only include the Body3d component system if ammo library is loaded
+            var body3dsys = new pc.fw.Body3dComponentSystem(this.context);    
+            var collisionboxsys = new pc.fw.CollisionBoxComponentSystem(this.context);
+            var collisionspheresys = new pc.fw.CollisionSphereComponentSystem(this.context);
+        }
 
         // Add event support
         pc.extend(this, pc.events);
