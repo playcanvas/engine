@@ -37,57 +37,37 @@ pc.extend(pc.fw, function () {
             var data = this.data;//this.getComponentData(entity);
 
             if (newValue) {
-                var geometry = null;
+                var mesh = null;
 
                 switch (newValue) {
                     case pc.shape.Type.BOX: 
-                        // Create a 1x1x1 Box.
-                        geometry = pc.scene.procedural.createBox({
-                            material: data.material, 
-                            halfExtents: [0.5,0.5,0.5]
-                        });
+                        mesh = this.system.box;
                         break;
                     case pc.shape.Type.SPHERE:
-                        // Create a 1m diameter sphere
-                        geometry = pc.scene.procedural.createSphere({
-                            material: data.material,
-                            radius: 0.5
-                        });
+                        mesh = this.system.sphere;
                         break;
                     case pc.shape.Type.CONE:
-                        // Create a cone 1m high and 1m across
-                        geometry = pc.scene.procedural.createCone({
-                            material: data.material,
-                            baseRadius: 0.5,
-                            peakRadius: 0,
-                            height: 1
-                        });
+                        mesh = this.system.cone;
                         break;
                     case pc.shape.Type.CYLINDER:
-                        // Create a cylinder 1m high and 1m across
-                        geometry = pc.scene.procedural.createCylinder({
-                            material: data.material,
-                            radius: 0.5,
-                            height: 1
-                        });
+                        mesh = this.system.cylinder;
                         break;
                     default:
                         throw new Error("Unknown shape type: " + newValue);
                         break;
                 };
 
+/*
                 if (this.system.context.designer) {
                     geometry.generateWireframe();
                 }
+*/
 
-                var mesh = new pc.scene.MeshNode();
-                mesh.setGeometry(geometry);
+                var node = new pc.scene.GraphNode();
 
                 var model = new pc.scene.Model();
-                model.getGeometries().push(geometry);
-                model.getMaterials().push(data.material);
-                model.getMeshes().push(mesh);
-                model.setGraph(mesh);
+                model.graph = node;
+                model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
 
                 this.model = model;
             }
@@ -97,9 +77,9 @@ pc.extend(pc.fw, function () {
             if (newValue !== undefined) {
                 var componentData = this.data;
                 if (componentData.model) {
-                    var meshes = componentData.model.getMeshes();
-                    for (var i = 0; i < meshes.length; i++) {
-                        meshes[i].setCastShadows(newValue);
+                    var meshInstances = componentData.model.meshInstances;
+                    for (var i = 0; i < meshInstances.length; i++) {
+                        meshInstances[i].castShadow = newValue;
                     }
                 }
             }
@@ -138,13 +118,13 @@ pc.extend(pc.fw, function () {
             
             if (newValue) {
                 var componentData = this.data;
-                var meshes = newValue.getMeshes();
-                for (var i = 0; i < meshes.length; i++) {
-                    meshes[i].setCastShadows(componentData.castShadows);
-                    meshes[i].setReceiveShadows(componentData.receiveShadows);
+                var meshInstances = newValue.meshInstances;
+                for (var i = 0; i < meshInstances.length; i++) {
+                    meshInstances[i].castShadow = componentData.castShadows;
+                    meshInstances[i].receiveShadow = componentData.receiveShadows;
                 }
 
-                this.entity.addChild(newValue.getGraph());
+                this.entity.addChild(newValue.graph);
                 this.system.context.scene.addModel(newValue);
 
                 // Store the entity that owns this model
@@ -156,9 +136,9 @@ pc.extend(pc.fw, function () {
             if (newValue !== undefined) {
                 var componentData = this.data;
                 if (componentData.model) {
-                    var meshes = componentData.model.getMeshes();
-                    for (var i = 0; i < meshes.length; i++) {
-                        meshes[i].setReceiveShadows(newValue);
+                    var meshInstances = componentData.model.meshInstances;
+                    for (var i = 0; i < meshInstances.length; i++) {
+                        meshInstances[i].receiveShadow = newValue;
                     }
                 }
             }

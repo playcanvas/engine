@@ -146,7 +146,7 @@ pc.extend(pc.fw, function () {
          * @function
          * @name pc.fw.CameraComponentSystem#frameBegin
          */
-        frameBegin: function (clear) {
+        frameBegin: function () {
             var camera = this._currentNode;
             if (!camera) {
                 return;
@@ -181,8 +181,6 @@ pc.extend(pc.fw, function () {
             if (aspect !== camera.getAspectRatio()) {
                 camera.setAspectRatio(aspect);
             }
-
-            camera.frameBegin(clear);
         },
 
         /**
@@ -195,8 +193,6 @@ pc.extend(pc.fw, function () {
             if (!camera) {
                 return;
             }
-
-            camera.frameEnd();        
         },
 
         onRemove: function (entity, data) {
@@ -216,11 +212,13 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
 
                     if (!entity.hasLabel("pc:designer")) {
+/*
                         this.context.scene.enqueue('opaque', function (componentData) {
                             return function () {
                                 componentData.camera.drawFrustum();        
                             };
                         }(components[id].data));
+*/
                     }
                 }
             }

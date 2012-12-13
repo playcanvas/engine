@@ -10,7 +10,7 @@ pc.extend(pc.fw, function () {
         this.outerConeAngle = 45;
 
         // Non-serialized
-        this.light = null;
+        this.model = null;
     };
 
     SpotLightComponentData = pc.inherits(SpotLightComponentData, pc.fw.ComponentData);

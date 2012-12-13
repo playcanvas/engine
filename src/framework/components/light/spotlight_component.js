@@ -22,8 +22,6 @@ pc.extend(pc.fw, function () {
         this.bind("set_innerConeAngle", this.onSetInnerConeAngle.bind(this));
         // Handle changes to the 'intensity' value
         this.bind("set_intensity", this.onSetIntensity.bind(this));
-        // Handle changes to the 'light' value
-        this.bind("set_light", this.onSetLight.bind(this));
         // Handle changes to the 'outerConeAngle' value
         this.bind("set_outerConeAngle", this.onSetOuterConeAngle.bind(this));
     };
@@ -31,11 +29,13 @@ pc.extend(pc.fw, function () {
 
     pc.extend(SpotLightComponent.prototype, {
         onSetAttenuationEnd: function (name, oldValue, newValue) {
-            this.data.light.setAttenuationEnd(newValue);
+            var light = this.data.model.lights[0];
+            light.setAttenuationEnd(newValue);
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
-            this.data.light.setCastShadows(newValue);
+            var light = this.data.model.lights[0];
+            light.setCastShadows(newValue);
         },
 
         onSetColor: function (name, oldValue, newValue) {
@@ -46,34 +46,28 @@ pc.extend(pc.fw, function () {
                 rgb[1] / 255,
                 rgb[2] / 255
             ];
-            this.data.light.setColor(color);
+            var light = this.data.model.lights[0];
+            light.setColor(color);
         },
 
         onSetInnerConeAngle: function (name, oldValue, newValue) {
-            this.data.light.setInnerConeAngle(newValue);
+            var light = this.data.model.lights[0];
+            light.setInnerConeAngle(newValue);
         },
 
         onSetOuterConeAngle: function (name, oldValue, newValue) {
-            this.data.light.setOuterConeAngle(newValue);
+            var light = this.data.model.lights[0];
+            light.setOuterConeAngle(newValue);
         },
 
         onSetEnable: function (name, oldValue, newValue) {
-            this.data.light.setEnabled(newValue);
+            var light = this.data.model.lights[0];
+            light.setEnabled(newValue);
         },
 
         onSetIntensity: function (name, oldValue, newValue) {
-            this.data.light.setIntensity(newValue);
-        },
-
-        onSetLight: function (name, oldValue, newValue) {
-            if (oldValue) {
-                this.entity.removeChild(oldValue);
-                this.system.context.scene.removeLight(oldValue);
-            }
-            if (newValue) {
-                this.entity.addChild(newValue);
-                this.system.context.scene.addLight(newValue);
-            }
+            var light = this.data.model.lights[0];
+            light.setIntensity(newValue);
         }
     });
     return {

@@ -244,8 +244,7 @@ pc.extend(pc.fw, function () {
             if (cameraEntity) {
                 context.systems.camera.frameBegin();
 
-                context.scene.dispatch(cameraEntity.camera.camera);
-                context.scene.flush();
+                context.scene.render(cameraEntity.camera.camera);
 
                 context.systems.camera.frameEnd();            
             }

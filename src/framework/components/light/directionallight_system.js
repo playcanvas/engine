@@ -25,7 +25,6 @@ pc.extend(pc.fw, function () {
             description: "Light color",
             type: "rgb",
             defaultValue: "0xffffff"
-
         }, {
             name: "intensity",
             displayName: "Intensity",
@@ -37,7 +36,6 @@ pc.extend(pc.fw, function () {
                 max: 10,
                 step: 0.05
             }
-
         }, {
             name: "castShadows",
             displayName: "Cast shadows",
@@ -45,83 +43,23 @@ pc.extend(pc.fw, function () {
             type: "boolean",
             defaultValue: false
         }, {
-            name: 'light',
+            name: 'model',
             exposed: false
         }];
         
         this.exposeProperties();
 
-        this.renderable = _createGfxResources();
+        // TODO: Only allocate graphics resources when running in Designer
+        var material = new pc.scene.BasicMaterial();
+        material.color = pc.math.vec4.create(1, 1, 0, 1);
+        material.update();
+        this.material = material;
 
-        this.bind('remove', this.onRemove.bind(this));
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
-    };
-        
-    DirectionalLightComponentSystem = pc.inherits(DirectionalLightComponentSystem, pc.fw.ComponentSystem);
-
-    pc.extend(DirectionalLightComponentSystem.prototype, {
-        initializeComponentData: function (component, data, properties) {
-            var light = new pc.scene.LightNode();
-            light.setType(pc.scene.LightType.DIRECTIONAL);
-
-            data = data || {};
-            data.light = light;
-
-            properties = ['light', 'enable', 'color', 'intensity', 'castShadows'];
-            DirectionalLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-        },
-
-        onRemove: function (entity, data) {
-            entity.removeChild(data.light);
-
-            data.light.setEnabled(false);
-            data.light = null;
-        },
-
-        toolsUpdate: function (fn) {
-            var id;
-            var entity;
-            var components = this.store;
-
-            for (id in components) {
-                if (components.hasOwnProperty(id)) {
-                    entity = components[id].entity;
-            
-                    this.context.scene.enqueue('opaque', function (renderable, transform) {
-                        return function () {
-                            // Render a representation of the light
-                            var device = pc.gfx.Device.getCurrent();
-                            device.setProgram(renderable.program);
-                            device.setVertexBuffer(renderable.vertexBuffer, 0);
-                            
-                            device.scope.resolve("matrix_model").setValue(transform);
-                            device.scope.resolve("uColor").setValue([1, 1, 0, 1]);
-                            device.draw({
-                                type: pc.gfx.PrimType.LINES,
-                                base: 0,
-                                count: renderable.vertexBuffer.getNumVertices(),
-                                indexed: false
-                            });
-
-                        } 
-                    }(this.renderable, entity.getWorldTransform()));
-                }
-            }
-        },
-
-        
-    });
-
-    var _createGfxResources = function () {
-        // Create the graphical resources required to render a light
-        var device = pc.gfx.Device.getCurrent();
-        var library = device.getProgramLibrary();
-        var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
         var format = new pc.gfx.VertexFormat();
         format.begin();
         format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 32, pc.gfx.VertexBufferUsage.STATIC);
+
         // Generate the directional light arrow vertex data
         vertexData = [ 
             // Center arrow
@@ -144,18 +82,58 @@ pc.extend(pc.fw, function () {
             vertexData[(i+16)*3+2] = posRot[2];
         }
         // Copy vertex data into the vertex buffer
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 32, pc.gfx.VertexBufferUsage.STATIC);
         var positions = new Float32Array(vertexBuffer.lock());
         for (var i = 0; i < vertexData.length; i++) {
             positions[i] = vertexData[i];
         }
         vertexBuffer.unlock();
+        this.vertexBuffer = vertexBuffer;
 
-        // Set the resources on the component
-        return {
-            program: program,
-            vertexBuffer: vertexBuffer
-        };
+        var mesh = new pc.scene.Mesh();
+        mesh.vertexBuffer = vertexBuffer;
+        mesh.indexBuffer[0] = null;
+        mesh.primitive[0].type = pc.gfx.PrimType.LINES;
+        mesh.primitive[0].base = 0;
+        mesh.primitive[0].count = this.vertexBuffer.getNumVertices();
+        mesh.primitive[0].indexed = false;
+        this.mesh = mesh;
+
+        this.bind('remove', this.onRemove.bind(this));
     };
+        
+    DirectionalLightComponentSystem = pc.inherits(DirectionalLightComponentSystem, pc.fw.ComponentSystem);
+
+    pc.extend(DirectionalLightComponentSystem.prototype, {
+        initializeComponentData: function (component, data, properties) {
+            var node = new pc.scene.LightNode();
+            node.setName('directionallight');
+            node.setType(pc.scene.LightType.DIRECTIONAL);
+
+            var model = new pc.scene.Model();
+            model.graph = node;
+            model.lights = [ node ];
+
+            if (this.context.designer) {
+                model.meshInstances = [ new pc.scene.MeshInstance(node, this.mesh, this.material) ];
+            }
+
+            this.context.scene.addModel(model);
+            component.entity.addChild(node);
+
+            data = data || {};
+            data.model = model;
+
+            properties = ['model', 'enable', 'color', 'intensity', 'castShadows'];
+            DirectionalLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+        },
+
+        onRemove: function (entity, data) {
+            entity.removeChild(data.model.graph);
+            this.context.scene.removeModel(data.model);
+            delete data.model;
+        }
+    });
 
     return {
         DirectionalLightComponentSystem: DirectionalLightComponentSystem

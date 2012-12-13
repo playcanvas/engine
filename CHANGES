@@ -3,6 +3,22 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.85.4
+-------
+* [FIX] Script instance initialize() method is called when an Entity is created over LiveLink
+
+-------
+v0.85.3
+-------
+* [FIX] Point lights render with the right color in Designer again.
+* [FIX] pc.input.Controller now handles mouse move properly again.
+
+-------
+v0.85.2
+-------
+* [FIX] Texture filters set incorrectly on JSON model load.
+
+-------
 v0.85.1
 -------
 * Update Body3d transforms after stepping simulation
