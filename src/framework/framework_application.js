@@ -101,14 +101,7 @@ pc.extend(pc.fw, function () {
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
 
-        // var libraries = [
-        //     new pc.resources.ScriptRequest('http://platform.playcanvas.dev/script/contrib/Box2dWeb-2.1.a.3.min.js'),
-        //     new pc.resources.ScriptRequest('http://apps.playcanvas.com.s3-website-eu-west-1.amazonaws.com/will/ammo/tiltmaze/ammo.js')
-        // ];  
-        // if (option.libraries) {
-        //     libraries = libraries.concat(options.libraries);
-        // }
-
+        // Load libraries
         this.bind('librariesloaded', this.onLibrariesLoaded.bind(this));
         if (options.libraries && options.libraries.length) {
             var requests = options.libraries.map(function (url) {
@@ -310,8 +303,8 @@ pc.extend(pc.fw, function () {
 
             // In AUTO mode the resolution is the same as the canvas size
             if (mode === pc.fw.ResolutionMode.AUTO) {
-                width = this.canvas.style.width;
-                height = this.canvas.style.height;
+                width = this.canvas.clientWidth;
+                height = this.canvas.clientHeight;
             }
 
             this.canvas.width = width;
