@@ -71,6 +71,9 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 max: 90
             }
+        }, {
+            name: "model",
+            exposed: false
         }];
 
         this.exposeProperties();
