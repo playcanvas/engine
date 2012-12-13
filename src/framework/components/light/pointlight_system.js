@@ -82,7 +82,7 @@ pc.extend(pc.fw, function () {
             model.lights = [ node ];
 
             if (this.context.designer) {
-                model.meshInstances = [ new pc.scene.MeshInstance(node, this.lightMat, this.sphereMesh) ];
+                model.meshInstances = [ new pc.scene.MeshInstance(node, this.sphereMesh, this.lightMat) ];
             }
 
             this.context.scene.addModel(model);

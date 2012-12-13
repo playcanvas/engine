@@ -131,7 +131,7 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = this.indexBuffer.getNumIndices();
 
-                model.meshInstances = [ new pc.scene.MeshInstance(node, this.material, mesh) ];
+                model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, this.material) ];
             }
 
             this.context.scene.addModel(model);
