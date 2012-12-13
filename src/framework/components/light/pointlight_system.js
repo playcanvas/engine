@@ -44,7 +44,7 @@ pc.extend(pc.fw, function () {
             defaultValue: false
         }, {
             name: "attenuationEnd",
-            displayName: "Attenuation End",
+            displayName: "Radius",
             description: "The distance from the light where its contribution falls to zero",
             type: "number",
             defaultValue: 10,

@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
         this.castShadows = false;
 
         // Non-serialized
-        this.light = null;
+        this.model = null;
     };
 
     DirectionalLightComponentData = pc.inherits(DirectionalLightComponentData, pc.fw.ComponentData);
