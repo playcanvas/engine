@@ -2,11 +2,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @name pc.scene.Picker
-     * @class Picker object used to identify Entities from the pixel co-ordinate on screen
-     * The Picker can be used to identify Entities that are drawn using a RenderComponent
-     * or Entities that have a PickComponent. For RenderComponents the Entity is selected if the
-     * pixel picked was drawn by the RenderComponent, PickComponents contains a shape which is used
-     * to perform the picking.
+     * @class Picker object used to select mesh instances from screen coordinates.
      * @constructor Create a new instance of a Picker object
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
