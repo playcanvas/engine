@@ -34,7 +34,6 @@ pc.extend(pc.fw, function () {
         };
         this.display = false;
 
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.onUpdate.bind(this));
         this.bind('remove', this.onRemove.bind(this));
     };
     
@@ -55,35 +54,12 @@ pc.extend(pc.fw, function () {
             this.deleteShapes(data.layer, data.shapes);
         },
 
-        onUpdate: function (dt) {
-            if (this.display) {
-                // Render the pick shapes here
-                var componentData;
-                var components = this.store;
-                for (var id in components) {
-                    if (components.hasOwnProperty(id)) {
-                        var entity = components[id].entity;
-                        componentData = components[id].data;
-
-                        for (var i = 0; i < componentData.shapes.length; i++) {
-                            this.context.scene.enqueue('opaque', function (model) {
-                                return function () {
-                                    model.dispatch();
-                                }
-                            }(componentData.shapes[i].model));
-                        }
-
-                    }
-                }
-            }
-        },
-
         addShape: function (layer, shape) {
             if (this.layers[layer] === undefined) {
                 this.layers[layer] = [];
             }
             this.layers[layer].push(shape.model);
-            
+
             if (this.display) {
                 this.context.scene.addModel(shape.model);    
             }
@@ -98,7 +74,7 @@ pc.extend(pc.fw, function () {
                 if (index !== -1) {
                     layerModels.splice(index, 1);
                 }
-                if(this.display) {
+                if (this.display) {
                     this.context.scene.removeModel(model);    
                 }
             }
