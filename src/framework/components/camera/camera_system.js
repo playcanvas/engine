@@ -212,11 +212,13 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
 
                     if (!entity.hasLabel("pc:designer")) {
+/*
                         this.context.scene.enqueue('opaque', function (componentData) {
                             return function () {
                                 componentData.camera.drawFrustum();        
                             };
                         }(components[id].data));
+*/
                     }
                 }
             }
