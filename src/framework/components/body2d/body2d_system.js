@@ -78,11 +78,10 @@ pc.extend(pc.fw, function () {
         // Create the Box2D physics world
         if (b2World) {
             this.b2World = new b2World(new b2Vec2(0,0), true);    
+            pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
         }
         
         this.bind('remove', this.onRemove.bind(this));
-
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
     };
     Body2dComponentSystem = pc.inherits(Body2dComponentSystem, pc.fw.ComponentSystem);
     
