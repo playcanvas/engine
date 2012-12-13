@@ -78,34 +78,33 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        if (context.designer) {
-            this.material = new pc.scene.BasicMaterial();
+        // TODO: Only allocate graphics resources when running in Designer
+        this.material = new pc.scene.BasicMaterial();
 
-            var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 88);
-            var inds = new Uint8Array(indexBuffer.lock());
-            // Spot cone side lines
-            inds[0] = 0;
-            inds[1] = 1;
-            inds[2] = 0;
-            inds[3] = 11;
-            inds[4] = 0;
-            inds[5] = 21;
-            inds[6] = 0;
-            inds[7] = 31;
-            // Spot cone circle - 40 segments
-            for (var i = 0; i < 40; i++) {
-                inds[8 + i * 2 + 0] = i + 1;
-                inds[8 + i * 2 + 1] = i + 2;
-            }
-            indexBuffer.unlock();
-            this.indexBuffer = indexBuffer;
-
-            var format = new pc.gfx.VertexFormat();
-            format.begin();
-            format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-            format.end();
-            this.vertexFormat = format;
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 88);
+        var inds = new Uint8Array(indexBuffer.lock());
+        // Spot cone side lines
+        inds[0] = 0;
+        inds[1] = 1;
+        inds[2] = 0;
+        inds[3] = 11;
+        inds[4] = 0;
+        inds[5] = 21;
+        inds[6] = 0;
+        inds[7] = 31;
+        // Spot cone circle - 40 segments
+        for (var i = 0; i < 40; i++) {
+            inds[8 + i * 2 + 0] = i + 1;
+            inds[8 + i * 2 + 1] = i + 2;
         }
+        indexBuffer.unlock();
+        this.indexBuffer = indexBuffer;
+
+        var format = new pc.gfx.VertexFormat();
+        format.begin();
+        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+        format.end();
+        this.vertexFormat = format;
 
         this.bind('remove', this.onRemove.bind(this));
         pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));

@@ -58,15 +58,14 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        if (context.designer) {
-            this.lightMat = new pc.scene.BasicMaterial();
-            this.lightMat.color = new Float32Array([1, 1, 0, 1]);
-            this.lightMat.update();
+        // TODO: Only allocate graphics resources when running in Designer
+        this.lightMat = new pc.scene.BasicMaterial();
+        this.lightMat.color = new Float32Array([1, 1, 0, 1]);
+        this.lightMat.update();
 
-            this.sphereMesh = pc.scene.procedural.createSphere({
-                radius: 0.1
-            });
-        }
+        this.sphereMesh = pc.scene.procedural.createSphere({
+            radius: 0.1
+        });
 
         this.bind('remove', this.onRemove.bind(this));
     };
