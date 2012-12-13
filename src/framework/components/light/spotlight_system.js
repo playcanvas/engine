@@ -130,6 +130,7 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].type = pc.gfx.PrimType.LINES;
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = this.indexBuffer.getNumIndices();
+                mesh.primitive[0].indexed = true;
 
                 model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, this.material) ];
             }
