@@ -74,22 +74,22 @@ pc.extend(pc.fw, function () {
 
     pc.extend(PointLightComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            var lightNode = new pc.scene.LightNode();
-            lightNode.setName('pointlight');
-            lightNode.setType(pc.scene.LightType.POINT);
+            var node = new pc.scene.LightNode();
+            node.setName('pointlight');
+            node.setType(pc.scene.LightType.POINT);
 
-            var lightModel = new pc.scene.Model();
-            lightModel.graph = lightNode;
-            lightModel.lights = [lightNode];
+            var model = new pc.scene.Model();
+            model.graph = node;
+            model.lights = [ node ];
 
             if (this.context.designer) {
-                lightModel.meshInstances = [ new pc.scene.MeshInstance(lightNode, this.lightMat, this.sphereMesh) ];
+                model.meshInstances = [ new pc.scene.MeshInstance(node, this.lightMat, this.sphereMesh) ];
             }
 
-            this.context.scene.addModel(lightModel);
-            component.entity.addChild(lightModel.graph);
+            this.context.scene.addModel(model);
+            component.entity.addChild(node);
 
-            data.model = lightModel;
+            data.model = model;
 
             properties = ['model', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd'];
             PointLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
@@ -98,7 +98,7 @@ pc.extend(pc.fw, function () {
         onRemove: function (entity, data) {
             entity.removeChild(data.model.graph);
             this.context.scene.removeModel(data.model);
-            delete data.light;
+            delete data.model;
         }
     });
 
