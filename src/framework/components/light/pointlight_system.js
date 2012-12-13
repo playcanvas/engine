@@ -58,62 +58,50 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.renderable = _createGfxResources();
+        if (context.designer) {
+            this.lightMat = new pc.scene.BasicMaterial();
+            this.lightMat.color = new Float32Array([1, 1, 0, 1]);
+            this.lightMat.update();
+
+            this.sphereMesh = pc.scene.procedural.createSphere({
+                radius: 0.1
+            });
+        }
 
         this.bind('remove', this.onRemove.bind(this));
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
     };
     PointLightComponentSystem = pc.inherits(PointLightComponentSystem, pc.fw.ComponentSystem);
 
     pc.extend(PointLightComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            var light = new pc.scene.LightNode();
-            light.setType(pc.scene.LightType.POINT);
+            var lightNode = new pc.scene.LightNode();
+            lightNode.setName('pointlight');
+            lightNode.setType(pc.scene.LightType.POINT);
 
-            data.light = light;
+            var lightModel = new pc.scene.Model();
+            lightModel.graph = lightNode;
+            lightModel.lights = [lightNode];
 
-            properties = ['light', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd'];
+            if (this.context.designer) {
+                lightModel.meshInstances = [ new pc.scene.MeshInstance(lightNode, this.lightMat, this.sphereMesh) ];
+            }
+
+            this.context.scene.addModel(lightModel);
+            component.entity.addChild(lightModel.graph);
+
+            data.model = lightModel;
+
+            properties = ['model', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd'];
             PointLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
         onRemove: function (entity, data) {
-            entity.removeChild(data.light);
-            data.light.setEnabled(false);
+            entity.removeChild(data.model.graph);
+            this.context.scene.removeModel(data.model);
             delete data.light;
-        },
-
-        toolsUpdate: function (fn) {
-            var components = this.store;
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var entity = components[id].entity;
-                    var componentData = components[id].data;
-
-                    this.context.scene.enqueue('opaque', function (renderable, position) {
-                        return function () {
-                            renderable.setLocalPosition(position);
-                            renderable.syncHierarchy();
-                            renderable.dispatch();                            
-                        };
-                    }(this.renderable, entity.getPosition()));                    
-                }
-            }
         }
     });
 
-    var _createGfxResources = function () {
-        var lightMat = new pc.scene.BasicMaterial();
-        lightMat.color = new Float32Array([1, 1, 0, 1]);
-        lightMat.update();
-
-        var sphereGeom = pc.scene.procedural.createSphere({material: lightMat});
-        
-        var sphereMesh = new pc.scene.MeshNode();
-        sphereMesh.setGeometry(sphereGeom);
-        
-        return sphereMesh;
-    };
-    
     return {
         PointLightComponentSystem: PointLightComponentSystem
     }; 
