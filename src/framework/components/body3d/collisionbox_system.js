@@ -87,7 +87,7 @@ pc.extend(pc.fw, function () {
         },
         
         onRemove: function (entity, data) {
-            if (entity.body3d) {
+            if (entity.body3d && entity.body3d.body) {
                 this.context.systems.body3d.removeBody(entity.body3d.body);
             }
         },
