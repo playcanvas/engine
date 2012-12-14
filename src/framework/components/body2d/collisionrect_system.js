@@ -155,7 +155,7 @@ if (typeof(Box2D) !== 'undefined') {
             onToolsUpdate: function (dt) {
                 var components = this.store;
                 for (id in components) {
-                    this.renderRect(components[id].entity, components[id].data, this._gfx.rectVertexBuffer, this._gfx.rectIndexBuffer);
+                    //this.renderRect(components[id].entity, components[id].data, this._gfx.rectVertexBuffer, this._gfx.rectIndexBuffer);
                 }
             },
 

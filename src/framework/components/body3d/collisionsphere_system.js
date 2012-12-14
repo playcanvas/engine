@@ -90,7 +90,7 @@ if (typeof(Ammo) !== 'undefined') {
             onToolsUpdate: function (dt) {
                 var components = this.store;
                 for (id in components) {
-                    this.renderCircle(components[id].entity, components[id].data, this._gfx.vertexBuffer, this._gfx.indexBuffer);
+                    //this.renderCircle(components[id].entity, components[id].data, this._gfx.vertexBuffer, this._gfx.indexBuffer);
                 }                    
             },
 
