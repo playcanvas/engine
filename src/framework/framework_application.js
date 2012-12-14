@@ -601,6 +601,12 @@ pc.extend(pc.fw, function () {
                     entity.body2d.setLinearVelocity(0, 0);
                     entity.body2d.setAngularVelocity(0);
                 }
+
+                if (this.context.systems.body3d && entity.body3d) {
+                    entity.body3d.setTransform(entity.getWorldTransform());
+                    entity.body3d.setLinearVelocity(0,0,0);
+                    entity.body3d.setAngularVelocity(0,0,0);
+                }
             }
         },
         
