@@ -56,7 +56,7 @@ pc.extend(pc.fw, function () {
             displayName: "Near Clip",
             description: "Near clipping distance",
             type: "number",
-            defaultValue: 0.1,
+            defaultValue: 1,
             options: {
                 min: 0
             }
@@ -65,7 +65,7 @@ pc.extend(pc.fw, function () {
             displayName: "Far Clip",
             description: "Far clipping distance",
             type: "number",
-            defaultValue: 1000,
+            defaultValue: 100000,
             options: {
                 min: 0
             }
@@ -275,57 +275,59 @@ pc.extend(pc.fw, function () {
         },
 
         updateGfx: function (component) {
-            var vertexBuffer = component.model.meshInstances[0].mesh.vertexBuffer;
+            if (component.model && component.model.meshInstances.length) {
+                var vertexBuffer = component.model.meshInstances[0].mesh.vertexBuffer;
 
-            // Retrieve the characteristics of the camera frustum
-            var nearClip   = component.nearClip;
-            var farClip    = component.farClip
-            var fov        = component.fov * Math.PI / 180.0;
-            
-            var viewport = component.camera.getRenderTarget().getViewport();
-            var aspect = viewport.width / viewport.height;
-            
-            var projection = component.projection;
+                // Retrieve the characteristics of the camera frustum
+                var nearClip   = component.nearClip;
+                var farClip    = component.farClip
+                var fov        = component.fov * Math.PI / 180.0;
+                
+                var viewport = component.camera.getRenderTarget().getViewport();
+                var aspect = viewport.width / viewport.height;
+                
+                var projection = component.projection;
 
-            var x, y;
-            if (projection === pc.scene.Projection.PERSPECTIVE) {
-                y = Math.tan(fov / 2.0) * nearClip;
-            } else {
-                y = this._orthoHeight;
-            }
-            x = y * aspect;
-
-            var positions = new Float32Array(vertexBuffer.lock());
-            positions[0]  = x;
-            positions[1]  = -y;
-            positions[2]  = -nearClip;
-            positions[3]  = x;
-            positions[4]  = y;
-            positions[5]  = -nearClip;
-            positions[6]  = -x;
-            positions[7]  = y;
-            positions[8]  = -nearClip;
-            positions[9]  = -x;
-            positions[10] = -y;
-            positions[11] = -nearClip;
-
-            if (projection === pc.scene.Projection.PERSPECTIVE) {
-                y = Math.tan(fov / 2.0) * farClip;
+                var x, y;
+                if (projection === pc.scene.Projection.PERSPECTIVE) {
+                    y = Math.tan(fov / 2.0) * nearClip;
+                } else {
+                    y = this._orthoHeight;
+                }
                 x = y * aspect;
+
+                var positions = new Float32Array(vertexBuffer.lock());
+                positions[0]  = x;
+                positions[1]  = -y;
+                positions[2]  = -nearClip;
+                positions[3]  = x;
+                positions[4]  = y;
+                positions[5]  = -nearClip;
+                positions[6]  = -x;
+                positions[7]  = y;
+                positions[8]  = -nearClip;
+                positions[9]  = -x;
+                positions[10] = -y;
+                positions[11] = -nearClip;
+
+                if (projection === pc.scene.Projection.PERSPECTIVE) {
+                    y = Math.tan(fov / 2.0) * farClip;
+                    x = y * aspect;
+                }
+                positions[12]  = x;
+                positions[13]  = -y;
+                positions[14]  = -farClip;
+                positions[15]  = x;
+                positions[16]  = y;
+                positions[17]  = -farClip;
+                positions[18]  = -x;
+                positions[19]  = y;
+                positions[20]  = -farClip;
+                positions[21]  = -x;
+                positions[22] = -y;
+                positions[23] = -farClip;                
+                vertexBuffer.unlock();
             }
-            positions[12]  = x;
-            positions[13]  = -y;
-            positions[14]  = -farClip;
-            positions[15]  = x;
-            positions[16]  = y;
-            positions[17]  = -farClip;
-            positions[18]  = -x;
-            positions[19]  = y;
-            positions[20]  = -farClip;
-            positions[21]  = -x;
-            positions[22] = -y;
-            positions[23] = -farClip;                
-            vertexBuffer.unlock();
         }
     });
 
