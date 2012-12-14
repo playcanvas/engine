@@ -88,11 +88,11 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             if (typeof(Ammo) !== 'undefined') {
                 data.shape = new Ammo.btSphereShape(data.radius);    
-
-                data.model = new pc.scene.Model();
-                data.model.graph = new pc.scene.GraphNode();
-                data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
             }
+
+            data.model = new pc.scene.Model();
+            data.model.graph = new pc.scene.GraphNode();
+            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
 
             properties = ['radius', 'shape', 'model'];
 
@@ -108,7 +108,7 @@ pc.extend(pc.fw, function () {
                 this.context.systems.body3d.removeBody(entity.body3d.body);
             }
 
-            if (typeof(Ammo) !== 'undefined') {
+            if (this.context.scene.containsModel(data.model)) {
                 this.context.root.removeChild(data.model.graph);
                 this.context.scene.removeModel(data.model);
             }
