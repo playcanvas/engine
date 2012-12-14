@@ -100,7 +100,6 @@
 ../src/framework/framework_link.prod.js
 ../src/framework/framework_link.dev.js
 ../src/framework/framework_applicationcontext.js
-../src/framework/framework_appdata.js
 ../src/framework/framework_application.js
 ../src/framework/framework_pack.js
 ../src/framework/resources/resources_pack.js
