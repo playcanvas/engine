@@ -4,6 +4,7 @@ pc.extend(pc.fw, function () {
 
         // Non-serialized properties
         this.shape = null;
+        this.model = null;
     };
     CollisionSphereComponentData = pc.inherits(CollisionSphereComponentData, pc.fw.ComponentData);
 
