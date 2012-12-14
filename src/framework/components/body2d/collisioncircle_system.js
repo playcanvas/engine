@@ -127,11 +127,6 @@ pc.extend(pc.fw, function () {
         
         this.debugRender = false;
 
-        // Indexes for converting between 2D and 3D co-ords
-        this.xi = 0; // 3D index that corresponds to 2D x-axis
-        this.yi = 2; // 3D index that corresponds to 2D y-axis
-        this.ri = 1; // 3D index that corresponds to the rotation axis
-
         this.bind('remove', this.onRemove.bind(this));
 
         pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));

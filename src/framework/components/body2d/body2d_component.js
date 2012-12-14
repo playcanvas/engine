@@ -24,19 +24,15 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.Body2dComponent
      * @constructor Create a new Body2dComponent
      * @class 
-     * @param {Object} context
+     * @param {pc.fw.ComponentSystem} system
+     * @param {pc.fw.Entity} entity
      * @extends pc.fw.Component
      */
-    var Body2dComponent = function Body2dComponent (context) {
+    var Body2dComponent = function Body2dComponent (system, entity) {
         if (typeof(Box2D) !== 'undefined' && !b2World) {
             // Lazily unpack common Box2D variables into closure
             unpack();
         }
-
-        // Indexes for converting between 2D and 3D co-ords
-        this.xi = 0; // 3D index that corresponds to 2D x-axis
-        this.yi = 2; // 3D index that corresponds to 2D y-axis
-        this.ri = 1; // 3D index that corresponds to the rotation axis
 
         this.bind('set_static', this.onSetStatic.bind(this));
     };
@@ -55,15 +51,15 @@ pc.extend(pc.fw, function () {
             if (body) {
                 if (!point) {
                     point = position;
-                    point[this.xi] = body.GetPosition().x;
-                    point[this.yi] = body.GetPosition().y;
+                    point[this.system.xi] = body.GetPosition().x;
+                    point[this.system.yi] = body.GetPosition().y;
                 }
                 body.ApplyForce({
-                    x: force[this.xi],
-                    y: force[this.yi]
+                    x: force[this.system.xi],
+                    y: force[this.system.yi]
                 }, {
-                    x: point[this.xi],
-                    y: point[this.yi]
+                    x: point[this.system.xi],
+                    y: point[this.system.yi]
                 });
             }
         },
@@ -80,16 +76,16 @@ pc.extend(pc.fw, function () {
             if (body) {
                 if (!point) {
                     point = position;
-                    point[this.xi] = body.GetPosition().x;
-                    point[this.yi] = body.GetPosition().y;
+                    point[this.system.xi] = body.GetPosition().x;
+                    point[this.system.yi] = body.GetPosition().y;
                 }
 
                 body.ApplyImpulse({
-                    x: impulse[this.xi],
-                    y: impulse[this.yi]
+                    x: impulse[this.system.xi],
+                    y: impulse[this.system.yi]
                 }, {
-                    x: point[this.xi],
-                    y: point[this.yi]
+                    x: point[this.system.xi],
+                    y: point[this.system.yi]
                 });
             }
         },
@@ -130,7 +126,7 @@ pc.extend(pc.fw, function () {
 
             var angle = this._eulersToAngle(rotation);
 
-            this.setPositionAndAngle(position[this.xi], position[this.yi], -angle);
+            this.setPositionAndAngle(position[this.system.xi], position[this.system.yi], -angle);
         },
 
         /**
@@ -214,13 +210,13 @@ pc.extend(pc.fw, function () {
 
             var position2d = body.GetPosition();
 
-            position[this.xi] = position2d.x;
-            position[this.ri] = entityPos[1];
-            position[this.yi] = position2d.y;
+            position[this.system.xi] = position2d.x;
+            position[this.system.ri] = entityPos[1];
+            position[this.system.yi] = position2d.y;
 
-            rotation[this.xi] = 0;
-            rotation[this.ri] = -body.GetAngle() * pc.math.RAD_TO_DEG;
-            rotation[this.yi] = 0;
+            rotation[this.system.xi] = 0;
+            rotation[this.system.ri] = -body.GetAngle() * pc.math.RAD_TO_DEG;
+            rotation[this.system.yi] = 0;
 
             this.entity.setPosition(position);
             this.entity.setEulerAngles(rotation);
@@ -238,9 +234,9 @@ pc.extend(pc.fw, function () {
         },
 
         _eulersToAngle: function (rotation) {
-            var angle = rotation[this.ri];
-            if (rotation[this.xi] > 179.9 && rotation[this.yi] > 179.9) {
-                angle = 180 - rotation[this.ri];
+            var angle = rotation[this.system.ri];
+            if (rotation[this.system.xi] > 179.9 && rotation[this.system.yi] > 179.9) {
+                angle = 180 - rotation[this.system.ri];
             }
 
             return angle;

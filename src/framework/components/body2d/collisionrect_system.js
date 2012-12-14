@@ -127,14 +127,6 @@ pc.extend(pc.fw, function () {
 
         this.debugRender = false;
 
-        // this.time = 0;
-        // this.step = 1/60;
-
-        // Indexes for converting between 2D and 3D co-ords
-        this.xi = 0; // 3D index that corresponds to 2D x-axis
-        this.yi = 2; // 3D index that corresponds to 2D y-axis
-        this.ri = 1; // 3D index that corresponds to the rotation axis
-
         this.bind('remove', this.onRemove.bind(this));
 
         pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
@@ -197,13 +189,19 @@ pc.extend(pc.fw, function () {
 
         updateDebugShapes: function () {
             var components = this.store;
+            var xi = this.context.systems.body2d.xi;
+            var yi = this.context.systems.body2d.yi;
+            var ri = this.context.systems.body2d.ri;
+            
             for (id in components) {
                 var entity = components[id].entity;
                 var data = components[id].data;
 
-                // var x = data.x;
-                // var y = data.y;
-                var s = [data.x, data.y, 0.5]
+                var s = []
+                s[xi] = data.x * 2;
+                s[yi] = data.y * 2;
+                s[ri] = 0.5 * 2;
+
                 var model = data.model;
 
                 if (!this.context.scene.containsModel(data.model)) {
@@ -214,8 +212,7 @@ pc.extend(pc.fw, function () {
                 var root = model.graph;
                 root.setPosition(entity.getPosition());
                 root.setRotation(entity.getRotation());
-                root.setLocalScale(s[this.xi] * 2, s[this.ri] * 2, s[this.yi] * 2)
-                //root.setLocalScale(x / 0.5, 1, y / 0.5);
+                root.setLocalScale(s[0], s[1], s[2])
             }
         }
     });

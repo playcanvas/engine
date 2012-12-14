@@ -7,11 +7,6 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var CollisionRectComponent = function CollisionRectComponent () {
-        // Indexes for converting between 2D and 3D co-ords
-        this.xi = 0; // 3D index that corresponds to 2D x-axis
-        this.yi = 2; // 3D index that corresponds to 2D y-axis
-        this.ri = 1; // 3D index that corresponds to the rotation axis
-
         this.bind('set_density', this.onSetDensity.bind(this));
         this.bind('set_friction', this.onSetFriction.bind(this));
         this.bind('set_restitution', this.onSetRestitution.bind(this));
