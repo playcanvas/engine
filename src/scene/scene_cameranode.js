@@ -7,30 +7,6 @@ pc.extend(pc.scene, function () {
     var v3 = pc.math.vec3;
     var m4 = pc.math.mat4;
 
-    var _createGfxResources = function () {
-        // Create the graphical resources required to render a camera frustum
-        var device = pc.gfx.Device.getCurrent();
-        var library = device.getProgramLibrary();
-        var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
-        var format = new pc.gfx.VertexFormat();
-        format.begin();
-        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-        format.end();
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 8, pc.gfx.VertexBufferUsage.DYNAMIC);
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 24);
-        var indices = new Uint8Array(indexBuffer.lock());
-        indices.set([0,1,1,2,2,3,3,0, // Near plane
-                     4,5,5,6,6,7,7,4, // Far plane
-                     0,4,1,5,2,6,3,7]); // Near to far edges
-        indexBuffer.unlock();
-
-        // Set the resources on the component
-        return {
-            program: program,
-            indexBuffer: indexBuffer,
-            vertexBuffer: vertexBuffer
-        };
-    };
 
     /**
      * @name pc.scene.CameraNode
@@ -63,7 +39,6 @@ pc.extend(pc.scene, function () {
         this._viewPosition = v3.create(0, 0, 0);
 
         this._frustum = new pc.shape.Frustum(this._projMat, this._viewMat);
-        this._frustumGfx = _createGfxResources();
 
         // Create a full size viewport onto the backbuffer
         this._renderTarget = new pc.gfx.RenderTarget(pc.gfx.FrameBuffer.getBackBuffer());
@@ -510,74 +485,6 @@ pc.extend(pc.scene, function () {
 
     CameraNode.prototype.getUpNode = function () {
         return this._upNode;
-    };
-
-    CameraNode.prototype.drawFrustum = function () {
-        var indexBuffer = this._frustumGfx.indexBuffer;
-        var vertexBuffer = this._frustumGfx.vertexBuffer;
-
-        // Retrieve the characteristics of the camera frustum
-        var nearClip   = this.getNearClip();
-        var farClip    = this.getFarClip();
-        var fov        = this.getFov() * Math.PI / 180.0;
-        var aspect     = this.getAspectRatio();
-        var projection = this.getProjection();
-
-        var x, y;
-        if (projection === pc.scene.Projection.PERSPECTIVE) {
-            y = Math.tan(fov / 2.0) * nearClip;
-        } else {
-            y = this._orthoHeight;
-        }
-        x = y * aspect;
-
-        var positions = new Float32Array(vertexBuffer.lock());
-        positions[0]  = x;
-        positions[1]  = -y;
-        positions[2]  = -nearClip;
-        positions[3]  = x;
-        positions[4]  = y;
-        positions[5]  = -nearClip;
-        positions[6]  = -x;
-        positions[7]  = y;
-        positions[8]  = -nearClip;
-        positions[9]  = -x;
-        positions[10] = -y;
-        positions[11] = -nearClip;
-
-        if (projection === pc.scene.Projection.PERSPECTIVE) {
-            y = Math.tan(fov / 2.0) * farClip;
-            x = y * aspect;
-        }
-        positions[12]  = x;
-        positions[13]  = -y;
-        positions[14]  = -farClip;
-        positions[15]  = x;
-        positions[16]  = y;
-        positions[17]  = -farClip;
-        positions[18]  = -x;
-        positions[19]  = y;
-        positions[20]  = -farClip;
-        positions[21]  = -x;
-        positions[22] = -y;
-        positions[23] = -farClip;                
-        vertexBuffer.unlock();
-
-        // Render the camera frustum
-        var device = pc.gfx.Device.getCurrent();
-        device.setProgram(this._frustumGfx.program);
-        device.setIndexBuffer(indexBuffer);
-        device.setVertexBuffer(vertexBuffer, 0);
-
-        var transform = this.getWorldTransform();
-        device.scope.resolve("matrix_model").setValue(transform);
-        device.scope.resolve("uColor").setValue([1, 1, 0, 1]);
-        device.draw({
-            type: pc.gfx.PrimType.LINES,
-            base: 0,
-            count: indexBuffer.getNumIndices(),
-            indexed: true
-        });
     };
 
     return {
