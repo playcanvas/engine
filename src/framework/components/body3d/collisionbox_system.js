@@ -114,7 +114,7 @@ pc.extend(pc.fw, function () {
         onToolsUpdate: function (dt) {
             var components = this.store;
             for (id in components) {
-                this.renderBox(components[id].entity, components[id].data, this._gfx.rectVertexBuffer, this._gfx.rectIndexBuffer);
+                //this.renderBox(components[id].entity, components[id].data, this._gfx.rectVertexBuffer, this._gfx.rectIndexBuffer);
             }
         },
 
