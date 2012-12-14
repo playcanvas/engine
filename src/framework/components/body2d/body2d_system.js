@@ -90,32 +90,47 @@ pc.extend(pc.fw, function () {
             Body2dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             if (typeof(Box2D) !== 'undefined') {
-                // Create a static body at the current position
-                this.initBodyDef(component);
-                this.createBody(component);                
+                this.createBody(component);
             }
         },
 
-        initBodyDef: function (component) {
-            var bodyDef = new b2BodyDef();
+        createBody: function (component) {
+            if (component.entity.collisionrect || component.entity.collisioncircle) {
+                var bodyDef = new b2BodyDef();
 
-            pc.math.vec3.copy(component.entity.getPosition(), position);
-            pc.math.vec3.copy(component.entity.getEulerAngles(), rotation);
+                pc.math.vec3.copy(component.entity.getPosition(), position);
+                pc.math.vec3.copy(component.entity.getEulerAngles(), rotation);
 
-            bodyDef.type = component.static ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
-            bodyDef.position.Set(position[this.xi], position[this.yi]);
-            
-            var angle = component._eulersToAngle(rotation);
+                bodyDef.type = component.static ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
+                bodyDef.position.Set(position[this.xi], position[this.yi]);
+                
+                var angle = component._eulersToAngle(rotation);
 
-            bodyDef.angle = -angle * pc.math.DEG_TO_RAD;
-            bodyDef.userData = component.entity;
+                bodyDef.angle = -angle * pc.math.DEG_TO_RAD;
+                bodyDef.userData = component.entity;
 
-            component.data.bodyDef = bodyDef;
+                component.data.bodyDef = bodyDef;
+            }
+
+            // Remove old body
+            if (component.data.body) {
+                this.removeBody(component.entity, component.data.body);
+            }
+
+            // Create new one
+            if (component.entity.collisionrect) {
+                component.data.body = this.addBody(component.bodyDef, component.entity.collisionrect.fixtureDef);
+            }
+            else if (component.entity.collisioncircle) {
+                component.data.body = this.addBody(component.bodyDef, component.entity.collisioncircle.fixtureDef);
+            } else {
+                component.data.body = null;
+            }
         },
 
         onRemove: function (entity, data) {
             if (data.body) {
-                this.removeBody(data.body);    
+                this.removeBody(entity, data.body);    
             }                
             data.body = null;
         },
@@ -128,26 +143,17 @@ pc.extend(pc.fw, function () {
             return vec2.Set(vec3[this.xi], vec3[this.yi]);
         },
 
-        createBody: function (component) {
-            if (component.entity.collisionrect) {
-                component.data.body = this.addBody(component.bodyDef, component.entity.collisionrect.fixtureDef);
-                //component.addCollision(component.entity.collisionrect);
-            }
-            else if (component.entity.collisioncircle) {
-                component.data.body = this.addBody(component.bodyDef, component.entity.collisioncircle.fixtureDef);
-            } else {
-                component.data.body = null;
-            }
-        },
-
         addBody: function (bodyDef, fixtureDef) {
             var body = this.b2World.CreateBody(bodyDef);
             body.CreateFixture(fixtureDef);
             return body;            
         },
 
-        removeBody: function(body) {
-            this.b2World.DestroyBody(body)
+        removeBody: function(entity, body) {
+            this.b2World.DestroyBody(body);
+            if (entity.body2d.body) {
+                entity.body2d.data.body = null;
+            }
         },
 
         /**

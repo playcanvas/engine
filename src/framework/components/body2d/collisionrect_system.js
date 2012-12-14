@@ -146,24 +146,35 @@ pc.extend(pc.fw, function () {
             CollisionRectComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             if (typeof(Box2D) !== 'undefined') {
-                var fixtureDef = new b2FixtureDef();
-                this.initFixtureDef(component.entity, fixtureDef, component);
-                component.fixtureDef = fixtureDef;                
+                component.fixtureDef = this.createFixtureDef(component.entity, component);
+                
+                if (component.entity.body2d) {
+                    this.context.systems.body2d.createBody(component.entity.body2d);
+                }
             }
         },
         
-        initFixtureDef: function(entity, fixtureDef, componentData) {
+        createFixtureDef: function(entity, componentData) {
+            var fixtureDef = new b2FixtureDef();
+                
             fixtureDef.density = componentData['density'];
             fixtureDef.friction = componentData['friction'];
             fixtureDef.restitution = componentData['restitution'];                        
             fixtureDef.shape = new b2PolygonShape();
             fixtureDef.shape.SetAsBox(componentData['x'], componentData['y']);
             fixtureDef.userData = entity;
+
+            return fixtureDef;
         },
 
         onRemove: function (entity, data) {
             if (entity.body2d && entity.body2d.body) {
-                this.context.systems.body2d.removeBody(entity.body2d.body);
+                this.context.systems.body2d.removeBody(entity, entity.body2d.body);
+            }
+
+            if (this.context.scene.containsModel(data.model)) {
+                this.context.scene.removeModel(data.model);
+                this.context.root.removeChild(data.model.graph);
             }
         },
 
@@ -192,22 +203,22 @@ pc.extend(pc.fw, function () {
             var xi = this.context.systems.body2d.xi;
             var yi = this.context.systems.body2d.yi;
             var ri = this.context.systems.body2d.ri;
-            
+
             for (id in components) {
                 var entity = components[id].entity;
                 var data = components[id].data;
-
+            
+                if (!this.context.scene.containsModel(data.model)) {
+                    this.context.scene.addModel(data.model);
+                    this.context.root.addChild(data.model.graph);
+                }
+            
                 var s = []
                 s[xi] = data.x * 2;
                 s[yi] = data.y * 2;
                 s[ri] = 0.5 * 2;
 
                 var model = data.model;
-
-                if (!this.context.scene.containsModel(data.model)) {
-                    this.context.scene.addModel(data.model);
-                    this.context.root.addChild(data.model.graph);
-                }
 
                 var root = model.graph;
                 root.setPosition(entity.getPosition());

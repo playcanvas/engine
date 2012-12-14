@@ -136,7 +136,6 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CollisionCircleComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
             data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
@@ -145,24 +144,35 @@ pc.extend(pc.fw, function () {
             CollisionCircleComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             if (typeof(Box2D) !== 'undefined') {
-                var fixtureDef = new b2FixtureDef();
-                this.initFixtureDef(component.entity, fixtureDef, component);
-                component.fixtureDef = fixtureDef;
+                component.fixtureDef = this.createFixtureDef(component.entity, component);
+
+                if (component.entity.body2d) {
+                    this.context.systems.body2d.createBody(component.entity.body2d);
+                }
             }
         },
         
-        initFixtureDef: function(entity, fixtureDef, component) {
+        createFixtureDef: function(entity, component) {
+            var fixtureDef = new b2FixtureDef();
+
             fixtureDef.density = component.density;
             fixtureDef.friction = component.friction;
             fixtureDef.restitution = component.restitution;                        
             fixtureDef.shape = new b2CircleShape();
             fixtureDef.shape.SetRadius(component.radius);
             fixtureDef.userData = entity;
+
+            return fixtureDef;
         },
 
         onRemove: function (entity, data) {
             if (entity.body2d && entity.body2d.body) {
-                this.context.systems.body2d.removeBody(entity.body2d.body);
+                this.context.systems.body2d.removeBody(entity, entity.body2d.body);
+            }
+
+            if (this.context.scene.containsModel(data.model)) {
+                this.context.scene.removeModel(data.model);
+                this.context.root.removeChild(data.model.graph);
             }
         },
 
@@ -202,13 +212,13 @@ pc.extend(pc.fw, function () {
                 var entity = components[id].entity;
                 var data = components[id].data;
 
-                var r = data.radius;
-                var model = data.model;
-
                 if (!this.context.scene.containsModel(data.model)) {
                     this.context.scene.addModel(data.model);
                     this.context.root.addChild(data.model.graph);
                 }
+
+                var r = data.radius;
+                var model = data.model;
 
                 var root = model.graph;
                 root.setPosition(entity.getPosition());
