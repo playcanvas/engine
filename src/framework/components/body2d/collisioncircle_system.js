@@ -77,11 +77,53 @@ pc.extend(pc.fw, function () {
                 step: 0.1,
             },
             defaultValue: 1
+        }, {
+            name: 'model',
+            exposed: false
         }];
 
         this.exposeProperties();
 
-        this._gfx = _createGfxResources();
+        // Create the graphical resources required to render a camera frustum
+        var format = new pc.gfx.VertexFormat();
+        format.begin();
+        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+        format.end();
+
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 41, pc.gfx.VertexBufferUsage.STATIC);
+        var positions = new Float32Array(vertexBuffer.lock());
+
+        var r = 0.5;
+        var numVerts = vertexBuffer.getNumVertices();
+        for (var i = 0; i < numVerts-1; i++) {
+            var theta = 2 * Math.PI * (i / (numVerts-2));
+            var x = r * Math.cos(theta);
+            var z = r * Math.sin(theta);
+            positions[(i)*3+0] = x;
+            positions[(i)*3+1] = 0;
+            positions[(i)*3+2] = z;
+        }
+        vertexBuffer.unlock();
+
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 80);
+        var inds = new Uint8Array(indexBuffer.lock());
+        for (var i = 0; i < 40; i++) {
+            inds[i * 2 + 0] = i;
+            inds[i * 2 + 1] = i + 1;
+        }
+        indexBuffer.unlock();
+
+        this.mesh = new pc.scene.Mesh();
+        this.mesh.vertexBuffer = vertexBuffer;
+        this.mesh.indexBuffer[0] = indexBuffer;
+        this.mesh.primitive[0].type = pc.gfx.PrimType.LINES;
+        this.mesh.primitive[0].base = 0;
+        this.mesh.primitive[0].count = indexBuffer.getNumIndices();
+        this.mesh.primitive[0].indexed = true;
+
+        this.material = new pc.scene.BasicMaterial();
+        this.material.color = pc.math.vec4.create(0, 0, 1, 1);
+        this.material.update();
         
         this.debugRender = false;
 
@@ -99,7 +141,12 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CollisionCircleComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['density', 'friction', 'restitution', 'radius'];
+
+            data.model = new pc.scene.Model();
+            data.model.graph = new pc.scene.GraphNode();
+            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
+
+            properties = ['density', 'friction', 'restitution', 'radius', 'model'];
             CollisionCircleComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             if (typeof(Box2D) !== 'undefined') {
@@ -134,102 +181,47 @@ pc.extend(pc.fw, function () {
             this.debugRender = value;
         },
 
+        /**
+        * @private
+        * @name pc.fw.CollisionSphereComponentSystem#setDebugRender
+        * @description Display collision shape outlines
+        * @param {Boolean} value Enable or disable
+        */
+        setDebugRender: function (value) {
+            this.debugRender = value;
+        },
+
         onUpdate: function (dt) {
             if (this.debugRender) {
-                var components = this.store;
-                for (id in components) {
-                    //this.renderCircle(components[id].entity, components[id].data, this._gfx.vertexBuffer, this._gfx.indexBuffer);
-                }                    
+                this.updateDebugShapes();
             }
         },
 
         onToolsUpdate: function (dt) {
-            var components = this.store;
-            for (id in components) {
-                //this.renderCircle(components[id].entity, components[id].data, this._gfx.vertexBuffer, this._gfx.indexBuffer);
-            }                    
+            this.updateDebugShapes();
         },
 
-        renderCircle: function (entity, data, vertexBuffer, indexBuffer) {
-            this.context.scene.enqueue('opaque', function () {
-                var positions = new Float32Array(vertexBuffer.lock());
-                positions[0] = 0;
-                positions[1] = 0;
-                positions[2] = 0;
+        updateDebugShapes: function () {
+            var components = this.store;
+            for (id in components) {
+                var entity = components[id].entity;
+                var data = components[id].data;
 
-                var r = data['radius'];
-                var numVerts = vertexBuffer.getNumVertices();
-                for (var i = 0; i < numVerts-1; i++) {
-                    var theta = 2 * Math.PI * (i / (numVerts-2));
-                    var x = r * Math.cos(theta);
-                    var z = r * Math.sin(theta);
-                    positions[(i+1)*3+0] = x;
-                    positions[(i+1)*3+1] = 0;
-                    positions[(i+1)*3+2] = z;
+                var r = data.radius;
+                var model = data.model;
+
+                if (!this.context.scene.containsModel(data.model)) {
+                    this.context.scene.addModel(data.model);
+                    this.context.root.addChild(data.model.graph);
                 }
-                vertexBuffer.unlock();
 
-                // Render a representation of the light
-                var device = pc.gfx.Device.getCurrent();
-                device.setProgram(this._gfx.program);
-                device.setIndexBuffer(indexBuffer);
-                device.setVertexBuffer(vertexBuffer, 0);
-
-                pc.math.mat4.compose(entity.getPosition(), entity.getRotation(), scale, transform);
-
-                device.scope.resolve("matrix_model").setValue(transform);
-                device.scope.resolve("uColor").setValue(this._gfx.color);
-                device.draw({
-                    type: pc.gfx.PrimType.LINES,
-                    base: 0,
-                    count: indexBuffer.getNumIndices(),
-                    indexed: true
-                });
-            }.bind(this));
+                var root = model.graph;
+                root.setPosition(entity.getPosition());
+                root.setRotation(entity.getRotation());
+                root.setLocalScale(r / 0.5, r / 0.5, r / 0.5);
+            }
         }
     });
-
-    var _createGfxResources = function () {
-        // Create the graphical resources required to render a camera frustum
-        var device = pc.gfx.Device.getCurrent();
-        var library = device.getProgramLibrary();
-        var program = library.getProgram("basic", { vertexColors: false, diffuseMap: false });
-        var vertBufferLength = 4;
-        var indexBufferLength = 8;
-
-        // var format = new pc.gfx.VertexFormat();
-        // format.begin();
-        // format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-        // format.end();
-        // var rectVertexBuffer = new pc.gfx.VertexBuffer(format, vertBufferLength, pc.gfx.VertexBufferUsage.DYNAMIC);
-        // var rectIndexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, indexBufferLength);
-        // var indices = new Uint8Array(rectIndexBuffer.lock());
-        // indices.set([0,1,1,2,2,3,3,0]);
-        // rectIndexBuffer.unlock();
-
-        var format = new pc.gfx.VertexFormat();
-        format.begin();
-        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-        format.end();
-        var circleVertexBuffer = new pc.gfx.VertexBuffer(format, 42, pc.gfx.VertexBufferUsage.DYNAMIC);
-        var circleIndexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 80);
-        var inds = new Uint8Array(circleIndexBuffer.lock());
-        
-        // Spot cone circle - 40 segments
-        for (var i = 0; i < 40; i++) {
-            inds[i * 2 + 0] = i + 1;
-            inds[i * 2 + 1] = i + 2;
-        }
-        circleIndexBuffer.unlock();
-
-        // Set the resources on the component
-        return {
-            program: program,
-            indexBuffer: circleIndexBuffer,
-            vertexBuffer: circleVertexBuffer,
-            color: [0,0,1,1]
-        };
-    };
 
     return {
         CollisionCircleComponentSystem: CollisionCircleComponentSystem
