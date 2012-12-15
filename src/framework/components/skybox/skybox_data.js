@@ -9,7 +9,7 @@ pc.extend(pc.fw, function() {
         
         this.assets = [];
 
-        this.skybox = null;
+        this.model = null;
     }
     SkyboxComponentData = pc.inherits(SkyboxComponentData, pc.fw.ComponentData);
     
