@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.ApplicationContext} context
      * @extends pc.fw.Component
      */
-    var SkyboxComponent = function SkyboxComponent () {
+    var SkyboxComponent = function SkyboxComponent (system, entity) {
         this.bind("set", this.onSet.bind(this));
     }
     SkyboxComponent = pc.inherits(SkyboxComponent, pc.fw.Component);
@@ -25,7 +25,7 @@ pc.extend(pc.fw, function () {
                 };
                 
                 // clear existing skybox
-                this.data.skybox = null;
+                this.data.model = null;
                 
                 if(guid) {
                     this.system.context.loader.request(new pc.resources.AssetRequest(guid), function (resources) {
@@ -38,7 +38,10 @@ pc.extend(pc.fw, function () {
                             var urls = assets.map(function (asset) { 
                                 return asset.getFileUrl();
                             });
-                            this.data.skybox = _createSkybox(this.entity, this.system.context, urls);
+                            this.data.model = _createSkybox(this.entity, this.system.context, urls);
+
+                            this.system.context.scene.addModel(this.data.model);
+                            this.entity.removeChild(this.data.model.graph);
                         }
 
                     }.bind(this), function (errors) {
@@ -80,9 +83,6 @@ pc.extend(pc.fw, function () {
 
     // Private    
     var _createSkybox = function (entity, context, urls) {
-        var library = pc.gfx.Device.getCurrent().getProgramLibrary();
-        var program = library.getProgram('skybox');
-
         var texture = new pc.gfx.Texture({
             format: pc.gfx.PIXELFORMAT_R8_G8_B8,
             cubemap: true
@@ -91,14 +91,6 @@ pc.extend(pc.fw, function () {
         texture.magFilter = pc.gfx.FILTER_LINEAR;
         texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        
-        var skyMat = new pc.scene.Material();
-        skyMat.setState({
-            cull: false,
-            depthWrite: false
-        });
-        skyMat.setProgram(program);
-        skyMat.setParameter("texture_cubeMap", texture);
 
         var requests = urls.map(function (url) {
             return new pc.resources.ImageRequest(url);
@@ -117,12 +109,29 @@ pc.extend(pc.fw, function () {
             
         }, options);
 
-        var geom = pc.scene.procedural.createBox({material: skyMat, halfExtents: [1, 1, 1]});
-        
-        var skybox = new pc.scene.MeshNode();
-        skybox.setGeometry(geom);
-        
-        return skybox;
+        var library = pc.gfx.Device.getCurrent().getProgramLibrary();
+        var program = library.getProgram('skybox');
+
+        var material = new pc.scene.Material();
+        material.setState({
+            cull: false,
+            depthWrite: false
+        });
+        material.setProgram(program);
+        material.setParameter("texture_cubeMap", texture);
+
+        var node = new pc.scene.GraphNode();
+        var mesh = pc.scene.procedural.createBox({
+            halfExtents: [1, 1, 1]
+        });
+        var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+        meshInstance.layer = pc.scene.LAYER_SKYBOX;
+
+        var model = new pc.scene.Model();
+        model.graph = node;
+        model.meshInstances = [ meshInstance ];
+
+        return model;
     };
 
     var CUBE_MAP_NAMES = [

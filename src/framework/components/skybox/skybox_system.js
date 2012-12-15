@@ -69,7 +69,7 @@ pc.extend(pc.fw, function () {
                 },
                 defaultValue: null  
             }, {
-                name: 'skybox',
+                name: 'model',
                 exposed: false,
                 readOnly: true
             }, {
@@ -82,6 +82,7 @@ pc.extend(pc.fw, function () {
         this.exposeProperties();
 
         pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+        this.bind('remove', this.onRemove.bind(this));
     }
     SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);
 
@@ -98,25 +99,25 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
 
-                    if (componentData.skybox) {
-                        this.context.scene.enqueue('first', (function (context, skybox) {
-                                return function () {
-                                    // Create a transform that will scale the skybox to always sit
-                                    // in between the near and far clip planes
-                                    var currentCamera = context.systems.camera.current;
-                                    var average = (currentCamera.camera.nearClip + currentCamera.camera.farClip) * 0.5;
+                    if (componentData.removeModel) {
+                        // Create a transform that will scale the skybox to always sit
+                        // in between the near and far clip planes
+                        var currentCamera = this.context.systems.camera.current;
+                        var midPoint = (currentCamera.camera.nearClip + currentCamera.camera.farClip) * 0.5;
 
-                                    // Set the scale - easy since the matrix is identity
-                                    var wtm = skybox.getWorldTransform();
-                                    wtm[0] = average;
-                                    wtm[5] = average;
-                                    wtm[10] = average;
-                                    skybox.dispatch();
-                                }
-                            })(this.context, componentData.skybox));
+                        var meshInstance = componentData.model.meshInstances[0];
+                        meshInstance.node.setLocalScale(midPoint, midPoint, midPoint);
                     }
                 }
-            }            
+            }
+        },
+
+        onRemove: function (entity, data) {
+            if (data.model) {
+                this.context.scene.removeModel(data.model);
+                entity.removeChild(data.model.getGraph());
+                data.model = null;
+            }
         }
     });
 
