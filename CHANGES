@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.86.1
+-------
+[FIX] Skybox component updated to new pc.scene API.
+
+-------
 v0.86.0
 -------
 * New Scene library with sorting enabled -- rendering speed boost++!
