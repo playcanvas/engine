@@ -44,7 +44,7 @@ pc.extend(pc.fw, function () {
             defaultValue: false
         }, {
             name: "attenuationEnd",
-            displayName: "Attenuation End",
+            displayName: "Radius",
             description: "The distance from the light where its contribution falls to zero",
             type: "number",
             defaultValue: 10,
@@ -52,68 +52,55 @@ pc.extend(pc.fw, function () {
                 min: 0
             }
         }, {
-            name: 'light', 
+            name: "model",
             exposed: false
         }];
 
         this.exposeProperties();
 
-        this.renderable = _createGfxResources();
+        // TODO: Only allocate graphics resources when running in Designer
+        this.lightMat = new pc.scene.BasicMaterial();
+        this.lightMat.color = new Float32Array([1, 1, 0, 1]);
+        this.lightMat.update();
+
+        this.sphereMesh = pc.scene.procedural.createSphere({
+            radius: 0.1
+        });
 
         this.bind('remove', this.onRemove.bind(this));
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
     };
     PointLightComponentSystem = pc.inherits(PointLightComponentSystem, pc.fw.ComponentSystem);
 
     pc.extend(PointLightComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            var light = new pc.scene.LightNode();
-            light.setType(pc.scene.LightType.POINT);
+            var node = new pc.scene.LightNode();
+            node.setName('pointlight');
+            node.setType(pc.scene.LightType.POINT);
 
-            data.light = light;
+            var model = new pc.scene.Model();
+            model.graph = node;
+            model.lights = [ node ];
 
-            properties = ['light', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd'];
+            if (this.context.designer) {
+                model.meshInstances = [ new pc.scene.MeshInstance(node, this.sphereMesh, this.lightMat) ];
+            }
+
+            this.context.scene.addModel(model);
+            component.entity.addChild(node);
+
+            data.model = model;
+
+            properties = ['model', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd'];
             PointLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
         onRemove: function (entity, data) {
-            entity.removeChild(data.light);
-            data.light.setEnabled(false);
-            delete data.light;
-        },
-
-        toolsUpdate: function (fn) {
-            var components = this.store;
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var entity = components[id].entity;
-                    var componentData = components[id].data;
-
-                    this.context.scene.enqueue('opaque', function (renderable, position) {
-                        return function () {
-                            renderable.setLocalPosition(position);
-                            renderable.syncHierarchy();
-                            renderable.dispatch();                            
-                        };
-                    }(this.renderable, entity.getPosition()));                    
-                }
-            }
+            entity.removeChild(data.model.graph);
+            this.context.scene.removeModel(data.model);
+            delete data.model;
         }
     });
 
-    var _createGfxResources = function () {
-        var lightMat = new pc.scene.BasicMaterial();
-        lightMat.color = new Float32Array([1, 1, 0, 1]);
-        lightMat.update();
-
-        var sphereGeom = pc.scene.procedural.createSphere({material: lightMat});
-        
-        var sphereMesh = new pc.scene.MeshNode();
-        sphereMesh.setGeometry(sphereGeom);
-        
-        return sphereMesh;
-    };
-    
     return {
         PointLightComponentSystem: PointLightComponentSystem
     }; 

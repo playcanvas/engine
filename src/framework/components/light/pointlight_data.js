@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
         this.attenuationEnd = 10;
 
         // Non-serialized
-        this.light = null;
+        this.model = null;
     };
 
     PointLightComponentData = pc.inherits(PointLightComponentData, pc.fw.ComponentData);

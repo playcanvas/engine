@@ -20,8 +20,6 @@ pc.extend(pc.fw, function () {
         this.bind("set_enable", this.onSetEnable.bind(this));
         // Handle changes to the 'intensity' value
         this.bind("set_intensity", this.onSetIntensity.bind(this));
-        // Handle changes to the 'light' value
-        this.bind("set_light", this.onSetLight.bind(this));
     };
 
     DirectionalLightComponent = pc.inherits(DirectionalLightComponent, pc.fw.Component);
@@ -29,7 +27,8 @@ pc.extend(pc.fw, function () {
     pc.extend(DirectionalLightComponent.prototype, {
         onSetCastShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
-                this.data.light.setCastShadows(newValue);
+                var light = this.data.model.lights[0];
+                light.setCastShadows(newValue);
             }
         },
         
@@ -42,32 +41,24 @@ pc.extend(pc.fw, function () {
                     rgb[1] / 255,
                     rgb[2] / 255
                 ];
-                this.data.light.setColor(color);
+                var light = this.data.model.lights[0];
+                light.setColor(color);
             }
         },
 
         onSetEnable: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
-                this.data.light.setEnabled(newValue);
+                var light = this.data.model.lights[0];
+                light.setEnabled(newValue);
             }
         },
 
         onSetIntensity: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
-                this.data.light.setIntensity(newValue);
+                var light = this.data.model.lights[0];
+                light.setIntensity(newValue);
             }
-        },
-
-        onSetLight: function (name, oldValue, newValue) {
-            if (oldValue) {
-                this.entity.removeChild(oldValue);
-                this.system.context.scene.removeLight(oldValue);
-            }
-            if (newValue) {
-                this.entity.addChild(newValue);
-                this.system.context.scene.addLight(newValue);
-            }
-        }        
+        }
     });
 
     return {

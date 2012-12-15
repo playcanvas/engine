@@ -54,12 +54,14 @@ pc.extend(pc.fw, function () {
                 var url = asset.getFileUrl();
                 this.system.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {
                     var model = resources[url];
+/*                    
                     if (this.system.context.designer) {
                         var geometries = model.getGeometries();
                         for (var i = 0; i < geometries.length; i++) {
                             geometries[i].generateWireframe();
                         }
                     }
+*/                    
                     this.model = model;
                 }.bind(this), function (errors, resources) {
                     Object.keys(errors).forEach(function (key) {
@@ -86,10 +88,11 @@ pc.extend(pc.fw, function () {
 
         onSetCastShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
-                if (this.data.model) {
-                    var meshes = this.data.model.getMeshes();
-                    for (var i = 0; i < meshes.length; i++) {
-                        meshes[i].setCastShadows(newValue);
+                var componentData = this.data;
+                if (componentData.model) {
+                    var meshInstances = componentData.model.meshInstances;
+                    for (var i = 0; i < meshInstances.length; i++) {
+                        meshInstances[i].castShadow = newValue;
                     }
                 }
             }
@@ -102,13 +105,14 @@ pc.extend(pc.fw, function () {
             }
 
             if (newValue) {
-                var meshes = newValue.getMeshes();
-                for (var i = 0; i < meshes.length; i++) {
-                    meshes[i].setCastShadows(this.data.castShadows);
-                    meshes[i].setReceiveShadows(this.data.receiveShadows);
+                var componentData = this.data;
+                var meshInstances = newValue.meshInstances;
+                for (var i = 0; i < meshInstances.length; i++) {
+                    meshInstances[i].castShadow = componentData.castShadows;
+                    meshInstances[i].receiveShadow = componentData.receiveShadows;
                 }
 
-                this.entity.addChild(newValue.getGraph());
+                this.entity.addChild(newValue.graph);
                 this.system.context.scene.addModel(newValue);
 
                 // Store the entity that owns this model
@@ -123,10 +127,11 @@ pc.extend(pc.fw, function () {
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
             if (newValue !== undefined) {
-                if (this.data.model) {
-                    var meshes = this.data.model.getMeshes();
-                    for (var i = 0; i < meshes.length; i++) {
-                        meshes[i].setReceiveShadows(newValue);
+                var componentData = this.data;
+                if (componentData.model) {
+                    var meshInstances = componentData.model.meshInstances;
+                    for (var i = 0; i < meshInstances.length; i++) {
+                        meshInstances[i].receiveShadow = newValue;
                     }
                 }
             }

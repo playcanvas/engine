@@ -56,7 +56,7 @@ pc.extend(pc.fw, function () {
             displayName: "Near Clip",
             description: "Near clipping distance",
             type: "number",
-            defaultValue: 0.1,
+            defaultValue: 1,
             options: {
                 min: 0
             }
@@ -65,7 +65,7 @@ pc.extend(pc.fw, function () {
             displayName: "Far Clip",
             description: "Far clipping distance",
             type: "number",
-            defaultValue: 1000,
+            defaultValue: 100000,
             options: {
                 min: 0
             }
@@ -84,6 +84,9 @@ pc.extend(pc.fw, function () {
         }, {
             name: "camera",
             exposed: false
+        }, {
+            name: "model",
+            exposed: false
         }];
 
         this.exposeProperties();
@@ -91,6 +94,8 @@ pc.extend(pc.fw, function () {
         this._currentEntity = null;
         this._currentNode = null;
         this._renderable = null;
+
+        this.createGfx();
 
         this.bind('remove', this.onRemove.bind(this));
         pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
@@ -131,8 +136,31 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             data = data || {};
             data.camera = new pc.scene.CameraNode();
+
+            var model = new pc.scene.Model();
+            model.graph = data.camera;
+
+            if (this.context.designer) {
+                var vertexBuffer = new pc.gfx.VertexBuffer(this.vertexFormat, 8, pc.gfx.VertexBufferUsage.DYNAMIC);
     
-            properties = ['camera', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
+                var mesh = new pc.scene.Mesh();
+                mesh.vertexBuffer = vertexBuffer;
+                mesh.indexBuffer[0] = this.indexBuffer;
+                mesh.primitive[0].type = pc.gfx.PrimType.LINES;
+                mesh.primitive[0].base = 0;
+                mesh.primitive[0].count = this.indexBuffer.getNumIndices();
+                mesh.primitive[0].indexed = true;
+    
+                model.meshInstances = [ new pc.scene.MeshInstance(model.graph, mesh, this.material) ];
+            }
+
+            this.context.scene.addModel(model);
+            // This is done in onSetCamera
+            //this.context.root.addChild(model.graph);
+
+            data.model = model;
+
+            properties = ['model', 'camera', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
     
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
@@ -146,7 +174,7 @@ pc.extend(pc.fw, function () {
          * @function
          * @name pc.fw.CameraComponentSystem#frameBegin
          */
-        frameBegin: function (clear) {
+        frameBegin: function () {
             var camera = this._currentNode;
             if (!camera) {
                 return;
@@ -181,8 +209,6 @@ pc.extend(pc.fw, function () {
             if (aspect !== camera.getAspectRatio()) {
                 camera.setAspectRatio(aspect);
             }
-
-            camera.frameBegin(clear);
         },
 
         /**
@@ -195,14 +221,17 @@ pc.extend(pc.fw, function () {
             if (!camera) {
                 return;
             }
-
-            camera.frameEnd();        
         },
 
         onRemove: function (entity, data) {
             // If this is the current camera then clear it
             if (this._currentEntity === entity) {
                 this.current = null;
+            }
+
+            if (this.context.scene.containsModel(data.model)) {
+                this.context.scene.removeModel(data.model);
+                this.context.root.removeChild(data.model.graph);
             }
 
             entity.removeChild(data.camera);
@@ -214,15 +243,90 @@ pc.extend(pc.fw, function () {
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
+                    var data = components[id].data;
 
                     if (!entity.hasLabel("pc:designer")) {
-                        this.context.scene.enqueue('opaque', function (componentData) {
-                            return function () {
-                                componentData.camera.drawFrustum();        
-                            };
-                        }(components[id].data));
+                        this.updateGfx(entity.camera);
                     }
                 }
+            }
+        },
+
+        createGfx: function () {
+            // TODO: Only allocate graphics resources when running in Designer
+            var material = new pc.scene.BasicMaterial();
+            material.color = pc.math.vec4.create(1, 1, 0, 1);
+            material.update();
+            this.material = material;
+
+            var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 24);
+            var indices = new Uint8Array(indexBuffer.lock());
+            indices.set([0,1,1,2,2,3,3,0, // Near plane
+                         4,5,5,6,6,7,7,4, // Far plane
+                         0,4,1,5,2,6,3,7]); // Near to far edges
+            indexBuffer.unlock();
+            this.indexBuffer = indexBuffer;
+
+            format = new pc.gfx.VertexFormat();
+            format.begin();
+            format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+            format.end();
+            this.vertexFormat = format;
+        },
+
+        updateGfx: function (component) {
+            if (component.model && component.model.meshInstances.length) {
+                var vertexBuffer = component.model.meshInstances[0].mesh.vertexBuffer;
+
+                // Retrieve the characteristics of the camera frustum
+                var nearClip   = component.nearClip;
+                var farClip    = component.farClip
+                var fov        = component.fov * Math.PI / 180.0;
+                
+                var viewport = component.camera.getRenderTarget().getViewport();
+                var aspect = viewport.width / viewport.height;
+                
+                var projection = component.projection;
+
+                var x, y;
+                if (projection === pc.scene.Projection.PERSPECTIVE) {
+                    y = Math.tan(fov / 2.0) * nearClip;
+                } else {
+                    y = this._orthoHeight;
+                }
+                x = y * aspect;
+
+                var positions = new Float32Array(vertexBuffer.lock());
+                positions[0]  = x;
+                positions[1]  = -y;
+                positions[2]  = -nearClip;
+                positions[3]  = x;
+                positions[4]  = y;
+                positions[5]  = -nearClip;
+                positions[6]  = -x;
+                positions[7]  = y;
+                positions[8]  = -nearClip;
+                positions[9]  = -x;
+                positions[10] = -y;
+                positions[11] = -nearClip;
+
+                if (projection === pc.scene.Projection.PERSPECTIVE) {
+                    y = Math.tan(fov / 2.0) * farClip;
+                    x = y * aspect;
+                }
+                positions[12]  = x;
+                positions[13]  = -y;
+                positions[14]  = -farClip;
+                positions[15]  = x;
+                positions[16]  = y;
+                positions[17]  = -farClip;
+                positions[18]  = -x;
+                positions[19]  = y;
+                positions[20]  = -farClip;
+                positions[21]  = -x;
+                positions[22] = -y;
+                positions[23] = -farClip;                
+                vertexBuffer.unlock();
             }
         }
     });

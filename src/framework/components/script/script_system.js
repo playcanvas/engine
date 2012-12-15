@@ -183,7 +183,7 @@ pc.extend(pc.fw, function () {
         _preRegisterInstance: function (entity, url, name, instance) {
             entity.script.data._instances = entity.script.data._instances || {};
             if (entity.script.data._instances[name]) {
-                throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, instances[name].url, entity.getGuid()));
+                throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, entity.script.data._instances[name].url, entity.getGuid()));
             }
             entity.script.data._instances[name] = {
                 url: url,
@@ -197,7 +197,7 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.ScriptComponentSystem#_registerInstance
         * @description Get all preregistered instances for an entity and 'register' then. This means storing the instance in the ComponentData
-        * and binding events for the update, fixedUpdate and postUpdate methods.
+        * and binding events for the update, fixedUpdate, postUpdate and toolsUpdate methods.
         * This function is recursive and calls itself for the complete hierarchy down from the supplied Entity
         * @param {pc.fw.Entity} entity The Entity the instances are attached to
         */        

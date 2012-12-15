@@ -187,18 +187,25 @@ pc.extend(pc.resources, function () {
     };
     
     ModelResourceHandler.prototype._loadMesh = function (model, modelData, meshData) {
-        var mesh = new pc.scene.MeshNode();
+        var node = new pc.scene.GraphNode();
 
-        this._setNodeData(mesh, meshData);
+        this._setNodeData(node, meshData);
 
         // Mesh properties
         var geometryId = meshData.geometry;
-        var geometry   = model.getGeometries()[geometryId];
-        mesh.setGeometry(geometry);
-    
-        return mesh;
+        var geometry   = model.geometries[geometryId];
+
+        for (var i = 0; i < geometry.length; i++) {
+            var meshInstance = new pc.scene.MeshInstance(node, geometry[i], geometry[i]._material);
+            if (geometry[i].skin) {
+                var skinIndex = model.skins.indexOf(geometry[i].skin);
+                meshInstance.skinInstance = model.skinInstances[skinIndex];
+            }
+            model.meshInstances.push(meshInstance);
+        }
+        return node;
     };
-    
+
     /**
      * @function
      * @name pc.resources.ModelResourceHandler#_loadTexture
@@ -229,8 +236,8 @@ pc.extend(pc.resources, function () {
             texture.name = textureData.name;
             texture.addressU = this._jsonToAddressMode[textureData.addressu];
             texture.addressV = this._jsonToAddressMode[textureData.addressv];
-            texture.minFilter = this._jsonToFilterMode[textureData.minfilter];
             texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
+            texture.minFilter = this._jsonToFilterMode[textureData.minfilter];
 
             // add to textureCache cache
             if (this._textureCache) {
@@ -352,19 +359,6 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData, buffers) {
-        var geometry = new pc.scene.Geometry();
-    
-        // Skinning data
-        if (geomData.inverse_bind_pose !== undefined) {
-            var inverseBindPose = [];
-            for (var i = 0; i < geomData.inverse_bind_pose.length; i++) {
-                inverseBindPose[i] = pc.math.mat4.clone(geomData.inverse_bind_pose[i]);
-            }
-            geometry.setInverseBindPose(inverseBindPose);
-
-            geometry._boneIds = geomData.bone_ids;
-        }
-
         // Calculate tangents if we have positions, normals and texture coordinates
         var positions = null, normals = null, uvs = null, tangents = null;
         for (var i = 0; i < geomData.attributes.length; i++) {
@@ -428,42 +422,71 @@ pc.extend(pc.resources, function () {
         }
         iterator.end();
     
-        geometry.getVertexBuffers().push(vertexBuffer);
-
         // Create the index buffer
         var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, geomData.indices.data.length);
         var dst = new Uint16Array(indexBuffer.lock());
         dst.set(geomData.indices.data);
         indexBuffer.unlock();
-        geometry.setIndexBuffer(indexBuffer);
+
+        // Skinning data
+        var skin, skinInstance;
+        if (geomData.inverse_bind_pose !== undefined) {
+            var inverseBindPose = [];
+            for (var i = 0; i < geomData.inverse_bind_pose.length; i++) {
+                inverseBindPose[i] = pc.math.mat4.clone(geomData.inverse_bind_pose[i]);
+            }
+
+            skin = new pc.scene.Skin(inverseBindPose, geomData.bone_ids);
+        }
+
+        // Set the local space axis-aligned bounding box of the geometry
+        var min = geomData.bbox.min;
+        var max = geomData.bbox.max;
+        var aabb = new pc.shape.Aabb(
+            pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+            pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+        );
+
+        var meshes = [];
 
         // Create and read each submesh
         for (var i = 0; i < geomData.submeshes.length; i++) {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
-    
-            geometry.getSubMeshes().push(subMesh);
+
+            var mesh = new pc.scene.Mesh();
+            mesh.vertexBuffer = vertexBuffer;
+            mesh.indexBuffer[0] = indexBuffer;
+            mesh.primitive[0].type = subMesh.primitive.type;
+            mesh.primitive[0].base = subMesh.primitive.base;
+            mesh.primitive[0].count = subMesh.primitive.count;
+            mesh.primitive[0].indexed = true;
+            mesh.skin = skin ? skin : null;
+            mesh.aabb = aabb;
+
+            mesh._material = subMesh.material;
+
+            meshes.push(mesh);
         }
 
-        // Set the local space axis-aligned bounding box of the geometry
-        if (geomData.bbox) {
-            var min = geomData.bbox.min;
-            var max = geomData.bbox.max;
-            var aabb = new pc.shape.Aabb(
-                pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
-            );
-            geometry.setAabb(aabb);
-        }
-
-        if (geometry.isSkinned()) {
+        if (geomData.inverse_bind_pose !== undefined) {
             var device = pc.gfx.Device.getCurrent();
             var maxBones = device.getBoneLimit();
-            if (geometry.getInverseBindPose().length > maxBones) {
-                geometry.partitionSkin(maxBones);
+            if (geomData.inverse_bind_pose.length > maxBones) {
+                meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
+            }
+
+            for (var i = 0; i < meshes.length; i++) {
+                skin = meshes[i].skin;
+                var skinIndex = model.skins.indexOf(skin);
+                if (skinIndex === -1) {
+                    model.skins.push(skin);
+                    skinInstance = new pc.scene.SkinInstance(skin);
+                    model.skinInstances.push(skinInstance);
+                }
             }
         }
 
-        return geometry;
+        return meshes;
     };
 
     /**
@@ -495,10 +518,10 @@ pc.extend(pc.resources, function () {
             }
         }
 
-        var geometries = model.getGeometries();
+        model.geometries = [];
         for (i = 0; i < modelData.geometries.length; i++) {
             var geomData = modelData.geometries[i];
-            geometries.push(this._loadGeometry(model, modelData, geomData));
+            model.geometries.push(this._loadGeometry(model, modelData, geomData));
         }
     
         var _jsonToLoader = {
@@ -518,8 +541,6 @@ pc.extend(pc.resources, function () {
                     model.getCameras().push(node);
                 else if (node instanceof pc.scene.LightNode)
                     model.getLights().push(node);
-                else if (node instanceof pc.scene.MeshNode)
-                    model.getMeshes().push(node);
 
                 // Now create and load each child
                 if (nodeData.children !== undefined) {
@@ -569,20 +590,16 @@ pc.extend(pc.resources, function () {
             var graph = _loadHierarchy(modelData.graph);
             model.setGraph(graph);
 
-            // Resolve bone IDs to actual graph nodes
-            var meshes = model.getMeshes();
-            for (i = 0; i < meshes.length; i++) {
-                var mesh = meshes[i];
-                var geom = mesh.getGeometry();
-                if (geom._boneIds !== undefined) {
-                    mesh._bones = [];
-                    for (var j = 0; j < geom._boneIds.length; j++) {
-                        var id = geom._boneIds[j];
-                        var bone = graph.findByGraphId(id);
-                        mesh._bones.push(bone);
-                    }
+            // Need to update JSON file format to have bone names instead of graph IDs
+            for (var i = 0; i < model.skins.length; i++) {
+                var skin = model.skins[i];
+                for (var j = 0; j < skin.boneNames.length; j++) {
+                    skin.boneNames[j] = graph.findByGraphId(skin.boneNames[j]).getName();
                 }
             }
+
+            // Resolve bone IDs to actual graph nodes
+            model.resolveBoneNames();
 
             // Resolve camera aim/up graph node IDs to actual graph nodes            
             _resolveCameraIds(graph);
@@ -591,9 +608,10 @@ pc.extend(pc.resources, function () {
         }
 
         model.getGraph().syncHierarchy();
-        var meshes = model.getMeshes();
-        for (i = 0; i < meshes.length; i++) {
-            meshes[i].syncAabb();
+
+        var meshInstances = model.meshInstances;
+        for (i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].syncAabb();
         }
 
         return model;
@@ -1266,12 +1284,12 @@ pc.extend(pc.resources, function () {
         readGeometryChunk: function () {
             var header = this.readChunkHeader();
 
-            var bbox = this.readAabbChunk();
-            var vbuff = this.readVertexBufferChunk();
-            var ibuff = this.readIndexBufferChunk();
+            var aabb = this.readAabbChunk();
+            var vertexBuffer = this.readVertexBufferChunk();
+            var indexBuffer = this.readIndexBufferChunk();
             var subMeshes = this.readSubMeshesChunk();
             var numBones  = this.readU32();
-            var ibp = [];
+            var inverseBindPose = [];
             var boneNames = [];
             if (numBones > 0) {
                 for (var i = 0; i < numBones; i++) {
@@ -1279,7 +1297,7 @@ pc.extend(pc.resources, function () {
                     for (var j = 0; j < 16; j++) {
                         ibm[j] = this.readF32();
                     }
-                    ibp.push(ibm);
+                    inverseBindPose.push(ibm);
                 }
                 for (var i = 0; i < numBones; i++) {
                     var boneName = this.readStringChunk();
@@ -1287,18 +1305,38 @@ pc.extend(pc.resources, function () {
                 }
             }
 
-            generateTangentsInPlace(vbuff, ibuff);
+            generateTangentsInPlace(vertexBuffer, indexBuffer);
 
-            var geometry = new pc.scene.Geometry();
-            geometry.setAabb(bbox);
-            geometry.setIndexBuffer(ibuff);
-            geometry.setVertexBuffers([vbuff]);
-            geometry.setSubMeshes(subMeshes);
-            if (numBones > 0) {
-                geometry.setInverseBindPose(ibp);
-                geometry._boneNames = boneNames;
+            var model = this.model;
+            var skin, skinInstance;
+            if (inverseBindPose.length > 0) {
+                skin = new pc.scene.Skin(inverseBindPose, boneNames);
+                model.skins.push(skin);
+                model.skinInstances.push(new pc.scene.SkinInstance(skin));
             }
 
+            var geometry = [];
+
+            // Create and read each submesh
+            for (var i = 0; i < subMeshes.length; i++) {
+                var subMesh = subMeshes[i];
+
+                var mesh = new pc.scene.Mesh();
+                mesh.vertexBuffer = vertexBuffer;
+                mesh.indexBuffer[0] = indexBuffer;
+                mesh.primitive[0].type = subMesh.primitive.type;
+                mesh.primitive[0].base = subMesh.primitive.base;
+                mesh.primitive[0].count = subMesh.primitive.count;
+                mesh.primitive[0].indexed = true;
+                mesh.skin = skin ? skin : null;
+                mesh.aabb = aabb;
+
+                mesh._material = subMesh.material;
+
+                geometry.push(mesh);
+            }
+
+/*
             if (geometry.isSkinned()) {
                 var device = pc.gfx.Device.getCurrent();
                 var maxBones = device.getBoneLimit();
@@ -1306,6 +1344,7 @@ pc.extend(pc.resources, function () {
                     geometry.partitionSkin(maxBones);
                 }
             }
+*/
 
             return geometry;
         },
@@ -1395,17 +1434,26 @@ pc.extend(pc.resources, function () {
                     this.model.getLights().push(node);
                     break;
                 case 3: // Mesh
-                    node = new pc.scene.MeshNode();
+                    node = new pc.scene.GraphNode();
                     node.setName(name);
                     node.setLocalPosition(px, py, pz);
                     node.setLocalEulerAngles(rx, ry, rz);
                     node.setLocalScale(sx, sy, sz);
 
                     // Mesh specific properties
+                    var model = this.model;
                     var geomIndex = this.readU32();
-                    node.setGeometry(this.model.getGeometries()[geomIndex]);
+                    var geometry = model.geometries[geomIndex];
 
-                    this.model.getMeshes().push(node);
+                    for (var i = 0; i < geometry.length; i++) {
+                        var meshInstance = new pc.scene.MeshInstance(node, geometry[i], geometry[i]._material);
+                        if (geometry[i].skin) {
+                            var skinIndex = model.skins.indexOf(geometry[i].skin);
+                            meshInstance.skinInstance = model.skinInstances[skinIndex];
+                        }
+                        model.meshInstances.push(meshInstance);
+                    }
+
                     break;
             }
             
@@ -1437,9 +1485,9 @@ pc.extend(pc.resources, function () {
             }
 
             // Read the geometry array
-            var geometries = this.model.getGeometries();
+            this.model.geometries = [];
             for (i = 0; i < numGeometries; i++) {
-                geometries.push(this.readGeometryChunk());
+                this.model.geometries.push(this.readGeometryChunk(this.model));
             }
 
             // Read the node array
@@ -1456,28 +1504,16 @@ pc.extend(pc.resources, function () {
                 var child  = connections[i * 2 + 1];
                 nodes[parent].addChild(nodes[child]);
             }
-            this.model.setGraph(nodes[0]);
+            this.model.graph = nodes[0];
 
             // Resolve bone IDs to actual graph nodes
-            var meshes = this.model.getMeshes();
-            var graph = this.model.getGraph();
-            for (i = 0; i < meshes.length; i++) {
-                var mesh = meshes[i];
-                var geom = mesh.getGeometry();
-                if (geom._boneNames !== undefined) {
-                    mesh._bones = [];
-                    for (var j = 0; j < geom._boneNames.length; j++) {
-                        var boneName = geom._boneNames[j];
-                        var bone = graph.findByName(boneName);
-                        mesh._bones.push(bone);
-                    }
-                }
-            }
+            this.model.resolveBoneNames();
 
             this.model.getGraph().syncHierarchy();
-            var meshes = this.model.getMeshes();
-            for (i = 0; i < meshes.length; i++) {
-                meshes[i].syncAabb();
+
+            var meshInstances = this.model.meshInstances;
+            for (i = 0; i < meshInstances.length; i++) {
+                meshInstances[i].syncAabb();
             }
 
             return this.model;

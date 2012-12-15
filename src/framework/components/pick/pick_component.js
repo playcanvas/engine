@@ -15,40 +15,35 @@ pc.extend(pc.fw, function () {
     pc.extend(PickComponent.prototype, {
         addShape: function (shape, shapeName) {
             var material = this.data.material;
-            var geometry = null;
+            var mesh = null;
 
             switch (shape.type) {
                 case pc.shape.Type.BOX:
-                    geometry = pc.scene.procedural.createBox({
-                        material: material, 
+                    mesh = pc.scene.procedural.createBox({
                         halfExtents: shape.halfExtents
                     });
                     break;
                 case pc.shape.Type.SPHERE:
-                    geometry = pc.scene.procedural.createSphere({
-                        material: material,
+                    mesh = pc.scene.procedural.createSphere({
                         radius: shape.radius
                     });
                     break;
                 case pc.shape.Type.TORUS:
-                    geometry = pc.scene.procedural.createTorus({
-                        material: material,
+                    mesh = pc.scene.procedural.createTorus({
                         tubeRadius: shape.iradius,
                         ringRadius: shape.oradius
                     });
                     break;
             }
 
-            var mesh = new pc.scene.MeshNode();
-            mesh.setGeometry(geometry);
+            var node = new pc.scene.GraphNode();
+            var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+
+            meshInstance._entity = this.entity;
 
             var model = new pc.scene.Model();
-            model.getGeometries().push(geometry);
-            model.getMaterials().push(material);
-            model.getMeshes().push(mesh);
-            model.setGraph(mesh);
-
-            model._entity = this.entity;
+            model.graph = node;
+            model.meshInstances = [ meshInstance ];
 
             var shape = {
                 shape: shape,

@@ -13,6 +13,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.input.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
      * @param {pc.input.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
      * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
+     * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
      * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
      *
      * @example
@@ -24,9 +25,13 @@ pc.extend(pc.fw, function () {
     var Application = function (canvas, options) {
         this._inTools = false;
 
+        // Add event support
+        pc.extend(this, pc.events);
+
         this.canvas = canvas;
         this.fillMode = pc.fw.FillMode.KEEP_ASPECT;
         this.resolutionMode = pc.fw.ResolutionMode.FIXED;
+        this.librariesLoaded = false;
 
         this._link = new pc.fw.LiveLink("application");
         this._link.addDestinationWindow(window);
@@ -95,21 +100,23 @@ pc.extend(pc.fw, function () {
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
-        if (typeof(Box2D) !== "undefined") {
-            // Only include the Body2d component system if box2d library is loaded
-            var body2dsys = new pc.fw.Body2dComponentSystem(this.context);    
-            var collisionrectsys = new pc.fw.CollisionRectComponentSystem(this.context);
-            var collisioncirclesys = new pc.fw.CollisionCircleComponentSystem(this.context);
-        }
-        if (typeof(Ammo) !== "undefined") {
-            // Only include the Body3d component system if ammo library is loaded
-            var body3dsys = new pc.fw.Body3dComponentSystem(this.context);    
-            var collisionboxsys = new pc.fw.CollisionBoxComponentSystem(this.context);
-            var collisionspheresys = new pc.fw.CollisionSphereComponentSystem(this.context);
-        }
 
-        // Add event support
-        pc.extend(this, pc.events);
+        // Load libraries
+        this.bind('librariesloaded', this.onLibrariesLoaded.bind(this));
+        if (options.libraries && options.libraries.length) {
+            var requests = options.libraries.map(function (url) {
+                return new pc.resources.ScriptRequest(url);
+            });
+            loader.request(requests, function (resources) {
+                this.fire('librariesloaded', this);
+                this.librariesLoaded = true;
+            }.bind(this), function (errors) {
+
+            });
+        } else {
+            this.fire('librariesloaded', this);
+            this.librariesLoaded = true;
+        }
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
@@ -137,13 +144,57 @@ pc.extend(pc.fw, function () {
     };
 
     Application.prototype = {
+        loadPack: function (guid, success, error, progress) {
+            var load = function() {
+                var request = new pc.resources.PackRequest(guid);
+                this.context.loader.request(request, function (resources) {
+                    var pack = resources[guid];
+
+                    // add to hierarchy
+                    this.context.root.addChild(pack['hierarchy']);
+                    
+                    // Initialise any systems with an initialize() method after pack is loaded
+                    pc.fw.ComponentSystem.initialize(pack['hierarchy']);
+                    
+                    // callback
+                    if (success) {
+                        success(pack);
+                    }
+                }.bind(this), function (errors) {
+                    // error
+                    if (error) {
+                        error(errors);
+                    }
+                }.bind(this), function (value) {
+                    // progress
+                    if (progress) {
+                        progress(value)
+                    }
+                }.bind(this));
+            }.bind(this);
+
+            if (!this.librariesLoaded) {
+                this.bind('librariesloaded', function () {
+                    load();
+                })
+            } else {
+                load();
+            }
+        },
+
         /**
          * @function
          * @name pc.fw.Application#start
          * @description Start the Application updating
          */
         start: function () {
-            this.tick();
+            if (!this.librariesLoaded) {
+                this.bind('librariesloaded', function () {
+                    this.tick();
+                }.bind(this));
+            } else {
+                this.tick();    
+            }
         },
         
         /**
@@ -193,8 +244,7 @@ pc.extend(pc.fw, function () {
             if (cameraEntity) {
                 context.systems.camera.frameBegin();
 
-                context.scene.dispatch(cameraEntity.camera.camera);
-                context.scene.flush();
+                context.scene.render(cameraEntity.camera.camera);
 
                 context.systems.camera.frameEnd();            
             }
@@ -252,8 +302,8 @@ pc.extend(pc.fw, function () {
 
             // In AUTO mode the resolution is the same as the canvas size
             if (mode === pc.fw.ResolutionMode.AUTO) {
-                width = this.canvas.style.width;
-                height = this.canvas.style.height;
+                width = this.canvas.clientWidth;
+                height = this.canvas.clientHeight;
             }
 
             this.canvas.width = width;
@@ -412,6 +462,23 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @private
+        * @name pc.fw.Application#onLibrariesLoaded
+        * @description Event handler called when all code libraries have been loaded
+        * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
+        * been loaded
+        */
+        onLibrariesLoaded: function () {
+            var body2dsys = new pc.fw.Body2dComponentSystem(this.context);    
+            var collisionrectsys = new pc.fw.CollisionRectComponentSystem(this.context);
+            var collisioncirclesys = new pc.fw.CollisionCircleComponentSystem(this.context);
+
+            var body3dsys = new pc.fw.Body3dComponentSystem(this.context);    
+            var collisionboxsys = new pc.fw.CollisionBoxComponentSystem(this.context);
+            var collisionspheresys = new pc.fw.CollisionSphereComponentSystem(this.context);
+        },
+
+        /**
          * @function
          * @name pc.fw.Application#_handleMessage
          * @description Called when the LiveLink object receives a new message
@@ -485,7 +552,7 @@ pc.extend(pc.fw, function () {
                             }
                         }
                     }
-                    break;
+                break;
             }
         },
 
@@ -534,24 +601,14 @@ pc.extend(pc.fw, function () {
                     entity.body2d.setLinearVelocity(0, 0);
                     entity.body2d.setAngularVelocity(0);
                 }
+
+                if (this.context.systems.body3d && entity.body3d) {
+                    entity.body3d.setTransform(entity.getWorldTransform());
+                    entity.body3d.setLinearVelocity(0,0,0);
+                    entity.body3d.setAngularVelocity(0,0,0);
+                }
             }
         },
-        
-        // _updateEntityAttribute: function (guid, accessor, value) {
-        //     var entity = this.context.root.findOne("getGuid", guid);
-            
-        //     if(entity) {
-        //         if(pc.type(entity[accessor]) != "function") {
-        //             logWARNING(pc.string.format("{0} is not an accessor function", accessor));
-        //         }
-                
-        //         if(pc.string.startsWith(accessor, "reparent")) {
-        //             entity[accessor](value, this.context);
-        //         } else {
-        //             entity[accessor](value);                
-        //         }
-        //     }
-        // },
         
         _reparentEntity: function (guid, parentId, index) {
             var entity = this.context.root.findByGuid(guid);
@@ -661,13 +718,13 @@ pc.extend(pc.fw, function () {
 
     return {
         FillMode: {
-            NONE: 0,
-            FILL_WINDOW: 1,
-            KEEP_ASPECT: 2
+            NONE: 'NONE',
+            FILL_WINDOW: 'FILL_WINDOW',
+            KEEP_ASPECT: 'KEEP_ASPECT'
         },
         ResolutionMode: {
-            AUTO: 0,
-            FIXED: 1
+            AUTO: 'AUTO',
+            FIXED: 'FIXED'
         },
         Application: Application
     };
