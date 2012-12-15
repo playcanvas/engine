@@ -389,6 +389,7 @@ pc.extend(pc.scene, function () {
             if (material !== prevMaterial) {
                 device.setProgram(material.getProgram(mesh));
                 material.setParameters();
+                device.clearLocalState();
                 device.updateLocalState(material.getState());
             }
 
@@ -398,10 +399,10 @@ pc.extend(pc.scene, function () {
             device.setIndexBuffer(mesh.indexBuffer[style]);
             device.draw(mesh.primitive[style]);
 
-            device.clearLocalState();
-
             prevMaterial = material;
         }
+
+        device.clearLocalState();
 
         camera.frameEnd();
     };
