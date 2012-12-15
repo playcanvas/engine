@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.86.2
+-------
+[FIX] Only mesh instances marked as shadow caster rendered into shadow map.
+
+-------
 v0.86.1
 -------
 [FIX] Skybox component updated to new pc.scene API.
