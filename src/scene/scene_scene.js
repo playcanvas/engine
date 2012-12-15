@@ -338,8 +338,8 @@ pc.extend(pc.scene, function () {
 
                 device.updateLocalState(this._shadowState);
 
-                for (i = 0, numInstances = this.shadowCasters.length; i < numInstances; i++) {
-                    meshInstance = this.shadowCasters[i];
+                for (j = 0, numInstances = this.shadowCasters.length; j < numInstances; j++) {
+                    meshInstance = this.shadowCasters[j];
                     mesh = meshInstance.mesh;
                     material = meshInstance.material;
 
