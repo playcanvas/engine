@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.86.0
+-------
+* New Scene library with sorting enabled -- rendering speed boost++!
+* Support for loading code libraries before Application starts
+* Replace AppData with application_properties from the Properties resource
+* Body3D component beta testing
+* [FIX] Use clientWidth to get canvas size instead of style.width (which is 100%)
+
+-------
 v0.85.4
 -------
 * [FIX] Script instance initialize() method is called when an Entity is created over LiveLink
