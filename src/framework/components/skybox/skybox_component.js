@@ -126,6 +126,7 @@ pc.extend(pc.fw, function () {
         });
         var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
         meshInstance.layer = pc.scene.LAYER_SKYBOX;
+        meshInstance.updateKey();
 
         var model = new pc.scene.Model();
         model.graph = node;

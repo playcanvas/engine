@@ -49,7 +49,7 @@ pc.extend(pc.scene, function () {
             // 0 - 25  - Material ID (if oqaque) or 0 (if transparent - will be depth)
             var material = this.material;
             this.key = 
-                (this.layer << 28) |
+                ((this.layer & 0x7) << 28) |
                 ((material.transparent ? 0 : 3) << 26) |
                 ((material.id & 0x1fffff) << 0); 
         }

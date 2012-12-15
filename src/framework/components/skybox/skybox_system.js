@@ -107,6 +107,7 @@ pc.extend(pc.fw, function () {
 
                         var meshInstance = componentData.model.meshInstances[0];
                         meshInstance.node.setLocalScale(midPoint, midPoint, midPoint);
+                        meshInstance.node.syncHierarchy();
                     }
                 }
             }
