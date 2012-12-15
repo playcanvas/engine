@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.86.5
+-------
+* [FIX] Final fix for skybox component.
+
+-------
 v0.86.4
 -------
 * [FIX] Skybox now renders at the correct depth.
