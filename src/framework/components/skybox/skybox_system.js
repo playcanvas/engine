@@ -99,7 +99,7 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
 
-                    if (componentData.removeModel) {
+                    if (componentData.model) {
                         // Create a transform that will scale the skybox to always sit
                         // in between the near and far clip planes
                         var currentCamera = this.context.systems.camera.current;
