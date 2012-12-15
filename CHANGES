@@ -3,19 +3,24 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.86.4
+-------
+* [FIX] Skybox now renders at the correct depth.
+
+-------
 v0.86.3
 -------
-[FIX] Infinite loop for scenes with shadows.
+* [FIX] Infinite loop for scenes with shadows.
 
 -------
 v0.86.2
 -------
-[FIX] Only mesh instances marked as shadow caster rendered into shadow map.
+* [FIX] Only mesh instances marked as shadow caster rendered into shadow map.
 
 -------
 v0.86.1
 -------
-[FIX] Skybox component updated to new pc.scene API.
+* [FIX] Skybox component updated to new pc.scene API.
 
 -------
 v0.86.0
