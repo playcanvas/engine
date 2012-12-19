@@ -1315,7 +1315,7 @@ pc.extend(pc.resources, function () {
                 model.skinInstances.push(new pc.scene.SkinInstance(skin));
             }
 
-            var geometry = [];
+            var meshes = [];
 
             // Create and read each submesh
             for (var i = 0; i < subMeshes.length; i++) {
@@ -1333,20 +1333,29 @@ pc.extend(pc.resources, function () {
 
                 mesh._material = subMesh.material;
 
-                geometry.push(mesh);
+                meshes.push(mesh);
             }
 
-/*
-            if (geometry.isSkinned()) {
+            var model = this.model;
+            if (inverseBindPose.length > 0) {
                 var device = pc.gfx.Device.getCurrent();
                 var maxBones = device.getBoneLimit();
-                if (geometry.getInverseBindPose().length > maxBones) {
-                    geometry.partitionSkin(maxBones);
+                if (inverseBindPose.length > maxBones) {
+                    meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
+                }
+
+                for (var i = 0; i < meshes.length; i++) {
+                    skin = meshes[i].skin;
+                    var skinIndex = model.skins.indexOf(skin);
+                    if (skinIndex === -1) {
+                        model.skins.push(skin);
+                        skinInstance = new pc.scene.SkinInstance(skin);
+                        model.skinInstances.push(skinInstance);
+                    }
                 }
             }
-*/
 
-            return geometry;
+            return meshes;
         },
 
         readNodeChunk: function () {
