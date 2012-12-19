@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.86.6
+-------
+* [FIX] Binary skins now partition correctly.
+
+-------
 v0.86.5
 -------
 * [FIX] Final fix for skybox component.
