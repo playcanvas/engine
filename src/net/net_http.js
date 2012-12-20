@@ -321,13 +321,13 @@ pc.extend(pc.net, function () {
                 }
             }
             // Check the content type to see if we want to parse it
-            if (contentType == this.ContentType.JSON || pc.string.endsWith(url, ".json")) {
+            if (contentType === this.ContentType.JSON || pc.string.endsWith(url, ".json")) {
                 // It's a JSON response
                 response = JSON.parse(xhr.responseText);
             } else if (this.isBinaryContentType(contentType)) {
                 response = xhr.response;
             } else {
-                if (xhr.responseType === Http.ResponseType.DOCUMENT) {
+                if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === this.ContentType.XML) {
                     // It's an XML response
                     response = xhr.responseXML;
                 }
