@@ -51,6 +51,7 @@ pc.events = function () {
         },
         
         /**
+         * @function
          * @name pc.events.off
          * @description Detach an event handler from an event. If callback is not provided then all callbacks are unbound from the event, 
          * if scope is not provided then all events with the callback will be unbound.
@@ -100,6 +101,7 @@ pc.events = function () {
         },
 
         /**
+         * @function
          * @name pc.events.fire
          * @description Fire an event, all additional arguments are passed on to the event listener
          * @param {Object} name Name of event to fire
