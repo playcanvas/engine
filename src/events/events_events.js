@@ -1,7 +1,7 @@
 /**
  * @name pc.events
  * @namespace
- * Event system that can be added to objects using pc.extend.
+ * @description Extend any normal object with events
  * 
  * @example
  * var o = {};
@@ -29,7 +29,12 @@ pc.events = function () {
          * @param {Function} callback Function that is called when event is fired
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
          * @example
-         * var i = 
+         * var o = {};
+         * o = pc.extend(o, pc.events);
+         * o.on('event_name', function (a, b) {
+         *   console.log(a + b);
+         * });
+         * o.fire('event_name', 1, 2); // prints 3 to the console
          */
         on: function (name, callback, scope) {
             if(pc.type(name) != "string") {
@@ -52,6 +57,16 @@ pc.events = function () {
          * @param {String} name Name of the event to unbind
          * @param {Function} [callback] Function to be unbound
          * @param {Object} [scope] Scope that was used as the this when the event is fired
+         * @example
+         * var handler = function () {
+         * };
+         * var o = {};
+         * o = pc.extend(o, pc.events);
+         * o.on('event_name', handler);
+         * 
+         * o.off('event_name'); // Remove all events called 'event_name'
+         * o.off('event_name', handler); // Remove all handler functions, called 'event_name' 
+         * o.off('event_name', handler, this); // Remove all hander functions, called 'event_name' with scope this
          */
         off: function (name, callback, scope) {
             var callbacks = this._callbacks;
@@ -89,6 +104,13 @@ pc.events = function () {
          * @description Fire an event, all additional arguments are passed on to the event listener
          * @param {Object} name Name of event to fire
          * @param {*} [...] Arguments that are passed to the event handler
+         * @example
+         * var o = {};
+         * o = pc.extend(o, pc.events);
+         * o.on('event_name', function (msg) {
+         *   alert('event_name fired: ' + msg);
+         * });
+         * o.fire('event_name', 'This is the message');
          */
         fire: function (name) {
             var index;
