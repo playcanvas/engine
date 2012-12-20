@@ -229,6 +229,15 @@ test("Unbind within a callback doesn't skip", function () {
   o.fire('test');
 });
 
+test("off with no event handlers setup", function () {
+  var o = {};
+  o = pc.extend(o, pc.events);
+  
+  o.off('test');
+
+  ok(true);
+});
+
 test("Deprecated bind()", function() {
    var o = {};
    var called = false;
