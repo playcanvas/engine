@@ -1,4 +1,5 @@
 /**
+ * @name pc.events
  * @namespace
  * Event system that can be added to objects using pc.extend.
  * 
@@ -84,8 +85,10 @@ pc.events = function () {
         },
 
         /**
-         * Fire an event, all additional arguments are passed on to the event listener
+         * @name pc.events.fire
+         * @description Fire an event, all additional arguments are passed on to the event listener
          * @param {Object} name Name of event to fire
+         * @param {*} [...] Arguments that are passed to the event handler
          */
         fire: function (name) {
             var index;
