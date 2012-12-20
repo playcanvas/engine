@@ -24,8 +24,8 @@ pc.extend(pc.gfx, function () {
         var autoMipmap = true;
 
         if (typeof options !== 'undefined') {
-            if (typeof options.width !== 'undefined') width = options.width;
-            height = (typeof options.height !== 'undefined') ? options.height : width;
+            width = (typeof options.width !== 'undefined') ? options.width : width;
+            height = (typeof options.height !== 'undefined') ? options.height : height;
             format = (typeof options.format !== 'undefined') ? options.format : format;
             cubemap = (typeof options.cubemap !== 'undefined') ? options.cubemap : cubemap;
             autoMipmap = (typeof options.autoMipmap !== 'undefined') ? options.autoMipmap : autoMipmap;
