@@ -17,10 +17,10 @@ pc.extend(pc.fw, function () {
             ammoTransform = new Ammo.btTransform();    
         }
 
-        this.bind('set_mass', this.onSetMass.bind(this));
-        this.bind('set_friction', this.onSetFriction.bind(this));
-        this.bind('set_restitution', this.onSetRestitution.bind(this));
-        this.bind('set_static', this.onSetStatic.bind(this));
+        this.on('set_mass', this.onSetMass, this);
+        this.on('set_friction', this.onSetFriction, this);
+        this.on('set_restitution', this.onSetRestitution, this);
+        this.on('set_static', this.onSetStatic, this);
     };
     Body3dComponent = pc.inherits(Body3dComponent, pc.fw.Component);
 

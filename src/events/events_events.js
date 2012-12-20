@@ -4,28 +4,33 @@
  * 
  * @example
  * var o = {};
- * o = pc.extend(o, events);
+ * o = pc.extend(o, pc.events);
  * 
- * // bind event
- * o.bind("event_name", function() {
+ * // attach event
+ * o.on("event_name", function() {
  *   alert('event_name fired');
- * });
+ * }, this);
  * 
  * // fire event
  * o.fire("event_name");
  *
- * o.unbind('event_name');
+ * // detach all events from object
+ * o.off('event_name');
  */
 pc.events = function () {
     
-    return {
+    var Events = {
         /**
-         * Bind an callback to an event 
-         * @param {String} name Name of the event to bind callback to
+         * @function
+         * @name pc.events.on
+         * @description Attach an event handler to an event
+         * @param {String} name Name of the event to bind the callback to
          * @param {Function} callback Function that is called when event is fired
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
+         * @example
+         * var i = 
          */
-        bind: function (name, callback, scope) {
+        on: function (name, callback, scope) {
             if(pc.type(name) != "string") {
                 throw new TypeError("Event name must be a string");
             }
@@ -40,16 +45,21 @@ pc.events = function () {
         },
         
         /**
-         * Unbind a callback from an event. If callback is not provided then all callbacks are unbound from the event, if scope is 
-         * not provided then all events with the callback will be unbound
+         * @name pc.events.off
+         * @description Detach an event handler from an event. If callback is not provided then all callbacks are unbound from the event, 
+         * if scope is not provided then all events with the callback will be unbound.
          * @param {String} name Name of the event to unbind
          * @param {Function} [callback] Function to be unbound
-         * @param {Object} [scope] Scope is used as the this when the event is fired
+         * @param {Object} [scope] Scope that was used as the this when the event is fired
          */
-        unbind: function (name, callback, scope) {
+        off: function (name, callback, scope) {
             var callbacks = this._callbacks;
             var events;
             var index;
+
+            if (!callbacks) {
+                return; // no callbacks at all
+            }
 
             if(!callback) {
                 // Clear all callbacks
@@ -72,7 +82,7 @@ pc.events = function () {
             
             return this;
         },
-        
+
         /**
          * Fire an event, all additional arguments are passed on to the event listener
          * @param {Object} name Name of event to fire
@@ -96,4 +106,10 @@ pc.events = function () {
             return this;
         }
     };
+
+    // For compatibility
+    Events.bind = Events.on;
+    Events.unbind = Events.off;
+
+    return Events;
 } ();

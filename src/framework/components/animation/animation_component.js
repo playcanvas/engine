@@ -14,11 +14,11 @@ pc.extend(pc.fw, function () {
     */
     var AnimationComponent = function (system, entity) {
         // Handle changes to the 'animations' value
-        this.bind('set_animations', this.onSetAnimations.bind(this));
+        this.on('set_animations', this.onSetAnimations, this);
         // Handle changes to the 'assets' value
-        this.bind('set_assets', this.onSetAssets.bind(this));
+        this.on('set_assets', this.onSetAssets, this);
         // Handle changes to the 'loop' value
-        this.bind('set_loop', this.onSetLoop.bind(this));
+        this.on('set_loop', this.onSetLoop, this);
     };
     AnimationComponent = pc.inherits(AnimationComponent, pc.fw.Component);
 

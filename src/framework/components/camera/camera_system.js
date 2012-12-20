@@ -97,8 +97,8 @@ pc.extend(pc.fw, function () {
 
         this.createGfx();
 
-        this.bind('remove', this.onRemove.bind(this));
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
+        this.on('remove', this.onRemove, this);
+        pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
 
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);

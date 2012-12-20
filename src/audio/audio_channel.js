@@ -25,9 +25,9 @@ pc.extend(pc.audio, function () {
             this.pausedAt = null;
 
             this.manager = manager;
-            this.manager.bind('volumechange', this.onManagerVolumeChange.bind(this))
-            this.manager.bind('suspend', this.onManagerSuspend.bind(this));
-            this.manager.bind('resume', this.onManagerResume.bind(this));
+            this.manager.on('volumechange', this.onManagerVolumeChange, this)
+            this.manager.on('suspend', this.onManagerSuspend, this);
+            this.manager.on('resume', this.onManagerResume, this);
 
             this.source = null;
 
@@ -141,9 +141,9 @@ pc.extend(pc.audio, function () {
             this.suspended = false;
 
             this.manager = manager;
-            this.manager.bind('volumechange', this.onManagerVolumeChange.bind(this))
-            this.manager.bind('suspend', this.onManagerSuspend.bind(this));
-            this.manager.bind('resume', this.onManagerResume.bind(this));
+            this.manager.on('volumechange', this.onManagerVolumeChange, this)
+            this.manager.on('suspend', this.onManagerSuspend, this);
+            this.manager.on('resume', this.onManagerResume, this);
             
             this.source = sound.audio.cloneNode(false);
             this.source.pause(); // not initially playing

@@ -106,8 +106,8 @@ pc.extend(pc.fw, function () {
         format.end();
         this.vertexFormat = format;
 
-        this.bind('remove', this.onRemove.bind(this));
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
+        this.on('remove', this.onRemove, this);
+        pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
     };
     SpotLightComponentSystem = pc.inherits(SpotLightComponentSystem, pc.fw.ComponentSystem);
 

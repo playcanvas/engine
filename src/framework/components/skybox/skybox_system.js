@@ -81,8 +81,8 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
-        this.bind('remove', this.onRemove.bind(this));
+        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+        this.on('remove', this.onRemove, this);
     }
     SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);
 

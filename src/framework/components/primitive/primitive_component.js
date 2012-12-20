@@ -14,16 +14,11 @@ pc.extend(pc.fw, function () {
     * @property {pc.scene.Model} model The model geometry that is used to render the primitive
     */    
     var PrimitiveComponent = function PrimitiveComponent(system, entity) {
-        // Handle changes to the 'castShadows' value
-        this.bind("set_castShadows", this.onSetCastShadows.bind(this));
-        // Handle changes to the 'color' value
-        this.bind("set_color", this.onSetColor.bind(this));
-        // Handle changes to the 'model' value
-        this.bind("set_model", this.onSetModel.bind(this));
-        // Handle changes to the 'receiveShadows' value
-        this.bind("set_receiveShadows", this.onSetReceiveShadows.bind(this));
-        // Handle changes to the 'type' value
-        this.bind("set_type", this.onSetType.bind(this));
+        this.on("set_castShadows", this.onSetCastShadows, this);
+        this.on("set_color", this.onSetColor, this);
+        this.on("set_model", this.onSetModel, this);
+        this.on("set_receiveShadows", this.onSetReceiveShadows, this);
+        this.on("set_type", this.onSetType, this);
     }
     PrimitiveComponent = pc.inherits(PrimitiveComponent, pc.fw.Component);
     pc.extend(PrimitiveComponent.prototype, {

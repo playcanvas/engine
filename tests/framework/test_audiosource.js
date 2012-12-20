@@ -1,6 +1,6 @@
 module('pc.fw.AudioSourceComponent', {
     setup: function () {
-        var scene = new pc.scene.Scene();
+        var scene = {};
         var registry = new pc.fw.ComponentSystemRegistry();
         var loader = new pc.resources.ResourceLoader();
         context = new pc.fw.ApplicationContext(loader, scene, registry);

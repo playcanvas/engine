@@ -5,7 +5,7 @@ test("format: No args", function() {
 	var expected = src;
 	var result = pc.string.format(src);
 	
-	same(result, expected);
+	equal(result, expected);
 });
 
 test("format: one arg", function() {
@@ -13,7 +13,7 @@ test("format: one arg", function() {
     var expected = "a string abc";
     var result = pc.string.format(src, "abc");
     
-    same(result, expected);
+    equal(result, expected);
 });
 
 test("format: two args", function() {
@@ -21,7 +21,7 @@ test("format: two args", function() {
     var expected = "abc a string def";
     var result = pc.string.format(src, "abc", "def");
     
-    same(result, expected);
+    equal(result, expected);
 });
 
 

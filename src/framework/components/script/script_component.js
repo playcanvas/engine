@@ -9,7 +9,7 @@ pc.extend(pc.fw, function () {
     * @extends pc.fw.Component
     */
     var ScriptComponent = function ScriptComponent(system, entity) {
-        this.bind("set_urls", this.onSetUrls.bind(this));
+        this.on("set_urls", this.onSetUrls, this);
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.fw.Component);
 

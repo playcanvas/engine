@@ -78,7 +78,7 @@ pc.extend(pc.fw, function () {
             height: 1
         });
 
-        this.bind('remove', this.onRemove.bind(this));
+        this.on('remove', this.onRemove, this);
     };
     PrimitiveComponentSystem = pc.inherits(PrimitiveComponentSystem, pc.fw.ComponentSystem);
 

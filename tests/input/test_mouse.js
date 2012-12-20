@@ -17,7 +17,7 @@ test("Object exists", function () {
 });
 
 test("mousedown: middlebutton", 10, function () {
-    m.bind(pc.input.EVENT_MOUSEDOWN, function (event) {
+    m.on(pc.input.EVENT_MOUSEDOWN, function (event) {
         equal(event.x, 0);
         equal(event.y, 0);
         equal(event.dx, 0);
@@ -36,7 +36,7 @@ test("mousedown: middlebutton", 10, function () {
   });
 
 test("mouseup: middlebutton", 10, function () {
-    m.bind(pc.input.EVENT_MOUSEUP, function (event) {
+    m.on(pc.input.EVENT_MOUSEUP, function (event) {
         equal(event.x, 0);
         equal(event.y, 0);
         equal(event.dx, 0);
@@ -61,7 +61,7 @@ test("mousemove", 10, function () {
       pointerX: 0
     });
 
-    m.bind(pc.input.EVENT_MOUSEMOVE, function (event) {
+    m.on(pc.input.EVENT_MOUSEMOVE, function (event) {
         equal(event.x, 10);
         equal(event.y, 10);
         equal(event.dx, 10);
@@ -82,7 +82,7 @@ test("mousemove", 10, function () {
 });
 
 test("mousewheel: fires", 11, function () {
-    m.bind(pc.input.EVENT_MOUSEWHEEL, function (event) {
+    m.on(pc.input.EVENT_MOUSEWHEEL, function (event) {
         equal(event.x, 0);
         equal(event.y, 0);
         equal(event.dx, 0);

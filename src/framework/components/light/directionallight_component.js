@@ -12,14 +12,10 @@ pc.extend(pc.fw, function () {
     * @property {Boolean} castShadows Enable shadow casting from this light
     */
     var DirectionalLightComponent = function DirectionalLightComponent(system, entity) {
-        // Handle changes to the 'castShadows' value
-        this.bind("set_castShadows", this.onSetCastShadows.bind(this));
-        // Handle changes to the 'color' value
-        this.bind("set_color", this.onSetColor.bind(this));
-        // Handle changes to the 'enable' value
-        this.bind("set_enable", this.onSetEnable.bind(this));
-        // Handle changes to the 'intensity' value
-        this.bind("set_intensity", this.onSetIntensity.bind(this));
+        this.on("set_castShadows", this.onSetCastShadows, this);
+        this.on("set_color", this.onSetColor, this);
+        this.on("set_enable", this.onSetEnable, this);
+        this.on("set_intensity", this.onSetIntensity, this);
     };
 
     DirectionalLightComponent = pc.inherits(DirectionalLightComponent, pc.fw.Component);

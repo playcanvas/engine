@@ -13,14 +13,10 @@ pc.extend(pc.fw, function () {
      * @property {pc.scene.Model} model The mode; node that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity) {
-        // Handle changes to the 'asset' value
-        this.bind("set_asset", this.onSetAsset.bind(this));
-        // Handle changes to the 'castShadows' value
-        this.bind("set_castShadows", this.onSetCastShadows.bind(this));
-        // Handle changes to the 'model' value
-        this.bind("set_model", this.onSetModel.bind(this));
-        // Handle changes to the 'receiveShadows' value
-        this.bind("set_receiveShadows", this.onSetReceiveShadows.bind(this));
+        this.on("set_asset", this.onSetAsset, this);
+        this.on("set_castShadows", this.onSetCastShadows, this);
+        this.on("set_model", this.onSetModel, this);
+        this.on("set_receiveShadows", this.onSetReceiveShadows, this);
     }
     ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
     

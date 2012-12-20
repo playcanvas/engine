@@ -91,10 +91,10 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.bind('remove', this.onRemove.bind(this));
-        this.bind('update', this.onUpdate.bind(this));
+        this.on('remove', this.onRemove, this);
+        this.on('update', this.onUpdate, this);
 
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
     };
     AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.fw.ComponentSystem);
     

@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
     };
     CubeMapComponentSystem = pc.inherits(CubeMapComponentSystem, pc.fw.ComponentSystem);
     

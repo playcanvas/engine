@@ -102,7 +102,7 @@ pc.extend(pc.fw, function () {
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
 
         // Load libraries
-        this.bind('librariesloaded', this.onLibrariesLoaded.bind(this));
+        this.on('librariesloaded', this.onLibrariesLoaded, this);
         if (options.libraries && options.libraries.length) {
             var requests = options.libraries.map(function (url) {
                 return new pc.resources.ScriptRequest(url);
@@ -174,7 +174,7 @@ pc.extend(pc.fw, function () {
             }.bind(this);
 
             if (!this.librariesLoaded) {
-                this.bind('librariesloaded', function () {
+                this.on('librariesloaded', function () {
                     load();
                 })
             } else {
@@ -189,9 +189,9 @@ pc.extend(pc.fw, function () {
          */
         start: function () {
             if (!this.librariesLoaded) {
-                this.bind('librariesloaded', function () {
+                this.on('librariesloaded', function () {
                     this.tick();
-                }.bind(this));
+                }, this);
             } else {
                 this.tick();    
             }

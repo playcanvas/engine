@@ -5,11 +5,11 @@ test("Parsed, all sections", function () {
     
     var uri = new pc.URI(s);
     
-    same(uri.scheme, "http");
-    same(uri.authority, "a");
-    same(uri.path, "/b/c/d;p");
-    same(uri.query, "q=r");
-    same(uri.fragment, "l");
+    equal(uri.scheme, "http");
+    equal(uri.authority, "a");
+    equal(uri.path, "/b/c/d;p");
+    equal(uri.query, "q=r");
+    equal(uri.fragment, "l");
 
 });
 
@@ -18,11 +18,11 @@ test("Parse, no scheme", function () {
     var uri = new pc.URI(s);
     var undef;
     
-    same(uri.scheme, undef);
-    same(uri.authority, "a");
-    same(uri.path, "/b/c/d;p");
-    same(uri.query, "q=r");
-    same(uri.fragment, "l");
+    equal(uri.scheme, undef);
+    equal(uri.authority, "a");
+    equal(uri.path, "/b/c/d;p");
+    equal(uri.query, "q=r");
+    equal(uri.fragment, "l");
         
 });
 
@@ -31,11 +31,11 @@ test("Parse, no authority", function () {
     var uri = new pc.URI(s);
     var undef;
     
-    same(uri.scheme, undef);
-    same(uri.authority, undef);
-    same(uri.path, "/b/c/d;p");
-    same(uri.query, "q=r");
-    same(uri.fragment, "l");
+    equal(uri.scheme, undef);
+    equal(uri.authority, undef);
+    equal(uri.path, "/b/c/d;p");
+    equal(uri.query, "q=r");
+    equal(uri.fragment, "l");
         
 });
 
@@ -44,11 +44,11 @@ test("Parse, no query", function () {
     var uri = new pc.URI(s);
     var undef;
     
-    same(uri.scheme, "http");
-    same(uri.authority, "a");
-    same(uri.path, "/b/c/d;p");
-    same(uri.query, undef);
-    same(uri.fragment, "l");
+    equal(uri.scheme, "http");
+    equal(uri.authority, "a");
+    equal(uri.path, "/b/c/d;p");
+    equal(uri.query, undef);
+    equal(uri.fragment, "l");
         
 });
 
@@ -57,11 +57,11 @@ test("Parse, no fragment", function () {
     var uri = new pc.URI(s);
     var undef;
     
-    same(uri.scheme, "http");
-    same(uri.authority, "a");
-    same(uri.path, "/b/c/d;p");
-    same(uri.query, "q=r");
-    same(uri.fragment, undef);
+    equal(uri.scheme, "http");
+    equal(uri.authority, "a");
+    equal(uri.path, "/b/c/d;p");
+    equal(uri.query, "q=r");
+    equal(uri.fragment, undef);
         
 });
 

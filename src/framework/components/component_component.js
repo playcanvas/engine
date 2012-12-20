@@ -15,7 +15,7 @@ pc.extend(pc.fw, function () {
 
         this.buildAccessors(this.system.schema);
 
-        this.bind("set", function (name, oldValue, newValue) {
+        this.on("set", function (name, oldValue, newValue) {
             this.fire("set_" + name, name, oldValue, newValue);
         });
     };

@@ -50,7 +50,7 @@ test("Object Exists", function () {
 });
 
 test("Keydown A", 3, function () {    
-    k.bind(pc.input.EVENT_KEYDOWN, function (event) {
+    k.on(pc.input.EVENT_KEYDOWN, function (event) {
         equal(event.key, pc.input.KEY_A);
         equal(event.element, document.body);
         ok(event.event);
@@ -62,7 +62,7 @@ test("Keydown A", 3, function () {
 });
 
 test("Keydown Left arrow", 3, function () {
-    k.bind(pc.input.EVENT_KEYDOWN, function (event) {
+    k.on(pc.input.EVENT_KEYDOWN, function (event) {
         equal(event.key, pc.input.KEY_LEFT);
         equal(event.element, document.body);
         ok(event.event);
@@ -74,7 +74,7 @@ test("Keydown Left arrow", 3, function () {
 });
 
 test("Keydown F1", 3, function () {
-    k.bind(pc.input.EVENT_KEYDOWN, function (event) {
+    k.on(pc.input.EVENT_KEYDOWN, function (event) {
         equal(event.key, pc.input.KEY_F1);
         equal(event.element, document.body);
         ok(event.event);
@@ -86,7 +86,7 @@ test("Keydown F1", 3, function () {
 });
 
 test("Keyup A", 3, function () {    
-    k.bind(pc.input.EVENT_KEYUP, function (event) {
+    k.on(pc.input.EVENT_KEYUP, function (event) {
         equal(event.key, pc.input.KEY_A);
         equal(event.element, document.body);
         ok(event.event);
@@ -98,7 +98,7 @@ test("Keyup A", 3, function () {
 });
 
 test("Keyup Left arrow", 3, function () {
-    k.bind(pc.input.EVENT_KEYUP, function (event) {
+    k.on(pc.input.EVENT_KEYUP, function (event) {
         equal(event.key, pc.input.KEY_LEFT);
         equal(event.element, document.body);
         ok(event.event);
@@ -110,7 +110,7 @@ test("Keyup Left arrow", 3, function () {
 });
 
 test("Keyup F1", 3, function () {
-    k.bind(pc.input.EVENT_KEYUP, function (event) {
+    k.on(pc.input.EVENT_KEYUP, function (event) {
         equal(event.key, pc.input.KEY_F1);
         equal(event.element, document.body);
         ok(event.event);
