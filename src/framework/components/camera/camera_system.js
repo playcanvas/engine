@@ -151,7 +151,7 @@ pc.extend(pc.fw, function () {
                 format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
                 format.end();
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, 8, pc.gfx.VertexBufferUsage.DYNAMIC);
+                var vertexBuffer = new pc.gfx.VertexBuffer(format, 8, pc.gfx.VertexBufferUsage.DYNAMIC);
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
