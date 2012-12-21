@@ -7,12 +7,12 @@ pc.extend(pc.resources, function () {
     * @param {DOMElement} element The DOMElement to attach this display to
     */
     var ResourceLoaderDisplay = function (element, loader) {
-        loader.bind('newbatch', this.handleNewBatch.bind(this));
-        loader.bind('loading', this.handleLoading.bind(this));
-        loader.bind('loaded', this.handleLoaded.bind(this));
-        loader.bind('error', this.handleError.bind(this));
-        loader.bind('batchprogress', this.handleBatchProgress.bind(this));
-        //loader.bind('requestProgress', this.handleBatchProgress.bind(this));
+        loader.on('newbatch', this.handleNewBatch, this);
+        loader.on('loading', this.handleLoading, this);
+        loader.on('loaded', this.handleLoaded, this);
+        loader.on('error', this.handleError, this);
+        loader.on('batchprogress', this.handleBatchProgress, this);
+        //loader.on('requestProgress', this.handleBatchProgress, this);
 
         this._element = element;
         this._domCreate();

@@ -67,7 +67,7 @@ pc.extend(pc.fw, function () {
             radius: 0.1
         });
 
-        this.bind('remove', this.onRemove.bind(this));
+        this.on('remove', this.onRemove, this);
     };
     PointLightComponentSystem = pc.inherits(PointLightComponentSystem, pc.fw.ComponentSystem);
 

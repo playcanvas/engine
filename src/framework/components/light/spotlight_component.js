@@ -9,21 +9,13 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var SpotLightComponent = function (system, entity) {
-
-        // Handle changes to the 'attenuationEnd' value
-        this.bind("set_attenuationEnd", this.onSetAttenuationEnd.bind(this));
-        // Handle changes to the 'castShadows' value
-        this.bind("set_castShadows", this.onSetCastShadows.bind(this));
-        // Handle changes to the 'color' value
-        this.bind("set_color", this.onSetColor.bind(this));
-        // Handle changes to the 'enable' value
-        this.bind("set_enable", this.onSetEnable.bind(this));
-        // Handle changes to the 'innerConeAngle' value
-        this.bind("set_innerConeAngle", this.onSetInnerConeAngle.bind(this));
-        // Handle changes to the 'intensity' value
-        this.bind("set_intensity", this.onSetIntensity.bind(this));
-        // Handle changes to the 'outerConeAngle' value
-        this.bind("set_outerConeAngle", this.onSetOuterConeAngle.bind(this));
+        this.on("set_attenuationEnd", this.onSetAttenuationEnd, this);
+        this.on("set_castShadows", this.onSetCastShadows, this);
+        this.on("set_color", this.onSetColor, this);
+        this.on("set_enable", this.onSetEnable, this);
+        this.on("set_innerConeAngle", this.onSetInnerConeAngle, this);
+        this.on("set_intensity", this.onSetIntensity, this);
+        this.on("set_outerConeAngle", this.onSetOuterConeAngle, this);
     };
     SpotLightComponent = pc.inherits(SpotLightComponent, pc.fw.Component);
 

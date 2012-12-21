@@ -34,7 +34,7 @@ pc.extend(pc.fw, function () {
         };
         this.display = false;
 
-        this.bind('remove', this.onRemove.bind(this));
+        this.on('remove', this.onRemove, this);
     };
     
     PickComponentSystem = pc.inherits(PickComponentSystem, pc.fw.ComponentSystem);

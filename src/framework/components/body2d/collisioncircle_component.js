@@ -8,10 +8,10 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var CollisionCircleComponent = function CollisionCircleComponent () {
-        this.bind('set_density', this.onSetDensity.bind(this));
-        this.bind('set_friction', this.onSetFriction.bind(this));
-        this.bind('set_restitution', this.onSetRestitution.bind(this));
-        this.bind('set_radius', this.onSetRadius)
+        this.on('set_density', this.onSetDensity, this);
+        this.on('set_friction', this.onSetFriction, this);
+        this.on('set_restitution', this.onSetRestitution, this);
+        this.on('set_radius', this.onSetRadius, this);
     };
     CollisionCircleComponent = pc.inherits(CollisionCircleComponent, pc.fw.Component);
     

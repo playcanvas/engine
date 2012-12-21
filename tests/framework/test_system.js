@@ -105,7 +105,7 @@ test("ComponentSystem.addComponent, multiple systems", function () {
 test("Event: 'add'", function () {
     var entity = new pc.fw.Entity();
 
-    system.bind('add', function (e, component) {
+    system.on('add', function (e, component) {
         equal(e.getGuid(), entity.getGuid());
         equal(component.data.one, 1);
         equal(component.data.two, 2);
@@ -137,7 +137,7 @@ test("Event: 'remove'", function () {
     var entity = new pc.fw.Entity();
     var system = new DerivedSystem(entity);
     
-    system.bind('remove', function (e) {
+    system.on('remove', function (e) {
         equal(e.getGuid(), entity.getGuid());
     });
 

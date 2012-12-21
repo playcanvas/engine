@@ -99,7 +99,7 @@ pc.extend(pc.fw, function () {
         mesh.primitive[0].indexed = false;
         this.mesh = mesh;
 
-        this.bind('remove', this.onRemove.bind(this));
+        this.on('remove', this.onRemove, this);
     };
         
     DirectionalLightComponentSystem = pc.inherits(DirectionalLightComponentSystem, pc.fw.ComponentSystem);

@@ -86,10 +86,10 @@ pc.extend(pc.fw, function () {
             this.dynamicsWorld.setGravity(new Ammo.btVector3(this.gravityX, this.gravityY, this.gravityZ));
             
             // Only bind 'update' if Ammo is loaded
-            pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+            pc.fw.ComponentSystem.on('update', this.onUpdate, this);
         }
 
-        this.bind('remove', this.onRemove.bind(this));
+        this.on('remove', this.onRemove, this);
 
         
     };

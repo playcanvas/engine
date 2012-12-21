@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var SkyboxComponent = function SkyboxComponent (system, entity) {
-        this.bind("set", this.onSet.bind(this));
+        this.on("set", this.onSet, this);
     }
     SkyboxComponent = pc.inherits(SkyboxComponent, pc.fw.Component);
 

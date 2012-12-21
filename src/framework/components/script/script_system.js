@@ -31,12 +31,12 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.bind('remove', this.onRemove.bind(this));
-        pc.fw.ComponentSystem.bind('initialize', this.onInitialize.bind(this));
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
-        pc.fw.ComponentSystem.bind('fixedUpdate', this.onFixedUpdate.bind(this));
-        pc.fw.ComponentSystem.bind('postUpdate', this.onPostUpdate.bind(this));
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.onToolsUpdate.bind(this));
+        this.on('remove', this.onRemove, this);
+        pc.fw.ComponentSystem.on('initialize', this.onInitialize, this);
+        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+        pc.fw.ComponentSystem.on('fixedUpdate', this.onFixedUpdate, this);
+        pc.fw.ComponentSystem.on('postUpdate', this.onPostUpdate, this);
+        pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
     }
     ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.fw.ComponentSystem);
 
@@ -213,16 +213,16 @@ pc.extend(pc.fw, function () {
 
                         // Attach events for update, fixedUpdate and postUpdate methods in script instance
                         if (instance.instance.update) {
-                            this.bind('update', instance.instance.update, instance.instance);
+                            this.on('update', instance.instance.update, instance.instance);
                         }
                         if (instance.instance.fixedUpdate) {
-                            this.bind('fixedUpdate', instance.instance.fixedUpdate, instance.instance);
+                            this.on('fixedUpdate', instance.instance.fixedUpdate, instance.instance);
                         }
                         if (instance.instance.postUpdate) {
-                            this.bind('postUpdate', instance.instance.postUpdate, instance.instance);
+                            this.on('postUpdate', instance.instance.postUpdate, instance.instance);
                         }
                         if (instance.instance.toolsUpdate) {
-                            this.bind('toolsUpdate', instance.instance.toolsUpdate, instance.instance);
+                            this.on('toolsUpdate', instance.instance.toolsUpdate, instance.instance);
                         }
                     }
 

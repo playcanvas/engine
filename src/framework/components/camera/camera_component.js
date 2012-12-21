@@ -20,13 +20,13 @@ pc.extend(pc.fw, function () {
     */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
-        this.bind("set_camera", this.onSetCamera.bind(this));
-        this.bind("set_clearColor", this.onSetClearColor.bind(this));
-        this.bind("set_fov", this.onSetFov.bind(this));
-        this.bind("set_orthoHeight", this.onSetOrthoHeight.bind(this));
-        this.bind("set_nearClip", this.onSetNearClip.bind(this));
-        this.bind("set_farClip", this.onSetFarClip.bind(this));
-        this.bind("set_projection", this.onSetProjection.bind(this));
+        this.on("set_camera", this.onSetCamera, this);
+        this.on("set_clearColor", this.onSetClearColor, this);
+        this.on("set_fov", this.onSetFov, this);
+        this.on("set_orthoHeight", this.onSetOrthoHeight, this);
+        this.on("set_nearClip", this.onSetNearClip, this);
+        this.on("set_farClip", this.onSetFarClip, this);
+        this.on("set_projection", this.onSetProjection, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
 

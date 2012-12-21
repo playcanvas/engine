@@ -8,9 +8,9 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var CollisionBoxComponent = function CollisionBoxComponent () {
-        this.bind('set_x', this.onSetX.bind(this));
-        this.bind('set_y', this.onSetY.bind(this));
-        this.bind('set_z', this.onSetZ.bind(this));
+        this.on('set_x', this.onSetX, this);
+        this.on('set_y', this.onSetY, this);
+        this.on('set_z', this.onSetZ, this);
     };
     CollisionBoxComponent = pc.inherits(CollisionBoxComponent, pc.fw.Component);
     

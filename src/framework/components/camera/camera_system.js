@@ -93,12 +93,9 @@ pc.extend(pc.fw, function () {
 
         this._currentEntity = null;
         this._currentNode = null;
-        this._renderable = null;
 
-        this.createGfx();
-
-        this.bind('remove', this.onRemove.bind(this));
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.toolsUpdate.bind(this));
+        this.on('remove', this.onRemove, this);
+        pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
 
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
@@ -137,28 +134,41 @@ pc.extend(pc.fw, function () {
             data = data || {};
             data.camera = new pc.scene.CameraNode();
 
-            var model = new pc.scene.Model();
-            model.graph = data.camera;
+            if (this.context.designer && !component.entity.hasLabel("pc:designer")) {
+                var material = new pc.scene.BasicMaterial();
+                material.color = pc.math.vec4.create(1, 1, 0, 1);
+                material.update();
 
-            if (this.context.designer) {
-                var vertexBuffer = new pc.gfx.VertexBuffer(this.vertexFormat, 8, pc.gfx.VertexBufferUsage.DYNAMIC);
-    
+                var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 24);
+                var indices = new Uint8Array(indexBuffer.lock());
+                indices.set([0,1,1,2,2,3,3,0, // Near plane
+                             4,5,5,6,6,7,7,4, // Far plane
+                             0,4,1,5,2,6,3,7]); // Near to far edges
+                indexBuffer.unlock();
+
+                var format = new pc.gfx.VertexFormat();
+                format.begin();
+                format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+                format.end();
+
+                var vertexBuffer = new pc.gfx.VertexBuffer(format, 8, pc.gfx.VertexBufferUsage.DYNAMIC);
+
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
-                mesh.indexBuffer[0] = this.indexBuffer;
+                mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].type = pc.gfx.PrimType.LINES;
                 mesh.primitive[0].base = 0;
-                mesh.primitive[0].count = this.indexBuffer.getNumIndices();
+                mesh.primitive[0].count = indexBuffer.getNumIndices();
                 mesh.primitive[0].indexed = true;
-    
-                model.meshInstances = [ new pc.scene.MeshInstance(model.graph, mesh, this.material) ];
+
+                var model = new pc.scene.Model();
+                model.graph = data.camera;
+                model.meshInstances = [ new pc.scene.MeshInstance(model.graph, mesh, material) ];
+
+                this.context.scene.addModel(model);
+
+                data.model = model;
             }
-
-            this.context.scene.addModel(model);
-            // This is done in onSetCamera
-            //this.context.root.addChild(model.graph);
-
-            data.model = model;
 
             properties = ['model', 'camera', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
     
@@ -229,9 +239,10 @@ pc.extend(pc.fw, function () {
                 this.current = null;
             }
 
-            if (this.context.scene.containsModel(data.model)) {
-                this.context.scene.removeModel(data.model);
-                this.context.root.removeChild(data.model.graph);
+            if (this.context.designer && !entity.hasLabel("pc:designer")) {
+                if (this.context.scene.containsModel(data.model)) {
+                    this.context.scene.removeModel(data.model);
+                }
             }
 
             entity.removeChild(data.camera);
@@ -250,28 +261,6 @@ pc.extend(pc.fw, function () {
                     }
                 }
             }
-        },
-
-        createGfx: function () {
-            // TODO: Only allocate graphics resources when running in Designer
-            var material = new pc.scene.BasicMaterial();
-            material.color = pc.math.vec4.create(1, 1, 0, 1);
-            material.update();
-            this.material = material;
-
-            var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 24);
-            var indices = new Uint8Array(indexBuffer.lock());
-            indices.set([0,1,1,2,2,3,3,0, // Near plane
-                         4,5,5,6,6,7,7,4, // Far plane
-                         0,4,1,5,2,6,3,7]); // Near to far edges
-            indexBuffer.unlock();
-            this.indexBuffer = indexBuffer;
-
-            format = new pc.gfx.VertexFormat();
-            format.begin();
-            format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-            format.end();
-            this.vertexFormat = format;
         },
 
         updateGfx: function (component) {

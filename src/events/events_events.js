@@ -1,31 +1,42 @@
 /**
+ * @name pc.events
  * @namespace
- * Event system that can be added to objects using pc.extend.
+ * @description Extend any normal object with events
  * 
  * @example
  * var o = {};
- * o = pc.extend(o, events);
+ * o = pc.extend(o, pc.events);
  * 
- * // bind event
- * o.bind("event_name", function() {
+ * // attach event
+ * o.on("event_name", function() {
  *   alert('event_name fired');
- * });
+ * }, this);
  * 
  * // fire event
  * o.fire("event_name");
  *
- * o.unbind('event_name');
+ * // detach all events from object
+ * o.off('event_name');
  */
 pc.events = function () {
     
-    return {
+    var Events = {
         /**
-         * Bind an callback to an event 
-         * @param {String} name Name of the event to bind callback to
+         * @function
+         * @name pc.events.on
+         * @description Attach an event handler to an event
+         * @param {String} name Name of the event to bind the callback to
          * @param {Function} callback Function that is called when event is fired
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
+         * @example
+         * var o = {};
+         * o = pc.extend(o, pc.events);
+         * o.on('event_name', function (a, b) {
+         *   console.log(a + b);
+         * });
+         * o.fire('event_name', 1, 2); // prints 3 to the console
          */
-        bind: function (name, callback, scope) {
+        on: function (name, callback, scope) {
             if(pc.type(name) != "string") {
                 throw new TypeError("Event name must be a string");
             }
@@ -40,16 +51,32 @@ pc.events = function () {
         },
         
         /**
-         * Unbind a callback from an event. If callback is not provided then all callbacks are unbound from the event, if scope is 
-         * not provided then all events with the callback will be unbound
+         * @function
+         * @name pc.events.off
+         * @description Detach an event handler from an event. If callback is not provided then all callbacks are unbound from the event, 
+         * if scope is not provided then all events with the callback will be unbound.
          * @param {String} name Name of the event to unbind
          * @param {Function} [callback] Function to be unbound
-         * @param {Object} [scope] Scope is used as the this when the event is fired
+         * @param {Object} [scope] Scope that was used as the this when the event is fired
+         * @example
+         * var handler = function () {
+         * };
+         * var o = {};
+         * o = pc.extend(o, pc.events);
+         * o.on('event_name', handler);
+         * 
+         * o.off('event_name'); // Remove all events called 'event_name'
+         * o.off('event_name', handler); // Remove all handler functions, called 'event_name' 
+         * o.off('event_name', handler, this); // Remove all hander functions, called 'event_name' with scope this
          */
-        unbind: function (name, callback, scope) {
+        off: function (name, callback, scope) {
             var callbacks = this._callbacks;
             var events;
             var index;
+
+            if (!callbacks) {
+                return; // no callbacks at all
+            }
 
             if(!callback) {
                 // Clear all callbacks
@@ -72,10 +99,20 @@ pc.events = function () {
             
             return this;
         },
-        
+
         /**
-         * Fire an event, all additional arguments are passed on to the event listener
+         * @function
+         * @name pc.events.fire
+         * @description Fire an event, all additional arguments are passed on to the event listener
          * @param {Object} name Name of event to fire
+         * @param {*} [...] Arguments that are passed to the event handler
+         * @example
+         * var o = {};
+         * o = pc.extend(o, pc.events);
+         * o.on('event_name', function (msg) {
+         *   alert('event_name fired: ' + msg);
+         * });
+         * o.fire('event_name', 'This is the message');
          */
         fire: function (name) {
             var index;
@@ -96,4 +133,10 @@ pc.events = function () {
             return this;
         }
     };
+
+    // For compatibility
+    Events.bind = Events.on;
+    Events.unbind = Events.off;
+
+    return Events;
 } ();

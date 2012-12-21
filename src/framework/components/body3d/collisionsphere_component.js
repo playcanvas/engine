@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var CollisionSphereComponent = function CollisionSphereComponent () {
-        this.bind('set_radius', this.onSetRadius)
+        this.on('set_radius', this.onSetRadius, this);
     };
     CollisionSphereComponent = pc.inherits(CollisionSphereComponent, pc.fw.Component);
     

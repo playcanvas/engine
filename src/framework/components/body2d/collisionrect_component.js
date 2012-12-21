@@ -7,11 +7,11 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var CollisionRectComponent = function CollisionRectComponent () {
-        this.bind('set_density', this.onSetDensity.bind(this));
-        this.bind('set_friction', this.onSetFriction.bind(this));
-        this.bind('set_restitution', this.onSetRestitution.bind(this));
-        this.bind('set_x', this.onSetX.bind(this));
-        this.bind('set_y', this.onSetY.bind(this));
+        this.on('set_density', this.onSetDensity, this);
+        this.on('set_friction', this.onSetFriction, this);
+        this.on('set_restitution', this.onSetRestitution, this);
+        this.on('set_x', this.onSetX, this);
+        this.on('set_y', this.onSetY, this);
     };
     CollisionRectComponent = pc.inherits(CollisionRectComponent, pc.fw.Component);
     

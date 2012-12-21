@@ -77,10 +77,10 @@ pc.extend(pc.fw, function () {
         
         this.debugRender = false;
 
-        this.bind('remove', this.onRemove.bind(this));
+        this.on('remove', this.onRemove, this);
 
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
-        pc.fw.ComponentSystem.bind('toolsUpdate', this.onToolsUpdate.bind(this));
+        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+        pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
     };
     CollisionSphereComponentSystem = pc.inherits(CollisionSphereComponentSystem, pc.fw.ComponentSystem);
     

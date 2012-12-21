@@ -16,7 +16,7 @@ pc.extend(pc.resources, function () {
         this._loaded = {}; // Script objects that have loaded 
         this._loading = null; // script element that has been created but is waiting for script to load
                 
-        pc.script.bind("created", this._onScriptCreated.bind(this));
+        pc.script.on("created", this._onScriptCreated, this);
     };
     ScriptResourceHandler = pc.inherits(ScriptResourceHandler, pc.resources.ResourceHandler);
     

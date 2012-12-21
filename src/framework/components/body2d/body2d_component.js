@@ -34,7 +34,7 @@ pc.extend(pc.fw, function () {
             unpack();
         }
 
-        this.bind('set_static', this.onSetStatic.bind(this));
+        this.on('set_static', this.onSetStatic, this);
     };
     Body2dComponent = pc.inherits(Body2dComponent, pc.fw.Component);
 

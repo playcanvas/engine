@@ -8,13 +8,13 @@ test("Methods exist", function() {
 });
 
 test("ContentType enum is correct", function() {
-    same(pc.net.http.ContentType.FORM_URLENCODED, "application/x-www-form-urlencoded");
-    same(pc.net.http.ContentType.GIF, "image/gif");
-    same(pc.net.http.ContentType.JPEG, "image/jpeg");
-    same(pc.net.http.ContentType.JSON, "application/json");
-    same(pc.net.http.ContentType.PNG, "image/png");
-    same(pc.net.http.ContentType.TEXT, "text/plain");
-    same(pc.net.http.ContentType.XML, "application/xml");
+    equal(pc.net.http.ContentType.FORM_URLENCODED, "application/x-www-form-urlencoded");
+    equal(pc.net.http.ContentType.GIF, "image/gif");
+    equal(pc.net.http.ContentType.JPEG, "image/jpeg");
+    equal(pc.net.http.ContentType.JSON, "application/json");
+    equal(pc.net.http.ContentType.PNG, "image/png");
+    equal(pc.net.http.ContentType.TEXT, "text/plain");
+    equal(pc.net.http.ContentType.XML, "application/xml");
 });
 
 test("request: xhr called with correct args", function() {
@@ -43,8 +43,8 @@ test("request: xhr calls callback", function() {
     };
     
     var callback = function(response, status, xhr2) {
-        same(response, "callback test");
-        same(status, 200);
+        equal(response, "callback test");
+        equal(status, 200);
         equal(xhr2, xhr);
         callbackFired = true;
     };
@@ -52,7 +52,7 @@ test("request: xhr calls callback", function() {
     var r = pc.net.http.request("GET", "http://test.com", { success : callback}, xhr);
     
     ok(r === xhr);
-    same(callbackFired, true);
+    equal(callbackFired, true);
 });
 
 test("request: xhr calls success callback with correct status", function() {
@@ -69,7 +69,7 @@ test("request: xhr calls success callback with correct status", function() {
     };
         
     var callback = function(response, status, xhr) {
-        same(status, expectedStatus);
+        equal(status, expectedStatus);
         callbackCount++;
     };
     
@@ -90,7 +90,7 @@ test("request: xhr calls success callback with correct status", function() {
     var r = pc.net.http.request("GET", "http://test.com", { success : callback }, xhr);
     
     ok(r === xhr);
-    same(callbackCount, 4);
+    equal(callbackCount, 4);
 });
 
 test("request: xhr calls error callback with correct status", function() {
@@ -107,7 +107,7 @@ test("request: xhr calls error callback with correct status", function() {
     };
         
     var callback = function(status, xhr, e) {
-        same(status, expectedStatus);
+        equal(status, expectedStatus);
         callbackCount++;
     };
     
@@ -124,7 +124,7 @@ test("request: xhr calls error callback with correct status", function() {
     var r = pc.net.http.request("GET", "http://test.com", { error : callback }, xhr);
     
     ok(r === xhr);
-    same(callbackCount, 3);
+    equal(callbackCount, 3);
 });
     
 test("get: xhr called with correct args", function () {
@@ -153,17 +153,17 @@ test("get: backwards compatibility with old (responseTest) callbacks", function 
     };
     
     var callback = function(response) {
-        same(response, "callback test");
+        equal(response, "callback test");
         callbackFired = true;
     };
     
     var r = pc.net.http.get("http://test.com", callback, null, xhr);
     
     ok(r === xhr);
-    same(callbackFired, true);
+    equal(callbackFired, true);
 });
 
-test("post: xhr called with corrent args", function () {
+test("post: xhr called with correct args", function () {
 	jack(function() {
         var xhr  = jack.create("xhr", ["open", "send"]);
         jack.expect("xhr.open").withArguments("POST", "http://test.com", true);
@@ -174,7 +174,7 @@ test("post: xhr called with corrent args", function () {
     });
 });
 
-test("put: xhr called with corrent string data", function () {
+test("put: xhr called with correct string data", function () {
 	jack(function() {
         var xhr  = jack.create("xhr", ["open", "send"]);
         jack.expect("xhr.open").withArguments("PUT", "http://test.com", true);
@@ -185,13 +185,15 @@ test("put: xhr called with corrent string data", function () {
     });
 });
 
-test("delete_: xhr called with corrext string data", function () {
+test("delete_: xhr called with correct string data", function () {
     jack(function() {
         var xhr = jack.create("xhr", ["open", "send"]);
         jack.expect("xhr.open").withArguments("DELETE", "http://test.com", true);
         jack.expect("xhr.send");
         var r = pc.net.http.delete_("http://test.com", null, null, xhr);
-    });    
+
+        ok(r === xhr);
+    });
 });
 
 test("request: cache=false adds timestamp to plain url", function () {
@@ -276,21 +278,21 @@ test("request: send exception triggers error callback with mock object", 5, func
     var callback = function(status, _xhr, exception) {
         equal(status, 0);
         notEqual(_xhr, null);
-        same(exception, "Test exception");
+        equal(exception, "Test exception");
         callbackFired = true;
     };
     
     var r = pc.net.http.request("GET", "http://test.com", {error : callback}, xhr);
     
     ok(r === xhr);
-    same(callbackFired, true);
+    equal(callbackFired, true);
 });
 
 asyncTest("request: cross-domain failure calls error callback", 3, function () {
     var callback = function (status, _xhr, exception) {
         equal(status, 0);
         notEqual(_xhr, null);
-        same(exception, null);
+        equal(exception, null);
         callbackFired = true;
         start();
     }
@@ -300,21 +302,21 @@ asyncTest("request: cross-domain failure calls error callback", 3, function () {
     });
 });
 
-test("request: send exception triggers error callback with real XMLHttpRequest", function() {
-    var callbackFired = false;
+// test("request: send exception triggers error callback with real XMLHttpRequest", function() {
+//     var callbackFired = false;
     
-    var callback = function(status, xhr, exception) {
-        same(status, 0);
-        same(xhr == null, false);
-        same(exception, null);
-        callbackFired = true;
-    };
+//     var callback = function(status, xhr, exception) {
+//         equal(status, 0);
+//         equal(xhr == null, false);
+//         equal(exception, null);
+//         callbackFired = true;
+//     };
     
-    var r = pc.net.http.request("GET", "http://127.0.0.1:1/", { error : callback, async : false });
+//     var r = pc.net.http.request("GET", "http://127.0.0.1:1/", { error : callback, async : false });
     
-    ok(r instanceof XMLHttpRequest);
-    same(true, callbackFired);
-});
+//     ok(r instanceof XMLHttpRequest);
+//     equal(true, callbackFired);
+// });
 
 test("request: set post data direct, no headers", function() {
    	jack(function() {
@@ -391,7 +393,7 @@ test("request: set post data with XML no content type", function() {
     var r = pc.net.http.request("GET", "http://test.com", { postdata : xml }, xhr);
     
     ok(r === xhr);
-    same(dataSet, true);
+    equal(dataSet, true);
 });
 
 test("request: post data, unknown content-type reverts to JSON", function() {
@@ -400,14 +402,14 @@ test("request: post data, unknown content-type reverts to JSON", function() {
     var xhr = {
         open: function(method, url, async) {},
         setRequestHeader: function(key, value) {
-            same(key, "Content-Type");
-            same(value, "test/contentType");
+            equal(key, "Content-Type");
+            equal(value, "test/contentType");
             headerSet = true;
         },
         send: function(postdata) {
             obj = JSON.parse(postdata);
-            same(obj["key1"], "value 1");
-            same(obj["key2"], "value 2");
+            equal(obj["key1"], "value 1");
+            equal(obj["key2"], "value 2");
             xhr.readyState = 4;
             xhr.status = 200;
             xhr.onreadystatechange();
@@ -424,8 +426,8 @@ test("request: post data, unknown content-type reverts to JSON", function() {
             "Content-Type" : "test/contentType" } }, xhr);
     
     ok(r === xhr);
-    same(headerSet, true);
-    same(dataSet, true);
+    equal(headerSet, true);
+    equal(dataSet, true);
 });
 
 test("request: check that JSON data is parsed correctly", function() {
@@ -449,19 +451,19 @@ test("request: check that JSON data is parsed correctly", function() {
     };
     
     var callback = function (response, status, xhr2) {
-        same(status, 200);
+        equal(status, 200);
         ok(xhr2 == xhr);
-        same(response instanceof Object, true);
-        same(response._id, "12345");
-        same(response.data, "Testing");
+        equal(response instanceof Object, true);
+        equal(response._id, "12345");
+        equal(response.data, "Testing");
         callbackCalled = true;
     }
     
     var r = pc.net.http.request("GET", "http://test.com", { success : callback }, xhr);
     
     ok(r === xhr);
-    same(dataSet, true);
-    same(callbackCalled, true);
+    equal(dataSet, true);
+    equal(callbackCalled, true);
 });
 
 
@@ -483,19 +485,19 @@ test("request: check that requesting a file ending .json will parse as json", fu
     };
     
     var callback = function (response, status, xhr2) {
-        same(status, 200);
+        equal(status, 200);
         ok(xhr2 == xhr);
-        same(response instanceof Object, true);
-        same(response._id, "12345");
-        same(response.data, "Testing");
+        equal(response instanceof Object, true);
+        equal(response._id, "12345");
+        equal(response.data, "Testing");
         callbackCalled = true;
     }
     
     var r = pc.net.http.request("GET", "http://test.com/file.json", { success : callback }, xhr);
     
     ok(r === xhr);
-    same(dataSet, true);
-    same(callbackCalled, true);    
+    equal(dataSet, true);
+    equal(callbackCalled, true);    
 });
 
 test("request: check that Content-Type header with parameter is parsed correctly", function() {
@@ -519,19 +521,19 @@ test("request: check that Content-Type header with parameter is parsed correctly
     };
     
     var callback = function (response, status, xhr2) {
-        same(status, 200);
+        equal(status, 200);
         ok(xhr2 == xhr);
-        same(response instanceof Object, true);
-        same(response._id, "12345");
-        same(response.data, "Testing");
+        equal(response instanceof Object, true);
+        equal(response._id, "12345");
+        equal(response.data, "Testing");
         callbackCalled = true;
     }
     
     var r = pc.net.http.request("GET", "http://test.com", { success : callback }, xhr);
     
     ok(r === xhr);
-    same(dataSet, true);
-    same(callbackCalled, true);
+    equal(dataSet, true);
+    equal(callbackCalled, true);
 });
 
 
@@ -558,18 +560,18 @@ test("request: check that XML data is returned correctly", function() {
     };
     
     var callback = function (response, status, xhr2) {
-        same(status, 200);
+        equal(status, 200);
         ok(xhr2 == xhr);
-        same(response instanceof Document, true);
-        same(response, xml);
+        equal(response instanceof Document, true);
+        equal(response, xml);
         callbackCalled = true;
     }
     
     var r = pc.net.http.request("GET", "http://test.com", { success : callback }, xhr);
     
     ok(r === xhr);
-    same(dataSet, true);
-    same(callbackCalled, true);
+    equal(dataSet, true);
+    equal(callbackCalled, true);
 });
 
 test("request: send FormData", 1, function () {

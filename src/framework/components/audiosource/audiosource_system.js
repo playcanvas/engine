@@ -99,9 +99,9 @@ pc.extend(pc.fw, function () {
         
         this.manager = manager;
         
-        //this.bind('remove', this.onRemove.bind(this));
-        pc.fw.ComponentSystem.bind('initialize', this.onInitialize.bind(this));
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+        //this.on('remove', this.onRemove, this);
+        pc.fw.ComponentSystem.on('initialize', this.onInitialize, this);
+        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
     };
     AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.fw.ComponentSystem);
     

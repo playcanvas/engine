@@ -15,12 +15,12 @@ pc.extend(pc.fw, function () {
      * @property {Number} rollOffFactor The factor used in the falloff equation.
      */
     var AudioSourceComponent = function (system, entity) {
-        this.bind("set_assets", this.onSetAssets.bind(this));
-        this.bind("set_loop", this.onSetLoop.bind(this));
-        this.bind("set_volume", this.onSetVolume.bind(this));
-        this.bind("set_minDistance", this.onSetMinDistance.bind(this));
-        this.bind("set_maxDistance", this.onSetMaxDistance.bind(this));
-        this.bind("set_rollOffFactor", this.onSetRollOffFactor.bind(this));
+        this.on("set_assets", this.onSetAssets, this);
+        this.on("set_loop", this.onSetLoop, this);
+        this.on("set_volume", this.onSetVolume, this);
+        this.on("set_minDistance", this.onSetMinDistance, this);
+        this.on("set_maxDistance", this.onSetMaxDistance, this);
+        this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.fw.Component);
         

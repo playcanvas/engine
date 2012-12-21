@@ -18,7 +18,7 @@ pc.extend(pc.fw, function () {
         this.manager = manager;
         this.current = null;
 
-        pc.fw.ComponentSystem.bind('update', this.onUpdate.bind(this));
+        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
     };        
     AudioListenerComponentSystem = pc.inherits(AudioListenerComponentSystem, pc.fw.ComponentSystem);
     
