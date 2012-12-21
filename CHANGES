@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.87.0
+-------
+* Replace event methods .bind()/.unbind() with .on()/.off(). Deprecated bind()/unbind().
+* [FIX] Designer cameras now no longer create frustum graphics resources (caused WebGL errors).
+
+-------
 v0.86.6
 -------
 * [FIX] Binary skins now partition correctly.
