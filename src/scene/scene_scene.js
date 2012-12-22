@@ -261,7 +261,6 @@ pc.extend(pc.scene, function () {
         }
 
         var calcBbox = false;
-        _getFrustumPoints(camera, frustumPoints);
 
         // Render all shadowmaps
         for (i = 0; i < lights.length; i++) {
@@ -276,42 +275,56 @@ pc.extend(pc.scene, function () {
                 var shadowCam = light._shadowCamera;
 
                 if (type === pc.scene.LightType.DIRECTIONAL) {
-                    if (!calcBbox) {
-                        _calculateSceneAabb(this);
-                        calcBbox = true;
-                    }
+                    // 1. Starting at the centroid of the view frustum, back up in the opposite
+                    // direction of the light by a certain amount. This will be our temporary 
+                    // working position.
+                    var centroid = camera.getFrustumCentroid();
+                    shadowCam.setPosition(centroid);
+                    var lightDir = pc.math.mat4.getY(light.worldTransform);
+                    shadowCam.translate(lightDir[0], lightDir[1], lightDir[2]);
 
-                    var worldToLight = pc.math.mat4.invert(light.worldTransform);
+                    // 2. Come up with a LookAt matrix using the light direction, and the 
+                    // temporary working position. This will be the view matrix that is used
+                    // when generating the shadow map.
+                    shadowCam.lookAt(centroid);
+                    pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
+
+                    // 3. Transform the 8 corners of the frustum by the LookAt Matrix
+                    _getFrustumPoints(camera, frustumPoints);
+                    var worldToShadowCam = pc.math.mat4.invert(shadowCamWtm);
                     var camToWorld = camera.worldTransform;
-                    var c2l = pc.math.mat4.multiply(worldToLight, camToWorld);
+                    var c2sc = pc.math.mat4.multiply(worldToShadowCam, camToWorld);
                     for (j = 0; j < 8; j++) {
-                        pc.math.mat4.multiplyVec3(frustumPoints[j], 1.0, c2l, frustumPoints[j]);
+                        pc.math.mat4.multiplyVec3(frustumPoints[j], 1.0, c2sc, frustumPoints[j]);
                     }
 
+                    // 4. Come up with a bounding box (in light-space) by calculating the min
+                    // and max X, Y, and Z values from your 8 light-space frustum coordinates.
                     var minx = 1000000;
                     var maxx = -1000000;
                     var miny = 1000000;
                     var maxy = -1000000;
+                    var minz = 1000000;
+                    var maxz = -1000000;
                     for (j = 0; j < 8; j++) {
                         var p = frustumPoints[j];
                         if (p[0] < minx) minx = p[0];
                         if (p[0] > maxx) maxx = p[0];
                         if (p[1] < miny) miny = p[1];
                         if (p[1] > maxy) maxy = p[1];
+                        if (p[2] < minz) minz = p[2];
+                        if (p[2] > maxz) maxz = p[2];
                     }
 
-                    pc.math.mat4.copy(light.worldTransform, shadowCamWtm);
-                    shadowCamWtm[12] = this._sceneAabb.center[0];
-                    shadowCamWtm[13] = this._sceneAabb.center[1];
-                    shadowCamWtm[14] = this._sceneAabb.center[2];
-                    pc.math.mat4.multiply(shadowCamWtm, camToLight, shadowCamWtm);
+                    // 5. Use your min and max values to create an off-center orthographic projection.
+                    shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz);
+                    pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
 
-                    var extent = pc.math.vec3.length(this._sceneAabb.halfExtents);
                     shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
-                    shadowCam.setNearClip(-extent);
-                    shadowCam.setFarClip(extent);
+                    shadowCam.setNearClip(0);
+                    shadowCam.setFarClip(maxz - minz);
                     shadowCam.setAspectRatio(1);
-                    shadowCam.setOrthoHeight(extent);
+                    shadowCam.setOrthoHeight((maxy - miny) * 0.5);
                 } else if (type === pc.scene.LightType.SPOT) {
                     shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
                     shadowCam.setNearClip(light.getAttenuationEnd() / 1000);

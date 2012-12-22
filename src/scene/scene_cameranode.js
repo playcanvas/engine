@@ -90,6 +90,12 @@ pc.extend(pc.scene, function () {
         return clone;
     };
 
+    CameraNode.prototype.getFrustumCentroid = function () {
+        var centroid = pc.math.vec3.create(0, 0, -(this._farClip + this._nearClip) * 0.5);
+        pc.math.mat4.multiplyVec3(centroid, 1, this.getWorldTransform(), centroid);
+        return centroid;
+    };
+
     /**
      * Convert a point in 3D world space to a point in 2D screen space.
      * (0,0) is top-left
