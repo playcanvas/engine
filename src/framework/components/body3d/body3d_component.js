@@ -2,6 +2,7 @@ pc.extend(pc.fw, function () {
     // Shared math variable to avoid excessive allocation
     var quat = pc.math.quat.create();
     var ammoTransform;
+    var ammoVec1, ammoVec2;
 
     /**
      * @private
@@ -14,7 +15,9 @@ pc.extend(pc.fw, function () {
     var Body3dComponent = function Body3dComponent (context) {
         // Lazily create shared variable
         if (typeof(Ammo) !== 'undefined' && !ammoTransform) {
-            ammoTransform = new Ammo.btTransform();    
+            ammoTransform = new Ammo.btTransform();
+            ammoVec1 = new Ammo.btVector3();
+            ammoVec2 = new Ammo.btVector3();
         }
 
         this.on('set_mass', this.onSetMass, this);
@@ -26,83 +29,66 @@ pc.extend(pc.fw, function () {
 
     pc.extend(Body3dComponent.prototype, {
         /**
-        * @private
-        * @name pc.fw.Body3dComponent#applyForce
-        * @description Apply an force to the body
-        * @param {pc.math.vec3} force The force to apply. A 3D world space vector, extra component is ignored
-        * @param {pc.math.vec3} point The point at which to apply the force. A 3D world space vector, extra component is ignored
-        */
+         * @private
+         * @name pc.fw.Body3dComponent#applyForce
+         * @description Apply an force to the body
+         * @param {pc.math.vec3} force The force to apply. A 3D world space vector, extra component is ignored
+         * @param {pc.math.vec3} point The point at which to apply the force. A 3D world space vector, extra component is ignored
+         */
         applyForce: function (force, point) {
             var body = this.entity.body3d.body;
             if (body) {
-                if (!point) {
-                    point = position;
-                    point[this.xi] = body.GetPosition().x;
-                    point[this.yi] = body.GetPosition().y;
-                }
-                body.ApplyForce({
-                    x: force[this.xi],
-                    y: force[this.yi]
-                }, {
-                    x: point[this.xi],
-                    y: point[this.yi]
-                });
+                ammoVec1.setValue(force[0], force[1], force[2]);
+                ammoVec2.setValue(point[0], point[1], point[2]);
+                body.applyForce(ammoVec1, ammoVec2);
             }
         },
 
         /**
-        * @private
-        * @name pc.fw.Body3dComponent#applyImpulse
-        * @description Apply an impulse (instantaneous change of velocity) to the body
-        * @param {pc.math.vec3} impulse The impulse to apply. A 3D world space vector, extra component is ignored
-        * @param {pc.math.vec3} point The point at which to apply the impulse. A 3D world space vector, extra component is ignored
-        */
+         * @private
+         * @name pc.fw.Body3dComponent#applyImpulse
+         * @description Apply an impulse (instantaneous change of velocity) to the body
+         * @param {pc.math.vec3} impulse The impulse to apply. A 3D world space vector, extra component is ignored
+         * @param {pc.math.vec3} point The point at which to apply the impulse. A 3D world space vector, extra component is ignored
+         */
         applyImpulse: function (impulse, point) {
-            var body = this.entity.body3d.body; 
+            var body = this.entity.body3d.body;
             if (body) {
-                if (!point) {
-                    point = position;
-                    point[this.xi] = body.GetPosition().x;
-                    point[this.yi] = body.GetPosition().y;
-                }
-
-                body.ApplyImpulse({
-                    x: impulse[this.xi],
-                    y: impulse[this.yi]
-                }, {
-                    x: point[this.xi],
-                    y: point[this.yi]
-                });
+                ammoVec1.setValue(impulse[0], impulse[1], impulse[2]);
+                ammoVec2.setValue(point[0], point[1], point[2]);
+                body.applyImpulse(ammoVec1, ammoVec2);
             }
         },
 
         /**
-        * @private
-        * @name pc.fw.Body3dComponentSystem#setLinearVelocity
-        * @description Set the linear velocity of the body
-        * @param {Number} x The x value of the velocity
-        * @param {Number} y The y value of the velocity
-        * @param {Number} y The z value of the velocity
-        */
+         * @private
+         * @name pc.fw.Body3dComponentSystem#setLinearVelocity
+         * @description Set the linear velocity of the body.
+         * @param {Number} x The x value of the velocity
+         * @param {Number} y The y value of the velocity
+         * @param {Number} y The z value of the velocity
+         */
         setLinearVelocity: function (x, y, z) {
             var body = this.entity.body3d.body;
             if (body) {
-                body.setLinearVelocity(new Ammo.btVector3(x, y, z));
+                ammoVec1.setValue(x, y, z);
+                body.setLinearVelocity(ammoVec1);
             }
         },
 
         /**
-        * @private
-        * @name pc.fw.Body3dComponent#setAngularVelocity
-        * @description Set the angular  velocity of the body
-        * @param {Number} x The x value of the angular velocity
-        * @param {Number} y The y value of the angular velocity
-        * @param {Number} z The z value of the angular velocity
-        */
+         * @private
+         * @name pc.fw.Body3dComponent#setAngularVelocity
+         * @description Set the angular  velocity of the body
+         * @param {Number} x The x value of the angular velocity
+         * @param {Number} y The y value of the angular velocity
+         * @param {Number} z The z value of the angular velocity
+         */
         setAngularVelocity: function (x, y, z) {
             var body = this.entity.body3d.body;
             if (body) {
-                body.setAngularVelocity(new Ammo.btVector3(x, y, z));
+                ammoVec1.setValue(x, y, z);
+                body.setAngularVelocity(ammoVec1);
             }
         },
 
@@ -115,8 +101,8 @@ pc.extend(pc.fw, function () {
                 var transform = body.getWorldTransform();
                 transform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
                 transform.setRotation(new Ammo.btQuaternion(rotation[0], rotation[1], rotation[2], rotation[3]));
-                body.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
-                body.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
+                this.setLinearVelocity(0, 0, 0);
+                this.setAngularVelocity(0, 0, 0);
                 body.activate();
             }
         },
@@ -208,30 +194,6 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-        * angle in degrees
-        */
-        setPositionAndAngle: function (x, y, a) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                body.SetAwake(true);
-                var pos = body.GetPosition();
-                pos.x = x;
-                pos.y = y;
-
-                body.SetPositionAndAngle(pos, a * pc.math.DEG_TO_RAD);
-
-                this.updateTransform(body);
-            }
-        },
-
-        /**
-        * Return angle in degrees
-        */
-        getAngle: function () {
-            return this.entity.body3d.body.GetAngle() * pc.math.RAD_TO_DEG;
-        },
-
-        /**
         * @private
         * @name pc.fw.Body3dComponent#setLinearDamping
         * @description Set the linear damping value of the body. 
@@ -241,8 +203,8 @@ pc.extend(pc.fw, function () {
         */
         setLinearDamping: function (entity, damping) {
             var body = this.entity.body3d.body;
-            if(body) {
-                body.SetLinearDamping(damping);
+            if (body) {
+                body.setDamping(damping, 1);
             }
         },
 
