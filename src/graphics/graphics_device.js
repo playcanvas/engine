@@ -131,7 +131,7 @@ pc.extend(pc.gfx, function () {
         this.defaultClearOptions = {
             color: [0, 0, 0, 1],
             depth: 1,
-            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+            flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_COLOR 
         };
 
         this.lookupPrim = [
@@ -516,7 +516,7 @@ pc.extend(pc.gfx, function () {
          * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
          * @param {Array} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
          * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
-         * @param {pc.gfx.ClearFlag} options.flags The buffers to clear (the types being color, depth and stencil).
+         * @param {pc.gfx.CLEARFLAG} options.flags The buffers to clear (the types being color, depth and stencil).
          * @example
          * // Clear color buffer to black and depth buffer to 1.0
          * device.clear();
@@ -524,14 +524,14 @@ pc.extend(pc.gfx, function () {
          * // Clear just the color buffer to red
          * device.clear({
          *     color: [1, 0, 0, 1],
-         *     flags: pc.gfx.ClearFlag.COLOR
+         *     flags: pc.gfx.CLEARFLAG_COLOR 
          * });
          *
          * // Clear color buffer to yellow and depth to 1.0
          * device.clear({
          *     color: [1, 1, 0, 1],
          *     depth: 1.0,
-         *     flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+         *     flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
          * });
          * @author Will Eastcott
          */
