@@ -99,7 +99,7 @@ pc.extend(pc.gfx, function () {
         }
 
         // Retrieve the WebGL context
-        this.gl = _createContext(canvas);
+        this.gl = _createContext(canvas, {alpha: false});
 
         if (!this.gl) {
             throw new pc.gfx.ContextCreationError();
