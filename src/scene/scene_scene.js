@@ -315,14 +315,31 @@ pc.extend(pc.scene, function () {
                         if (p[2] < minz) minz = p[2];
                         if (p[2] > maxz) maxz = p[2];
                     }
+/*
+                    var worldUnitsPerTexelX = (maxx - minx) / light._shadowWidth;
+                    var worldUnitsPerTexelY = (maxy - miny) / light._shadowHeight;
 
+                    minx /= worldUnitsPerTexelX;
+                    minx = Math.floor(minx);
+                    minx *= worldUnitsPerTexelX;
+                    maxx /= worldUnitsPerTexelX;
+                    maxx = Math.floor(maxx);
+                    maxx *= worldUnitsPerTexelX;
+
+                    miny /= worldUnitsPerTexelY;
+                    miny = Math.floor(miny);
+                    miny *= worldUnitsPerTexelY;
+                    maxy /= worldUnitsPerTexelY;
+                    maxy = Math.floor(maxy);
+                    maxy *= worldUnitsPerTexelY;
+*/
                     // 5. Use your min and max values to create an off-center orthographic projection.
-                    shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz);
+                    shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
                     pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
 
                     shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
                     shadowCam.setNearClip(0);
-                    shadowCam.setFarClip(maxz - minz);
+                    shadowCam.setFarClip((maxz - minz) * 1.5);
                     shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
                     shadowCam.setOrthoHeight((maxy - miny) * 0.5);
                 } else if (type === pc.scene.LightType.SPOT) {
