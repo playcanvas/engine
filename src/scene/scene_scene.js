@@ -323,7 +323,7 @@ pc.extend(pc.scene, function () {
                     shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
                     shadowCam.setNearClip(0);
                     shadowCam.setFarClip(maxz - minz);
-                    shadowCam.setAspectRatio(1);
+                    shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
                     shadowCam.setOrthoHeight((maxy - miny) * 0.5);
                 } else if (type === pc.scene.LightType.SPOT) {
                     shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
