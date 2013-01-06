@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.88.0
+-------
+* [FIX] Engine now honours toggling of cast shadows in Designer.
+* pc.gfx.ClearFlag -> pc.gfx.CLEARFLAG
+* Reworked directional light shadowmap camera frustum calculation.
+* Set WebGL to treat alpha more similarly to OpenGL.
+* Corrected aspect ratio of directional light shadow frustum. Added a fudge factor to Z limits of frustum to prevent clipping of shadow casters.
+* Initial support for inserting one-shot commands into draw call queue (to do things like clearing the depth buffer).
+
+-------
 v0.87.0
 -------
 * Replace event methods .bind()/.unbind() with .on()/.off(). Deprecated bind()/unbind().
