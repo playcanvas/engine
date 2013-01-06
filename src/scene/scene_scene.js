@@ -106,8 +106,9 @@ pc.extend(pc.scene, function () {
      * @class A scene.
      */
     var Scene = function Scene() {
-        this.drawCalls = [];
-        this.shadowCasters = [];
+        this.drawCalls = [];     // All mesh instances and commands
+        this.meshInstances = []; // All mesh instances
+        this.shadowCasters = []; // All mesh instances that cast shadows
 
         var device = pc.gfx.Device.getCurrent();
         this.modelMatrixId = device.scope.resolve('matrix_model');
@@ -149,10 +150,14 @@ pc.extend(pc.scene, function () {
 
             // Insert the model's mesh instances into lists ready for rendering
             var meshInstance;
-            for (var i = 0; i < model.meshInstances.length; i++) {
+            var numMeshInstances = model.meshInstances.length;
+            for (var i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
                 if (this.drawCalls.indexOf(meshInstance) === -1) {
                     this.drawCalls.push(meshInstance);
+                }
+                if (this.meshInstances.indexOf(meshInstance) === -1) {
+                    this.meshInstances.push(meshInstance);
                 }
                 if (meshInstance.castShadow) {
                     if (this.shadowCasters.indexOf(meshInstance) === -1) {
@@ -177,11 +182,16 @@ pc.extend(pc.scene, function () {
 
             // Remove the model's mesh instances from render queues
             var meshInstance;
-            for (var i = 0; i < model.meshInstances.length; i++) {
+            var numMeshInstances = model.meshInstances.length;
+            for (var i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
                 index = this.drawCalls.indexOf(meshInstance);
                 if (index !== -1) {
                     this.drawCalls.splice(index, 1);
+                }
+                index = this.meshInstances.indexOf(meshInstance);
+                if (index !== -1) {
+                    this.meshInstances.splice(index, 1);
                 }
                 if (meshInstance.castShadow) {
                     index = this.shadowCasters.indexOf(meshInstance);
