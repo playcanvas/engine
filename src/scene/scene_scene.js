@@ -1,23 +1,28 @@
-
 /**
  * @name pc.scene
  * @namespace High level Graphics API
  */
 pc.scene = {
+    BLEND_NONE: 0,
+    BLEND_NORMAL: 1,
+    BLEND_ADDITIVE: 2,
+    BLEND_SUBTRACTIVE: 3,
+
     RENDERSTYLE_SOLID: 0,
     RENDERSTYLE_WIREFRAME: 1,
     RENDERSTYLE_POINTS: 2,
 
     LAYER_HUD: 0,
     LAYER_FX: 1,
-    LAYER_WORLD: 2,
-    LAYER_SKYBOX: 3
+    LAYER_GIZMO: 2,
+    LAYER_WORLD: 3,
+    LAYER_SKYBOX: 4
 };
 
 pc.extend(pc.scene, function () {
 
-    function sortByMaterial(instanceA, instanceB) {
-        return instanceB.key - instanceA.key;
+    function sortDrawCalls(drawCallA, drawCallB) {
+        return drawCallB.key - drawCallA.key;
     }
 
     // Global shadowmap resources
@@ -101,8 +106,9 @@ pc.extend(pc.scene, function () {
      * @class A scene.
      */
     var Scene = function Scene() {
-        this.meshInstances = [];
-        this.shadowCasters = [];
+        this.drawCalls = [];     // All mesh instances and commands
+        this.meshInstances = []; // All mesh instances
+        this.shadowCasters = []; // All mesh instances that cast shadows
 
         var device = pc.gfx.Device.getCurrent();
         this.modelMatrixId = device.scope.resolve('matrix_model');
@@ -144,8 +150,12 @@ pc.extend(pc.scene, function () {
 
             // Insert the model's mesh instances into lists ready for rendering
             var meshInstance;
-            for (var i = 0; i < model.meshInstances.length; i++) {
+            var numMeshInstances = model.meshInstances.length;
+            for (var i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
+                if (this.drawCalls.indexOf(meshInstance) === -1) {
+                    this.drawCalls.push(meshInstance);
+                }
                 if (this.meshInstances.indexOf(meshInstance) === -1) {
                     this.meshInstances.push(meshInstance);
                 }
@@ -172,8 +182,13 @@ pc.extend(pc.scene, function () {
 
             // Remove the model's mesh instances from render queues
             var meshInstance;
-            for (var i = 0; i < model.meshInstances.length; i++) {
+            var numMeshInstances = model.meshInstances.length;
+            for (var i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
+                index = this.drawCalls.indexOf(meshInstance);
+                if (index !== -1) {
+                    this.drawCalls.splice(index, 1);
+                }
                 index = this.meshInstances.indexOf(meshInstance);
                 if (index !== -1) {
                     this.meshInstances.splice(index, 1);
@@ -250,7 +265,7 @@ pc.extend(pc.scene, function () {
 
         var i, j, numInstances;
         var device = pc.gfx.Device.getCurrent();
-        var meshInstance, mesh, material, prevMaterial = null, style;
+        var drawCall, meshInstance, mesh, material, prevMaterial = null, style;
 
         // Update all skin matrix palettes
         for (i = this._models.length - 1; i >= 0; i--) {
@@ -261,7 +276,6 @@ pc.extend(pc.scene, function () {
         }
 
         var calcBbox = false;
-        _getFrustumPoints(camera, frustumPoints);
 
         // Render all shadowmaps
         for (i = 0; i < lights.length; i++) {
@@ -276,42 +290,73 @@ pc.extend(pc.scene, function () {
                 var shadowCam = light._shadowCamera;
 
                 if (type === pc.scene.LightType.DIRECTIONAL) {
-                    if (!calcBbox) {
-                        _calculateSceneAabb(this);
-                        calcBbox = true;
-                    }
+                    // 1. Starting at the centroid of the view frustum, back up in the opposite
+                    // direction of the light by a certain amount. This will be our temporary 
+                    // working position.
+                    var centroid = camera.getFrustumCentroid();
+                    shadowCam.setPosition(centroid);
+                    var lightDir = pc.math.mat4.getY(light.worldTransform);
+                    shadowCam.translate(lightDir[0], lightDir[1], lightDir[2]);
 
-                    var worldToLight = pc.math.mat4.invert(light.worldTransform);
+                    // 2. Come up with a LookAt matrix using the light direction, and the 
+                    // temporary working position. This will be the view matrix that is used
+                    // when generating the shadow map.
+                    shadowCam.lookAt(centroid);
+                    pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
+
+                    // 3. Transform the 8 corners of the frustum by the LookAt Matrix
+                    _getFrustumPoints(camera, frustumPoints);
+                    var worldToShadowCam = pc.math.mat4.invert(shadowCamWtm);
                     var camToWorld = camera.worldTransform;
-                    var c2l = pc.math.mat4.multiply(worldToLight, camToWorld);
+                    var c2sc = pc.math.mat4.multiply(worldToShadowCam, camToWorld);
                     for (j = 0; j < 8; j++) {
-                        pc.math.mat4.multiplyVec3(frustumPoints[j], 1.0, c2l, frustumPoints[j]);
+                        pc.math.mat4.multiplyVec3(frustumPoints[j], 1.0, c2sc, frustumPoints[j]);
                     }
 
+                    // 4. Come up with a bounding box (in light-space) by calculating the min
+                    // and max X, Y, and Z values from your 8 light-space frustum coordinates.
                     var minx = 1000000;
                     var maxx = -1000000;
                     var miny = 1000000;
                     var maxy = -1000000;
+                    var minz = 1000000;
+                    var maxz = -1000000;
                     for (j = 0; j < 8; j++) {
                         var p = frustumPoints[j];
                         if (p[0] < minx) minx = p[0];
                         if (p[0] > maxx) maxx = p[0];
                         if (p[1] < miny) miny = p[1];
                         if (p[1] > maxy) maxy = p[1];
+                        if (p[2] < minz) minz = p[2];
+                        if (p[2] > maxz) maxz = p[2];
                     }
+/*
+                    var worldUnitsPerTexelX = (maxx - minx) / light._shadowWidth;
+                    var worldUnitsPerTexelY = (maxy - miny) / light._shadowHeight;
 
-                    pc.math.mat4.copy(light.worldTransform, shadowCamWtm);
-                    shadowCamWtm[12] = this._sceneAabb.center[0];
-                    shadowCamWtm[13] = this._sceneAabb.center[1];
-                    shadowCamWtm[14] = this._sceneAabb.center[2];
-                    pc.math.mat4.multiply(shadowCamWtm, camToLight, shadowCamWtm);
+                    minx /= worldUnitsPerTexelX;
+                    minx = Math.floor(minx);
+                    minx *= worldUnitsPerTexelX;
+                    maxx /= worldUnitsPerTexelX;
+                    maxx = Math.floor(maxx);
+                    maxx *= worldUnitsPerTexelX;
 
-                    var extent = pc.math.vec3.length(this._sceneAabb.halfExtents);
+                    miny /= worldUnitsPerTexelY;
+                    miny = Math.floor(miny);
+                    miny *= worldUnitsPerTexelY;
+                    maxy /= worldUnitsPerTexelY;
+                    maxy = Math.floor(maxy);
+                    maxy *= worldUnitsPerTexelY;
+*/
+                    // 5. Use your min and max values to create an off-center orthographic projection.
+                    shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
+                    pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
+
                     shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
-                    shadowCam.setNearClip(-extent);
-                    shadowCam.setFarClip(extent);
-                    shadowCam.setAspectRatio(1);
-                    shadowCam.setOrthoHeight(extent);
+                    shadowCam.setNearClip(0);
+                    shadowCam.setFarClip((maxz - minz) * 1.5);
+                    shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
+                    shadowCam.setOrthoHeight((maxy - miny) * 0.5);
                 } else if (type === pc.scene.LightType.SPOT) {
                     shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
                     shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
@@ -369,37 +414,44 @@ pc.extend(pc.scene, function () {
         }
 
         // Sort meshes into the correct render order
-        this.meshInstances.sort(sortByMaterial);
+        this.drawCalls.sort(sortDrawCalls);
 
         camera.frameBegin();
 
         this.dispatchGlobalLights();
         this.dispatchLocalLights();
 
-        for (i = 0, numInstances = this.meshInstances.length; i < numInstances; i++) {
-            meshInstance = this.meshInstances[i];
-            mesh = meshInstance.mesh;
-            material = meshInstance.material;
+        for (i = 0, numDrawCalls = this.drawCalls.length; i < numDrawCalls; i++) {
+            drawCall = this.drawCalls[i];
+            if (drawCall.command) {
+                // We have a command
+                drawCall.command();
+            } else {
+                // We have a mesh instance
+                meshInstance = drawCall;
+                mesh = meshInstance.mesh;
+                material = meshInstance.material;
 
-            this.modelMatrixId.setValue(meshInstance.node.worldTransform);
-            if (meshInstance.skinInstance) {
-                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                if (meshInstance.skinInstance) {
+                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                }
+
+                if (material !== prevMaterial) {
+                    device.setProgram(material.getProgram(mesh));
+                    material.setParameters();
+                    device.clearLocalState();
+                    device.updateLocalState(material.getState());
+                }
+
+                style = meshInstance.renderStyle;
+
+                device.setVertexBuffer(mesh.vertexBuffer, 0);
+                device.setIndexBuffer(mesh.indexBuffer[style]);
+                device.draw(mesh.primitive[style]);
+
+                prevMaterial = material;
             }
-
-            if (material !== prevMaterial) {
-                device.setProgram(material.getProgram(mesh));
-                material.setParameters();
-                device.clearLocalState();
-                device.updateLocalState(material.getState());
-            }
-
-            style = meshInstance.renderStyle;
-
-            device.setVertexBuffer(mesh.vertexBuffer, 0);
-            device.setIndexBuffer(mesh.indexBuffer[style]);
-            device.draw(mesh.primitive[style]);
-
-            prevMaterial = material;
         }
 
         device.clearLocalState();

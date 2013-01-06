@@ -75,7 +75,7 @@ pc.extend(pc.fw, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            if(newValue) {
+            if (newValue) {
                 this.loadModelAsset(newValue);
             } else {
                 this.model = null;
@@ -83,13 +83,21 @@ pc.extend(pc.fw, function () {
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
-            if (newValue !== undefined) {
-                var componentData = this.data;
-                if (componentData.model) {
-                    var meshInstances = componentData.model.meshInstances;
-                    for (var i = 0; i < meshInstances.length; i++) {
-                        meshInstances[i].castShadow = newValue;
-                    }
+            var model = this.data.model;
+            if (model) {
+                var scene = this.system.context.scene;
+                var inScene = scene.containsModel(model);
+                if (inScene) {
+                    scene.removeModel(model);
+                }
+
+                var meshInstances = model.meshInstances;
+                for (var i = 0; i < meshInstances.length; i++) {
+                    meshInstances[i].castShadow = newValue;
+                }
+
+                if (inScene) {
+                    scene.addModel(model);
                 }
             }
         },

@@ -36,7 +36,6 @@
 ../src/graphics/graphics_scopespace.js
 ../src/graphics/graphics_version.js
 ../src/graphics/graphics_versionedobject.js
-../src/graphics/graphics_clearflag.js
 ../src/graphics/graphics_validation.js
 ../src/graphics/graphics_vertexiterator.js
 ../src/graphics/graphics_vertexformat.js

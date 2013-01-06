@@ -47,7 +47,7 @@ pc.extend(pc.scene, function () {
         this._clearOptions = {
             color: [186.0 / 255.0, 186.0 / 255.0, 177.0 / 255.0, 1.0],
             depth: 1.0,
-            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+            flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
         };
     }
 
@@ -88,6 +88,12 @@ pc.extend(pc.scene, function () {
         var clone = new pc.scene.CameraNode();
         this._cloneInternal(clone);
         return clone;
+    };
+
+    CameraNode.prototype.getFrustumCentroid = function () {
+        var centroid = pc.math.vec3.create(0, 0, -(this._farClip + this._nearClip) * 0.5);
+        pc.math.mat4.multiplyVec3(centroid, 1, this.getWorldTransform(), centroid);
+        return centroid;
     };
 
     /**
@@ -390,7 +396,7 @@ pc.extend(pc.scene, function () {
      * @param {Object} clearOptions The options determining the behaviour of subsequent render target clears.
      * @param {Array} clearOptions.color The options determining the behaviour of subsequent render target clears.
      * @param {number} clearOptions.depth The options determining the behaviour of subsequent render target clears.
-     * @param {pc.gfx.ClearFlag} clearOptions.flags The options determining the behaviour of subsequent render target clears.
+     * @param {pc.gfx.CLEARFLAG} clearOptions.flags The options determining the behaviour of subsequent render target clears.
      * @author Will Eastcott
      */
     CameraNode.prototype.setClearOptions = function (options) {

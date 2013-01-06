@@ -24,7 +24,7 @@ pc.extend(pc.scene, function () {
         this._clearOptions = {
             color: [1.0, 1.0, 1.0, 1.0],
             depth: 1.0,
-            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+            flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
         };
         this.setDimensions(width, height);
     };

@@ -1,4 +1,17 @@
 pc.extend(pc.scene, function () {
+    function getKey(layer, blendType, isCommand, materialId) {
+        // Key definition:
+        // Bit
+        // 31      : sign bit (leave)
+        // 28 - 30 : layer
+        // 26 - 27 : translucency type (opaque: 3, normal, additive, subtractive)
+        // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
+        // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
+        return ((layer & 0x7) << 28) |
+               ((blendType ? 0 : 3) << 26) |
+               ((isCommand ? 1 : 0) << 25) |
+               ((materialId & 0x1ffffff) << 0);
+    }
 
     var Mesh = function () {
         this.vertexBuffer = null;
@@ -21,6 +34,7 @@ pc.extend(pc.scene, function () {
 
         // Render options
         this.layer = pc.scene.LAYER_WORLD;
+        this.blendType = material.transparent ? pc.scene.BLEND_NORMAL : pc.scene.BLEND_NONE;
         this.renderStyle = pc.scene.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this.receiveShadow = true;
@@ -41,21 +55,18 @@ pc.extend(pc.scene, function () {
         },
 
         updateKey: function () {
-            // Key definition:
-            // Bit
-            // 31      - sign bit (leave)
-            // 28 - 30 - layer
-            // 26 - 27 - translucency type (opaque: 3, normal, additive, subtractive)
-            // 0 - 25  - Material ID (if oqaque) or 0 (if transparent - will be depth)
             var material = this.material;
-            this.key = 
-                ((this.layer & 0x7) << 28) |
-                ((material.transparent ? 0 : 3) << 26) |
-                ((material.id & 0x1fffff) << 0); 
+            this.key = getKey(this.layer, this.blendType, false, material.id);
         }
     };
 
+    var Command = function (layer, blendType, command) {
+        this.key = getKey(layer, blendType, true, 0);
+        this.command = command;
+    };
+
     return {
+        Command: Command,
         Mesh: Mesh,
         MeshInstance: MeshInstance,
     }; 

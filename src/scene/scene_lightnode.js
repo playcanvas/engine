@@ -240,7 +240,7 @@ pc.extend(pc.scene, function () {
 
         // We don't need to clear the color buffer if we're rendering a depth map
         var device = pc.gfx.Device.getCurrent();
-        var flags = (device.extDepthTexture) ? pc.gfx.ClearFlag.DEPTH : pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH;
+        var flags = (device.extDepthTexture) ? pc.gfx.CLEARFLAG_DEPTH : pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH;
 
         var shadowCam = new pc.scene.CameraNode();
         shadowCam.setRenderTarget(new pc.gfx.RenderTarget(shadowBuffer));

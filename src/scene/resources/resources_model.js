@@ -149,7 +149,7 @@ pc.extend(pc.resources, function () {
         camera.setClearOptions({
             color: cameraData.clearColor || [0, 0, 0, 1],
             depth: 1,
-            flags: pc.gfx.ClearFlag.COLOR | pc.gfx.ClearFlag.DEPTH
+            flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
         });
         if (cameraData.lookAt) {
             camera._lookAtId = cameraData.lookAt;
