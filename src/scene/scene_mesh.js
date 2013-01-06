@@ -61,7 +61,7 @@ pc.extend(pc.scene, function () {
     };
 
     var Command = function (layer, blendType, command) {
-        this.key = getKey(layer, transparency, true, 0);
+        this.key = getKey(layer, blendType, true, 0);
         this.command = command;
     };
 
