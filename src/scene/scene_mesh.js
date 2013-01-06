@@ -9,7 +9,7 @@ pc.extend(pc.scene, function () {
         // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
         return ((layer & 0x7) << 28) |
                ((blendType ? 0 : 3) << 26) |
-               (isCommand ? 1 : 0 << 25) |
+               ((isCommand ? 1 : 0) << 25) |
                ((materialId & 0x1ffffff) << 0);
     }
 
