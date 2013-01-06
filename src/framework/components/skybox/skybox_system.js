@@ -81,7 +81,10 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
+        // Update the skybox to work in both game and Designer
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+        pc.fw.ComponentSystem.on('toolsUpdate', this.onUpdate, this);
+
         this.on('remove', this.onRemove, this);
     }
     SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);
