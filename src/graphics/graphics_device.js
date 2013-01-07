@@ -317,8 +317,16 @@ pc.extend(pc.gfx, function () {
             }
         }
         this._stateFuncs["colorWrite"] = function (value) {
-            self.gl.colorMask(value.red, value.green, value.blue, value.alpha);
-            self._currentState.culling = value;
+            if ((self._currentState.colorWrite.red !== value.red) ||
+                (self._currentState.colorWrite.green !== value.green) || 
+                (self._currentState.colorWrite.blue !== value.blue) || 
+                (self._currentState.colorWrite.alpha !== value.alpha)) {
+                self.gl.colorMask(value.red, value.green, value.blue, value.alpha);
+                self._currentState.colorWrite.red = value.red;
+                self._currentState.colorWrite.green = value.green;
+                self._currentState.colorWrite.blue = value.blue;
+                self._currentState.colorWrite.alpha = value.alpha;
+            }
         };
         this._stateFuncs["cull"] = function (value) {
             if (self._currentState.cull !== value) {
@@ -706,7 +714,7 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
-         * @function
+         * @private
          * @name pc.gfx.Device#commitAttributes
          * @author Will Eastcott
          */
@@ -745,7 +753,7 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
-         * @function
+         * @private
          * @name pc.gfx.Device#commitSamplers
          * @author Will Eastcott
          */
@@ -767,7 +775,7 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
-         * @function
+         * @private
          * @name pc.gfx.Device#commitUniforms
          * @author Will Eastcott
          */

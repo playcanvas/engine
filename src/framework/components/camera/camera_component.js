@@ -31,6 +31,20 @@ pc.extend(pc.fw, function () {
     CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
 
     pc.extend(CameraComponent.prototype, {
+        /**
+         * @function 
+         * @name pc.fw.CameraComponent#screenToWorld
+         * @description Convert a point from 2D screen space to 3D world space.
+         * @param {Number} x x coordinate on screen.
+         * @param {Number} y y coordinate on screen.
+         * @param {Number} z The distance from the camera in world space to create the new point.
+         * @param {pc.math.vec3} worldCoord [Optional] 3D vector to recieve world coordinate result.
+         * @returns {pc.math.vec3} The world space coordinate.
+         */
+        screenToWorld: function (x, y, z, worldCoord) {
+            return this.data.camera.screenToWorld(x, y, z, worldCoord);
+        },
+
         onSetCamera: function (name, oldValue, newValue) {
             // remove old camera node from hierarchy and add new one
             if (oldValue) {
