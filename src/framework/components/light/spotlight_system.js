@@ -91,7 +91,7 @@ pc.extend(pc.fw, function () {
                     value: 2048
                 }]
             },
-            defaultValue: "1024"
+            defaultValue: 1024
         }, {
             name: "model",
             exposed: false
