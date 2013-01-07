@@ -2,7 +2,7 @@ pc.extend(pc.input, function () {
     /**
     * @name pc.input.TouchEvent
     * @class A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the standard
-    * browser event and provides lists of {@link pc.input.Touch}s.
+    * browser event and provides lists of {@link pc.input.Touch} objects.
     * @constructor Create a new TouchEvent from an existing browser event
     * @param {pc.input.TouchDevice} device The source device of the touch events
     * @param {TouchEvent} event The original browser TouchEvent
@@ -33,7 +33,7 @@ pc.extend(pc.input, function () {
 
     TouchEvent.prototype = {
         /**
-        * @method 
+        * @method
         * @name pc.input.TouchEvent#getTouchById
         * @description Get an event from one of the touch lists by the id.
         * It is useful to access touches by their id so that you can be sure you are referencing the same touch
@@ -55,7 +55,7 @@ pc.extend(pc.input, function () {
     
     /**
     * @name pc.input.Touch
-    * @class A instance of a single point touch on a {@pc.input.TouchDevice}
+    * @class A instance of a single point touch on a {@link pc.input.TouchDevice}
     * @constructor Create a new Touch object from the browser Touch
     * @param {Touch} touch The browser Touch object
     * @property {Number} id The identifier of the touch
