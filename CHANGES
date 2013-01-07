@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.88.1
+-------
+* Added pc.fw.CameraComponent#screenToWorld.
+* [FIX] Skybox now renders correctly in Designer.
+
+-------
 v0.88.0
 -------
 * [FIX] Engine now honours toggling of cast shadows in Designer.
