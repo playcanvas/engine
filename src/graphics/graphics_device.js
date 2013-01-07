@@ -706,7 +706,7 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
-         * @function
+         * @private
          * @name pc.gfx.Device#commitAttributes
          * @author Will Eastcott
          */
@@ -745,7 +745,7 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
-         * @function
+         * @private
          * @name pc.gfx.Device#commitSamplers
          * @author Will Eastcott
          */
@@ -767,7 +767,7 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
-         * @function
+         * @private
          * @name pc.gfx.Device#commitUniforms
          * @author Will Eastcott
          */
