@@ -33,7 +33,7 @@ pc.extend(pc.input, function () {
 
     TouchEvent.prototype = {
         /**
-        * @method
+        * @function
         * @name pc.input.TouchEvent#getTouchById
         * @description Get an event from one of the touch lists by the id.
         * It is useful to access touches by their id so that you can be sure you are referencing the same touch
@@ -62,7 +62,7 @@ pc.extend(pc.input, function () {
     * @property {Number} x The x co-ordinate relative to the element that the TouchDevice is attached to
     * @property {Number} y The y co-ordinate relative to the element that the TouchDevice is attached to
     * @property {DOMElement} target The target element of the touch event
-    * @property {Touch} The original browser Touch object
+    * @property {Touch} touch The original browser Touch object
     */
     var Touch = function (touch) {
         var coords = pc.input.getTouchTargetCoords(touch);
@@ -99,7 +99,7 @@ pc.extend(pc.input, function () {
 
     TouchDevice.prototype = {
         /**
-        * @method
+        * @function
         * @name pc.input.TouchDevice#attach
         * @description Attach a device to an element in the DOM. 
         * If the device is already attached to an element this method will detach it first
@@ -119,7 +119,7 @@ pc.extend(pc.input, function () {
         },
 
         /**
-        * @method
+        * @function
         * @name pc.input.TouchDevice#detach
         * @description Detach a device from the element it is attached to
         */
