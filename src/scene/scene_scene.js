@@ -13,8 +13,8 @@ pc.scene = {
     RENDERSTYLE_POINTS: 2,
 
     LAYER_HUD: 0,
-    LAYER_FX: 1,
-    LAYER_GIZMO: 2,
+    LAYER_GIZMO: 1,
+    LAYER_FX: 2,
     LAYER_WORLD: 3,
     LAYER_SKYBOX: 4
 };
