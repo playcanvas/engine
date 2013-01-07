@@ -5,6 +5,7 @@ pc.extend(pc.fw, function () {
         this.color = "0xffffff";
         this.intensity = 1;
         this.castShadows = false;
+        this.shadowResolution = 1024;
 
         // Non-serialized
         this.model = null;
