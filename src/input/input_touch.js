@@ -5,7 +5,7 @@ pc.extend(pc.input, function () {
     * browser event and provides lists of {@link pc.input.Touch}s.
     * @constructor Create a new TouchEvent from an existing browser event
     * @param {pc.input.TouchDevice} device The source device of the touch events
-    * @param {TouchEvent} The original browser TouchEvent
+    * @param {TouchEvent} event The original browser TouchEvent
     * @property {DOMElement} element The target DOMElement that the event was fired from
     * @property {pc.input.Touch[]} touches A list of all touches currently in contact with the device
     * @property {pc.input.Touch[]} changedTouches A list of touches that have changed since the last event
@@ -80,7 +80,8 @@ pc.extend(pc.input, function () {
     
     /**
     * @name pc.input.TouchDevice
-    * @class Attach a TouchDevice to an element and it will receive and fire events when the element is touched
+    * @class Attach a TouchDevice to an element and it will receive and fire events when the element is touched.
+    * See also {@link pc.input.Touch} and {@link pc.input.TouchEvent}
     * @constructor Create a new touch device and attach it to an element
     * @param {DOMElement} element The element to attach listen for events on
     */
@@ -98,6 +99,7 @@ pc.extend(pc.input, function () {
 
     TouchDevice.prototype = {
         /**
+        * @method
         * @name pc.input.TouchDevice#attach
         * @description Attach a device to an element in the DOM. 
         * If the device is already attached to an element this method will detach it first
@@ -117,6 +119,7 @@ pc.extend(pc.input, function () {
         },
 
         /**
+        * @method
         * @name pc.input.TouchDevice#detach
         * @description Detach a device from the element it is attached to
         */
