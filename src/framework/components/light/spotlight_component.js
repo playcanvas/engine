@@ -16,6 +16,7 @@ pc.extend(pc.fw, function () {
         this.on("set_innerConeAngle", this.onSetInnerConeAngle, this);
         this.on("set_intensity", this.onSetIntensity, this);
         this.on("set_outerConeAngle", this.onSetOuterConeAngle, this);
+        this.on("set_shadowResolution", this.onSetShadowResolution, this);
     };
     SpotLightComponent = pc.inherits(SpotLightComponent, pc.fw.Component);
 
@@ -23,11 +24,6 @@ pc.extend(pc.fw, function () {
         onSetAttenuationEnd: function (name, oldValue, newValue) {
             var light = this.data.model.lights[0];
             light.setAttenuationEnd(newValue);
-        },
-
-        onSetCastShadows: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setCastShadows(newValue);
         },
 
         onSetColor: function (name, oldValue, newValue) {
@@ -60,6 +56,16 @@ pc.extend(pc.fw, function () {
         onSetIntensity: function (name, oldValue, newValue) {
             var light = this.data.model.lights[0];
             light.setIntensity(newValue);
+        },
+
+        onSetCastShadows: function (name, oldValue, newValue) {
+            var light = this.data.model.lights[0];
+            light.setCastShadows(newValue);
+        },
+
+        onSetShadowResolution: function (name, oldValue, newValue) {
+            var light = this.data.model.lights[0];
+            light.setShadowResolution(newValue, newValue);
         }
     });
     return {

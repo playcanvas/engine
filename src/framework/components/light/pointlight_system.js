@@ -22,7 +22,7 @@ pc.extend(pc.fw, function () {
         }, {
             name: "color",
             displayName: "Color",
-            description: "Light color",
+            description: "Light Color",
             type: "rgb",
             defaultValue: "0xffffff"
         }, {
@@ -36,12 +36,6 @@ pc.extend(pc.fw, function () {
                 max: 10,
                 step: 0.05
             }
-        }, {
-            name: "castShadows",
-            displayName: "Cast shadows",
-            description: "Cast shadows from this light",
-            type: "boolean",
-            defaultValue: false
         }, {
             name: "attenuationEnd",
             displayName: "Radius",
@@ -90,7 +84,7 @@ pc.extend(pc.fw, function () {
 
             data.model = model;
 
-            properties = ['model', 'enable', 'color', 'intensity', 'castShadows', 'attenuationEnd'];
+            properties = ['model', 'enable', 'color', 'intensity', 'attenuationEnd'];
             PointLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 

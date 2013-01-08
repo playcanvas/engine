@@ -52,17 +52,15 @@ pc.extend(pc.fw, function () {
                         break;
                 };
 
-/*
-                if (this.system.context.designer) {
-                    geometry.generateWireframe();
-                }
-*/
-
                 var node = new pc.scene.GraphNode();
 
                 var model = new pc.scene.Model();
                 model.graph = node;
                 model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
+
+                if (this.system.context.designer) {
+                    model.generateWireframe();
+                }
 
                 this.model = model;
             }

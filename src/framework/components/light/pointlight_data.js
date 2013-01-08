@@ -4,7 +4,6 @@ pc.extend(pc.fw, function () {
         this.enable = true;
         this.color = "0xffffff";
         this.intensity = 1;
-        this.castShadows = false;
         this.attenuationEnd = 10;
 
         // Non-serialized

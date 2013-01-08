@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.89.0
+-------
+* Implemented pc.scene.Model#generateWireframe.
+* Added pc.input.TouchDevice
+* Added shadow resolution attribute. Removed cast shadows attribute from point light component.
+
+-------
 v0.88.1
 -------
 * Added pc.fw.CameraComponent#screenToWorld.
