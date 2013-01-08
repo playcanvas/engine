@@ -12,7 +12,7 @@ pc.extend(pc.fw, function () {
      * @param {Object} context
      * @extends pc.fw.Component
      */
-    var Body3dComponent = function Body3dComponent (context) {
+    var Body3dComponent = function Body3dComponent (system, entity) {
         // Lazily create shared variable
         if (typeof(Ammo) !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
@@ -24,6 +24,8 @@ pc.extend(pc.fw, function () {
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
         this.on('set_static', this.onSetStatic, this);
+
+        entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
     };
     Body3dComponent = pc.inherits(Body3dComponent, pc.fw.Component);
 
@@ -260,6 +262,12 @@ pc.extend(pc.fw, function () {
             var body = this.data.body;
             if (body) {
             }
+        },
+
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            this.setTransform(this.entity.getWorldTransform());
+            this.setLinearVelocity(0,0,0);
+            this.setAngularVelocity(0,0,0);    
         }
     });
 
