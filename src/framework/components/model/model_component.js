@@ -50,14 +50,11 @@ pc.extend(pc.fw, function () {
                 var url = asset.getFileUrl();
                 this.system.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {
                     var model = resources[url];
-/*                    
+
                     if (this.system.context.designer) {
-                        var geometries = model.getGeometries();
-                        for (var i = 0; i < geometries.length; i++) {
-                            geometries[i].generateWireframe();
-                        }
+                        model.generateWireframe();
                     }
-*/                    
+
                     this.model = model;
                 }.bind(this), function (errors, resources) {
                     Object.keys(errors).forEach(function (key) {
