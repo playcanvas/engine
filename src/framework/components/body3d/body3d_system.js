@@ -106,8 +106,8 @@ pc.extend(pc.fw, function () {
             Body3dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.entity.body3d.createBody();
-            // component.entity._setPosition = component.entity.setPosition;
-            // component.entity.setPosition = pc.fw.Body3dComponent.prototype._setPosition;
+            component.entity._setPosition = component.entity.setPosition;
+            component.entity.setPosition = pc.fw.Body3dComponent.prototype._setPosition;
         },
 
         onRemove: function (entity, data) {
@@ -116,8 +116,8 @@ pc.extend(pc.fw, function () {
             }                
             data.body = null;
 
-            // entity.setPosition = entity._setPosition;
-            // delete entity._setPosition;
+            entity.setPosition = entity._setPosition;
+            delete entity._setPosition;
         },
 
         addBody: function (body) {

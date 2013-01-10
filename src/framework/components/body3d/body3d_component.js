@@ -157,20 +157,24 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        // _setPosition: function (x, y, z) {
-        //     if (arguments.length > 1) {
-        //         this._setPosition(x, y, z);    
-        //     } else {
-        //         this._setPosition(x);
-        //     }
+        /** 
+        Replacement for pc.scene.GraphNode#setPosition()
+        Used by Entities with a Body3d Component so that when entity.setPosition() is called, the body transform can be updated
+        **/
+        _setPosition: function (x, y, z) {
+            if (arguments.length > 1) {
+                this._setPosition(x, y, z);    
+            } else {
+                this._setPosition(x);
+            }
 
-        //     if (this.body3d && this.body3d.body) {
-        //         var transform = this.body3d.body.getWorldTransform();
-        //         transform.setOrigin(new Ammo.btVector3(x, y, z));
+            if (this.body3d && this.body3d.body) {
+                var transform = this.body3d.body.getWorldTransform();
+                transform.setOrigin(new Ammo.btVector3(x, y, z));
 
-        //         this.body3d.body.activate();
-        //     }
-        // },
+                this.body3d.body.activate();
+            }
+        },
 
         /**
         * @private
@@ -180,17 +184,17 @@ pc.extend(pc.fw, function () {
         * @param {Number} y The y value of the position
         * @param {Number} z The z value of the position
         */
-        setPosition: function (x, y, z) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                var transform = body.getWorldTransform();
-                transform.setOrigin(new Ammo.btVector3(x, y, z));
+        // setPosition: function (x, y, z) {
+        //     var body = this.entity.body3d.body;
+        //     if (body) {
+        //         var transform = body.getWorldTransform();
+        //         transform.setOrigin(new Ammo.btVector3(x, y, z));
 
-                body.activate();
+        //         body.activate();
 
-                this.entity.setPosition(x, y, z);
-            }
-        },
+        //         this.entity.setPosition(x, y, z);
+        //     }
+        // },
 
         /**
         * @private
