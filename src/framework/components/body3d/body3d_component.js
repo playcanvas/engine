@@ -34,14 +34,14 @@ pc.extend(pc.fw, function () {
          * @private
          * @name pc.fw.Body3dComponent#applyForce
          * @description Apply an force to the body
-         * @param {pc.math.vec3} force The force to apply. A 3D world space vector, extra component is ignored
-         * @param {pc.math.vec3} point The point at which to apply the force. A 3D world space vector, extra component is ignored
+         * @param {pc.math.vec3} force The force to apply, in world space.
+         * @param {pc.math.vec3} relativePoint The point at which to apply the force, in local space (relative to the entity).
          */
-        applyForce: function (force, point) {
+        applyForce: function (force, relativePoint) {
             var body = this.entity.body3d.body;
             if (body) {
                 ammoVec1.setValue(force[0], force[1], force[2]);
-                ammoVec2.setValue(point[0], point[1], point[2]);
+                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
                 body.applyForce(ammoVec1, ammoVec2);
             }
         },
@@ -50,14 +50,14 @@ pc.extend(pc.fw, function () {
          * @private
          * @name pc.fw.Body3dComponent#applyImpulse
          * @description Apply an impulse (instantaneous change of velocity) to the body
-         * @param {pc.math.vec3} impulse The impulse to apply. A 3D world space vector, extra component is ignored
-         * @param {pc.math.vec3} point The point at which to apply the impulse. A 3D world space vector, extra component is ignored
+         * @param {pc.math.vec3} impulse The impulse to apply, in world space.
+         * @param {pc.math.vec3} relativePoint The point at which to apply the impulse, in local space (relative to the entity).
          */
-        applyImpulse: function (impulse, point) {
+        applyImpulse: function (impulse, relativePoint) {
             var body = this.entity.body3d.body;
             if (body) {
                 ammoVec1.setValue(impulse[0], impulse[1], impulse[2]);
-                ammoVec2.setValue(point[0], point[1], point[2]);
+                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
                 body.applyImpulse(ammoVec1, ammoVec2);
             }
         },
@@ -148,12 +148,29 @@ pc.extend(pc.fw, function () {
                 body.setRestitution(isStatic ? 1 : entity.body3d.restitution);
                 body.setFriction(entity.body3d.friction);
 
+                body.entity = this;
+
                 this.system.addBody(body);
 
                 entity.body3d.body = body;
                 entity.body3d.body.activate();
             }
         },
+
+        // _setPosition: function (x, y, z) {
+        //     if (arguments.length > 1) {
+        //         this._setPosition(x, y, z);    
+        //     } else {
+        //         this._setPosition(x);
+        //     }
+
+        //     if (this.body3d && this.body3d.body) {
+        //         var transform = this.body3d.body.getWorldTransform();
+        //         transform.setOrigin(new Ammo.btVector3(x, y, z));
+
+        //         this.body3d.body.activate();
+        //     }
+        // },
 
         /**
         * @private

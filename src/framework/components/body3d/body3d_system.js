@@ -7,6 +7,12 @@ pc.extend(pc.fw, function () {
     var rotation = pc.math.vec3.create();
     var scale = pc.math.vec3.create();
 
+    var RaycastResult = function (entity, point, normal) {
+        this.entity = entity;
+        this.point = point;
+        this.normal = normal;
+    };
+
     /**
      * @private
      * @name pc.fw.Body3dComponentSystem
@@ -65,10 +71,8 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.debugRender = false;
-        this._gfx = _createGfxResources();      // debug gfx resources
-        this._rayStart = pc.math.vec3.create(); // for debugging raycasts
-        this._rayEnd = pc.math.vec3.create();   // for debugging raycasts
+        // this._rayStart = pc.math.vec3.create(); // for debugging raycasts
+        // this._rayEnd = pc.math.vec3.create();   // for debugging raycasts
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
@@ -102,6 +106,8 @@ pc.extend(pc.fw, function () {
             Body3dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.entity.body3d.createBody();
+            // component.entity._setPosition = component.entity.setPosition;
+            // component.entity.setPosition = pc.fw.Body3dComponent.prototype._setPosition;
         },
 
         onRemove: function (entity, data) {
@@ -109,6 +115,9 @@ pc.extend(pc.fw, function () {
                 this.removeBody(data.body);    
             }                
             data.body = null;
+
+            // entity.setPosition = entity._setPosition;
+            // delete entity._setPosition;
         },
 
         addBody: function (body) {
@@ -134,49 +143,74 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.Body3dComponentSystem#raycast
-        * @description Raycast the world for entities that intersect with the ray. Your callback controls whether you get the closest entity, 
-        * any entity or n-entities. Entities that contain the starting point are ignored
-        * @param {Function} callback Callback with signature `callback(entity, point, normal, fraction)`. The callback should return the 
-        * the new length of the ray as a fraction of original length. So, returning 0, terminates; returning 1, continues with original ray,
-        * returning current fraction will find the closest entity.
+        * @name pc.fw.Body3dComponentSystem#raycastFirst
+        * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end, 
+        * if the ray hits an entity with a body3d component, the callback function is called along with a {@link pc.fw.RaycastResult}.
+        * @param {pc.math.vec3} start The world space point where the ray starts
+        * @param {pc.math.vec3} end The world space point where the ray ends
+        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
         */
-        raycast: function (callback, start, end) {
+        raycastFirst: function (start, end, callback) {
             var rayFrom = new Ammo.btVector3(start[0], start[1], start[2]);
             var rayTo = new Ammo.btVector3(end[0], end[1], end[2]);
-
             var rayCallback = new Ammo.ClosestRayResultCallback(rayFrom, rayTo);
+
             this.dynamicsWorld.rayTest(rayFrom, rayTo, rayCallback);
             if (rayCallback.hasHit()) {
-                var body = rayCallback.get_m_collisionObject();
+                var body = Module.castObject(rayCallback.get_m_collisionObject(), Ammo.btRigidBody);
+                var point = rayCallback.get_m_hitPointWorld();
+                var normal = rayCallback.get_m_hitNormalWorld();
+
                 if (body) {
-                    callback();
+                    callback(new RaycastResult(
+                                    body.entity, 
+                                    pc.math.vec3.create(point.x(), point.y(), point.z()),
+                                    pc.math.vec3.create(normal.x(), normal.y(), normal.z())
+                                )
+                            );
                 }
             }
+
+            Ammo.destroy(rayFrom);
+            Ammo.destroy(rayTo);
+            Ammo.destroy(rayCallback);
         },
+
 
         /**
         * @private
-        * @name pc.fw.Body3dComponentSystem#raycastFirst
-        * @description Raycast into the world (in 2D) and return the first Entity hit
-        * @param {pc.math.vec3} start The ray start position
-        * @param {pc.math.vec3} end The ray end position
-        * @param {pc.fw.Entity} ignore An entity to ignore
-        * @returns {pc.fw.Entity} The first Entity with a 2D collision shape hit by the ray.
+        * @name pc.fw.Body3dComponentSystem#raycast
+        * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end, 
+        * if the ray hits an entity with a body3d component, the callback function is called along with a {@link pc.fw.RaycastResult}.
+        * @param {pc.math.vec3} start The world space point where the ray starts
+        * @param {pc.math.vec3} end The world space point where the ray ends
+        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
         */
-        raycastFirst: function (start, end, ignore) {
-            var result;
-            var fraction = 1;
-            this.raycast(function (fixture, point, normal, f) {
-                var e = fixture.GetUserData();
-                if (e !== ignore && f < fraction) {
-                    result = e;
-                    fraction = f;
-                }
-                return 1;
-            }, start, end);
-            return result;
-        },
+        // raycast: function (start, end, callback) {
+        //     var rayFrom = new Ammo.btVector3(start[0], start[1], start[2]);
+        //     var rayTo = new Ammo.btVector3(end[0], end[1], end[2]);
+        //     var rayCallback = new Ammo.AllHitsRayResultCallback(rayFrom, rayTo);
+
+        //     this.dynamicsWorld.rayTest(rayFrom, rayTo, rayCallback);
+        //     if (rayCallback.hasHit()) {
+        //         var body = Module.castObject(rayCallback.get_m_collisionObject(), Ammo.btRigidBody);
+        //         var point = rayCallback.get_m_hitPointWorld();
+        //         var normal = rayCallback.get_m_hitNormalWorld();
+
+        //         if (body) {
+        //             callback(new RaycastResult(
+        //                             body.entity, 
+        //                             pc.math.vec3.create(point.x(), point.y(), point.z()),
+        //                             pc.math.vec3.create(normal.x(), normal.y(), normal.z())
+        //                         )
+        //                     );
+        //         }
+        //     }
+
+        //     Ammo.destroy(rayFrom);
+        //     Ammo.destroy(rayTo);
+        //     Ammo.destroy(rayCallback);
+        // },
 
         onUpdate: function (dt) {
             // Update the transforms of all bodies
@@ -193,43 +227,8 @@ pc.extend(pc.fw, function () {
                     }
                 }
             }
-        },
-
-        render: function () {
-            if (this.debugRender) {
-                var p1 = this._rayStart;
-                var p2 = this._rayEnd;
-
-                var positions = new Float32Array(this._gfx.vertexBuffer.lock());
-                positions[0]  = p1[0];
-                positions[1]  = p1[1];
-                positions[2]  = p1[2];
-                positions[3]  = p2[0];
-                positions[4]  = p2[1];
-                positions[5]  = p2[2];
-                this._gfx.vertexBuffer.unlock();
-
-                var device = pc.gfx.Device.getCurrent();
-                device.setProgram(this._gfx.program);
-                device.setIndexBuffer(this._gfx.indexBuffer);
-                device.setVertexBuffer(this._gfx.vertexBuffer, 0);
-
-                device.scope.resolve("matrix_model").setValue(pc.math.mat4.create());
-                device.scope.resolve("uColor").setValue(this._gfx.color);
-                device.draw({
-                    type: pc.gfx.PrimType.LINES,
-                    base: 0,
-                    count: this._gfx.indexBuffer.getNumIndices(),
-                    indexed: true
-                });
-            }
         }
     });
-
-
-    var _createGfxResources = function () {
-        return {};
-    };
 
     return {
         Body3dComponentSystem: Body3dComponentSystem
