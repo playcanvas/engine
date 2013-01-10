@@ -148,7 +148,7 @@ pc.extend(pc.fw, function () {
                 body.setRestitution(isStatic ? 1 : entity.body3d.restitution);
                 body.setFriction(entity.body3d.friction);
 
-                body.entity = this;
+                body.entity = entity;
 
                 this.system.addBody(body);
 
@@ -160,7 +160,7 @@ pc.extend(pc.fw, function () {
         /** 
         Replacement for pc.scene.GraphNode#setPosition()
         Used by Entities with a Body3d Component so that when entity.setPosition() is called, the body transform can be updated
-        **/
+        */
         _setPosition: function (x, y, z) {
             if (arguments.length > 1) {
                 this._setPosition(x, y, z);    
@@ -231,6 +231,9 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        /** 
+        * update the Entity transform from the RigidBody
+        */
         updateTransform: function (body) {
             if (body.isActive() && body.getMotionState()) {
                 body.getMotionState().getWorldTransform(ammoTransform);

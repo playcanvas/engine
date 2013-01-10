@@ -7,10 +7,42 @@ pc.extend(pc.fw, function () {
     var rotation = pc.math.vec3.create();
     var scale = pc.math.vec3.create();
 
+    /**
+    * @private
+    * @name pc.fw.RaycastResult
+    * @class Object holding the result of a successful raycast hit
+    * @constructor Create a new RaycastResult
+    * @property {pc.fw.Entity} entity The entity that was hit
+    * @property {pc.math.vec3} point The point at which the ray hit the entity in world space
+    * @property {pc.math.vec3} normal The normal vector of the surface where the ray hit in world space.
+    */
     var RaycastResult = function (entity, point, normal) {
         this.entity = entity;
         this.point = point;
         this.normal = normal;
+    };
+
+    /**
+    * @private
+    * @name pc.fw.ContactResult
+    * @class Object holding the result of a contact between two rigid bodies
+    * @constructor Create a new ContactResult
+    * @property {pc.fw.Entity} a The first entity involved in the contact
+    * @property {pc.fw.Entity} b The second entity involved in the contact
+    * @property {pc.math.vec3} localPointA The point on Entity A where the contact occured, relative to A
+    * @property {pc.math.vec3} localPointB The point on Entity B where the contact occured, relative to B
+    * @property {pc.math.vec3} pointA The point on Entity A where the contact occured, in world space
+    * @property {pc.math.vec3} pointB The point on Entity B where the contact occured, in world space
+    * @property {pc.math.vec3} normal The normal vector of the contact on Entity B, in world space
+    */
+    var ContactResult = function (a, b, contactPoint) {
+        this.a = a;
+        this.b = b;
+        this.localPointA = new pc.math.vec3.create(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
+        this.localPointB = new pc.math.vec3.create(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
+        this.pointA = new pc.math.vec3.create(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
+        this.pointB = new pc.math.vec3.create(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
+        this.normal = new pc.math.vec3.create(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
     };
 
     /**
@@ -226,6 +258,28 @@ pc.extend(pc.fw, function () {
                         entity.body3d.updateTransform(componentData.body);
                     }
                 }
+            }
+
+            // Check for collisions and fire callbacks
+            if (this.hasEvent('contact')) {
+                var dispatcher = this.dynamicsWorld.getDispatcher();
+                var manifold;
+                var e0, e1; // Entities in collision
+                var contactPoint;
+                var numManifolds = dispatcher.getNumManifolds();
+                var numContacts;
+                var i, j;
+                for (i = 0; i < numManifolds; i++) {
+                    manifold = dispatcher.getManifoldByIndexInternal(i);
+                    e0 = Ammo.wrapPointer(manifold.getBody0(), Ammo.btRigidBody).entity;
+                    e1 = Ammo.wrapPointer(manifold.getBody1(), Ammo.btRigidBody).entity;
+
+                    numContacts = manifold.getNumContacts();
+                    for (j = 0; j < numContacts; j++) {
+                        contactPoint = manifold.getContactPoint(j);
+                        this.fire('contact', new ContactResult(e0, e1, contactPoint));
+                    }
+                }                
             }
         }
     });
