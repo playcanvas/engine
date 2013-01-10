@@ -131,6 +131,21 @@ pc.events = function () {
             }
             
             return this;
+        },
+
+        /**
+        * @function
+        * @name pc.events.hasEvent
+        * @description Test if there are any handlers bound to an event name
+        * @param {String} name The name of the event to test
+        * @example
+        * var o = {};
+        * pc.extend(o, pc.events); // add events to o
+        * o.on('event_name', function () {}); // bind an event to 'event_name'
+        * o.hasEvent('event_name'); // returns true
+        */
+        hasEvent: function (name) {
+            return (typeof(this._callbacks) !== 'undefined' && typeof(this._callbacks[name]) !== 'undefined' && this._callbacks[name].length > 0)
         }
     };
 
