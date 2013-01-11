@@ -851,7 +851,18 @@ pc.extend(pc.scene, function () {
          * @param {Number} ez Rotation around world space Z axis in degrees.
          * @author Will Eastcott
          */
-        rotate: function (x, y, z) {
+        rotate: function () {
+            var x, y, z;
+            if (arguments.length === 3) {
+                x = arguments[0];
+                y = arguments[1];
+                z = arguments[2];
+            } else {
+                x = arguments[0][0];
+                y = arguments[0][1];
+                z = arguments[0][2];
+            }
+
             pc.math.quat.setFromEulers(tempQuatA, x, y, z);
 
             if (this._parent === null) {
@@ -885,7 +896,18 @@ pc.extend(pc.scene, function () {
          * @param {Number} ez Rotation around local space Z axis in degrees.
          * @author Will Eastcott
          */
-        rotateLocal: function (x, y, z) {
+        rotateLocal: function () {
+            var x, y, z;
+            if (arguments.length === 3) {
+                x = arguments[0];
+                y = arguments[1];
+                z = arguments[2];
+            } else {
+                x = arguments[0][0];
+                y = arguments[0][1];
+                z = arguments[0][2];
+            }
+
             pc.math.quat.setFromEulers(tempQuatA, x, y, z);
             pc.math.quat.multiply(this.localRotation, tempQuatA, this.localRotation);
             this.dirtyLocal = true;
