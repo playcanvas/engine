@@ -1,5 +1,7 @@
 pc.extend(pc.fw, function () {
     // Shared math variable to avoid excessive allocation
+    var vel = pc.math.vec3.create();
+
     var quat = pc.math.quat.create();
     var ammoTransform;
     var ammoVec1, ammoVec2, ammoQuat;
@@ -24,9 +26,17 @@ pc.extend(pc.fw, function () {
         this.on('set_mass', this.onSetMass, this);
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
-        this.on('set_static', this.onSetStatic, this);
+        //this.on('set_static', this.onSetStatic, this);
+        this.on('set_bodyType', this.onSetBodyType, this);
 
         entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+
+        // For kinematic
+        this.displacement = pc.math.vec3.create();
+
+        this.linearVelocity = pc.math.vec3.create();
+        this.angularVelocity = pc.math.vec3.create();
+
     };
     Body3dComponent = pc.inherits(Body3dComponent, pc.fw.Component);
 
@@ -72,10 +82,14 @@ pc.extend(pc.fw, function () {
          * @param {Number} y The z value of the velocity
          */
         setLinearVelocity: function (x, y, z) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                ammoVec1.setValue(x, y, z);
-                body.setLinearVelocity(ammoVec1);
+            if (!this.isKinematic()) {
+                var body = this.entity.body3d.body;
+                if (body) {
+                    ammoVec1.setValue(x, y, z);
+                    body.setLinearVelocity(ammoVec1);
+                }                
+            } else {
+                pc.math.vec3.set(this.linearVelocity, x, y, z);
             }
         },
 
@@ -125,15 +139,16 @@ pc.extend(pc.fw, function () {
             }
 
             if (shape) {
-                if (entity.body3d.body) {
-                    this.system.removeBody(entity.body3d.body);
+                if (this.body) {
+                    this.system.removeBody(this.body);
+                    Ammo.destroy(this.body);
                 }
 
-                var isStatic = entity.body3d.static;
-                var mass = isStatic ? 0 : entity.body3d.mass;
+                var isStaticOrKinematic = this.isStaticOrKinematic();
+                var mass = isStaticOrKinematic ? 0 : this.mass;
 
                 var localInertia = new Ammo.btVector3(0, 0, 0);
-                if (!isStatic) {
+                if (!isStaticOrKinematic) {
                     shape.calculateLocalInertia(mass, localInertia);
                 }
 
@@ -150,8 +165,13 @@ pc.extend(pc.fw, function () {
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
                 var body = new Ammo.btRigidBody(bodyInfo);
-                body.setRestitution(isStatic ? 1 : entity.body3d.restitution);
-                body.setFriction(entity.body3d.friction);
+                body.setRestitution(this.restitution);
+                body.setFriction(this.friction);
+
+                if (this.isKinematic()) {
+                    body.setCollisionFlags(body.getCollisionFlags() | pc.fw.BODY3D_CF_KINEMATIC_OBJECT);
+                    body.setActivationState(pc.fw.BODY3D_DISABLE_DEACTIVATION);
+                }
 
                 body.entity = entity;
 
@@ -237,6 +257,35 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        isStatic: function () {
+            return (this.bodyType === pc.fw.BODY3D_TYPE_STATIC);
+        },
+
+        isStaticOrKinematic: function () {
+            return (this.bodyType === pc.fw.BODY3D_TYPE_STATIC || this.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC);
+        },
+
+        isKinematic: function () {
+            return (this.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC);
+        },
+
+        updateKinematicTransform: function (dt) {
+            pc.math.vec3.scale(this.linearVelocity, dt, this.displacement);
+            this.entity.translate(this.displacement);
+
+            pc.math.vec3.scale(this.angularVelocity, dt, this.displacement);
+            this.entity.rotate(this.displacement[0], this.displacement[1], this.displacement[2]);
+            if (this.body.getMotionState()) {
+                var pos = this.entity.getPosition();
+                var rot = this.entity.getRotation();
+
+                ammoTransform.getOrigin().setValue(pos[0], pos[1], pos[2]);
+                ammoQuat.setValue(rot[0], rot[1], rot[2], rot[3]);
+                ammoTransform.setRotation(ammoQuat);
+                this.body.getMotionState().setWorldTransform(ammoTransform);
+            }
+        },
+
         /** 
         * update the Entity transform from the RigidBody
         */
@@ -267,7 +316,7 @@ pc.extend(pc.fw, function () {
                 body.updateInertiaTensor();
 
                 this.system.addBody(body);
-            }                
+            }
         },
 
         onSetFriction: function (name, oldValue, newValue) {
@@ -280,17 +329,24 @@ pc.extend(pc.fw, function () {
         onSetRestitution: function (name, oldValue, newValue) {
             var body = this.data.body;
             if (body) {
-                if (this.data.static) {
-                    body.setRestitution(1);
-                } else {
-                    body.setRestitution(newValue);
-                }
+                body.setRestitution(newValue);
+                // if (this.data.static) {
+                //     body.setRestitution(1);
+                // } else {
+                //     body.setRestitution(newValue);
+                // }
             }                
         },
 
-        onSetStatic: function (name, oldValue, newValue) {
-            var body = this.data.body;
-            if (body) {
+        // onSetStatic: function (name, oldValue, newValue) {
+        //     var body = this.data.body;
+        //     if (body) {
+        //     }
+        // },
+
+        onSetBodyType: function (name, oldValue, newValue) {
+            if (newValue !== oldValue) {
+                this.createBody();    
             }
         },
 

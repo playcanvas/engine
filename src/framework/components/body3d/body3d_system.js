@@ -7,6 +7,8 @@ pc.extend(pc.fw, function () {
     var rotation = pc.math.vec3.create();
     var scale = pc.math.vec3.create();
 
+    var ammoRayStart, ammoRayEnd;
+
     /**
     * @private
     * @name pc.fw.RaycastResult
@@ -91,11 +93,23 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0
         }, {
-            name: "static",
-            displayName: "Static",
-            description: "Static bodies are immovable and do not collide with other static bodies.",
-            type: "boolean",
-            defaultValue: true
+            name: "bodyType",
+            displayName: "Body Type",
+            description: "The type of body determines how it moves and collides with other bodies. Dynamic is a normal body. Static will never move. Kinematic can be moved in code, but will not respond to collisions.",
+            type: "enumeration",
+            options: {
+                enumerations: [{
+                    name: 'Static',
+                    value: pc.fw.BODY3D_TYPE_STATIC,
+                }, {
+                    name: 'Dynamic',
+                    value: pc.fw.BODY3D_TYPE_DYNAMIC,
+                }, {
+                    name: 'Kinematic',
+                    value: pc.fw.BODY3D_TYPE_KINEMATIC,
+                }]
+            },
+            defaultValue: pc.fw.BODY3D_TYPE_STATIC
         }, {
             name: "body",
             exposed: false
@@ -105,8 +119,7 @@ pc.extend(pc.fw, function () {
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
-        this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
-
+        
         // Create the Ammo physics world
         if (typeof(Ammo) !== 'undefined') {
             var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -114,10 +127,16 @@ pc.extend(pc.fw, function () {
             var overlappingPairCache = new Ammo.btDbvtBroadphase();
             var solver = new Ammo.btSequentialImpulseConstraintSolver();
             this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
+
+            this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
             this.dynamicsWorld.setGravity(this._ammoGravity);
             
             // Only bind 'update' if Ammo is loaded
             pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+
+            // Lazily create temp vars
+            ammoRayStart = new Ammo.btVector3();
+            ammoRayEnd = new Ammo.btVector3();
         }
 
         this.on('remove', this.onRemove, this);
@@ -129,7 +148,7 @@ pc.extend(pc.fw, function () {
     pc.extend(Body3dComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
-            var properties = ['body', 'friction', 'mass', 'restitution', 'static'];
+            var properties = ['body', 'friction', 'mass', 'restitution', 'bodyType'];
             Body3dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.entity.body3d.createBody();
@@ -178,11 +197,11 @@ pc.extend(pc.fw, function () {
         * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
         */
         raycastFirst: function (start, end, callback) {
-            var rayFrom = new Ammo.btVector3(start[0], start[1], start[2]);
-            var rayTo = new Ammo.btVector3(end[0], end[1], end[2]);
-            var rayCallback = new Ammo.ClosestRayResultCallback(rayFrom, rayTo);
+            ammoRayStart.setValue(start[0], start[1], start[2]);
+            ammoRayEnd.setValue(end[0], end[1], end[2]);
+            var rayCallback = new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
 
-            this.dynamicsWorld.rayTest(rayFrom, rayTo, rayCallback);
+            this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
             if (rayCallback.hasHit()) {
                 var body = Module.castObject(rayCallback.get_m_collisionObject(), Ammo.btRigidBody);
                 var point = rayCallback.get_m_hitPointWorld();
@@ -198,8 +217,6 @@ pc.extend(pc.fw, function () {
                 }
             }
 
-            Ammo.destroy(rayFrom);
-            Ammo.destroy(rayTo);
             Ammo.destroy(rayCallback);
         },
 
@@ -249,9 +266,14 @@ pc.extend(pc.fw, function () {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
-                    if (componentData.body && !componentData.static) {
-                        entity.body3d.updateTransform(componentData.body);
+                    if (componentData.body) {
+                        if (componentData.bodyType === pc.fw.BODY3D_TYPE_DYNAMIC) {
+                            entity.body3d.updateTransform(componentData.body);
+                        } else if (componentData.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC) {
+                            entity.body3d.updateKinematicTransform(dt);
+                        }
                     }
+
                 }
             }
 
@@ -280,6 +302,21 @@ pc.extend(pc.fw, function () {
     });
 
     return {
+        BODY3D_TYPE_STATIC: 'static',
+        BODY3D_TYPE_DYNAMIC: 'dynamic',
+        BODY3D_TYPE_KINEMATIC: 'kinematic',
+
+        // Collision flags from AmmoJS
+        BODY3D_CF_STATIC_OBJECT: 1,
+        BODY3D_CF_KINEMATIC_OBJECT: 2,
+
+        // Activation states from AmmoJS
+        BODY3D_ACTIVE_TAG: 1,
+        BODY3D_ISLAND_SLEEPING: 2,
+        BODY3D_WANTS_DEACTIVATION: 3,
+        BODY3D_DISABLE_DEACTIVATION: 4,
+        BODY3D_DISABLE_SIMULATION: 5,
+
         Body3dComponentSystem: Body3dComponentSystem
     };
 }());
