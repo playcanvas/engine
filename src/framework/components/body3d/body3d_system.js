@@ -103,9 +103,6 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        // this._rayStart = pc.math.vec3.create(); // for debugging raycasts
-        // this._rayEnd = pc.math.vec3.create();   // for debugging raycasts
-
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
         this.gravityX = 0;
