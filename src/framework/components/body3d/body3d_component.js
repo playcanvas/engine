@@ -12,7 +12,7 @@ pc.extend(pc.fw, function () {
      * @param {Object} context
      * @extends pc.fw.Component
      */
-    var Body3dComponent = function Body3dComponent (context) {
+    var Body3dComponent = function Body3dComponent (system, entity) {
         // Lazily create shared variable
         if (typeof(Ammo) !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
@@ -24,6 +24,8 @@ pc.extend(pc.fw, function () {
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
         this.on('set_static', this.onSetStatic, this);
+
+        entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
     };
     Body3dComponent = pc.inherits(Body3dComponent, pc.fw.Component);
 
@@ -32,14 +34,14 @@ pc.extend(pc.fw, function () {
          * @private
          * @name pc.fw.Body3dComponent#applyForce
          * @description Apply an force to the body
-         * @param {pc.math.vec3} force The force to apply. A 3D world space vector, extra component is ignored
-         * @param {pc.math.vec3} point The point at which to apply the force. A 3D world space vector, extra component is ignored
+         * @param {pc.math.vec3} force The force to apply, in world space.
+         * @param {pc.math.vec3} relativePoint The point at which to apply the force, in local space (relative to the entity).
          */
-        applyForce: function (force, point) {
+        applyForce: function (force, relativePoint) {
             var body = this.entity.body3d.body;
             if (body) {
                 ammoVec1.setValue(force[0], force[1], force[2]);
-                ammoVec2.setValue(point[0], point[1], point[2]);
+                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
                 body.applyForce(ammoVec1, ammoVec2);
             }
         },
@@ -48,14 +50,14 @@ pc.extend(pc.fw, function () {
          * @private
          * @name pc.fw.Body3dComponent#applyImpulse
          * @description Apply an impulse (instantaneous change of velocity) to the body
-         * @param {pc.math.vec3} impulse The impulse to apply. A 3D world space vector, extra component is ignored
-         * @param {pc.math.vec3} point The point at which to apply the impulse. A 3D world space vector, extra component is ignored
+         * @param {pc.math.vec3} impulse The impulse to apply, in world space.
+         * @param {pc.math.vec3} relativePoint The point at which to apply the impulse, in local space (relative to the entity).
          */
-        applyImpulse: function (impulse, point) {
+        applyImpulse: function (impulse, relativePoint) {
             var body = this.entity.body3d.body;
             if (body) {
                 ammoVec1.setValue(impulse[0], impulse[1], impulse[2]);
-                ammoVec2.setValue(point[0], point[1], point[2]);
+                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
                 body.applyImpulse(ammoVec1, ammoVec2);
             }
         },
@@ -146,10 +148,31 @@ pc.extend(pc.fw, function () {
                 body.setRestitution(isStatic ? 1 : entity.body3d.restitution);
                 body.setFriction(entity.body3d.friction);
 
+                body.entity = entity;
+
                 this.system.addBody(body);
 
                 entity.body3d.body = body;
                 entity.body3d.body.activate();
+            }
+        },
+
+        /** 
+        Replacement for pc.scene.GraphNode#setPosition()
+        Used by Entities with a Body3d Component so that when entity.setPosition() is called, the body transform can be updated
+        */
+        _setPosition: function (x, y, z) {
+            if (arguments.length > 1) {
+                this._setPosition(x, y, z);    
+            } else {
+                this._setPosition(x);
+            }
+
+            if (this.body3d && this.body3d.body) {
+                var transform = this.body3d.body.getWorldTransform();
+                transform.setOrigin(new Ammo.btVector3(x, y, z));
+
+                this.body3d.body.activate();
             }
         },
 
@@ -161,17 +184,17 @@ pc.extend(pc.fw, function () {
         * @param {Number} y The y value of the position
         * @param {Number} z The z value of the position
         */
-        setPosition: function (x, y, z) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                var transform = body.getWorldTransform();
-                transform.setOrigin(new Ammo.btVector3(x, y, z));
+        // setPosition: function (x, y, z) {
+        //     var body = this.entity.body3d.body;
+        //     if (body) {
+        //         var transform = body.getWorldTransform();
+        //         transform.setOrigin(new Ammo.btVector3(x, y, z));
 
-                body.activate();
+        //         body.activate();
 
-                this.entity.setPosition(x, y, z);
-            }
-        },
+        //         this.entity.setPosition(x, y, z);
+        //     }
+        // },
 
         /**
         * @private
@@ -208,6 +231,9 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        /** 
+        * update the Entity transform from the RigidBody
+        */
         updateTransform: function (body) {
             if (body.isActive() && body.getMotionState()) {
                 body.getMotionState().getWorldTransform(ammoTransform);
@@ -260,6 +286,12 @@ pc.extend(pc.fw, function () {
             var body = this.data.body;
             if (body) {
             }
+        },
+
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            this.setTransform(this.entity.getWorldTransform());
+            this.setLinearVelocity(0,0,0);
+            this.setAngularVelocity(0,0,0);    
         }
     });
 
