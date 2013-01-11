@@ -105,7 +105,7 @@ pc.extend(pc.fw, function () {
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
-        this.btGravity = new Ammo.btVector3(0, -9.82, 0);
+        this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
 
         // Create the Ammo physics world
         if (typeof(Ammo) !== 'undefined') {
@@ -114,7 +114,7 @@ pc.extend(pc.fw, function () {
             var overlappingPairCache = new Ammo.btDbvtBroadphase();
             var solver = new Ammo.btSequentialImpulseConstraintSolver();
             this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-            this.dynamicsWorld.setGravity(this.btGravity);
+            this.dynamicsWorld.setGravity(this._ammoGravity);
             
             // Only bind 'update' if Ammo is loaded
             pc.fw.ComponentSystem.on('update', this.onUpdate, this);
@@ -140,7 +140,9 @@ pc.extend(pc.fw, function () {
         onRemove: function (entity, data) {
             if (data.body) {
                 this.removeBody(data.body);    
-            }                
+            }
+            
+            Ammo.destroy(data.body);
             data.body = null;
 
             entity.setPosition = entity._setPosition;
@@ -162,8 +164,8 @@ pc.extend(pc.fw, function () {
         * @description Set the gravity vector for the 3D physics world
         */
         setGravity: function (x, y, z) {
-            this.btGravity.setValue(x, y, z);
-            this.dynamicsWorld.setGravity(this.btGravity);
+            this._ammoGravity.setValue(x, y, z);
+            this.dynamicsWorld.setGravity(this._ammoGravity);
         },
 
         /**

@@ -2,7 +2,7 @@ pc.extend(pc.fw, function () {
     // Shared math variable to avoid excessive allocation
     var quat = pc.math.quat.create();
     var ammoTransform;
-    var ammoVec1, ammoVec2;
+    var ammoVec1, ammoVec2, ammoQuat;
 
     /**
      * @private
@@ -18,6 +18,7 @@ pc.extend(pc.fw, function () {
             ammoTransform = new Ammo.btTransform();
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();
+            ammoQuat = new Ammo.btQuaternion();
         }
 
         this.on('set_mass', this.onSetMass, this);
@@ -98,11 +99,14 @@ pc.extend(pc.fw, function () {
             var body = this.entity.body3d.body;
             if (body) {
                 var position = pc.math.mat4.getTranslation(transform);
-                var rotation = pc.math.mat4.toQuat(transform);
+                pc.math.mat4.toQuat(transform, quat);
 
                 var transform = body.getWorldTransform();
-                transform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
-                transform.setRotation(new Ammo.btQuaternion(rotation[0], rotation[1], rotation[2], rotation[3]));
+                transform.getOrigin().setValue(position[0], position[1], position[2]);
+                
+                ammoQuat.setValue(quat[0], quat[1], quat[2], quat[3]);
+                transform.setRotation(ammoQuat);
+
                 this.setLinearVelocity(0, 0, 0);
                 this.setAngularVelocity(0, 0, 0);
                 body.activate();
@@ -135,11 +139,12 @@ pc.extend(pc.fw, function () {
 
                 var pos = entity.getPosition();
                 var rot = entity.getRotation();
+                ammoQuat.setValue(rot[0], rot[1], rot[2], rot[3]);
 
                 var startTransform = new Ammo.btTransform();
                 startTransform.setIdentity();
-                startTransform.setOrigin(new Ammo.btVector3(pos[0], pos[1], pos[2]));
-                startTransform.setRotation(new Ammo.btQuaternion(rot[0], rot[1], rot[2], rot[3]));
+                startTransform.getOrigin().setValue(pos[0], pos[1], pos[2]);
+                startTransform.setRotation(ammoQuat);
 
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
@@ -170,7 +175,7 @@ pc.extend(pc.fw, function () {
 
             if (this.body3d && this.body3d.body) {
                 var transform = this.body3d.body.getWorldTransform();
-                transform.setOrigin(new Ammo.btVector3(x, y, z));
+                transform.getOrigin().setValue(x, y, z);
 
                 this.body3d.body.activate();
             }
@@ -206,9 +211,10 @@ pc.extend(pc.fw, function () {
             var body = this.entity.body3d.body;
             if (body) {
                 pc.math.quat.setFromEulers(quat, x, y, z);
+                ammoQuat.setValue(quat[0], quat[1], quat[2], quat[3]);
 
                 var transform = body.getWorldTransform();
-                transform.setRotation(new Ammo.btQuaternion(quat[0], quat[1], quat[2], quat[3]));
+                transform.setRotation(ammoQuat);
 
                 body.activate();
 
