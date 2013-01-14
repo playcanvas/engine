@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.90.0
+-------
+* [FIX] GraphNode#rotate() and GraphNode#rotateLocal() take can accept a single vector argument like in the docs
+* Replace Body3d 'static' with 'bodyType' which can be dynamic, kinematic or static.
+* hasEvent() added to event API to check whether an handler is bound
+* Working on Body3d component
+* Add support for contact/collision events
+* Add support for raycastFirst()
+* 'collisionbox' format changed to single 'size' property
+* Fire 'livelink:updatetransform' event when entity transform is updated over a livelink
+
+-------
 v0.89.0
 -------
 * Implemented pc.scene.Model#generateWireframe.
