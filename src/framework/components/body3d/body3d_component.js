@@ -221,6 +221,8 @@ pc.extend(pc.fw, function () {
                 
                 ammoQuat.setValue(quat[0], quat[1], quat[2], quat[3]);
                 transform.setRotation(ammoQuat);
+
+                body.activate();
             }
         },
 
