@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.90.1
+-------
+* [FIX] Activate body inside a syncTransform() so that livelink movement re-activates
+
+-------
 v0.90.0
 -------
 * [FIX] GraphNode#rotate() and GraphNode#rotateLocal() take can accept a single vector argument like in the docs
