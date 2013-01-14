@@ -15,9 +15,9 @@ pc.extend(pc.fw, function () {
     pc.extend(CollisionBoxComponent.prototype, {
 
         onSetSize: function (name, oldValue, newValue) {
-            if (this.entity.body3d) {
+            if (this.entity.rigidbody) {
                 this.data.shape = this.createShape(this.data.size[0], this.data.size[1], this.data.size[2]);
-                this.entity.body3d.createBody();
+                this.entity.rigidbody.createBody();
             }
         },
 

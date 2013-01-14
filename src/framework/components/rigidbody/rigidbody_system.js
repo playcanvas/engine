@@ -49,18 +49,18 @@ pc.extend(pc.fw, function () {
 
     /**
      * @private
-     * @name pc.fw.Body3dComponentSystem
-     * @constructor Create a new Body3dComponentSystem
+     * @name pc.fw.RigidBodyComponentSystem
+     * @constructor Create a new RigidBodyComponentSystem
      * @class 
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
      */
-    var Body3dComponentSystem = function Body3dComponentSystem (context) {
-        this.id = 'body3d'
+    var RigidBodyComponentSystem = function RigidBodyComponentSystem (context) {
+        this.id = 'rigidbody'
         context.systems.add(this.id, this);
         
-        this.ComponentType = pc.fw.Body3dComponent;
-        this.DataType = pc.fw.Body3dComponentData;
+        this.ComponentType = pc.fw.RigidBodyComponent;
+        this.DataType = pc.fw.RigidBodyComponentData;
 
         this.schema = [{
             name: "mass",
@@ -100,16 +100,16 @@ pc.extend(pc.fw, function () {
             options: {
                 enumerations: [{
                     name: 'Static',
-                    value: pc.fw.BODY3D_TYPE_STATIC,
+                    value: pc.fw.RIGIDBODY_TYPE_STATIC,
                 }, {
                     name: 'Dynamic',
-                    value: pc.fw.BODY3D_TYPE_DYNAMIC,
+                    value: pc.fw.RIGIDBODY_TYPE_DYNAMIC,
                 }, {
                     name: 'Kinematic',
-                    value: pc.fw.BODY3D_TYPE_KINEMATIC,
+                    value: pc.fw.RIGIDBODY_TYPE_KINEMATIC,
                 }]
             },
-            defaultValue: pc.fw.BODY3D_TYPE_STATIC
+            defaultValue: pc.fw.RIGIDBODY_TYPE_STATIC
         }, {
             name: "body",
             exposed: false
@@ -143,13 +143,13 @@ pc.extend(pc.fw, function () {
 
         
     };
-    Body3dComponentSystem = pc.inherits(Body3dComponentSystem, pc.fw.ComponentSystem);
+    RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.fw.ComponentSystem);
     
-    pc.extend(Body3dComponentSystem.prototype, {
+    pc.extend(RigidBodyComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
             var properties = ['body', 'friction', 'mass', 'restitution', 'bodyType'];
-            Body3dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.createBody();
         },
@@ -174,7 +174,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.Body3dComponentSystem#setGravity
+        * @name pc.fw.RigidBodyComponentSystem#setGravity
         * @description Set the gravity vector for the 3D physics world
         */
         setGravity: function (x, y, z) {
@@ -184,9 +184,9 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.Body3dComponentSystem#raycastFirst
+        * @name pc.fw.RigidBodyComponentSystem#raycastFirst
         * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end, 
-        * if the ray hits an entity with a body3d component, the callback function is called along with a {@link pc.fw.RaycastResult}.
+        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
         * @param {pc.math.vec3} start The world space point where the ray starts
         * @param {pc.math.vec3} end The world space point where the ray ends
         * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
@@ -218,9 +218,9 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.Body3dComponentSystem#raycast
+        * @name pc.fw.RigidBodyComponentSystem#raycast
         * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end, 
-        * if the ray hits an entity with a body3d component, the callback function is called along with a {@link pc.fw.RaycastResult}.
+        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
         * @param {pc.math.vec3} start The world space point where the ray starts
         * @param {pc.math.vec3} end The world space point where the ray ends
         * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
@@ -262,10 +262,10 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
                     if (componentData.body) {
-                        if (componentData.bodyType === pc.fw.BODY3D_TYPE_DYNAMIC) {
-                            entity.body3d.syncEntityTransform();
-                        } else if (componentData.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC) {
-                            entity.body3d.updateKinematic(dt);
+                        if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
+                            entity.rigidbody.syncBodyToEntity();
+                        } else if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
+                            entity.rigidbody.updateKinematic(dt);
                         }
                     }
 
@@ -297,21 +297,21 @@ pc.extend(pc.fw, function () {
     });
 
     return {
-        BODY3D_TYPE_STATIC: 'static',
-        BODY3D_TYPE_DYNAMIC: 'dynamic',
-        BODY3D_TYPE_KINEMATIC: 'kinematic',
+        RIGIDBODY_TYPE_STATIC: 'static',
+        RIGIDBODY_TYPE_DYNAMIC: 'dynamic',
+        RIGIDBODY_TYPE_KINEMATIC: 'kinematic',
 
         // Collision flags from AmmoJS
-        BODY3D_CF_STATIC_OBJECT: 1,
-        BODY3D_CF_KINEMATIC_OBJECT: 2,
+        RIGIDBODY_CF_STATIC_OBJECT: 1,
+        RIGIDBODY_CF_KINEMATIC_OBJECT: 2,
 
         // Activation states from AmmoJS
-        BODY3D_ACTIVE_TAG: 1,
-        BODY3D_ISLAND_SLEEPING: 2,
-        BODY3D_WANTS_DEACTIVATION: 3,
-        BODY3D_DISABLE_DEACTIVATION: 4,
-        BODY3D_DISABLE_SIMULATION: 5,
+        RIGIDBODY_ACTIVE_TAG: 1,
+        RIGIDBODY_ISLAND_SLEEPING: 2,
+        RIGIDBODY_WANTS_DEACTIVATION: 3,
+        RIGIDBODY_DISABLE_DEACTIVATION: 4,
+        RIGIDBODY_DISABLE_SIMULATION: 5,
 
-        Body3dComponentSystem: Body3dComponentSystem
+        RigidBodyComponentSystem: RigidBodyComponentSystem
     };
 }());

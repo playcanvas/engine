@@ -474,7 +474,7 @@ pc.extend(pc.fw, function () {
             var collisionrectsys = new pc.fw.CollisionRectComponentSystem(this.context);
             var collisioncirclesys = new pc.fw.CollisionCircleComponentSystem(this.context);
 
-            var body3dsys = new pc.fw.Body3dComponentSystem(this.context);    
+            var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
             var collisionboxsys = new pc.fw.CollisionBoxComponentSystem(this.context);
             var collisionspheresys = new pc.fw.CollisionSphereComponentSystem(this.context);
         },
