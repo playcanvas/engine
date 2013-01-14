@@ -469,6 +469,7 @@ pc.extend(pc.fw, function () {
         * been loaded
         */
         onLibrariesLoaded: function () {
+            // Create systems that may require external libraries
             var body2dsys = new pc.fw.Body2dComponentSystem(this.context);    
             var collisionrectsys = new pc.fw.CollisionRectComponentSystem(this.context);
             var collisioncirclesys = new pc.fw.CollisionCircleComponentSystem(this.context);
@@ -487,20 +488,20 @@ pc.extend(pc.fw, function () {
         _handleMessage: function (msg) {
             switch(msg.type) {
                 case pc.fw.LiveLinkMessageType.UPDATE_COMPONENT:
-                    this._updateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
+                    this._linkUpdateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY:
-                    this._updateEntity(msg.content.id, msg.content.components);
+                    this._linkUpdateEntity(msg.content.id, msg.content.components);
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
-                    this._updateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
+                    this._linkUpdateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME:
                     var entity = this.context.root.findOne("getGuid", msg.content.id);
                     entity.setName(msg.content.name);
                     break;
                 case pc.fw.LiveLinkMessageType.REPARENT_ENTITY:
-                    this._reparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
+                    this._linkReparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
                     break;
                 case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                     var entity = this.context.root.findOne("getGuid", msg.content.id);
@@ -558,14 +559,14 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.Application#_updateComponent
+         * @name pc.fw.Application#_linkUpdateComponent
          * @description Update a value on a component, 
          * @param {String} guid GUID for the entity
          * @param {String} componentName name of the component to update
          * @param {String} attributeName name of the attribute on the component
          * @param {Object} value - value to set attribute to
          */
-        _updateComponent: function(guid, componentName, attributeName, value) {
+        _linkUpdateComponent: function(guid, componentName, attributeName, value) {
             var entity = this.context.root.findOne("getGuid", guid);
             //var system;
                 
@@ -585,32 +586,19 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        _updateEntityTransform: function (guid, position, rotation, scale) {
+        _linkUpdateEntityTransform: function (guid, position, rotation, scale) {
             var entity = this.context.root.findByGuid(guid);
             if(entity) {
                 entity.setLocalPosition(position);
                 entity.setLocalEulerAngles(rotation);
                 entity.setLocalScale(scale);
 
-                // TODO: I don't like referencing a specific system here, but the body2d system won't pick up changes to the ltm 
-                // unless we tell it directly. (Because it is simulating from the physics world). Perhaps we could do this 
-                // by firing an event which the body system subscribes to instead. But I do we really want entities (or nodes) firing
-                // an event everytime the transform is updated, sounds slow. Perhaps we can fire an event from in here.
-                if (this.context.systems.body2d && entity.body2d) {
-                    entity.body2d.setTransform(entity.getWorldTransform());
-                    entity.body2d.setLinearVelocity(0, 0);
-                    entity.body2d.setAngularVelocity(0);
-                }
-
-                if (this.context.systems.body3d && entity.body3d) {
-                    entity.body3d.setTransform(entity.getWorldTransform());
-                    entity.body3d.setLinearVelocity(0,0,0);
-                    entity.body3d.setAngularVelocity(0,0,0);
-                }
+                // Fire event to notify listeners that the transform has been changed by an external tool
+                entity.fire('livelink:updatetransform', position, rotation, scale);
             }
         },
         
-        _reparentEntity: function (guid, parentId, index) {
+        _linkReparentEntity: function (guid, parentId, index) {
             var entity = this.context.root.findByGuid(guid);
             var parent = this.context.root.findByGuid(parentId);
             // TODO: use index to insert child into child list
@@ -625,7 +613,7 @@ pc.extend(pc.fw, function () {
          * @param {Object} guid GUID of the entity
          * @param {Object} components Component object keyed by component name.
          */
-        _updateEntity: function (guid, components) {
+        _linkUpdateEntity: function (guid, components) {
             var type;
             var entity = this.context.root.findOne("getGuid", guid);
             
@@ -639,9 +627,6 @@ pc.extend(pc.fw, function () {
                         if (!entity[type]) {
                             this.context.systems[type].addComponent(entity, {});
                         }
-                       // if(!this.context.systems[type].hasComponent(entity)) {
-                       //      this.context.systems[type].createComponent(entity);
-                       //  }
                     }
                 }
                 

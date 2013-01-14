@@ -7,6 +7,46 @@ pc.extend(pc.fw, function () {
     var rotation = pc.math.vec3.create();
     var scale = pc.math.vec3.create();
 
+    var ammoRayStart, ammoRayEnd;
+
+    /**
+    * @private
+    * @name pc.fw.RaycastResult
+    * @class Object holding the result of a successful raycast hit
+    * @constructor Create a new RaycastResult
+    * @property {pc.fw.Entity} entity The entity that was hit
+    * @property {pc.math.vec3} point The point at which the ray hit the entity in world space
+    * @property {pc.math.vec3} normal The normal vector of the surface where the ray hit in world space.
+    */
+    var RaycastResult = function (entity, point, normal) {
+        this.entity = entity;
+        this.point = point;
+        this.normal = normal;
+    };
+
+    /**
+    * @private
+    * @name pc.fw.ContactResult
+    * @class Object holding the result of a contact between two rigid bodies
+    * @constructor Create a new ContactResult
+    * @property {pc.fw.Entity} a The first entity involved in the contact
+    * @property {pc.fw.Entity} b The second entity involved in the contact
+    * @property {pc.math.vec3} localPointA The point on Entity A where the contact occured, relative to A
+    * @property {pc.math.vec3} localPointB The point on Entity B where the contact occured, relative to B
+    * @property {pc.math.vec3} pointA The point on Entity A where the contact occured, in world space
+    * @property {pc.math.vec3} pointB The point on Entity B where the contact occured, in world space
+    * @property {pc.math.vec3} normal The normal vector of the contact on Entity B, in world space
+    */
+    var ContactResult = function (a, b, contactPoint) {
+        this.a = a;
+        this.b = b;
+        this.localPointA = new pc.math.vec3.create(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
+        this.localPointB = new pc.math.vec3.create(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
+        this.pointA = new pc.math.vec3.create(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
+        this.pointB = new pc.math.vec3.create(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
+        this.normal = new pc.math.vec3.create(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
+    };
+
     /**
      * @private
      * @name pc.fw.Body3dComponentSystem
@@ -53,11 +93,23 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0
         }, {
-            name: "static",
-            displayName: "Static",
-            description: "Static bodies are immovable and do not collide with other static bodies.",
-            type: "boolean",
-            defaultValue: true
+            name: "bodyType",
+            displayName: "Body Type",
+            description: "The type of body determines how it moves and collides with other bodies. Dynamic is a normal body. Static will never move. Kinematic can be moved in code, but will not respond to collisions.",
+            type: "enumeration",
+            options: {
+                enumerations: [{
+                    name: 'Static',
+                    value: pc.fw.BODY3D_TYPE_STATIC,
+                }, {
+                    name: 'Dynamic',
+                    value: pc.fw.BODY3D_TYPE_DYNAMIC,
+                }, {
+                    name: 'Kinematic',
+                    value: pc.fw.BODY3D_TYPE_KINEMATIC,
+                }]
+            },
+            defaultValue: pc.fw.BODY3D_TYPE_STATIC
         }, {
             name: "body",
             exposed: false
@@ -65,17 +117,9 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.debugRender = false;
-        this._gfx = _createGfxResources();      // debug gfx resources
-        this._rayStart = pc.math.vec3.create(); // for debugging raycasts
-        this._rayEnd = pc.math.vec3.create();   // for debugging raycasts
-
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
-        this.gravityX = 0;
-        this.gravityY = -9.82;
-        this.gravityZ = 0;
-
+        
         // Create the Ammo physics world
         if (typeof(Ammo) !== 'undefined') {
             var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -83,10 +127,16 @@ pc.extend(pc.fw, function () {
             var overlappingPairCache = new Ammo.btDbvtBroadphase();
             var solver = new Ammo.btSequentialImpulseConstraintSolver();
             this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-            this.dynamicsWorld.setGravity(new Ammo.btVector3(this.gravityX, this.gravityY, this.gravityZ));
+
+            this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
+            this.dynamicsWorld.setGravity(this._ammoGravity);
             
             // Only bind 'update' if Ammo is loaded
             pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+
+            // Lazily create temp vars
+            ammoRayStart = new Ammo.btVector3();
+            ammoRayEnd = new Ammo.btVector3();
         }
 
         this.on('remove', this.onRemove, this);
@@ -98,16 +148,18 @@ pc.extend(pc.fw, function () {
     pc.extend(Body3dComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
-            var properties = ['body', 'friction', 'mass', 'restitution', 'static'];
+            var properties = ['body', 'friction', 'mass', 'restitution', 'bodyType'];
             Body3dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-            component.entity.body3d.createBody();
+            component.createBody();
         },
 
         onRemove: function (entity, data) {
             if (data.body) {
                 this.removeBody(data.body);    
-            }                
+            }
+            
+            Ammo.destroy(data.body);
             data.body = null;
         },
 
@@ -126,57 +178,78 @@ pc.extend(pc.fw, function () {
         * @description Set the gravity vector for the 3D physics world
         */
         setGravity: function (x, y, z) {
-            this.gravityX = x;
-            this.gravityY = y;
-            this.gravityZ = z;
-            this.dynamicsWorld.setGravity(new Ammo.btVector3(this.gravityX, this.gravityY, this.gravityZ));
-        },
-
-        /**
-        * @private
-        * @name pc.fw.Body3dComponentSystem#raycast
-        * @description Raycast the world for entities that intersect with the ray. Your callback controls whether you get the closest entity, 
-        * any entity or n-entities. Entities that contain the starting point are ignored
-        * @param {Function} callback Callback with signature `callback(entity, point, normal, fraction)`. The callback should return the 
-        * the new length of the ray as a fraction of original length. So, returning 0, terminates; returning 1, continues with original ray,
-        * returning current fraction will find the closest entity.
-        */
-        raycast: function (callback, start, end) {
-            var rayFrom = new Ammo.btVector3(start[0], start[1], start[2]);
-            var rayTo = new Ammo.btVector3(end[0], end[1], end[2]);
-
-            var rayCallback = new Ammo.ClosestRayResultCallback(rayFrom, rayTo);
-            this.dynamicsWorld.rayTest(rayFrom, rayTo, rayCallback);
-            if (rayCallback.hasHit()) {
-                var body = rayCallback.get_m_collisionObject();
-                if (body) {
-                    callback();
-                }
-            }
+            this._ammoGravity.setValue(x, y, z);
+            this.dynamicsWorld.setGravity(this._ammoGravity);
         },
 
         /**
         * @private
         * @name pc.fw.Body3dComponentSystem#raycastFirst
-        * @description Raycast into the world (in 2D) and return the first Entity hit
-        * @param {pc.math.vec3} start The ray start position
-        * @param {pc.math.vec3} end The ray end position
-        * @param {pc.fw.Entity} ignore An entity to ignore
-        * @returns {pc.fw.Entity} The first Entity with a 2D collision shape hit by the ray.
+        * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end, 
+        * if the ray hits an entity with a body3d component, the callback function is called along with a {@link pc.fw.RaycastResult}.
+        * @param {pc.math.vec3} start The world space point where the ray starts
+        * @param {pc.math.vec3} end The world space point where the ray ends
+        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
         */
-        raycastFirst: function (start, end, ignore) {
-            var result;
-            var fraction = 1;
-            this.raycast(function (fixture, point, normal, f) {
-                var e = fixture.GetUserData();
-                if (e !== ignore && f < fraction) {
-                    result = e;
-                    fraction = f;
+        raycastFirst: function (start, end, callback) {
+            ammoRayStart.setValue(start[0], start[1], start[2]);
+            ammoRayEnd.setValue(end[0], end[1], end[2]);
+            var rayCallback = new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
+
+            this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
+            if (rayCallback.hasHit()) {
+                var body = Module.castObject(rayCallback.get_m_collisionObject(), Ammo.btRigidBody);
+                var point = rayCallback.get_m_hitPointWorld();
+                var normal = rayCallback.get_m_hitNormalWorld();
+
+                if (body) {
+                    callback(new RaycastResult(
+                                    body.entity, 
+                                    pc.math.vec3.create(point.x(), point.y(), point.z()),
+                                    pc.math.vec3.create(normal.x(), normal.y(), normal.z())
+                                )
+                            );
                 }
-                return 1;
-            }, start, end);
-            return result;
+            }
+
+            Ammo.destroy(rayCallback);
         },
+
+
+        /**
+        * @private
+        * @name pc.fw.Body3dComponentSystem#raycast
+        * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end, 
+        * if the ray hits an entity with a body3d component, the callback function is called along with a {@link pc.fw.RaycastResult}.
+        * @param {pc.math.vec3} start The world space point where the ray starts
+        * @param {pc.math.vec3} end The world space point where the ray ends
+        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
+        */
+        // raycast: function (start, end, callback) {
+        //     var rayFrom = new Ammo.btVector3(start[0], start[1], start[2]);
+        //     var rayTo = new Ammo.btVector3(end[0], end[1], end[2]);
+        //     var rayCallback = new Ammo.AllHitsRayResultCallback(rayFrom, rayTo);
+
+        //     this.dynamicsWorld.rayTest(rayFrom, rayTo, rayCallback);
+        //     if (rayCallback.hasHit()) {
+        //         var body = Module.castObject(rayCallback.get_m_collisionObject(), Ammo.btRigidBody);
+        //         var point = rayCallback.get_m_hitPointWorld();
+        //         var normal = rayCallback.get_m_hitNormalWorld();
+
+        //         if (body) {
+        //             callback(new RaycastResult(
+        //                             body.entity, 
+        //                             pc.math.vec3.create(point.x(), point.y(), point.z()),
+        //                             pc.math.vec3.create(normal.x(), normal.y(), normal.z())
+        //                         )
+        //                     );
+        //         }
+        //     }
+
+        //     Ammo.destroy(rayFrom);
+        //     Ammo.destroy(rayTo);
+        //     Ammo.destroy(rayCallback);
+        // },
 
         onUpdate: function (dt) {
             // Update the transforms of all bodies
@@ -188,50 +261,57 @@ pc.extend(pc.fw, function () {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
-                    if (componentData.body && !componentData.static) {
-                        entity.body3d.updateTransform(componentData.body);
+                    if (componentData.body) {
+                        if (componentData.bodyType === pc.fw.BODY3D_TYPE_DYNAMIC) {
+                            entity.body3d.syncEntityTransform();
+                        } else if (componentData.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC) {
+                            entity.body3d.updateKinematic(dt);
+                        }
                     }
+
                 }
             }
-        },
 
-        render: function () {
-            if (this.debugRender) {
-                var p1 = this._rayStart;
-                var p2 = this._rayEnd;
+            // Check for collisions and fire callbacks
+            if (this.hasEvent('contact')) {
+                var dispatcher = this.dynamicsWorld.getDispatcher();
+                var manifold;
+                var e0, e1; // Entities in collision
+                var contactPoint;
+                var numManifolds = dispatcher.getNumManifolds();
+                var numContacts;
+                var i, j;
+                for (i = 0; i < numManifolds; i++) {
+                    manifold = dispatcher.getManifoldByIndexInternal(i);
+                    e0 = Ammo.wrapPointer(manifold.getBody0(), Ammo.btRigidBody).entity;
+                    e1 = Ammo.wrapPointer(manifold.getBody1(), Ammo.btRigidBody).entity;
 
-                var positions = new Float32Array(this._gfx.vertexBuffer.lock());
-                positions[0]  = p1[0];
-                positions[1]  = p1[1];
-                positions[2]  = p1[2];
-                positions[3]  = p2[0];
-                positions[4]  = p2[1];
-                positions[5]  = p2[2];
-                this._gfx.vertexBuffer.unlock();
-
-                var device = pc.gfx.Device.getCurrent();
-                device.setProgram(this._gfx.program);
-                device.setIndexBuffer(this._gfx.indexBuffer);
-                device.setVertexBuffer(this._gfx.vertexBuffer, 0);
-
-                device.scope.resolve("matrix_model").setValue(pc.math.mat4.create());
-                device.scope.resolve("uColor").setValue(this._gfx.color);
-                device.draw({
-                    type: pc.gfx.PrimType.LINES,
-                    base: 0,
-                    count: this._gfx.indexBuffer.getNumIndices(),
-                    indexed: true
-                });
+                    numContacts = manifold.getNumContacts();
+                    for (j = 0; j < numContacts; j++) {
+                        contactPoint = manifold.getContactPoint(j);
+                        this.fire('contact', new ContactResult(e0, e1, contactPoint));
+                    }
+                }                
             }
         }
     });
 
-
-    var _createGfxResources = function () {
-        return {};
-    };
-
     return {
+        BODY3D_TYPE_STATIC: 'static',
+        BODY3D_TYPE_DYNAMIC: 'dynamic',
+        BODY3D_TYPE_KINEMATIC: 'kinematic',
+
+        // Collision flags from AmmoJS
+        BODY3D_CF_STATIC_OBJECT: 1,
+        BODY3D_CF_KINEMATIC_OBJECT: 2,
+
+        // Activation states from AmmoJS
+        BODY3D_ACTIVE_TAG: 1,
+        BODY3D_ISLAND_SLEEPING: 2,
+        BODY3D_WANTS_DEACTIVATION: 3,
+        BODY3D_DISABLE_DEACTIVATION: 4,
+        BODY3D_DISABLE_SIMULATION: 5,
+
         Body3dComponentSystem: Body3dComponentSystem
     };
 }());

@@ -35,6 +35,8 @@ pc.extend(pc.fw, function () {
         }
 
         this.on('set_static', this.onSetStatic, this);
+
+        entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
     };
     Body2dComponent = pc.inherits(Body2dComponent, pc.fw.Component);
 
@@ -231,6 +233,12 @@ pc.extend(pc.fw, function () {
                     body.SetType(b2Body.b2_dynamicBody);
                 }
             }
+        },
+
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            this.setTransform(this.entity.getWorldTransform());
+            this.setLinearVelocity(0,0);
+            this.setAngularVelocity(0);
         },
 
         _eulersToAngle: function (rotation) {

@@ -238,6 +238,39 @@ test("off with no event handlers setup", function () {
   ok(true);
 });
 
+test("hasEvent() no handlers", function () {
+  var o = {};
+  o = pc.extend(o, pc.events);
+
+  equal(o.hasEvent('event_name'), false);
+});
+
+test("hasEvent() with handlers", function () {
+  var o = {};
+  o = pc.extend(o, pc.events);
+
+  o.on('event_name', function () {});
+
+  equal(o.hasEvent('event_name'), true);
+});
+
+test("hasEvent() with different handler", function () {
+  var o = {};
+  o = pc.extend(o, pc.events);
+
+  o.on('other_event', function () {});
+
+  equal(o.hasEvent('event_name'), false);
+});
+
+test("hasEvent() handler removed", function () {
+  var o = {};
+  o = pc.extend(o, pc.events);
+  o.on('event_name', function () {});
+  o.off('event_name');
+  equal(o.hasEvent('event_name'), false);
+});
+
 test("Deprecated bind()", function() {
    var o = {};
    var called = false;

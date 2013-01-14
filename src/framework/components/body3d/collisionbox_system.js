@@ -15,35 +15,15 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CollisionBoxComponentData;
 
         this.schema = [{
-            name: "x",
-            displayName: "Size: X",
-            description: "The half-extent of the box in the x-axis",
-            type: "number",
+            name: "size",
+            displayName: "Size",
+            description: "The half-extents of the box",
+            type: "vector",
             options: {
                 min: 0,
                 step: 0.1,
             },
-            defaultValue: 0.5
-        }, {
-            name: "y",
-            displayName: "Size: Y",
-            description: "The half-extent of the box in the y-axis",
-            type: "number",
-            options: {
-                min: 0,
-                step: 0.1,
-            },
-            defaultValue: 0.5
-        }, {
-            name: "z",
-            displayName: "Size: Z",
-            description: "The half-extent of the box in the z-axis",
-            type: "number",
-            options: {
-                min: 0,
-                step: 0.1,
-            },
-            defaultValue: 0.5
+            defaultValue: [0.5, 0.5, 0.5]
         }, {
             name: "shape",
             exposed: false
@@ -101,14 +81,14 @@ pc.extend(pc.fw, function () {
     CollisionBoxComponentSystem.prototype = pc.extend(CollisionBoxComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (typeof(Ammo) !== 'undefined') {
-                data.shape = new Ammo.btBoxShape(new Ammo.btVector3(data.x, data.y, data.z));
+                data.shape = new Ammo.btBoxShape(new Ammo.btVector3(data.size[0], data.size[1], data.size[2]));
             }
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
             data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
             
-            properties = ['x', 'y', 'z', 'shape', 'model'];
+            properties = ['size', 'shape', 'model'];
 
             CollisionBoxComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
@@ -154,9 +134,9 @@ pc.extend(pc.fw, function () {
                 var entity = components[id].entity;
                 var data = components[id].data;
 
-                var x = data.x;
-                var y = data.y;
-                var z = data.z;
+                var x = data.size[0];
+                var y = data.size[1];
+                var z = data.size[2];
                 var model = data.model;
 
                 if (!this.context.scene.containsModel(data.model)) {
