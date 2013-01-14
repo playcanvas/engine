@@ -4,7 +4,7 @@ pc.extend(pc.fw, function () {
 
     var quat = pc.math.quat.create();
     var ammoTransform;
-    var ammoVec1, ammoVec2, ammoQuat;
+    var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
 
     /**
      * @private
@@ -21,6 +21,7 @@ pc.extend(pc.fw, function () {
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
+            ammoOrigin = new Ammo.btVector3(0,0,0);
         }
 
         this.on('set_mass', this.onSetMass, this);
@@ -107,8 +108,13 @@ pc.extend(pc.fw, function () {
             var body = this.entity.body3d.body;
             if (body) {
                 ammoVec1.setValue(force[0], force[1], force[2]);
-                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
-                body.applyForce(ammoVec1, ammoVec2);
+                if (relativePoint) {
+                    ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
+                    body.applyForce(ammoVec1, ammoVec2);
+                } else {
+                    body.applyForce(ammoVec1, ammoOrigin);
+                }
+                
             }
         },
 
@@ -123,8 +129,12 @@ pc.extend(pc.fw, function () {
             var body = this.entity.body3d.body;
             if (body) {
                 ammoVec1.setValue(impulse[0], impulse[1], impulse[2]);
-                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
-                body.applyImpulse(ammoVec1, ammoVec2);
+                if (relativePoint) {
+                    ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
+                    body.applyImpulse(ammoVec1, ammoVec2);                    
+                } else {
+                    body.applyImpulse(ammoVec1, ammoOrigin);
+                }
             }
         },
 

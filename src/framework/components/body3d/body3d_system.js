@@ -157,9 +157,9 @@ pc.extend(pc.fw, function () {
         onRemove: function (entity, data) {
             if (data.body) {
                 this.removeBody(data.body);    
+                Ammo.destroy(data.body);
             }
             
-            Ammo.destroy(data.body);
             data.body = null;
         },
 
