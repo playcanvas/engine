@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.90.2
+-------
+* relativePoint for Body3d.applyForce and Body3d.applyImpulse is now an optional argument, defaults to 0,0,0
+* [FIX] Default values for body3d and collisionbox
+
+-------
 v0.90.1
 -------
 * [FIX] Activate body inside a syncTransform() so that livelink movement re-activates
