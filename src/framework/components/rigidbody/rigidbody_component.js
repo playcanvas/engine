@@ -102,14 +102,56 @@ pc.extend(pc.fw, function () {
          * @name pc.fw.RigidBodyComponent#applyForce
          * @description Apply an force to the body
          * @param {pc.math.vec3} force The force to apply, in world space.
-         * @param {pc.math.vec3} relativePoint The point at which to apply the force, in local space (relative to the entity).
+         * @param {pc.math.vec3} [relativePoint] The point at which to apply the force, in local space (relative to the entity).
          */
-        applyForce: function (force, relativePoint) {
+
+        /**
+         * @private
+         * @name pc.fw.RigidBodyComponent#applyForce^2
+         * @description Apply an force to the body
+         * @param {Number} x The x component of the force to apply, in world space.
+         * @param {Number} y The y component of the force to apply, in world space.
+         * @param {Number} z The z component of the force to apply, in world space.
+         * @param {Number} [px] The x component of the point at which to apply the force, in local space (relative to the Entity).
+         * @param {Number} [py] The y component of the point at which to apply the force, in local space (relative to the Entity).
+         * @param {Number} [pz] The z component of the point at which to apply the force, in local space (relative to the Entity).
+         */
+        applyForce: function () {
+            var x, y, z;
+            var px,py,pz;
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 2:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    px = arguments[1][0];
+                    py = arguments[1][1];
+                    pz = arguments[1][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+                case 6:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    px = arguments[0];
+                    py = arguments[1];
+                    pz = arguments[2];
+                    break;
+            }
             var body = this.body;
             if (body) {
-                ammoVec1.setValue(force[0], force[1], force[2]);
-                if (relativePoint) {
-                    ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
+                ammoVec1.setValue(x, y, z);
+                if (typeof(px) !== 'undefined') {
+                    ammoVec2.setValue(px, py, pz);
                     body.applyForce(ammoVec1, ammoVec2);
                 } else {
                     body.applyForce(ammoVec1, ammoOrigin);
@@ -123,14 +165,56 @@ pc.extend(pc.fw, function () {
          * @name pc.fw.RigidBodyComponent#applyImpulse
          * @description Apply an impulse (instantaneous change of velocity) to the body
          * @param {pc.math.vec3} impulse The impulse to apply, in world space.
-         * @param {pc.math.vec3} relativePoint The point at which to apply the impulse, in local space (relative to the entity).
+         * @param {pc.math.vec3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
          */
-        applyImpulse: function (impulse, relativePoint) {
+
+        /**
+         * @private
+         * @name pc.fw.RigidBodyComponent#applyImpulse^2
+         * @description Apply an impulse (instantaneous change of velocity) to the body
+         * @param {Number} x The x component of the impulse to apply, in world space.
+         * @param {Number} y The y component of the impulse to apply, in world space.
+         * @param {Number} z The z component of the impulse to apply, in world space.
+         * @param {Number} [px] The x component of the point at which to apply the impulse, in local space (relative to the Entity).
+         * @param {Number} [py] The y component of the point at which to apply the impulse, in local space (relative to the Entity).
+         * @param {Number} [pz] The z component of the point at which to apply the impulse, in local space (relative to the Entity).
+        */
+        applyImpulse: function () {
+            var x, y, z;
+            var px,py,pz;
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 2:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    px = arguments[1][0];
+                    py = arguments[1][1];
+                    pz = arguments[1][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+                case 6:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    px = arguments[0];
+                    py = arguments[1];
+                    pz = arguments[2];
+                    break;
+            }
             var body = this.body;
             if (body) {
-                ammoVec1.setValue(impulse[0], impulse[1], impulse[2]);
-                if (relativePoint) {
-                    ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
+                ammoVec1.setValue(x, y, z);
+                if (typeof(px) !== 'undefined') {
+                    ammoVec2.setValue(px, py, pz);
                     body.applyImpulse(ammoVec1, ammoVec2);                    
                 } else {
                     body.applyImpulse(ammoVec1, ammoOrigin);
