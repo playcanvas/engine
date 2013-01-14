@@ -151,9 +151,7 @@ pc.extend(pc.fw, function () {
             var properties = ['body', 'friction', 'mass', 'restitution', 'bodyType'];
             Body3dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-            component.entity.body3d.createBody();
-            component.entity._setPosition = component.entity.setPosition;
-            component.entity.setPosition = pc.fw.Body3dComponent.prototype._setPosition;
+            component.createBody();
         },
 
         onRemove: function (entity, data) {
@@ -163,9 +161,6 @@ pc.extend(pc.fw, function () {
             
             Ammo.destroy(data.body);
             data.body = null;
-
-            entity.setPosition = entity._setPosition;
-            delete entity._setPosition;
         },
 
         addBody: function (body) {
@@ -268,9 +263,9 @@ pc.extend(pc.fw, function () {
                     var componentData = components[id].data;
                     if (componentData.body) {
                         if (componentData.bodyType === pc.fw.BODY3D_TYPE_DYNAMIC) {
-                            entity.body3d.updateTransform(componentData.body);
+                            entity.body3d.syncEntityTransform();
                         } else if (componentData.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC) {
-                            entity.body3d.updateKinematicTransform(dt);
+                            entity.body3d.updateKinematic(dt);
                         }
                     }
 

@@ -26,14 +26,14 @@ pc.extend(pc.fw, function () {
         this.on('set_mass', this.onSetMass, this);
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
-        //this.on('set_static', this.onSetStatic, this);
         this.on('set_bodyType', this.onSetBodyType, this);
+
+        this.on('set_body', this.onSetBody, this);
 
         entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
 
         // For kinematic
         this.displacement = pc.math.vec3.create();
-
         this.linearVelocity = pc.math.vec3.create();
         this.angularVelocity = pc.math.vec3.create();
 
@@ -41,92 +41,6 @@ pc.extend(pc.fw, function () {
     Body3dComponent = pc.inherits(Body3dComponent, pc.fw.Component);
 
     pc.extend(Body3dComponent.prototype, {
-        /**
-         * @private
-         * @name pc.fw.Body3dComponent#applyForce
-         * @description Apply an force to the body
-         * @param {pc.math.vec3} force The force to apply, in world space.
-         * @param {pc.math.vec3} relativePoint The point at which to apply the force, in local space (relative to the entity).
-         */
-        applyForce: function (force, relativePoint) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                ammoVec1.setValue(force[0], force[1], force[2]);
-                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
-                body.applyForce(ammoVec1, ammoVec2);
-            }
-        },
-
-        /**
-         * @private
-         * @name pc.fw.Body3dComponent#applyImpulse
-         * @description Apply an impulse (instantaneous change of velocity) to the body
-         * @param {pc.math.vec3} impulse The impulse to apply, in world space.
-         * @param {pc.math.vec3} relativePoint The point at which to apply the impulse, in local space (relative to the entity).
-         */
-        applyImpulse: function (impulse, relativePoint) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                ammoVec1.setValue(impulse[0], impulse[1], impulse[2]);
-                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
-                body.applyImpulse(ammoVec1, ammoVec2);
-            }
-        },
-
-        /**
-         * @private
-         * @name pc.fw.Body3dComponentSystem#setLinearVelocity
-         * @description Set the linear velocity of the body.
-         * @param {Number} x The x value of the velocity
-         * @param {Number} y The y value of the velocity
-         * @param {Number} y The z value of the velocity
-         */
-        setLinearVelocity: function (x, y, z) {
-            if (!this.isKinematic()) {
-                var body = this.entity.body3d.body;
-                if (body) {
-                    ammoVec1.setValue(x, y, z);
-                    body.setLinearVelocity(ammoVec1);
-                }                
-            } else {
-                pc.math.vec3.set(this.linearVelocity, x, y, z);
-            }
-        },
-
-        /**
-         * @private
-         * @name pc.fw.Body3dComponent#setAngularVelocity
-         * @description Set the angular  velocity of the body
-         * @param {Number} x The x value of the angular velocity
-         * @param {Number} y The y value of the angular velocity
-         * @param {Number} z The z value of the angular velocity
-         */
-        setAngularVelocity: function (x, y, z) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                ammoVec1.setValue(x, y, z);
-                body.setAngularVelocity(ammoVec1);
-            }
-        },
-
-        setTransform: function (transform) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                var position = pc.math.mat4.getTranslation(transform);
-                pc.math.mat4.toQuat(transform, quat);
-
-                var transform = body.getWorldTransform();
-                transform.getOrigin().setValue(position[0], position[1], position[2]);
-                
-                ammoQuat.setValue(quat[0], quat[1], quat[2], quat[3]);
-                transform.setRotation(ammoQuat);
-
-                this.setLinearVelocity(0, 0, 0);
-                this.setAngularVelocity(0, 0, 0);
-                body.activate();
-            }
-        },
-
         createBody: function () {
             var entity = this.entity;
             var shape;
@@ -182,80 +96,97 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        /** 
-        Replacement for pc.scene.GraphNode#setPosition()
-        Used by Entities with a Body3d Component so that when entity.setPosition() is called, the body transform can be updated
-        */
-        _setPosition: function (x, y, z) {
-            if (arguments.length > 1) {
-                this._setPosition(x, y, z);    
-            } else {
-                this._setPosition(x);
-            }
-
-            if (this.body3d && this.body3d.body) {
-                var transform = this.body3d.body.getWorldTransform();
-                transform.getOrigin().setValue(x, y, z);
-
-                this.body3d.body.activate();
+        /**
+         * @private
+         * @name pc.fw.Body3dComponent#applyForce
+         * @description Apply an force to the body
+         * @param {pc.math.vec3} force The force to apply, in world space.
+         * @param {pc.math.vec3} relativePoint The point at which to apply the force, in local space (relative to the entity).
+         */
+        applyForce: function (force, relativePoint) {
+            var body = this.entity.body3d.body;
+            if (body) {
+                ammoVec1.setValue(force[0], force[1], force[2]);
+                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
+                body.applyForce(ammoVec1, ammoVec2);
             }
         },
 
         /**
-        * @private
-        * @name pc.fw.Body3dComponent#setPosition
-        * @description Set the position of the body
-        * @param {Number} x The x value of the position
-        * @param {Number} y The y value of the position
-        * @param {Number} z The z value of the position
-        */
-        // setPosition: function (x, y, z) {
+         * @private
+         * @name pc.fw.Body3dComponent#applyImpulse
+         * @description Apply an impulse (instantaneous change of velocity) to the body
+         * @param {pc.math.vec3} impulse The impulse to apply, in world space.
+         * @param {pc.math.vec3} relativePoint The point at which to apply the impulse, in local space (relative to the entity).
+         */
+        applyImpulse: function (impulse, relativePoint) {
+            var body = this.entity.body3d.body;
+            if (body) {
+                ammoVec1.setValue(impulse[0], impulse[1], impulse[2]);
+                ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
+                body.applyImpulse(ammoVec1, ammoVec2);
+            }
+        },
+
+        /**
+         * @private
+         * @name pc.fw.Body3dComponentSystem#setLinearVelocity
+         * @description Set the linear velocity of the body.
+         * @param {Number} x The x value of the velocity
+         * @param {Number} y The y value of the velocity
+         * @param {Number} y The z value of the velocity
+         */
+        setLinearVelocity: function (x, y, z) {
+            if (!this.isKinematic()) {
+                var body = this.entity.body3d.body;
+                if (body) {
+                    ammoVec1.setValue(x, y, z);
+                    body.setLinearVelocity(ammoVec1);
+                }                
+            } else {
+                pc.math.vec3.set(this.linearVelocity, x, y, z);
+            }
+        },
+
+        /**
+         * @private
+         * @name pc.fw.Body3dComponent#setAngularVelocity
+         * @description Set the angular velocity of the body
+         * @param {Number} x The x value of the angular velocity
+         * @param {Number} y The y value of the angular velocity
+         * @param {Number} z The z value of the angular velocity
+         */
+        setAngularVelocity: function (x, y, z) {
+            if (!this.isKinematic()) {
+                var body = this.entity.body3d.body;
+                if (body) {
+                    ammoVec1.setValue(x, y, z);
+                    body.setAngularVelocity(ammoVec1);
+                }
+            } else {
+                pc.math.vec3.set(this.angularVelocity, x, y, z);
+            }
+        },
+
+        // /**
+        // * @private
+        // * @name pc.fw.Body3dComponent#setLinearDamping
+        // * @description Set the linear damping value of the body. 
+        // * Damping parameters should be between 0 and 1.
+        // * @param {Number} damping The damping value
+        // */
+        // setLinearDamping: function (damping) {
         //     var body = this.entity.body3d.body;
         //     if (body) {
-        //         var transform = body.getWorldTransform();
-        //         transform.setOrigin(new Ammo.btVector3(x, y, z));
-
-        //         body.activate();
-
-        //         this.entity.setPosition(x, y, z);
+        //         body.setDamping(damping, 0);
         //     }
         // },
 
-        /**
-        * @private
-        * @name pc.fw.Body3dComponent#setAngle
-        * @description Set the angle of the body
-        * @param {Number} a The new angle, in degrees
-        */
-        setRotation: function (x, y, z) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                pc.math.quat.setFromEulers(quat, x, y, z);
-                ammoQuat.setValue(quat[0], quat[1], quat[2], quat[3]);
-
-                var transform = body.getWorldTransform();
-                transform.setRotation(ammoQuat);
-
-                body.activate();
-
-                this.entity.setEulerAngles(x, y, z);
-            }
-        },
-
-        /**
-        * @private
-        * @name pc.fw.Body3dComponent#setLinearDamping
-        * @description Set the linear damping value of the body. 
-        * Damping parameters should be between 0 and infinity, with 0 meaning no damping, and infinity 
-        * meaning full damping. Normally you will use a damping value between 0 and 0.1
-        * @param {Number} damping The damping value
-        */
-        setLinearDamping: function (entity, damping) {
-            var body = this.entity.body3d.body;
-            if (body) {
-                body.setDamping(damping, 1);
-            }
-        },
+        // setAngularDamping: function (damping) {
+        //     if (this.body) {
+        //         this.body.setDamping(0, damping);
+        //     }
+        // },
 
         isStatic: function () {
             return (this.bodyType === pc.fw.BODY3D_TYPE_STATIC);
@@ -269,7 +200,60 @@ pc.extend(pc.fw, function () {
             return (this.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC);
         },
 
-        updateKinematicTransform: function (dt) {
+
+        /**
+        * @private
+        * @name pc.fw.Body3dComponent#syncTransform
+        * @description Set the rigid body transform to to be the same as the Entity transform.
+        * This must be called after any Entity transformation functions (e.g. {@link pc.fw.Entity#setPosition}) are called
+        * in order to update the rigid body to match the Entity.
+        */
+        syncTransform: function () {
+            var transform = this.entity.getWorldTransform();
+
+            var body = this.entity.body3d.body;
+            if (body) {
+                var position = pc.math.mat4.getTranslation(transform);
+                pc.math.mat4.toQuat(transform, quat);
+
+                var transform = body.getWorldTransform();
+                transform.getOrigin().setValue(position[0], position[1], position[2]);
+                
+                ammoQuat.setValue(quat[0], quat[1], quat[2], quat[3]);
+                transform.setRotation(ammoQuat);
+            }
+        },
+
+        /** 
+        * @private
+        * @name pc.fwBody3dComponent#syncEntity
+        * @description Update the Entity transform from the rigid body.
+        * This is called after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
+        */
+        syncEntityTransform: function () {
+            var body = this.body;
+            if (body.isActive() && body.getMotionState()) {
+                body.getMotionState().getWorldTransform(ammoTransform);
+
+                var p = ammoTransform.getOrigin();
+                var q = ammoTransform.getRotation();
+                this.entity.setPosition(p.x(), p.y(), p.z());
+                quat[0] = q.x();
+                quat[1] = q.y();
+                quat[2] = q.z();
+                quat[3] = q.w();
+                this.entity.setRotation(quat);
+            }
+        },
+
+        /**
+        * @private
+        * @function
+        * @name pc.fw.Body3dComponent#updateKinematic
+        * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
+        * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
+        */
+        updateKinematic: function (dt) {
             pc.math.vec3.scale(this.linearVelocity, dt, this.displacement);
             this.entity.translate(this.displacement);
 
@@ -283,24 +267,6 @@ pc.extend(pc.fw, function () {
                 ammoQuat.setValue(rot[0], rot[1], rot[2], rot[3]);
                 ammoTransform.setRotation(ammoQuat);
                 this.body.getMotionState().setWorldTransform(ammoTransform);
-            }
-        },
-
-        /** 
-        * update the Entity transform from the RigidBody
-        */
-        updateTransform: function (body) {
-            if (body.isActive() && body.getMotionState()) {
-                body.getMotionState().getWorldTransform(ammoTransform);
-
-                var p = ammoTransform.getOrigin();
-                var q = ammoTransform.getRotation();
-                this.entity.setPosition(p.x(), p.y(), p.z());
-                quat[0] = q.x();
-                quat[1] = q.y();
-                quat[2] = q.z();
-                quat[3] = q.w();
-                this.entity.setRotation(quat);
             }
         },
 
@@ -330,28 +296,25 @@ pc.extend(pc.fw, function () {
             var body = this.data.body;
             if (body) {
                 body.setRestitution(newValue);
-                // if (this.data.static) {
-                //     body.setRestitution(1);
-                // } else {
-                //     body.setRestitution(newValue);
-                // }
             }                
         },
 
-        // onSetStatic: function (name, oldValue, newValue) {
-        //     var body = this.data.body;
-        //     if (body) {
-        //     }
-        // },
-
         onSetBodyType: function (name, oldValue, newValue) {
             if (newValue !== oldValue) {
-                this.createBody();    
+                // Create a new body
+                this.createBody();
+            }
+        },
+
+        onSetBody: function (name, oldValue, newValue) {
+            if (this.body) {
+                this.body.activate();
             }
         },
 
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            this.setTransform(this.entity.getWorldTransform());
+            this.syncTransform();
+            // Reset velocities
             this.setLinearVelocity(0,0,0);
             this.setAngularVelocity(0,0,0);    
         }
