@@ -97,6 +97,20 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        isActive: function () {
+            if (this.body) {
+                return this.body.isActive();
+            }
+
+            return false;
+        },
+
+        activate: function () {
+            if (this.body) {
+                this.body.activate();
+            }
+        },
+
         /**
          * @private
          * @name pc.fw.RigidBodyComponent#applyForce
