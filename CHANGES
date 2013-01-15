@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.91.0
+-------
+* Renamed 'body3d' component to 'rigidbody' component
+* Added isActive() and activate() to rigidbody component
+* Better argument options for applyForce() and applyImpulse()
+
+-------
 v0.90.2
 -------
 * relativePoint for Body3d.applyForce and Body3d.applyImpulse is now an optional argument, defaults to 0,0,0

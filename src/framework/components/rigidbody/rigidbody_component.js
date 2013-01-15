@@ -8,13 +8,13 @@ pc.extend(pc.fw, function () {
 
     /**
      * @private
-     * @name pc.fw.Body3dComponent
-     * @constructor Create a new Body3dComponent
+     * @name pc.fw.RigidBodyComponent
+     * @constructor Create a new RigidBodyComponent
      * @class 
      * @param {Object} context
      * @extends pc.fw.Component
      */
-    var Body3dComponent = function Body3dComponent (system, entity) {
+    var RigidBodyComponent = function RigidBodyComponent (system, entity) {
         // Lazily create shared variable
         if (typeof(Ammo) !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
@@ -39,9 +39,9 @@ pc.extend(pc.fw, function () {
         this.angularVelocity = pc.math.vec3.create();
 
     };
-    Body3dComponent = pc.inherits(Body3dComponent, pc.fw.Component);
+    RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.fw.Component);
 
-    pc.extend(Body3dComponent.prototype, {
+    pc.extend(RigidBodyComponent.prototype, {
         createBody: function () {
             var entity = this.entity;
             var shape;
@@ -84,32 +84,88 @@ pc.extend(pc.fw, function () {
                 body.setFriction(this.friction);
 
                 if (this.isKinematic()) {
-                    body.setCollisionFlags(body.getCollisionFlags() | pc.fw.BODY3D_CF_KINEMATIC_OBJECT);
-                    body.setActivationState(pc.fw.BODY3D_DISABLE_DEACTIVATION);
+                    body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_KINEMATIC_OBJECT);
+                    body.setActivationState(pc.fw.RIGIDBODY_DISABLE_DEACTIVATION);
                 }
 
                 body.entity = entity;
 
                 this.system.addBody(body);
 
-                entity.body3d.body = body;
-                entity.body3d.body.activate();
+                entity.rigidbody.body = body;
+                entity.rigidbody.body.activate();
+            }
+        },
+
+        isActive: function () {
+            if (this.body) {
+                return this.body.isActive();
+            }
+
+            return false;
+        },
+
+        activate: function () {
+            if (this.body) {
+                this.body.activate();
             }
         },
 
         /**
          * @private
-         * @name pc.fw.Body3dComponent#applyForce
+         * @name pc.fw.RigidBodyComponent#applyForce
          * @description Apply an force to the body
          * @param {pc.math.vec3} force The force to apply, in world space.
-         * @param {pc.math.vec3} relativePoint The point at which to apply the force, in local space (relative to the entity).
+         * @param {pc.math.vec3} [relativePoint] The point at which to apply the force, in local space (relative to the entity).
          */
-        applyForce: function (force, relativePoint) {
-            var body = this.entity.body3d.body;
+
+        /**
+         * @private
+         * @name pc.fw.RigidBodyComponent#applyForce^2
+         * @description Apply an force to the body
+         * @param {Number} x The x component of the force to apply, in world space.
+         * @param {Number} y The y component of the force to apply, in world space.
+         * @param {Number} z The z component of the force to apply, in world space.
+         * @param {Number} [px] The x component of the point at which to apply the force, in local space (relative to the Entity).
+         * @param {Number} [py] The y component of the point at which to apply the force, in local space (relative to the Entity).
+         * @param {Number} [pz] The z component of the point at which to apply the force, in local space (relative to the Entity).
+         */
+        applyForce: function () {
+            var x, y, z;
+            var px,py,pz;
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 2:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    px = arguments[1][0];
+                    py = arguments[1][1];
+                    pz = arguments[1][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+                case 6:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    px = arguments[0];
+                    py = arguments[1];
+                    pz = arguments[2];
+                    break;
+            }
+            var body = this.body;
             if (body) {
-                ammoVec1.setValue(force[0], force[1], force[2]);
-                if (relativePoint) {
-                    ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
+                ammoVec1.setValue(x, y, z);
+                if (typeof(px) !== 'undefined') {
+                    ammoVec2.setValue(px, py, pz);
                     body.applyForce(ammoVec1, ammoVec2);
                 } else {
                     body.applyForce(ammoVec1, ammoOrigin);
@@ -120,17 +176,59 @@ pc.extend(pc.fw, function () {
 
         /**
          * @private
-         * @name pc.fw.Body3dComponent#applyImpulse
+         * @name pc.fw.RigidBodyComponent#applyImpulse
          * @description Apply an impulse (instantaneous change of velocity) to the body
          * @param {pc.math.vec3} impulse The impulse to apply, in world space.
-         * @param {pc.math.vec3} relativePoint The point at which to apply the impulse, in local space (relative to the entity).
+         * @param {pc.math.vec3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
          */
-        applyImpulse: function (impulse, relativePoint) {
-            var body = this.entity.body3d.body;
+
+        /**
+         * @private
+         * @name pc.fw.RigidBodyComponent#applyImpulse^2
+         * @description Apply an impulse (instantaneous change of velocity) to the body
+         * @param {Number} x The x component of the impulse to apply, in world space.
+         * @param {Number} y The y component of the impulse to apply, in world space.
+         * @param {Number} z The z component of the impulse to apply, in world space.
+         * @param {Number} [px] The x component of the point at which to apply the impulse, in local space (relative to the Entity).
+         * @param {Number} [py] The y component of the point at which to apply the impulse, in local space (relative to the Entity).
+         * @param {Number} [pz] The z component of the point at which to apply the impulse, in local space (relative to the Entity).
+        */
+        applyImpulse: function () {
+            var x, y, z;
+            var px,py,pz;
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 2:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    px = arguments[1][0];
+                    py = arguments[1][1];
+                    pz = arguments[1][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+                case 6:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    px = arguments[0];
+                    py = arguments[1];
+                    pz = arguments[2];
+                    break;
+            }
+            var body = this.body;
             if (body) {
-                ammoVec1.setValue(impulse[0], impulse[1], impulse[2]);
-                if (relativePoint) {
-                    ammoVec2.setValue(relativePoint[0], relativePoint[1], relativePoint[2]);
+                ammoVec1.setValue(x, y, z);
+                if (typeof(px) !== 'undefined') {
+                    ammoVec2.setValue(px, py, pz);
                     body.applyImpulse(ammoVec1, ammoVec2);                    
                 } else {
                     body.applyImpulse(ammoVec1, ammoOrigin);
@@ -140,7 +238,7 @@ pc.extend(pc.fw, function () {
 
         /**
          * @private
-         * @name pc.fw.Body3dComponentSystem#setLinearVelocity
+         * @name pc.fw.RigidBodyComponentSystem#setLinearVelocity
          * @description Set the linear velocity of the body.
          * @param {Number} x The x value of the velocity
          * @param {Number} y The y value of the velocity
@@ -148,7 +246,7 @@ pc.extend(pc.fw, function () {
          */
         setLinearVelocity: function (x, y, z) {
             if (!this.isKinematic()) {
-                var body = this.entity.body3d.body;
+                var body = this.body;
                 if (body) {
                     ammoVec1.setValue(x, y, z);
                     body.setLinearVelocity(ammoVec1);
@@ -160,7 +258,7 @@ pc.extend(pc.fw, function () {
 
         /**
          * @private
-         * @name pc.fw.Body3dComponent#setAngularVelocity
+         * @name pc.fw.RigidBodyComponent#setAngularVelocity
          * @description Set the angular velocity of the body
          * @param {Number} x The x value of the angular velocity
          * @param {Number} y The y value of the angular velocity
@@ -168,7 +266,7 @@ pc.extend(pc.fw, function () {
          */
         setAngularVelocity: function (x, y, z) {
             if (!this.isKinematic()) {
-                var body = this.entity.body3d.body;
+                var body = this.body;
                 if (body) {
                     ammoVec1.setValue(x, y, z);
                     body.setAngularVelocity(ammoVec1);
@@ -180,13 +278,13 @@ pc.extend(pc.fw, function () {
 
         // /**
         // * @private
-        // * @name pc.fw.Body3dComponent#setLinearDamping
+        // * @name pc.fw.RigidBodyComponent#setLinearDamping
         // * @description Set the linear damping value of the body. 
         // * Damping parameters should be between 0 and 1.
         // * @param {Number} damping The damping value
         // */
         // setLinearDamping: function (damping) {
-        //     var body = this.entity.body3d.body;
+        //     var body = this.body;
         //     if (body) {
         //         body.setDamping(damping, 0);
         //     }
@@ -199,29 +297,29 @@ pc.extend(pc.fw, function () {
         // },
 
         isStatic: function () {
-            return (this.bodyType === pc.fw.BODY3D_TYPE_STATIC);
+            return (this.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC);
         },
 
         isStaticOrKinematic: function () {
-            return (this.bodyType === pc.fw.BODY3D_TYPE_STATIC || this.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC);
+            return (this.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC || this.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
         },
 
         isKinematic: function () {
-            return (this.bodyType === pc.fw.BODY3D_TYPE_KINEMATIC);
+            return (this.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
         },
 
 
         /**
         * @private
-        * @name pc.fw.Body3dComponent#syncTransform
+        * @name pc.fw.RigidBodyComponent#syncTransform
         * @description Set the rigid body transform to to be the same as the Entity transform.
         * This must be called after any Entity transformation functions (e.g. {@link pc.fw.Entity#setPosition}) are called
         * in order to update the rigid body to match the Entity.
         */
-        syncTransform: function () {
+        syncEntityToBody: function () {
             var transform = this.entity.getWorldTransform();
 
-            var body = this.entity.body3d.body;
+            var body = this.body;
             if (body) {
                 var position = pc.math.mat4.getTranslation(transform);
                 pc.math.mat4.toQuat(transform, quat);
@@ -238,11 +336,11 @@ pc.extend(pc.fw, function () {
 
         /** 
         * @private
-        * @name pc.fwBody3dComponent#syncEntity
+        * @name pc.fwRigidBodyComponent#syncEntity
         * @description Update the Entity transform from the rigid body.
         * This is called after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
         */
-        syncEntityTransform: function () {
+        syncBodyToEntity: function () {
             var body = this.body;
             if (body.isActive() && body.getMotionState()) {
                 body.getMotionState().getWorldTransform(ammoTransform);
@@ -261,7 +359,7 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.Body3dComponent#updateKinematic
+        * @name pc.fw.RigidBodyComponent#updateKinematic
         * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
         * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
         */
@@ -325,7 +423,7 @@ pc.extend(pc.fw, function () {
         },
 
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            this.syncTransform();
+            this.syncEntityToBody();
             // Reset velocities
             this.setLinearVelocity(0,0,0);
             this.setAngularVelocity(0,0,0);    
@@ -333,6 +431,6 @@ pc.extend(pc.fw, function () {
     });
 
     return {
-        Body3dComponent: Body3dComponent
+        RigidBodyComponent: RigidBodyComponent
     };
 }());

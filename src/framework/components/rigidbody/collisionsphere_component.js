@@ -15,12 +15,12 @@ pc.extend(pc.fw, function () {
     pc.extend(CollisionSphereComponent.prototype, {
 
         onSetRadius: function (name, oldValue, newValue) {
-            if (this.entity.body3d) {
+            if (this.entity.rigidbody) {
                 if (typeof(Ammo) !== 'undefined') {
                     this.data.shape = new Ammo.btSphereShape(newValue);    
                 }
                 
-                this.entity.body3d.createBody();
+                this.entity.rigidbody.createBody();
             }
         }
     });

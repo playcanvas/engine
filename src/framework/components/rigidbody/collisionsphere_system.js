@@ -1,29 +1,29 @@
 pc.extend(pc.fw, function () {
     /**
      * @private
-     * @name pc.fw.CollisionBoxComponentSystem
-     * @constructor Create a new CollisionBoxComponentSystem
+     * @name pc.fw.CollisionSphereComponentSystem
+     * @constructor Create a new CollisionSphereComponentSystem
      * @class 
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
      */
-    var CollisionBoxComponentSystem = function CollisionBoxComponentSystem (context) {
-        this.id = "collisionbox";
+    var CollisionSphereComponentSystem = function CollisionSphereComponentSystem (context) {
+        this.id = "collisionsphere";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.CollisionBoxComponent;
-        this.DataType = pc.fw.CollisionBoxComponentData;
+        this.ComponentType = pc.fw.CollisionSphereComponent;
+        this.DataType = pc.fw.CollisionSphereComponentData;
 
         this.schema = [{
-            name: "size",
-            displayName: "Size",
-            description: "The half-extents of the box",
-            type: "vector",
+            name: "radius",
+            displayName: "Radius",
+            description: "The radius of the collision sphere",
+            type: "number",
             options: {
                 min: 0,
                 step: 0.1,
             },
-            defaultValue: [0.5, 0.5, 0.5]
+            defaultValue: 0.5
         }, {
             name: "shape",
             exposed: false
@@ -34,26 +34,33 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
+        // Create the graphical resources required to render a camera frustum
         var format = new pc.gfx.VertexFormat();
         format.begin();
         format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 8, pc.gfx.VertexBufferUsage.STATIC);
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 41, pc.gfx.VertexBufferUsage.STATIC);
         var positions = new Float32Array(vertexBuffer.lock());
-        positions.set([
-            -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5,
-            -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5
-        ]);
+
+        var r = 0.5;
+        var numVerts = vertexBuffer.getNumVertices();
+        for (var i = 0; i < numVerts-1; i++) {
+            var theta = 2 * Math.PI * (i / (numVerts-2));
+            var x = r * Math.cos(theta);
+            var z = r * Math.sin(theta);
+            positions[(i)*3+0] = x;
+            positions[(i)*3+1] = 0;
+            positions[(i)*3+2] = z;
+        }
         vertexBuffer.unlock();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 24);
-        var indices = new Uint8Array(indexBuffer.lock());
-        indices.set([
-            0,1,1,2,2,3,3,0,
-            4,5,5,6,6,7,7,4,
-            0,4,1,5,2,6,3,7
-        ]);
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 80);
+        var inds = new Uint8Array(indexBuffer.lock());
+        for (var i = 0; i < 40; i++) {
+            inds[i * 2 + 0] = i;
+            inds[i * 2 + 1] = i + 1;
+        }
         indexBuffer.unlock();
 
         this.mesh = new pc.scene.Mesh();
@@ -67,39 +74,38 @@ pc.extend(pc.fw, function () {
         this.material = new pc.scene.BasicMaterial();
         this.material.color = pc.math.vec4.create(0, 0, 1, 1);
         this.material.update();
-
+        
         this.debugRender = false;
 
         this.on('remove', this.onRemove, this);
 
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
         pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
-          
     };
-    CollisionBoxComponentSystem = pc.inherits(CollisionBoxComponentSystem, pc.fw.ComponentSystem);
+    CollisionSphereComponentSystem = pc.inherits(CollisionSphereComponentSystem, pc.fw.ComponentSystem);
     
-    CollisionBoxComponentSystem.prototype = pc.extend(CollisionBoxComponentSystem.prototype, {
+    pc.extend(CollisionSphereComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (typeof(Ammo) !== 'undefined') {
-                data.shape = new Ammo.btBoxShape(new Ammo.btVector3(data.size[0], data.size[1], data.size[2]));
+                data.shape = new Ammo.btSphereShape(data.radius);    
             }
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
             data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
-            
-            properties = ['size', 'shape', 'model'];
 
-            CollisionBoxComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            properties = ['radius', 'shape', 'model'];
 
-            if (component.entity.body3d) {
-                component.entity.body3d.createBody();
+            CollisionSphereComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+
+            if (component.entity.rigidbody) {
+                component.entity.rigidbody.createBody();
             }
         },
-        
+
         onRemove: function (entity, data) {
-            if (entity.body3d && entity.body3d.body) {
-                this.context.systems.body3d.removeBody(entity.body3d.body);
+            if (entity.rigidbody && entity.rigidbody.body) {
+                this.context.systems.rigidbody.removeBody(entity.rigidbody.body);
             }
 
             if (this.context.scene.containsModel(data.model)) {
@@ -110,7 +116,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.CollisionBoxComponentSystem#setDebugRender
+        * @name pc.fw.CollisionSphereComponentSystem#setDebugRender
         * @description Display collision shape outlines
         * @param {Boolean} value Enable or disable
         */
@@ -134,9 +140,7 @@ pc.extend(pc.fw, function () {
                 var entity = components[id].entity;
                 var data = components[id].data;
 
-                var x = data.size[0];
-                var y = data.size[1];
-                var z = data.size[2];
+                var r = data.radius;
                 var model = data.model;
 
                 if (!this.context.scene.containsModel(data.model)) {
@@ -147,12 +151,12 @@ pc.extend(pc.fw, function () {
                 var root = model.graph;
                 root.setPosition(entity.getPosition());
                 root.setRotation(entity.getRotation());
-                root.setLocalScale(x / 0.5, y / 0.5, z / 0.5);
+                root.setLocalScale(r / 0.5, r / 0.5, r / 0.5);
             }
         }
     });
 
     return {
-        CollisionBoxComponentSystem: CollisionBoxComponentSystem
+        CollisionSphereComponentSystem: CollisionSphereComponentSystem
     };
 }());
