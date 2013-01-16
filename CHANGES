@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.93.0
+-------
+* Renamed collisionbox.size to collisionbox.halfExtents
+
+-------
 v0.92.0
 -------
 * First public version of rigidbody component
