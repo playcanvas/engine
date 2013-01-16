@@ -75,7 +75,7 @@ pc.extend(pc.fw, function () {
             type: "number",
             options: {
                 min: 0,
-                step: 0.01
+                step: 1
             },
             defaultValue: 1
         }, {
