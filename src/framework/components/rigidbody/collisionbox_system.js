@@ -1,6 +1,5 @@
 pc.extend(pc.fw, function () {
     /**
-     * @private
      * @name pc.fw.CollisionBoxComponentSystem
      * @constructor Create a new CollisionBoxComponentSystem
      * @class Manages creation of CollisionBoxComponents

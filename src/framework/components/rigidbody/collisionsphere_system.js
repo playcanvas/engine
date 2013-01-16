@@ -1,6 +1,5 @@
 pc.extend(pc.fw, function () {
     /**
-     * @private
      * @name pc.fw.CollisionSphereComponentSystem
      * @constructor Create a new CollisionSphereComponentSystem
      * @class Manages creation of CollisionSphereComponents
@@ -115,7 +114,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-        * @private
+        * @function
         * @name pc.fw.CollisionSphereComponentSystem#setDebugRender
         * @description Display collision shape outlines
         * @param {Boolean} value Enable or disable
