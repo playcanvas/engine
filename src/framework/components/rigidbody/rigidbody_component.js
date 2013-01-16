@@ -342,7 +342,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBody#setLinearFactor
+        * @name pc.fw.RigidBodyComponent#setLinearFactor
         * @description Apply a scaling factor to linear motion in each axis. 
         * Use this to limit motion in one or more axes
         * @param {Number} x The factor to scale x-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged
@@ -360,7 +360,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBody#setAngularFactor
+        * @name pc.fw.RigidBodyComponent#setAngularFactor
         * @description Apply a scaling factor to angular motion.
         * @param {Number} f The factor to scale by, 0 means no angular motion, 1 means angular motion is unchanged
         * @example
