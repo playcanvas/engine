@@ -1,10 +1,9 @@
 pc.extend(pc.fw, function () {
     /**
-     * @private
      * @name pc.fw.CollisionSphereComponentSystem
      * @constructor Create a new CollisionSphereComponentSystem
-     * @class 
-     * @param {Object} context
+     * @class Manages creation of CollisionSphereComponents
+     * @param {pc.fw.ApplicationContext} context The ApplicationContext of the running application
      * @extends pc.fw.ComponentSystem
      */
     var CollisionSphereComponentSystem = function CollisionSphereComponentSystem (context) {
@@ -115,7 +114,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-        * @private
+        * @function
         * @name pc.fw.CollisionSphereComponentSystem#setDebugRender
         * @description Display collision shape outlines
         * @param {Boolean} value Enable or disable
