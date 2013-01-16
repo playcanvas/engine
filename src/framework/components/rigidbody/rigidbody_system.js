@@ -306,19 +306,19 @@ pc.extend(pc.fw, function () {
         /** 
         * @enum pc.fw.RIGIDBODY_TYPE
         * @name pc.fw.RIGIDBODY_TYPE_STATIC
-        * @description Static RigidBodies have infinite mass and can never move. You cannot apply forces or impulses to them or set their velocity.
+        * @description Static rigid bodies have infinite mass and can never move. You cannot apply forces or impulses to them or set their velocity.
         */
         RIGIDBODY_TYPE_STATIC: 'static',
         /** 
         * @enum pc.fw.RIGIDBODY_TYPE
         * @name pc.fw.RIGIDBODY_TYPE_DYNAMIC
-        * @description Dynamic RigidBodies are simulated according to the forces acted on them. They have a positive, non-zero mass.
+        * @description Dynamic rigid bodies are simulated according to the forces acted on them. They have a positive, non-zero mass.
         */
         RIGIDBODY_TYPE_DYNAMIC: 'dynamic',
         /** 
         * @enum pc.fw.RIGIDBODY_TYPE
         * @name pc.fw.RIGIDBODY_TYPE_KINEMATIC
-        * @description Kinematic RigidBodies are objects with infinite mass but can be moved by directly setting their velocity. You cannot apply forces or impulses to them.
+        * @description Kinematic rigid bodies are objects with infinite mass but can be moved by directly setting their velocity. You cannot apply forces or impulses to them.
         */
         RIGIDBODY_TYPE_KINEMATIC: 'kinematic',
 

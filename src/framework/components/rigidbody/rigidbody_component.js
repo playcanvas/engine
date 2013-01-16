@@ -266,7 +266,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBodyComponent#getLinearVelocity()
+        * @name pc.fw.RigidBodyComponent#getLinearVelocity
         * @description Return the current linear velocity of the rigid body
         * @returns {pc.math.vec3} The linear velocity
         */
@@ -284,7 +284,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBodyComponent#getAngularVelocity()
+        * @name pc.fw.RigidBodyComponent#getAngularVelocity
         * @description Return the current angular velocity of the rigid body
         * @returns {pc.math.vec3} The angular velocity
         */
@@ -362,7 +362,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBodyComponent#isStatic()
+        * @name pc.fw.RigidBodyComponent#isStatic
         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC}
         * @returns {Boolean} True if static
         */
@@ -372,7 +372,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBodyComponent#isStaticOrKinematic()
+        * @name pc.fw.RigidBodyComponent#isStaticOrKinematic
         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC} or {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
         * @returns {Boolean} True if static or kinematic
         */
@@ -382,7 +382,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBodyComponent#isKinematic()
+        * @name pc.fw.RigidBodyComponent#isKinematic
         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
         * @returns {Boolean} True if kinematic
         */
