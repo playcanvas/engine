@@ -188,7 +188,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.CollisionSphereComponentSystem#setDebugRender
+        * @name pc.fw.CollisionCircleComponentSystem#setDebugRender
         * @description Display collision shape outlines
         * @param {Boolean} value Enable or disable
         */
