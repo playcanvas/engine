@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
     var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
 
     /**
+     * @component
      * @name pc.fw.RigidBodyComponent
      * @constructor Create a new RigidBodyComponent
      * @class The RigidBody Component, when combined with a Collision volume Component, allow your Entities to be simulated using realistic physics. 

@@ -1,7 +1,5 @@
 pc.extend(pc.fw, function () {
-
     /**
-     * @component
      * @name pc.fw.BloomComponent
      * @constructor Create a new BloomComponent
      * @class Applies a bloom filter to a render target, writing the result to the backbuffer.

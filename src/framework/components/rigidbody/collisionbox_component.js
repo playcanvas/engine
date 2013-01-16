@@ -1,6 +1,6 @@
 pc.extend(pc.fw, function () {
-
     /**
+     * @component
      * @name pc.fw.CollisionBoxComponent
      * @constructor Create a new CollisionBoxComponent
      * @class A box-shaped collision volume. use this in conjunction with a RigidBodyComponent to make a Box that can be simulated using the physics engine.
