@@ -7,12 +7,22 @@ pc.extend(pc.fw, function () {
     var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
 
     /**
-     * @private
      * @name pc.fw.RigidBodyComponent
      * @constructor Create a new RigidBodyComponent
-     * @class 
-     * @param {Object} context
+     * @class The RigidBody Component, when combined with a Collision volume Component, allow your Entities to be simulated using realistic physics. 
+     * A RigidBody Component will fall under gravity and collide with other RigidBodiesa and using scripts you can apply forces to the body.
+     * @param {pc.fw.RigidBodyComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.fw.Entity} entity The Entity this Component is attached to
      * @extends pc.fw.Component
+     * @property {Number} mass The mass of the body. This is only relevant for {@link pc.fw.RIGIDBODY_TYPE_DYNAMIC} bodies, other types have infinite mass.
+     * @property {Number} friction The friction value used when contacts occur between two bodies. A higher value indicates more friction.
+     * @property {Number} restitution The amount of energy lost when two objects collide, this determines the bounciness of the object. 
+     * A value of 0 means that no energy is lost in the collision, a value of 1 means that all energy is lost. 
+     * So the higher the value the less bouncy the object is.
+     * @property {pc.fw.RIGIDBODY_TYPE} bodyType The type of RigidBody determines how it is simulated. 
+     * Static objects have infinite mass and cannot move, 
+     * Dynamic objects are simulated according to the forces applied to them, 
+     * Kinematic objects have infinite mass and do not respond to forces, but can still be moved by setting their velocity or position.
      */
     var RigidBodyComponent = function RigidBodyComponent (system, entity) {
         // Lazily create shared variable
@@ -42,6 +52,12 @@ pc.extend(pc.fw, function () {
     RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.fw.Component);
 
     pc.extend(RigidBodyComponent.prototype, {
+        /**
+        * @private
+        * @function
+        * @name pc.fw.RigidBodyComponent#createBody
+        * @description If the Entity has a Collision shape attached then create a rigid body using this shape. This method destroys the existing body.
+        */
         createBody: function () {
             var entity = this.entity;
             var shape;
@@ -97,6 +113,12 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.fw.RigidBodyComponent#isActive
+        * @description Returns true if the rigid body is currently actively being simulated. i.e. not 'sleeping'
+        * @returns {Boolean} True if the body is active
+        */
         isActive: function () {
             if (this.body) {
                 return this.body.isActive();
@@ -105,6 +127,11 @@ pc.extend(pc.fw, function () {
             return false;
         },
 
+        /**
+        * @function
+        * @name pc.fw.RigidBodyComponent#activate
+        * @description Forceably activate the rigid body simulation
+        */
         activate: function () {
             if (this.body) {
                 this.body.activate();
@@ -112,17 +139,17 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-         * @private
+         * @function
          * @name pc.fw.RigidBodyComponent#applyForce
-         * @description Apply an force to the body
+         * @description Apply an force to the body at a point
          * @param {pc.math.vec3} force The force to apply, in world space.
          * @param {pc.math.vec3} [relativePoint] The point at which to apply the force, in local space (relative to the entity).
          */
 
         /**
-         * @private
+         * @function
          * @name pc.fw.RigidBodyComponent#applyForce^2
-         * @description Apply an force to the body
+         * @description Apply an force to the body at a point
          * @param {Number} x The x component of the force to apply, in world space.
          * @param {Number} y The y component of the force to apply, in world space.
          * @param {Number} z The z component of the force to apply, in world space.
@@ -175,17 +202,17 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-         * @private
+         * @function
          * @name pc.fw.RigidBodyComponent#applyImpulse
-         * @description Apply an impulse (instantaneous change of velocity) to the body
+         * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
          * @param {pc.math.vec3} impulse The impulse to apply, in world space.
          * @param {pc.math.vec3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
          */
 
         /**
-         * @private
+         * @function
          * @name pc.fw.RigidBodyComponent#applyImpulse^2
-         * @description Apply an impulse (instantaneous change of velocity) to the body
+         * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
          * @param {Number} x The x component of the impulse to apply, in world space.
          * @param {Number} y The y component of the impulse to apply, in world space.
          * @param {Number} z The z component of the impulse to apply, in world space.
@@ -237,7 +264,43 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-         * @private
+        * @function
+        * @name pc.fw.RigidBodyComponent#getLinearVelocity()
+        * @description Return the current linear velocity of the rigid body
+        * @returns {pc.math.vec3} The linear velocity
+        */
+        getLinearVelocity: function () {
+            if (!this.isKinematic()) {
+                if (this.body) {
+                    var vel = this.body.getLinearVelocity();
+                    pc.math.vec3.set(this.linearVelocity, vel.x(), vel.y(), vel.z())
+                    return this.linearVelocity;
+                }
+            } else {
+                return this.linearVelocity;
+            }
+        },
+
+        /**
+        * @function
+        * @name pc.fw.RigidBodyComponent#getAngularVelocity()
+        * @description Return the current angular velocity of the rigid body
+        * @returns {pc.math.vec3} The angular velocity
+        */
+        getAngularVelocity: function () {
+            if (!this.isKinematic()) {
+                if (this.body) {
+                    var vel = this.body.getAngularVelocity();
+                    pc.math.vec3.set(this.angularVelocity, vel.x(), vel.y(), vel.z())
+                    return this.angularVelocity;
+                }
+            } else {
+                return this.angularVelocity;
+            }
+        },
+
+        /**
+         * @function
          * @name pc.fw.RigidBodyComponentSystem#setLinearVelocity
          * @description Set the linear velocity of the body.
          * @param {Number} x The x value of the velocity
@@ -257,7 +320,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-         * @private
+         * @function
          * @name pc.fw.RigidBodyComponent#setAngularVelocity
          * @description Set the angular velocity of the body
          * @param {Number} x The x value of the angular velocity
@@ -296,22 +359,40 @@ pc.extend(pc.fw, function () {
         //     }
         // },
 
+        /**
+        * @function
+        * @name pc.fw.RigidBodyComponent#isStatic()
+        * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC}
+        * @returns {Boolean} True if static
+        */
         isStatic: function () {
             return (this.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC);
         },
 
+        /**
+        * @function
+        * @name pc.fw.RigidBodyComponent#isStaticOrKinematic()
+        * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC} or {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
+        * @returns {Boolean} True if static or kinematic
+        */
         isStaticOrKinematic: function () {
             return (this.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC || this.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
         },
 
+        /**
+        * @function
+        * @name pc.fw.RigidBodyComponent#isKinematic()
+        * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
+        * @returns {Boolean} True if kinematic
+        */
         isKinematic: function () {
             return (this.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
         },
 
 
         /**
-        * @private
-        * @name pc.fw.RigidBodyComponent#syncTransform
+        * @function
+        * @name pc.fw.RigidBodyComponent#syncEntityToBody
         * @description Set the rigid body transform to to be the same as the Entity transform.
         * This must be called after any Entity transformation functions (e.g. {@link pc.fw.Entity#setPosition}) are called
         * in order to update the rigid body to match the Entity.
@@ -336,9 +417,10 @@ pc.extend(pc.fw, function () {
 
         /** 
         * @private
-        * @name pc.fwRigidBodyComponent#syncEntity
+        * @function
+        * @name pc.fwRigidBodyComponent#syncBodyToEntity
         * @description Update the Entity transform from the rigid body.
-        * This is called after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
+        * This is called internally after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
         */
         syncBodyToEntity: function () {
             var body = this.body;
@@ -422,6 +504,9 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        /**
+        * Handle an update over livelink from the tools updating the Entities transform
+        */
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
             this.syncEntityToBody();
             // Reset velocities

@@ -10,7 +10,6 @@ pc.extend(pc.fw, function () {
     var ammoRayStart, ammoRayEnd;
 
     /**
-    * @private
     * @name pc.fw.RaycastResult
     * @class Object holding the result of a successful raycast hit
     * @constructor Create a new RaycastResult
@@ -25,7 +24,6 @@ pc.extend(pc.fw, function () {
     };
 
     /**
-    * @private
     * @name pc.fw.ContactResult
     * @class Object holding the result of a contact between two rigid bodies
     * @constructor Create a new ContactResult
@@ -47,12 +45,20 @@ pc.extend(pc.fw, function () {
         this.normal = new pc.math.vec3.create(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
     };
 
+    // Events Documentation   
     /**
-     * @private
+    * @event
+    * @name pc.fw.RigidBodyComponentSystem#contact
+    * @description Fired when a contact occurs between two rigid bodies
+    * @param {pc.fw.ContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
      * @name pc.fw.RigidBodyComponentSystem
      * @constructor Create a new RigidBodyComponentSystem
-     * @class 
-     * @param {Object} context
+     * @class The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also controls global values for the world such as gravity.
+     * Note: The RigidBodyComponentSystem is only valid if 3D Physics is enabled in your application. You can enable this in the application settings for your Depot.
+     * @param {pc.fw.ApplicationContext} context The ApplicationContext
      * @extends pc.fw.ComponentSystem
      */
     var RigidBodyComponentSystem = function RigidBodyComponentSystem (context) {
@@ -173,7 +179,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-        * @private
+        * @function
         * @name pc.fw.RigidBodyComponentSystem#setGravity
         * @description Set the gravity vector for the 3D physics world
         */
@@ -183,7 +189,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-        * @private
+        * @function
         * @name pc.fw.RigidBodyComponentSystem#raycastFirst
         * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end, 
         * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
@@ -253,7 +259,7 @@ pc.extend(pc.fw, function () {
 
         onUpdate: function (dt) {
             // Update the transforms of all bodies
-            this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+            this.dynamicsWorld.stepSimulation(dt);//, this.maxSubSteps, this.fixedTimeStep);
 
             // Update the transforms of all entities referencing a body
             var components = this.store;
@@ -297,8 +303,23 @@ pc.extend(pc.fw, function () {
     });
 
     return {
+        /** 
+        * @enum pc.fw.RIGIDBODY_TYPE
+        * @name pc.fw.RIGIDBODY_TYPE_STATIC
+        * @description Static RigidBodies have infinite mass and can never move. You cannot apply forces or impulses to them or set their velocity.
+        */
         RIGIDBODY_TYPE_STATIC: 'static',
+        /** 
+        * @enum pc.fw.RIGIDBODY_TYPE
+        * @name pc.fw.RIGIDBODY_TYPE_DYNAMIC
+        * @description Dynamic RigidBodies are simulated according to the forces acted on them. They have a positive, non-zero mass.
+        */
         RIGIDBODY_TYPE_DYNAMIC: 'dynamic',
+        /** 
+        * @enum pc.fw.RIGIDBODY_TYPE
+        * @name pc.fw.RIGIDBODY_TYPE_KINEMATIC
+        * @description Kinematic RigidBodies are objects with infinite mass but can be moved by directly setting their velocity. You cannot apply forces or impulses to them.
+        */
         RIGIDBODY_TYPE_KINEMATIC: 'kinematic',
 
         // Collision flags from AmmoJS
