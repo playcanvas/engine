@@ -14,8 +14,8 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CollisionBoxComponentData;
 
         this.schema = [{
-            name: "size",
-            displayName: "Size",
+            name: "halfExtents",
+            displayName: "Half Extents",
             description: "The half-extents of the box",
             type: "vector",
             options: {
@@ -80,14 +80,14 @@ pc.extend(pc.fw, function () {
     CollisionBoxComponentSystem.prototype = pc.extend(CollisionBoxComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (typeof(Ammo) !== 'undefined') {
-                data.shape = new Ammo.btBoxShape(new Ammo.btVector3(data.size[0], data.size[1], data.size[2]));
+                data.shape = new Ammo.btBoxShape(new Ammo.btVector3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]));
             }
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
             data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
             
-            properties = ['size', 'shape', 'model'];
+            properties = ['halfExtents', 'shape', 'model'];
 
             CollisionBoxComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
@@ -133,9 +133,9 @@ pc.extend(pc.fw, function () {
                 var entity = components[id].entity;
                 var data = components[id].data;
 
-                var x = data.size[0];
-                var y = data.size[1];
-                var z = data.size[2];
+                var x = data.halfExtents[0];
+                var y = data.halfExtents[1];
+                var z = data.halfExtents[2];
                 var model = data.model;
 
                 if (!this.context.scene.containsModel(data.model)) {
