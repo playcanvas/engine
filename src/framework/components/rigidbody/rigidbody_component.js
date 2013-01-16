@@ -340,6 +340,39 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.fw.RigidBody#setLinearFactor
+        * @description Apply a scaling factor to linear motion in each axis. 
+        * Use this to limit motion in one or more axes
+        * @param {Number} x The factor to scale x-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged
+        * @param {Number} y The factor to scale y-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged
+        * @param {Number} z The factor to scale z-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged
+        * @example
+        * // Restrict motion to the vertical y-axis
+        * entity.rigidbody.setLinearFactor(0, 1, 0);
+        */
+        setLinearFactor: function (x, y, z) {
+            if (this.body) {
+                this.body.setLinearFactor(x, y, z);
+            }
+        },
+
+        /**
+        * @function
+        * @name pc.fw.RigidBody#setAngularFactor
+        * @description Apply a scaling factor to angular motion.
+        * @param {Number} f The factor to scale by, 0 means no angular motion, 1 means angular motion is unchanged
+        * @example
+        * // Prevent an body from rotating
+        * entity.rigidbody.setAngularFactor(0);
+        */
+        setAngularFactor: function (a) {
+            if (this.body) {
+                this.body.setAngularFactor(a);
+            }
+        },
+
         // /**
         // * @private
         // * @name pc.fw.RigidBodyComponent#setLinearDamping
