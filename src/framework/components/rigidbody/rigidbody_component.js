@@ -10,8 +10,8 @@ pc.extend(pc.fw, function () {
      * @component
      * @name pc.fw.RigidBodyComponent
      * @constructor Create a new RigidBodyComponent
-     * @class The RigidBody Component, when combined with a Collision volume Component, allow your Entities to be simulated using realistic physics. 
-     * A RigidBody Component will fall under gravity and collide with other RigidBodiesa and using scripts you can apply forces to the body.
+     * @class The rigidbody Component, when combined with a collision volume Component, e.g. {@link pc.fw.CollisionBoxComponent}, allows your Entities to be simulated using realistic physics. 
+     * A rigidbody Component will fall under gravity and collide with other rigid bodies, using scripts you can apply forces to the body.
      * @param {pc.fw.RigidBodyComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity this Component is attached to
      * @extends pc.fw.Component
