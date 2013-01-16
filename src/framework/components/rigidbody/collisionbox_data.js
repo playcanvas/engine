@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentData
      */
     var CollisionBoxComponentData = function () {
-        this.size = [0.5, 0.5, 0.5];
+        this.halfExtents = [0.5, 0.5, 0.5];
 
         // Non-serialized properties
         this.shape = null;
