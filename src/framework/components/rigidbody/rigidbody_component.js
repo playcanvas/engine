@@ -312,7 +312,6 @@ pc.extend(pc.fw, function () {
             if (!this.isKinematic()) {
                 var body = this.body;
                 if (body) {
-                    body.activate();
                     ammoVec1.setValue(x, y, z);
                     body.setLinearVelocity(ammoVec1);
                 }                
@@ -333,7 +332,6 @@ pc.extend(pc.fw, function () {
             if (!this.isKinematic()) {
                 var body = this.body;
                 if (body) {
-                    body.activate();
                     ammoVec1.setValue(x, y, z);
                     body.setAngularVelocity(ammoVec1);
                 }
