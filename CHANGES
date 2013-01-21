@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.93.1
+-------
+* Physics docs corrections.
+
+-------
 v0.93.0
 -------
 * Renamed collisionbox.size to collisionbox.halfExtents

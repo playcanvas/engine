@@ -302,11 +302,11 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.RigidBodyComponentSystem#setLinearVelocity
+         * @name pc.fw.RigidBodyComponent#setLinearVelocity
          * @description Set the linear velocity of the body.
          * @param {Number} x The x value of the velocity
          * @param {Number} y The y value of the velocity
-         * @param {Number} y The z value of the velocity
+         * @param {Number} z The z value of the velocity
          */
         setLinearVelocity: function (x, y, z) {
             if (!this.isKinematic()) {
