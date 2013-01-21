@@ -182,6 +182,9 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.RigidBodyComponentSystem#setGravity
         * @description Set the gravity vector for the 3D physics world
+        * @param {Number} x The x-component of the gravity vector
+        * @param {Number} y The y-component of the gravity vector
+        * @param {Number} z The z-component of the gravity vector
         */
         setGravity: function (x, y, z) {
             this._ammoGravity.setValue(x, y, z);
