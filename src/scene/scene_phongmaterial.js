@@ -45,6 +45,9 @@ pc.extend(pc.scene, function () {
      * channel.
      * @property {pc.math.mat4} parallaxMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's parallax map.
+     * @property {Number} bumpMapFactor The bumpiness of the material. This value scales the assinged bump map
+     * (be that a normal map or a parallax map) and can be between 0 and 1, where 0 shows no contribution from
+     * the bump map and 1 results in a full contribution.
      * @property {pc.gfx.Texture} reflectionMap The reflection map of the material. This can be a 2D texture, in
      * which case the texture must be a sphere map.  Otherwise, the material will be cubemapped.
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and 
@@ -71,7 +74,10 @@ pc.extend(pc.scene, function () {
         this.opacityMap = null;
         this.opacityMapTransform = null;
         this.normalMap = null;
+        this.normalMapTransform = null;
         this.parallaxMap = null;
+        this.parallaxMapTransform = null;
+        this.bumpMapFactor = 1;
         this.reflectionMap = null;
         this.reflectivity = 1;
         this.lightMap = null;
@@ -134,6 +140,9 @@ pc.extend(pc.scene, function () {
             if (this.parallaxMapTransform) {
                 this.setParameter('texture_parallaxMapTransform', this.parallaxMapTransform);
             }
+        }
+        if (this.normalMap || this.parallaxMap) {
+            this.setParameter('material_bumpMapFactor', this.bumpMapFactor);
         }
 
         if (this.reflectionMap) {

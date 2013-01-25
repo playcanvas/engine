@@ -315,6 +315,9 @@ pc.extend(pc.resources, function () {
                 case 'texture_cubeMap': 
                     material.reflectionMap = model.getTextures()[param.data];
                     break;
+                case 'material_reflectionFactor':
+                    material.reflectivity = param.data;
+                    break;
                 case 'texture_normalMap': 
                     material.normalMap = model.getTextures()[param.data]; 
                     break;
@@ -326,6 +329,9 @@ pc.extend(pc.resources, function () {
                     break;
                 case 'texture_parallaxMapTransform': 
                     material.parallaxMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'material_bumpMapFactor': 
+                    material.bumpMapFactor = param.data;
                     break;
                 case 'texture_lightMap': 
                     material.lightMap = model.getTextures()[param.data];
@@ -1174,6 +1180,9 @@ pc.extend(pc.resources, function () {
                     case 'texture_cubeMap': 
                         material.reflectionMap = param.data;
                         break;
+                    case 'material_reflectionFactor':
+                        material.reflectivity = param.data;
+                        break;
                     case 'texture_normalMap': 
                         material.normalMap = param.data;
                         break;
@@ -1185,6 +1194,9 @@ pc.extend(pc.resources, function () {
                         break;
                     case 'texture_parallaxMapTransform': 
                         material.parallaxMapTransform = param.data;
+                        break;
+                    case 'material_bumpMapFactor': 
+                        material.bumpMapFactor = param.data;
                         break;
                     case 'texture_lightMap': 
                         material.lightMap = param.data;

@@ -461,8 +461,10 @@ pc.gfx.programlib.phong = {
         if (lighting) {
             if (options.normalMap) {
                 code += "uniform sampler2D texture_normalMap;\n";
+                code += "uniform float material_bumpMapFactor;\n";
             } else if (options.parallaxMap) {
                 code += "uniform sampler2D texture_parallaxMap;\n";
+                code += "uniform float material_bumpMapFactor;\n";
             }
             if (options.cubeMap || options.sphereMap) {
                 code += "uniform float material_reflectionFactor;\n";
@@ -749,6 +751,7 @@ pc.gfx.programlib.phong = {
             if ((options.normalMap) || (options.parallaxMap)) {
                 // Use a normal extracted from the supplied normal map
                 code += "    vec3 N = normalize(normMapPixel * 2.0 - 1.0);\n";
+                code += "    N.xy *= material_bumpMapFactor;\n";
             } else {
                 // Use a normal interpolated from vertex normals
                 code += "    vec3 N = vNormalE;\n";
