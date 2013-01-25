@@ -92,9 +92,6 @@ pc.gfx.programlib.phong = {
         code += "attribute vec3 vertex_position;\n";
         if (lighting || options.cubeMap || options.sphereMap) {
             code += "attribute vec3 vertex_normal;\n";
-            if (options.normalMap || options.parallaxMap) {
-                code += "attribute vec4 vertex_tangent;\n";
-            }
         }
         if (options.diffuseMap || options.specularMap || options.specularFactorMap ||
             options.emissiveMap || options.normalMap || options.parallaxMap || options.opacityMap) {
@@ -136,9 +133,7 @@ pc.gfx.programlib.phong = {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
             }
         }
-        if ((options.cubeMap) || (options.sphereMap)) {
-            code += "uniform vec3 view_position;\n";
-        }
+        code += "uniform vec3 view_position;\n";
         if (options.diffuseMap && options.diffuseMapTransform) {
             code += "uniform mat4 texture_diffuseMapTransform;\n";
         }
@@ -163,7 +158,9 @@ pc.gfx.programlib.phong = {
 
         // VERTEX SHADER OUTPUTS
         if (lighting) {
-            code += "varying vec3 vViewDir;\n";
+            code += "varying vec3 vNormalW;\n";
+            code += "varying vec3 vViewDirW;\n";
+
             for (i = 0; i < totalLights; i++) {
                 code += "varying vec3 vLight" + i + "Dir;\n";
                 if (i >= totalDirs + totalPnts) {
@@ -174,9 +171,6 @@ pc.gfx.programlib.phong = {
                     (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
                     code += "varying vec4 vLight" + i + "ShadowCoord;\n";
                 }
-            }
-            if (!(options.normalMap || options.parallaxMap)) {
-                code += "varying vec3 vNormalE;\n";
             }
         }
 
@@ -207,10 +201,6 @@ pc.gfx.programlib.phong = {
             code += "varying vec2 vUvLightMap;\n";
         }
 
-        if (options.cubeMap || options.sphereMap) {
-            code += "varying vec3 vNormalW;\n";
-            code += "varying vec3 vVertToEyeW;\n";
-        }
         if (options.vertexColors) {
             code += "varying vec4 vVertexColor;\n";
         }
@@ -223,9 +213,6 @@ pc.gfx.programlib.phong = {
         code += "    vec4 position = vec4(vertex_position, 1.0);\n";
         if (lighting || options.cubeMap || options.sphereMap) {
             code += "    vec4 normal   = vec4(vertex_normal, 0.0);\n";
-            if (options.normalMap || options.parallaxMap) {
-                code += "    vec4 tangent  = vec4(vertex_tangent.xyz, 0.0);\n";
-            }
         }
         code += "\n";
 
@@ -244,22 +231,11 @@ pc.gfx.programlib.phong = {
                 code += "    normalW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * normal;\n";
                 code += "    normalW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * normal;\n";
                 code += "    normalW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * normal;\n\n";
-
-                if (options.normalMap || options.parallaxMap) {
-                    code += "    vec4 tangentW;\n";
-                    code += "    tangentW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * tangent;\n\n";
-                }
             }
         } else {
             code += "    vec4 positionW = matrix_model * position;\n";
             if (lighting || options.cubeMap || options.sphereMap) {
                 code += "    vec4 normalW   = matrix_model * normal;\n";
-                if (options.normalMap || options.parallaxMap) {
-                    code += "    vec4 tangentW  = matrix_model * tangent;\n";
-                }
             }
             code += "\n";
         }
@@ -270,38 +246,24 @@ pc.gfx.programlib.phong = {
         // Transform vectors required for lighting to eye space
         if (lighting) {
             // Calculate position, normal and light direction in eye space
-            code += "    vec3 positionE = vec3(matrix_view * positionW);\n";
-            code += "    vec3 normalE   = normalize((matrix_view * normalW).xyz);\n";
+            code += "    vNormalW = normalW.xyz;\n";
+            code += "    vViewDirW = view_position - positionW.xyz;\n";
+
             for (i = 0; i < totalDirs; i++) {
-                code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(-light" + i + "_direction, 0.0));\n";
+                code += "    vec3 light" + i + "DirW = -light" + i + "_direction;\n";
             }
             for (i = totalDirs; i < totalLights; i++) {
-                code += "    vec3 light" + i + "DirE = vec3(matrix_view * vec4(light" + i + "_position - positionW.xyz, 0.0));\n";
+                code += "    vec3 light" + i + "DirW = light" + i + "_position - positionW.xyz;\n";
                 if (i >= totalDirs + totalPnts) {
-                    code += "    vec3 light" + i + "SpotDirE = vec3(matrix_view * vec4(light" + i + "_spotDirection, 0.0));\n";
+                    code += "    vec3 light" + i + "SpotDirW = light" + i + "_spotDirection;\n";
                 }
             }
 
-            var tangentSpaceLighting = (options.normalMap || options.parallaxMap);
-            if (tangentSpaceLighting) {
-                // Calculate the tangent space basis vectors
-                code += "    vec3 tangentE  = normalize((matrix_view * tangentW).xyz);\n";
-                code += "    vec3 binormalE = cross(normalE, tangentE) * vertex_tangent.w;\n";
-                code += "    mat3 tbnMatrix = mat3(tangentE.x, binormalE.x, normalE.x,\n";
-                code += "                          tangentE.y, binormalE.y, normalE.y,\n";
-                code += "                          tangentE.z, binormalE.z, normalE.z);\n";
-            } else {
-                // Just pass on the vertex normal to the fragment shader
-                code += "    vNormalE = normalE;\n";
-            }
-
             // Transform vertex-view and vertex-light vectors to eye space
-            var tbnMult = tangentSpaceLighting ? "tbnMatrix * " : "";
-            code += "    vViewDir = " + tbnMult + "-positionE;\n";
             for (i = 0; i < totalLights; i++) {
-                code += "    vLight" + i + "Dir = " + tbnMult + "light" + i + "DirE;\n";
+                code += "    vLight" + i + "Dir = light" + i + "DirW;\n";
                 if (i >= totalDirs + totalPnts) {
-                    code += "    vLight" + i + "SpotDir = " + tbnMult + "light" + i + "SpotDirE;\n";
+                    code += "    vLight" + i + "SpotDir = light" + i + "SpotDirW;\n";
                 }
                 if ((i >= options.numDirs && i < totalDirs) || 
                     (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
@@ -310,12 +272,6 @@ pc.gfx.programlib.phong = {
                 }
             }
             code += "\n";
-        }
-
-        // Calculate world space vector from eye point to vertex for reflection mapping
-        if (options.cubeMap || options.sphereMap) {
-            code += "    vNormalW    = normalW.xyz;\n";
-            code += "    vVertToEyeW = view_position - positionW.xyz;\n";
         }
 
         if (mapWithoutTransform) {
@@ -374,9 +330,15 @@ pc.gfx.programlib.phong = {
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = getSnippet('fs_precision');
 
+        if (options.normalMap || options.parallaxMap) {
+            code += "#extension GL_OES_standard_derivatives : enable\n\n";
+        }
+
         // FRAGMENT SHADER INPUTS: VARYINGS
         if (lighting) {
-            code += "varying vec3 vViewDir;\n";
+            code += "varying vec3 vNormalW;\n";
+            code += "varying vec3 vViewDirW;\n";
+
             for (i = 0; i < totalLights; i++) {
                 code += "varying vec3 vLight" + i + "Dir;\n";
                 if (i >= totalDirs + totalPnts) {
@@ -387,9 +349,6 @@ pc.gfx.programlib.phong = {
                     (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
                     code += "varying vec4 vLight" + i + "ShadowCoord;\n";
                 }
-            }
-            if (!(options.normalMap || options.parallaxMap)) {
-                code += "varying vec3 vNormalE;\n";
             }
         }
 
@@ -420,10 +379,6 @@ pc.gfx.programlib.phong = {
             code += "varying vec2 vUvLightMap;\n";
         }
 
-        if (options.cubeMap || options.sphereMap) {
-            code += "varying vec3 vNormalW;\n";
-            code += "varying vec3 vVertToEyeW;\n";
-        }
         if (options.vertexColors) {
             code += "varying vec4 vVertexColor;\n";
         }
@@ -503,6 +458,10 @@ pc.gfx.programlib.phong = {
         }
         if (options.alphaTest) {
             code += getSnippet('fs_alpha_test_decl');
+        }
+
+        if (options.normalMap || options.parallaxMap) {
+            code += getSnippet('fs_normal_map_funcs');
         }
 
         code += "\n"; // End of uniform declarations
@@ -685,7 +644,8 @@ pc.gfx.programlib.phong = {
 
         // Read the map texels that the shader needs
         if (lighting) {
-            code += "    vec3 viewDir = normalize(vViewDir);\n";
+            code += "    vec3 viewDirW = normalize(vViewDirW);\n";
+            code += "    vec3 normalW = normalize(vNormalW);\n";
             
             if (options.normalMap) {
                 code += "    vec3 normMapPixel = texture2D(texture_normalMap, uvBumpMap).rgb;\n";
@@ -694,12 +654,12 @@ pc.gfx.programlib.phong = {
                 code += "    float height = texture2D(texture_parallaxMap, uvBumpMap).a;\n";
                 // Scale and bias
                 code += "    float offset = height * 0.025 - 0.02;\n";
-                code += "    vec3 normMapPixel = texture2D(texture_parallaxMap, uvBumpMap + offset * viewDir.xy).rgb;\n";
+                code += "    vec3 normMapPixel = texture2D(texture_parallaxMap, uvBumpMap + offset * viewDirW.xy).rgb;\n";
                 if (options.diffuseMap) {
-                    code += "    uvDiffuseMap += offset * viewDir.xy;\n";
+                    code += "    uvDiffuseMap += offset * viewDirW.xy;\n";
                 }
                 if (options.specularMap) {
-                    code += "    uvSpecularMap += offset * viewDir.xy;\n";
+                    code += "    uvSpecularMap += offset * viewDirW.xy;\n";
                 }
             }
         }
@@ -750,11 +710,11 @@ pc.gfx.programlib.phong = {
             }
             if ((options.normalMap) || (options.parallaxMap)) {
                 // Use a normal extracted from the supplied normal map
-                code += "    vec3 N = normalize(normMapPixel * 2.0 - 1.0);\n";
+                code += "    vec3 N = perturb_normal(texture_" + (options.normalMap ? 'normal' : 'parallax') + 'Map, normalW, viewDirW, uvBumpMap);\n';
                 code += "    N.xy *= material_bumpMapFactor;\n";
             } else {
                 // Use a normal interpolated from vertex normals
-                code += "    vec3 N = vNormalE;\n";
+                code += "    vec3 N = normalW;\n";
             }
 
             for (i = 0; i < totalLights; i++) {
@@ -775,7 +735,7 @@ pc.gfx.programlib.phong = {
                         code += "        if (shininess > 0.0)\n";
                         code += "        {\n";
                         code += "            vec3 R = normalize(-reflect(lightDir, N));\n";
-                        code += "            float rDotV = max(0.0, dot(R, viewDir));\n";
+                        code += "            float rDotV = max(0.0, dot(R, viewDirW));\n";
                         code += "            specularContrib += pow(rDotV, shininess);\n";
                         code += "        }\n";
                     }
@@ -808,7 +768,7 @@ pc.gfx.programlib.phong = {
                         code += "            if (shininess > 0.0)\n";
                         code += "            {\n";
                         code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
-                        code += "                float rDotV = max(0.0, dot(R, viewDir));\n";
+                        code += "                float rDotV = max(0.0, dot(R, viewDirW));\n";
                         code += "                specularContrib += pow(rDotV, shininess) * att;\n";
                         code += "            }\n";
                     }
@@ -836,7 +796,7 @@ pc.gfx.programlib.phong = {
                 } else {
                     code += "    vec3 normalW = normalize(vNormalW);\n";
                 }
-                code += "    vec3 reflectW = -reflect(normalize(vVertToEyeW), normalW);\n";
+                code += "    vec3 reflectW = -reflect(normalize(vViewDirW), normalW);\n";
                 code += "    specular = textureCube(texture_cubeMap, reflectW).rgb * material_reflectionFactor;\n";
                 code += "    specularContrib = 1.0;\n";
             } else if (options.sphereMap) {
