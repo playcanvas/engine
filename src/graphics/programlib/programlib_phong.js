@@ -646,20 +646,18 @@ pc.gfx.programlib.phong = {
         if (lighting) {
             code += "    vec3 viewDirW = normalize(vViewDirW);\n";
             code += "    vec3 normalW = normalize(vNormalW);\n";
-            
-            if (options.normalMap) {
-                code += "    vec3 normMapPixel = texture2D(texture_normalMap, uvBumpMap).rgb;\n";
-            } else if (options.parallaxMap) {
+
+            if (options.parallaxMap) {
                 // Shift UV0 if parallax mapping is enabled
-                code += "    float height = texture2D(texture_parallaxMap, uvBumpMap).a;\n";
-                // Scale and bias
-                code += "    float offset = height * 0.025 - 0.02;\n";
-                code += "    vec3 normMapPixel = texture2D(texture_parallaxMap, uvBumpMap + offset * viewDirW.xy).rgb;\n";
+                code += "    const float parallaxScale = 0.025;\n";
+                code += "    const float parallaxBias = 0.01;\n";
+                code += "    float height = texture2D(texture_parallaxMap, uvBumpMap).a * parallaxScale - parallaxBias;\n";
+                code += "    uvBumpMap = uvBumpMap - min(height * viewDirW.xy, vec2(parallaxBias));\n";
                 if (options.diffuseMap) {
-                    code += "    uvDiffuseMap += offset * viewDirW.xy;\n";
+                    code += "    uvDiffuseMap = uvDiffuseMap - min(height * viewDirW.xy, vec2(parallaxBias));\n";
                 }
                 if (options.specularMap) {
-                    code += "    uvSpecularMap += offset * viewDirW.xy;\n";
+                    code += "    uvSpecularMap = uvSpecularMap - min(height * viewDirW.xy, vec2(parallaxBias));\n";
                 }
             }
         }
@@ -791,16 +789,11 @@ pc.gfx.programlib.phong = {
             }
             if (options.cubeMap) {
                 // Need to factor in lambert term here somehow
-                if (options.normalMap) {
-                    code += "    vec3 normalW = (vec4(N, 0.0) * matrix_view).xyz;\n";
-                } else {
-                    code += "    vec3 normalW = normalize(vNormalW);\n";
-                }
-                code += "    vec3 reflectW = -reflect(normalize(vViewDirW), normalW);\n";
+                code += "    vec3 reflectW = -reflect(viewDirW, N);\n";
                 code += "    specular = textureCube(texture_cubeMap, reflectW).rgb * material_reflectionFactor;\n";
                 code += "    specularContrib = 1.0;\n";
             } else if (options.sphereMap) {
-                code += "    vec3 R = normalize(-reflect(lightDir, N));\n";
+                code += "    vec3 R = -reflect(lightDir, N);\n";
                 code += "    float m = 2.0 * sqrt( R.x*R.x + R.y*R.y + (R.z+1.0)*(R.z+1.0) );\n";
                 code += "    vec2 sphereMapUv = vec2(R.x/m + 0.5, R.y/m + 0.5);\n";
                 // Need to factor in lambert term here somehow
