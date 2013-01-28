@@ -731,7 +731,6 @@ pc.gfx.programlib.phong = {
             if (options.normalMap) {
                 // Use a normal extracted from the supplied normal map
                 code += "    vec3 N = perturb_normal(texture_normalMap, normalW, viewDirW, uvBumpMap);\n";
-                code += "    N.xy *= material_bumpMapFactor;\n";
             } else {
                 // Use a normal interpolated from vertex normals
                 code += "    vec3 N = normalW;\n";
