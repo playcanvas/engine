@@ -34,11 +34,17 @@ pc.gfx.programlib.phong = {
             key += "_spfm"; // Specular factor map
         }
 
+        if (options.glossMapTransform) {
+            key += "_glox"; // Gloss map with texture transform
+        } else if (options.glossMap) {
+            key += "_glom"; // Gloss map
+        }
+
         if (options.emissiveMapTransform) {
             key += "_emix"; // Emissive map with texture transform
         } else if (options.emissiveMap) {
             key += "_emim"; // Emissive map
-        } else if (options.emissiveColor) {
+        } else {
             key += "_emic"; // Emissive color
         }
 
@@ -54,10 +60,10 @@ pc.gfx.programlib.phong = {
             key += "_norm"; // Normal map
         }
 
-        if (options.parallaxMapTransform) {
-            key += "_parx"; // Parallax map with texture transform
-        } else if (options.parallaxMap) {
-            key += "_parm"; // Parallax map
+        if (options.heightMapTransform) {
+            key += "_hgtx"; // Height map with texture transform
+        } else if (options.heightMap) {
+            key += "_hgtm"; // Height map
         }
 
         if (options.sphereMap)           key += "_sphr";
@@ -83,18 +89,19 @@ pc.gfx.programlib.phong = {
            ((options.diffuseMap && !options.diffuseMapTransform) ||
             (options.specularMap && !options.specularMapTransform) ||
             (options.specularFactorMap && !options.specularFactorMapTransform) ||
+            (options.glossMap && !options.glossMapTransform) ||
             (options.emissiveMap && !options.emissiveMapTransform) ||
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
-            (options.parallaxMap && !options.parallaxMapTransform));
+            (options.heightMap && !options.heightMapTransform));
         
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec3 vertex_position;\n";
         if (lighting || options.cubeMap || options.sphereMap) {
             code += "attribute vec3 vertex_normal;\n";
         }
-        if (options.diffuseMap || options.specularMap || options.specularFactorMap ||
-            options.emissiveMap || options.normalMap || options.parallaxMap || options.opacityMap) {
+        if (options.diffuseMap || options.specularMap || options.specularFactorMap || options.glossMap ||
+            options.emissiveMap || options.normalMap || options.heightMap || options.opacityMap) {
             code += "attribute vec2 vertex_texCoord0;\n";
         }
         if (options.lightMap) {
@@ -139,8 +146,9 @@ pc.gfx.programlib.phong = {
         }
         if (options.normalMap && options.normalMapTransform) {
             code += "uniform mat4 texture_normalMapTransform;\n";
-        } else if (options.parallaxMap && options.parallaxMapTransform) {
-            code += "uniform mat4 texture_parallaxMapTransform;\n";
+        }
+        if (options.heightMap && options.heightMapTransform) {
+            code += "uniform mat4 texture_heightMapTransform;\n";
         }
         if (options.opacityMap && options.opacityMapTransform) {
             code += "uniform mat4 texture_opacityMapTransform;\n";
@@ -150,6 +158,9 @@ pc.gfx.programlib.phong = {
         }
         if (options.specularFactorMap && options.specularFactorMapTransform) {
             code += "uniform mat4 texture_specularFactorMapTransform;\n";
+        }
+        if (options.glossMap && options.glossMapTransform) {
+            code += "uniform mat4 texture_glossMapTransform;\n";
         }
         if (options.emissiveMap && options.emissiveMapTransform) {
             code += "uniform mat4 texture_emissiveMapTransform;\n";
@@ -187,7 +198,10 @@ pc.gfx.programlib.phong = {
             if (options.specularFactorMap && options.specularFactorMapTransform) {
                 code += "varying vec2 vUvSpecularFactorMap;\n";
             }
-            if ((options.normalMap && options.normalMapTransform) || (options.parallaxMap && options.parallaxMapTransform)) {
+            if (options.glossMap && options.glossMapTransform) {
+                code += "varying vec2 vUvGlossMap;\n";
+            }
+            if ((options.normalMap && options.normalMapTransform) || (options.heightMap && options.heightMapTransform)) {
                 code += "varying vec2 vUvBumpMap;\n";
             }
         }
@@ -289,8 +303,8 @@ pc.gfx.programlib.phong = {
             }
             if (options.normalMap && options.normalMapTransform) {
                 code += "    vUvBumpMap = (texture_normalMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
-            } else if (options.parallaxMap && options.parallaxMapTransform) {
-                code += "    vUvBumpMap = (texture_parallaxMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
+            } else if (options.heightMap && options.heightMapTransform) {
+                code += "    vUvBumpMap = (texture_heightMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
             }
         }
         if (options.opacityMap && options.opacityMapTransform) {
@@ -322,15 +336,16 @@ pc.gfx.programlib.phong = {
            ((options.diffuseMap && !options.diffuseMapTransform) ||
             (options.specularMap && !options.specularMapTransform) ||
             (options.specularFactorMap && !options.specularFactorMapTransform) ||
+            (options.glossMap && !options.glossMapTransform) ||
             (options.emissiveMap && !options.emissiveMapTransform) ||
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
-            (options.parallaxMap && !options.parallaxMapTransform));
+            (options.heightMap && !options.heightMapTransform));
 
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = getSnippet('fs_precision');
 
-        if (options.normalMap || options.parallaxMap) {
+        if (options.normalMap || options.heightMap) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
         }
 
@@ -365,7 +380,10 @@ pc.gfx.programlib.phong = {
             if (options.specularFactorMap && options.specularFactorMapTransform) {
                 code += "varying vec2 vUvSpecularFactorMap;\n";
             }
-            if ((options.normalMap && options.normalMapTransform) || (options.parallaxMap && options.parallaxMapTransform)) {
+            if (options.glossMap && options.glossMapTransform) {
+                code += "varying vec2 vUvGlossMap;\n";
+            }
+            if ((options.normalMap && options.normalMapTransform) || (options.heightMap && options.heightMapTransform)) {
                 code += "varying vec2 vUvBumpMap;\n";
             }
         }
@@ -400,11 +418,15 @@ pc.gfx.programlib.phong = {
             if (options.specularFactorMap) {
                 code += "uniform sampler2D texture_specularFactorMap;\n";
             }
-            code += "uniform float material_shininess;\n";
+            if (options.glossMap) {
+                code += "uniform sampler2D texture_glossMap;\n";
+            } else {
+                code += "uniform float material_shininess;\n";
+            }
         }
         if (options.emissiveMap) {
             code += "uniform sampler2D texture_emissiveMap;\n";
-        } else if (options.emissiveColor) {
+        } else {
             code += "uniform vec3 material_emissive;\n";
         }
         if (options.diffuseMap) {
@@ -417,16 +439,16 @@ pc.gfx.programlib.phong = {
             if (options.normalMap) {
                 code += "uniform sampler2D texture_normalMap;\n";
                 code += "uniform float material_bumpMapFactor;\n";
-            } else if (options.parallaxMap) {
-                code += "uniform sampler2D texture_parallaxMap;\n";
-                code += "uniform float material_bumpMapFactor;\n";
+            }
+            if (options.heightMap) {
+                code += "uniform sampler2D texture_heightMap;\n";
             }
             if (options.cubeMap || options.sphereMap) {
                 code += "uniform float material_reflectionFactor;\n";
                 if (options.sphereMap) {
+                    code += "uniform mat4 matrix_view;\n";
                     code += "uniform sampler2D texture_sphereMap;\n";
                 } else { // Cube mapping
-                    code += "uniform mat4 matrix_view;\n";
                     code += "uniform samplerCube texture_cubeMap;\n";
                 }
             }
@@ -460,7 +482,7 @@ pc.gfx.programlib.phong = {
             code += getSnippet('fs_alpha_test_decl');
         }
 
-        if (options.normalMap || options.parallaxMap) {
+        if (options.normalMap) {
             code += getSnippet('fs_normal_map_funcs');
         }
 
@@ -607,14 +629,16 @@ pc.gfx.programlib.phong = {
                 }
             }
 
-            if (options.normalMap) {
-                if (options.normalMapTransform) {
-                    code += "    vec2 uvBumpMap = vUvBumpMap;\n";
-                } else {
-                    code += "    vec2 uvBumpMap = vUv0;\n";
+            if (options.glossMap) {
+                if (options.glossMapTransform) {
+                    code += "    vec2 uvGlossMap = vUvGlossMap;\n";
+                } else { 
+                    code += "    vec2 uvGlossMap = vUv0;\n";
                 }
-            } else if (options.parallaxMap) {
-                if (options.parallaxMapTransform) {
+            }
+
+            if (options.normalMap || options.heightMap) {
+                if (options.normalMapTransform || options.heightMapTransform) {
                     code += "    vec2 uvBumpMap = vUvBumpMap;\n";
                 } else {
                     code += "    vec2 uvBumpMap = vUv0;\n";
@@ -647,11 +671,11 @@ pc.gfx.programlib.phong = {
             code += "    vec3 viewDirW = normalize(vViewDirW);\n";
             code += "    vec3 normalW = normalize(vNormalW);\n";
 
-            if (options.parallaxMap) {
+            if (options.normalMap && options.heightMap) {
                 // Shift UV0 if parallax mapping is enabled
                 code += "    const float parallaxScale = 0.025;\n";
                 code += "    const float parallaxBias = 0.01;\n";
-                code += "    float height = texture2D(texture_parallaxMap, uvBumpMap).a * parallaxScale - parallaxBias;\n";
+                code += "    float height = texture2D(texture_heightMap, uvBumpMap).a * parallaxScale - parallaxBias;\n";
                 code += "    uvBumpMap = uvBumpMap - min(height * viewDirW.xy, vec2(parallaxBias));\n";
                 if (options.diffuseMap) {
                     code += "    uvDiffuseMap = uvDiffuseMap - min(height * viewDirW.xy, vec2(parallaxBias));\n";
@@ -685,8 +709,6 @@ pc.gfx.programlib.phong = {
 
         if (options.opacityMap) {
             code += "    gl_FragColor.a = texture2D(texture_opacityMap, uvOpacityMap).r;\n";
-        } else if (options.diffuseMap) {
-            code += "    gl_FragColor.a = material_opacity * diffMapPixel.a;\n";
         } else {
             code += "    gl_FragColor.a = material_opacity;\n";
         }
@@ -706,9 +728,9 @@ pc.gfx.programlib.phong = {
             if (numShadowLights > 0) {
                 code += "    float shadowFactor = 0.0;\n";
             }
-            if ((options.normalMap) || (options.parallaxMap)) {
+            if (options.normalMap) {
                 // Use a normal extracted from the supplied normal map
-                code += "    vec3 N = perturb_normal(texture_" + (options.normalMap ? 'normal' : 'parallax') + 'Map, normalW, viewDirW, uvBumpMap);\n';
+                code += "    vec3 N = perturb_normal(texture_normalMap, normalW, viewDirW, uvBumpMap);\n";
                 code += "    N.xy *= material_bumpMapFactor;\n";
             } else {
                 // Use a normal interpolated from vertex normals
@@ -725,8 +747,8 @@ pc.gfx.programlib.phong = {
                     if (options.cubeMap || options.sphereMap) {
                         code += "        lambertContrib += nDotL;\n";
                     } else {
-                        if (options.specularMap) {
-                            code += "        float shininess = specMapPixel.a * 100.0;\n";
+                        if (options.glossMap) {
+                            code += "        float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0;\n";
                         } else {
                             code += "        float shininess = material_shininess;\n";
                         }
@@ -758,8 +780,8 @@ pc.gfx.programlib.phong = {
                     if (options.cubeMap || options.sphereMap) {
                         code += "            lambertContrib += nDotL;\n";
                     } else {
-                        if (options.specularMap) {
-                            code += "            float shininess = specMapPixel.a * 100.0;\n";
+                        if (options.glossMap) {
+                            code += "            float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0;\n";
                         } else {
                             code += "            float shininess = material_shininess;\n";
                         }
@@ -793,9 +815,11 @@ pc.gfx.programlib.phong = {
                 code += "    specular = textureCube(texture_cubeMap, reflectW).rgb * material_reflectionFactor;\n";
                 code += "    specularContrib = 1.0;\n";
             } else if (options.sphereMap) {
-                code += "    vec3 R = -reflect(lightDir, N);\n";
-                code += "    float m = 2.0 * sqrt( R.x*R.x + R.y*R.y + (R.z+1.0)*(R.z+1.0) );\n";
-                code += "    vec2 sphereMapUv = vec2(R.x/m + 0.5, R.y/m + 0.5);\n";
+                // Reference: http://www.reindelsoftware.com/Documents/Mapping/Mapping.html
+                code += "    vec3 reflectW = -reflect(viewDirW, N);\n";
+                code += "    vec3 reflectE = (matrix_view * vec4(reflectW, 0.0)).xyz;\n";
+                code += "    float m = 2.0 * sqrt( dot(reflectE.xy, reflectE.xy) + (reflectE.z+1.0)*(reflectE.z+1.0) );\n";
+                code += "    vec2 sphereMapUv = reflectE.xy / m + 0.5;\n";
                 // Need to factor in lambert term here somehow
                 code += "    specular = texture2D(texture_sphereMap, sphereMapUv).rgb * lambertContrib * material_reflectionFactor;\n";
                 code += "    specularContrib = 1.0;\n";
@@ -805,12 +829,10 @@ pc.gfx.programlib.phong = {
                 } else {
                     code += "    specular = specMapPixel.rgb;\n";
                 }
+            } else if (options.specularFactorMap) {
+                code += "    specular = material_specular * specFacMapPixel.rgb;\n";
             } else {
-                if (options.specularFactorMap) {
-                    code += "    specular = material_specular * specFacMapPixel.rgb;\n";
-                } else {
-                    code += "    specular = material_specular;\n";
-                }
+                code += "    specular = material_specular;\n";
             }
 
             // Add ambient + diffuse + specular
@@ -838,7 +860,7 @@ pc.gfx.programlib.phong = {
 
         if (options.emissiveMap) {
             code += "    gl_FragColor.rgb += texture2D(texture_emissiveMap, uvEmissiveMap).rgb;\n";
-        } else if (options.emissiveColor) {
+        } else {
             code += "    gl_FragColor.rgb += material_emissive;\n";
         }
 

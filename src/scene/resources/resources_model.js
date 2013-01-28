@@ -291,6 +291,9 @@ pc.extend(pc.resources, function () {
                 case 'material_shininess':
                     material.shininess = param.data;
                     break;
+                case 'texture_glossMap': 
+                    material.glossMap = model.getTextures()[param.data]; 
+                    break;
                 case 'material_emissive':
                     material.emissive = pc.math[param.type].clone(param.data); 
                     break;
@@ -967,6 +970,9 @@ pc.extend(pc.resources, function () {
                         break;
                     case 'material_shininess':
                         material.shininess = param.data;
+                        break;
+                    case 'texture_glossMap': 
+                        material.glossMap = param.data;
                         break;
                     case 'material_emissive':
                         material.emissive = param.data;
