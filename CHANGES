@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.94.0
+-------
+* Engine no longer generate vertex tangents. Instead, it perturbs surface normals using a normal map in the fragment shader.
+* Added support for heightmap bump mapping.
+* Added support for gloss maps (per-pixel shininess).
+* Specular shininess no longer queried from specular map alpha channel (use gloss map instead).
+* Per pixel opacity no longer queried from diffuse map alpha channel (use opacity map instead).
+
+-------
 v0.93.1
 -------
 * Physics docs corrections.
