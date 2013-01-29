@@ -40,11 +40,14 @@ pc.extend(pc.scene, function () {
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.math.mat4} normalMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's normal map.
-     * @property {pc.gfx.Texture} parallaxMap The parallax map of the material. This must be a 2D texture rather 
-     * than a cube map. The texture must contains normalized, tangent space normals with the heightmap in the alpha 
-     * channel.
-     * @property {pc.math.mat4} parallaxMapTransform 4x4 matrix that is used to transform the texture coordinates
-     * of the material's parallax map.
+     * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather 
+     * than a cube map. The texture contain values defining the height of the surface at that point where darker
+     * pixels are lower and lighter pixels are higher.
+     * @property {pc.math.mat4} heightMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * of the material's height map.
+     * @property {Number} bumpMapFactor The bumpiness of the material. This value scales the assinged bump map
+     * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
+     * the bump map and 1 results in a full contribution.
      * @property {pc.gfx.Texture} reflectionMap The reflection map of the material. This can be a 2D texture, in
      * which case the texture must be a sphere map.  Otherwise, the material will be cubemapped.
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and 
@@ -71,7 +74,10 @@ pc.extend(pc.scene, function () {
         this.opacityMap = null;
         this.opacityMapTransform = null;
         this.normalMap = null;
-        this.parallaxMap = null;
+        this.normalMapTransform = null;
+        this.heightMap = null;
+        this.heightMapTransform = null;
+        this.bumpMapFactor = 1;
         this.reflectionMap = null;
         this.reflectivity = 1;
         this.lightMap = null;
@@ -104,7 +110,14 @@ pc.extend(pc.scene, function () {
             this.setParameter('material_specular', this.specular);
         }
 
-        this.setParameter('material_shininess', this.shininess);
+        if (this.glossMap) {
+            this.setParameter('texture_glossMap', this.glossMap);
+            if (this.glossMapTransform) {
+                this.setParameter('texture_glossMapTransform', this.glossMapTransform);
+            }
+        } else {
+            this.setParameter('material_shininess', this.shininess);
+        }
 
         if (this.emissiveMap) {
             this.setParameter('texture_emissiveMap', this.emissiveMap);
@@ -129,11 +142,15 @@ pc.extend(pc.scene, function () {
             if (this.normalMapTransform) {
                 this.setParameter('texture_normalMapTransform', this.normalMapTransform);
             }
-        } else if (this.parallaxMap) {
-            this.setParameter('texture_parallaxMap', this.parallaxMap);
-            if (this.parallaxMapTransform) {
-                this.setParameter('texture_parallaxMapTransform', this.parallaxMapTransform);
+        } 
+        if (this.heightMap) {
+            this.setParameter('texture_heightMap', this.heightMap);
+            if (this.heightMapTransform) {
+                this.setParameter('texture_heightMapTransform', this.heightMapTransform);
             }
+        }
+        if (this.normalMap || this.heightMap) {
+            this.setParameter('material_bumpMapFactor', this.bumpMapFactor);
         }
 
         if (this.reflectionMap) {
@@ -154,11 +171,6 @@ pc.extend(pc.scene, function () {
             this.transparent = true;
         } else if (this.opacity < 1) {
             this.transparent = true;
-        }
-        if (this.diffuseMap) {
-            if (this.diffuseMap.format === pc.gfx.PIXELFORMAT_R8_G8_B8_A8) {
-                this.transparent = true;
-            }
         }
     };
 
@@ -221,15 +233,16 @@ pc.extend(pc.scene, function () {
             specularMapTransform:       (parameters["texture_specularMapTransform"] !== undefined),
             specularFactorMap:          (parameters["texture_specularFactorMap"] !== undefined),
             specularFactorMapTransform: (parameters["texture_specularFactorMapTransform"] !== undefined),
-            emissiveColor:              (parameters["material_emissive"] !== undefined),
+            glossMap:                   (parameters["texture_glossMap"] !== undefined),
+            glossMapTransform:          (parameters["texture_glossMapTransform"] !== undefined),
             emissiveMap:                (parameters["texture_emissiveMap"] !== undefined),
             emissiveMapTransform:       (parameters["texture_emissiveMapTransform"] !== undefined),
             opacityMap:                 (parameters["texture_opacityMap"] !== undefined),
             opacityMapTransform:        (parameters["texture_opacityMapTransform"] !== undefined),
             normalMap:                  (parameters["texture_normalMap"] !== undefined),
             normalMapTransform:         (parameters["texture_normalMapTransform"] !== undefined),
-            parallaxMap:                (parameters["texture_parallaxMap"] !== undefined),
-            parallaxMapTransfrom:       (parameters["texture_parallaxMapTransform"] !== undefined),
+            heightMap:                  (parameters["texture_heightMap"] !== undefined),
+            heightMapTransform:         (parameters["texture_heightMapTransform"] !== undefined),
             sphereMap:                  (parameters["texture_sphereMap"] !== undefined),
             cubeMap:                    (parameters["texture_cubeMap"] !== undefined),
             lightMap:                   (parameters["texture_lightMap"] !== undefined)

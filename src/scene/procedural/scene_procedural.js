@@ -273,11 +273,8 @@ pc.scene.procedural.createTorus = function (opts) {
         }
     }
 
-    var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
-
     return pc.scene.procedural.createMesh(positions, {
         normals:   normals,
-        tangents:  tangents,
         uvs:       uvs,
         indices:   indices
     });
@@ -486,11 +483,8 @@ pc.scene.procedural.createCylinder = function (opts) {
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var vertexData = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
 
-    var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
-
     return pc.scene.procedural.createMesh(vertexData.positions, {
         normals:   vertexData.normals,
-        tangents:  tangents,
         uvs:       vertexData.uvs,
         indices:   vertexData.indices
     });
@@ -523,11 +517,8 @@ pc.scene.procedural.createCapsule = function (opts) {
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var vertexData = pc.scene.procedural._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
-    var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
-
     return pc.scene.procedural.createMesh(vertexData.positions, {
         normals:   vertexData.normals,
-        tangents:  tangents,
         uvs:       vertexData.uvs,
         indices:   vertexData.indices
     });
@@ -561,11 +552,8 @@ pc.scene.procedural.createCone = function (opts) {
 
     var vertexData = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
-    var tangents = pc.scene.procedural.calculateTangents(vertexData.positions, vertexData.normals, vertexData.uvs, vertexData.indices);
-
     return pc.scene.procedural.createMesh(vertexData.positions, {
         normals:   vertexData.normals,
-        tangents:  tangents,
         uvs:       vertexData.uvs,
         indices:   vertexData.indices
     });
@@ -634,11 +622,8 @@ pc.scene.procedural.createSphere = function (opts) {
         }
     }
 
-    var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
-
     return pc.scene.procedural.createMesh(positions, {
         normals:   normals,
-        tangents:  tangents,
         uvs:       uvs,
         indices:   indices
     });
@@ -703,11 +688,8 @@ pc.scene.procedural.createPlane = function (opts) {
         }
     }
 
-    var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
-
     return pc.scene.procedural.createMesh(positions, {
         normals:   normals,
-        tangents:  tangents,
         uvs:       uvs,
         indices:   indices
     });
@@ -818,11 +800,8 @@ pc.scene.procedural.createBox = function (opts) {
     generateFace(sides.RIGHT, ls, hs);
     generateFace(sides.LEFT, ls, hs);
 
-    var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
-
     return pc.scene.procedural.createMesh(positions, {
         normals:   normals,
-        tangents:  tangents,
         uvs:       uvs,
         indices:   indices
     });

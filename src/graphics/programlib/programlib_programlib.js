@@ -90,6 +90,60 @@ pc.gfx.programlib = {
                 }
                 break;
 
+            case 'fs_height_map_funcs':
+                code += 'vec3 perturb_normal( vec3 N, vec3 p, vec2 uv )\n';
+                code += '{\n';
+                code += '    vec3 dp1 = dFdx( p );\n';
+                code += '    vec3 dp2 = dFdy( p );\n';
+                code += '    vec2 duv1 = dFdx( uv );\n';
+                code += '    vec2 duv2 = dFdy( uv );\n\n';
+
+                code += '    vec3 dp2perp = cross( dp2, N );\n';
+                code += '    vec3 dp1perp = cross( N, dp1 );\n\n';
+
+                code += '    const float bumpScale = 0.125;\n';
+                code += '    float Hll = bumpScale * texture2D( texture_heightMap, uv ).x;\n';
+                code += '    float dBx = bumpScale * texture2D( texture_heightMap, uv + duv1 ).x - Hll;\n';
+                code += '    float dBy = bumpScale * texture2D( texture_heightMap, uv + duv2 ).x - Hll;\n\n';
+
+                code += '    float fDet = dot( dp1, dp2perp );\n';
+                code += '    vec3 vGrad = sign( fDet ) * ( dBx * dp2perp + dBy * dp1perp );\n';
+                code += '    return normalize( abs( fDet ) * N - vGrad );\n';
+                code += '}\n\n';
+                break;
+
+            case 'fs_normal_map_funcs':
+                code += 'mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )\n';
+                code += '{\n';
+                             // get edge vectors of the pixel triangle
+                code += '    vec3 dp1 = dFdx( p );\n';
+                code += '    vec3 dp2 = dFdy( p );\n';
+                code += '    vec2 duv1 = dFdx( uv );\n';
+                code += '    vec2 duv2 = dFdy( uv );\n\n';
+
+                             // solve the linear system
+                code += '    vec3 dp2perp = cross( dp2, N );\n';
+                code += '    vec3 dp1perp = cross( N, dp1 );\n';
+                code += '    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;\n';
+                code += '    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;\n\n';
+
+                             // construct a scale-invariant frame 
+                code += '    float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );\n';
+                code += '    return mat3( T * invmax, B * invmax, N );\n';
+                code += '}\n\n';
+
+                code += 'vec3 perturb_normal( vec3 N, vec3 V, vec2 uv )\n';
+                code += '{\n';
+                             // assume N, the interpolated vertex normal and 
+                             // V, the view vector (vertex to eye)
+                code += '    vec3 map = texture2D( texture_normalMap, uv ).xyz;\n';
+                code += '    map = map * 255./127. - 128./127.;\n';
+                code += '    map.xy = map.xy * material_bumpMapFactor;\n';
+                code += '    mat3 TBN = cotangent_frame( N, -V, uv );\n';
+                code += '    return normalize( TBN * map );\n';
+                code += '}\n\n';
+                break;
+
             ////////////////////////////
             // VERTEX SHADER SNIPPETS //
             ////////////////////////////
