@@ -327,11 +327,11 @@ pc.extend(pc.resources, function () {
                 case 'texture_normalMapTransform': 
                     material.normalMapTransform = pc.math[param.type].clone(param.data); 
                     break;
-                case 'texture_parallaxMap': 
-                    material.parallaxMap = model.getTextures()[param.data]; 
+                case 'texture_heightMap': 
+                    material.heightMap = model.getTextures()[param.data]; 
                     break;
-                case 'texture_parallaxMapTransform': 
-                    material.parallaxMapTransform = pc.math[param.type].clone(param.data); 
+                case 'texture_heightMapTransform': 
+                    material.heightMapTransform = pc.math[param.type].clone(param.data); 
                     break;
                 case 'material_bumpMapFactor': 
                     material.bumpMapFactor = param.data;
@@ -1007,11 +1007,11 @@ pc.extend(pc.resources, function () {
                     case 'texture_normalMapTransform': 
                         material.normalMapTransform = param.data;
                         break;
-                    case 'texture_parallaxMap': 
-                        material.parallaxMap = param.data;
+                    case 'texture_heightMap': 
+                        material.heightMap = param.data;
                         break;
-                    case 'texture_parallaxMapTransform': 
-                        material.parallaxMapTransform = param.data;
+                    case 'texture_heightMapTransform': 
+                        material.heightMapTransform = param.data;
                         break;
                     case 'material_bumpMapFactor': 
                         material.bumpMapFactor = param.data;

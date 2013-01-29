@@ -242,7 +242,7 @@ pc.extend(pc.scene, function () {
             normalMap:                  (parameters["texture_normalMap"] !== undefined),
             normalMapTransform:         (parameters["texture_normalMapTransform"] !== undefined),
             heightMap:                  (parameters["texture_heightMap"] !== undefined),
-            heightMapTransfrom:         (parameters["texture_heightMapTransform"] !== undefined),
+            heightMapTransform:         (parameters["texture_heightMapTransform"] !== undefined),
             sphereMap:                  (parameters["texture_sphereMap"] !== undefined),
             cubeMap:                    (parameters["texture_cubeMap"] !== undefined),
             lightMap:                   (parameters["texture_lightMap"] !== undefined)

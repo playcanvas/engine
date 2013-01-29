@@ -484,6 +484,8 @@ pc.gfx.programlib.phong = {
 
         if (options.normalMap) {
             code += getSnippet('fs_normal_map_funcs');
+        } else if (options.heightMap) {
+            code += getSnippet('fs_height_map_funcs');
         }
 
         code += "\n"; // End of uniform declarations
@@ -728,9 +730,9 @@ pc.gfx.programlib.phong = {
             if (numShadowLights > 0) {
                 code += "    float shadowFactor = 0.0;\n";
             }
-            if (options.normalMap) {
+            if (options.normalMap || options.heightMap) {
                 // Use a normal extracted from the supplied normal map
-                code += "    vec3 N = perturb_normal(texture_normalMap, normalW, viewDirW, uvBumpMap);\n";
+                code += "    vec3 N = perturb_normal(normalW, viewDirW, uvBumpMap);\n";
             } else {
                 // Use a normal interpolated from vertex normals
                 code += "    vec3 N = normalW;\n";
