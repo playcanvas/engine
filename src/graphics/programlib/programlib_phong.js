@@ -443,34 +443,29 @@ pc.gfx.programlib.phong = {
         code += "\n";
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
-        if (!options.diffuseMap) {
+        if (options.diffuseMap) {
+            code += "uniform sampler2D texture_diffuseMap;\n";
+        } else {
             code += "uniform vec3 material_ambient;\n";
-            if (lighting) {
-                code += "uniform vec3 material_diffuse;\n";
-            }
+            code += "uniform vec3 material_diffuse;\n";
         }
-        if (lighting) {
-            if (options.specularMap) {
-                code += "uniform sampler2D texture_specularMap;\n";
-            } else {
-                code += "uniform vec3 material_specular;\n";
-            }
-            if (options.specularFactorMap) {
-                code += "uniform sampler2D texture_specularFactorMap;\n";
-            }
-            if (options.glossMap) {
-                code += "uniform sampler2D texture_glossMap;\n";
-            } else {
-                code += "uniform float material_shininess;\n";
-            }
+        if (options.specularMap) {
+            code += "uniform sampler2D texture_specularMap;\n";
+        } else {
+            code += "uniform vec3 material_specular;\n";
+        }
+        if (options.specularFactorMap) {
+            code += "uniform sampler2D texture_specularFactorMap;\n";
+        }
+        if (options.glossMap) {
+            code += "uniform sampler2D texture_glossMap;\n";
+        } else {
+            code += "uniform float material_shininess;\n";
         }
         if (options.emissiveMap) {
             code += "uniform sampler2D texture_emissiveMap;\n";
         } else {
             code += "uniform vec3 material_emissive;\n";
-        }
-        if (options.diffuseMap) {
-            code += "uniform sampler2D texture_diffuseMap;\n";
         }
         if (options.lightMap) {
             code += "uniform sampler2D texture_lightMap;\n";
@@ -772,6 +767,9 @@ pc.gfx.programlib.phong = {
             code += getSnippet('fs_alpha_test');
         }
 
+        code += "    vec3 diffuseContrib = vec3(0.0);\n";
+        code += "    float specularContrib = 0.0;\n";
+
         if (lighting) {
             // Calculate a surface normal
             if (options.normalMap) {
@@ -787,8 +785,6 @@ pc.gfx.programlib.phong = {
             }
 
             code += "    vec3 lightDir;\n";
-            code += "    vec3 diffuseContrib = vec3(0.0);\n";
-            code += "    float specularContrib = 0.0;\n";
             code += "    float d, nDotL, shadowFactor;\n";
 
             for (i = 0; i < totalLights; i++) {
