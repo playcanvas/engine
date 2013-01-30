@@ -531,7 +531,7 @@ pc.gfx.programlib.phong = {
         code += "\n"; // End of uniform declarations
 
         if (numShadowLights > 0) {
-            code += "float calculateShadowFactor(const in vec4 sc, const in vec3 sp, const in sampler2D sm)\n";
+            code += "float calculateShadowFactor(const in vec4 sc, const in vec3 sp, const in sampler2D shadowMap)\n";
             code += "{\n";
             code += "    float depth;\n";
             code += "    float depthBias = sp.z;\n";
@@ -542,7 +542,7 @@ pc.gfx.programlib.phong = {
             code += "    if (contained)\n";
             code += "    {\n";
             if (false) {
-                code += "        depth = upackRgbaDepthToFloat(texture2D(sm, shadowCoord.xy));\n";
+                code += "        depth = upackRgbaDepthToFloat(texture2D(shadowMap, shadowCoord.xy));\n";
                 code += "        return (depth < shadowCoord.z) ? 0.3 : 1.0;\n";
             } else {
                 code += "        float shadowAccum = 0.0;\n";
@@ -555,61 +555,61 @@ pc.gfx.programlib.phong = {
                 code += "        float yNorth = 1.25 * yoffset;\n";
 
                 if (pc.gfx.Device.getCurrent().extDepthTexture) {
-                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xWest, ySouth)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy + vec2(xWest, ySouth)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(0.0, ySouth)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy + vec2(0.0, ySouth)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xEast, ySouth)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy + vec2(xEast, ySouth)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xWest, 0.0)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy + vec2(xWest, 0.0)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = texture2D(sm, shadowCoord.xy)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xEast, 0.0)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy + vec2(xEast, 0.0)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xWest, yNorth)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy + vec2(xWest, yNorth)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(0.0, yNorth)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy + vec2(0.0, yNorth)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = texture2D(sm, shadowCoord.xy + vec2(xEast, yNorth)).r;\n";
+                    code += "        depth = texture2D(shadowMap, shadowCoord.xy + vec2(xEast, yNorth)).r;\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
                 } else {
                     // Vector equivalent to vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0)";
                     code += "        const vec4 bit_shift = vec4(5.96046e-08, 1.52588e-05, 0.00390625, 1.0);\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xWest, ySouth)), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy + vec2(xWest, ySouth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(0.0, ySouth)), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, ySouth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xEast, ySouth)), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy + vec2(xEast, ySouth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xWest, 0.0)), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy + vec2(xWest, 0.0)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xEast, 0.0)), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy + vec2(xEast, 0.0)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xWest, yNorth)), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy + vec2(xWest, yNorth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(0.0, yNorth)), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, yNorth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
 
-                    code += "        depth = dot(texture2D(sm, shadowCoord.xy + vec2(xEast, yNorth)), bit_shift);\n";
+                    code += "        depth = dot(texture2D(shadowMap, shadowCoord.xy + vec2(xEast, yNorth)), bit_shift);\n";
                     code += "        shadowAccum += (depth < shadowCoord.z) ? 0.0 : shadowContrib;\n";
                 }
                 code += "        return shadowAccum;\n";
@@ -789,20 +789,28 @@ pc.gfx.programlib.phong = {
             code += "    vec3 lightDir;\n";
             code += "    vec3 diffuseContrib = vec3(0.0);\n";
             code += "    float specularContrib = 0.0;\n";
-            code += "    float d, nDotL;\n";
+            code += "    float d, nDotL, shadowFactor;\n";
 
             for (i = 0; i < totalLights; i++) {
+                if ((i >= options.numDirs && i < totalDirs) || 
+                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
+                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
+                    code += "    shadowFactor = calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
+                } else {
+                    code += "    shadowFactor = 1.0;\n";
+                }
+
                 if (i < totalDirs) {
                     code += "    lightDir = normalize(vLight" + i + "DirW);\n";
                     code += "    nDotL = max(0.0, dot(N, lightDir));\n";
                     code += "    if (nDotL > 0.0)\n";
                     code += "    {\n";
-                    code += "        diffuseContrib += light" + i + "_color * nDotL;\n";
+                    code += "        diffuseContrib += light" + i + "_color * nDotL * shadowFactor;\n";
                     code += "        if (shininess > 0.0)\n";
                     code += "        {\n";
                     code += "            vec3 R = normalize(-reflect(lightDir, N));\n";
                     code += "            float rDotV = max(0.0, dot(R, viewDirW));\n";
-                    code += "            specularContrib += pow(rDotV, shininess);\n";
+                    code += "            specularContrib += pow(rDotV, shininess) * shadowFactor;\n";
                     code += "        }\n";
                     code += "    }\n\n";
                 } else {
@@ -820,34 +828,16 @@ pc.gfx.programlib.phong = {
                         code += "            float cosAngle = dot(-lightDir, vLight" + i + "SpotDirW);\n";
                         code += "            att *= smoothstep(light" + i + "_outerConeAngle, light" + i + "_innerConeAngle, cosAngle);\n";
                     }
-                    code += "            diffuseContrib += light" + i + "_color * nDotL * att;\n";
+                    code += "            diffuseContrib += light" + i + "_color * nDotL * att * shadowFactor;\n";
                     code += "            if (shininess > 0.0)\n";
                     code += "            {\n";
                     code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
                     code += "                float rDotV = max(0.0, dot(R, viewDirW));\n";
-                    code += "                specularContrib += pow(rDotV, shininess) * att;\n";
+                    code += "                specularContrib += pow(rDotV, shininess) * att * shadowFactor;\n";
                     code += "            }\n";
                     code += "        }\n";
                     code += "    }\n\n";
                 }
-            }
-
-            // Calculate shadow factor
-            if (numShadowLights > 0) {
-                code += "    float shadowFactor = 0.0;\n";
-                for (i = 0; i < totalLights; i++) {
-                    if ((i >= options.numDirs && i < totalDirs) || 
-                        (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                        (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                        code += "    shadowFactor += calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
-                    }
-                }
-
-                if (numShadowLights > 1) {
-                    code += "    shadowFactor *= 1.0 / " + numShadowLights + ".0;\n";
-                }
-                code += "    diffuseContrib  *= shadowFactor;\n";
-                code += "    specularContrib *= shadowFactor;\n";
             }
         } else if (options.lightMap) {
             if (options.diffuseMap) {
