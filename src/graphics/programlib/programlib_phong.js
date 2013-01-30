@@ -728,43 +728,52 @@ pc.gfx.programlib.phong = {
                     code += "    uvSpecularMap = uvSpecularMap - min(height * viewDirW.xy, vec2(parallaxBias));\n";
                 }
             }
+            code += "\n";
         }
 
+        // Select the sources for material color
         if (options.diffuseMap) {
-            code += "    vec4 diffMapPixel = texture2D(texture_diffuseMap, uvDiffuseMap);\n";
+            code += "    vec3 diffuseColor = texture2D(texture_diffuseMap, uvDiffuseMap).rgb;\n";
+            code += "    vec3 ambientColor = diffuseColor;\n";
+        } else {
+            code += "    vec3 ambientColor = material_ambient;\n";
+            code += "    vec3 diffuseColor = material_diffuse;\n";
         }
+        if (options.specularMap) {
+            code += "    vec3 specularColor = texture2D(texture_specularMap, uvSpecularMap).rgb;\n";
+        } else {
+            code += "    vec3 specularColor = material_specular;\n";
+        }
+        if (options.specularFactorMap) {
+            code += "    specularColor *= texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
+        }
+        if (options.emissiveMap) {
+            code += "    vec3 emissiveColor = texture2D(texture_emissiveMap, uvEmissiveMap).rgb;\n";
+        } else {
+            code += "    vec3 emissiveColor = material_emissive;\n";
+        }
+        if (options.opacityMap) {
+            code += "    float opacity = texture2D(texture_opacityMap, uvOpacityMap).r;\n";
+        } else {
+            code += "    float opacity = material_opacity;\n";
+        }
+        if (options.glossMap) {
+            code += "    float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0;\n";
+        } else {
+            code += "    float shininess = material_shininess;\n";
+        }
+
         if (options.lightMap) {
             code += "    vec4 lghtMapPixel = texture2D(texture_lightMap, uvLightMap);\n";
         }
+        code += "\n";
 
-        if (options.diffuseMap) {
-            code += "    gl_FragColor.rgb  = diffMapPixel.rgb * light_globalAmbient;\n";
-        } else {
-            code += "    gl_FragColor.rgb  = material_ambient * light_globalAmbient;\n";
-        }
-
-        if (options.opacityMap) {
-            code += "    gl_FragColor.a = texture2D(texture_opacityMap, uvOpacityMap).r;\n";
-        } else {
-            code += "    gl_FragColor.a = material_opacity;\n";
-        }
         if (options.alphaTest) {
             code += getSnippet('fs_alpha_test');
         }
 
         if (lighting) {
-            code += "    vec3 lightDir;\n";
-            code += "    vec3 diffuse, specular;\n";
-            code += "    vec3 diffuseContrib = vec3(0.0);\n";
-            code += "    float specularContrib = 0.0;\n";
-            code += "    float d, nDotL;\n";
-            if (options.cubeMap || options.sphereMap) {
-                code += "    float lambertContrib = 0.0;\n";
-            }
-            if (numShadowLights > 0) {
-                code += "    float shadowFactor = 0.0;\n";
-            }
-
+            // Calculate a surface normal
             if (options.normalMap) {
                 if (useTangents) {
                     code += "    vec3 N = normalize(texture2D(texture_normalMap, uvBumpMap).xyz * 2.0 - 1.0);\n";
@@ -777,6 +786,11 @@ pc.gfx.programlib.phong = {
                 code += "    vec3 N = normalW;\n";
             }
 
+            code += "    vec3 lightDir;\n";
+            code += "    vec3 diffuseContrib = vec3(0.0);\n";
+            code += "    float specularContrib = 0.0;\n";
+            code += "    float d, nDotL;\n";
+
             for (i = 0; i < totalLights; i++) {
                 if (i < totalDirs) {
                     code += "    lightDir = normalize(vLight" + i + "DirW);\n";
@@ -784,22 +798,13 @@ pc.gfx.programlib.phong = {
                     code += "    if (nDotL > 0.0)\n";
                     code += "    {\n";
                     code += "        diffuseContrib += light" + i + "_color * nDotL;\n";
-                    if (options.cubeMap || options.sphereMap) {
-                        code += "        lambertContrib += nDotL;\n";
-                    } else {
-                        if (options.glossMap) {
-                            code += "        float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0;\n";
-                        } else {
-                            code += "        float shininess = material_shininess;\n";
-                        }
-                        code += "        if (shininess > 0.0)\n";
-                        code += "        {\n";
-                        code += "            vec3 R = normalize(-reflect(lightDir, N));\n";
-                        code += "            float rDotV = max(0.0, dot(R, viewDirW));\n";
-                        code += "            specularContrib += pow(rDotV, shininess);\n";
-                        code += "        }\n";
-                    }
-                    code += "    }\n";
+                    code += "        if (shininess > 0.0)\n";
+                    code += "        {\n";
+                    code += "            vec3 R = normalize(-reflect(lightDir, N));\n";
+                    code += "            float rDotV = max(0.0, dot(R, viewDirW));\n";
+                    code += "            specularContrib += pow(rDotV, shininess);\n";
+                    code += "        }\n";
+                    code += "    }\n\n";
                 } else {
                     code += "    d = length(vLight" + i + "DirW);\n";
                     code += "    if (d < light" + i + "_radius)\n";
@@ -816,98 +821,72 @@ pc.gfx.programlib.phong = {
                         code += "            att *= smoothstep(light" + i + "_outerConeAngle, light" + i + "_innerConeAngle, cosAngle);\n";
                     }
                     code += "            diffuseContrib += light" + i + "_color * nDotL * att;\n";
-                    if (options.cubeMap || options.sphereMap) {
-                        code += "            lambertContrib += nDotL;\n";
-                    } else {
-                        if (options.glossMap) {
-                            code += "            float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0;\n";
-                        } else {
-                            code += "            float shininess = material_shininess;\n";
-                        }
-                        code += "            if (shininess > 0.0)\n";
-                        code += "            {\n";
-                        code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
-                        code += "                float rDotV = max(0.0, dot(R, viewDirW));\n";
-                        code += "                specularContrib += pow(rDotV, shininess) * att;\n";
-                        code += "            }\n";
-                    }
+                    code += "            if (shininess > 0.0)\n";
+                    code += "            {\n";
+                    code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
+                    code += "                float rDotV = max(0.0, dot(R, viewDirW));\n";
+                    code += "                specularContrib += pow(rDotV, shininess) * att;\n";
+                    code += "            }\n";
                     code += "        }\n";
-                    code += "    }\n";
-                }
-
-                if ((i >= options.numDirs && i < totalDirs) || 
-                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                    code += "    shadowFactor += calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
+                    code += "    }\n\n";
                 }
             }
 
-            // Select the sources for material color
-            if (options.diffuseMap) {
-                code += "    diffuse = diffMapPixel.rgb;\n";
-            } else {
-                code += "    diffuse = material_diffuse;\n";
-            }
-            if (options.cubeMap) {
-                // Need to factor in lambert term here somehow
-                code += "    vec3 reflectW = -reflect(viewDirW, N);\n";
-                code += "    specular = textureCube(texture_cubeMap, reflectW).rgb * material_reflectionFactor;\n";
-                code += "    specularContrib = 1.0;\n";
-            } else if (options.sphereMap) {
-                // Reference: http://www.reindelsoftware.com/Documents/Mapping/Mapping.html
-                code += "    vec3 reflectW = -reflect(viewDirW, N);\n";
-                code += "    vec3 reflectE = (matrix_view * vec4(reflectW, 0.0)).xyz;\n";
-                code += "    float m = 2.0 * sqrt( dot(reflectE.xy, reflectE.xy) + (reflectE.z+1.0)*(reflectE.z+1.0) );\n";
-                code += "    vec2 sphereMapUv = reflectE.xy / m + 0.5;\n";
-                // Need to factor in lambert term here somehow
-                code += "    specular = texture2D(texture_sphereMap, sphereMapUv).rgb * lambertContrib * material_reflectionFactor;\n";
-                code += "    specularContrib = 1.0;\n";
-            } else if (options.specularMap) {
-                code += "    vec3 specularColor = texture2D(texture_specularMap, uvSpecularMap).rgb;\n";
-                if (options.specularFactorMap) {
-                    code += "    vec3 specularFactor = texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
-                    code += "    specular = specularColor * specularFactor;\n";
-                } else {
-                    code += "    specular = specularColor;\n";
-                }
-            } else if (options.specularFactorMap) {
-                code += "    vec3 specularFactor = texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
-                code += "    specular = material_specular * specularFactor;\n";
-            } else {
-                code += "    specular = material_specular;\n";
-            }
-
-            // Add ambient + diffuse + specular
-            if (options.lightMap) {
-                code += "    diffuseContrib += lghtMapPixel.rgb;\n";
-            }
-
+            // Calculate shadow factor
             if (numShadowLights > 0) {
+                code += "    float shadowFactor = 0.0;\n";
+                for (i = 0; i < totalLights; i++) {
+                    if ((i >= options.numDirs && i < totalDirs) || 
+                        (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
+                        (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
+                        code += "    shadowFactor += calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
+                    }
+                }
+
                 if (numShadowLights > 1) {
                     code += "    shadowFactor *= 1.0 / " + numShadowLights + ".0;\n";
                 }
-                code += "    diffuse = diffuse * shadowFactor;\n";
-                code += "    specular = specular * shadowFactor;\n";
+                code += "    diffuseContrib  *= shadowFactor;\n";
+                code += "    specularContrib *= shadowFactor;\n";
             }
-
-            code += "    gl_FragColor.rgb += diffuse * diffuseContrib;\n";
-            code += "    gl_FragColor.rgb += specular * specularContrib;\n";
         } else if (options.lightMap) {
             if (options.diffuseMap) {
-                code += "    gl_FragColor.rgb += diffMapPixel.rgb * lghtMapPixel.rgb;\n";
+                code += "    gl_FragColor.rgb += diffuseColor * lghtMapPixel.rgb;\n";
             } else {
                 code += "    gl_FragColor.rgb += lghtMapPixel.rgb;\n";
             }
         }
 
-        if (options.emissiveMap) {
-            code += "    gl_FragColor.rgb += texture2D(texture_emissiveMap, uvEmissiveMap).rgb;\n";
-        } else {
-            code += "    gl_FragColor.rgb += material_emissive;\n";
+        // Process reflection map
+        if (options.cubeMap || options.sphereMap) {
+            code += "    vec3 reflectW = -reflect(viewDirW, N);\n";
+            if (options.cubeMap) {
+                // Need to factor in lambert term here somehow
+                code += "    vec3 reflectionColor = textureCube(texture_cubeMap, reflectW).rgb;\n";
+            } else if (options.sphereMap) {
+                // Reference: http://www.reindelsoftware.com/Documents/Mapping/Mapping.html
+                code += "    vec3 reflectE = (matrix_view * vec4(reflectW, 0.0)).xyz;\n";
+                code += "    float m = 2.0 * sqrt( dot(reflectE.xy, reflectE.xy) + (reflectE.z+1.0)*(reflectE.z+1.0) );\n";
+                code += "    vec2 sphereMapUv = reflectE.xy / m + 0.5;\n";
+                code += "    vec3 reflectionColor = texture2D(texture_sphereMap, sphereMapUv).rgb;\n";
+            }
+            code += "    diffuseColor = mix(diffuseColor, reflectionColor, material_reflectionFactor);\n\n";
         }
 
+        // Calculate final lighting contributions
+        code += "    vec3 ambient  = ambientColor * light_globalAmbient;\n";
+        code += "    vec3 diffuse  = diffuseColor * diffuseContrib;\n";
+        code += "    vec3 specular = specularColor * specularContrib;\n";
+        code += "    vec3 emissive = emissiveColor;\n\n";
+
+        // Write out final pixel color
+        code += "    gl_FragColor.rgb = ambient + diffuse + specular + emissive;\n";
+        code += "    gl_FragColor.a   = opacity;\n\n";
+
+        // Make sure all components are between 0 and 1
         code += getSnippet('fs_clamp');
 
+        // Fog
         if (options.fog) {
             code += getSnippet('fs_fog');
         }
