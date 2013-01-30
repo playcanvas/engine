@@ -94,11 +94,15 @@ pc.gfx.programlib.phong = {
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
             (options.heightMap && !options.heightMapTransform));
-        
+        var useTangents = pc.gfx.Device.getCurrent().precalculatedTangents;
+
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec3 vertex_position;\n";
         if (lighting || options.cubeMap || options.sphereMap) {
             code += "attribute vec3 vertex_normal;\n";
+            if (options.normalMap && useTangents) {
+                code += "attribute vec4 vertex_tangent;\n";
+            }
         }
         if (options.diffuseMap || options.specularMap || options.specularFactorMap || options.glossMap ||
             options.emissiveMap || options.normalMap || options.heightMap || options.opacityMap) {
@@ -117,7 +121,6 @@ pc.gfx.programlib.phong = {
         code += "\n";
 
         // VERTEX SHADER INPUTS: UNIFORMS
-        code += "uniform mat4 matrix_view;\n";
         code += "uniform mat4 matrix_viewProjection;\n";
         code += "uniform mat4 matrix_model;\n";
         if (options.skin) {
@@ -169,13 +172,15 @@ pc.gfx.programlib.phong = {
 
         // VERTEX SHADER OUTPUTS
         if (lighting) {
-            code += "varying vec3 vNormalW;\n";
+            if (!(options.normalMap && useTangents)) {
+                code += "varying vec3 vNormalW;\n";
+            }
             code += "varying vec3 vViewDirW;\n";
 
             for (i = 0; i < totalLights; i++) {
-                code += "varying vec3 vLight" + i + "Dir;\n";
+                code += "varying vec3 vLight" + i + "DirW;\n";
                 if (i >= totalDirs + totalPnts) {
-                    code += "varying vec3 vLight" + i + "SpotDir;\n";
+                    code += "varying vec3 vLight" + i + "SpotDirW;\n";
                 }
                 if ((i >= options.numDirs && i < totalDirs) || 
                     (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
@@ -227,6 +232,9 @@ pc.gfx.programlib.phong = {
         code += "    vec4 position = vec4(vertex_position, 1.0);\n";
         if (lighting || options.cubeMap || options.sphereMap) {
             code += "    vec4 normal   = vec4(vertex_normal, 0.0);\n";
+            if (options.normalMap && useTangents) {
+                code += "    vec4 tangent  = vec4(vertex_tangent.xyz, 0.0);\n";
+            }
         }
         code += "\n";
 
@@ -245,11 +253,22 @@ pc.gfx.programlib.phong = {
                 code += "    normalW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * normal;\n";
                 code += "    normalW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * normal;\n";
                 code += "    normalW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * normal;\n\n";
+
+                if (options.normalMap && useTangents) {
+                    code += "    vec4 tangentW;\n";
+                    code += "    tangentW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * tangent;\n\n";
+                }
             }
         } else {
             code += "    vec4 positionW = matrix_model * position;\n";
             if (lighting || options.cubeMap || options.sphereMap) {
                 code += "    vec4 normalW   = matrix_model * normal;\n";
+                if (options.normalMap && useTangents) {
+                    code += "    vec4 tangentW  = matrix_model * tangent;\n";
+                }
             }
             code += "\n";
         }
@@ -259,32 +278,50 @@ pc.gfx.programlib.phong = {
 
         // Transform vectors required for lighting to eye space
         if (lighting) {
-            // Calculate position, normal and light direction in eye space
-            code += "    vNormalW = normalW.xyz;\n";
-            code += "    vViewDirW = view_position - positionW.xyz;\n";
+            if (options.normalMap && useTangents) {
+                // Calculate the tangent space basis vectors
+                code += "    vec3 binormalW = cross(normalW.xyz, tangentW.xyz) * vertex_tangent.w;\n";
+                code += "    mat3 tbnMatrix = mat3(tangentW.x, binormalW.x, normalW.x,\n";
+                code += "                          tangentW.y, binormalW.y, normalW.y,\n";
+                code += "                          tangentW.z, binormalW.z, normalW.z);\n";
+                code += "    vViewDirW = tbnMatrix * (view_position - positionW.xyz);\n";
 
-            for (i = 0; i < totalDirs; i++) {
-                code += "    vec3 light" + i + "DirW = -light" + i + "_direction;\n";
-            }
-            for (i = totalDirs; i < totalLights; i++) {
-                code += "    vec3 light" + i + "DirW = light" + i + "_position - positionW.xyz;\n";
-                if (i >= totalDirs + totalPnts) {
-                    code += "    vec3 light" + i + "SpotDirW = light" + i + "_spotDirection;\n";
+                for (i = 0; i < totalLights; i++) {
+                    if (i < totalDirs) {
+                        code += "    vLight" + i + "DirW = tbnMatrix * (-light" + i + "_direction);\n";
+                    }
+                    if (i >= totalDirs) {
+                        code += "    vLight" + i + "DirW = tbnMatrix * (light" + i + "_position - positionW.xyz);\n";
+                    }
+                    if (i >= totalDirs + totalPnts) {
+                        code += "    vLight" + i + "SpotDirW = tbnMatrix * light" + i + "_spotDirection;\n";
+                    }
+                }
+            } else {
+                code += "    vNormalW = normalW.xyz;\n";
+                code += "    vViewDirW = view_position - positionW.xyz;\n";
+
+                for (i = 0; i < totalLights; i++) {
+                    if (i < totalDirs) {
+                        code += "    vLight" + i + "DirW = -light" + i + "_direction;\n";
+                    }
+                    if (i >= totalDirs) {
+                        code += "    vLight" + i + "DirW = light" + i + "_position - positionW.xyz;\n";
+                    }
+                    if (i >= totalDirs + totalPnts) {
+                        code += "    vLight" + i + "SpotDirW = light" + i + "_spotDirection;\n";
+                    }
                 }
             }
 
-            // Transform vertex-view and vertex-light vectors to eye space
             for (i = 0; i < totalLights; i++) {
-                code += "    vLight" + i + "Dir = light" + i + "DirW;\n";
-                if (i >= totalDirs + totalPnts) {
-                    code += "    vLight" + i + "SpotDir = light" + i + "SpotDirW;\n";
-                }
                 if ((i >= options.numDirs && i < totalDirs) || 
                     (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
                     (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
                     code += "    vLight" + i + "ShadowCoord = light" + i + "_shadowMatrix * positionW;\n";
                 }
             }
+
             code += "\n";
         }
 
@@ -341,23 +378,26 @@ pc.gfx.programlib.phong = {
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
             (options.heightMap && !options.heightMapTransform));
+        var useTangents = pc.gfx.Device.getCurrent().precalculatedTangents;
 
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = getSnippet('fs_precision');
 
-        if (options.normalMap || options.heightMap) {
+        if ((options.normalMap && !useTangents) || options.heightMap) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
         }
 
         // FRAGMENT SHADER INPUTS: VARYINGS
         if (lighting) {
-            code += "varying vec3 vNormalW;\n";
+            if (!(options.normalMap && useTangents)) {
+                code += "varying vec3 vNormalW;\n";
+            }
             code += "varying vec3 vViewDirW;\n";
 
             for (i = 0; i < totalLights; i++) {
-                code += "varying vec3 vLight" + i + "Dir;\n";
+                code += "varying vec3 vLight" + i + "DirW;\n";
                 if (i >= totalDirs + totalPnts) {
-                    code += "varying vec3 vLight" + i + "SpotDir;\n";
+                    code += "varying vec3 vLight" + i + "SpotDirW;\n";
                 }
                 if ((i >= options.numDirs && i < totalDirs) || 
                     (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
@@ -671,7 +711,9 @@ pc.gfx.programlib.phong = {
         // Read the map texels that the shader needs
         if (lighting) {
             code += "    vec3 viewDirW = normalize(vViewDirW);\n";
-            code += "    vec3 normalW = normalize(vNormalW);\n";
+            if (!(options.normalMap && useTangents)) {
+                code += "    vec3 normalW = normalize(vNormalW);\n";
+            }
 
             if (options.normalMap && options.heightMap) {
                 // Shift UV0 if parallax mapping is enabled
@@ -690,14 +732,6 @@ pc.gfx.programlib.phong = {
 
         if (options.diffuseMap) {
             code += "    vec4 diffMapPixel = texture2D(texture_diffuseMap, uvDiffuseMap);\n";
-        }
-        if (lighting) {
-            if (options.specularMap) {
-                code += "    vec4 specMapPixel = texture2D(texture_specularMap, uvSpecularMap);\n";
-            }
-            if (options.specularFactorMap) {
-                code += "    vec4 specFacMapPixel = texture2D(texture_specularFactorMap, uvSpecularFactorMap);\n";
-            }
         }
         if (options.lightMap) {
             code += "    vec4 lghtMapPixel = texture2D(texture_lightMap, uvLightMap);\n";
@@ -730,9 +764,14 @@ pc.gfx.programlib.phong = {
             if (numShadowLights > 0) {
                 code += "    float shadowFactor = 0.0;\n";
             }
-            if (options.normalMap || options.heightMap) {
-                // Use a normal extracted from the supplied normal map
-                code += "    vec3 N = perturb_normal(normalW, viewDirW, uvBumpMap);\n";
+
+            if (options.normalMap) {
+                if (useTangents) {
+                    code += "    vec3 N = normalize(texture2D(texture_normalMap, uvBumpMap).xyz * 2.0 - 1.0);\n";
+                    code += "    N.xy *= material_bumpMapFactor;\n";
+                } else {
+                    code += "    vec3 N = perturb_normal(normalW, viewDirW, uvBumpMap);\n";
+                }
             } else {
                 // Use a normal interpolated from vertex normals
                 code += "    vec3 N = normalW;\n";
@@ -740,7 +779,7 @@ pc.gfx.programlib.phong = {
 
             for (i = 0; i < totalLights; i++) {
                 if (i < totalDirs) {
-                    code += "    lightDir = normalize(vLight" + i + "Dir);\n";
+                    code += "    lightDir = normalize(vLight" + i + "DirW);\n";
                     code += "    nDotL = max(0.0, dot(N, lightDir));\n";
                     code += "    if (nDotL > 0.0)\n";
                     code += "    {\n";
@@ -762,20 +801,19 @@ pc.gfx.programlib.phong = {
                     }
                     code += "    }\n";
                 } else {
-                    code += "    d = length(vLight" + i + "Dir);\n";
+                    code += "    d = length(vLight" + i + "DirW);\n";
                     code += "    if (d < light" + i + "_radius)\n";
                     code += "    {\n";
-                    code += "        lightDir = normalize(vLight" + i + "Dir);\n";
+                    code += "        lightDir = normalize(vLight" + i + "DirW);\n";
                     code += "        nDotL = max(0.0, dot(N, lightDir));\n";
                     code += "        if (nDotL > 0.0)\n";
                     code += "        {\n";
                     code += "            float att = ((light" + i + "_radius - d) / light" + i + "_radius);\n";
 //                    code += "            float att = light" + i + "_attenuate ? 1.0 : calculateAttenuation(N, light" + i + "_range, ;\n";
                     if (i >= totalDirs + totalPnts) {
-                        code += "            float cosAngle = dot(-lightDir, normalize(vLight" + i + "SpotDir));\n";
-                        code += "            float cosInnerAngle = light" + i + "_innerConeAngle;\n";
-                        code += "            float cosOuterAngle = light" + i + "_outerConeAngle;\n";
-                        code += "            att *= clamp((cosAngle - cosOuterAngle) / (cosInnerAngle - cosOuterAngle), 0.0, 1.0);\n";
+                        // Spotlight inner cone -> outer cone
+                        code += "            float cosAngle = dot(-lightDir, vLight" + i + "SpotDirW);\n";
+                        code += "            att *= smoothstep(light" + i + "_outerConeAngle, light" + i + "_innerConeAngle, cosAngle);\n";
                     }
                     code += "            diffuseContrib += light" + i + "_color * nDotL * att;\n";
                     if (options.cubeMap || options.sphereMap) {
@@ -825,13 +863,16 @@ pc.gfx.programlib.phong = {
                 code += "    specular = texture2D(texture_sphereMap, sphereMapUv).rgb * lambertContrib * material_reflectionFactor;\n";
                 code += "    specularContrib = 1.0;\n";
             } else if (options.specularMap) {
+                code += "    vec3 specularColor = texture2D(texture_specularMap, uvSpecularMap).rgb;\n";
                 if (options.specularFactorMap) {
-                    code += "    specular = specMapPixel.rgb * specFacMapPixel.rgb;\n";
+                    code += "    vec3 specularFactor = texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
+                    code += "    specular = specularColor * specularFactor;\n";
                 } else {
-                    code += "    specular = specMapPixel.rgb;\n";
+                    code += "    specular = specularColor;\n";
                 }
             } else if (options.specularFactorMap) {
-                code += "    specular = material_specular * specFacMapPixel.rgb;\n";
+                code += "    vec3 specularFactor = texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
+                code += "    specular = material_specular * specularFactor;\n";
             } else {
                 code += "    specular = material_specular;\n";
             }
