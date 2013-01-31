@@ -120,6 +120,8 @@ pc.extend(pc.gfx, function () {
         // Mip levels
         this._levels = cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
         this._lockedLevel = -1;
+
+        this.upload();
     };
 
     // Public properties
@@ -388,6 +390,11 @@ pc.extend(pc.gfx, function () {
             }
 
             this.upload();
+            // Reset filter and address modes because width/height may have changed
+            this.minFilter = this._minFilter;
+            this.magFilter = this._magFilter;
+            this.addressu = this._addressu;
+            this.addressv = this._addressv;
         },
 
         /**
