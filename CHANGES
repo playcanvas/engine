@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.94.1
+-------
+* Switched engine back to using precalculated tangents, but can be switched on a device flag.
+* Change spotlight boundary interpolation.
+* Fix shadow interaction with non-shadowcasting lights.
+* All Phong lighting now done in world space.
+* Reflection maps now lerp towards diffuse color based on reflectivity.
+* Fix WebGL errors about texture completeness (unitialised texture objects).
+
+-------
 v0.94.0
 -------
 * Engine no longer generate vertex tangents. Instead, it perturbs surface normals using a normal map in the fragment shader.
