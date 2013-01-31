@@ -368,6 +368,33 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData, buffers) {
+        var device = pc.gfx.Device.getCurrent();
+        if (device.precalculatedTangents) {
+            // Calculate tangents if we have positions, normals and texture coordinates
+            var positions = null, normals = null, uvs = null, tangents = null;
+            for (var i = 0; i < geomData.attributes.length; i++) {
+                var entry = geomData.attributes[i];
+
+                if (entry.name === "vertex_position") {
+                    positions = entry.data;
+                }
+                if (entry.name === "vertex_normal") {
+                    normals = entry.data;
+                }
+                if (entry.name === "vertex_tangent") {
+                    tangents = entry.data;
+                }
+                if (entry.name === "vertex_texCoord0") {
+                    uvs = entry.data;
+                }
+            }
+
+            if (!tangents && positions && normals && uvs) {
+                var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, geomData.indices.data);
+                geomData.attributes.push({ name: "vertex_tangent", type: "float32", components: 4, data: tangents });
+            }
+        }
+
         // Generate the vertex format for the geometry's vertex buffer
         var vertexFormat = new pc.gfx.VertexFormat();
         vertexFormat.begin();
@@ -631,6 +658,43 @@ pc.extend(pc.resources, function () {
         return str;
     }
 
+    function copyToBuffer(dstBuffer, srcBuffer, srcAttribs, srcStride) {
+        var hasPositions = (srcAttribs & attribs.POSITION) !== 0;
+        var hasNormals = (srcAttribs & attribs.NORMAL) !== 0;
+        var hasUvs = (srcAttribs & attribs.UV0) !== 0;
+        var addTangents = hasPositions && hasNormals && hasUvs;
+
+        if (addTangents) {
+            var preSize = 0;
+            // Only positions and normals can occur before tangents in a vertex buffer
+            if (srcAttribs & attribs.POSITION) {
+                preSize += 12;
+            }
+            if (srcAttribs & attribs.NORMAL) {
+                preSize += 12;
+            }
+            var postSize = srcStride - preSize; // Everything else
+            
+            var numVerts = srcBuffer.length / srcStride;
+            var srcIndex = 0;
+            var dstIndex = 0;
+            var i, j;
+            for (i = 0; i < numVerts; i++) {
+                for (j = 0; j < preSize; j++) {
+                    dstBuffer[dstIndex++] = srcBuffer[srcIndex++];
+                }
+                for (j = 0; j < 16; j++) {
+                    dstBuffer[dstIndex++] = 0;
+                }
+                for (j = 0; j < postSize; j++) {
+                    dstBuffer[dstIndex++] = srcBuffer[srcIndex++];
+                }
+            }
+        } else {
+            dstBuffer.set(srcBuffer);
+        }
+    }
+
     function translateFormat(attributes) {
         var vertexFormat = new pc.gfx.VertexFormat();
 
@@ -640,6 +704,13 @@ pc.extend(pc.resources, function () {
         }
         if (attributes & attribs.NORMAL) {
             vertexFormat.addElement(new pc.gfx.VertexElement("vertex_normal", 3, pc.gfx.VertexElementType.FLOAT32));
+        }
+        var device = pc.gfx.Device.getCurrent();
+        if (device.precalculatedTangents) {
+            // If we've got positions, normals and uvs, add tangents which will be auto-generated
+            if ((attributes & attribs.POSITION) && (attributes & attribs.NORMAL) && (attributes & attribs.UV0)) {
+                vertexFormat.addElement(new pc.gfx.VertexElement("vertex_tangent", 4, pc.gfx.VertexElementType.FLOAT32));
+            }
         }
         if (attributes & attribs.COLORS) {
             vertexFormat.addElement(new pc.gfx.VertexElement("vertex_color", 4, pc.gfx.VertexElementType.UINT8), true);
@@ -677,6 +748,129 @@ pc.extend(pc.resources, function () {
         vertexFormat.end();
 
         return vertexFormat;
+    }
+
+    function generateTangentsInPlace(vertexBuffer, indexBuffer) {
+        var indices = new Uint16Array(indexBuffer.lock());
+        var vertices = vertexBuffer.lock();
+        var vertexFormat = vertexBuffer.getFormat();
+
+        var stride = vertexFormat.size;
+        var positions, normals, tangents, uvs;
+        for (var el = 0; el < vertexFormat.elements.length; el++) {
+            var element = vertexFormat.elements[el];
+            if (element.scopeId.name === 'vertex_position') {
+                positions = new Float32Array(vertices, element.offset);
+            } else if (element.scopeId.name === 'vertex_normal') {
+                normals = new Float32Array(vertices, element.offset);
+            } else if (element.scopeId.name === 'vertex_tangent') {
+                tangents = new Float32Array(vertices, element.offset);
+            } else if (element.scopeId.name === 'vertex_texCoord0') {
+                uvs = new Float32Array(vertices, element.offset);
+            }
+        }
+
+        if (!(positions && normals && uvs)) return;
+
+        var triangleCount = indices.length / 3;
+        var vertexCount   = vertices.byteLength / stride;
+        var i1, i2, i3;
+        var v1, v2, v3;
+        var w1, w2, w3;
+        var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
+        var sdir = pc.math.vec3.create(0, 0, 0);
+        var tdir = pc.math.vec3.create(0, 0, 0);
+        var v1   = pc.math.vec3.create(0, 0, 0);
+        var v2   = pc.math.vec3.create(0, 0, 0);
+        var v3   = pc.math.vec3.create(0, 0, 0);
+        var w1   = pc.math.vec2.create(0, 0);
+        var w2   = pc.math.vec2.create(0, 0);
+        var w3   = pc.math.vec2.create(0, 0);
+        var i; // Loop counter
+        var tan1 = new Float32Array(vertexCount * 3);
+        var tan2 = new Float32Array(vertexCount * 3);
+
+        for (i = 0; i < triangleCount; i++) {
+            i1 = indices[i * 3];
+            i2 = indices[i * 3 + 1];
+            i3 = indices[i * 3 + 2];
+
+            pc.math.vec3.set(v1, positions[i1 * (stride / 4)], positions[i1 * (stride / 4) + 1], positions[i1 * (stride / 4) + 2]);
+            pc.math.vec3.set(v2, positions[i2 * (stride / 4)], positions[i2 * (stride / 4) + 1], positions[i2 * (stride / 4) + 2]);
+            pc.math.vec3.set(v3, positions[i3 * (stride / 4)], positions[i3 * (stride / 4) + 1], positions[i3 * (stride / 4) + 2]);
+
+            pc.math.vec2.set(w1, uvs[i1 * (stride / 4)], uvs[i1 * (stride / 4) + 1]);
+            pc.math.vec2.set(w2, uvs[i2 * (stride / 4)], uvs[i2 * (stride / 4) + 1]);
+            pc.math.vec2.set(w3, uvs[i3 * (stride / 4)], uvs[i3 * (stride / 4) + 1]);
+
+            x1 = v2[0] - v1[0];
+            x2 = v3[0] - v1[0];
+            y1 = v2[1] - v1[1];
+            y2 = v3[1] - v1[1];
+            z1 = v2[2] - v1[2];
+            z2 = v3[2] - v1[2];
+
+            s1 = w2[0] - w1[0];
+            s2 = w3[0] - w1[0];
+            t1 = w2[1] - w1[1];
+            t2 = w3[1] - w1[1];
+
+            r = 1.0 / (s1 * t2 - s2 * t1);
+            pc.math.vec3.set(sdir, (t2 * x1 - t1 * x2) * r, 
+                                   (t2 * y1 - t1 * y2) * r,
+                                   (t2 * z1 - t1 * z2) * r);
+            pc.math.vec3.set(tdir, (s1 * x2 - s2 * x1) * r,
+                                   (s1 * y2 - s2 * y1) * r,
+                                   (s1 * z2 - s2 * z1) * r);
+
+            tan1[i1 * 3 + 0] += sdir[0];
+            tan1[i1 * 3 + 1] += sdir[1];
+            tan1[i1 * 3 + 2] += sdir[2];
+            tan1[i2 * 3 + 0] += sdir[0];
+            tan1[i2 * 3 + 1] += sdir[1];
+            tan1[i2 * 3 + 2] += sdir[2];
+            tan1[i3 * 3 + 0] += sdir[0];
+            tan1[i3 * 3 + 1] += sdir[1];
+            tan1[i3 * 3 + 2] += sdir[2];
+
+            tan2[i1 * 3 + 0] += tdir[0];
+            tan2[i1 * 3 + 1] += tdir[1];
+            tan2[i1 * 3 + 2] += tdir[2];
+            tan2[i2 * 3 + 0] += tdir[0];
+            tan2[i2 * 3 + 1] += tdir[1];
+            tan2[i2 * 3 + 2] += tdir[2];
+            tan2[i3 * 3 + 0] += tdir[0];
+            tan2[i3 * 3 + 1] += tdir[1];
+            tan2[i3 * 3 + 2] += tdir[2];
+        }
+
+        var n    = pc.math.vec3.create(0, 0, 0);
+        var t1   = pc.math.vec3.create(0, 0, 0);
+        var t2   = pc.math.vec3.create(0, 0, 0);
+        var temp = pc.math.vec3.create(0, 0, 0);
+
+        for (i = 0; i < vertexCount; i++) {
+            pc.math.vec3.set(n, normals[i * (stride / 4)], normals[i * (stride / 4) + 1], normals[i * (stride / 4) + 2]);
+            pc.math.vec3.set(t1, tan1[i * 3], tan1[i * 3 + 1], tan1[i * 3 + 2]);
+            pc.math.vec3.set(t2, tan2[i * 3], tan2[i * 3 + 1], tan2[i * 3 + 2]);
+
+            // Gram-Schmidt orthogonalize
+            var ndott = pc.math.vec3.dot(n, t1);
+            pc.math.vec3.scale(n, ndott, temp);
+            pc.math.vec3.subtract(t1, temp, temp);
+            pc.math.vec3.normalize(temp, temp);
+
+            tangents[i * (stride / 4)]     = temp[0];
+            tangents[i * (stride / 4) + 1] = temp[1];
+            tangents[i * (stride / 4) + 2] = temp[2];
+
+            // Calculate handedness
+            pc.math.vec3.cross(n, t1, temp);
+            tangents[i * (stride / 4) + 3] = (pc.math.vec3.dot(temp, t2) < 0.0) ? -1.0 : 1.0;
+        }
+
+        indexBuffer.unlock();
+        vertexBuffer.unlock();
     }
 
     function MemoryStream(arrayBuffer, loader, textureCache, options) {
@@ -1054,7 +1248,13 @@ pc.extend(pc.resources, function () {
             var vbuff = vertexBuffer.lock();
             var dst = new Uint8Array(vbuff);
             var src = this.readU8(count * stride);
-            dst.set(src);
+
+            var device = pc.gfx.Device.getCurrent();
+            if (device.precalculatedTangents) {
+                copyToBuffer(dst, src, format, stride);
+            } else {
+                dst.set(src);
+            }
             vertexBuffer.unlock();
             
             return vertexBuffer;
@@ -1133,6 +1333,11 @@ pc.extend(pc.resources, function () {
                     var boneName = this.readStringChunk();
                     boneNames.push(boneName);
                 }
+            }
+
+            var device = pc.gfx.Device.getCurrent();
+            if (device.precalculatedTangents) {
+                generateTangentsInPlace(vertexBuffer, indexBuffer);
             }
 
             var model = this.model;

@@ -186,6 +186,10 @@ pc.extend(pc.gfx, function () {
         this.extTextureFloat = gl.getExtension("OES_texture_float");
         this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
         this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
+        if (this.extStandardDerivatives) {
+            gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
+        }
+
         this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
         if (!this.extTextureFilterAnisotropic) {
             this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
@@ -399,6 +403,8 @@ pc.extend(pc.gfx, function () {
         pc.extend(this, pc.events);
         
         this.boundBuffer = null;
+
+        this.precalculatedTangents = true;
     };
 
     /**

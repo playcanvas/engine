@@ -273,11 +273,18 @@ pc.scene.procedural.createTorus = function (opts) {
         }
     }
 
-    return pc.scene.procedural.createMesh(positions, {
+    var options = {
         normals:   normals,
         uvs:       uvs,
         indices:   indices
-    });
+    };
+
+    var device = pc.gfx.Device.getCurrent();
+    if (device.precalculatedTangents) {
+        options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
+    }
+
+    return pc.scene.procedural.createMesh(positions, options);
 }
 
 pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments, roundedCaps) {
@@ -481,13 +488,14 @@ pc.scene.procedural.createCylinder = function (opts) {
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var vertexData = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
+    var options = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
 
-    return pc.scene.procedural.createMesh(vertexData.positions, {
-        normals:   vertexData.normals,
-        uvs:       vertexData.uvs,
-        indices:   vertexData.indices
-    });
+    var device = pc.gfx.Device.getCurrent();
+    if (device.precalculatedTangents) {
+        options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
+    }
+
+    return pc.scene.procedural.createMesh(options.positions, options);
 }
 
 /**
@@ -515,13 +523,14 @@ pc.scene.procedural.createCapsule = function (opts) {
     var sides = opts && opts.sides !== undefined ? opts.sides : 10;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
-    var vertexData = pc.scene.procedural._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
+    var options = pc.scene.procedural._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
-    return pc.scene.procedural.createMesh(vertexData.positions, {
-        normals:   vertexData.normals,
-        uvs:       vertexData.uvs,
-        indices:   vertexData.indices
-    });
+    var device = pc.gfx.Device.getCurrent();
+    if (device.precalculatedTangents) {
+        options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
+    }
+
+    return pc.scene.procedural.createMesh(options.positions, options);
 }
 
 /**
@@ -550,13 +559,14 @@ pc.scene.procedural.createCone = function (opts) {
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
     var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
 
-    var vertexData = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
+    var options = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
-    return pc.scene.procedural.createMesh(vertexData.positions, {
-        normals:   vertexData.normals,
-        uvs:       vertexData.uvs,
-        indices:   vertexData.indices
-    });
+    var device = pc.gfx.Device.getCurrent();
+    if (device.precalculatedTangents) {
+        options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
+    }
+
+    return pc.scene.procedural.createMesh(options.positions, options);
 }
 
 /**
@@ -622,11 +632,18 @@ pc.scene.procedural.createSphere = function (opts) {
         }
     }
 
-    return pc.scene.procedural.createMesh(positions, {
+    var options = {
         normals:   normals,
         uvs:       uvs,
         indices:   indices
-    });
+    };
+
+    var device = pc.gfx.Device.getCurrent();
+    if (device.precalculatedTangents) {
+        options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
+    }
+
+    return pc.scene.procedural.createMesh(positions, options);
 }
 
 /**
@@ -688,11 +705,18 @@ pc.scene.procedural.createPlane = function (opts) {
         }
     }
 
-    return pc.scene.procedural.createMesh(positions, {
+    var options = {
         normals:   normals,
         uvs:       uvs,
         indices:   indices
-    });
+    };
+
+    var device = pc.gfx.Device.getCurrent();
+    if (device.precalculatedTangents) {
+        options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
+    }
+
+    return pc.scene.procedural.createMesh(positions, options);
 }
 
 /**
@@ -800,9 +824,16 @@ pc.scene.procedural.createBox = function (opts) {
     generateFace(sides.RIGHT, ls, hs);
     generateFace(sides.LEFT, ls, hs);
 
-    return pc.scene.procedural.createMesh(positions, {
+    var options = {
         normals:   normals,
         uvs:       uvs,
         indices:   indices
-    });
+    };
+
+    var device = pc.gfx.Device.getCurrent();
+    if (device.precalculatedTangents) {
+        options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
+    }
+
+    return pc.scene.procedural.createMesh(positions, options);
 }
