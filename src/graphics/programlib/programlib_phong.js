@@ -784,7 +784,7 @@ pc.gfx.programlib.phong = {
             if (options.normalMap) {
                 if (useTangents) {
                     code += "    vec3 N = normalize(texture2D(texture_normalMap, uvBumpMap).xyz * 2.0 - 1.0);\n";
-                    code += "    N.xy *= material_bumpMapFactor;\n";
+                    code += "    N = normalize(mix(vec3(0.0, 0.0, 1.0), N, material_bumpMapFactor));\n";
                 } else {
                     code += "    vec3 N = perturb_normal(normalW, viewDirW, uvBumpMap);\n";
                 }
