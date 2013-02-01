@@ -143,7 +143,9 @@ pc.gfx.programlib.phong = {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
             }
         }
-        code += "uniform vec3 view_position;\n";
+        if (lighting) {
+            code += "uniform vec3 view_position;\n";
+        }
         if (options.diffuseMap && options.diffuseMapTransform) {
             code += "uniform mat4 texture_diffuseMapTransform;\n";
         }
@@ -338,6 +340,9 @@ pc.gfx.programlib.phong = {
             if (options.specularFactorMap && options.specularFactorMapTransform) {
                 code += "    vUvSpecularFactorMap = (texture_specularFactorMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
             }
+            if (options.glossMap & options.glossMapTransform) {
+                code += "    vUvGlossMap = (texture_glossMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
+            }
             if (options.normalMap && options.normalMapTransform) {
                 code += "    vUvBumpMap = (texture_normalMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
             } else if (options.heightMap && options.heightMapTransform) {
@@ -449,18 +454,20 @@ pc.gfx.programlib.phong = {
             code += "uniform vec3 material_ambient;\n";
             code += "uniform vec3 material_diffuse;\n";
         }
-        if (options.specularMap) {
-            code += "uniform sampler2D texture_specularMap;\n";
-        } else {
-            code += "uniform vec3 material_specular;\n";
-        }
-        if (options.specularFactorMap) {
-            code += "uniform sampler2D texture_specularFactorMap;\n";
-        }
-        if (options.glossMap) {
-            code += "uniform sampler2D texture_glossMap;\n";
-        } else {
-            code += "uniform float material_shininess;\n";
+        if (lighting) {
+            if (options.specularMap) {
+                code += "uniform sampler2D texture_specularMap;\n";
+            } else {
+                code += "uniform vec3 material_specular;\n";
+            }
+            if (options.specularFactorMap) {
+                code += "uniform sampler2D texture_specularFactorMap;\n";
+            }
+            if (options.glossMap) {
+                code += "uniform sampler2D texture_glossMap;\n";
+            } else {
+                code += "uniform float material_shininess;\n";
+            }
         }
         if (options.emissiveMap) {
             code += "uniform sampler2D texture_emissiveMap;\n";
@@ -734,13 +741,20 @@ pc.gfx.programlib.phong = {
             code += "    vec3 ambientColor = material_ambient;\n";
             code += "    vec3 diffuseColor = material_diffuse;\n";
         }
-        if (options.specularMap) {
-            code += "    vec3 specularColor = texture2D(texture_specularMap, uvSpecularMap).rgb;\n";
-        } else {
-            code += "    vec3 specularColor = material_specular;\n";
-        }
-        if (options.specularFactorMap) {
-            code += "    specularColor *= texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
+        if (lighting) {
+            if (options.specularMap) {
+                code += "    vec3 specularColor = texture2D(texture_specularMap, uvSpecularMap).rgb;\n";
+            } else {
+                code += "    vec3 specularColor = material_specular;\n";
+            }
+            if (options.specularFactorMap) {
+                code += "    specularColor *= texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
+            }
+            if (options.glossMap) {
+                code += "    float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0;\n";
+            } else {
+                code += "    float shininess = material_shininess;\n";
+            }
         }
         if (options.emissiveMap) {
             code += "    vec3 emissiveColor = texture2D(texture_emissiveMap, uvEmissiveMap).rgb;\n";
@@ -752,11 +766,6 @@ pc.gfx.programlib.phong = {
         } else {
             code += "    float opacity = material_opacity;\n";
         }
-        if (options.glossMap) {
-            code += "    float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0;\n";
-        } else {
-            code += "    float shininess = material_shininess;\n";
-        }
 
         if (options.lightMap) {
             code += "    vec4 lghtMapPixel = texture2D(texture_lightMap, uvLightMap);\n";
@@ -767,15 +776,15 @@ pc.gfx.programlib.phong = {
             code += getSnippet('fs_alpha_test');
         }
 
-        code += "    vec3 diffuseContrib = vec3(0.0);\n";
-        code += "    float specularContrib = 0.0;\n";
-
         if (lighting) {
+            code += "    vec3 diffuseContrib = vec3(0.0);\n";
+            code += "    float specularContrib = 0.0;\n";
+
             // Calculate a surface normal
             if (options.normalMap) {
                 if (useTangents) {
                     code += "    vec3 N = normalize(texture2D(texture_normalMap, uvBumpMap).xyz * 2.0 - 1.0);\n";
-                    code += "    N.xy *= material_bumpMapFactor;\n";
+                    code += "    N = normalize(mix(vec3(0.0, 0.0, 1.0), N, material_bumpMapFactor));\n";
                 } else {
                     code += "    vec3 N = perturb_normal(normalW, viewDirW, uvBumpMap);\n";
                 }
@@ -844,29 +853,37 @@ pc.gfx.programlib.phong = {
         }
 
         // Process reflection map
-        if (options.cubeMap || options.sphereMap) {
-            code += "    vec3 reflectW = -reflect(viewDirW, N);\n";
-            if (options.cubeMap) {
-                // Need to factor in lambert term here somehow
-                code += "    vec3 reflectionColor = textureCube(texture_cubeMap, reflectW).rgb;\n";
-            } else if (options.sphereMap) {
-                // Reference: http://www.reindelsoftware.com/Documents/Mapping/Mapping.html
-                code += "    vec3 reflectE = (matrix_view * vec4(reflectW, 0.0)).xyz;\n";
-                code += "    float m = 2.0 * sqrt( dot(reflectE.xy, reflectE.xy) + (reflectE.z+1.0)*(reflectE.z+1.0) );\n";
-                code += "    vec2 sphereMapUv = reflectE.xy / m + 0.5;\n";
-                code += "    vec3 reflectionColor = texture2D(texture_sphereMap, sphereMapUv).rgb;\n";
+        if (lighting) {
+            if (options.cubeMap || options.sphereMap) {
+                code += "    vec3 reflectW = -reflect(viewDirW, N);\n";
+                if (options.cubeMap) {
+                    // Need to factor in lambert term here somehow
+                    code += "    vec3 reflectionColor = textureCube(texture_cubeMap, reflectW).rgb;\n";
+                } else if (options.sphereMap) {
+                    // Reference: http://www.reindelsoftware.com/Documents/Mapping/Mapping.html
+                    code += "    vec3 reflectE = (matrix_view * vec4(reflectW, 0.0)).xyz;\n";
+                    code += "    float m = 2.0 * sqrt( dot(reflectE.xy, reflectE.xy) + (reflectE.z+1.0)*(reflectE.z+1.0) );\n";
+                    code += "    vec2 sphereMapUv = reflectE.xy / m + 0.5;\n";
+                    code += "    vec3 reflectionColor = texture2D(texture_sphereMap, sphereMapUv).rgb;\n";
+                }
+                code += "    diffuseColor = mix(diffuseColor, reflectionColor, material_reflectionFactor);\n\n";
             }
-            code += "    diffuseColor = mix(diffuseColor, reflectionColor, material_reflectionFactor);\n\n";
         }
 
         // Calculate final lighting contributions
         code += "    vec3 ambient  = ambientColor * light_globalAmbient;\n";
-        code += "    vec3 diffuse  = diffuseColor * diffuseContrib;\n";
-        code += "    vec3 specular = specularColor * specularContrib;\n";
+        if (lighting) {
+            code += "    vec3 diffuse  = diffuseColor * diffuseContrib;\n";
+            code += "    vec3 specular = specularColor * specularContrib;\n";
+        }
         code += "    vec3 emissive = emissiveColor;\n\n";
 
         // Write out final pixel color
-        code += "    gl_FragColor.rgb = ambient + diffuse + specular + emissive;\n";
+        if (lighting) {
+            code += "    gl_FragColor.rgb = ambient + diffuse + specular + emissive;\n";
+        } else {
+            code += "    gl_FragColor.rgb = ambient + emissive;\n";
+        }
         code += "    gl_FragColor.a   = opacity;\n\n";
 
         // Make sure all components are between 0 and 1
