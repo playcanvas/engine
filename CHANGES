@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.94.2
+-------
+* Better scaling function for normal map.
+* [FIX] Fixes for when no lights are enabled.
+
+-------
 v0.94.1
 -------
 * Switched engine back to using precalculated tangents, but can be switched on a device flag.
