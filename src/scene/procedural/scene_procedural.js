@@ -415,7 +415,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
         // Generate bottom cap
         var offset = (heightSegments + 1) * (capSegments + 1);
         if (baseRadius > 0.0) {
-            for (i = 0; i <= capSegments; i++) {
+            for (i = 0; i < capSegments; i++) {
                 theta = (i / capSegments) * 2.0 * Math.PI;
                 x = Math.sin(theta);
                 y = -height / 2.0;
@@ -434,9 +434,9 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
         }
 
         // Generate top cap
-        offset += (capSegments + 1);
+        offset += capSegments;
         if (peakRadius > 0.0) {
-            for (i = 0; i <= capSegments; i++) {
+            for (i = 0; i < capSegments; i++) {
                 theta = (i / capSegments) * 2.0 * Math.PI;
                 x = Math.sin(theta);
                 y = height / 2.0;

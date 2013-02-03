@@ -268,8 +268,10 @@ pc.gfx.programlib.phong = {
             code += "    vec4 positionW = matrix_model * position;\n";
             if (lighting || options.cubeMap || options.sphereMap) {
                 code += "    vec4 normalW   = matrix_model * normal;\n";
+                code += "    normalW.xyz    = normalize(normalW.xyz);\n";
                 if (options.normalMap && useTangents) {
                     code += "    vec4 tangentW  = matrix_model * tangent;\n";
+                    code += "    tangentW.xyz   = normalize(tangentW.xyz);\n";
                 }
             }
             code += "\n";

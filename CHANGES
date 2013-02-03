@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.94.3
+-------
+* [FIX] Procedural cylinder code was generating caps incorrectly, causing NaNs to be generated for tangents.
+* Renormalize normal and tangent in case the model matrix has a scale in it.
+
+-------
 v0.94.2
 -------
 * Better scaling function for normal map.
