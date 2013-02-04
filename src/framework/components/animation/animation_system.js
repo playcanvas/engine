@@ -104,6 +104,21 @@ pc.extend(pc.fw, function () {
             AnimationComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
+        cloneComponent: function (entity, clone) {
+            var component = this.addComponent(clone, {});
+            
+            clone.animation.data.assets = pc.extend([], entity.animation.assets);
+            clone.animation.data.speed = entity.animation.speed;
+            clone.animation.data.loop = entity.animation.loop;
+            clone.animation.data.activate = entity.animation.activate;
+
+            clone.animation.data.animations = pc.extend([], entity.animation.animations);
+            clone.animation.data.skeleton = entity.animation.skeleton;
+            clone.animation.data.fromSkel = entity.animation.fromSkel;
+            clone.animation.data.toSkel = entity.animation.toSkel;
+            clone.animation.data.model = entity.animation.model;
+        },
+
         onRemove: function (entity, data) {
             delete data.animation;
             delete data.skeleton;

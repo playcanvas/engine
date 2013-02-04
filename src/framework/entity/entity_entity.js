@@ -38,123 +38,144 @@ pc.extend(pc.fw, function () {
     };
     Entity = pc.inherits(Entity, pc.scene.GraphNode);
     
-	/**
-     * @function
-     * @name pc.fw.Entity#getGuid
-     * @description Get the GUID value for this Entity
-     */
-    Entity.prototype.getGuid = function () {
-        return this._guid;
-    };
-
-    /**
-     * @function
-     * @name pc.fw.Entity#setGuid
-     * @description Set the GUID value for this Entity. N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time.
-     * Doing so will corrupt the graph this Entity is in.
-     * @param {Object} guid
-     */
-    Entity.prototype.setGuid = function (guid) {
-        this._guid = guid;
-    };
-	
-	/**
-	 * @function
-	 * @name pc.fw.Entity#setRequestBatch
-	 * @description Used during resource loading to ensure that child resources of Entities are tracked
-	 * @param {Number} handle The handle of the RequestBatch used to load this Entity
-	 */
-	Entity.prototype.setRequestBatch = function (handle) {
-		this._batchHandle = handle;
-	};
-	
-	/**
-	 * @function
-	 * @name pc.fw.Entity#getRequestBatch
-	 * @description Get the RequestBatch handle that is being used to load this Entity
-	 * @returns {Number} The RequestBatch handle
-	 */
-	Entity.prototype.getRequestBatch = function () {
-		return this._batchHandle;
-	};
-	
-    Entity.prototype.addChild = function (child) {
-        if(child instanceof pc.fw.Entity) {
-            var _debug = true
-            if(_debug) {
-                var root = this.getRoot();
-                var dupe = root.findOne("getGuid", child.getGuid());
-                if(dupe) {
-                    throw new Error("GUID already exists in graph");
-                }
-            }            
-        }
-        
-        pc.scene.GraphNode.prototype.addChild.call(this, child);
-    };
-
-    /**
-     * @function
-     * @name pc.fw.Entity#findByGuid
-     * @description Find a descendant of this Entity with the GUID
-     * @returns {pc.fw.Entity}
-     */
-    Entity.prototype.findByGuid = function (guid) {
-        if (this._guid === guid) return this;
-
-        for (var i = 0; i < this._children.length; i++) {
-            if(this._children[i].findByGuid) {
-                var found = this._children[i].findByGuid(guid);
-                if (found !== null) return found;                
-            }
-        }
-        return null;
-    };
+    Entity.prototype = pc.extend(Entity.prototype, {
+        /**
+         * @function
+         * @name pc.fw.Entity#getGuid
+         * @description Get the GUID value for this Entity
+         */
+        getGuid: function () {
+            return this._guid;
+        },
     
-    /**
-     * @function
-     * @name pc.fw.Entity#reparent
-     * @description Remove Entity from current parent and add as child to new parent
-     * @param {pc.scene.GraphNode} parent New parent to attach Entity to 
-     */
-    Entity.prototype.reparent = function(parent) {
-        var current = this.getParent();
-        if(current) {
-            current.removeChild(this);
-        }
-        if(parent) {
-            parent.addChild(this);            
-        }
-    };
-    
-    /**
-    * @function
-    * @name pc.fw.Entity#destroy
-    * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
-    */
-    Entity.prototype.destroy = function () {
-        var parent = this.getParent();
-        var childGuids;
-        
-        // Remove all components
-        for (name in this.c) {
-            this.c[name].system.removeComponent(this);
-        }
+        /**
+         * @function
+         * @name pc.fw.Entity#setGuid
+         * @description Set the GUID value for this Entity. N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time.
+         * Doing so will corrupt the graph this Entity is in.
+         * @param {Object} guid
+         */
+        setGuid: function (guid) {
+            this._guid = guid;
+        },
 
-        // Detach from parent
-        if(parent) {
-            parent.removeChild(this);
-        }
-        
-        var children = this.getChildren();
-        var length = children.length;
-        var child;
-        while(child = children.shift()) {
+        /**
+         * @function
+         * @name pc.fw.Entity#setRequestBatch
+         * @description Used during resource loading to ensure that child resources of Entities are tracked
+         * @param {Number} handle The handle of the RequestBatch used to load this Entity
+         */
+        setRequestBatch: function (handle) {
+            this._batchHandle = handle;
+        },
+
+        /**
+         * @function
+         * @name pc.fw.Entity#getRequestBatch
+         * @description Get the RequestBatch handle that is being used to load this Entity
+         * @returns {Number} The RequestBatch handle
+         */
+        getRequestBatch: function () {
+            return this._batchHandle;
+        },
+
+        addChild: function (child) {
             if(child instanceof pc.fw.Entity) {
-                child.destroy();
+                var _debug = true
+                if(_debug) {
+                    var root = this.getRoot();
+                    var dupe = root.findOne("getGuid", child.getGuid());
+                    if(dupe) {
+                        throw new Error("GUID already exists in graph");
+                    }
+                }            
             }
+            
+            pc.scene.GraphNode.prototype.addChild.call(this, child);
+        },
+
+        /**
+         * @function
+         * @name pc.fw.Entity#findByGuid
+         * @description Find a descendant of this Entity with the GUID
+         * @returns {pc.fw.Entity}
+         */
+        findByGuid: function (guid) {
+            if (this._guid === guid) return this;
+
+            for (var i = 0; i < this._children.length; i++) {
+                if(this._children[i].findByGuid) {
+                    var found = this._children[i].findByGuid(guid);
+                    if (found !== null) return found;                
+                }
+            }
+            return null;
+        },
+
+        /**
+         * @function
+         * @name pc.fw.Entity#reparent
+         * @description Remove Entity from current parent and add as child to new parent
+         * @param {pc.scene.GraphNode} parent New parent to attach Entity to 
+         */
+        reparent: function(parent) {
+            var current = this.getParent();
+            if(current) {
+                current.removeChild(this);
+            }
+            if(parent) {
+                parent.addChild(this);            
+            }
+        },
+
+        /**
+        * @function
+        * @name pc.fw.Entity#destroy
+        * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
+        */
+        destroy: function () {
+            var parent = this.getParent();
+            var childGuids;
+            
+            // Remove all components
+            for (name in this.c) {
+                this.c[name].system.removeComponent(this);
+            }
+
+            // Detach from parent
+            if(parent) {
+                parent.removeChild(this);
+            }
+            
+            var children = this.getChildren();
+            var length = children.length;
+            var child;
+            while(child = children.shift()) {
+                if(child instanceof pc.fw.Entity) {
+                    child.destroy();
+                }
+            }
+        },
+
+        clone: function () {
+            var c = new pc.fw.Entity();
+            pc.fw.Entity._super._cloneInternal.call(this, c);
+
+            for (type in this.c) {
+                var component = this.c[type];
+                component.system.cloneComponent(this, c);
+            }
+            
+            var i;
+            for (i = 0; i < this.getChildren().length; i++) {
+                var child = this.getChildren()[i];
+                c.addChild(child.clone());
+            }
+            
+            return c;
         }
-    };
+
+    });
     
     Entity.deserialize = function (data) {
         var template = pc.json.parse(data.template);

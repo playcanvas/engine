@@ -9,6 +9,13 @@ module('pc.fw.ComponentSystem', {
             this.id = 'derived';
             this.DataType = DerivedComponentData;
             this.ComponentType = DerivedComponent;
+            this.schema = [{
+                name: 'one',
+                type: 'number'
+            }, {
+                name: 'two',
+                type: 'number'
+            }];
         };
         DerivedSystem = pc.inherits(DerivedSystem, pc.fw.ComponentSystem);
         pc.extend(DerivedSystem.prototype, {
@@ -63,6 +70,11 @@ test("ComponentSystem.addComponent, multiple systems", function () {
         this.id = 'another';
         this.ComponentType = AnotherDerivedComponent;
         this.DataType = AnotherDerivedComponentData;
+        this.schema = [{
+            name: 'three',
+            type: 'number'
+        }];
+
     };
     AnotherDerivedSystem = pc.inherits(AnotherDerivedSystem, pc.fw.ComponentSystem);
     pc.extend(AnotherDerivedSystem.prototype, {
@@ -158,7 +170,7 @@ test("get value from component", function() {
         two: 2
     });
     
-    equal(entity.derived.get("one"), 1);
+    equal(entity.derived.one, 1);
 });
 
 test("set value on component", function() {
@@ -170,9 +182,9 @@ test("set value on component", function() {
         two: 2
     });
 
-    entity.derived.set("one", 3);
+    entity.derived.one = 3;
     
-    equal(entity.derived.get('one'), 3);
+    equal(entity.derived.one, 3);
     equal(c.data['one'], 3);
 });
 
@@ -181,6 +193,10 @@ test("set events", 2, function () {
         this.id = 'another';
         this.ComponentType = AnotherDerivedComponent;
         this.DataType = AnotherDerivedComponentData;
+        this.schema = [{
+            name: 'one',
+            type: 'number'
+        }];
     };
     AnotherDerivedSystem = pc.inherits(AnotherDerivedSystem, pc.fw.ComponentSystem);
     pc.extend(AnotherDerivedSystem.prototype, {
@@ -194,7 +210,7 @@ test("set events", 2, function () {
     };
     AnotherDerivedComponent = pc.inherits(AnotherDerivedComponent, pc.fw.Component);
     pc.extend(AnotherDerivedComponent.prototype, {
-        onSetOne: function (oldValue, newValue) {
+        onSetOne: function (name, oldValue, newValue) {
             equal(newValue, 1);
             equal(oldValue, null);
         }
