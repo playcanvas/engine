@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
     var ComponentSystem = function (context) {
         this.context = context;
         this.dataStore = {};
+        this.schema = [];
 
         pc.extend(this, pc.events);
     };
@@ -106,7 +107,20 @@ pc.extend(pc.fw, function () {
             delete this.dataStore[entity.getGuid()];
             delete entity[this.id];
             delete entity.c[this.id];
-            this.fire('remove', entity, record.data);                
+            this.fire('remove', entity, record.data);
+        },
+
+        /**
+        * @function
+        * @name pc.fw.ComponentSystem#cloneComponent
+        * @description Create a clone of component. This creates a copy all ComponentData variables.
+        * @param {pc.fw.Entity} entity The entity to clone the component from
+        * @param {pc.fw.Entity} clone The entity to clone the component into
+        */
+        cloneComponent: function (entity, clone) {
+            // default clone is just to add a new component with existing data
+            var src = this.dataStore[entity.getGuid()];
+            return this.addComponent(clone, src.data);
         },
 
         /**

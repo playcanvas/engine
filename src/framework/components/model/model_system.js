@@ -52,6 +52,15 @@ pc.extend(pc.fw, function () {
 
         removeComponent: function (entity, data) {
             entity.model.asset = null;
+        },
+
+        cloneComponent: function (entity, clone) {
+            var component = this.addComponent(clone, {});
+            
+            clone.model.data.asset = entity.model.asset;
+            clone.model.data.castShadows = entity.model.castShadows;
+            clone.model.data.receiveShadows = entity.model.receiveShadows;
+            clone.model.model = entity.model.model.clone();
         }
     });
 
