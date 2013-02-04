@@ -157,6 +157,7 @@ pc.extend(pc.fw, function () {
     };
 
     Entity.prototype.clone = function () {
+        var type;
         var c = new pc.fw.Entity();
         pc.fw.Entity._super._cloneInternal.call(this, c);
 
@@ -168,7 +169,9 @@ pc.extend(pc.fw, function () {
         var i;
         for (i = 0; i < this.getChildren().length; i++) {
             var child = this.getChildren()[i];
-            c.addChild(child.clone());
+            if (child instanceof pc.fw.Entity) {
+                c.addChild(child.clone());    
+            }
         }
 
         return c;
