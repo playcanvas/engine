@@ -126,10 +126,20 @@ pc.extend(pc.scene, function () {
         // Shadows
         var library = device.getProgramLibrary();
         this._depthProgStatic = library.getProgram('depth', {
-            skin: false
+            skin: false,
+            opacityMap: false
         });
         this._depthProgSkin = library.getProgram('depth', {
-            skin: true
+            skin: true,
+            opacityMap: false
+        });
+        this._depthProgStaticOp = library.getProgram('depth', {
+            skin: false,
+            opacityMap: true
+        });
+        this._depthProgSkinOp = library.getProgram('depth', {
+            skin: true,
+            opacityMap: true
         });
         this._shadowState = {
             blend: false
@@ -389,11 +399,14 @@ pc.extend(pc.scene, function () {
                     material = meshInstance.material;
 
                     this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                    if (material.opacityMap) {
+                        device.scope.resolve('texture_opacityMap').setValue(material.opacityMap);
+                    }
                     if (meshInstance.skinInstance) {
                         this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
-                        device.setProgram(this._depthProgSkin);
+                        device.setProgram(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                     } else {
-                        device.setProgram(this._depthProgStatic);
+                        device.setProgram(material.opacityMap ? this._depthProgStaticOp : this._depthProgStatic);
                     }
 
                     style = meshInstance.renderStyle;
