@@ -154,7 +154,7 @@ pc.extend(pc.fw, function () {
     pc.extend(RigidBodyComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
-            var properties = ['body', 'friction', 'mass', 'restitution', 'bodyType'];
+            var properties = ['friction', 'mass', 'restitution', 'bodyType'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.createBody();
