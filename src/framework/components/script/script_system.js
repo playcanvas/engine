@@ -46,6 +46,16 @@ pc.extend(pc.fw, function () {
             ScriptComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
+        cloneComponent: function (entity, clone) {
+            // overridden to make sure urls list is duplicated
+            var src = this.dataStore[entity.getGuid()];
+            var data = {
+                runInTools: src.data.runInTools,
+                urls: pc.extend([], src.data.urls)
+            };
+            return this.addComponent(clone, data);
+        },
+
         /**
         * @private
         * @name pc.fw.ScriptComponentSystem#onRemove

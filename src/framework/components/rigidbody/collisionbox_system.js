@@ -95,6 +95,15 @@ pc.extend(pc.fw, function () {
                 component.entity.rigidbody.createBody();
             }
         },
+
+        cloneComponent: function (entity, clone) {
+            // overridden to make sure halfExtents is duplicated
+            var src = this.dataStore[entity.getGuid()];
+            var data = {
+                halfExtents: pc.extend([], src.data.halfExtents)
+            };
+            return this.addComponent(clone, data);
+        },
         
         onRemove: function (entity, data) {
             if (entity.rigidbody && entity.rigidbody.body) {
