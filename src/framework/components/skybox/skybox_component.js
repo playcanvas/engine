@@ -28,27 +28,20 @@ pc.extend(pc.fw, function () {
                 this.data.model = null;
                 
                 if(guid) {
-                    this.system.context.loader.request(new pc.resources.AssetRequest(guid), function (resources) {
-                        assets[index] = resources[guid];
-                        this.data.assets = assets;
-                        
-                        // Once all assets are loaded create the skybox
-                        if(assets[0] && assets[1] && assets[2] 
-                        && assets[3] && assets[4] && assets[5]) {
-                            var urls = assets.map(function (asset) { 
-                                return asset.getFileUrl();
-                            });
-                            this.data.model = _createSkybox(this.entity, this.system.context, urls);
+                    assets[index] = this.system.context.assets.getAsset(guid);
+                    this.data.assets = assets;
+                    
+                    // Once all assets are loaded create the skybox
+                    if(assets[0] && assets[1] && assets[2] 
+                    && assets[3] && assets[4] && assets[5]) {
+                        var urls = assets.map(function (asset) { 
+                            return asset.getFileUrl();
+                        });
+                        this.data.model = _createSkybox(this.entity, this.system.context, urls);
 
-                            this.system.context.scene.addModel(this.data.model);
-                            this.entity.removeChild(this.data.model.graph);
-                        }
-
-                    }.bind(this), function (errors) {
-                        
-                    }, function (progress) {
-                        
-                    }, options);
+                        this.system.context.scene.addModel(this.data.model);
+                        this.entity.removeChild(this.data.model.graph);
+                    }
                 } else {
                     delete assets[index];
                 }

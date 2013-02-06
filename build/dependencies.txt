@@ -99,9 +99,10 @@
 ../src/framework/framework_fw.js
 ../src/framework/framework_link.prod.js
 ../src/framework/framework_link.dev.js
+../src/framework/framework_initfile.js
+../src/framework/framework_pack.js
 ../src/framework/framework_applicationcontext.js
 ../src/framework/framework_application.js
-../src/framework/framework_pack.js
 ../src/framework/resources/resources_pack.js
 ../src/framework/resources/resources_entity.js
 ../src/framework/resources/resources_asset.js
@@ -185,3 +186,4 @@
 ../src/framework/livelink/livelink_open_entity_message.js
 ../src/framework/entity/entity_entity.js
 ../src/framework/asset/asset_asset.js
+../src/framework/asset/asset_assetcache.js

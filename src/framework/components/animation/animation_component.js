@@ -98,38 +98,32 @@ pc.extend(pc.fw, function () {
                 return;
             }
             
-            var requests = guids.map(function (guid) {
-                return new pc.resources.AssetRequest(guid);
-            });
             var options = {
                 batch: this.entity.getRequestBatch()
             };
 
-            this.system.context.loader.request(requests, function (assetResources) {
-                var requests = guids.map(function (guid) {
-                    var asset = assetResources[guid];
-                    return new pc.resources.AnimationRequest(asset.getFileUrl());
-                });
-                var assetNames = guids.map(function (guid) {
-                    return assetResources[guid].name;
-                });
-                this.system.context.loader.request(requests, function (animResources) {
-                    var animations = {};
-                    for (var i = 0; i < requests.length; i++) {
-                        animations[assetNames[i]] = animResources[requests[i].identifier];
-                    }
-                    this.animations = animations;
-                    //this.set(entity, 'animations', animations);
-                }.bind(this), function (errors) {
-                    
-                }, function (progress) {
-                    
-                }, options);
+            var assets = guids.map(function (guid) {
+                return this.system.context.assets.getAsset(guid);
+            }, this);
+
+            var names = [];
+            var requests = assets.map(function (asset) {
+                names.push(asset.name);
+                return new pc.resources.AnimationRequest(asset.getFileUrl());
+            });
+
+            this.system.context.loader.request(requests, function (animResources) {
+                var animations = {};
+                for (var i = 0; i < requests.length; i++) {
+                    animations[names[i]] = animResources[requests[i].identifier];
+                }
+                this.animations = animations;
             }.bind(this), function (errors) {
                 
             }, function (progress) {
                 
-            }, options);        
+            }, options);
+        
         },
 
         onSetAnimations: function (name, oldValue, newValue) {

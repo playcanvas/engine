@@ -28,6 +28,7 @@ pc.extend(pc.fw, function () {
         // Add event support
         pc.extend(this, pc.events);
 
+        this.initfile = options.initfile;
         this.canvas = canvas;
         this.fillMode = pc.fw.FillMode.KEEP_ASPECT;
         this.resolutionMode = pc.fw.ResolutionMode.FIXED;
@@ -67,9 +68,9 @@ pc.extend(pc.fw, function () {
         //loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler());
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(textureCache));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
-        loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
+        //loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
-        loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
+        //loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
         // Display shows debug loading information. Only really fit for debug display at the moment.
@@ -144,6 +145,49 @@ pc.extend(pc.fw, function () {
     };
 
     Application.prototype = {
+        /**
+        * Load a pack and asset set from a table of contents config
+        * @param {String} name The name of the Table of Contents block to load
+        */
+        loadFromToc: function (name, success, error, progress) {
+            var toc = this.initfile.toc[name];
+
+            success = success || function () {};
+            error = error || function () {};
+            progress = progress || function () {};
+            
+            var requests = [];
+            for (guid in toc.assets) {
+                // Create assets for every entry in TOC and add to AssetCache
+                var asset = new pc.fw.Asset(guid, toc.assets[guid]);
+                this.context.assets.addAsset(guid, asset);
+
+                // Create a request and register the hash for every entry in TOC
+                requests.push(this.context.loader.createFileRequest(asset.file));
+                this.context.loader.registerHash(asset.file.hash, asset.file.url);
+
+                asset.subfiles.forEach(function (file) {
+                    this.context.loader.registerHash(file.hash, file.url);
+                    requests.push(this.context.loader.createFileRequest(file));
+                }.bind(this));
+            }
+
+            // Load all the assets from the TOC
+            this.context.loader.request(requests, function (resources) {
+                // load pack 
+                guid = toc.packs[0];
+                
+                var request = new pc.resources.PackRequest(guid);
+                this.context.loader.request(request, function (resources) {
+                    var pack = resources[guid];
+                    this.context.root.addChild(pack['hierarchy']);
+                    pc.fw.ComponentSystem.initialize(pack['hierarchy']);
+                    success(resources[guid]);
+                }.bind(this), error, progress);
+
+            }.bind(this), error, progress);
+        },
+
         loadPack: function (guid, success, error, progress) {
             var load = function() {
                 var request = new pc.resources.PackRequest(guid);

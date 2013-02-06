@@ -38,7 +38,8 @@ pc.resources = function () {
         this._loading = [];
         this._pending = [];
         this._batches = [];
-        this._handlers = {};
+        this._handlers = {}; // Store registered handlers
+        this._types = {}; // Store registered types
         this._requests = {};
         this._hashes = {}; // Lookup from file url to file hash
         this._canonicals = {}; // Lookup from hash to canonical file url
@@ -61,14 +62,31 @@ pc.resources = function () {
      * @param {pc.resources.ResourceHandler} handler A ResourceHandler instance.
      */
     ResourceLoader.prototype.registerHandler = function (RequestType, handler) {
-        var request = new RequestType();        
+        var request = new RequestType();
         if (request.type == "") {
             throw Error("ResourceRequests must have a type");
         }
+        this._types[request.type] = RequestType;
         this._handlers[request.type] = handler;
         handler.setLoader(this);
     };
     
+    /**
+    * @function
+    * @name pc.resources.ResourceLoader#createFileRequest
+    * @description Return a new {@link pc.resources.ResourceRequest} from the types that have been registered.
+    * @param {Object} file A file entry like that from a {@link pc.fw.Asset}
+    * @example
+    * var request = loader.createRequest({
+    *    url: 'assets/12/12341234-1234-1234-123412341234/image.jpg',
+    *    type: 'image'
+    * });
+    * request; // pc.resources.ImageRequest
+    */
+    ResourceLoader.prototype.this.context.loader.createRequest = function (file) {
+        return new this._types[file.type](file.url);
+    },
+
     ResourceLoader.prototype.registerHash = function (hash, identifier) {
         if (!this._hashes[identifier]) {
             this._hashes[identifier] = hash;
