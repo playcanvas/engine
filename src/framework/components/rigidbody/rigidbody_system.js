@@ -154,7 +154,7 @@ pc.extend(pc.fw, function () {
     pc.extend(RigidBodyComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
-            var properties = ['body', 'friction', 'mass', 'restitution', 'bodyType'];
+            var properties = ['friction', 'mass', 'restitution', 'bodyType'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.createBody();
@@ -270,7 +270,7 @@ pc.extend(pc.fw, function () {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
-                    if (componentData.body) {
+                    if (componentData.body && componentData.body.isActive()) {
                         if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
                         } else if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
