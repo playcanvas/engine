@@ -268,11 +268,17 @@ pc.gfx.programlib.phong = {
             code += "    vec4 positionW = matrix_model * position;\n";
             if (lighting || options.cubeMap || options.sphereMap) {
                 code += "    vec4 normalW   = matrix_model * normal;\n";
-                code += "    normalW.xyz    = normalize(normalW.xyz);\n";
                 if (options.normalMap && useTangents) {
-                    code += "    vec4 tangentW  = matrix_model * tangent;\n";
-                    code += "    tangentW.xyz   = normalize(tangentW.xyz);\n";
+                    code += "    vec4 tangentW = matrix_model * tangent;\n";
                 }
+            }
+            code += "\n";
+        }
+
+        if (lighting || options.cubeMap || options.sphereMap) {
+            code += "    normalW.xyz = normalize(normalW.xyz);\n";
+            if (options.normalMap && useTangents) {
+                code += "    tangentW.xyz  = normalize(tangentW.xyz);\n";
             }
             code += "\n";
         }
@@ -768,10 +774,6 @@ pc.gfx.programlib.phong = {
         } else {
             code += "    float opacity = material_opacity;\n";
         }
-
-        if (options.lightMap) {
-            code += "    vec4 lghtMapPixel = texture2D(texture_lightMap, uvLightMap);\n";
-        }
         code += "\n";
 
         if (options.alphaTest) {
@@ -846,12 +848,11 @@ pc.gfx.programlib.phong = {
                     code += "    }\n\n";
                 }
             }
-        } else if (options.lightMap) {
-            if (options.diffuseMap) {
-                code += "    gl_FragColor.rgb += diffuseColor * lghtMapPixel.rgb;\n";
-            } else {
-                code += "    gl_FragColor.rgb += lghtMapPixel.rgb;\n";
-            }
+        }
+
+        // Process light map
+        if (options.lightMap) {
+            code += "    diffuseContrib += texture2D(texture_lightMap, uvLightMap).rgb;\n";
         }
 
         // Process reflection map
