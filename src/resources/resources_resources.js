@@ -83,8 +83,8 @@ pc.resources = function () {
     * });
     * request; // pc.resources.ImageRequest
     */
-    ResourceLoader.prototype.this.context.loader.createRequest = function (file) {
-        return new this._types[file.type](file.url);
+    ResourceLoader.prototype.createFileRequest = function (url, type) {
+        return new this._types[type](url);
     },
 
     ResourceLoader.prototype.registerHash = function (hash, identifier) {
@@ -107,7 +107,7 @@ pc.resources = function () {
         if (hash) {
             this._cache[hash] = resource;    
         } else {
-            console.log(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
+            logWARNING(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
         }
         
     };
@@ -330,7 +330,7 @@ pc.resources = function () {
                 var resource = this.getFromCache(request.canonical);
                 if (resource) {
                     // Found resource in cache
-                    console.log(pc.string.format('Found {0} in cache', request.canonical));
+                    logDEBUG(pc.string.format('Found {0} in cache', request.canonical));
                     
                     this._completeRequest(request);
 
@@ -340,6 +340,7 @@ pc.resources = function () {
                     }
                     
                 } else {
+                    logDEBUG(pc.string.format('Cache miss: {0}', request.canonical));
                     // load using handler
                     handler.load(request.canonical, function (response, options) {
                         this._completeRequest(request);
@@ -472,10 +473,10 @@ pc.resources = function () {
         addToCache: function (identifier, resource) {
             var hash = this._loader.getHash(identifier);
             if (hash) {
-                console.log('Added to cache: ' + identifier);
+                logDEBUG('Added to cache: ' + identifier);
                 this._loader.addToCache(hash, resource);
             } else {
-                console.warn(pc.string.format("Could not add resource {0} to cache, no hash stored", identifier));
+                logWARNING(pc.string.format("Could not add resource {0} to cache, no hash stored", identifier));
             }
             
         },

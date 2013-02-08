@@ -29,6 +29,10 @@ pc.extend(pc.fw, function () {
                 
                 if(guid) {
                     assets[index] = this.system.context.assets.getAsset(guid);
+                    if (!assets[index]) {
+                        logERROR(pc.string.format("Trying to load skybox component before asset {0} has loaded", guid));
+                        return;
+                    }
                     this.data.assets = assets;
                     
                     // Once all assets are loaded create the skybox

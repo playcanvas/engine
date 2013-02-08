@@ -45,6 +45,10 @@ pc.extend(pc.fw, function () {
             };
             
             var asset = this.system.context.assets.getAsset(guid);
+            if (!asset) {
+                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
+                return;
+            }
 
             var url = asset.getFileUrl();
             this.system.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {

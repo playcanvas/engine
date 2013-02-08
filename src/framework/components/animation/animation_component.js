@@ -108,8 +108,12 @@ pc.extend(pc.fw, function () {
 
             var names = [];
             var requests = assets.map(function (asset) {
-                names.push(asset.name);
-                return new pc.resources.AnimationRequest(asset.getFileUrl());
+                if (!asset) {
+                    logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', guids));
+                } else {
+                    names.push(asset.name);
+                    return new pc.resources.AnimationRequest(asset.getFileUrl());    
+                }
             });
 
             this.system.context.loader.request(requests, function (animResources) {

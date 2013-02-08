@@ -1,17 +1,42 @@
 pc.extend(pc.fw, function () {
-    var AssetCache = function () {
+    var AssetCache = function (prefix) {
         this._cache = {};
         this._names = {};
+        this._prefix = prefix || "";
     };
 
     AssetCache.prototype = {
-        addAsset: function (identifier, asset) {
-            this._cache[identifier] = asset;
-            this._names[asset.name] = identifier;
+        update: function (toc, loader) {
+            for (resourceId in toc.assets) {
+                var asset = this.getAsset(resourceId);
+
+                if (!asset) {
+                    // Create assets for every entry in TOC and add to AssetCache
+                    asset = new pc.fw.Asset(resourceId, toc.assets[resourceId], this._prefix);
+                    this.addAsset(resourceId, asset);
+
+                    // Register hashes with the resource loader
+                    if (loader) {
+                        loader.registerHash(asset.file.hash, asset.getFileUrl());
+                        asset.subfiles.forEach(function (file, i) {
+                            loader.registerHash(file.hash, asset.getSubAssetFileUrl(i));
+                        });
+                    }
+                } else {
+                    // Update asset data
+                    pc.extend(asset, toc.assets[resourceId]);
+                }
+
+            }
         },
 
-        getAsset: function (identifier) {
-            return this._cache[identifier];
+        addAsset: function (resourceId, asset) {
+            this._cache[resourceId] = asset;
+            this._names[asset.name] = resourceId;
+        },
+
+        getAsset: function (resourceId) {
+            return this._cache[resourceId];
         },
 
         getAssetByName: function (name) {
@@ -20,8 +45,7 @@ pc.extend(pc.fw, function () {
                 return this._cache[id];
             } else {
                 return null;
-            }
-            
+            }            
         }
     };
 

@@ -17,7 +17,9 @@ pc.extend(pc.fw, function() {
         this.loader = loader;
         this.scene = scene;
         this.root = new pc.fw.Entity();
-        this.assets = new pc.fw.AssetCache();
+
+        var prefix = options.depot ? options.depot.assets.getServer().getBaseUrl() : null;
+        this.assets = new pc.fw.AssetCache(prefix);
         
         /**
          * @name pc.fw.ApplicationContext#components

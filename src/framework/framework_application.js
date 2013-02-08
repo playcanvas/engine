@@ -8,13 +8,13 @@ pc.extend(pc.fw, function () {
      * @constructor Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
-     * @param {Object} [options.config] Configuration options for the application
-     * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
      * @param {pc.input.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
      * @param {pc.input.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
      * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
      * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
      * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
+     * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
+     * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading 
      *
      * @example
      * // Create application
@@ -56,8 +56,6 @@ pc.extend(pc.fw, function () {
     
         this.audioManager = new pc.audio.AudioManager();
         
-        var scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
-
 		// Create resource loader
 		var loader = new pc.resources.ResourceLoader();
         
@@ -71,7 +69,7 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
         // Display shows debug loading information. Only really fit for debug display at the moment.
-        if (options['displayLoader']) {
+        if (options.displayLoader) {
             var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
         }
 
@@ -79,7 +77,7 @@ pc.extend(pc.fw, function () {
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options);
     
         // Register the ScriptResourceHandler late as we need the context        
-        loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
+        loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
         var bloomsys = new pc.fw.BloomComponentSystem(this.context);
@@ -154,22 +152,20 @@ pc.extend(pc.fw, function () {
             progress = progress || function () {};
             
             var requests = [];
+
+            // Populate the AssetCache and register hashes
+            this.context.assets.update(toc, this.context.loader);
+
             for (guid in toc.assets) {
-                // Create assets for every entry in TOC and add to AssetCache
-                var asset = new pc.fw.Asset(guid, toc.assets[guid]);
-                this.context.assets.addAsset(guid, asset);
-
-                // Create a request and register the hash for every entry in TOC
-                requests.push(this.context.loader.createFileRequest(asset.file));
-                this.context.loader.registerHash(asset.file.hash, asset.file.url);
-
-                asset.subfiles.forEach(function (file) {
-                    this.context.loader.registerHash(file.hash, file.url);
-                    requests.push(this.context.loader.createFileRequest(file));
+                var asset = this.context.assets.getAsset(guid);
+                // Create a request for all files
+                requests.push(this.context.loader.createFileRequest(asset.getFileUrl(), asset.file.type));
+                asset.subfiles.forEach(function (file, index) {
+                    requests.push(this.context.loader.createFileRequest(asset.getSubAssetFileUrl(index), file.type));
                 }.bind(this));
             }
 
-            // Load all the assets from the TOC
+            // Request all asset files
             this.context.loader.request(requests, function (resources) {
                 // load pack 
                 guid = toc.packs[0];

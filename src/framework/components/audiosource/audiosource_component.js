@@ -156,8 +156,12 @@ pc.extend(pc.fw, function () {
             var names = [];
             
             assets.forEach(function (asset) {
-                requests.push(new pc.resources.AudioRequest(asset.file.url));
-                names.push(asset.name);
+                if (!asset) {
+                    logERROR(pc.string.format('Trying to load audiosource component before assets {0} are loaded', guids));
+                } else {
+                    requests.push(new pc.resources.AudioRequest(asset.getFileUrl()));
+                    names.push(asset.name);                    
+                }
             });
 
             this.system.context.loader.request(requests, function (audioResources) {
