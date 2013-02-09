@@ -5,6 +5,7 @@ pc.extend(pc.gfx, function () {
      * data to the graphics hardware.
      * @param {pc.gfx.VertexFormat} format The vertex format of this vertex buffer.
      * @param {Number} numVertices The number of vertices that this vertex buffer will hold.
+     * @param {Number} [usage] The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
      */
     var VertexBuffer = function (format, numVertices, usage) {
         // Initialize optional parameters
