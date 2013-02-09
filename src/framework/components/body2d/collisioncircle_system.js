@@ -90,7 +90,7 @@ pc.extend(pc.fw, function () {
         format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 41, pc.gfx.VertexBufferUsage.STATIC);
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 41);
         var positions = new Float32Array(vertexBuffer.lock());
 
         var r = 0.5;

@@ -161,5 +161,24 @@ pc.gfx = {
      * @name pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
      * @description Linearly interpolate both the mipmap levels and between texels.
      */
-    FILTER_LINEAR_MIPMAP_LINEAR: 5
+    FILTER_LINEAR_MIPMAP_LINEAR: 5,
+
+    /**
+     * @enum pc.gfx.BUFFER
+     * @name pc.gfx.BUFFER_STATIC
+     * @description The data store contents will be modified once and used many times.
+     */
+    BUFFER_STATIC: 0,
+    /**
+     * @enum pc.gfx.BUFFER
+     * @name pc.gfx.BUFFER_DYNAMIC
+     * @description The data store contents will be modified repeatedly and used many times.
+     */
+    BUFFER_DYNAMIC: 1,
+    /**
+     * @enum pc.gfx.BUFFER
+     * @name pc.gfx.BUFFER_STREAM
+     * @description The data store contents will be modified once and used at most a few times.
+     */
+    BUFFER_STREAM: 2
 };

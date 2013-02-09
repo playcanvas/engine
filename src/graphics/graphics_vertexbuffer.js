@@ -1,31 +1,16 @@
-/**
- * Constants for describing usage pattern of a vertex buffer.
- * @enum {number}
- */
-pc.gfx.VertexBufferUsage = {
-    /** The data store contents will be modified repeatedly and used many times. */
-    DYNAMIC: 0,
-    /** The data store contents will be modified once and used many times. */
-    STATIC: 1
-};
-
 pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.VertexBuffer
      * @class A vertex buffer is the mechanism via which the application specifies vertex 
      * data to the graphics hardware.
-     * @param {pc.gfx.VertexFormat} format
-     * @param {Number} numVertices
+     * @param {pc.gfx.VertexFormat} format The vertex format of this vertex buffer.
+     * @param {Number} numVertices The number of vertices that this vertex buffer will hold.
      */
     var VertexBuffer = function (format, numVertices, usage) {
         // Initialize optional parameters
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
-        usage = usage || pc.gfx.VertexBufferUsage.STATIC;
+        this.usage = usage || pc.gfx.BUFFER_STATIC;
 
-        var gl = pc.gfx.Device.getCurrent().gl;
-        
-        this.usage = (usage === pc.gfx.VertexBufferUsage.DYNAMIC) ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW;
-        
         // Store the vertex format
         this.format = format;
 
@@ -36,6 +21,9 @@ pc.extend(pc.gfx, function () {
         this.numBytes = format.size * numVertices;
 
         // Create the WebGL program ID
+        this.gl = pc.gfx.Device.getCurrent().gl;
+
+        var gl = this.gl;
         this.bufferId = gl.createBuffer();
 
         // Allocate the storage
@@ -43,6 +31,17 @@ pc.extend(pc.gfx, function () {
     };
 
     VertexBuffer.prototype = {
+        /**
+         * @function
+         * @name pc.gfx.VertexBuffer#destroy
+         * @description Frees resources associated with this vertex buffer.
+         * @author Will Eastcott
+         */
+        destroy: function () {
+            var gl = this.gl;
+            gl.deleteBuffer(this.bufferId);
+        },
+
         /**
          * @function
          * @name pc.gfx.VertexBuffer#getFormat
@@ -58,9 +57,10 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.VertexBuffer#getUsage
          * @description Returns the usage type of the specified vertex buffer. This indicates
-         * whether the buffer can be written to once (pc.gfx.VertexBufferUsage.STATIC) or
-         * multiple times (pc.gfx.VertexBufferUsage.DYNAMIC).
-         * @returns {pc.gfx.VertexBufferUsage} The usage type of the vertex buffer.
+         * whether the buffer can be modified once and used many times (pc.gfx.BUFFER_STATIC), 
+         * modified repeatedly and used many times (pc.gfx.BUFFER_DYNAMIC) or modified once 
+         * and used at most a few times (pc.gfx.BUFFER_STREAM).
+         * @returns {Number} The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
          * @author Will Eastcott
          */
         getUsage: function () {
@@ -98,9 +98,22 @@ pc.extend(pc.gfx, function () {
          */
         unlock: function () {
             // Upload the new vertex data
-            var gl = pc.gfx.Device.getCurrent().gl;
+            var gl = this.gl;
+            var glUsage;
+            switch (this.usage) {
+                case pc.gfx.BUFFER_STATIC:
+                    glUsage = gl.STATIC_DRAW;
+                    break;
+                case pc.gfx.BUFFER_DYNAMIC:
+                    glUsage = gl.DYNAMIC_DRAW;
+                    break;
+                case pc.gfx.BUFFER_STREAM:
+                    glUsage = gl.STREAM_DRAW;
+                    break;
+            }
+
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferId);
-            gl.bufferData(gl.ARRAY_BUFFER, this.storage, this.usage);
+            gl.bufferData(gl.ARRAY_BUFFER, this.storage, glUsage);
         }
     }
 

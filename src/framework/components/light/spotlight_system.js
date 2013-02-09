@@ -143,7 +143,7 @@ pc.extend(pc.fw, function () {
             model.lights = [ node ];
 
             if (this.context.designer) {
-                var vertexBuffer = new pc.gfx.VertexBuffer(this.vertexFormat, 42, pc.gfx.VertexBufferUsage.DYNAMIC);
+                var vertexBuffer = new pc.gfx.VertexBuffer(this.vertexFormat, 42, pc.gfx.BUFFER_DYNAMIC);
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;

@@ -99,7 +99,7 @@ pc.extend(pc.fw, function () {
         format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 4, pc.gfx.VertexBufferUsage.STATIC);
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 4);
         var positions = new Float32Array(vertexBuffer.lock());
         positions.set([
             -0.5, 0, -0.5, -0.5, 0, 0.5, 0.5, 0, 0.5, 0.5, 0, -0.5

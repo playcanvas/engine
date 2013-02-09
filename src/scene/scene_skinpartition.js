@@ -224,7 +224,7 @@ pc.extend(pc.scene, function () {
         // Build new vertex buffer from partitioned vertices
         var partitionedVbs = [];
         for (var i = 0; i < vbs.length; i++) {
-            var partitionedVb = new pc.gfx.VertexBuffer(vbs[i].getFormat(), partitionedVertices.length, pc.gfx.VertexBufferUsage.STATIC);
+            var partitionedVb = new pc.gfx.VertexBuffer(vbs[i].getFormat(), partitionedVertices.length);
             var lockedBuffer = partitionedVb.lock();
             var byteArray = new Uint8Array(lockedBuffer);
             for (var j = 0; j < partitionedVertices.length; j++) {
