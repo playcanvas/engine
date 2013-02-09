@@ -28,10 +28,13 @@ pc.extend(pc.gfx, function () {
         var bytesPerIndex;
         if (format === pc.gfx.INDEXFORMAT_UINT8) {
             bytesPerIndex = 1;
+            this.glFormat = gl.UNSIGNED_BYTE;
         } else if (format === pc.gfx.INDEXFORMAT_UINT16) {
             bytesPerIndex = 2;
+            this.glFormat = gl.UNSIGNED_SHORT;
         } else if (format === pc.gfx.INDEXFORMAT_UINT32) {
             bytesPerIndex = 4;
+            this.glFormat = gl.UNSIGNED_INT;
         }
 
         var numBytes = this.numIndices * bytesPerIndex;
