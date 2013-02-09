@@ -170,6 +170,7 @@ pc.resources = function () {
      */
     ResourceLoader.prototype.request = function (requests, priority, success, error, progress, options) {
         var batch = null;
+        var self = this;
         
         // Re-jig arguments if priority has been left out.
         if(typeof(priority) == "function") {
@@ -189,11 +190,11 @@ pc.resources = function () {
         // Create a batch for this request
         batch = new RequestBatch(this._batchId++, requests, priority, success, error, function (pcnt) {
             var value = this.getProgress();
-            this.fire('batchprogress', this, batch);
+            self.fire('batchprogress', self, batch);
             if (progress) {
                 progress(value);
             }
-        }.bind(this));
+        });
 
         // If a batch handle is passed in as an option, we use it as a 'parent' to the new batch. 
         // The parent batch won't be complete until all it's children are complete.

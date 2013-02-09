@@ -13,9 +13,44 @@ pc.extend(pc.resources, function () {
         loader.on('error', this.handleError, this);
         loader.on('batchprogress', this.handleBatchProgress, this);
         //loader.on('requestProgress', this.handleBatchProgress, this);
-
+        
+        this.addCss();
+        
         this._element = element;
         this._domCreate();
+    };
+
+    ResourceLoaderDisplay.prototype.addCss = function () {
+        var styles = [
+            '.pc-resourceloaderdisplay-root {',
+            '   font-family: sans-serif;',
+            '   font-size: 0.7em;',
+            '   color: #aaa;',
+            '   border-collapse: collapse;',
+            '   position: absolute;',
+            '   top: 10px;',
+            '   left: 10px;',
+            '   background-color: black;',
+            '   opacity: 0.6;',
+            '}',
+            '.pc-resourceloaderdisplay-root td {',
+            '   border: 1px solid #aaa;',
+            '}',
+            '.pc-resourceloaderdisplay-subtable {',
+            '   border-collapse: collapse;',
+            '}'
+        ].join('\n');
+        
+        var style = document.createElement( 'style' );
+
+        document.getElementsByTagName('head')[0].appendChild( style );
+
+        if ( style.styleSheet ) { // IE
+            style.styleSheet.cssText = styles;
+        } else {
+            var cssText = document.createTextNode( styles );
+            style.appendChild( cssText );
+        }
     };
 
     /**
@@ -50,6 +85,7 @@ pc.extend(pc.resources, function () {
         var resourceRow = document.createElement('tr');
         var item = document.createElement('td');
         var subtable = document.createElement('table');
+        subtable.setAttribute('class', 'pc-resourceloaderdisplay-subtable');
         subtable.id = 'pc-resourceloaderdisplay-subtable-' + batch.handle;
         item.appendChild(subtable);
         resourceRow.appendChild(item);

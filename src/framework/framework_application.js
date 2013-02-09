@@ -165,6 +165,7 @@ pc.extend(pc.fw, function () {
                 }.bind(this));
             }
 
+
             // Request all asset files
             this.context.loader.request(requests, function (resources) {
                 // load pack 
