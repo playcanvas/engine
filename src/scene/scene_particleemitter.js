@@ -167,7 +167,7 @@ pc.extend(pc.scene, function () {
         iterator.end();
 
         // Create a index buffer
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, 6 * this.numParticles);
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, 6 * this.numParticles);
 
         // Fill the index buffer
         var dst = 0;

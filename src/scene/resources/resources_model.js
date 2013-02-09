@@ -435,7 +435,7 @@ pc.extend(pc.resources, function () {
         iterator.end();
     
         // Create the index buffer
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, geomData.indices.data.length);
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, geomData.indices.data.length);
         var dst = new Uint16Array(indexBuffer.lock());
         dst.set(geomData.indices.data);
         indexBuffer.unlock();
@@ -1268,7 +1268,7 @@ pc.extend(pc.resources, function () {
             var indexBuffer = new pc.gfx.IndexBuffer(type, numIndices);
             var ibuff = indexBuffer.lock();
             var src, dst;
-            if (type === pc.gfx.IndexFormat.UINT8) {
+            if (type === pc.gfx.INDEXFORMAT_UINT8) {
                 src = this.readU8(numIndices);
                 dst = new Uint8Array(ibuff);
             } else {

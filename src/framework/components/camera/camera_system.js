@@ -139,7 +139,7 @@ pc.extend(pc.fw, function () {
                 material.color = pc.math.vec4.create(1, 1, 0, 1);
                 material.update();
 
-                var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 24);
+                var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 24);
                 var indices = new Uint8Array(indexBuffer.lock());
                 indices.set([0,1,1,2,2,3,3,0, // Near plane
                              4,5,5,6,6,7,7,4, // Far plane

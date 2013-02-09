@@ -102,7 +102,7 @@ pc.extend(pc.fw, function () {
         // TODO: Only allocate graphics resources when running in Designer
         this.material = new pc.scene.BasicMaterial();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 88);
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 88);
         var inds = new Uint8Array(indexBuffer.lock());
         // Spot cone side lines
         inds[0] = 0;

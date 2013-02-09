@@ -1,20 +1,10 @@
-/**
- * Constants for shader type.
- * @enum {number}
- */
-pc.gfx.ShaderType = {
-    /** Vertex shader type. */
-    VERTEX:   0,
-    /** Fragment shader type. */
-    FRAGMENT: 1
-};
-
 pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.Shader
-     * @class A program representing a compiled and linked vertex and fragment shader pair.
-     * @param {pc.gfx.ShaderType} vertexShader
-     * @param {String} fragmentShader
+     * @class A shader object. Can be a vertex or fragment shader. A vertex and fragment shader
+     * pair can be linked into a program which is used to process geometry on the GPU (see pc.gfx.Program).
+     * @param {Number} type The type of shader to generate (see pc.gfx.SHADERTYPE_*).
+     * @param {String} src The shader source to be compiled into the shader object.
      */
     var Shader = function (type, src) {
         // Store the shader type
@@ -24,8 +14,9 @@ pc.extend(pc.gfx, function () {
         this.src = src;
 
         // Create the WebGL shader ID
-        var gl = pc.gfx.Device.getCurrent().gl;
-        var glType = (this.type === pc.gfx.ShaderType.VERTEX) ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER;
+        this.gl = pc.gfx.Device.getCurrent().gl;
+        var gl = this.gl;
+        var glType = (this.type === pc.gfx.SHADERTYPE_VERTEX) ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER;
         this.shaderId = gl.createShader(glType);
 
         // Compile the shader
@@ -35,7 +26,7 @@ pc.extend(pc.gfx, function () {
         var ok = gl.getShaderParameter(this.shaderId, gl.COMPILE_STATUS);
         if (!ok) {
             var error = gl.getShaderInfoLog(this.shaderId);
-            var typeName = (this.type === pc.gfx.ShaderType.VERTEX) ? "vertex" : "fragment";
+            var typeName = (this.type === pc.gfx.SHADERTYPE_VERTEX) ? "vertex" : "fragment";
             logERROR("Failed to compile " + typeName + " shader:\n" + src + "\n" + error);
         }
     }
@@ -43,14 +34,25 @@ pc.extend(pc.gfx, function () {
     Shader.prototype = {
         /**
          * @function
+         * @name pc.gfx.Shader#destroy
+         * @description Frees resources associated with this shader.
+         * @author Will Eastcott
+         */
+        destroy: function () {
+            var gl = this.gl;
+            gl.deleteShader(this.shaderId);
+        },
+
+        /**
+         * @function
          * @name pc.gfx.Shader#getType
-         * @description Returns the type of the shader which can be either a vertex shader or a
+         * @description Returns the type of the shader. It can be either a vertex shader or a
          * fragment shader.
-         * @returns {pc.gfx.ShaderType} A constant denoting a vertex shader or a fragment shader.
+         * @returns {Number} A constant denoting a vertex shader or a fragment shader (see pc.gfx.SHADERTYPE_*).
          * @example
-         * var shader = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, source);
+         * var shader = new pc.gfx.Shader(pc.gfx.SHADERTYPE_VERTEX, source);
          * var type = shader.getType();
-         * if (type === pc.gfx.ShaderType.VERTEX) {
+         * if (type === pc.gfx.SHADERTYPE_VERTEX) {
          *     console.log("This is indeed a vertex shader!");
          * }
          * @author Will Eastcott
@@ -66,8 +68,8 @@ pc.extend(pc.gfx, function () {
          * specified shader object.
          * @returns {String} The source code for the specified shader.
          * @example
-         * var shader1 = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, source);
-         * var shader2 = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, shader1.getSource());
+         * var shader1 = new pc.gfx.Shader(pc.gfx.SHADERTYPE_VERTEX, source);
+         * var shader2 = new pc.gfx.Shader(pc.gfx.SHADERTYPE_VERTEX, shader1.getSource());
          * @author Will Eastcott
          */
         getSource: function () {

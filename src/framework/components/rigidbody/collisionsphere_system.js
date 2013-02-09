@@ -54,7 +54,7 @@ pc.extend(pc.fw, function () {
         }
         vertexBuffer.unlock();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 80);
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 80);
         var inds = new Uint8Array(indexBuffer.lock());
         for (var i = 0; i < 40; i++) {
             inds[i * 2 + 0] = i;
