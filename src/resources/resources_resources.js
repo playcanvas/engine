@@ -145,7 +145,7 @@ pc.resources = function () {
      * @param {Number} [priority] Priority of download, lower is higher priority, default = 1
      * @param {Function} [success] Callback called after all requests have been successfully download and processed, it is passed a object containing all the resources keyed by their identitier.
      * @param {Function} [error] Callback called if there are errors while requesting resources. It is passed an object containing error messages keyed by their identifier, and an object containing all the resources which succeeded, keyed by their identifier
-     * @param {Function} [progress] Callback called periodically during the request process to indicate the progress of the entire request. It is passed a percentage complete value 0-100.
+     * @param {Function} [progress] Callback called periodically during the request process to indicate the progress of the entire request. It is passed a percentage complete value 0-1.
      * @param {Object} [options]
      * @param {Number} [options.batch] Handle for parent batch of this request. If the request is made with a parent, then the parent request will not complete until the child one has.
      * @returns {Number} A request handle which can be used to cancel the request.
@@ -278,7 +278,7 @@ pc.resources = function () {
     ResourceLoader.prototype.getProgress = function () {
         var i, len = this._batches.length;
         var current = 0;
-        var total = 100 * len;
+        var total = len;
 
         for (i = 0; i < len; i++) {
             var batch = this._batches[i];
@@ -286,7 +286,7 @@ pc.resources = function () {
             current = current + batch.getProgress();
         }
 
-        return 100 * current / total;
+        return current / total;
     };
 
     ResourceLoader.prototype.getRequestBatch = function (handle) {
@@ -609,7 +609,7 @@ pc.resources = function () {
      * @description Get a percentage value of how complete the batch is. Includes all child batches
      */
     RequestBatch.prototype.getProgress = function () {
-        return 100 * this._getCount() / this._getTotal();
+        return this._getCount() / this._getTotal();
     };
     
     /**
