@@ -39,7 +39,7 @@ pc.extend(pc.fw, function () {
         format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 41, pc.gfx.VertexBufferUsage.STATIC);
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 41);
         var positions = new Float32Array(vertexBuffer.lock());
 
         var r = 0.5;
@@ -54,7 +54,7 @@ pc.extend(pc.fw, function () {
         }
         vertexBuffer.unlock();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 80);
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 80);
         var inds = new Uint8Array(indexBuffer.lock());
         for (var i = 0; i < 40; i++) {
             inds[i * 2 + 0] = i;

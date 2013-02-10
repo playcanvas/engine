@@ -4,8 +4,8 @@ pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.Program
      * @class A program representing a compiled and linked vertex and fragment shader pair.
-     * @param {pc.gfx.Shader} vertexShader
-     * @param {pc.gfx.Shader} fragmentShader
+     * @param {pc.gfx.Shader} vertexShader The vertex shader to be linked into the new program.
+     * @param {pc.gfx.Shader} fragmentShader The fragment shader to be linked into the new program.
      */
     var Program = function (vertexShader, fragmentShader) {
         this.id = id++;
@@ -15,7 +15,8 @@ pc.extend(pc.gfx, function () {
         this.uniforms   = [];
         
         // Create the WebGL program ID
-        var gl = pc.gfx.Device.getCurrent().gl;
+        this.gl = pc.gfx.Device.getCurrent().gl;
+        var gl = this.gl;
 
         var _typeToString = {};
         _typeToString[gl.BOOL]         = "bool";
@@ -93,6 +94,19 @@ pc.extend(pc.gfx, function () {
 
 //            logDEBUG("Added shader uniform: " + _typeToString[info.type] + " " + info.name);
         }
+    }
+
+    Program.prototype = {
+        /**
+         * @function
+         * @name pc.gfx.Program#destroy
+         * @description Frees resources associated with this program.
+         * @author Will Eastcott
+         */
+        destroy: function () {
+            var gl = this.gl;
+            gl.deleteProgram(this.programId);
+        },
     }
 
     return {

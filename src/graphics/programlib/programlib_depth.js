@@ -54,7 +54,7 @@ pc.gfx.programlib.depth = {
         code += getSnippet('common_main_begin');
 
         if (options.opacityMap) {
-            code += '    if (texture2D(texture_opacityMap, vUv0).r < 0.25) discard;';
+            code += '    if (texture2D(texture_opacityMap, vUv0).r < 0.25) discard;\n\n';
         }
 
         code += getSnippet('fs_depth_write');

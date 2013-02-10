@@ -224,7 +224,7 @@ pc.extend(pc.scene, function () {
         // Build new vertex buffer from partitioned vertices
         var partitionedVbs = [];
         for (var i = 0; i < vbs.length; i++) {
-            var partitionedVb = new pc.gfx.VertexBuffer(vbs[i].getFormat(), partitionedVertices.length, pc.gfx.VertexBufferUsage.STATIC);
+            var partitionedVb = new pc.gfx.VertexBuffer(vbs[i].getFormat(), partitionedVertices.length);
             var lockedBuffer = partitionedVb.lock();
             var byteArray = new Uint8Array(lockedBuffer);
             for (var j = 0; j < partitionedVertices.length; j++) {
@@ -244,7 +244,7 @@ pc.extend(pc.scene, function () {
             indices = indices.concat(partitionedIndices.splice(0, partition.indexCount));
         }
 
-        var partitionedIb = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, indices.length);
+        var partitionedIb = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, indices.length);
         var idata = new Uint16Array(partitionedIb.lock());
         idata.set(indices);
         partitionedIb.unlock();
