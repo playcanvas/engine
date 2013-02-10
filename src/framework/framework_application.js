@@ -182,19 +182,27 @@ pc.extend(pc.fw, function () {
                 }.bind(this), error, progress);
             }.bind(this);
 
-            if (requests.length) {
-                // Request all asset files
-                this.context.loader.request(requests, function (resources) {
-                    onLoaded(resources);
-                }.bind(this), error, progress);                
+            var load = function () {
+                if (requests.length) {
+                    // Request all asset files
+                    this.context.loader.request(requests, function (resources) {
+                        onLoaded(resources);
+                    }.bind(this), error, progress);                
+                } else {
+                    // No assets to load
+                    setTimeout(function () {
+                        onLoaded([]);
+                    }, 0);
+                }                
+            }.bind(this);
+
+            if (!this.librariesLoaded) {
+                this.on('librariesloaded', function () {
+                    load();
+                })
             } else {
-                // No assets to load
-                setTimeout(function () {
-                    onLoaded([]);
-                }, 0);
+                load();
             }
-
-
         },
 
         loadPack: function (guid, success, error, progress) {
