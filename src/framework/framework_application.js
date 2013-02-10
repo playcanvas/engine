@@ -28,7 +28,7 @@ pc.extend(pc.fw, function () {
         // Add event support
         pc.extend(this, pc.events);
 
-        this.initfile = options.initfile;
+        this.content = options.content;
         this.canvas = canvas;
         this.fillMode = pc.fw.FillMode.KEEP_ASPECT;
         this.resolutionMode = pc.fw.ResolutionMode.FIXED;
@@ -145,7 +145,11 @@ pc.extend(pc.fw, function () {
         * @param {String} name The name of the Table of Contents block to load
         */
         loadFromToc: function (name, success, error, progress) {
-            var toc = this.initfile.toc[name];
+            if (!this.content) {
+                error('No content');
+            }
+
+            var toc = this.content.toc[name];
 
             success = success || function () {};
             error = error || function () {};
