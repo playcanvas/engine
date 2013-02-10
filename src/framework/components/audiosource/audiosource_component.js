@@ -144,42 +144,40 @@ pc.extend(pc.fw, function () {
         },
          
         loadAudioSourceAssets: function (guids) {
-            var requests = guids.map(function (guid) {
-                return new pc.resources.AssetRequest(guid);
-            });
             var options = {
                 batch: this.entity.getRequestBatch()
             };
             
-            this.system.context.loader.request(requests, function (assetResources) {
-                var requests = [];
-                var names = [];
-                
-                guids.forEach(function (guid) {
-                    var asset = assetResources[guid];
-                    requests.push(new pc.resources.AudioRequest(asset.getFileUrl()));
-                    names.push(asset.name);
-                });
-                
-                this.system.context.loader.request(requests, function (audioResources) {
-                    var sources = {};
-                    for (var i = 0; i < requests.length; i++) {
-                        sources[names[i]] = audioResources[requests[i].identifier];
-                    }
-                    // set the current source to the first entry (before calling set, so that it can play if needed)
-                    if(names.length) {
-                        this.data.currentSource = names[0];
-                    }
-                    this.data.sources = sources;
+            var assets = guids.map(function (guid) {
+                return this.system.context.assets.getAsset(guid);
+            }, this);
 
-                    if (!options.batch && this.activate) {
-                        this.play(names[0]);
-                    }
-                }.bind(this), function (errors) {
-                    
-                }, function (progress) {
-                    
-                }, options);
+            var requests = [];
+            var names = [];
+            
+            assets.forEach(function (asset) {
+                if (!asset) {
+                    logERROR(pc.string.format('Trying to load audiosource component before assets {0} are loaded', guids));
+                } else {
+                    requests.push(new pc.resources.AudioRequest(asset.getFileUrl()));
+                    names.push(asset.name);                    
+                }
+            });
+
+            this.system.context.loader.request(requests, function (audioResources) {
+                var sources = {};
+                for (var i = 0; i < requests.length; i++) {
+                    sources[names[i]] = audioResources[requests[i].identifier];
+                }
+                // set the current source to the first entry (before calling set, so that it can play if needed)
+                if(names.length) {
+                    this.data.currentSource = names[0];
+                }
+                this.data.sources = sources;
+
+                if (!options.batch && this.activate) {
+                    this.play(names[0]);
+                }
             }.bind(this), function (errors) {
                 
             }, function (progress) {

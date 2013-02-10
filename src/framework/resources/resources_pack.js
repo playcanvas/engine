@@ -14,9 +14,9 @@ pc.extend(pc.resources, function () {
         options = options || {};
         
         var guid = identifier;
-        if(guid in pc.content.data) {
+        if(guid in pc.content.packs) {
             setTimeout( function () {
-                success(pc.content.data[guid], options) 
+                success(pc.content.packs[guid], options) 
             }, 0);
         } else {
             this._depot.packs.getOne(guid, function (pack) {
@@ -98,7 +98,7 @@ pc.extend(pc.resources, function () {
         for (i = 0; i < len; i++) {
             var componentData = data.components[systems[i].id];
             if (componentData) {
-                this._registry[systems[i].id].addComponent(entity, componentData);    
+                this._registry[systems[i].id].addComponent(entity, componentData);
             }
         }
 

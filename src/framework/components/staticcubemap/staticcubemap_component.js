@@ -29,24 +29,18 @@ pc.extend(pc.fw, function () {
                 this.cubemap = null;
 
                 if(guid) {
-                    this.system.context.loader.request(new pc.resources.AssetRequest(guid), function (resources) {
-                        assets[index] = resources[guid];
-                        //this.set(entity, "assets", assets);
-                        this.assets = assets;
+                    assets[index] = this.system.context.assets.getAsset(guid);
+                    
+                    this.assets = assets;
 
-                        if(assets[0] && assets[1] && assets[2] 
-                        && assets[3] && assets[4] && assets[5]) {
-                            var urls = assets.map(function (asset) { 
-                                return asset.getFileUrl(); 
-                            });
-                            var cubemap = _createCubemap(this.entity, this.system.context, urls);
-                            this.cubemap = cubemap;
-                        }
-                    }.bind(this), function (errors) {
-                        
-                    }, function (progress) {
-                        
-                    }, options);
+                    if(assets[0] && assets[1] && assets[2] 
+                    && assets[3] && assets[4] && assets[5]) {
+                        var urls = assets.map(function (asset) { 
+                            return asset.getFileUrl(); 
+                        });
+                        var cubemap = _createCubemap(this.entity, this.system.context, urls);
+                        this.cubemap = cubemap;
+                    }
                 } else {
                     delete assets[index];                
                 }

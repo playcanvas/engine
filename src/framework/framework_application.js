@@ -8,13 +8,13 @@ pc.extend(pc.fw, function () {
      * @constructor Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
-     * @param {Object} [options.config] Configuration options for the application
-     * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
      * @param {pc.input.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
      * @param {pc.input.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
      * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
      * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
      * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
+     * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
+     * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading 
      *
      * @example
      * // Create application
@@ -28,6 +28,7 @@ pc.extend(pc.fw, function () {
         // Add event support
         pc.extend(this, pc.events);
 
+        this.content = options.content;
         this.canvas = canvas;
         this.fillMode = pc.fw.FillMode.KEEP_ASPECT;
         this.resolutionMode = pc.fw.ResolutionMode.FIXED;
@@ -55,8 +56,6 @@ pc.extend(pc.fw, function () {
     
         this.audioManager = new pc.audio.AudioManager();
         
-        var scriptPrefix = (options.config && options.config['script_prefix']) ? options.config['script_prefix'] : "";
-
 		// Create resource loader
 		var loader = new pc.resources.ResourceLoader();
         
@@ -64,16 +63,13 @@ pc.extend(pc.fw, function () {
         var textureCache = new pc.resources.TextureCache(loader);
         
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
-        //loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler());
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(textureCache));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
-        loader.registerHandler(pc.resources.EntityRequest, new pc.resources.EntityResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
-        loader.registerHandler(pc.resources.AssetRequest, new pc.resources.AssetResourceHandler(options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
         // Display shows debug loading information. Only really fit for debug display at the moment.
-        if (options['displayLoader']) {
+        if (options.displayLoader) {
             var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
         }
 
@@ -81,7 +77,7 @@ pc.extend(pc.fw, function () {
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options);
     
         // Register the ScriptResourceHandler late as we need the context        
-        loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, scriptPrefix));
+        loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
         var bloomsys = new pc.fw.BloomComponentSystem(this.context);
@@ -144,6 +140,52 @@ pc.extend(pc.fw, function () {
     };
 
     Application.prototype = {
+        /**
+        * Load a pack and asset set from a table of contents config
+        * @param {String} name The name of the Table of Contents block to load
+        */
+        loadFromToc: function (name, success, error, progress) {
+            if (!this.content) {
+                error('No content');
+            }
+
+            var toc = this.content.toc[name];
+
+            success = success || function () {};
+            error = error || function () {};
+            progress = progress || function () {};
+            
+            var requests = [];
+
+            // Populate the AssetCache and register hashes
+            this.context.assets.update(toc, this.context.loader);
+
+            for (guid in toc.assets) {
+                var asset = this.context.assets.getAsset(guid);
+                // Create a request for all files
+                requests.push(this.context.loader.createFileRequest(asset.getFileUrl(), asset.file.type));
+                asset.subfiles.forEach(function (file, index) {
+                    requests.push(this.context.loader.createFileRequest(asset.getSubAssetFileUrl(index), file.type));
+                }.bind(this));
+            }
+
+
+            // Request all asset files
+            this.context.loader.request(requests, function (resources) {
+                // load pack 
+                guid = toc.packs[0];
+                
+                var request = new pc.resources.PackRequest(guid);
+                this.context.loader.request(request, function (resources) {
+                    var pack = resources[guid];
+                    this.context.root.addChild(pack['hierarchy']);
+                    pc.fw.ComponentSystem.initialize(pack['hierarchy']);
+                    success(resources[guid]);
+                }.bind(this), error, progress);
+
+            }.bind(this), error, progress);
+        },
+
         loadPack: function (guid, success, error, progress) {
             var load = function() {
                 var request = new pc.resources.PackRequest(guid);

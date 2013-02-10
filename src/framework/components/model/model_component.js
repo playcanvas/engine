@@ -40,34 +40,31 @@ pc.extend(pc.fw, function () {
         },
 
         loadModelAsset: function(guid) {
-            var request = new pc.resources.AssetRequest(guid);
             var options = {
                 batch: this.entity.getRequestBatch()
             };
             
-            this.system.context.loader.request(request, function (resources) {
-                var asset = resources[guid];
-                var url = asset.getFileUrl();
-                this.system.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {
-                    var model = resources[url];
+            var asset = this.system.context.assets.getAsset(guid);
+            if (!asset) {
+                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
+                return;
+            }
 
-                    if (this.system.context.designer) {
-                        model.generateWireframe();
-                    }
+            var url = asset.getFileUrl();
+            this.system.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {
+                var model = resources[url];
 
-                    this.model = model;
-                }.bind(this), function (errors, resources) {
-                    Object.keys(errors).forEach(function (key) {
-                        logERROR(errors[key]);
-                    });
-                }, function (progress) {
-                }, options);
+                if (this.system.context.designer) {
+                    model.generateWireframe();
+                }
+
+                this.model = model;
             }.bind(this), function (errors, resources) {
                 Object.keys(errors).forEach(function (key) {
                     logERROR(errors[key]);
                 });
             }, function (progress) {
-                
+
             }, options);
         },
 
