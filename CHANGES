@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.96.1
+-------
+* [FIX] Make sure physics libraries are loaded before loading Entities
+
+-------
 v0.96.0
 -------
 * loadFromTOC function for pc.fw.Application
