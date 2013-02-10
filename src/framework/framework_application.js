@@ -169,9 +169,7 @@ pc.extend(pc.fw, function () {
                 }.bind(this));
             }
 
-
-            // Request all asset files
-            this.context.loader.request(requests, function (resources) {
+            var onLoaded = function (resources) {
                 // load pack 
                 guid = toc.packs[0];
                 
@@ -182,8 +180,21 @@ pc.extend(pc.fw, function () {
                     pc.fw.ComponentSystem.initialize(pack['hierarchy']);
                     success(resources[guid]);
                 }.bind(this), error, progress);
+            }.bind(this);
 
-            }.bind(this), error, progress);
+            if (requests.length) {
+                // Request all asset files
+                this.context.loader.request(requests, function (resources) {
+                    onLoaded(resources);
+                }.bind(this), error, progress);                
+            } else {
+                // No assets to load
+                setTimeout(function () {
+                    onLoaded([]);
+                }, 0);
+            }
+
+
         },
 
         loadPack: function (guid, success, error, progress) {
