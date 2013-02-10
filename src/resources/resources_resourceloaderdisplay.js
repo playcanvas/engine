@@ -172,7 +172,7 @@ pc.extend(pc.resources, function () {
     ResourceLoaderDisplay.prototype.handleBatchProgress = function (loader, batch) {
         var batchProgress = document.getElementById('pc-resourceloaderdisplay-batchprogress-' + batch.handle);
         if (batchProgress) {
-            batchProgress.textContent = batch.getProgress() + '%';    
+            batchProgress.textContent = batch.getProgress()*100 + '%';    
         }
         
     };
