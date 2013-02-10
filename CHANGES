@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.96.0
+-------
+* loadFromTOC function for pc.fw.Application
+* Added AssetCache for preloading asset metadata
+* Added pc.fw.ContentFile for where preloaded data is stored
+* pc.gfx.VertexBufferUsage -> pc.gfx.BUFFER_
+* pc.gfx.IndexFormat -> pc.gfx.INDEXFORMAT_
+* Restore gl format of index buffer that is used when primitive is drawn
+* Made ResourceLoaderDisplay prettier
+* Deprecate AssetResourceHandler and EntityResourceHandler
+
+-------
 v0.95.0
 -------
 * Added Entity#clone() method

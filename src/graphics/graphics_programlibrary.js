@@ -35,8 +35,8 @@ pc.extend(pc.gfx, function () {
             var fsCode = generator.generateFragmentShader(options);
             logDEBUG("\n" + key + ": vertex shader\n" + vsCode);
             logDEBUG("\n" + key + ": fragment shader\n" + fsCode);
-            var vs = new pc.gfx.Shader(pc.gfx.ShaderType.VERTEX, vsCode);
-            var fs = new pc.gfx.Shader(pc.gfx.ShaderType.FRAGMENT, fsCode);
+            var vs = new pc.gfx.Shader(pc.gfx.SHADERTYPE_VERTEX, vsCode);
+            var fs = new pc.gfx.Shader(pc.gfx.SHADERTYPE_FRAGMENT, fsCode);
             program = this._cache[key] = new pc.gfx.Program(vs, fs);
         }
         return program;

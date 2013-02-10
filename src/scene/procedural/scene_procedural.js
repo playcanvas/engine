@@ -189,7 +189,7 @@ pc.scene.procedural.createMesh = function (positions, opts) {
     var indexBuffer = null;
     var indexed = (indices !== null);
     if (indexed) {
-        indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT16, indices.length);
+        indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, indices.length);
 
         // Read the indicies into the index buffer
         var dst = new Uint16Array(indexBuffer.lock());

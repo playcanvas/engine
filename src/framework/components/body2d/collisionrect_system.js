@@ -99,14 +99,14 @@ pc.extend(pc.fw, function () {
         format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 4, pc.gfx.VertexBufferUsage.STATIC);
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 4);
         var positions = new Float32Array(vertexBuffer.lock());
         positions.set([
             -0.5, 0, -0.5, -0.5, 0, 0.5, 0.5, 0, 0.5, 0.5, 0, -0.5
         ]);
         vertexBuffer.unlock();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.IndexFormat.UINT8, 8);
+        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 8);
         var indices = new Uint8Array(indexBuffer.lock());
         indices.set([
             0,1,1,2,2,3,3,0

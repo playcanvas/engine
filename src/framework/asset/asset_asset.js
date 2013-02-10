@@ -1,24 +1,8 @@
 pc.extend(pc.fw, function () {
-    var Asset = function (prefix, data) {
-        this.prefix = prefix;
-        if(data._id) {
-            this._guid = data._id;
-        } else {
-            this._guid = pc.guid.create();
-        }
-         
-        if(data) {
-            pc.extend(this, data);
-            delete this._id;
-        }
-    };
-    
-    Asset.prototype.getGuid = function () {
-        return this._guid;
-    }
-    
-    Asset.prototype.setGuid = function(guid) {
-        this._guid = guid;
+    var Asset = function (resource_id, data, prefix) {
+        this.resourceId = resource_id;
+        pc.extend(this, data);
+        this.prefix = prefix || "";
     };
     
     Asset.prototype.getFileUrl = function () {
@@ -32,7 +16,7 @@ pc.extend(pc.fw, function () {
     };
     
     Asset.prototype.getSubAssetFileUrl = function (i) {
-        var url = this.subasset_files[i].url;
+        var url = this.subfiles[i].url;
         var prefix = "";
         // Non-exported files use the Corazon API to load, so they need an added prefix
         if (this.prefix) {

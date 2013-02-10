@@ -4,6 +4,45 @@
  */
 pc.gfx = {
     /**
+     * @enum pc.gfx.ADDRESS
+     * @name pc.gfx.ADDRESS_REPEAT
+     * @description Ignores the integer part of texture coordinates, using only the fractional part.
+     */
+    ADDRESS_REPEAT: 0,
+    /**
+     * @enum pc.gfx.ADDRESS
+     * @name pc.gfx.ADDRESS_CLAMP_TO_EDGE
+     * @description Clamps texture coordinate to the range 0 to 1.
+     */
+    ADDRESS_CLAMP_TO_EDGE: 1,
+    /**
+     * @enum pc.gfx.ADDRESS
+     * @name pc.gfx.ADDRESS_MIRRORED_REPEAT
+     * @description Texture coordinate to be set to the fractional part if the integer part is even; if the integer part is odd,
+     * then the texture coordinate is set to 1 minus the fractional part.
+     */
+    ADDRESS_MIRRORED_REPEAT: 2,
+
+    /**
+     * @enum pc.gfx.BUFFER
+     * @name pc.gfx.BUFFER_STATIC
+     * @description The data store contents will be modified once and used many times.
+     */
+    BUFFER_STATIC: 0,
+    /**
+     * @enum pc.gfx.BUFFER
+     * @name pc.gfx.BUFFER_DYNAMIC
+     * @description The data store contents will be modified repeatedly and used many times.
+     */
+    BUFFER_DYNAMIC: 1,
+    /**
+     * @enum pc.gfx.BUFFER
+     * @name pc.gfx.BUFFER_STREAM
+     * @description The data store contents will be modified once and used at most a few times.
+     */
+    BUFFER_STREAM: 2,
+
+    /**
      * @enum pc.gfx.CLEARFLAG
      * @name pc.gfx.CLEARFLAG_COLOR
      * @description Clear the color buffer
@@ -22,20 +61,61 @@ pc.gfx = {
      */
     CLEARFLAG_STENCIL: 4,
 
+    /**
+     * @enum pc.gfx.FILTER
+     * @name pc.gfx.FILTER_NEAREST
+     * @description Point sample filtering.
+     */
+    FILTER_NEAREST: 0,
+    /**
+     * @enum pc.gfx.FILTER
+     * @name pc.gfx.FILTER_LINEAR
+     * @description Bilinear filtering.
+     */
+    FILTER_LINEAR: 1,
+    /**
+     * @enum pc.gfx.FILTER
+     * @name pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST
+     * @description Use the nearest neighbor in the nearest mipmap level.
+     */
+    FILTER_NEAREST_MIPMAP_NEAREST: 2,
+    /**
+     * @enum pc.gfx.FILTER
+     * @name pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR
+     * @description Linearly interpolate in the nearest mipmap level.
+     */
+    FILTER_NEAREST_MIPMAP_LINEAR: 3,
+    /**
+     * @enum pc.gfx.FILTER
+     * @name pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST
+     * @description Use the nearest neighbor after linearly interpolating between mipmap levels.
+     */
+    FILTER_LINEAR_MIPMAP_NEAREST: 4,
+    /**
+     * @enum pc.gfx.FILTER
+     * @name pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
+     * @description Linearly interpolate both the mipmap levels and between texels.
+     */
+    FILTER_LINEAR_MIPMAP_LINEAR: 5,
 
     /**
-     * @enum pc.gfx.TEXTURELOCK
-     * @name pc.gfx.TEXTURELOCK_READ
-     * @description Read only. Any changes to the locked mip level's pixels will not update the texture.
+     * @enum pc.gfx.INDEXFORMAT
+     * @name pc.gfx.INDEXFORMAT_UINT8
+     * @description 8-bit unsigned vertex indices.
      */
-    TEXTURELOCK_READ: 1,
+    INDEXFORMAT_UINT8: 0,
     /**
-     * @enum pc.gfx.TEXTURELOCK
-     * @name pc.gfx.TEXTURELOCK_WRITE
-     * @description Write only. The contents of the specified mip level will be entirely replaced.
+     * @enum pc.gfx.INDEXFORMAT
+     * @name pc.gfx.INDEXFORMAT_UINT16
+     * @description 16-bit unsigned vertex indices.
      */
-    TEXTURELOCK_WRITE: 2,
-
+    INDEXFORMAT_UINT16: 1,
+    /**
+     * @enum pc.gfx.INDEXFORMAT
+     * @name pc.gfx.INDEXFORMAT_UINT32
+     * @description 32-bit unsigned vertex indices.
+     */
+    INDEXFORMAT_UINT32: 2,
 
     /**
      * @enum pc.gfx.PIXELFORMAT
@@ -104,62 +184,29 @@ pc.gfx = {
      */
     PIXELFORMAT_DXT5: 10,
 
+    /**
+     * @enum pc.gfx.SHADERTYPE
+     * @name pc.gfx.SHADERTYPE_VERTEX
+     * @description A vertex shader.
+     */
+    SHADERTYPE_VERTEX: 0,
+    /**
+     * @enum pc.gfx.SHADERTYPE
+     * @name pc.gfx.SHADERTYPE_FRAGMENT
+     * @description A fragment shader.
+     */
+    SHADERTYPE_FRAGMENT: 1,
 
     /**
-     * @enum pc.gfx.ADDRESS
-     * @name pc.gfx.ADDRESS_REPEAT
-     * @description Ignores the integer part of texture coordinates, using only the fractional part.
+     * @enum pc.gfx.TEXTURELOCK
+     * @name pc.gfx.TEXTURELOCK_READ
+     * @description Read only. Any changes to the locked mip level's pixels will not update the texture.
      */
-    ADDRESS_REPEAT: 0,
+    TEXTURELOCK_READ: 1,
     /**
-     * @enum pc.gfx.ADDRESS
-     * @name pc.gfx.ADDRESS_CLAMP_TO_EDGE
-     * @description Clamps texture coordinate to the range 0 to 1.
+     * @enum pc.gfx.TEXTURELOCK
+     * @name pc.gfx.TEXTURELOCK_WRITE
+     * @description Write only. The contents of the specified mip level will be entirely replaced.
      */
-    ADDRESS_CLAMP_TO_EDGE: 1,
-    /**
-     * @enum pc.gfx.ADDRESS
-     * @name pc.gfx.ADDRESS_MIRRORED_REPEAT
-     * @description Texture coordinate to be set to the fractional part if the integer part is even; if the integer part is odd,
-     * then the texture coordinate is set to 1 minus the fractional part.
-     */
-    ADDRESS_MIRRORED_REPEAT: 2,
-
-
-    /**
-     * @enum pc.gfx.FILTER
-     * @name pc.gfx.FILTER_NEAREST
-     * @description Point sample filtering.
-     */
-    FILTER_NEAREST: 0,
-    /**
-     * @enum pc.gfx.FILTER
-     * @name pc.gfx.FILTER_LINEAR
-     * @description Bilinear filtering.
-     */
-    FILTER_LINEAR: 1,
-    /**
-     * @enum pc.gfx.FILTER
-     * @name pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST
-     * @description Use the nearest neighbor in the nearest mipmap level.
-     */
-    FILTER_NEAREST_MIPMAP_NEAREST: 2,
-    /**
-     * @enum pc.gfx.FILTER
-     * @name pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR
-     * @description Linearly interpolate in the nearest mipmap level.
-     */
-    FILTER_NEAREST_MIPMAP_LINEAR: 3,
-    /**
-     * @enum pc.gfx.FILTER
-     * @name pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST
-     * @description Use the nearest neighbor after linearly interpolating between mipmap levels.
-     */
-    FILTER_LINEAR_MIPMAP_NEAREST: 4,
-    /**
-     * @enum pc.gfx.FILTER
-     * @name pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
-     * @description Linearly interpolate both the mipmap levels and between texels.
-     */
-    FILTER_LINEAR_MIPMAP_LINEAR: 5
+    TEXTURELOCK_WRITE: 2
 };

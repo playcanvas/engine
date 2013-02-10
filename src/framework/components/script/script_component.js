@@ -42,7 +42,6 @@ pc.extend(pc.fw, function () {
 
         onSetUrls: function(name, oldValue, newValue) {
             var urls = newValue;
-            var prefix = pc.content.source || "";
 
             var options = {
                 batch: this.entity.getRequestBatch()
@@ -51,7 +50,7 @@ pc.extend(pc.fw, function () {
             if (!this.system._inTools || this.runInTools) {
                 // Load and register new scripts and instances
                 urls.forEach(function (url, index, arr) {
-                    var url = new pc.URI(pc.path.join(prefix, urls[index].trim())).toString();
+                    var url = urls[index].trim();
                     this.system.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
                         var ScriptType = resources[url];
 

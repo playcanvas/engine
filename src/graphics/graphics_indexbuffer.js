@@ -1,37 +1,42 @@
-/**
- * Constants for index buffer data format.
- * @enum {number}
- */
-pc.gfx.IndexFormat = {
-    /** 8-bit unsigned per index. */
-    UINT8: 0,
-    /** 16-bit unsigned per index. */
-    UINT16: 1
-};
-
 pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.IndexBuffer
      * @class An index buffer is the mechanism via which the application specifies vertex 
      * index data to the graphics hardware.
-     * @param {pc.gfx.IndexFormat} format The type of each index to be stored in the index buffer.
+     * @param {Number} format The type of each index to be stored in the index buffer (see pc.gfx.INDEXFORMAT_*).
      * @param {Number} numIndices The number of indices to be stored in the index buffer.
+     * @param {Number} [usage] The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
      */
-    var IndexBuffer = function (format, numIndices) {
-        var gl = pc.gfx.Device.getCurrent().gl;
+    var IndexBuffer = function (format, numIndices, usage) {
+        // Initialize optional parameters
+        // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
+        this.usage = usage || pc.gfx.BUFFER_STATIC;
 
         // Store the index format
         this.format = format;
-        this.glFormat = (format === pc.gfx.IndexFormat.UINT8) ? gl.UNSIGNED_BYTE : gl.UNSIGNED_SHORT;
 
-        // Store the number of indicies
+        // Store the number of indices
         this.numIndices = numIndices;
 
         // Create the WebGL buffer
+        this.gl = pc.gfx.Device.getCurrent().gl;
+
+        var gl = this.gl;
         this.bufferId = gl.createBuffer();
 
         // Allocate the storage
-        var bytesPerIndex = (format === pc.gfx.IndexFormat.UINT8) ? 1 : 2;
+        var bytesPerIndex;
+        if (format === pc.gfx.INDEXFORMAT_UINT8) {
+            bytesPerIndex = 1;
+            this.glFormat = gl.UNSIGNED_BYTE;
+        } else if (format === pc.gfx.INDEXFORMAT_UINT16) {
+            bytesPerIndex = 2;
+            this.glFormat = gl.UNSIGNED_SHORT;
+        } else if (format === pc.gfx.INDEXFORMAT_UINT32) {
+            bytesPerIndex = 4;
+            this.glFormat = gl.UNSIGNED_INT;
+        }
+
         var numBytes = this.numIndices * bytesPerIndex;
         this.storage = new ArrayBuffer(numBytes);
     };
@@ -39,9 +44,20 @@ pc.extend(pc.gfx, function () {
     IndexBuffer.prototype = {
         /**
          * @function
+         * @name pc.gfx.IndexBuffer#destroy
+         * @description Frees resources associated with this index buffer.
+         * @author Will Eastcott
+         */
+        destroy: function () {
+            var gl = this.gl;
+            gl.deleteBuffer(this.bufferId);
+        },
+
+        /**
+         * @function
          * @name pc.gfx.IndexBuffer#getFormat
          * @description Returns the data format of the specified index buffer.
-         * @returns {pc.gfx.IndexFormat} The data format of the specified index buffer.
+         * @returns {Number} The data format of the specified index buffer (see pc.gfx.INDEXFORMAT_*).
          * @author Will Eastcott
          */
         getFormat: function () {
@@ -80,9 +96,22 @@ pc.extend(pc.gfx, function () {
          */
         unlock: function () {
             // Upload the new index data
-            var gl = pc.gfx.Device.getCurrent().gl;
+            var gl = this.gl;
+            var glUsage;
+            switch (this.usage) {
+                case pc.gfx.BUFFER_STATIC:
+                    glUsage = gl.STATIC_DRAW;
+                    break;
+                case pc.gfx.BUFFER_DYNAMIC:
+                    glUsage = gl.DYNAMIC_DRAW;
+                    break;
+                case pc.gfx.BUFFER_STREAM:
+                    glUsage = gl.STREAM_DRAW;
+                    break;
+            }
+
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, gl.STATIC_DRAW);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, glUsage);
         }
     }
 

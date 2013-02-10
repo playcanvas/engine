@@ -27,7 +27,7 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.VertexElement
      * @class An attribute stored in a vertex buffer. Positions, normals, texture coordinates
      * and vertex colors are all examples of vertex elements.
-     * @param {pc.gfx.ShaderType} name The name of the vertex element as referenced by any shaders.
+     * @param {String} name The name of the vertex element as referenced by any shaders.
      * @param {Number} numComponents The number of distinct components in this particular element.
      * @param {pc.gfx.VertexElementType} dataType The type of each element component.
      * @param {Boolean} normalize If true, map integer values to the range 0 to 1, otherwise leave

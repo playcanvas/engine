@@ -103,7 +103,7 @@ pc.extend(pc.fw, function () {
             vertexData[(i+16)*3+2] = posRot[2];
         }
         // Copy vertex data into the vertex buffer
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 32, pc.gfx.VertexBufferUsage.STATIC);
+        var vertexBuffer = new pc.gfx.VertexBuffer(format, 32);
         var positions = new Float32Array(vertexBuffer.lock());
         for (var i = 0; i < vertexData.length; i++) {
             positions[i] = vertexData[i];
