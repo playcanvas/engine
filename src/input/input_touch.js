@@ -135,22 +135,18 @@ pc.extend(pc.input, function () {
 
         _handleTouchStart: function (e) {
             this.fire('touchstart', new TouchEvent(this, e));
-            e.preventDefault();
         },
 
         _handleTouchEnd: function (e) {
             this.fire('touchend', new TouchEvent(this, e));
-            e.preventDefault();
         },
 
         _handleTouchMove: function (e) {
             this.fire('touchmove', new TouchEvent(this, e));
-            e.preventDefault();
         },
 
         _handleTouchCancel: function (e) {
             this.fire('touchcancel', new TouchEvent(this, e));
-            e.preventDefault();
         }       
     };
 
