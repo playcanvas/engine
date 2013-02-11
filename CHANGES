@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.96.2
+-------
+* [FIX] No longer call preventDefault() in TouchDevice event handling. User should call it themselves.
+
+-------
 v0.96.1
 -------
 * [FIX] Make sure physics libraries are loaded before loading Entities
