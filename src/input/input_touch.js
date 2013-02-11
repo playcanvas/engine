@@ -193,9 +193,13 @@ pc.extend(pc.input, function () {
             var canvasX = 0;
             var canvasY = 0;
             var currentElement = touch.target;
-            
-            var scaleX = currentElement.width / currentElement.offsetWidth;
-            var scaleY = currentElement.height / currentElement.offsetHeight;
+            var scaleX = 1;
+            var scaleY = 1;
+
+            if (typeof(currentElement.width) === 'number' && typeof(currentElement.height) === 'number') {
+                scaleX = currentElement.width / currentElement.offsetWidth;
+                scaleY = currentElement.height / currentElement.offsetHeight;
+            }
             
             do{
                 totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
