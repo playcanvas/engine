@@ -192,10 +192,11 @@ pc.extend(pc.input, function () {
             var totalOffsetY = 0;
             var canvasX = 0;
             var canvasY = 0;
-            var currentElement = touch.target;
-            while (!(currentElement instanceof HTMLElement)) {
-                currentElement = currentElement.parentNode
+            var target = touch.target
+            while (!(target instanceof HTMLElement)) {
+                target = target.parentNode
             }
+            var currentElement = target;
             var scaleX = 1;
             var scaleY = 1;
 
@@ -210,7 +211,7 @@ pc.extend(pc.input, function () {
             } while(currentElement = currentElement.offsetParent)
         
             canvasX = touch.pageX - totalOffsetX;
-            canvasY = touch.target.offsetHeight - (touch.pageY - totalOffsetY);
+            canvasY = target.offsetHeight - (touch.pageY - totalOffsetY);
 
             return {
                 x: canvasX * scaleX, 
