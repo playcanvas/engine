@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.96.6
+-------
+* [FIX] Use parentNode value for element if touch event lands on an SVG element. [Properly this time]
+
+-------
 v0.96.5
 -------
 * [FIX] Use parentNode value for element if touch event lands on an SVG element.
