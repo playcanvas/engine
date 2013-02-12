@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.96.4
+-------
+* [FIX] Fix so that touch position is not null in Firefox when using SVG elements
+
+-------
 v0.96.3
 -------
 * [FIX] Fix to touch events when attached to elements without width and height attributes (i.e. not the canvas)

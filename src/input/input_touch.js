@@ -201,11 +201,10 @@ pc.extend(pc.input, function () {
                 scaleY = currentElement.height / currentElement.offsetHeight;
             }
             
-            do{
-                totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
-                totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-            }
-            while(currentElement = currentElement.offsetParent)
+            do {
+                totalOffsetX += (currentElement.offsetLeft !== undefined ? currentElement.offsetLeft : 0) - currentElement.scrollLeft;
+                totalOffsetY += (currentElement.offsetTop !== undefined ? currentElement.offsetTop : 0) - currentElement.scrollTop;
+            } while(currentElement = currentElement.offsetParent)
         
             canvasX = touch.pageX - totalOffsetX;
             canvasY = touch.target.offsetHeight - (touch.pageY - totalOffsetY);
