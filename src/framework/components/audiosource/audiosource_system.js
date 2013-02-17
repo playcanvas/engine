@@ -96,7 +96,6 @@ pc.extend(pc.fw, function () {
         
         this.manager = manager;
         
-        //this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on('initialize', this.onInitialize, this);
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
     };
@@ -144,9 +143,9 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-         * @name pc.fw.AudioSourceSystem#setVolume()
+         * @name pc.fw.AudioSourceComponentSystem#setVolume()
          * @function
-         * @description Set the volume for the entire AudioSource system. All sources will have their volume multiplied by this value.
+         * @description Set the volume for the entire AudioSource system. All sources will have their volume multiplied by this value
          * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
          */
         setVolume: function (volume) {
