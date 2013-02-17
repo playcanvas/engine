@@ -79,9 +79,6 @@ pc.extend(pc.fw, function () {
                 min: 0
             }
         }, {
-            name: "paused",
-            exposed: false
-        }, {
             name: "sources",
             exposed: false,
             readOnly: true
@@ -144,6 +141,16 @@ pc.extend(pc.fw, function () {
                     }
                 }
             }
+        },
+
+        /**
+         * @name pc.fw.AudioSourceSystem#setVolume()
+         * @function
+         * @description Set the volume for the entire AudioSource system. All sources will have their volume multiplied by this value.
+         * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
+         */
+        setVolume: function (volume) {
+            this.manager.setVolume(volume);
         }
     });
     
