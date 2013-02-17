@@ -30,13 +30,15 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.AudioSourceComponent#play
         * @description Begin playback of an audio asset in the component attached to an entity
-        * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
         * @param {String} name The name of the Asset to play
         */
         play: function(name) {
-            this.entity.paused = false;
+            if (this.channel) {
+                // If we are currently playing a channel, stop it.
+                this.stop();
+            }
 
-            var componentData = this.data;
+            var componentData = this.data;            
             if(componentData['sources'][name]) {
                 if (!componentData['3d']) {
                     var channel = this.system.manager.playSound(componentData['sources'][name], componentData);
@@ -54,10 +56,9 @@ pc.extend(pc.fw, function () {
         /**
         * @function
         * @name pc.fw.AudioSourceComponent#pause
-        * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling play()
-        * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
+        * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.fw.AudioSourceComponent#unpause}
         */
-        pause: function(entity) {
+        pause: function() {
             if (this.channel) {
                 this.channel.pause();    
             }
@@ -65,26 +66,27 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
+        * @name pc.fw.AudioSourceComponent#unpause
+        * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
+        */
+        unpause: function () {
+            if (this.channel && this.channel.paused) {
+                this.channel.unpause();
+            }
+        },
+
+        /**
+        * @function
         * @name pc.fw.AudioSourceComponent#stop
         * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
-        * @param {pc.fw.Entity} entity Then entity which has an AudioSource Component
         */
-        stop: function(entity) {
+        stop: function() {
             if(this.channel) {
-                this.channel.stop();    
+                this.channel.stop();
+                this.channel = null;
             }
         },
             
-        /**
-         * @name pc.fw.AudioSourceComponent#setVolume()
-         * @function
-         * @description Set the volume for the entire AudioSource system. All sources will have their volume limited to this value
-         * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0
-         */
-        setVolume: function(value) {
-            this.system.manager.setVolume(value);
-        },
-        
         onSetAssets: function (name, oldValue, newValue) {
             var componentData = this.data
             var newAssets = [];

@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.97.0
+-------
+* Add pc.fw.AudioSourceComponent#unpause() to resume playback from paused (instead of using play() which starts from the beginning of the sound)
+* [FIX] Tabbing away correctly suspends audio in Firefox
+
+-------
 v0.96.6
 -------
 * [FIX] Use parentNode value for element if touch event lands on an SVG element. [Properly this time]
