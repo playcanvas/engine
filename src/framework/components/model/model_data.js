@@ -1,7 +1,8 @@
 pc.extend(pc.fw, function() {
     
     /**
-    * @name pc.fw.ModeComponentData
+    * @private
+    * @name pc.fw.ModelComponentData
     * @class Data for a {@link pc.fw.ModelComponent}
     * @constructor Create a new data object
     * @property {String} asset The GUID of the asset for the model

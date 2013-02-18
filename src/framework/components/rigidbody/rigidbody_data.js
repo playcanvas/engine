@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+    * @private
     * @name pc.fw.RigidBodyComponentData
     * @constructor Create a new data structure for a RigidBodyComponent
     * @class Contains data for the RigidBodyComponent

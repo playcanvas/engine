@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @name pc.fw.CollisionSphereComponentData
      * @constructor Create a new CollisionSphereComponentData
      * @class A sphere-shaped collision volume. Use in conjunction with {@link pc.fw.RigidBodyComponent} to create a sphere that can be simulated using the physics engine.

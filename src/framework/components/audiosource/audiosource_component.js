@@ -2,7 +2,8 @@ pc.extend(pc.fw, function () {
     /**
      * @component
      * @name pc.fw.AudioSourceComponent
-     * @constructor The AudioSource Component controls playback of an audio sample
+     * @class The AudioSource Component controls playback of an audio sample.
+     * @constructor Create a new AudioSource Component
      * @param {pc.fw.AudioSourceComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The entity that the Component is attached to
      * @extends pc.fw.Component

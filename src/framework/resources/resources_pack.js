@@ -113,10 +113,17 @@ pc.extend(pc.resources, function () {
 
         return entity;
     }
+
     /**
-    * @name pc.fw.PackRequest
+    * @name pc.resources.PackRequest
     * @class Make a request for a Pack resource
     * @param {String} identifier GUID that identifies the Pack on the server
+    * @example
+    * var guid = ...; // get pack GUID from somewhere
+    * var r = new pc.resources.PackRequest(guid);
+    * context.loader.request(r, function (resources) {
+    *     var pack = resources[guid];
+    * });
     */
     var PackRequest = function PackRequest(identifier) {
     }

@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @name pc.fw.CameraComponentData
      * @class ComponentData structure for Camera components.
      * @extends pc.fw.ComponentData
