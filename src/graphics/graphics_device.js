@@ -405,6 +405,8 @@ pc.extend(pc.gfx, function () {
         this.boundBuffer = null;
 
         this.precalculatedTangents = true;
+
+        this.textureUnits = [];
     };
 
     /**
@@ -472,6 +474,10 @@ pc.extend(pc.gfx, function () {
 
             // Set the render target
             this.renderTarget.bind();
+
+            for (var i = 0; i < 16; i++) {
+                this.textureUnits[i] = null;
+            }
         },
 
         /**
@@ -765,20 +771,23 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.Device#commitSamplers
          * @author Will Eastcott
          */
-        // Handle textures differently, as it's probably safer
-        // to always set them rather than try to track which
-        // one is currently set!
         commitSamplers: function () {
-            var i, len, sampler, textureUnit = 0;
-            var samplers = this.program.samplers;
             var gl = this.gl;
+            var i, len, sampler, value;
+            var samplers = this.program.samplers;
 
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
-
-                gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                sampler.scopeId.value.bind();
-                gl.uniform1i(sampler.locationId, textureUnit++);
+                texture = sampler.scopeId.value;
+                if (this.textureUnits[i] !== texture) {
+                    gl.activeTexture(gl.TEXTURE0 + i);
+                    texture.bind();
+                    this.textureUnits[i] = texture;
+                }
+                if (sampler.slot !== i) {
+                    gl.uniform1i(sampler.locationId, i);
+                    sampler.slot = i;
+                }
             }
         },
 

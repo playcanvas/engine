@@ -1,5 +1,6 @@
 pc.extend(pc.resources, function () {
     /**
+     * @private
      * @name pc.resources.EntityResourceHandler
      * @class Handle requests for Entity resources
      */
