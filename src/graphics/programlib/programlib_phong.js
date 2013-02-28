@@ -298,7 +298,7 @@ pc.gfx.programlib.phong = {
 
                 for (i = 0; i < totalLights; i++) {
                     if (i < totalDirs) {
-                        code += "    vLight" + i + "DirW = tbnMatrix * (-light" + i + "_direction);\n";
+                        code += "    vLight" + i + "DirW = -(tbnMatrix * light" + i + "_direction);\n";
                     }
                     if (i >= totalDirs) {
                         code += "    vLight" + i + "DirW = tbnMatrix * (light" + i + "_position - positionW.xyz);\n";
