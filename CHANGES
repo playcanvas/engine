@@ -3,7 +3,7 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
-v0.98.0
+v0.98.1
 -------
 * Added pc.audio.Channel#getDuration() to safely access the duration of the audio clip
 * Added pc.string.toBool() to convert a string value to a boolean value
