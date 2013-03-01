@@ -153,6 +153,15 @@ pc.extend(pc.audio, function () {
                 return (!this.paused && (this.source.playbackState === this.source.PLAYING_STATE));
             },
 
+            getDuration: function () {
+                if (this.source) {
+                    return this.source.buffer.duration
+                }
+                else {
+                    return 0;
+                }
+            },
+
             _createSource: function () {
                 var source = this.manager.context.createBufferSource();
                 source.buffer = this.sound.buffer;
@@ -212,9 +221,9 @@ pc.extend(pc.audio, function () {
                     this.source.currentTime = 0;
                 }
 
-                this.manager.on('volumechange', this.onManagerVolumeChange, this)
-                this.manager.on('suspend', this.onManagerSuspend, this);
-                this.manager.on('resume', this.onManagerResume, this);
+                this.manager.off('volumechange', this.onManagerVolumeChange, this)
+                this.manager.off('suspend', this.onManagerSuspend, this);
+                this.manager.off('resume', this.onManagerResume, this);
             },
             
             setVolume: function (volume) {
@@ -229,6 +238,18 @@ pc.extend(pc.audio, function () {
                 if (this.source) {
                     this.source.loop = loop;
                 }
+            },
+
+            getDuration: function () {
+                if (this.source) {
+                    var d = this.source.duration;
+                    if (d === d) {
+                        // Not NaN
+                        return d;
+                    }
+                }
+
+                return 0;
             },
 
             isPlaying: function () {
