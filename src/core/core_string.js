@@ -77,8 +77,25 @@ pc.string = function () {
         */
         endsWith: function (s, subs) {
             return (s.lastIndexOf(subs, s.length - subs.length) !== -1);    
-        }
+        },
 
+        /**
+        * @function
+        * @name pc.string.toBool
+        * @description Convert a string value to a boolean. 'true' is converted to true, 'false' is converted to false,
+        * all other values will throw an Exception.
+        * @param {String} s The string to convert
+        * @returns {Boolean} The converted value
+        */
+        toBool: function (s) {
+            if (s === 'true') {
+                return true;
+            } else if (s === 'false') {
+                return false;
+            }
+
+            throw new Exception('Not a boolean string');
+        }
     };
 } ();
 
