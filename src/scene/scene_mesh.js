@@ -8,7 +8,7 @@ pc.extend(pc.scene, function () {
         // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
         // 0 - 24  : Material ID (if oqaque) or 0 (if transparent - will be depth)
         return ((layer & 0x7) << 28) |
-               ((blendType ? 0 : 3) << 26) |
+               ((blendType & 0x3) << 26) |
                ((isCommand ? 1 : 0) << 25) |
                ((materialId & 0x1ffffff) << 0);
     }
@@ -34,7 +34,6 @@ pc.extend(pc.scene, function () {
 
         // Render options
         this.layer = pc.scene.LAYER_WORLD;
-        this.blendType = material.transparent ? pc.scene.BLEND_NORMAL : pc.scene.BLEND_NONE;
         this.renderStyle = pc.scene.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this.receiveShadow = true;
@@ -56,7 +55,7 @@ pc.extend(pc.scene, function () {
 
         updateKey: function () {
             var material = this.material;
-            this.key = getKey(this.layer, this.blendType, false, material.id);
+            this.key = getKey(this.layer, material.blendType, false, material.id);
         }
     };
 

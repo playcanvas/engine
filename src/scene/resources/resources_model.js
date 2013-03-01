@@ -305,9 +305,13 @@ pc.extend(pc.resources, function () {
                     break;
                 case 'material_opacity':
                     material.opacity = param.data;
+                    if (material.opacity < 1) {
+                        material.blendType = pc.scene.BLEND_NORMAL;
+                    }
                     break;
                 case 'texture_opacityMap': 
-                    material.opacityMap = model.getTextures()[param.data]; 
+                    material.opacityMap = model.getTextures()[param.data];
+                    material.blendType = pc.scene.BLEND_NORMAL;
                     break;
                 case 'texture_opacityMapTransform': 
                     material.opacityMapTransform = pc.math[param.type].clone(param.data); 
@@ -1179,9 +1183,13 @@ pc.extend(pc.resources, function () {
                         break;
                     case 'material_opacity':
                         material.opacity = param.data;
+                        if (material.opacity < 1) {
+                            material.blendType = pc.scene.BLEND_NORMAL;
+                        }
                         break;
                     case 'texture_opacityMap': 
                         material.opacityMap = param.data;
+                        material.blendType = pc.scene.BLEND_NORMAL;
                         break;
                     case 'texture_opacityMapTransform': 
                         material.opacityMapTransform = param.data;

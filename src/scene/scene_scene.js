@@ -3,10 +3,10 @@
  * @namespace High level Graphics API
  */
 pc.scene = {
-    BLEND_NONE: 0,
-    BLEND_NORMAL: 1,
-    BLEND_ADDITIVE: 2,
-    BLEND_SUBTRACTIVE: 3,
+    BLEND_SUBTRACTIVE: 0,
+    BLEND_ADDITIVE: 1,
+    BLEND_NORMAL: 2,
+    BLEND_NONE: 3,
 
     RENDERSTYLE_SOLID: 0,
     RENDERSTYLE_WIREFRAME: 1,

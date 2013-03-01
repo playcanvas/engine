@@ -263,8 +263,8 @@ pc.extend(pc.gfx, function () {
         gl.cullFace(gl.BACK);
         gl.frontFace(gl.CCW);
 
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.disable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ZERO);
 
         gl.enable(gl.SCISSOR_TEST);
 
@@ -277,8 +277,8 @@ pc.extend(pc.gfx, function () {
             return {
                 alphaTest: false,
                 alphaRef: 0.0,
-                blend: true,
-                blendModes: { srcBlend: pc.gfx.BlendMode.SRC_ALPHA, dstBlend: pc.gfx.BlendMode.ONE_MINUS_SRC_ALPHA },
+                blend: false,
+                blendModes: { srcBlend: pc.gfx.BlendMode.ONE, dstBlend: pc.gfx.BlendMode.ZERO },
                 colorWrite: { red: true, green: true, blue: true, alpha: true },
                 cull: true,
                 depthTest: true,
