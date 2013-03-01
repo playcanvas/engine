@@ -186,7 +186,7 @@ pc.extend(pc.scene, function () {
         var mesh = new pc.scene.Mesh();
         mesh.vertexBuffer = vertexBuffer;
         mesh.indexBuffer[0] = indexBuffer;
-        mesh.primitive[0].type = pc.gfx.PrimType.TRIANGLES;
+        mesh.primitive[0].type = pc.gfx.PRIMITIVE_TRIANGLES;
         mesh.primitive[0].base = 0;
         mesh.primitive[0].count = indexBuffer.getNumIndices();
         mesh.primitive[0].indexed = true;
@@ -216,7 +216,7 @@ pc.extend(pc.scene, function () {
         material.setState({
             cull: false,
             blend: true,
-            blendModes: { srcBlend: pc.gfx.BlendMode.SRC_ALPHA, dstBlend: pc.gfx.BlendMode.ONE },
+            blendModes: { srcBlend: pc.gfx.BLENDMODE_SRC_ALPHA, dstBlend: pc.gfx.BLENDMODE_ONE },
             depthWrite: false
         });
 

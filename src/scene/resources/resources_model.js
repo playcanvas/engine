@@ -8,11 +8,11 @@ pc.extend(pc.resources, function () {
         this._textureCache = textureCache;
 
         this._jsonToPrimitiveType = {
-            "points":         pc.gfx.PrimType.POINTS,
-            "lines":          pc.gfx.PrimType.LINES,
-            "linestrip":      pc.gfx.PrimType.LINE_STRIP,
-            "triangles":      pc.gfx.PrimType.TRIANGLES,
-            "trianglestrip":  pc.gfx.PrimType.TRIANGLE_STRIP
+            "points":         pc.gfx.PRIMITIVE_POINTS,
+            "lines":          pc.gfx.PRIMITIVE_LINES,
+            "linestrip":      pc.gfx.PRIMITIVE_LINE_STRIP,
+            "triangles":      pc.gfx.PRIMITIVE_TRIANGLES,
+            "trianglestrip":  pc.gfx.PRIMITIVE_TRIANGLE_STRIP
         }
 
         this._jsonToVertexElementType = {

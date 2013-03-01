@@ -1,26 +1,13 @@
-/**
- * @enum {Number}
- * @name pc.gfx.PrimType
- * @description Constants for primitive type.
- */
+// DEPRECATED! See pc.gfx.PRIMITIVE_
 pc.gfx.PrimType = {
-    /** List of distinct points. */
     POINTS: 0,
-    /** Discrete list of line segments. */
     LINES: 1,
-    /** List of points that are linked sequentially by line segments. */
     LINE_STRIP: 2,
-    /** Discrete list of triangles. */
     TRIANGLES: 3,
-    /** Connected strip of triangles where a specified vertex forms a triangle using the previous two. */
     TRIANGLE_STRIP: 4
 };
 
-/**
- * @enum {Number}
- * @name pc.gfx.BlendMode
- * @description Constants for blending modes.
- */
+// DEPRECATED! See pc.gfx.BLENDMODE_
 pc.gfx.BlendMode = {
     ZERO: 0,
     ONE: 1,
@@ -278,7 +265,7 @@ pc.extend(pc.gfx, function () {
                 alphaTest: false,
                 alphaRef: 0.0,
                 blend: false,
-                blendModes: { srcBlend: pc.gfx.BlendMode.ONE, dstBlend: pc.gfx.BlendMode.ZERO },
+                blendModes: { srcBlend: pc.gfx.BLENDMODE_ONE, dstBlend: pc.gfx.BLENDMODE_ZERO },
                 colorWrite: { red: true, green: true, blue: true, alpha: true },
                 cull: true,
                 depthTest: true,
@@ -496,14 +483,14 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.Device#draw
          * @description Submits a graphical primitive to the hardware for immediate rendering.
          * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
-         * @param {pc.gfx.PrimType} primitive.type The type of primitive to render.
+         * @param {pc.gfx.PRIMITIVE} primitive.type The type of primitive to render.
          * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
          * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
          * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
          * @example
          * // Render a single, unindexed triangle
          * device.draw({
-         *     type: pc.gfx.PrimType.TRIANGLES,
+         *     type: pc.gfx.PRIMITIVE_TRIANGLES,
          *     base: 0,
          *     count: 3,
          *     indexed: false

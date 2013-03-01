@@ -24,6 +24,73 @@ pc.gfx = {
     ADDRESS_MIRRORED_REPEAT: 2,
 
     /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_ZERO
+     * @description Multiply all fragment components by zero.
+     */
+    BLENDMODE_ZERO: 0,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_ONE
+     * @description Multiply all fragment components by one.
+     */
+    BLENDMODE_ONE: 1,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_SRC_COLOR
+     * @description Multiply all fragment components by the components of the source fragment.
+     */
+    BLENDMODE_SRC_COLOR: 2,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_ONE_MINUS_SRC_COLOR
+     * @description Multiply all fragment components by one minus the components of the source fragment.
+     */
+    BLENDMODE_ONE_MINUS_SRC_COLOR: 3,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_DST_COLOR
+     * @description Multiply all fragment components by the components of the destination fragment.
+     */
+    BLENDMODE_DST_COLOR: 4,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_ONE_MINUS_DST_COLOR
+     * @description Multiply all fragment components by one minus the components of the destination fragment.
+     */
+    BLENDMODE_ONE_MINUS_DST_COLOR: 5,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_SRC_ALPHA
+     * @description Multiply all fragment components by the alpha value of the source fragment.
+     */
+    BLENDMODE_SRC_ALPHA: 6,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_SRC_ALPHA_SATURATE
+     * @description Multiply all fragment components by the alpha value of the source fragment.
+     */
+    BLENDMODE_SRC_ALPHA_SATURATE: 7,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA
+     * @description Multiply all fragment components by one minus the alpha value of the source fragment.
+     */
+    BLENDMODE_ONE_MINUS_SRC_ALPHA: 8,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_DST_ALPHA
+     * @description Multiply all fragment components by the alpha value of the destination fragment.
+     */
+    BLENDMODE_DST_ALPHA: 9,
+    /**
+     * @enum pc.gfx.BLENDMODE
+     * @name pc.gfx.BLENDMODE_ONE_MINUS_DST_ALPHA
+     * @description Multiply all fragment components by one minus the alpha value of the destination fragment.
+     */
+    BLENDMODE_ONE_MINUS_DST_ALPHA: 10,
+
+    /**
      * @enum pc.gfx.BUFFER
      * @name pc.gfx.BUFFER_STATIC
      * @description The data store contents will be modified once and used many times.
@@ -183,6 +250,37 @@ pc.gfx = {
      * @description Block compressed format, storing 16 input pixels into 128 bits of output, consisting of 64 bits of alpha channel data (two 8 bit alpha values and a 4x4 3 bit lookup table) followed by 64 bits of color data (encoded the same way as DXT1).
      */
     PIXELFORMAT_DXT5: 10,
+
+    /**
+     * @enum pc.gfx.PRIMITIVE
+     * @name pc.gfx.PRIMITIVE_POINTS
+     * @description List of distinct points.
+     */
+    PRIMITIVE_POINTS: 0,
+    /**
+     * @enum pc.gfx.PRIMITIVE
+     * @name pc.gfx.PRIMITIVE_LINES
+     * @description Discrete list of line segments.
+     */
+    PRIMITIVE_LINES: 1,
+    /**
+     * @enum pc.gfx.PRIMITIVE
+     * @name pc.gfx.PRIMITIVE_LINESTRIP
+     * @description List of points that are linked sequentially by line segments.
+     */
+    PRIMITIVE_LINESTRIP: 2,
+    /**
+     * @enum pc.gfx.PRIMITIVE
+     * @name pc.gfx.PRIMITIVE_TRIANGLES
+     * @description Discrete list of triangles.
+     */
+    PRIMITIVE_TRIANGLES: 3,
+    /**
+     * @enum pc.gfx.PRIMITIVE
+     * @name pc.gfx.PRIMITIVE_TRISTRIP
+     * @description Connected strip of triangles where a specified vertex forms a triangle using the previous two.
+     */
+    PRIMITIVE_TRISTRIP: 4,
 
     /**
      * @enum pc.gfx.SHADERTYPE

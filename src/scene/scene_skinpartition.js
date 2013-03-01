@@ -269,7 +269,7 @@ pc.extend(pc.scene, function () {
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = partitionedVbs[0];
             mesh.indexBuffer[0] = partitionedIb;
-            mesh.primitive[0].type = pc.gfx.PrimType.TRIANGLES;
+            mesh.primitive[0].type = pc.gfx.PRIMITIVE_TRIANGLES;
             mesh.primitive[0].base = base;
             mesh.primitive[0].count = partition.indexCount;
             mesh.primitive[0].indexed = true;

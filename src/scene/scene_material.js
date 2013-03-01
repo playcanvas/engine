@@ -20,14 +20,14 @@ pc.extend(pc.scene, function () {
     Object.defineProperty(Material.prototype, 'blendType', {
         get: function () {
             if (this._state.blendModes) {
-                if ((this._state.blendModes.srcBlend === pc.gfx.BlendMode.ONE) && 
-                    (this._state.blendModes.dstBlend === pc.gfx.BlendMode.ZERO)) {
+                if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_ONE) && 
+                    (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ZERO)) {
                     return pc.scene.BLEND_NONE;
-                } else if ((this._state.blendModes.srcBlend === pc.gfx.BlendMode.SRC_ALPHA) && 
-                           (this._state.blendModes.dstBlend === pc.gfx.BlendMode.ONE_MINUS_SRC_ALPHA)) {
+                } else if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_SRC_ALPHA) && 
+                           (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA)) {
                     return pc.scene.BLEND_NORMAL;
-                } else if ((this._state.blendModes.srcBlend === pc.gfx.BlendMode.ONE) && 
-                           (this._state.blendModes.dstBlend === pc.gfx.BlendMode.ONE)) {
+                } else if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_ONE) && 
+                           (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ONE)) {
                     return pc.scene.BLEND_ADDITIVE;
                 } else {
                     return pc.scene.BLEND_NORMAL;
@@ -41,22 +41,22 @@ pc.extend(pc.scene, function () {
                 case pc.scene.BLEND_NONE:
                     this._state.blend = false;
                     this._state.blendModes = {
-                        srcBlend: pc.gfx.BlendMode.ONE, 
-                        dstBlend: pc.gfx.BlendMode.ZERO
+                        srcBlend: pc.gfx.BLENDMODE_ONE, 
+                        dstBlend: pc.gfx.BLENDMODE_ZERO
                     };
                     break;
                 case pc.scene.BLEND_NORMAL:
                     this._state.blend = true;
                     this._state.blendModes = {
-                        srcBlend: pc.gfx.BlendMode.SRC_ALPHA,
-                        dstBlend: pc.gfx.BlendMode.ONE_MINUS_SRC_ALPHA
+                        srcBlend: pc.gfx.BLENDMODE_SRC_ALPHA,
+                        dstBlend: pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA
                     };
                     break;
                 case pc.scene.BLEND_ADDITIVE:
                     this._state.blend = true;
                     this._state.blendModes = {
-                        srcBlend: pc.gfx.BlendMode.ONE, 
-                        dstBlend: pc.gfx.BlendMode.ONE 
+                        srcBlend: pc.gfx.BLENDMODE_ONE, 
+                        dstBlend: pc.gfx.BLENDMODE_ONE 
                     };
                     break;
             }

@@ -148,7 +148,7 @@ pc.extend(pc.fw, function () {
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
                 mesh.indexBuffer[0] = this.indexBuffer;
-                mesh.primitive[0].type = pc.gfx.PrimType.LINES;
+                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = this.indexBuffer.getNumIndices();
                 mesh.primitive[0].indexed = true;
