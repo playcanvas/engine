@@ -23,7 +23,7 @@ pc.gfx.post.bloom = function () {
     var vertexBuffer = null;
 
     var quadPrimitive = {
-        type: pc.gfx.PrimType.TRIANGLE_STRIP,
+        type: pc.gfx.PRIMITIVE_TRIANGLE_STRIP,
         base: 0,
         count: 4,
         indexed: false

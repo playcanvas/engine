@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.98.2
+-------
+* Renamed enums for blend modes and primitive types.
+* Disable blending for opaque meshes.
+* Add a blend type to a material that specifies how it should blend when rendered.
+
+-------
 v0.98.1
 -------
 * Added pc.audio.Channel#getDuration() to safely access the duration of the audio clip

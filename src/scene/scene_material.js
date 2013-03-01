@@ -7,14 +7,61 @@ pc.extend(pc.scene, function () {
      */
     var Material = function Material() {
         this.name = null;
-        this.transparent = false;
         this.id = id++;
 
         this._parameters       = {};
         this._state            = {};
         this._program          = null; // Set if the material has a vanilla program attached
         this._programs         = {};   // Set from a program generator
+        
+        this.blendType = pc.scene.BLEND_NONE;
     };
+
+    Object.defineProperty(Material.prototype, 'blendType', {
+        get: function () {
+            if (this._state.blendModes) {
+                if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_ONE) && 
+                    (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ZERO)) {
+                    return pc.scene.BLEND_NONE;
+                } else if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_SRC_ALPHA) && 
+                           (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA)) {
+                    return pc.scene.BLEND_NORMAL;
+                } else if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_ONE) && 
+                           (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ONE)) {
+                    return pc.scene.BLEND_ADDITIVE;
+                } else {
+                    return pc.scene.BLEND_NORMAL;
+                }
+            } else {
+                return pc.scene.BLEND_NONE;
+            }
+        },
+        set: function (type) {
+            switch (type) {
+                case pc.scene.BLEND_NONE:
+                    this._state.blend = false;
+                    this._state.blendModes = {
+                        srcBlend: pc.gfx.BLENDMODE_ONE, 
+                        dstBlend: pc.gfx.BLENDMODE_ZERO
+                    };
+                    break;
+                case pc.scene.BLEND_NORMAL:
+                    this._state.blend = true;
+                    this._state.blendModes = {
+                        srcBlend: pc.gfx.BLENDMODE_SRC_ALPHA,
+                        dstBlend: pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA
+                    };
+                    break;
+                case pc.scene.BLEND_ADDITIVE:
+                    this._state.blend = true;
+                    this._state.blendModes = {
+                        srcBlend: pc.gfx.BLENDMODE_ONE, 
+                        dstBlend: pc.gfx.BLENDMODE_ONE 
+                    };
+                    break;
+            }
+        }
+    });
 
     /**
      * @function
@@ -169,7 +216,7 @@ pc.extend(pc.scene, function () {
     Material.prototype.setState = function (state) {
         this._state = state;
     }
-    
+
     return {
         Material: Material
     }; 

@@ -8,11 +8,11 @@ pc.extend(pc.resources, function () {
         this._textureCache = textureCache;
 
         this._jsonToPrimitiveType = {
-            "points":         pc.gfx.PrimType.POINTS,
-            "lines":          pc.gfx.PrimType.LINES,
-            "linestrip":      pc.gfx.PrimType.LINE_STRIP,
-            "triangles":      pc.gfx.PrimType.TRIANGLES,
-            "trianglestrip":  pc.gfx.PrimType.TRIANGLE_STRIP
+            "points":         pc.gfx.PRIMITIVE_POINTS,
+            "lines":          pc.gfx.PRIMITIVE_LINES,
+            "linestrip":      pc.gfx.PRIMITIVE_LINE_STRIP,
+            "triangles":      pc.gfx.PRIMITIVE_TRIANGLES,
+            "trianglestrip":  pc.gfx.PRIMITIVE_TRIANGLE_STRIP
         }
 
         this._jsonToVertexElementType = {
@@ -288,11 +288,20 @@ pc.extend(pc.resources, function () {
                 case 'texture_specularMapTransform': 
                     material.specularMapTransform = pc.math[param.type].clone(param.data); 
                     break;
+                case 'texture_specularFactorMap':
+                    material.specularFactorMap = model.getTextures()[param.data]; 
+                    break;
+                case 'texture_specularFactorMapTransform': 
+                    material.specularFactorMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
                 case 'material_shininess':
                     material.shininess = param.data;
                     break;
                 case 'texture_glossMap': 
                     material.glossMap = model.getTextures()[param.data]; 
+                    break;
+                case 'texture_glossMapTransform':
+                    material.glossMapTransform = pc.math[param.type].clone(param.data); 
                     break;
                 case 'material_emissive':
                     material.emissive = pc.math[param.type].clone(param.data); 
@@ -305,9 +314,13 @@ pc.extend(pc.resources, function () {
                     break;
                 case 'material_opacity':
                     material.opacity = param.data;
+                    if (material.opacity < 1) {
+                        material.blendType = pc.scene.BLEND_NORMAL;
+                    }
                     break;
                 case 'texture_opacityMap': 
-                    material.opacityMap = model.getTextures()[param.data]; 
+                    material.opacityMap = model.getTextures()[param.data];
+                    material.blendType = pc.scene.BLEND_NORMAL;
                     break;
                 case 'texture_opacityMapTransform': 
                     material.opacityMapTransform = pc.math[param.type].clone(param.data); 
@@ -1162,11 +1175,20 @@ pc.extend(pc.resources, function () {
                     case 'texture_specularMapTransform': 
                         material.specularMapTransform = param.data;
                         break;
+                    case 'texture_specularFactorMap':
+                        material.specularFactorMap = param.data;
+                        break;
+                    case 'texture_specularFactorMapTransform': 
+                        material.specularFactorMapTransform = param.data;
+                        break;
                     case 'material_shininess':
                         material.shininess = param.data;
                         break;
-                    case 'texture_glossMap': 
+                    case 'texture_glossMap':
                         material.glossMap = param.data;
+                        break;
+                    case 'texture_glossMapTransform': 
+                        material.glossMapTransform = param.data;
                         break;
                     case 'material_emissive':
                         material.emissive = param.data;
@@ -1179,9 +1201,13 @@ pc.extend(pc.resources, function () {
                         break;
                     case 'material_opacity':
                         material.opacity = param.data;
+                        if (material.opacity < 1) {
+                            material.blendType = pc.scene.BLEND_NORMAL;
+                        }
                         break;
                     case 'texture_opacityMap': 
                         material.opacityMap = param.data;
+                        material.blendType = pc.scene.BLEND_NORMAL;
                         break;
                     case 'texture_opacityMapTransform': 
                         material.opacityMapTransform = param.data;

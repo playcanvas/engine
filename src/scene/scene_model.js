@@ -194,7 +194,7 @@ pc.extend(pc.scene, function () {
             wireBuffer.unlock();
 
             mesh.primitive[pc.scene.RENDERSTYLE_WIREFRAME] = {
-                type: pc.gfx.PrimType.LINES,
+                type: pc.gfx.PRIMITIVE_LINES,
                 base: 0,
                 count: lines.length,
                 indexed: true

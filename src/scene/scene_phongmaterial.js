@@ -165,13 +165,6 @@ pc.extend(pc.scene, function () {
         if (this.lightMap) {
             this.setParameter('texture_lightMap', this.lightMap);
         }
-
-        this.transparent = false;
-        if (this.opacityMap) {
-            this.transparent = true;
-        } else if (this.opacity < 1) {
-            this.transparent = true;
-        }
     };
 
     PhongMaterial.prototype.getProgram = function (mesh) {
