@@ -25,3 +25,17 @@ test("format: two args", function() {
 });
 
 
+test("toBool: strict", function () {
+    strictEqual(true, pc.string.toBool("true", true));
+    strictEqual(false, pc.string.toBool("false", true));
+    throws(function () {
+        pc.string.toBool("abc", true);
+    }, Error);
+});
+
+test("toBool: non-strict", function () {
+    strictEqual(true, pc.string.toBool("true"));
+    strictEqual(false, pc.string.toBool("false"));
+    strictEqual(false, pc.string.toBool("abc"));
+    strictEqual(false, pc.string.toBool(undefined));
+});
