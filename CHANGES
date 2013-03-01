@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.97.2
+-------
+* [FIX] Work around presumed GLSL compiler bug on Mac where directional light appears inverted in Y axis. Code should be equivalent.
+-------
+v0.97.1
+-------
+* Optimized WebGL texture state setting.
+* [FIX] Phong shader now generates correct GLSL for lightmapping with no lights.
+
+-------
 v0.97.0
 -------
 * Add pc.fw.AudioSourceComponent#unpause() to resume playback from paused (instead of using play() which starts from the beginning of the sound)

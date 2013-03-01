@@ -82,4 +82,6 @@ pc.gfx.ShaderInput = function (name, type, locationId) {
             break;
     }
     this.commitFunc = f;
+
+    this.slot = -1;
 }

@@ -298,7 +298,7 @@ pc.gfx.programlib.phong = {
 
                 for (i = 0; i < totalLights; i++) {
                     if (i < totalDirs) {
-                        code += "    vLight" + i + "DirW = tbnMatrix * (-light" + i + "_direction);\n";
+                        code += "    vLight" + i + "DirW = -(tbnMatrix * light" + i + "_direction);\n";
                     }
                     if (i >= totalDirs) {
                         code += "    vLight" + i + "DirW = tbnMatrix * (light" + i + "_position - positionW.xyz);\n";
@@ -780,8 +780,11 @@ pc.gfx.programlib.phong = {
             code += getSnippet('fs_alpha_test');
         }
 
-        if (lighting) {
+        if (lighting || options.lightMap) {
             code += "    vec3 diffuseContrib = vec3(0.0);\n";
+        }
+
+        if (lighting) {
             code += "    float specularContrib = 0.0;\n";
 
             // Calculate a surface normal
@@ -875,19 +878,24 @@ pc.gfx.programlib.phong = {
 
         // Calculate final lighting contributions
         code += "    vec3 ambient  = ambientColor * light_globalAmbient;\n";
-        if (lighting) {
+        if (lighting || options.lightMap) {
             code += "    vec3 diffuse  = diffuseColor * diffuseContrib;\n";
+        }
+        if (lighting) {
             code += "    vec3 specular = specularColor * specularContrib;\n";
         }
         code += "    vec3 emissive = emissiveColor;\n\n";
 
         // Write out final pixel color
-        if (lighting) {
-            code += "    gl_FragColor.rgb = ambient + diffuse + specular + emissive;\n";
-        } else {
-            code += "    gl_FragColor.rgb = ambient + emissive;\n";
+        code += "    gl_FragColor.rgb  = ambient;\n";
+        if (lighting || options.lightMap) {
+            code += "    gl_FragColor.rgb += diffuse;\n";
         }
-        code += "    gl_FragColor.a   = opacity;\n\n";
+        if (lighting) {
+            code += "    gl_FragColor.rgb += specular;\n";
+        }
+        code += "    gl_FragColor.rgb += emissive;\n";
+        code += "    gl_FragColor.a    = opacity;\n\n";
 
         // Make sure all components are between 0 and 1
         code += getSnippet('fs_clamp');
