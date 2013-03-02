@@ -785,7 +785,7 @@ pc.gfx.programlib.phong = {
         }
 
         if (lighting) {
-            code += "    float specularContrib = 0.0;\n";
+            code += "    vec3 specularContrib = vec3(0.0);\n";
 
             // Calculate a surface normal
             if (options.normalMap) {
@@ -822,7 +822,7 @@ pc.gfx.programlib.phong = {
                     code += "        {\n";
                     code += "            vec3 R = normalize(-reflect(lightDir, N));\n";
                     code += "            float rDotV = max(0.0, dot(R, viewDirW));\n";
-                    code += "            specularContrib += pow(rDotV, shininess) * shadowFactor;\n";
+                    code += "            specularContrib += light" + i + "_color * pow(rDotV, shininess) * shadowFactor;\n";
                     code += "        }\n";
                     code += "    }\n\n";
                 } else {
@@ -845,7 +845,7 @@ pc.gfx.programlib.phong = {
                     code += "            {\n";
                     code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
                     code += "                float rDotV = max(0.0, dot(R, viewDirW));\n";
-                    code += "                specularContrib += pow(rDotV, shininess) * att * shadowFactor;\n";
+                    code += "                specularContrib += light" + i + "_color * pow(rDotV, shininess) * att * shadowFactor;\n";
                     code += "            }\n";
                     code += "        }\n";
                     code += "    }\n\n";
