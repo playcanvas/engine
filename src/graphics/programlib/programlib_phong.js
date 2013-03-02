@@ -738,10 +738,11 @@ pc.gfx.programlib.phong = {
             if (options.specularFactorMap) {
                 code += "    specularColor *= texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
             }
+            // Hack: On Mac OS X, calling pow with zero for the exponent generates hideous artifacts so bias up a little
             if (options.glossMap) {
-                code += "    float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0;\n";
+                code += "    float shininess = texture2D(texture_glossMap, uvGlossMap).r * 100.0 + 0.0001;\n";
             } else {
-                code += "    float shininess = material_shininess;\n";
+                code += "    float shininess = material_shininess + 0.0001;\n";
             }
         }
         if (options.emissiveMap) {
