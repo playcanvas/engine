@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.98.3
+-------
+* Optimize setting of vertex buffer attributes in the graphics device.
+* Simplified and optimized GLSL lighting code.
+* [FIX] Specular lighting calculation now takes the light color into account.
+
+-------
 v0.98.2
 -------
 * Renamed enums for blend modes and primitive types.

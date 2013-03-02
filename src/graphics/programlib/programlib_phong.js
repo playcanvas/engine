@@ -631,27 +631,7 @@ pc.gfx.programlib.phong = {
             code += "    }\n";
             code += "}\n\n";
         }
-/*
-        if ((totalPnts > 0) || (totalSpts > 0)) {
-            code += "\n";
-            code += "float calculateAttenuation(float d, float r, float cutoff)\n";
-            code += "{\n";
-            // calculate normalized light vector and distance to sphere light surface
-            code += "    d = max(d - r, 0.0);\n";
 
-            // calculate basic attenuation
-            code += "    float denom = d/r + 1.0;\n";
-            code += "    float attenuation = 1 / (denom*denom);\n";
-
-            // scale and bias attenuation such that:
-            //   attenuation == 0 at extent of max influence
-            //   attenuation == 1 when d == 0
-            code += "    attenuation = (attenuation - cutoff) / (1 - cutoff);\n";
-            code += "    attenuation = max(attenuation, 0);\n";
-            code += "    return attenuation;\n";
-            code += "}\n";
-        }
-*/
         // FRAGMENT SHADER BODY
         code += getSnippet('common_main_begin');
 
@@ -785,7 +765,7 @@ pc.gfx.programlib.phong = {
         }
 
         if (lighting) {
-            code += "    float specularContrib = 0.0;\n";
+            code += "    vec3 specularContrib = vec3(0.0);\n";
 
             // Calculate a surface normal
             if (options.normalMap) {
@@ -800,56 +780,47 @@ pc.gfx.programlib.phong = {
                 code += "    vec3 N = normalW;\n";
             }
 
-            code += "    vec3 lightDir;\n";
-            code += "    float d, nDotL, shadowFactor;\n";
+            code += "    vec3 L, R;\n";
+            code += "    float diffuseLight, specularLight;\n";
+            if (totalPnts + totalSpts > 0) {
+                code += "    float d, attenuation;\n";
+            }
+            if (totalSpts > 0) {
+                code += "    float cosAngle, spotEffect;\n";
+            }
+            if (numShadowLights > 0) {
+                code += "    float shadowFactor;\n";
+            }
+            code += "\n";
 
             for (i = 0; i < totalLights; i++) {
-                if ((i >= options.numDirs && i < totalDirs) || 
+                var positionalLight = i >= totalDirs;
+                var spotLight = i >= totalDirs + totalPnts;
+                var shadowLight =
+                   ((i >= options.numDirs && i < totalDirs) || 
                     (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                    code += "    shadowFactor = calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
-                } else {
-                    code += "    shadowFactor = 1.0;\n";
-                }
+                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights));
 
-                if (i < totalDirs) {
-                    code += "    lightDir = normalize(vLight" + i + "DirW);\n";
-                    code += "    nDotL = max(0.0, dot(N, lightDir));\n";
-                    code += "    if (nDotL > 0.0)\n";
-                    code += "    {\n";
-                    code += "        diffuseContrib += light" + i + "_color * nDotL * shadowFactor;\n";
-                    code += "        if (shininess > 0.0)\n";
-                    code += "        {\n";
-                    code += "            vec3 R = normalize(-reflect(lightDir, N));\n";
-                    code += "            float rDotV = max(0.0, dot(R, viewDirW));\n";
-                    code += "            specularContrib += pow(rDotV, shininess) * shadowFactor;\n";
-                    code += "        }\n";
-                    code += "    }\n\n";
-                } else {
+                code += "    L = normalize(vLight" + i + "DirW);\n";
+                code += "    diffuseLight = max(dot(N, L), 0.0);\n";
+                code += "    R = normalize(-reflect(L, N));\n";
+                code += "    specularLight = pow(max(dot(R, viewDirW), 0.0), shininess);\n";
+                if (positionalLight) {
+                    // Linear attenuation
                     code += "    d = length(vLight" + i + "DirW);\n";
-                    code += "    if (d < light" + i + "_radius)\n";
-                    code += "    {\n";
-                    code += "        lightDir = normalize(vLight" + i + "DirW);\n";
-                    code += "        nDotL = max(0.0, dot(N, lightDir));\n";
-                    code += "        if (nDotL > 0.0)\n";
-                    code += "        {\n";
-                    code += "            float att = ((light" + i + "_radius - d) / light" + i + "_radius);\n";
-//                    code += "            float att = light" + i + "_attenuate ? 1.0 : calculateAttenuation(N, light" + i + "_range, ;\n";
-                    if (i >= totalDirs + totalPnts) {
-                        // Spotlight inner cone -> outer cone
-                        code += "            float cosAngle = dot(-lightDir, vLight" + i + "SpotDirW);\n";
-                        code += "            att *= smoothstep(light" + i + "_outerConeAngle, light" + i + "_innerConeAngle, cosAngle);\n";
-                    }
-                    code += "            diffuseContrib += light" + i + "_color * nDotL * att * shadowFactor;\n";
-                    code += "            if (shininess > 0.0)\n";
-                    code += "            {\n";
-                    code += "                vec3 R = normalize(-reflect(lightDir, N));\n";
-                    code += "                float rDotV = max(0.0, dot(R, viewDirW));\n";
-                    code += "                specularContrib += pow(rDotV, shininess) * att * shadowFactor;\n";
-                    code += "            }\n";
-                    code += "        }\n";
-                    code += "    }\n\n";
+                    code += "    attenuation = max(((light" + i + "_radius - d) / light" + i + "_radius), 0.0);\n";
                 }
+                if (spotLight) {
+                    // Spotlight inner cone -> outer cone
+                    code += "    cosAngle = dot(-L, vLight" + i + "SpotDirW);\n";
+                    code += "    spotEffect = smoothstep(light" + i + "_outerConeAngle, light" + i + "_innerConeAngle, cosAngle);\n";
+                }
+                if (shadowLight) {
+                    code += "    shadowFactor = calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
+                }
+                code += "    diffuseContrib += light" + i + "_color * diffuseLight" + (positionalLight ? " * attenuation" : "") + (spotLight ? " * spotEffect" : "") + (shadowLight ? " * shadowFactor" : "") + ";\n";
+                code += "    if (diffuseLight <= 0.0) specularLight = 0.0;\n";
+                code += "    specularContrib += light" + i + "_color * specularLight" + (positionalLight ? " * attenuation" : "") + (spotLight ? " * spotEffect" : "") + (shadowLight ? " * shadowFactor" : "") + ";\n\n";
             }
         }
 

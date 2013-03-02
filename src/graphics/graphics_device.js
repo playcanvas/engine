@@ -394,6 +394,8 @@ pc.extend(pc.gfx, function () {
         this.precalculatedTangents = true;
 
         this.textureUnits = [];
+
+        this.attributesInvalidated = true;
     };
 
     /**
@@ -499,7 +501,10 @@ pc.extend(pc.gfx, function () {
          */
         draw: function (primitive) {
             // Commit the vertex buffer inputs
-            this.commitAttributes();
+            if (this.attributesInvalidated) {
+                this.commitAttributes();
+                this.attributesInvalidated = false;
+            }
 
             // Commit the shader program variables
             this.commitSamplers();
@@ -683,18 +688,22 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         setVertexBuffer: function (vertexBuffer, stream) {
-            // Store the vertex buffer for this stream index
-            this.vertexBuffers[stream] = vertexBuffer;
+            if (this.vertexBuffers[stream] !== vertexBuffer) {
+                // Store the vertex buffer for this stream index
+                this.vertexBuffers[stream] = vertexBuffer;
 
-            // Push each vertex element in scope
-            var vertexFormat = vertexBuffer.getFormat();
-            var i = 0;
-            var elements = vertexFormat.elements;
-            var numElements = elements.length;
-            while (i < numElements) {
-                var vertexElement = elements[i++];
-                vertexElement.stream = stream;
-                vertexElement.scopeId.setValue(vertexElement);
+                // Push each vertex element in scope
+                var vertexFormat = vertexBuffer.getFormat();
+                var i = 0;
+                var elements = vertexFormat.elements;
+                var numElements = elements.length;
+                while (i < numElements) {
+                    var vertexElement = elements[i++];
+                    vertexElement.stream = stream;
+                    vertexElement.scopeId.setValue(vertexElement);
+                }
+
+                this.attributesInvalidated = true;
             }
         },
 
@@ -711,6 +720,8 @@ pc.extend(pc.gfx, function () {
                 // Set the active shader program
                 var gl = this.gl;
                 gl.useProgram(program.programId);
+
+                this.attributesInvalidated = true;
             }
         },
 
