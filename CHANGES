@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.98.5
+-------
+* Soften PCF shadows.
+
+-------
 v0.98.4
 -------
 * [FIX] Prevent GLSL pow function from being passed zero which causes glitches on Mac OS X.
