@@ -224,8 +224,8 @@ pc.extend(pc.scene, function () {
         var shadowBuffer = new pc.gfx.FrameBuffer(this._shadowWidth, this._shadowHeight, true);
 
         var shadowTexture = shadowBuffer.getTexture();
-        shadowTexture.minFilter = pc.gfx.FILTER_LINEAR;
-        shadowTexture.maxFilter = pc.gfx.FILTER_LINEAR;
+        shadowTexture.minFilter = pc.gfx.FILTER_NEAREST;
+        shadowTexture.magFilter = pc.gfx.FILTER_NEAREST;
         shadowTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         shadowTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
 
