@@ -156,6 +156,16 @@ pc.extend(pc.fw, function () {
         }
     };
 
+    /**
+    * @function
+    * @name pc.fw.Entity#clone
+    * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
+    * Note, this Entity is not in the hierarchy and must be added manually.
+    * @returns A new Entity which is a deep copy of the original. 
+    * @example
+    *   var e = this.entity.clone(); // Clone Entity
+    *   this.entity.getParent().addChild(e); // Add it as a sibling to the original
+    */
     Entity.prototype.clone = function () {
         var type;
         var c = new pc.fw.Entity();
