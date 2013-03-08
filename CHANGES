@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.98.6
+-------
+* Added documenation for pc.fw.Entity#clone()
+
+-------
 v0.98.5
 -------
 * Soften PCF shadows.

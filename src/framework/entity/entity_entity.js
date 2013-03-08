@@ -4,13 +4,13 @@ pc.extend(pc.fw, function () {
      * @class The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
      * it from other Entities, and associates it with tool-time data on the server.
      * An object in your game consists of an {@link pc.fw.Entity}, and a set of {@link pc.fw.Component}s which are 
-     * managed by a {@link pc.fw.ComponentSystem}.
+     * managed by their respective {@link pc.fw.ComponentSystem}s.
      * The Entity uniquely identifies the object and also provides a transform for position and orientation 
-     * an inherits from {@pc.scene.GraphNode} so can be added into the scene graph.
-     * The Component and ComponentSystem provide provide the logic to give an Entity a specific type of behaviour. e.g. the ability to 
+     * which it inherits from {@link pc.scene.GraphNode} so can be added into the scene graph.
+     * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to 
      * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`) 
-     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.fw.ApplicationContext}
-     * 
+     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.fw.ApplicationContext}.
+     *
      * Every object created in the PlayCanvas Designer is an Entity.
      *
      * @example
@@ -42,6 +42,7 @@ pc.extend(pc.fw, function () {
      * @function
      * @name pc.fw.Entity#getGuid
      * @description Get the GUID value for this Entity
+     * @returns {String} The GUID of the Entity
      */
     Entity.prototype.getGuid = function () {
         return this._guid;
@@ -50,15 +51,17 @@ pc.extend(pc.fw, function () {
     /**
      * @function
      * @name pc.fw.Entity#setGuid
-     * @description Set the GUID value for this Entity. N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time.
-     * Doing so will corrupt the graph this Entity is in.
-     * @param {Object} guid
+     * @description Set the GUID value for this Entity. 
+     *
+     * N.B. It is unlikely that you should need to change the GUID value of an Entity at run-time. Doing so will corrupt the graph this Entity is in.
+     * @param {String} guid The GUID to assign to the Entity
      */
     Entity.prototype.setGuid = function (guid) {
         this._guid = guid;
     };
 
     /**
+     * @private
      * @function
      * @name pc.fw.Entity#setRequestBatch
      * @description Used during resource loading to ensure that child resources of Entities are tracked
@@ -69,6 +72,7 @@ pc.extend(pc.fw, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.fw.Entity#getRequestBatch
      * @description Get the RequestBatch handle that is being used to load this Entity
@@ -97,7 +101,7 @@ pc.extend(pc.fw, function () {
      * @function
      * @name pc.fw.Entity#findByGuid
      * @description Find a descendant of this Entity with the GUID
-     * @returns {pc.fw.Entity}
+     * @returns {pc.fw.Entity} The Entity with the GUID or null
      */
     Entity.prototype.findByGuid = function (guid) {
         if (this._guid === guid) return this;
@@ -156,6 +160,16 @@ pc.extend(pc.fw, function () {
         }
     };
 
+    /**
+    * @function
+    * @name pc.fw.Entity#clone
+    * @description Create a deep copy of the Entity. Duplicate the full Entity hierarchy, with all Components and all descendants.
+    * Note, this Entity is not in the hierarchy and must be added manually.
+    * @returns {pc.fw.Entity} A new Entity which is a deep copy of the original. 
+    * @example
+    *   var e = this.entity.clone(); // Clone Entity
+    *   this.entity.getParent().addChild(e); // Add it as a sibling to the original
+    */
     Entity.prototype.clone = function () {
         var type;
         var c = new pc.fw.Entity();
