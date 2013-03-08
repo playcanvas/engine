@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.CameraComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
+    * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
     * @property {pc.scene.Camera} camera The {@link pc.scene.CameraNode} used to render the scene
     * @property {String} clearColor The color used to clear the canvas to before the camera starts to render
     * @property {Number} nearClip The distance from the camera before which no rendering will take place
@@ -20,6 +21,7 @@ pc.extend(pc.fw, function () {
     */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
+        this.on("set_aspectRatio", this.onSetAspectRatio, this);
         this.on("set_camera", this.onSetCamera, this);
         this.on("set_clearColor", this.onSetClearColor, this);
         this.on("set_fov", this.onSetFov, this);
@@ -45,6 +47,9 @@ pc.extend(pc.fw, function () {
             return this.data.camera.screenToWorld(x, y, z, worldCoord);
         },
 
+        onSetAspectRatio: function (name, oldValue, newValue) {
+            this.data.camera.setAspectRatio(newValue);
+        },
         onSetCamera: function (name, oldValue, newValue) {
             // remove old camera node from hierarchy and add new one
             if (oldValue) {
@@ -77,8 +82,6 @@ pc.extend(pc.fw, function () {
             this.data.camera.setProjection(newValue);
         }
     });
-
-    
 
     return {
         CameraComponent: CameraComponent
