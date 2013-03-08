@@ -268,22 +268,19 @@ pc.extend(pc.fw, function () {
                 var vertexBuffer = component.model.meshInstances[0].mesh.vertexBuffer;
 
                 // Retrieve the characteristics of the camera frustum
-                var nearClip   = component.nearClip;
-                var farClip    = component.farClip
-                var fov        = component.fov * Math.PI / 180.0;
-                
-                var viewport = component.camera.getRenderTarget().getViewport();
-                var aspect = viewport.width / viewport.height;
-                
-                var projection = component.projection;
+                var aspectRatio = component.camera.getAspectRatio();
+                var nearClip    = component.nearClip;
+                var farClip     = component.farClip
+                var fov         = component.fov * Math.PI / 180.0;
+                var projection  = component.projection;
 
                 var x, y;
                 if (projection === pc.scene.Projection.PERSPECTIVE) {
                     y = Math.tan(fov / 2.0) * nearClip;
                 } else {
-                    y = this._orthoHeight;
+                    y = component.camera.getOrthoHeight();
                 }
-                x = y * aspect;
+                x = y * aspectRatio;
 
                 var positions = new Float32Array(vertexBuffer.lock());
                 positions[0]  = x;
@@ -301,18 +298,18 @@ pc.extend(pc.fw, function () {
 
                 if (projection === pc.scene.Projection.PERSPECTIVE) {
                     y = Math.tan(fov / 2.0) * farClip;
-                    x = y * aspect;
+                    x = y * aspectRatio;
                 }
-                positions[12]  = x;
-                positions[13]  = -y;
-                positions[14]  = -farClip;
-                positions[15]  = x;
-                positions[16]  = y;
-                positions[17]  = -farClip;
-                positions[18]  = -x;
-                positions[19]  = y;
-                positions[20]  = -farClip;
-                positions[21]  = -x;
+                positions[12] = x;
+                positions[13] = -y;
+                positions[14] = -farClip;
+                positions[15] = x;
+                positions[16] = y;
+                positions[17] = -farClip;
+                positions[18] = -x;
+                positions[19] = y;
+                positions[20] = -farClip;
+                positions[21] = -x;
                 positions[22] = -y;
                 positions[23] = -farClip;                
                 vertexBuffer.unlock();
