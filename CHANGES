@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.99.0
+-------
+* Aspect ratio of Designer-rendered cameras is now fixed at 16/9.
+* Exposed aspectRatio on camera component.
+* Added right, up and forwards properties to pc.scene.GraphNode.
+* Update a skeleton's interpolated keyframes immediately upon setting a new time.
+
+-------
 v0.98.6
 -------
 * Added documenation for pc.fw.Entity#clone()
