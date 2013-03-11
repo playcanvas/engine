@@ -251,6 +251,50 @@ pc.math = {
     */
     atan2: function (y, x) {
         return Math.atan2(y, x) * pc.math.RAD_TO_DEG;
+    },
+
+    /**
+     * @function
+     * @name pc.math.smoothstep
+     * @description The function interpolates smoothly between two input values based on
+     * a third one that should be between the first two. The returned value is clamped 
+     * between 0 and 1.
+     * The slope (i.e. derivative) of the smoothstep function starts at 0 and ends at 0.
+     * This makes it easy to create a sequence of transitions using smoothstep to interpolate
+     * each segment rather than using a more sophisticated or expensive interpolation technique.
+     * See http://en.wikipedia.org/wiki/Smoothstep for more details.
+     * @param {Number} min The lower bound of the interpolation range.
+     * @param {Number} max The upper bound of the interpolation range.
+     * @param {Number} x The value to interpolate.
+     * @returns {Number} The smoothly interpolated value clamped between zero and one.
+     */
+    smoothstep: function (min, max, x) {
+        if (x <= min) return 0;
+        if (x >= max) return 1;
+
+        x = (x - min) / (max - min);
+
+        return x * x * (3 - 2 * x);
+    },
+
+    /**
+     * @function
+     * @name pc.math.smootherstep
+     * @description An improved version of the pc.math.smoothstep function which has zero
+     * 1st and 2nd order derivatives at t=0 and t=1.
+     * See http://en.wikipedia.org/wiki/Smoothstep for more details.
+     * @param {Number} min The lower bound of the interpolation range.
+     * @param {Number} max The upper bound of the interpolation range.
+     * @param {Number} x The value to interpolate.
+     * @returns {Number} The smoothly interpolated value clamped between zero and one.
+     */
+    smootherstep: function (min, max, x) {
+        if (x <= min) return 0;
+        if (x >= max) return 1;
+
+        x = (x - min) / (max - min);
+
+        return x * x * x * (x * (x * 6 - 15) + 10);
     }
 };
 
