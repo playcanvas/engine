@@ -206,6 +206,9 @@ pc.extend(pc.anim, function () {
             var nodeName = node._name;
             this._currKeyIndices[nodeName] = 0;
         }
+
+        // Write current time into interpolated keyframe array
+        this.addTime(0);
     }
 
     /**
