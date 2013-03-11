@@ -8,8 +8,11 @@ pc.extend(pc.scene, function () {
 
     /**
      * @name pc.scene.GraphNode
-     * @class A node.
+     * @class A hierarchical scene node.
      * @param {String} name Non-unique, human readable name.
+     * @property {pc.math.vec3} right Vector representing the X direction of the node in world space (read only).
+     * @property {pc.math.vec3} up Vector representing the Y direction of the node in world space (read only).
+     * @property {pc.math.vec3} forwards Vector representing the negative Z direction of the node in world space (read only).
      */
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
@@ -33,9 +36,47 @@ pc.extend(pc.scene, function () {
         this.worldTransform = pc.math.mat4.create();
         this.dirtyWorld = false;
 
+        this.right = pc.math.vec3.create();
+        this.up = pc.math.vec3.create();
+        this.forwards = pc.math.vec3.create();
+
         this._parent = null;
         this._children = [];
     };
+
+    Object.defineProperty(GraphNode.prototype, 'forwards', {
+        get: function() {
+            var transform = this.getWorldTransform();
+
+            pc.math.mat4.getX(transform, this.forwards);
+            pc.math.vec3.normalize(this.forwards, this.forwards);
+            pc.math.vec3.scale(this.forwards, -1, this.forwards);
+
+            return this.forwards;
+        }
+    });
+
+    Object.defineProperty(GraphNode.prototype, 'up', {
+        get: function() {
+            var transform = this.getWorldTransform();
+
+            pc.math.mat4.getY(transform, this.up);
+            pc.math.vec3.normalize(this.up, this.up);
+
+            return this.up;
+        }
+    });
+
+    Object.defineProperty(GraphNode.prototype, 'right', {
+        get: function() {
+            var transform = this.getWorldTransform();
+
+            pc.math.mat4.getZ(transform, this.right);
+            pc.math.vec3.normalize(this.right, this.right);
+
+            return this.right;
+        }
+    });
 
     GraphNode.prototype = {
 
