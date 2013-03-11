@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 -------
+v0.99.1
+-------
+* Update a skeleton's graph if a time is explicitly set. Prevents you seeing previous animation frame on playing an anim from an entity script, since entity script udpates occur after animation component update.
+
+-------
 v0.99.0
 -------
 * Aspect ratio of Designer-rendered cameras is now fixed at 16/9.
