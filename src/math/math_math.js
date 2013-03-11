@@ -35,6 +35,26 @@ pc.math = {
     
     /**
      * @function
+     * @name pc.math.intToBytes24
+     * @description Convert an 24 bit integer into an array of 3 bytes.
+     * @param {Object} i
+     * @example
+     * <code><pre>
+     * var bytes = pc.math.intToBytes24(0x112233); // bytes === [0x11,0x22,0x33] 
+     * </code></pre>
+     */
+     intToBytes24: function (i) {
+        var r,g,b;
+        
+        r = (i >> 16) & 0xff;
+        g = (i >> 8) & 0xff;
+        b = (i) & 0xff;
+        
+        return [r,g,b];        
+    },
+    
+    /**
+     * @function
      * @name pc.math.intToBytes32
      * @description Convert an 32 bit integer into an array of 4 bytes.
      * @param {Object} i
@@ -53,25 +73,27 @@ pc.math = {
         
         return [r,g,b,a];
     },
-    
-    /**
-     * @function
-     * @name pc.math.intToBytes24
-     * @description Convert an 24 bit integer into an array of 3 bytes.
-     * @param {Object} i
-     * @example
-     * <code><pre>
-     * var bytes = pc.math.intToBytes24(0x112233); // bytes === [0x11,0x22,0x33] 
-     * </code></pre>
-     */
-     intToBytes24: function (i) {
-        var r,g,b;
-        
-        r = (i >> 16) & 0xff;
-        g = (i >> 8) & 0xff;
-        b = (i) & 0xff;
-        
-        return [r,g,b];        
+
+     /**
+      * @function
+      * @name pc.math.bytesToInt24
+      * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number 
+      * @example
+      * <code><pre>
+      * var int = pc.math.bytesToInt24([0x11,0x22,0x33]); // int === 0x112233
+      * </pre></code>
+      * @param {Number} r A single byte (0-255)
+      * @param {Number} g A single byte (0-255)
+      * @param {Number} b A single byte (0-255)
+      * @param {Number} a A single byte (0-255)
+      */
+    bytesToInt24: function (r,g,b) {
+        if (r.length) {
+            b = r[2];
+            g = r[1];
+            r = r[0];
+        }
+        return ((r << 16) | (g << 8) | b);
     },
 
     /**
@@ -99,27 +121,6 @@ pc.math = {
         // >>> used unsigned so >>>32 converts back to an unsigned.
         // See http://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
         return ((r << 24) | (g << 16) | (b << 8) | a)>>>32;
-    },
-     /**
-     * @function
-     * @name pc.math.bytesToInt24
-     * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number 
-     * @example
-     * <code><pre>
-     * var int = pc.math.bytesToInt24([0x11,0x22,0x33]); // int === 0x112233
-     * </pre></code>
-     * @param {Number} r A single byte (0-255)
-     * @param {Number} g A single byte (0-255)
-     * @param {Number} b A single byte (0-255)
-     * @param {Number} a A single byte (0-255)
-     */            
-    bytesToInt24: function (r,g,b) {
-        if (r.length) {
-            b = r[2];
-            g = r[1];
-            r = r[0];
-        }
-        return ((r << 16) | (g << 8) | b);
     },
 
     /**
@@ -159,98 +160,26 @@ pc.math = {
 
     /**
      * @function
-     * @name pc.math.pot
+     * @name pc.math.powerOfTwo
      * @description Returns true if argument is a power-of-two and false otherwise.
      * @param {Number} x Number to check for power-of-two property.
      * @returns {Boolean} true if power-of-two and false otherwise. 
      */
-    pot: function (x) {
+    powerOfTwo: function (x) {
         return (!(x === 0) && !(x & (x - 1)));
     },
 
     /**
      * @function
      * @name pc.math.random
-     * @description Return a pseudo-random number between min and max
+     * @description Return a pseudo-random number between min and max.
+     * @param {Number} min Lower bound for range.
+     * @param {Number} max Upper bound for range.
+     * @returns {Number} Pseudo-random number between the supplied range.
      */
     random: function (min, max) {
         var diff = max - min;
         return Math.random() * diff + min;        
-    },
-
-    /**
-    * @function
-    * @name pc.math.sin
-    * @description Sine function using Degrees
-    * @param a Angle in degrees
-    */
-    sin: function (a) {
-        return Math.sin(a * pc.math.DEG_TO_RAD);
-    },
-
-    /**
-    * @function
-    * @name pc.math.cos
-    * @description Cosine function using Degrees
-    * @param a Angle in degrees
-    */
-    cos: function (a) {
-        return Math.cos(a * pc.math.DEG_TO_RAD);
-    },
-
-    /**
-    * @function
-    * @name pc.math.tan
-    * @description Tangent function using Degrees
-    * @param a Angle in degrees
-    */
-    tan: function (a) {
-        return Math.tan(a * pc.math.DEG_TO_RAD);
-    },
-
-    /**
-    * @function
-    * @name pc.math.asin
-    * @description Arcsine function using degrees
-    * @param x A number between -1 and 1
-    * @returns Angle in degrees
-    */
-    asin: function (x) {
-        return Math.asin(x) * pc.math.RAD_TO_DEG;
-    },
-
-    /**
-    * @function
-    * @name pc.math.acos
-    * @description Arccosine function using degrees
-    * @param x A number between -1 and 1
-    * @returns Angle in degrees
-    */
-    acos: function (x) {
-        return Math.acos(x) * pc.math.RAD_TO_DEG;
-    },
-
-    /**
-    * @function
-    * @name pc.math.atan
-    * @description Arctangent function using degrees
-    * @param x A number between -1 and 1
-    * @returns Angle in degrees
-    */
-    atan: function (x) {
-        return Math.atan(x) * pc.math.RAD_TO_DEG;
-    },
-
-    /**
-    * @function
-    * @name pc.math.atan2
-    * @description Arctangent function using degrees which takes 2 arguments
-    * @param y A number
-    * @param x A number
-    * @returns Angle in degrees
-    */
-    atan2: function (y, x) {
-        return Math.atan2(y, x) * pc.math.RAD_TO_DEG;
     },
 
     /**
