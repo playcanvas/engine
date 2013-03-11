@@ -347,7 +347,7 @@ pc.math.quat = function () {
          */
         toMat3: function (q, r) {
             if (r === undefined) {
-                r = pc.math.mat4.create();
+                r = pc.math.mat3.create();
             }
             var norm = q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
             var s = (norm == 0.0) ? 0.0 : (2.0 / norm);
