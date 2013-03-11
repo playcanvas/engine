@@ -44,7 +44,7 @@ pc.extend(pc.scene, function () {
         this._children = [];
     };
 
-    Object.defineProperty(Texture.prototype, 'forwards', {
+    Object.defineProperty(GraphNode.prototype, 'forwards', {
         get: function() {
             var transform = this.getWorldTransform();
 
@@ -56,7 +56,7 @@ pc.extend(pc.scene, function () {
         }
     });
 
-    Object.defineProperty(Texture.prototype, 'up', {
+    Object.defineProperty(GraphNode.prototype, 'up', {
         get: function() {
             var transform = this.getWorldTransform();
 
@@ -67,7 +67,7 @@ pc.extend(pc.scene, function () {
         }
     });
 
-    Object.defineProperty(Texture.prototype, 'right', {
+    Object.defineProperty(GraphNode.prototype, 'right', {
         get: function() {
             var transform = this.getWorldTransform();
 
