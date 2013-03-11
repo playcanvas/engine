@@ -209,6 +209,7 @@ pc.extend(pc.anim, function () {
 
         // Write current time into interpolated keyframe array
         this.addTime(0);
+        this.updateGraph();
     }
 
     /**
