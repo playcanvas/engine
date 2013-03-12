@@ -127,8 +127,8 @@ pc.extend(pc.gfx, function () {
     // Public properties
     Object.defineProperty(Texture.prototype, 'minFilter', {
         get: function() { return this._minFilter; },
-        set: function(filter) { 
-            if (!(pc.math.pot(this._width) && pc.math.pot(this._height))) {
+        set: function(filter) {
+            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
                 if (!((filter === pc.gfx.FILTER_NEAREST) || (filter === pc.gfx.FILTER_LINEAR)))  {
                     logWARNING("Invalid filter mode set on non power of two texture. Forcing linear addressing.");
                     filter = pc.gfx.FILTER_LINEAR;
@@ -159,7 +159,7 @@ pc.extend(pc.gfx, function () {
     Object.defineProperty(Texture.prototype, 'addressU', {
         get: function() { return this._addressu; },
         set: function(addressu) {
-            if (!(pc.math.pot(this._width) && pc.math.pot(this._height))) {
+            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
                 if (addressu !== pc.gfx.ADDRESS_CLAMP_TO_EDGE) {
                     logWARNING("Invalid address mode in U set on non power of two texture. Forcing clamp to edge addressing.");
                     addressu = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
@@ -176,7 +176,7 @@ pc.extend(pc.gfx, function () {
     Object.defineProperty(Texture.prototype, 'addressV', {
         get: function() { return this._addressv; },
         set: function(addressv) {
-            if (!(pc.math.pot(this._width) && pc.math.pot(this._height))) {
+            if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
                 if (addressv !== pc.gfx.ADDRESS_CLAMP_TO_EDGE) {
                     logWARNING("Invalid address mode in V set on non power of two texture. Forcing clamp to edge addressing.");
                     addressv = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
@@ -458,7 +458,7 @@ pc.extend(pc.gfx, function () {
                 }
             }
 
-            if (this.autoMipmap && pc.math.pot(this._width) && pc.math.pot(this._height) && this._levels.length === 1) {
+            if (this.autoMipmap && pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height) && this._levels.length === 1) {
                 gl.generateMipmap(this._glTarget);
             }
         }

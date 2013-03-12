@@ -111,19 +111,14 @@ pc.extend(pc.fw, function () {
 
         var material = new pc.scene.Material();
         material.setState({
-            cull: false,
-            depthWrite: false
+            cull: false
         });
         material.setProgram(program);
         material.setParameter("texture_cubeMap", texture);
 
         var node = new pc.scene.GraphNode();
-        var mesh = pc.scene.procedural.createBox({
-            halfExtents: [1, 1, 1]
-        });
+        var mesh = pc.scene.procedural.createBox();
         var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
-        meshInstance.layer = pc.scene.LAYER_SKYBOX;
-        meshInstance.updateKey();
 
         var model = new pc.scene.Model();
         model.graph = node;

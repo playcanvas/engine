@@ -62,11 +62,11 @@ pc.math.quat = function () {
          * @function
          * @name pc.math.quat.create
          * @description Creates a new quaternion set to the specified values.
-         * @param {number} x The value of the x component of the quaternion.
-         * @param {number} y The value of the y component of the quaternion.
-         * @param {number} z The value of the x component of the quaternion.
-         * @param {number} w The value of the w component of the quaternion.
-         * @returns {Array} A new quaternion.
+         * @param {Number} [x] The value of the x component of the quaternion.
+         * @param {Number} [y] The value of the y component of the quaternion.
+         * @param {Number} [z] The value of the x component of the quaternion.
+         * @param {Number} [w] The value of the w component of the quaternion.
+         * @returns {Float32Array} A new quaternion.
          * @example
          * // Create a quaternion with all components set to 'undefined'
          * var q1 = pc.math.quat.create();
@@ -93,7 +93,20 @@ pc.math.quat = function () {
             return q;
         },
 
+        /**
+         * @function
+         * @name pc.math.quat.invert
+         * @description Inverts the supplied quaternion and returns the result.
+         * @param {Float32Array} q The quaternion to invert.
+         * @param {Float32Array} [r] Quaternion to receive the result of the inversion.
+         * @returns {Float32Array} The inverse of q.
+         * @author Will Eastcott
+         */
         invert: function(q, r) {
+            if (r === undefined) {
+                r = pc.math.vec3.create();
+            }
+
             var qx = q[0];
             var qy = q[1];
             var qz = q[2];
@@ -109,6 +122,7 @@ pc.math.quat = function () {
                 q[3] *= invDot;
                 return q;
             }
+
             r[0] = -q[0]*invDot;
             r[1] = -q[1]*invDot;
             r[2] = -q[2]*invDot;
@@ -116,6 +130,16 @@ pc.math.quat = function () {
             return r;
         },
 
+        /**
+         * @function
+         * @name pc.math.quat.transformVector
+         * @description Transforms the direction vector v by q.
+         * @param {Float32Array} q The quaternion with which to transform the vector.
+         * @param {Float32Array} v The vector to transform by q.
+         * @param {Float32Array} [r] 3-dimensional vector to receive the result of the transformation.
+         * @returns {Float32Array} The 3-dimensional vector that is the result of transforming q by v.
+         * @author Will Eastcott
+         */
         transformVector: function (q, v, r) {
             if (r === undefined) {
                 r = pc.math.vec3.create();
@@ -138,7 +162,20 @@ pc.math.quat = function () {
             return r;
         },
 
+        /**
+         * @function
+         * @name pc.math.quat.multiply
+         * @description Multiplies two quaternions together and returns the result.
+         * @param {Float32Array} q1 First multiplication operand.
+         * @param {Float32Array} q2 Second multiplication operand.
+         * @param {Float32Array} [r] Quaternion to receive the result of the multiplication.
+         * @returns {Float32Array} The quaternion result of the multiplication.
+         * @author Will Eastcott
+         */
         multiply: function (q1, q2, r) {
+            if (r === undefined) {
+                r = pc.math.vec3.create();
+            }
 
             var xx = q1[3] * q2[0] +
                      q1[0] * q2[3] +
@@ -164,8 +201,19 @@ pc.math.quat = function () {
             r[1] = yy;
             r[2] = zz;
             r[3] = ww;
+
+            return r;
         },
 
+        /**
+         * @function
+         * @name pc.math.quat.setFromAxisAngle
+         * @description Sets the quaternion based on a direction vector and a rotation angle around that vector.
+         * @param {Float32Array} q The quaternion to set.
+         * @param {Float32Array} v The 3-dimensional direction vector forming the axis.
+         * @param {Number} angle The angle of rotation around the axis vector in degrees.
+         * @author Will Eastcott
+         */
         setFromAxisAngle: function (q, v, angle) {
             var halfAngle = 0.5 * angle * (Math.PI / 180.0);
 
@@ -178,6 +226,16 @@ pc.math.quat = function () {
             q[3] = ca;
         },
 
+        /**
+         * @function
+         * @name pc.math.quat.setFromEulers
+         * @description Sets the quaternion based on a set of 3 Euler angles.
+         * @param {Float32Array} q The quaternion to set.
+         * @param {Number} ex Angle to rotate around X axis in degrees.
+         * @param {Number} ey Angle to rotate around Y axis in degrees.
+         * @param {Number} ez Angle to rotate around Z axis in degrees.
+         * @author Will Eastcott
+         */
         setFromEulers: function (q, ex, ey, ez) {
             ex = 0.5 * ex * Math.PI / 180.0;
             ey = 0.5 * ey * Math.PI / 180.0;
@@ -196,6 +254,16 @@ pc.math.quat = function () {
             q[3] = cx * cy * cz + sx * sy * sz;
         },
 
+        /**
+         * @function
+         * @name pc.math.quat.toEulers
+         * @description Converts the supplied quaternion to Euler angles.
+         * @param {Float32Array} q The quaternion to convert.
+         * @param {Float32Array} [r] The 3-dimensional vector to receive the Euler angles.
+         * @returns {Float32Array} The 3-dimensional vector holding the Euler angles that 
+         * correspond to the supplied quaternion.
+         * @author Will Eastcott
+         */
         toEulers: function (q, r) {
             if (r === undefined) {
                 r = pc.math.vec3.create();
@@ -226,6 +294,15 @@ pc.math.quat = function () {
             return r;
         },
 
+        /**
+         * @function
+         * @name pc.math.quat.normalize
+         * @description Normalizes the supplied quaternion (converts it to unit length).
+         * @param {Float32Array} q The quaternion to normalize.
+         * @param {Float32Array} [r] A quaternion to receive the result of the normalization.
+         * @returns {Float32Array} The normalized quaternion.
+         * @author Will Eastcott
+         */
         normalize: function (q, r) {
             if (!r) { r = q; }
 
@@ -248,9 +325,29 @@ pc.math.quat = function () {
             return r;
         },
 
+        /**
+         * @function
+         * @name pc.math.quat.toMat3
+         * @description Converts the specified quaternion to a 3x3 rotation matrix.
+         * @param {Float32Array} q The quaternion to convert.
+         * @param {Float32Array} [r] An optional 3x3 matrix that will receive the result of the conversion. If
+         * this parameter is omitted, the function will create a new 3x3 matrix internally and return it.
+         * @returns {Float32Array} A 3x3 matrix corresponding to the specified quaternion. If the r parameter is
+         * specified, the return value will be equal to r. Otherwise, it will be a newly created matrix.
+         * @example
+         * var q = pc.math.quat.create(-0.11,-0.15,-0.46,0.87);
+         *
+         * // Allow toMat4 to create a new matrix internally
+         * var m = pc.math.quat.toMat3(q);
+         *
+         * // Supply a 3x3 matrix to receive the result of the conversion
+         * var m = pc.math.mat3.create();
+         * pc.math.quat.toMat3(q, m);
+         * @author Will Eastcott
+         */
         toMat3: function (q, r) {
             if (r === undefined) {
-                r = pc.math.mat4.create();
+                r = pc.math.mat3.create();
             }
             var norm = q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3];
             var s = (norm == 0.0) ? 0.0 : (2.0 / norm);
@@ -359,7 +456,7 @@ pc.math.quat = function () {
          * @description Performs a spherical interpolation between two quaternions.
          * @param {Array} q1 The quaternion to interpolate from.
          * @param {Array} q2 The quaternion to interpolate to.
-         * @param {number} alpha The value controlling the interpolation in relation to the two input
+         * @param {Number} alpha The value controlling the interpolation in relation to the two input
          * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
          * in between generating a spherical interpolation between the two.
          * @param {Array} r An optional quaternion that will receive the result of the interpolation. If
