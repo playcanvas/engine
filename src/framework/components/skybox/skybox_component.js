@@ -119,8 +119,6 @@ pc.extend(pc.fw, function () {
         var node = new pc.scene.GraphNode();
         var mesh = pc.scene.procedural.createBox();
         var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
-        meshInstance.layer = pc.scene.LAYER_WORLD;
-        meshInstance.updateKey();
 
         var model = new pc.scene.Model();
         model.graph = node;
