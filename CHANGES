@@ -2,6 +2,15 @@
 PlayCanvas Runtime Changes 
 --------------------------
 
+--------
+v0.100.0
+--------
+* Added pc.math.smoothstep and pc.math.smootherstep.
+* pc.math.pot -> pc.math.powerOfTwo
+* Removed pc.math trigonometric functions.
+* Documented the whole quaternion API.
+* Allow skybox to be rendered at any time with any camera (much more robust and faster too!).
+
 -------
 v0.99.1
 -------
