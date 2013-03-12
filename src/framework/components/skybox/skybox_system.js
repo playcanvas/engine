@@ -81,10 +81,6 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        // Update the skybox to work in both game and Designer
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.onUpdate, this);
-
         this.on('remove', this.onRemove, this);
     }
     SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);
@@ -92,28 +88,6 @@ pc.extend(pc.fw, function () {
     pc.extend(SkyboxComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             SkyboxComponentSystem._super.initializeComponentData.call(this, component, data, CUBE_MAP_NAMES);
-        },
-
-        onUpdate: function (dt) {
-            var components = this.store;
-
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var entity = components[id].entity;
-                    var componentData = components[id].data;
-
-                    if (componentData.model) {
-                        // Create a transform that will scale the skybox to always sit
-                        // in between the near and far clip planes
-                        var currentCamera = this.context.systems.camera.current;
-                        var midPoint = (currentCamera.camera.nearClip + currentCamera.camera.farClip) * 0.5;
-
-                        var meshInstance = componentData.model.meshInstances[0];
-                        meshInstance.node.setLocalScale(midPoint, midPoint, midPoint);
-                        meshInstance.node.syncHierarchy();
-                    }
-                }
-            }
         },
 
         onRemove: function (entity, data) {

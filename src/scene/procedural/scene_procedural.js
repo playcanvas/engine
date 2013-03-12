@@ -730,18 +730,18 @@ pc.scene.procedural.createPlane = function (opts) {
  * information is generated into the vertex buffer of the box's mesh.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Array} opts.halfExtents The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
- * @param {Number} opts.widthSegments The number of divisions along the X axis of the box (defaults to 5).
- * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the box (defaults to 5).
- * @param {Number} opts.heightSegments The number of divisions along the Y axis of the box (defaults to 5).
+ * @param {Number} opts.widthSegments The number of divisions along the X axis of the box (defaults to 1).
+ * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the box (defaults to 1).
+ * @param {Number} opts.heightSegments The number of divisions along the Y axis of the box (defaults to 1).
  * @return {pc.scene.Mesh} A new box-shaped mesh.
  * @author Will Eastcott
  */
 pc.scene.procedural.createBox = function (opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : [0.5, 0.5, 0.5];
-    var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
-    var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
-    var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
+    var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 1;
+    var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 1;
+    var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
 
     var corners = [
         pc.math.vec3.create(-he[0], -he[1],  he[2]),
