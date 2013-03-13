@@ -36,6 +36,8 @@ pc.extend(pc.anim, function () {
         this._interpolatedKeyDict = {};
         this._currKeyIndices = {};
 
+        this.graph = null;
+
         var self = this;
         
         function addInterpolatedKeys(node) {
@@ -207,7 +209,6 @@ pc.extend(pc.anim, function () {
             this._currKeyIndices[nodeName] = 0;
         }
 
-        // Write current time into interpolated keyframe array
         this.addTime(0);
         this.updateGraph();
     }
@@ -245,10 +246,18 @@ pc.extend(pc.anim, function () {
      * @author Will Eastcott
      */
     Skeleton.prototype.setGraph = function (graph) {
-        for (var i = 0; i < this._interpolatedKeys.length; i++) {
-            var interpKey = this._interpolatedKeys[i];
-            var graphNode = graph.findByName(interpKey._name);
-            this._interpolatedKeys[i].setTarget(graphNode);
+        this.graph = graph;
+
+        if (graph) {
+            for (var i = 0; i < this._interpolatedKeys.length; i++) {
+                var interpKey = this._interpolatedKeys[i];
+                var graphNode = graph.findByName(interpKey._name);
+                this._interpolatedKeys[i].setTarget(graphNode);
+            }
+        } else {
+            for (var i = 0; i < this._interpolatedKeys.length; i++) {
+                this._interpolatedKeys[i].setTarget(null);
+            }
         }
     };
 
@@ -262,17 +271,19 @@ pc.extend(pc.anim, function () {
      * @author Will Eastcott
      */
     Skeleton.prototype.updateGraph = function () {
-        for (var i = 0; i < this._interpolatedKeys.length; i++) {
-            var interpKey = this._interpolatedKeys[i];
-            if (interpKey._written) {
-                var transform = interpKey.getTarget();
+        if (this.graph) {
+            for (var i = 0; i < this._interpolatedKeys.length; i++) {
+                var interpKey = this._interpolatedKeys[i];
+                if (interpKey._written) {
+                    var transform = interpKey.getTarget();
 
-                pc.math.vec3.copy(interpKey._pos, transform.localPosition);
-                pc.math.quat.copy(interpKey._quat, transform.localRotation);
-                pc.math.vec3.copy(interpKey._scale, transform.localScale);
-                transform.dirtyLocal = true;
+                    pc.math.vec3.copy(interpKey._pos, transform.localPosition);
+                    pc.math.quat.copy(interpKey._quat, transform.localRotation);
+                    pc.math.vec3.copy(interpKey._scale, transform.localScale);
+                    transform.dirtyLocal = true;
 
-                interpKey._written = false;
+                    interpKey._written = false;
+                }
             }
         }
     };

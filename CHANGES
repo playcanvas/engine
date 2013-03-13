@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.101.1
+--------
+* [FIX] Animation blending works again (broken in 0.99.1).
+
+--------
 v0.101.0
 --------
 * Documented almost all of pc.math and renamed a number of functions for uniformity.
@@ -68,6 +73,7 @@ v0.98.1
 v0.97.2
 -------
 * [FIX] Work around presumed GLSL compiler bug on Mac where directional light appears inverted in Y axis. Code should be equivalent.
+
 -------
 v0.97.1
 -------
