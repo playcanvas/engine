@@ -54,7 +54,6 @@ pc.extend(pc.fw, function () {
                     data.fromSkel.setAnimation(data.animations[data.prevAnim]);
                     data.fromSkel.addTime(data.skeleton.getCurrentTime());
                     data.toSkel.setAnimation(data.animations[data.currAnim]);
-                    data.toSkel.addTime(0);
                 } else {
                     data.skeleton.setAnimation(data.animations[data.currAnim]);
                 }
