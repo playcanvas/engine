@@ -68,45 +68,14 @@ test("RAD_TO_DEG", function () {
    equal(rad * pc.math.RAD_TO_DEG, 180); 
 });
 
-test("sin", function () {
-  var d = 56;
-
-  equal(pc.math.sin(56), Math.sin(d * pc.math.DEG_TO_RAD));
+test("smoothstep", function () {
+  equal(pc.math.smoothstep(0, 10, 0), 0);
+  equal(pc.math.smoothstep(0, 10, 5), 0.5);
+  equal(pc.math.smoothstep(0, 10, 10), 1);
 });
 
-test("cos", function () {
-  var d = 56;
-
-  equal(pc.math.cos(56), Math.cos(d * pc.math.DEG_TO_RAD));
-});
-
-test("tan", function () {
-  var d = 56;
-
-  equal(pc.math.tan(56), Math.tan(d * pc.math.DEG_TO_RAD));
-});
-
-test("asin", function () {
-  var n = 0.5;
-
-  equal(pc.math.asin(n), Math.asin(n) * pc.math.RAD_TO_DEG);
-});
-
-test("asin", function () {
-  var n = 0.5;
-
-  equal(pc.math.acos(n), Math.acos(n) * pc.math.RAD_TO_DEG);
-});
-
-test("atan", function () {
-  var n = 0.5;
-
-  equal(pc.math.atan(n), Math.atan(n) * pc.math.RAD_TO_DEG);
-});
-
-test("atan2", function () {
-  var x = 1;
-  var y = 2;
-
-  equal(pc.math.atan2(y, x), Math.atan2(y, x) * pc.math.RAD_TO_DEG);
+test("smootherstep", function () {
+  equal(pc.math.smootherstep(0, 10, 0), 0);
+  equal(pc.math.smootherstep(0, 10, 5), 0.5);
+  equal(pc.math.smootherstep(0, 10, 10), 1);
 });
