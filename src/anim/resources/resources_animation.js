@@ -44,8 +44,7 @@ pc.extend(pc.resources, function () {
                 var t = k.time;
 
                 key._pos   = pc.math.vec3.create(p[0], p[1], p[2]);
-                key._quat  = pc.math.quat.create();
-                pc.math.quat.setFromEulers(key._quat, r[0], r[1], r[2]);
+                key._quat  = pc.math.quat.fromEulerXYZ(r[0], r[1], r[2]);
                 key._scale = pc.math.vec3.create(s[0], s[1], s[2]);
                 key._time  = t;
 

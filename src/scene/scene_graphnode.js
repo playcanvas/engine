@@ -399,7 +399,7 @@ pc.extend(pc.scene, function () {
          */
         getRotation: function () {
             var worldTransform = this.getWorldTransform();
-            pc.math.mat4.toQuat(worldTransform, this.rotation);
+            pc.math.quat.fromMat4(worldTransform, this.rotation);
             return this.rotation;
         },
 
@@ -443,9 +443,9 @@ pc.extend(pc.scene, function () {
          */
         setLocalEulerAngles: function () {
             if (arguments.length === 1) {
-                pc.math.quat.setFromEulers(this.localRotation, arguments[0][0], arguments[0][1], arguments[0][2]);
+                pc.math.quat.fromEulerXYZ(arguments[0][0], arguments[0][1], arguments[0][2], this.localRotation);
             } else {
-                pc.math.quat.setFromEulers(this.localRotation, arguments[0], arguments[1], arguments[2]);
+                pc.math.quat.fromEulerXYZ(arguments[0], arguments[1], arguments[2], this.localRotation);
             }
             this.dirtyLocal = true;
         },
@@ -571,17 +571,41 @@ pc.extend(pc.scene, function () {
         /**
          * @function
          * @name pc.scene.GraphNode#setRotation
-         * @description Sets the world space rotation of the specified graph node.
+         * @description Sets the world space rotation of the specified graph node using
+         * a quaternion.
          * @param {pc.math.vec3} rot World space rotation (xyz) of graph node.
          * @author Will Eastcott
          */
-        setRotation: function (rot) {
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setRotation^2
+         * @description Sets the world space rotation of the specified graph node using
+         * the 4 components of a quaternion.
+         * @param {Number} x X component of world space quaternion rotation.
+         * @param {Number} y Y component of world space quaternion rotation.
+         * @param {Number} z Z component of world space quaternion rotation.
+         * @param {Number} w W component of world space quaternion rotation.
+         * @author Will Eastcott
+         */
+        setRotation: function () {
+            if (arguments.length === 1) {
+                tempQuatA[0] = arguments[0][0];
+                tempQuatA[1] = arguments[0][1];
+                tempQuatA[2] = arguments[0][2];
+                tempQuatA[3] = arguments[0][3];
+            } else {
+                tempQuatA[0] = arguments[0];
+                tempQuatA[1] = arguments[1];
+                tempQuatA[2] = arguments[2];
+                tempQuatA[3] = arguments[3];
+            }
+
             if (this._parent === null) {
-                pc.math.quat.copy(rot, this.localRotation);
+                pc.math.quat.copy(tempQuatA, this.localRotation);
             } else {
                 var parentRot = this._parent.getRotation();
-                pc.math.quat.invert(parentRot, tempQuatA);
-                pc.math.quat.multiply(tempQuatA, rot, this.localRotation);
+                pc.math.quat.invert(parentRot, tempQuatB);
+                pc.math.quat.multiply(tempQuatB, tempQuatA, this.localRotation);
             }
             this.dirtyLocal = true;
         },
@@ -615,7 +639,7 @@ pc.extend(pc.scene, function () {
                 tempVec[2] = arguments[2];
             }
 
-            pc.math.quat.setFromEulers(this.localRotation, tempVec[0], tempVec[1], tempVec[2]);
+            pc.math.quat.fromEulerXYZ(tempVec[0], tempVec[1], tempVec[2], this.localRotation);
 
             if (this._parent !== null) {
                 var parentRot = this._parent.getRotation();
@@ -800,7 +824,7 @@ pc.extend(pc.scene, function () {
             }
 
             var m = pc.math.mat4.makeLookAt(this.localPosition, target, up);
-            pc.math.mat4.toQuat(m, this.localRotation);
+            pc.math.quat.fromMat4(m, this.localRotation);
             this.dirtyLocal = true;
         },
 
@@ -904,7 +928,7 @@ pc.extend(pc.scene, function () {
                 z = arguments[0][2];
             }
 
-            pc.math.quat.setFromEulers(tempQuatA, x, y, z);
+            pc.math.quat.fromEulerXYZ(x, y, z, tempQuatA);
 
             if (this._parent === null) {
                 pc.math.quat.multiply(tempQuatA, this.localRotation, this.localRotation);
@@ -949,7 +973,7 @@ pc.extend(pc.scene, function () {
                 z = arguments[0][2];
             }
 
-            pc.math.quat.setFromEulers(tempQuatA, x, y, z);
+            pc.math.quat.fromEulerXYZ(x, y, z, tempQuatA);
             pc.math.quat.multiply(this.localRotation, tempQuatA, this.localRotation);
             this.dirtyLocal = true;
         }

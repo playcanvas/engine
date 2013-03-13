@@ -7,14 +7,16 @@ pc.math = {
      * @name pc.math.DEG_TO_RAD
      * @description Conversion factor between degrees and radians
      * @example
-     * <code><pre>var rad = 180 * pc.math.DEG_TO_RAD; // Converts 180 degrees to pi radians</pre></code>
+     * // Convert 180 degrees to pi radians
+     * var rad = 180 * pc.math.DEG_TO_RAD;
      */
     DEG_TO_RAD: Math.PI / 180,
     /**
      * @name pc.math.RAD_TO_DEG
      * @description Conversion factor between degrees and radians
      * @example
-     * <code><pre>var deg = Math.PI * pc.math.RAD_TO_DEG; // Converts pi radians to 180 degrees</pre></code>
+     * // Convert pi radians to 180 degrees
+     * var deg = Math.PI * pc.math.RAD_TO_DEG;
      */
     RAD_TO_DEG: 180 / Math.PI,
     
@@ -37,41 +39,39 @@ pc.math = {
      * @function
      * @name pc.math.intToBytes24
      * @description Convert an 24 bit integer into an array of 3 bytes.
-     * @param {Object} i
+     * @param {Number} i Number holding an integer value
      * @example
-     * <code><pre>
-     * var bytes = pc.math.intToBytes24(0x112233); // bytes === [0x11,0x22,0x33] 
-     * </code></pre>
+     * // Set bytes to [0x11, 0x22, 0x33] 
+     * var bytes = pc.math.intToBytes24(0x112233);
      */
      intToBytes24: function (i) {
-        var r,g,b;
-        
+        var r, g, b;
+
         r = (i >> 16) & 0xff;
         g = (i >> 8) & 0xff;
         b = (i) & 0xff;
-        
-        return [r,g,b];        
+
+        return [r, g, b];        
     },
     
     /**
      * @function
      * @name pc.math.intToBytes32
      * @description Convert an 32 bit integer into an array of 4 bytes.
-     * @param {Object} i
+     * @param {Number} i Number holding an integer value
      * @example
-     * <code><pre>
-     * var bytes = pc.math.intToBytes32(0x11223344); // bytes === [0x11,0x22,0x33,0x44] 
-     * </code></pre>
+     * // Set bytes to [0x11, 0x22, 0x33, 0x44]
+     * var bytes = pc.math.intToBytes32(0x11223344);
      */
     intToBytes32: function (i) {
-        var r,g,b,a;
-        
+        var r, g, b, a;
+
         r = (i >> 24) & 0xff;
         g = (i >> 16) & 0xff;
         b = (i >> 8) & 0xff;
         a = (i) & 0xff;
-        
-        return [r,g,b,a];
+
+        return [r, g, b, a];
     },
 
      /**
@@ -79,15 +79,16 @@ pc.math = {
       * @name pc.math.bytesToInt24
       * @description Convert 3 8 bit Numbers into a single unsigned 24 bit Number 
       * @example
-      * <code><pre>
-      * var int = pc.math.bytesToInt24([0x11,0x22,0x33]); // int === 0x112233
-      * </pre></code>
+      * // Set result1 to 0x112233 from an array of 3 values
+      * var result1 = pc.math.bytesToInt24([0x11, 0x22, 0x33]);
+      * 
+      * // Set result2 to 0x112233 from 3 discrete values
+      * var result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
       * @param {Number} r A single byte (0-255)
       * @param {Number} g A single byte (0-255)
       * @param {Number} b A single byte (0-255)
-      * @param {Number} a A single byte (0-255)
       */
-    bytesToInt24: function (r,g,b) {
+    bytesToInt24: function (r, g, b) {
         if (r.length) {
             b = r[2];
             g = r[1];
@@ -101,15 +102,17 @@ pc.math = {
      * @name pc.math.bytesToInt32
      * @description Convert 4 1-byte Numbers into a single unsigned 32bit Number 
      * @example
-     * <code><pre>
-     * var int = pc.math.bytesToInt32([0x11,0x22,0x33,0x44]); // int === 0x11223344
-     * </pre></code>
+      * // Set result1 to 0x11223344 from an array of 4 values
+      * var result1 = pc.math.bytesToInt32([0x11, 0x22, 0x33, 0x44]);
+      * 
+      * // Set result2 to 0x11223344 from 4 discrete values
+      * var result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
      * @param {Number} r A single byte (0-255)
      * @param {Number} g A single byte (0-255)
      * @param {Number} b A single byte (0-255)
      * @param {Number} a A single byte (0-255)
      */    
-    bytesToInt32: function (r,g,b,a) {
+    bytesToInt32: function (r, g, b, a) {
         if (r.length) {
             a = r[3];
             b = r[2];
