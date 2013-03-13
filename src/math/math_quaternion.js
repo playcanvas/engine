@@ -175,7 +175,7 @@ pc.math.quat = function () {
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
          * var rot = pc.math.mat4.makeRotate(180, yaxis);
          *
-         * // Allow toQuat to create a new quaternion internally
+         * // Allow fromMat4 to create a new quaternion internally
          * var q1 = pc.math.quat.fromMat4(rot);
          *
          * // Supply a quaternion to receive the result of the conversion
