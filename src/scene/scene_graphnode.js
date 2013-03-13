@@ -443,9 +443,9 @@ pc.extend(pc.scene, function () {
          */
         setLocalEulerAngles: function () {
             if (arguments.length === 1) {
-                pc.math.quat.setFromEulers(this.localRotation, arguments[0][0], arguments[0][1], arguments[0][2]);
+                pc.math.quat.fromEulerXYZ(arguments[0][0], arguments[0][1], arguments[0][2], this.localRotation);
             } else {
-                pc.math.quat.setFromEulers(this.localRotation, arguments[0], arguments[1], arguments[2]);
+                pc.math.quat.fromEulerXYZ(arguments[0], arguments[1], arguments[2], this.localRotation);
             }
             this.dirtyLocal = true;
         },
@@ -639,7 +639,7 @@ pc.extend(pc.scene, function () {
                 tempVec[2] = arguments[2];
             }
 
-            pc.math.quat.setFromEulers(this.localRotation, tempVec[0], tempVec[1], tempVec[2]);
+            pc.math.quat.fromEulerXYZ(tempVec[0], tempVec[1], tempVec[2], this.localRotation);
 
             if (this._parent !== null) {
                 var parentRot = this._parent.getRotation();
@@ -928,7 +928,7 @@ pc.extend(pc.scene, function () {
                 z = arguments[0][2];
             }
 
-            pc.math.quat.setFromEulers(tempQuatA, x, y, z);
+            pc.math.quat.fromEulerXYZ(x, y, z, tempQuatA);
 
             if (this._parent === null) {
                 pc.math.quat.multiply(tempQuatA, this.localRotation, this.localRotation);
@@ -973,7 +973,7 @@ pc.extend(pc.scene, function () {
                 z = arguments[0][2];
             }
 
-            pc.math.quat.setFromEulers(tempQuatA, x, y, z);
+            pc.math.quat.fromEulerXYZ(x, y, z, tempQuatA);
             pc.math.quat.multiply(this.localRotation, tempQuatA, this.localRotation);
             this.dirtyLocal = true;
         }
