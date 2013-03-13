@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.101.0
+--------
+* Documented almost all of pc.math and renamed a number of functions for uniformity.
+
+--------
 v0.100.0
 --------
 * Added pc.math.smoothstep and pc.math.smootherstep.
