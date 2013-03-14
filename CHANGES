@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.102.0
+--------
+* Added new collision mesh component.
+
+--------
 v0.101.1
 --------
 * [FIX] Animation blending works again (broken in 0.99.1).
