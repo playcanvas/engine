@@ -108,11 +108,28 @@ pc.extend(pc.fw, function () {
                 }
 
                 var useQuantizedAabbCompression = true;
-                var shape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
-
+                var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+/*
                 var wtm = meshInstance.node.getWorldTransform();
                 var scl = pc.math.mat4.getScale(wtm);
                 shape.setLocalScaling(new Ammo.btVector3(scl[0], scl[1], scl[2]));
+*/
+
+                var shape = new Ammo.btCompoundShape();
+
+                var position = meshInstance.node.getPosition();
+                var rotation = meshInstance.node.getRotation();
+
+                var transform = new Ammo.btTransform();
+                transform.setIdentity();
+                transform.getOrigin().setValue(position[0], position[1], position[2]);
+
+                var ammoQuat = new Ammo.btQuaternion();
+                ammoQuat.setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
+                transform.setRotation(ammoQuat);
+//                transform.getRotation().setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
+
+                shape.addChildShape(transform, triMeshShape);
 
                 return shape;
             } else {
