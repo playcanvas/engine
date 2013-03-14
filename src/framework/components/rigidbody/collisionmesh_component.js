@@ -73,63 +73,66 @@ pc.extend(pc.fw, function () {
         createShape: function () {
             if (typeof(Ammo) !== 'undefined') {
                 var model = this.model;
-                var meshInstance = model.meshInstances[0];
-                var mesh = meshInstance.mesh;
-                var ib = mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID];
-                var vb = mesh.vertexBuffer;
-
-                var format = vb.getFormat();
-                var stride = format.size / 4;
-                var positions;
-                for (var i = 0; i < format.elements.length; i++) {
-                    var element = format.elements[i];
-                    if (element.scopeId.name === 'vertex_position') {
-                        positions = new Float32Array(vb.lock(), element.offset);
-                    }
-                }
-
-                var indices = new Uint16Array(ib.lock());
-                var numTriangles = indices.length / 3;
-
-                var v1 = new Ammo.btVector3();
-                var v2 = new Ammo.btVector3();
-                var v3 = new Ammo.btVector3();
-                var i1, i2, i3;
-
-                var triMesh = new Ammo.btTriangleMesh();
-                for (i = 0; i < numTriangles; i++) {
-                    i1 = indices[i*3] * stride;
-                    i2 = indices[i*3+1] * stride;
-                    i3 = indices[i*3+2] * stride;
-                    v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-                    v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-                    v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
-                    triMesh.addTriangle(v1, v2, v3, true);
-                }
-
-                var useQuantizedAabbCompression = true;
-                var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
-/*
-                var wtm = meshInstance.node.getWorldTransform();
-                var scl = pc.math.mat4.getScale(wtm);
-                shape.setLocalScaling(new Ammo.btVector3(scl[0], scl[1], scl[2]));
-*/
 
                 var shape = new Ammo.btCompoundShape();
 
-                var position = meshInstance.node.getPosition();
-                var rotation = meshInstance.node.getRotation();
+                for (var i = 0; i < model.meshInstances.length; i++) {
+                    var meshInstance = model.meshInstances[i];
+                    var mesh = meshInstance.mesh;
+                    var ib = mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID];
+                    var vb = mesh.vertexBuffer;
 
-                var transform = new Ammo.btTransform();
-                transform.setIdentity();
-                transform.getOrigin().setValue(position[0], position[1], position[2]);
+                    var format = vb.getFormat();
+                    var stride = format.size / 4;
+                    var positions;
+                    for (var i = 0; i < format.elements.length; i++) {
+                        var element = format.elements[i];
+                        if (element.scopeId.name === 'vertex_position') {
+                            positions = new Float32Array(vb.lock(), element.offset);
+                        }
+                    }
 
-                var ammoQuat = new Ammo.btQuaternion();
-                ammoQuat.setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
-                transform.setRotation(ammoQuat);
-//                transform.getRotation().setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
+                    var indices = new Uint16Array(ib.lock());
+                    var numTriangles = indices.length / 3;
 
-                shape.addChildShape(transform, triMeshShape);
+                    var v1 = new Ammo.btVector3();
+                    var v2 = new Ammo.btVector3();
+                    var v3 = new Ammo.btVector3();
+                    var i1, i2, i3;
+
+                    var triMesh = new Ammo.btTriangleMesh();
+                    for (i = 0; i < numTriangles; i++) {
+                        i1 = indices[i*3] * stride;
+                        i2 = indices[i*3+1] * stride;
+                        i3 = indices[i*3+2] * stride;
+                        v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
+                        v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
+                        v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
+                        triMesh.addTriangle(v1, v2, v3, true);
+                    }
+
+                    var useQuantizedAabbCompression = true;
+                    var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+
+/*
+                    var wtm = meshInstance.node.getWorldTransform();
+                    var scl = pc.math.mat4.getScale(wtm);
+                    triMeshShape.setLocalScaling(new Ammo.btVector3(scl[0], scl[1], scl[2]));
+*/
+
+                    var position = meshInstance.node.getPosition();
+                    var rotation = meshInstance.node.getRotation();
+
+                    var transform = new Ammo.btTransform();
+                    transform.setIdentity();
+                    transform.getOrigin().setValue(position[0], position[1], position[2]);
+
+                    var ammoQuat = new Ammo.btQuaternion();
+                    ammoQuat.setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
+                    transform.setRotation(ammoQuat);
+
+                    shape.addChildShape(transform, triMeshShape);
+                }
 
                 return shape;
             } else {
