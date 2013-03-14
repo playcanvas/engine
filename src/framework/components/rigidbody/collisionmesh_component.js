@@ -110,7 +110,7 @@ pc.extend(pc.fw, function () {
                 var useQuantizedAabbCompression = true;
                 var shape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
 
-                var wtm = this.meshInstance.node.getWorldTransform();
+                var wtm = meshInstance.node.getWorldTransform();
                 var scl = pc.math.mat4.getScale(wtm);
                 shape.setLocalScaling(new Ammo.btVector3(scl[0], scl[1], scl[2]));
 

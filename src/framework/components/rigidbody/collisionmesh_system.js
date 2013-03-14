@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var CollisionMeshComponentSystem = function CollisionMeshComponentSystem (context) {
-        this.id = "collisionbox";
+        this.id = "collisionmesh";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.CollisionMeshComponent;
