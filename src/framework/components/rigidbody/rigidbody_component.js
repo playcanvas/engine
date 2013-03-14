@@ -1,7 +1,5 @@
 pc.extend(pc.fw, function () {
     // Shared math variable to avoid excessive allocation
-    var vel = pc.math.vec3.create();
-
     var quat = pc.math.quat.create();
     var ammoTransform;
     var ammoVec1, ammoVec2, ammoQuat, ammoOrigin;
@@ -65,9 +63,10 @@ pc.extend(pc.fw, function () {
 
             if (entity.collisionbox) {
                 shape = entity.collisionbox.shape;
-            }
-            else if (entity.collisionsphere) {
+            } else if (entity.collisionsphere) {
                 shape = entity.collisionsphere.shape;
+            } else if (entity.collisionmesh) {
+                shape = entity.collisionmesh.shape;
             }
 
             if (shape) {
