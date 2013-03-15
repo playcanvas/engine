@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.102.1
+--------
+* [FIX] Don't add collision meshes to the hierarchy.
+
+--------
 v0.102.0
 --------
 * Added new collision mesh component.
