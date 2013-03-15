@@ -58,16 +58,6 @@ pc.extend(pc.fw, function () {
         },
 
         onSetModel: function (name, oldValue, newValue) {
-            if (oldValue) {
-                this.entity.removeChild(oldValue.getGraph());
-            }
-
-            if (newValue) {
-                this.entity.addChild(newValue.graph);
-
-                // Store the entity that owns this model
-                newValue._entity = this.entity;
-            }
         },
 
         createShape: function () {
