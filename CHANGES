@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.102.2
+--------
+* [FIX] GraphNode right, up and forwards properties now work.
+* [FIX] pc.math.multiply now creates a result quaternion correctly if not supplied as parameter.
+
+--------
 v0.102.1
 --------
 * [FIX] Don't add collision meshes to the hierarchy.
