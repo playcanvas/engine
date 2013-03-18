@@ -36,23 +36,22 @@ pc.extend(pc.scene, function () {
         this.worldTransform = pc.math.mat4.create();
         this.dirtyWorld = false;
 
-        this.right = pc.math.vec3.create();
-        this.up = pc.math.vec3.create();
-        this.forwards = pc.math.vec3.create();
+        this._right = pc.math.vec3.create();
+        this._up = pc.math.vec3.create();
+        this._forwards = pc.math.vec3.create();
 
         this._parent = null;
         this._children = [];
     };
 
-    Object.defineProperty(GraphNode.prototype, 'forwards', {
+    Object.defineProperty(GraphNode.prototype, 'right', {
         get: function() {
             var transform = this.getWorldTransform();
 
-            pc.math.mat4.getX(transform, this.forwards);
-            pc.math.vec3.normalize(this.forwards, this.forwards);
-            pc.math.vec3.scale(this.forwards, -1, this.forwards);
+            pc.math.mat4.getX(transform, this._right);
+            pc.math.vec3.normalize(this._right, this._right);
 
-            return this.forwards;
+            return this._right;
         }
     });
 
@@ -60,25 +59,26 @@ pc.extend(pc.scene, function () {
         get: function() {
             var transform = this.getWorldTransform();
 
-            pc.math.mat4.getY(transform, this.up);
-            pc.math.vec3.normalize(this.up, this.up);
+            pc.math.mat4.getY(transform, this._up);
+            pc.math.vec3.normalize(this._up, this._up);
 
-            return this.up;
+            return this._up;
         }
     });
 
-    Object.defineProperty(GraphNode.prototype, 'right', {
+    Object.defineProperty(GraphNode.prototype, 'forwards', {
         get: function() {
             var transform = this.getWorldTransform();
 
-            pc.math.mat4.getZ(transform, this.right);
-            pc.math.vec3.normalize(this.right, this.right);
+            pc.math.mat4.getZ(transform, this._forwards);
+            pc.math.vec3.normalize(this._forwards, this._forwards);
+            pc.math.vec3.scale(this._forwards, -1, this._forwards);
 
-            return this.right;
+            return this._forwards;
         }
     });
 
-    GraphNode.prototype = {
+    pc.extend(GraphNode.prototype, {
 
         _cloneInternal: function (clone) {
             clone._name = this._name;
@@ -977,7 +977,7 @@ pc.extend(pc.scene, function () {
             pc.math.quat.multiply(this.localRotation, tempQuatA, this.localRotation);
             this.dirtyLocal = true;
         }
-    };
+    });
 
     return {
         GraphNode: GraphNode
