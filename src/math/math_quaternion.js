@@ -352,7 +352,7 @@ pc.math.quat = function () {
          */
         multiply: function (q1, q2, r) {
             if (typeof r === 'undefined') {
-                r = pc.math.vec3.create();
+                r = pc.math.quat.create();
             }
 
             var xx = q1[3] * q2[0] +
