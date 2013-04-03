@@ -4,7 +4,7 @@ pc.extend(pc.scene, function () {
 
     var getTime = function () {
         return (new Date().getTime() - start.getTime()) / 1000.0;
-    }
+    };
 
     var particleVerts = [
         [-0.5, -0.5],
@@ -155,12 +155,12 @@ pc.extend(pc.scene, function () {
 
             for (var corner = 0; corner < 4; corner++) {
                 var e = iterator.element;
-                e["particle_uvLifeTimeFrameStart"].set(particleVerts[corner][0], particleVerts[corner][1], lifeTime, frameStart);
-                e["particle_positionStartTime"].set(position[0], position[1], position[2], startTime);
-                e["particle_velocityStartSize"].set(velocity[0], velocity[1], velocity[2], startSize);
-                e["particle_accelerationEndSize"].set(acceleration[0], acceleration[1], acceleration[2], endSize);
-                e["particle_spinStartSpinSpeed"].set(spinStart, spinSpeed, 0.0, 0.0);
-                e["particle_colorMult"].set(1, 1, 1, 1);
+                e.particle_uvLifeTimeFrameStart.set(particleVerts[corner][0], particleVerts[corner][1], lifeTime, frameStart);
+                e.particle_positionStartTime.set(position[0], position[1], position[2], startTime);
+                e.particle_velocityStartSize.set(velocity[0], velocity[1], velocity[2], startSize);
+                e.particle_accelerationEndSize.set(acceleration[0], acceleration[1], acceleration[2], endSize);
+                e.particle_spinStartSpinSpeed.set(spinStart, spinSpeed, 0.0, 0.0);
+                e.particle_colorMult.set(1, 1, 1, 1);
                 iterator.next();
             }
         }
@@ -181,7 +181,7 @@ pc.extend(pc.scene, function () {
             indices[dst++] = baseIndex + 2;
             indices[dst++] = baseIndex + 3;
         }
-        indexBuffer.unlock()
+        indexBuffer.unlock();
 
         var mesh = new pc.scene.Mesh();
         mesh.vertexBuffer = vertexBuffer;

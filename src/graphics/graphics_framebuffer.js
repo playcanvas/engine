@@ -131,7 +131,7 @@ pc.extend(pc.gfx, function () {
      */
     FrameBuffer.prototype.setActiveBuffer = function (bufferIndex) {
         this._activeBuffer = bufferIndex;
-    }
+    };
 
     /**
      * @function

@@ -53,7 +53,7 @@ pc.extend(pc.gfx, function () {
 
         // Calculate the size
         this.size = this.numComponents * _typeSize[this.dataType];
-    }
+    };
 
     return {
         VertexElement: VertexElement

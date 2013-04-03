@@ -17,7 +17,7 @@ pc.extend(pc.gfx, function () {
             // Increment the revision number
             this.version.revision++;
         }
-    }
+    };
 
     return {
         VersionedObject: VersionedObject

@@ -241,14 +241,15 @@ pc.extend(pc.scene, function () {
          * @return {pc.scene.GraphNode} The root node of the hierarchy to which this node belongs.
          */
         getRoot: function () {
-            var parent = this.getParent()
-            if(!parent) {
+            var parent = this.getParent();
+            if (!parent) {
                 return this;
             }
-            
-            while(parent.getParent()) {
+
+            while (parent.getParent()) {
                 parent = parent.getParent();
             }
+
             return parent;
         },
 
@@ -656,8 +657,8 @@ pc.extend(pc.scene, function () {
          * @param {pc.scene.GraphNode} node The new child to add
          */
         addChild: function (node) {
-            if(node.getParent() != null) {
-                throw new Error("GraphNode is already parented")
+            if (node.getParent() !== null) {
+                throw new Error("GraphNode is already parented");
             }
 
             this._children.push(node);

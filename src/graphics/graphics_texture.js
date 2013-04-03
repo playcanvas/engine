@@ -38,6 +38,7 @@ pc.extend(pc.gfx, function () {
         // PRIVATE
         var device = pc.gfx.Device.getCurrent();
         var gl = device.gl;
+        var ext;
         this._gl = gl;
         this._glTextureId = gl.createTexture();
         this._glTarget = cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
@@ -87,17 +88,17 @@ pc.extend(pc.gfx, function () {
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
             case pc.gfx.PIXELFORMAT_DXT1:
-                var ext = device.extCompressedTextureS3TC;
+                ext = device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
                 break;
             case pc.gfx.PIXELFORMAT_DXT3:
-                var ext = device.extCompressedTextureS3TC;
+                ext = device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
                 break;
             case pc.gfx.PIXELFORMAT_DXT5:
-                var ext = device.extCompressedTextureS3TC;
+                ext = device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
                 break;
@@ -252,9 +253,9 @@ pc.extend(pc.gfx, function () {
         lock: function (options) {
             // Initialize options to some sensible defaults
             options = options || { level: 0, face: 0, mode: pc.gfx.TEXTURELOCK_WRITE };
-            if (options.level === undefined) { options.level = 0; };
-            if (options.face === undefined) { options.face = 0; };
-            if (options.mode === undefined) { options.mode = pc.gfx.TEXTURELOCK_WRITE; };
+            if (options.level === undefined) { options.level = 0; }
+            if (options.face === undefined) { options.face = 0; }
+            if (options.mode === undefined) { options.mode = pc.gfx.TEXTURELOCK_WRITE; }
 
             this._lockedLevel = options.level;
 
@@ -424,24 +425,25 @@ pc.extend(pc.gfx, function () {
             this.bind();
 
             var gl = this._gl;
+            var pixels = this._levels[0];
 
             if (this._cubemap) {
+                var face;
+
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                var pixels = this._levels[0];
                 if ((pixels[0] instanceof HTMLCanvasElement) || (pixels[0] instanceof HTMLImageElement) || (pixels[0] instanceof HTMLVideoElement)) {
                     // Upload the image, canvas or video
-                    for (var face = 0; face < 6; face++) {
+                    for (face = 0; face < 6; face++) {
                         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                         gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, this._glInternalFormat, this._glFormat, this._glPixelType, pixels[face]);
                     }
                 } else {
                     // Upload the byte array
-                    for (var face = 0; face < 6; face++) {
+                    for (face = 0; face < 6; face++) {
                         gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, this._glInternalFormat, this._width, this._height, 0, this._glFormat, this._glPixelType, pixels[face]);
                     }
                 }
             } else {
-                var pixels = this._levels[0];
                 if ((pixels instanceof HTMLCanvasElement) || (pixels instanceof HTMLImageElement) || (pixels instanceof HTMLVideoElement)) {
                     // Upload the image, canvas or video
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);

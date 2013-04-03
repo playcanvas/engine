@@ -29,7 +29,7 @@ pc.extend(pc.gfx, function () {
             var typeName = (this.type === pc.gfx.SHADERTYPE_VERTEX) ? "vertex" : "fragment";
             logERROR("Failed to compile " + typeName + " shader:\n" + src + "\n" + error);
         }
-    }
+    };
 
     Shader.prototype = {
         /**
@@ -75,7 +75,7 @@ pc.extend(pc.gfx, function () {
         getSource: function () {
             return this.src;
         }
-    }
+    };
 
     return {
         Shader: Shader
