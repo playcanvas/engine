@@ -102,7 +102,7 @@ pc.extend(pc.resources, function () {
     */
     ResourceLoaderDisplay.prototype._sanitizeId = function (id) {
         return id.replace(/\//, '').replace(/\./, '');
-    }
+    };
 
     /**
     * @function
@@ -179,5 +179,5 @@ pc.extend(pc.resources, function () {
 
     return {
         ResourceLoaderDisplay: ResourceLoaderDisplay
-    }
+    };
 }());

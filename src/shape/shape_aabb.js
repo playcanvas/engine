@@ -13,7 +13,7 @@ pc.extend(pc.shape, function () {
         this.center = center || pc.math.vec3.create(0, 0, 0);
         this.halfExtents = halfExtents || pc.math.vec3.create(0.5, 0.5, 0.5);
         this.type = pc.shape.Type.AABB;
-    }
+    };
     Aabb = pc.inherits(Aabb, pc.shape.Shape);
 
     Aabb.prototype.add = function (other) {
@@ -45,7 +45,7 @@ pc.extend(pc.shape, function () {
         th[0] = (tmaxx - tminx) * 0.5;
         th[1] = (tmaxy - tminy) * 0.5;
         th[2] = (tmaxz - tminz) * 0.5;
-    }
+    };
 
     Aabb.prototype.copy = function (src) {
         pc.math.vec3.copy(src.center, this.center);

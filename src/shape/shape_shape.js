@@ -20,7 +20,7 @@ pc.shape = function () {
         containsPoint: function (point) {
             throw new Error("Shape hasn't implemented containsPoint");
         }
-    }
+    };
     return {
         Shape: Shape,
         /**

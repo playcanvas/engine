@@ -40,7 +40,7 @@ pc.shape.intersection = function () {
             i;
                 
             pc.math.vec3.subtract(rayOrigin, aabb.center, diff);
-            absDiff = pc.math.vec3.create(Math.abs(diff[0]), Math.abs(diff[1]), Math.abs(diff[2]))
+            absDiff = pc.math.vec3.create(Math.abs(diff[0]), Math.abs(diff[1]), Math.abs(diff[2]));
             
             pc.math.vec3.multiply(diff, rayDir, prod);
             
@@ -78,11 +78,11 @@ pc.shape.intersection = function () {
          * @return {Boolean} True if intersection occurs
          */
         raySphere: function (rayOrigin, rayDir, sphere, result) {
-            var diff = pc.math.vec3.create(),
-            a = 0,
-            b = 0,
-            c = 0,
-            discr = 0,
+            var diff = pc.math.vec3.create();
+            var a = 0;
+            var b = 0;
+            var c = 0;
+            var discr = 0;
             result = result || {};
             
             pc.math.vec3.subtract(rayOrigin, sphere.center, diff);

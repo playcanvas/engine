@@ -192,9 +192,9 @@ pc.extend(pc.input, function () {
             var totalOffsetY = 0;
             var canvasX = 0;
             var canvasY = 0;
-            var target = touch.target
+            var target = touch.target;
             while (!(target instanceof HTMLElement)) {
-                target = target.parentNode
+                target = target.parentNode;
             }
             var currentElement = target;
             var scaleX = 1;
@@ -208,7 +208,8 @@ pc.extend(pc.input, function () {
             do {
                 totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
                 totalOffsetY += currentElement.offsetTop - currentElement.scrollTop;
-            } while(currentElement = currentElement.offsetParent)
+                currentElement = currentElement.offsetParent;
+            } while (currentElement);
         
             canvasX = touch.pageX - totalOffsetX;
             canvasY = target.offsetHeight - (touch.pageY - totalOffsetY);

@@ -63,9 +63,7 @@ pc.extend(pc.net, function () {
 
         send: function (msg) {
             this._ws.send(msg);
-        },
-
-
+        }
     };
 
     return {

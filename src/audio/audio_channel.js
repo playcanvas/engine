@@ -54,7 +54,7 @@ pc.extend(pc.audio, function () {
 
                 this.source.start(0);
 
-                this.manager.on('volumechange', this.onManagerVolumeChange, this)
+                this.manager.on('volumechange', this.onManagerVolumeChange, this);
                 this.manager.on('suspend', this.onManagerSuspend, this);
                 this.manager.on('resume', this.onManagerResume, this);
             },
@@ -84,7 +84,7 @@ pc.extend(pc.audio, function () {
             unpause: function () {
                 if (this.source || !this.paused) {
                     throw new Error('Call pause() before unpausing.');
-                };
+                }
 
                 this._createSource();
 
@@ -121,7 +121,7 @@ pc.extend(pc.audio, function () {
                     this.source = null;
                 }
 
-                this.manager.off('volumechange', this.onManagerVolumeChange, this)
+                this.manager.off('volumechange', this.onManagerVolumeChange, this);
                 this.manager.off('suspend', this.onManagerSuspend, this);
                 this.manager.off('resume', this.onManagerResume, this);
 
@@ -157,7 +157,7 @@ pc.extend(pc.audio, function () {
 
             getDuration: function () {
                 if (this.source) {
-                    return this.source.buffer.duration
+                    return this.source.buffer.duration;
                 }
                 else {
                     return 0;
@@ -189,7 +189,7 @@ pc.extend(pc.audio, function () {
             
             this.source = sound.audio.cloneNode(false);
             this.source.pause(); // not initially playing
-        }
+        };
         
         Channel.prototype = {
             play: function () {
@@ -200,7 +200,7 @@ pc.extend(pc.audio, function () {
                     this.source.play();
                 }
 
-                this.manager.on('volumechange', this.onManagerVolumeChange, this)
+                this.manager.on('volumechange', this.onManagerVolumeChange, this);
                 this.manager.on('suspend', this.onManagerSuspend, this);
                 this.manager.on('resume', this.onManagerResume, this);
 
@@ -227,7 +227,7 @@ pc.extend(pc.audio, function () {
                     this.source.currentTime = 0;
                 }
 
-                this.manager.off('volumechange', this.onManagerVolumeChange, this)
+                this.manager.off('volumechange', this.onManagerVolumeChange, this);
                 this.manager.off('suspend', this.onManagerSuspend, this);
                 this.manager.off('resume', this.onManagerResume, this);
             },

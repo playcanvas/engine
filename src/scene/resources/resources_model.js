@@ -13,7 +13,7 @@ pc.extend(pc.resources, function () {
             "linestrip":      pc.gfx.PRIMITIVE_LINE_STRIP,
             "triangles":      pc.gfx.PRIMITIVE_TRIANGLES,
             "trianglestrip":  pc.gfx.PRIMITIVE_TRIANGLE_STRIP
-        }
+        };
 
         this._jsonToVertexElementType = {
             "int8":     pc.gfx.VertexElementType.INT8,
@@ -23,19 +23,19 @@ pc.extend(pc.resources, function () {
             "int32":    pc.gfx.VertexElementType.INT32,
             "uint32":   pc.gfx.VertexElementType.UINT32,
             "float32":  pc.gfx.VertexElementType.FLOAT32
-        }
+        };
 
         this._jsonToLightType = {
             "directional": pc.scene.LightType.DIRECTIONAL,
             "point":       pc.scene.LightType.POINT,
             "spot":        pc.scene.LightType.SPOT
-        }
+        };
         
         this._jsonToAddressMode = {
             "repeat": pc.gfx.ADDRESS_REPEAT,
             "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
             "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
-        }
+        };
         
         this._jsonToFilterMode = {
             "nearest":             pc.gfx.FILTER_NEAREST,
@@ -44,12 +44,12 @@ pc.extend(pc.resources, function () {
             "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
             "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
             "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
-        }
+        };
         
         this._jsonToProjectionType = {
             "perspective"  : pc.scene.Projection.PERSPECTIVE,
             "orthographic" : pc.scene.Projection.ORTHOGRAPHIC
-        }
+        };
 	};
 	ModelResourceHandler = pc.inherits(ModelResourceHandler, pc.resources.ResourceHandler);
 	
@@ -91,10 +91,10 @@ pc.extend(pc.resources, function () {
      * @param {String} [options.identifier] The identifier used to load the resource, this is used to store the opened resource in the loader cache 
 	 */
     ModelResourceHandler.prototype.open = function (data, options) {
-    	options = options || {};
-    	options.directory = options.directory || "";
-    	options.priority = options.priority || 1; // default priority of 1
-    	options.batch = options.batch || null;
+        options = options || {};
+        options.directory = options.directory || "";
+        options.priority = options.priority || 1; // default priority of 1
+        options.batch = options.batch || null;
 
         if (options.binary) {
             model = this._loadModelBin(data, options);
@@ -102,12 +102,12 @@ pc.extend(pc.resources, function () {
             model = this._loadModelJson(data, options);
         }
 
-    	return model;
+        return model;
     };
 
     ModelResourceHandler.prototype.clone = function (model) {
         return model.clone();
-    }
+    };
 
     ModelResourceHandler.prototype._setNodeData = function (node, data) {
         node.setName(data.name);
@@ -1601,5 +1601,5 @@ pc.extend(pc.resources, function () {
 	return {
 		ModelResourceHandler: ModelResourceHandler,
 		ModelRequest: ModelRequest
-	}
+	};
 }());

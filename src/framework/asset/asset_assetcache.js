@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
 
     AssetCache.prototype = {
         update: function (toc, loader) {
-            for (resourceId in toc.assets) {
+            for (var resourceId in toc.assets) {
                 var asset = this.getAsset(resourceId);
 
                 if (!asset) {

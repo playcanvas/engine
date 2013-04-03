@@ -56,10 +56,10 @@ pc.extend(pc.shape, function () {
      */
     Box.prototype.getHalfExtents = function () {
         return this.halfExtents;
-    }
+    };
     
     return {
         Box: Box
-    }
+    };
 }());
   

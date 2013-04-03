@@ -74,7 +74,7 @@ pc.extend(pc.shape, function () {
         }
         
         this.radius = Math.sqrt(maxDistSq);
-    }
+    };
     
     return {
         Sphere: Sphere

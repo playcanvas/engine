@@ -110,7 +110,7 @@ pc.extend(pc.input, function(){
         this._element.addEventListener("keydown", this._keyDownHandler, false);
         this._element.addEventListener("keypress", this._keyPressHandler, false);
         this._element.addEventListener("keyup", this._keyUpHandler, false);        
-    }
+    };
     
     /**
     * @function
@@ -122,7 +122,7 @@ pc.extend(pc.input, function(){
         this._element.removeEventListener("keypress", this._keyPressHandler);
         this._element.removeEventListener("keyup", this._keyUpHandler);
         this._element = null;
-    }
+    };
     
     /**
      * @private
@@ -150,7 +150,7 @@ pc.extend(pc.input, function(){
         }
         
         return 'U+' + hex;
-    }
+    };
     
     Keyboard.prototype._handleKeyDown = function(event) {
         var code = event.keyCode || event.charCode;
@@ -231,8 +231,8 @@ pc.extend(pc.input, function(){
      * @return {Boolean} True if the key was pressed, false if not
      */
     Keyboard.prototype.isPressed = function (key) {
-        var key = toKeyCode(key);
-        var id = this.toKeyIdentifier(key);
+        var keyCode = toKeyCode(key);
+        var id = this.toKeyIdentifier(keyCode);
         
         return !!(this._keymap[id]);
     };
@@ -245,8 +245,8 @@ pc.extend(pc.input, function(){
      * @return {Boolean} true if the key was pressed
      */
     Keyboard.prototype.wasPressed = function (key) {
-        var key = toKeyCode(key);
-        var id = this.toKeyIdentifier(key);
+        var keyCode = toKeyCode(key);
+        var id = this.toKeyIdentifier(keyCode);
         
         return (!!(this._keymap[id]) && !!!(this._lastmap[id]));
     };

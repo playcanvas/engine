@@ -11,7 +11,7 @@ pc.extend(pc.anim, function () {
 
         // Optional destination for interpolated keyframe
         this._targetNode = null;
-    };
+    }
 
     InterpolatedKey.prototype = {
         getTarget: function () {
@@ -189,7 +189,7 @@ pc.extend(pc.anim, function () {
      */
     Skeleton.prototype.getCurrentTime = function () {
         return this._time;
-    }
+    };
 
     /**
      * @function
@@ -211,7 +211,7 @@ pc.extend(pc.anim, function () {
 
         this.addTime(0);
         this.updateGraph();
-    }
+    };
 
     /**
      * @function
@@ -222,7 +222,7 @@ pc.extend(pc.anim, function () {
      */
     Skeleton.prototype.getNumNodes = function () {
         return this._interpolatedKeys.length;
-    }
+    };
     
     /**
      * @function

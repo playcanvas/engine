@@ -4,7 +4,7 @@ pc.extend(pc.resources, function () {
     AnimationResourceHandler = pc.inherits(AnimationResourceHandler, pc.resources.ResourceHandler);
 
     AnimationResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
-    	var url = identifier;
+        var url = identifier;
         var dir = pc.path.getDirectory(url);
 
         pc.net.http.get(url, function (response) {
@@ -17,10 +17,9 @@ pc.extend(pc.resources, function () {
     };
 
     AnimationResourceHandler.prototype.open = function (data, options) {
-        animation = this._loadAnimation(data);
-    	return animation;
+        return this._loadAnimation(data);
     };
-	
+
     AnimationResourceHandler.prototype._loadAnimation = function (data) {
         var animData = data.animation;
 
@@ -65,5 +64,5 @@ pc.extend(pc.resources, function () {
     return {
         AnimationResourceHandler: AnimationResourceHandler,
         AnimationRequest: AnimationRequest
-    }	
+    };
 }());
