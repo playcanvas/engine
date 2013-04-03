@@ -6,6 +6,6 @@ pc.extend(pc.fw, function () {
     };
 
     return {
-        ContentFile: ContentFile,
+        ContentFile: ContentFile
     };
 }());

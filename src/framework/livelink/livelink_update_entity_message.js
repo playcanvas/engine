@@ -26,7 +26,7 @@ pc.extend(pc.fw, function () {
             position: position,
             rotation: rotation,
             scale: scale
-        }
+        };
     };
     LiveLinkUpdateEntityTransformMessage = pc.inherits(LiveLinkUpdateEntityTransformMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_TRANSFORM");

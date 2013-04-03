@@ -66,5 +66,5 @@ pc.extend(editor, function () {
     return {
         LinkInterface: LinkInterface,
         link: new LinkInterface()
-    }            
+    };
 }());

@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @private
      */
     var LiveLinkCloseEntityMessage = function(id) {
-        this.type = pc.fw.LiveLinkMessageType.CLOSE_ENTITY
+        this.type = pc.fw.LiveLinkMessageType.CLOSE_ENTITY;
         this.content = {
             id: id
         };

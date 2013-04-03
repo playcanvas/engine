@@ -50,7 +50,7 @@ pc.extend(pc.fw, function () {
         }
         
         pc.livelinks.push(this);
-    }
+    };
     
     /**
      * @ignore
@@ -61,7 +61,7 @@ pc.extend(pc.fw, function () {
     LiveLink.prototype.detach = function () {
         this._listener = null;
         window.removeEventListener("message", this._handler, false);
-    }
+    };
     
     /**
      * @ignore
@@ -72,7 +72,7 @@ pc.extend(pc.fw, function () {
      */
     LiveLink.prototype.addDestinationWindow = function (_window) {
         this._destinations.push(_window);
-    }
+    };
     
     /**
      * @ignore
@@ -89,7 +89,7 @@ pc.extend(pc.fw, function () {
                 break;
             }
         }
-    }
+    };
     
     /**
      * @ignore
@@ -121,7 +121,7 @@ pc.extend(pc.fw, function () {
         for(i = 0; i < length; i++) {
             this.removeDestinationWindow(closed[i]);
         }
-    }
+    };
     
     LiveLink.prototype._send = function(msg, success, _window, origin) {
         msg.senderid = this._linkid;
@@ -131,7 +131,7 @@ pc.extend(pc.fw, function () {
             this._callbacks[msg.id] = {
                 count: 1,
                 callback: success ? success.bind(this) : function () {}
-            }            
+            };
         }
         var data = pc.fw.LiveLinkMessage.serialize(msg);
         
@@ -144,11 +144,10 @@ pc.extend(pc.fw, function () {
                     source: window,
                     data: data             
                 });
-            })
+            });
         } else {
             _window.postMessage(data, origin);    
         }
-        
     };
     
     /**
@@ -164,7 +163,7 @@ pc.extend(pc.fw, function () {
             throw new Error("LiveLink already listening");
         }
         this._listener = callback;
-    }
+    };
     
     LiveLink.prototype._handleMessage = function (event) {
         var msg, newmsg;
@@ -184,7 +183,7 @@ pc.extend(pc.fw, function () {
             if(msg.content.received_from == this._linkid) {
                 // Call the callback and delete it
                 this._callbacks[msg.content.id].count--;
-                if(this._callbacks[msg.content.id].count == 0) {
+                if (this._callbacks[msg.content.id].count === 0) {
                     this._callbacks[msg.content.id].callback();
                     delete this._callbacks[msg.content.id];                    
                 }
@@ -208,6 +207,6 @@ pc.extend(pc.fw, function () {
     
     return {
         LiveLink: LiveLink
-    }
+    };
 }());
 

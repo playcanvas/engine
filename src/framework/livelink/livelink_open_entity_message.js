@@ -15,7 +15,7 @@ pc.extend(pc.fw, function () {
     // };
 
     var LiveLinkOpenEntityMessage = function(entity) {
-        this.type = pc.fw.LiveLinkMessageType.OPEN_ENTITY
+        this.type = pc.fw.LiveLinkMessageType.OPEN_ENTITY;
         this.content = {
             entity: PCD.model.Entity.toData(entity)
         };

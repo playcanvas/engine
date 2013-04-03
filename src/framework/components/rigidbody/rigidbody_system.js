@@ -62,7 +62,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var RigidBodyComponentSystem = function RigidBodyComponentSystem (context) {
-        this.id = 'rigidbody'
+        this.id = 'rigidbody';
         context.systems.add(this.id, this);
         
         this.ComponentType = pc.fw.RigidBodyComponent;
@@ -106,13 +106,13 @@ pc.extend(pc.fw, function () {
             options: {
                 enumerations: [{
                     name: 'Static',
-                    value: pc.fw.RIGIDBODY_TYPE_STATIC,
+                    value: pc.fw.RIGIDBODY_TYPE_STATIC
                 }, {
                     name: 'Dynamic',
-                    value: pc.fw.RIGIDBODY_TYPE_DYNAMIC,
+                    value: pc.fw.RIGIDBODY_TYPE_DYNAMIC
                 }, {
                     name: 'Kinematic',
-                    value: pc.fw.RIGIDBODY_TYPE_KINEMATIC,
+                    value: pc.fw.RIGIDBODY_TYPE_KINEMATIC
                 }]
             },
             defaultValue: pc.fw.RIGIDBODY_TYPE_STATIC
@@ -154,7 +154,7 @@ pc.extend(pc.fw, function () {
     pc.extend(RigidBodyComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
-            var properties = ['friction', 'mass', 'restitution', 'bodyType'];
+            properties = ['friction', 'mass', 'restitution', 'bodyType'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.createBody();
@@ -266,7 +266,7 @@ pc.extend(pc.fw, function () {
 
             // Update the transforms of all entities referencing a body
             var components = this.store;
-            for (id in components) {
+            for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;

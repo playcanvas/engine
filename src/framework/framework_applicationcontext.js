@@ -49,10 +49,10 @@ pc.extend(pc.fw, function() {
         * @name pc.fw.ApplicationContext#gamepads
         * @description INput handler for gamepads if available
         */
-        this.gamepads = options.gamepads
-    }
+        this.gamepads = options.gamepads;
+    };
     
     return {
         ApplicationContext: ApplicationContext
-    }
+    };
 }());
