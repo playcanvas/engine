@@ -138,6 +138,7 @@ pc.extend(pc.scene, function () {
         // Build mesh instance list (ideally done by visibility query)
         var i;
         var mesh, meshInstance;
+        var type;
         var meshInstances = scene.meshInstances;
         var numMeshInstances = meshInstances.length;
         var device = pc.gfx.Device.getCurrent();
@@ -149,21 +150,24 @@ pc.extend(pc.scene, function () {
             meshInstance = meshInstances[i];
             mesh = meshInstance.mesh;
 
-            modelMatrixId.setValue(meshInstance.node.worldTransform);
-            if (meshInstance.skinInstance) {
-                poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+            type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type; 
+            if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP)) {
+                modelMatrixId.setValue(meshInstance.node.worldTransform);
+                if (meshInstance.skinInstance) {
+                    poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                }
+
+                this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;
+                this.pickColor[1] = ((i >> 8) & 0xff) / 255.0;
+                this.pickColor[2] = (i & 0xff) / 255.0;
+                this.pickColor[3] = 1.0;
+                pickColorId.setValue(this.pickColor);
+                device.setProgram(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
+
+                device.setVertexBuffer(mesh.vertexBuffer, 0);
+                device.setIndexBuffer(mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID]);
+                device.draw(mesh.primitive[pc.scene.RENDERSTYLE_SOLID]);
             }
-
-            this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;
-            this.pickColor[1] = ((i >> 8) & 0xff) / 255.0;
-            this.pickColor[2] = (i & 0xff) / 255.0;
-            this.pickColor[3] = 1.0;
-            pickColorId.setValue(this.pickColor);
-            device.setProgram(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
-
-            device.setVertexBuffer(mesh.vertexBuffer, 0);
-            device.setIndexBuffer(mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID]);
-            device.draw(mesh.primitive[pc.scene.RENDERSTYLE_SOLID]);
         }
 
         camera.frameEnd();
