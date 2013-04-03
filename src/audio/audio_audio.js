@@ -11,8 +11,11 @@ pc.audio = function () {
     */
     var AudioManager = function () {
         if (pc.audio.hasAudioContext()) {
-            var AudioContext = AudioContext || webkitAudioContext;
-            this.context = new AudioContext();
+            if (typeof AudioContext !== "undefined") {
+                this.context = new AudioContext();
+            } else if (typeof webkitAudioContext !== "undefined") {
+                this.context = new webkitAudioContext();
+            }
         }
         this.listener = new pc.audio.Listener(this);
         

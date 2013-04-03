@@ -27,6 +27,8 @@ pc.extend(pc.audio, function () {
             this.manager = manager;
 
             this.source = null;
+            var context = manager.context;
+            this.gain = context.createGain();
 
             this.resetTimeout = null;
         };
@@ -42,7 +44,7 @@ pc.extend(pc.audio, function () {
                     throw new Error('Call stop() before calling play()');
                 }
 
-                this.source = this._createSource();
+                this._createSource();
 
                 this.startedAt = this.manager.context.currentTime;
 
@@ -50,7 +52,7 @@ pc.extend(pc.audio, function () {
                 this.setVolume(this.volume);
                 this.setLoop(this.loop);
 
-                this.source.noteOn(0);
+                this.source.start(0);
 
                 this.manager.on('volumechange', this.onManagerVolumeChange, this)
                 this.manager.on('suspend', this.onManagerSuspend, this);
@@ -69,7 +71,7 @@ pc.extend(pc.audio, function () {
                     }
                     this.paused = true;
                     this.pausedAt = (this.manager.context.currentTime - this.startedAt) % this.source.buffer.duration;
-                    this.source.noteOff(0);
+                    this.source.stop(0);
                     this.source = null;
                 }
             },
@@ -84,7 +86,7 @@ pc.extend(pc.audio, function () {
                     throw new Error('Call pause() before unpausing.');
                 };
 
-                this.source = this._createSource();
+                this._createSource();
 
                 // Initialize volume and loop
                 this.setVolume(this.volume);
@@ -92,7 +94,7 @@ pc.extend(pc.audio, function () {
 
                 this.startedAt -= this.pausedAt;
                 var remainingTime = this.source.buffer.duration - this.pausedAt;
-                this.source.noteGrainOn(0, this.pausedAt, remainingTime);
+                this.source.start(0, this.pausedAt, remainingTime);
 
                 this.resetTimeout = setTimeout(function () {
                     // The loop property may have changed since the sound was restarted so check...
@@ -115,7 +117,7 @@ pc.extend(pc.audio, function () {
                     if (this.resetTimeout !== null) {
                       clearTimeout(this.resetTimeout);
                     }
-                    this.source.noteOff(0);
+                    this.source.stop(0);
                     this.source = null;
                 }
 
@@ -144,8 +146,8 @@ pc.extend(pc.audio, function () {
             */
             setVolume: function (volume) {
                 this.volume = volume;
-                if (this.source) {
-                    this.source.gain.value = volume * this.manager.getVolume();
+                if (this.gain) {
+                    this.gain.gain.value = volume * this.manager.getVolume();
                 }
             },
 
@@ -163,10 +165,14 @@ pc.extend(pc.audio, function () {
             },
 
             _createSource: function () {
-                var source = this.manager.context.createBufferSource();
-                source.buffer = this.sound.buffer;
-                source.connect(this.manager.context.destination);                    
-                return source;
+                var context = this.manager.context;
+
+                this.source = context.createBufferSource();
+                this.source.buffer = this.sound.buffer;
+
+                // Connect up the nodes
+                this.source.connect(this.gain);
+                this.gain.connect(context.destination);
             }
 
         };

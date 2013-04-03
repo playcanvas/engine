@@ -9,7 +9,8 @@ pc.extend(pc.audio, function () {
             this.position = pc.math.vec3.create();
             this.velocity = pc.math.vec3.create();
             
-            this.panner = manager.context.createPanner();
+            var context = manager.context;
+            this.panner = context.createPanner();
         };
         Channel3d = pc.inherits(Channel3d, pc.audio.Channel);
         
@@ -63,14 +64,15 @@ pc.extend(pc.audio, function () {
             * @description Create the buffer source and connect it up to the correct audio nodes 
             */
             _createSource: function () {
-                var source = this.manager.context.createBufferSource();
-                source.buffer = this.sound.buffer;
-                source.disconnect(0);
-                source.connect(this.panner);
-                
-                this.panner.connect(this.manager.context.destination);
+                var context = this.manager.context;
 
-                return source;
+                this.source = context.createBufferSource();
+                this.source.buffer = this.sound.buffer;
+
+                // Connect up the nodes
+                this.source.connect(this.panner);
+                this.panner.connect(this.gain);
+                this.gain.connect(context.destination);
             }
         });        
     } else if (pc.audio.hasAudio()) {
