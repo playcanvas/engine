@@ -94,7 +94,7 @@ pc.extend(pc.audio, function () {
 
                 this.startedAt -= this.pausedAt;
                 var remainingTime = this.source.buffer.duration - this.pausedAt;
-                this.source.noteGrainOn(0, this.pausedAt, remainingTime);
+                this.source.start(0, this.pausedAt, remainingTime);
 
                 this.resetTimeout = setTimeout(function () {
                     // The loop property may have changed since the sound was restarted so check...
