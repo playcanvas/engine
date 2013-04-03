@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.102.3
+--------
+* [FIX] Updated to latest Web Audio API spec. PlayCanvas apps no longer crash in Firefox Nightly.
+
+--------
 v0.102.2
 --------
 * [FIX] GraphNode right, up and forwards properties now work.
