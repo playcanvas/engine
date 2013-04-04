@@ -98,7 +98,7 @@ pc.extend(pc.fw, function () {
             var color = new Float32Array([0, 0, 0]);
             
             if (newValue) {
-                rgb = parseInt(newValue);
+                rgb = parseInt(newValue, 16);
                 rgb = pc.math.intToBytes24(rgb);
                 color[0] = rgb[0] / 255;
                 color[1] = rgb[1] / 255;

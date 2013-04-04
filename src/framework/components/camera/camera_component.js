@@ -58,7 +58,7 @@ pc.extend(pc.fw, function () {
             this.entity.addChild(newValue);
         },
         onSetClearColor: function (name, oldValue, newValue) {
-            var color = parseInt(newValue, 10);
+            var color = parseInt(newValue, 16);
             this.data.camera.getClearOptions().color = [
                 ((color >> 24) & 0xff) / 255.0,
                 ((color >> 16) & 0xff) / 255.0,

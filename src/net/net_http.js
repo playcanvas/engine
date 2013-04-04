@@ -139,20 +139,20 @@ pc.extend(pc.net, function () {
             options = options || {};
             
             // fill in dummy implementations of success, error to simplify callbacks later
-            if (options.success === null) {
+            if (options.success == null) {
                 options.success = function (){};
             }
-            if (options.error === null) {
+            if (options.error == null) {
                 options.error = function (){};
             }
-            if (options.async === null) {
+            if (options.async == null) {
                 options.async = true;
             }
-            if (options.headers === null) {
+            if (options.headers == null) {
                 options.headers = {};
             }
             
-            if (options.postdata !== null) {
+            if (options.postdata != null) {
                 if (options.postdata instanceof Document) {
                     // It's an XML document, so we can send it directly.
                     // XMLHttpRequest will set the content type correctly.
@@ -190,7 +190,7 @@ pc.extend(pc.net, function () {
                             break;
                         case Http.ContentType.JSON:
                         default:
-                            if (contentType === null) {
+                            if (contentType == null) {
                                 options.headers["Content-Type"] = Http.ContentType.JSON;
                             }
                             postdata = JSON.stringify(options.postdata);
