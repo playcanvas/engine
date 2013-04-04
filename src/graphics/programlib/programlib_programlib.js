@@ -76,7 +76,7 @@ pc.gfx.programlib = {
                     // Using a bit-shift of vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0)
                     // and a bit-mask of    vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0)
                     code += '    vec4 packedDepth = fract((gl_FragCoord.z * vec4(1.67772e+07, 65536.0, 256.0, 1.0)));\n';
-                    code += '    gl_FragData[0] = (packedDepth - (packedDepth.xxyz * vec4(0.0, 0.00390625, 0.00390625, 0.00390625)));\n'
+                    code += '    gl_FragData[0] = (packedDepth - (packedDepth.xxyz * vec4(0.0, 0.00390625, 0.00390625, 0.00390625)));\n';
                     /*
                     code += '    float linearDepth = 1.0 / (camera_far - camera_near);\n';
                     code += '    float r = length(vPositionE) * linearDepth;\n';
@@ -175,7 +175,7 @@ pc.gfx.programlib = {
                 code += '    normalW += (vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * normal).xyz;\n';
                 code += '    normalW += (vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * normal).xyz;\n';
                 code += '    normalW += (vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * normal).xyz;\n';
-	            code += '    normalE = normalize((matrix_view * normalW).xyz);\n';
+                code += '    normalE = normalize((matrix_view * normalW).xyz);\n';
                 break;
 
             case 'vs_skin_tangent':
@@ -185,7 +185,7 @@ pc.gfx.programlib = {
                 code += '    tangentW += (vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * tangent).xyz;\n';
                 code += '    tangentW += (vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * tangent).xyz;\n';
                 code += '    tangentW += (vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * tangent).xyz;\n';
-	            code += '    tangentE = normalize((matrix_view * tangentW).xyz);\n';
+                code += '    tangentE = normalize((matrix_view * tangentW).xyz);\n';
                 break;
 
             case 'vs_static_position_decl':
