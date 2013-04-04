@@ -78,7 +78,6 @@ pc.extend(pc.fw, function () {
     });
 
     return {
-        ScriptComponent: ScriptComponent,
+        ScriptComponent: ScriptComponent
     };
 }());
-

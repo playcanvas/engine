@@ -1,5 +1,5 @@
 pc.extend(pc.fw, function() {
-    function StaticCubeMapComponentData() {
+    var StaticCubeMapComponentData = function () {
         this.posx = null;
         this.negx = null;
         this.posy = null;
@@ -10,7 +10,7 @@ pc.extend(pc.fw, function() {
         this.assets = [];
 
         this.cubemap = null;
-    }
+    };
     StaticCubeMapComponentData = pc.inherits(StaticCubeMapComponentData, pc.fw.ComponentData);
     
     return {

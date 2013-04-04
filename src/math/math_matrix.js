@@ -83,7 +83,7 @@ pc.math.mat3 = function () {
 
             return r;
         }
-    }
+    };
 } ();
 
 /**
@@ -895,7 +895,7 @@ pc.math.mat4 = function () {
                 r[2] = pc.math.vec3.length(z);
 
                 return r;
-            }
+            };
         }(),
 
         /**
@@ -1062,5 +1062,5 @@ pc.math.mat4 = function () {
 
             return r;
         }
-    }
+    };
 } ();

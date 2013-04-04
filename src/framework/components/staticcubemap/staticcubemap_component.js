@@ -28,13 +28,12 @@ pc.extend(pc.fw, function () {
                 // clear existing cubemap
                 this.cubemap = null;
 
-                if(guid) {
+                if (guid) {
                     assets[index] = this.system.context.assets.getAsset(guid);
                     
                     this.assets = assets;
 
-                    if(assets[0] && assets[1] && assets[2] 
-                    && assets[3] && assets[4] && assets[5]) {
+                    if (assets[0] && assets[1] && assets[2] && assets[3] && assets[4] && assets[5]) {
                         var urls = assets.map(function (asset) { 
                             return asset.getFileUrl(); 
                         });
@@ -44,28 +43,28 @@ pc.extend(pc.fw, function () {
                 } else {
                     delete assets[index];                
                 }
-            };
+            }
 
             var functions = {
                 "posx": function (name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "negx": function (name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "posy": function (name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "negy": function (name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "posz": function (name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "negz": function (name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     }
-            }
+            };
 
             if (functions[name]) {
                 functions[name].call(this, name, oldValue, newValue);
@@ -113,5 +112,5 @@ pc.extend(pc.fw, function () {
 
     return {
         StaticCubeMapComponent: StaticCubeMapComponent
-    }
+    };
 }());

@@ -169,7 +169,7 @@ pc.math = {
      * @returns {Boolean} true if power-of-two and false otherwise. 
      */
     powerOfTwo: function (x) {
-        return (!(x === 0) && !(x & (x - 1)));
+        return ((x !== 0) && !(x & (x - 1)));
     },
 
     /**

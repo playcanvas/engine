@@ -26,16 +26,16 @@ pc.extend(pc.net, function () {
                 return;
             }
                 
-            if (msg.data['access_token']) {
+            if (msg.data.access_token) {
                 var iframe = document.getElementById(id);
                 if(iframe) {
                     iframe.parentNode.removeChild(iframe);
                 }
-                this.accessToken = msg.data['access_token'];
-                success(msg.data['access_token']);
+                this.accessToken = msg.data.access_token;
+                success(msg.data.access_token);
             } else {
-                if (msg.data['error']) {
-                    logERROR(msg.data['error']);
+                if (msg.data.error) {
+                    logERROR(msg.data.error);
                 } else {
                     logWARNING("Invalid message posted to Corazon API");
                 }
@@ -45,8 +45,8 @@ pc.extend(pc.net, function () {
         }.bind(this);
         window.addEventListener("message", handleMessage, false);
         var clearEvent = function () {
-            window.removeEventListener("message", handleMessage)            
-        }
+            window.removeEventListener("message", handleMessage);
+        };
     
         // Create the endpoint url
         var params = {
@@ -77,13 +77,13 @@ pc.extend(pc.net, function () {
         });
         
         return pc.net.OAuth._super.request.call(this, method, url, options, xhr);
-    }
+    };
     
     OAuth.prototype.onError = function (method, url, options, xhr) {
         if (xhr.status == 401) {
             // Get a new access token and resend the request
             this.refreshAccessToken(function (accessToken) {
-                options.query['access_token'] = accessToken;
+                options.query.access_token = accessToken;
                 this.request(method, url, options, xhr);    
             }.bind(this));
         } else {
