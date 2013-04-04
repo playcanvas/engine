@@ -1,6 +1,6 @@
 pc.extend(pc.fw, function () {
     var CubeMapComponentSystem = function (context) {
-        this.id = "cubemap"
+        this.id = 'cubemap';
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.CubeMapComponent;
@@ -63,7 +63,7 @@ pc.extend(pc.fw, function () {
                                 var model;
                                 // Get the model from either the model or primitive component
                                 if (ent.model) {
-                                    model = ent.model.model
+                                    model = ent.model.model;
                                 } else if (ent.primitive) {
                                     model = ent.primitive.model;
                                 }
@@ -104,7 +104,7 @@ pc.extend(pc.fw, function () {
                                 }
 
                                 ctx.systems.camera.frameBegin(false);
-                            }
+                            };
                         })(componentData, entity, this.context));
                 }
             }

@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var CameraComponentSystem = function (context) {
-        this.id = 'camera'
+        this.id = 'camera';
         context.systems.add(this.id, this);
         
         this.ComponentType = pc.fw.CameraComponent;
@@ -124,7 +124,7 @@ pc.extend(pc.fw, function () {
             }
 
             if (!entity.camera) {
-                throw Error("Entity must have camera Component")
+                throw Error("Entity must have camera Component");
             }
             
             this._currentEntity = entity;
@@ -217,7 +217,6 @@ pc.extend(pc.fw, function () {
                 }
             }
 
-            var viewport = camera.getRenderTarget().getViewport();
             var aspect = viewport.width / viewport.height;
             if (aspect !== camera.getAspectRatio()) {
                 camera.setAspectRatio(aspect);
@@ -273,7 +272,7 @@ pc.extend(pc.fw, function () {
                 // Retrieve the characteristics of the camera frustum
                 var aspectRatio = component.camera.getAspectRatio();
                 var nearClip    = component.nearClip;
-                var farClip     = component.farClip
+                var farClip     = component.farClip;
                 var fov         = component.fov * Math.PI / 180.0;
                 var projection  = component.projection;
 

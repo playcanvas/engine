@@ -27,7 +27,7 @@ pc.extend(pc.fw, function () {
         },
 
         onSetColor: function (name, oldValue, newValue) {
-            var rgb = parseInt(newValue);
+            var rgb = parseInt(newValue, 10);
             rgb = pc.math.intToBytes24(rgb);
             var color = [
                 rgb[0] / 255,

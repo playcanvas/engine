@@ -131,7 +131,6 @@ pc.extend(pc.fw, function () {
 
         onSetAnimations: function (name, oldValue, newValue) {
             var data = this.data;
-            var name;
 
             // If we have animations _and_ a model, we can create the skeletons
             var modelComponent = this.entity.model;
@@ -142,10 +141,10 @@ pc.extend(pc.fw, function () {
                 }
             }
 
-            for (name in data.animations) {
+            for (var animName in data.animations) {
                 // Set the first loaded animation as the current
                 if (data.activate) {
-                    this.play(name, 0);
+                    this.play(animName, 0);
                 }
                 break;
             }

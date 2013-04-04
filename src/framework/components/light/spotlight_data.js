@@ -1,5 +1,5 @@
 pc.extend(pc.fw, function () {
-    function SpotLightComponentData() {
+    var SpotLightComponentData = function () {
         // Serialized
         this.enable = true;
         this.color = "0xffffff";
@@ -13,7 +13,6 @@ pc.extend(pc.fw, function () {
         // Non-serialized
         this.model = null;
     };
-
     SpotLightComponentData = pc.inherits(SpotLightComponentData, pc.fw.ComponentData);
 
     return {

@@ -49,7 +49,6 @@ pc.extend(pc.fw, function () {
         }
     };
 
-
     return {
         AssetCache: AssetCache
     };

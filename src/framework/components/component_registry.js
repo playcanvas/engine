@@ -71,13 +71,14 @@ pc.extend(pc.fw, function () {
         },
 
         getComponentSystemOrder: function () {
+            var index;
             var names = Object.keys(this);
 
-            var index = names.indexOf('collisionrect');
+            index = names.indexOf('collisionrect');
             names.splice(index, 1);
             names.unshift('collisionrect');
 
-            var index = names.indexOf('collisioncircle');
+            index = names.indexOf('collisioncircle');
             names.splice(index, 1);
             names.unshift('collisioncircle');
 
@@ -87,5 +88,5 @@ pc.extend(pc.fw, function () {
 
     return {
         ComponentSystemRegistry: ComponentSystemRegistry 
-    }
+    };
 }());

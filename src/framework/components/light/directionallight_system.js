@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var DirectionalLightComponentSystem = function (context) {
-        this.id = 'directionallight'
+        this.id = 'directionallight';
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.DirectionalLightComponent;
@@ -95,7 +95,8 @@ pc.extend(pc.fw, function () {
             0, -10, -2, -0.25, -8, -2    // Arrowhead tip
         ];
         var rot = pc.math.mat4.makeRotate(120, [0, 1, 0]);
-        for (var i = 0; i < 16; i++) {
+        var i;
+        for (i = 0; i < 16; i++) {
             var pos = pc.math.vec3.create(vertexData[(i+8)*3], vertexData[(i+8)*3+1], vertexData[(i+8)*3+2]);
             var posRot = pc.math.mat4.multiplyVec3(pos, 1.0, rot);
             vertexData[(i+16)*3]   = posRot[0];
@@ -105,7 +106,7 @@ pc.extend(pc.fw, function () {
         // Copy vertex data into the vertex buffer
         var vertexBuffer = new pc.gfx.VertexBuffer(format, 32);
         var positions = new Float32Array(vertexBuffer.lock());
-        for (var i = 0; i < vertexData.length; i++) {
+        for (i = 0; i < vertexData.length; i++) {
             positions[i] = vertexData[i];
         }
         vertexBuffer.unlock();

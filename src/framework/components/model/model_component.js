@@ -17,7 +17,7 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-    }
+    };
     ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
     
     pc.extend(ModelComponent.prototype, {
@@ -138,6 +138,5 @@ pc.extend(pc.fw, function () {
 
     return {
         ModelComponent: ModelComponent
-    }
+    };
 }());
-

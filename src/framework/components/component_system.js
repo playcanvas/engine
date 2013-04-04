@@ -158,14 +158,13 @@ pc.extend(pc.fw, function () {
                     editor.link.expose(this.id, prop);    
                 }
             }.bind(this));                
-        },
-
+        }
     };
 
     // Add event support
     pc.extend(ComponentSystem, pc.events);
 
     return {
-        ComponentSystem: ComponentSystem,
+        ComponentSystem: ComponentSystem
     };
 }());
