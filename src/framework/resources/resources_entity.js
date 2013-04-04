@@ -5,7 +5,7 @@ pc.extend(pc.resources, function () {
      * @class Handle requests for Entity resources
      */
     var EntityResourceHandler = function (registry, depot) {
-        this._registry = registry
+        this._registry = registry;
         this._depot = depot;
     
     };
@@ -17,7 +17,7 @@ pc.extend(pc.resources, function () {
         var guid = identifier;
         if(guid in pc.content.data) {
             setTimeout( function () {
-                success(pc.content.data[guid], options) 
+                success(pc.content.data[guid], options);
             }, 0);
         } else {
             this._depot.entities.getOne(guid, function (entity) {
@@ -108,20 +108,20 @@ pc.extend(pc.resources, function () {
      */
     EntityResourceHandler.patchChildren = function (entity, children) {
         var child;
-        for(i = 0 ; i < entity.__children.length; ++i) {
-            child = children[entity.__children[i]]
+        for (i = 0 ; i < entity.__children.length; ++i) {
+            child = children[entity.__children[i]];
             entity.addChild(child);
-        }    	
+        }
         delete entity.__children;
     };
     
     var EntityRequest = function EntityRequest(identifier) {
-    }
+    };
     EntityRequest = pc.inherits(EntityRequest, pc.resources.ResourceRequest);
     EntityRequest.prototype.type = "entity";
     
     return {
         EntityResourceHandler: EntityResourceHandler,
         EntityRequest: EntityRequest
-    }
+    };
 }());

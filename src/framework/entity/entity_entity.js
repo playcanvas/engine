@@ -84,11 +84,11 @@ pc.extend(pc.fw, function () {
 
     Entity.prototype.addChild = function (child) {
         if(child instanceof pc.fw.Entity) {
-            var _debug = true
-            if(_debug) {
+            var _debug = true;
+            if (_debug) {
                 var root = this.getRoot();
                 var dupe = root.findOne("getGuid", child.getGuid());
-                if(dupe) {
+                if (dupe) {
                     throw new Error("GUID already exists in graph");
                 }
             }            
@@ -141,22 +141,23 @@ pc.extend(pc.fw, function () {
         var childGuids;
         
         // Remove all components
-        for (name in this.c) {
+        for (var name in this.c) {
             this.c[name].system.removeComponent(this);
         }
 
         // Detach from parent
-        if(parent) {
+        if (parent) {
             parent.removeChild(this);
         }
         
         var children = this.getChildren();
         var length = children.length;
-        var child;
-        while(child = children.shift()) {
-            if(child instanceof pc.fw.Entity) {
+        var child = children.shift();
+        while (child) {
+            if (child instanceof pc.fw.Entity) {
                 child.destroy();
             }
+            child = children.shift();
         }
     };
 
@@ -229,7 +230,7 @@ pc.extend(pc.fw, function () {
         };
         
         if(model._rev) {
-            data._rev = model._rev
+            data._rev = model._rev;
         }
         
         return data;
@@ -237,6 +238,5 @@ pc.extend(pc.fw, function () {
     
     return {
         Entity: Entity
-    }
-    
+    };
 }());

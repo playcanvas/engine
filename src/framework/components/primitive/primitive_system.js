@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.ApplicationContext} context The ApplicationContext for the active application
      */
     var PrimitiveComponentSystem = function PrimitiveComponentSystem(context) {
-        this.id = 'primitive'
+        this.id = 'primitive';
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.PrimitiveComponent;

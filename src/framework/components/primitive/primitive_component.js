@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
         this.on("set_type", this.onSetType, this);
-    }
+    };
     PrimitiveComponent = pc.inherits(PrimitiveComponent, pc.fw.Component);
     pc.extend(PrimitiveComponent.prototype, {
         /**
@@ -49,8 +49,7 @@ pc.extend(pc.fw, function () {
                         break;
                     default:
                         throw new Error("Unknown shape type: " + newValue);
-                        break;
-                };
+                }
 
                 var node = new pc.scene.GraphNode();
 
@@ -147,6 +146,6 @@ pc.extend(pc.fw, function () {
     });
 
     return {
-        PrimitiveComponent: PrimitiveComponent,
+        PrimitiveComponent: PrimitiveComponent
     };
 }());
