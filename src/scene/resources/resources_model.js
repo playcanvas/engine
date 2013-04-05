@@ -581,7 +581,7 @@ pc.extend(pc.resources, function () {
             }
     
             return node;
-        }.bind(this);
+        };
 
         var _resolveCameraIds = function (node) {
             if (node instanceof pc.scene.CameraNode) {
