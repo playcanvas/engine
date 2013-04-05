@@ -10,9 +10,9 @@ pc.extend(pc.resources, function () {
         this._jsonToPrimitiveType = {
             "points":         pc.gfx.PRIMITIVE_POINTS,
             "lines":          pc.gfx.PRIMITIVE_LINES,
-            "linestrip":      pc.gfx.PRIMITIVE_LINE_STRIP,
+            "linestrip":      pc.gfx.PRIMITIVE_LINESTRIP,
             "triangles":      pc.gfx.PRIMITIVE_TRIANGLES,
-            "trianglestrip":  pc.gfx.PRIMITIVE_TRIANGLE_STRIP
+            "trianglestrip":  pc.gfx.PRIMITIVE_TRISTRIP
         };
 
         this._jsonToVertexElementType = {
