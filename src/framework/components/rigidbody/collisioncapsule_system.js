@@ -97,7 +97,9 @@ pc.extend(pc.fw, function () {
     pc.extend(CollisionCapsuleComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             if (typeof(Ammo) !== 'undefined') {
-                data.shape = new Ammo.btCapsuleShape(data.radius, data.height);
+                var radius = data.radius;
+                var height = Math.max(data.height - 2 * radius, 0);
+                data.shape = new Ammo.btCapsuleShape(radius, height);
             }
 
             data.model = new pc.scene.Model();
