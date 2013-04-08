@@ -14,6 +14,24 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CollisionCapsuleComponentData;
 
         this.schema = [{
+            name: "axis",
+            displayName: "Axis",
+            description: "Major axis of capsule",
+            type: "enumeration",
+            options: {
+                enumerations: [{
+                    name: 'X',
+                    value: 0
+                }, {
+                    name: 'Y',
+                    value: 1
+                }, {
+                    name: 'Z',
+                    value: 2
+                }]
+            },
+            defaultValue: 1
+        }, {
             name: "height",
             displayName: "Height",
             description: "The height of the collision capsule",

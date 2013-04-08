@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentData
      */
     var CollisionCapsuleComponentData = function () {
+        this.axis = 1;
         this.radius = 0.5;
         this.height = 2;
 
