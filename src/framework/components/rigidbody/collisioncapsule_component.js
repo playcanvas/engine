@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.CollisionCapsuleComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @extends pc.fw.Component
-     * @property {Number} height The height of the capsule.
+     * @property {Number} height The total height of the capsule from tip to tip.
      * @property {Number} radius The radius of the capsule.
      */
     var CollisionCapsuleComponent = function CollisionCapsuleComponent(system, entity) {
@@ -21,7 +21,9 @@ pc.extend(pc.fw, function () {
         onSetHeight: function (name, oldValue, newValue) {
             if (this.entity.rigidbody) {
                 if (typeof(Ammo) !== 'undefined') {
-                    this.data.shape = new Ammo.btCapsuleShape(this.data.radius, newValue);
+                    var radius = this.data.radius;
+                    var height = Math.max(newValue - 2 * radius, 0);
+                    this.data.shape = new Ammo.btCapsuleShape(radius, height);
                 }
 
                 this.entity.rigidbody.createBody();
@@ -31,7 +33,9 @@ pc.extend(pc.fw, function () {
         onSetRadius: function (name, oldValue, newValue) {
             if (this.entity.rigidbody) {
                 if (typeof(Ammo) !== 'undefined') {
-                    this.data.shape = new Ammo.btCapsuleShape(newValue, this.data.height);
+                    var radius = newValue;
+                    var height = Math.max(this.data.height - 2 * radius, 0);
+                    this.data.shape = new Ammo.btCapsuleShape(radius, height);
                 }
 
                 this.entity.rigidbody.createBody();
