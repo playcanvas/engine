@@ -175,6 +175,9 @@
 ../src/framework/components/rigidbody/collisionbox_system.js
 ../src/framework/components/rigidbody/collisionbox_component.js
 ../src/framework/components/rigidbody/collisionbox_data.js
+../src/framework/components/rigidbody/collisioncapsule_system.js
+../src/framework/components/rigidbody/collisioncapsule_component.js
+../src/framework/components/rigidbody/collisioncapsule_data.js
 ../src/framework/components/rigidbody/collisionmesh_system.js
 ../src/framework/components/rigidbody/collisionmesh_component.js
 ../src/framework/components/rigidbody/collisionmesh_data.js

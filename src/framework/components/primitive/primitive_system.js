@@ -23,6 +23,9 @@ pc.extend(pc.fw, function () {
                     name: 'Box',
                     value: pc.shape.Type.BOX
                 }, {
+                    name: 'Capsule',
+                    value: pc.shape.Type.CAPSULE
+                }, {
                     name: 'Sphere',
                     value: pc.shape.Type.SPHERE
                 }, {
@@ -65,6 +68,10 @@ pc.extend(pc.fw, function () {
         this.box = pc.scene.procedural.createBox({
             halfExtents: [0.5,0.5,0.5]
         });
+        this.capsule = pc.scene.procedural.createCapsule({
+            radius: 0.5,
+            height: 2
+        });
         this.sphere = pc.scene.procedural.createSphere({
             radius: 0.5
         });
@@ -102,5 +109,4 @@ pc.extend(pc.fw, function () {
     return {
         PrimitiveComponentSystem: PrimitiveComponentSystem
     };
-
 }());

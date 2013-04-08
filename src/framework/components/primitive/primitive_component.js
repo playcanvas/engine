@@ -38,6 +38,9 @@ pc.extend(pc.fw, function () {
                     case pc.shape.Type.BOX: 
                         mesh = this.system.box;
                         break;
+                    case pc.shape.Type.CAPSULE:
+                        mesh = this.system.capsule;
+                        break;
                     case pc.shape.Type.SPHERE:
                         mesh = this.system.sphere;
                         break;

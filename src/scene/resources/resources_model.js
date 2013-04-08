@@ -550,7 +550,7 @@ pc.extend(pc.resources, function () {
             var geomData = modelData.geometries[i];
             model.geometries.push(this._loadGeometry(model, modelData, geomData));
         }
-    
+
         var _jsonToLoader = {
             "camera" : this._loadCamera.bind(this),
             "light"  : this._loadLight.bind(this),
