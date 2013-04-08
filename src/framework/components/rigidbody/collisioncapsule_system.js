@@ -99,14 +99,24 @@ pc.extend(pc.fw, function () {
             if (typeof(Ammo) !== 'undefined') {
                 var radius = data.radius;
                 var height = Math.max(data.height - 2 * radius, 0);
-                data.shape = new Ammo.btCapsuleShape(radius, height);
+                switch (data.axis) {
+                    case 0:
+                        data.shape = new Ammo.btCapsuleShapeX(radius, height);
+                        break;
+                    case 1:
+                        data.shape = new Ammo.btCapsuleShape(radius, height);
+                        break;
+                    case 2:
+                        data.shape = new Ammo.btCapsuleShapeZ(radius, height);
+                        break;
+                }
             }
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
             data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
 
-            properties = ['height', 'radius', 'shape', 'model'];
+            properties = ['axis', 'height', 'radius', 'shape', 'model'];
 
             CollisionCapsuleComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 

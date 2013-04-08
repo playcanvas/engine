@@ -1,4 +1,21 @@
 pc.extend(pc.fw, function () {
+
+    function createCapsuleShape(axis, radius, height) {
+        var shape;
+        switch (axis) {
+            case 0:
+                shape = new Ammo.btCapsuleShapeX(radius, height);
+                break;
+            case 1:
+                shape = new Ammo.btCapsuleShape(radius, height);
+                break;
+            case 2:
+                shape = new Ammo.btCapsuleShapeZ(radius, height);
+                break;
+        }
+        return shape;
+    }
+
     /**
      * @component
      * @name pc.fw.CollisionCapsuleComponent
@@ -11,6 +28,7 @@ pc.extend(pc.fw, function () {
      * @property {Number} radius The radius of the capsule.
      */
     var CollisionCapsuleComponent = function CollisionCapsuleComponent(system, entity) {
+        this.on('set_axis', this.onSetAxis, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_radius', this.onSetRadius, this);
     };
@@ -18,12 +36,28 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CollisionCapsuleComponent.prototype, {
 
+        onSetAxis: function (name, oldValue, newValue) {
+            if (this.entity.rigidbody) {
+                if (typeof(Ammo) !== 'undefined') {
+                    var axis = newValue;
+                    var radius = this.data.radius;
+                    var height = Math.max(this.data.height - 2 * radius, 0);
+
+                    this.data.shape = createCapsuleShape(axis, radius, height);
+                }
+
+                this.entity.rigidbody.createBody();
+            }
+        },
+
         onSetHeight: function (name, oldValue, newValue) {
             if (this.entity.rigidbody) {
                 if (typeof(Ammo) !== 'undefined') {
+                    var axis = this.data.axis;
                     var radius = this.data.radius;
                     var height = Math.max(newValue - 2 * radius, 0);
-                    this.data.shape = new Ammo.btCapsuleShape(radius, height);
+
+                    this.data.shape = createCapsuleShape(axis, radius, height);
                 }
 
                 this.entity.rigidbody.createBody();
@@ -33,9 +67,11 @@ pc.extend(pc.fw, function () {
         onSetRadius: function (name, oldValue, newValue) {
             if (this.entity.rigidbody) {
                 if (typeof(Ammo) !== 'undefined') {
+                    var axis = this.data.axis;
                     var radius = newValue;
                     var height = Math.max(this.data.height - 2 * radius, 0);
-                    this.data.shape = new Ammo.btCapsuleShape(radius, height);
+
+                    this.data.shape = createCapsuleShape(axis, radius, height);
                 }
 
                 this.entity.rigidbody.createBody();
