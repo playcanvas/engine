@@ -1,17 +1,19 @@
 pc.extend(pc.fw, function () {
 
     function createCapsuleShape(axis, radius, height) {
-        var shape;
-        switch (axis) {
-            case 0:
-                shape = new Ammo.btCapsuleShapeX(radius, height);
-                break;
-            case 1:
-                shape = new Ammo.btCapsuleShape(radius, height);
-                break;
-            case 2:
-                shape = new Ammo.btCapsuleShapeZ(radius, height);
-                break;
+        var shape = null;
+        if (typeof(Ammo) !== 'undefined') {
+            switch (axis) {
+                case 0:
+                    shape = new Ammo.btCapsuleShapeX(radius, height);
+                    break;
+                case 1:
+                    shape = new Ammo.btCapsuleShape(radius, height);
+                    break;
+                case 2:
+                    shape = new Ammo.btCapsuleShapeZ(radius, height);
+                    break;
+            }
         }
         return shape;
     }
@@ -39,51 +41,42 @@ pc.extend(pc.fw, function () {
 
         onSetAxis: function (name, oldValue, newValue) {
             if (this.entity.rigidbody) {
-                if (typeof(Ammo) !== 'undefined') {
-                    var axis = newValue;
-                    var radius = this.data.radius;
-                    var height = Math.max(this.data.height - 2 * radius, 0);
+                var axis = newValue;
+                var radius = this.data.radius;
+                var height = Math.max(this.data.height - 2 * radius, 0);
 
-                    this.data.shape = createCapsuleShape(axis, radius, height);
-                    if (this.system.debugRender) {
-                        this.updateDebugShape(axis, radius, height);
-                    }
+                this.data.shape = createCapsuleShape(axis, radius, height);
+                if (this.system.debugRender) {
+                    this.updateDebugShape(axis, radius, height);
                 }
-
                 this.entity.rigidbody.createBody();
             }
         },
 
         onSetHeight: function (name, oldValue, newValue) {
             if (this.entity.rigidbody) {
-                if (typeof(Ammo) !== 'undefined') {
-                    var axis = this.data.axis;
-                    var radius = this.data.radius;
-                    var height = Math.max(newValue - 2 * radius, 0);
+                var axis = this.data.axis;
+                var radius = this.data.radius;
+                var height = Math.max(newValue - 2 * radius, 0);
 
-                    this.data.shape = createCapsuleShape(axis, radius, height);
-                    if (this.system.debugRender) {
-                        this.updateDebugShape(axis, radius, height);
-                    }
+                this.data.shape = createCapsuleShape(axis, radius, height);
+                if (this.system.debugRender) {
+                    this.updateDebugShape(axis, radius, height);
                 }
-
                 this.entity.rigidbody.createBody();
             }
         },
 
         onSetRadius: function (name, oldValue, newValue) {
             if (this.entity.rigidbody) {
-                if (typeof(Ammo) !== 'undefined') {
-                    var axis = this.data.axis;
-                    var radius = newValue;
-                    var height = Math.max(this.data.height - 2 * radius, 0);
+                var axis = this.data.axis;
+                var radius = newValue;
+                var height = Math.max(this.data.height - 2 * radius, 0);
 
-                    this.data.shape = createCapsuleShape(axis, radius, height);
-                    if (this.system.debugRender) {
-                        this.updateDebugShape(axis, radius, height);
-                    }
+                this.data.shape = createCapsuleShape(axis, radius, height);
+                if (this.system.debugRender) {
+                    this.updateDebugShape(axis, radius, height);
                 }
-
                 this.entity.rigidbody.createBody();
             }
         },
