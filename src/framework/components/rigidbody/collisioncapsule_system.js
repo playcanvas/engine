@@ -61,48 +61,11 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        // Create the graphical resources required to render a camera frustum
-        var format = new pc.gfx.VertexFormat();
-        format.begin();
-        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
-        format.end();
-
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 41);
-        var positions = new Float32Array(vertexBuffer.lock());
-
-        var i;
-        var r = 0.5;
-        var numVerts = vertexBuffer.getNumVertices();
-        for (i = 0; i < numVerts-1; i++) {
-            var theta = 2 * Math.PI * (i / (numVerts-2));
-            var x = r * Math.cos(theta);
-            var z = r * Math.sin(theta);
-            positions[(i)*3+0] = x;
-            positions[(i)*3+1] = 0;
-            positions[(i)*3+2] = z;
-        }
-        vertexBuffer.unlock();
-
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 80);
-        var inds = new Uint8Array(indexBuffer.lock());
-        for (i = 0; i < 40; i++) {
-            inds[i * 2 + 0] = i;
-            inds[i * 2 + 1] = i + 1;
-        }
-        indexBuffer.unlock();
-
-        this.mesh = new pc.scene.Mesh();
-        this.mesh.vertexBuffer = vertexBuffer;
-        this.mesh.indexBuffer[0] = indexBuffer;
-        this.mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
-        this.mesh.primitive[0].base = 0;
-        this.mesh.primitive[0].count = indexBuffer.getNumIndices();
-        this.mesh.primitive[0].indexed = true;
-
+        // Material used to render all debug capsule shapes
         this.material = new pc.scene.BasicMaterial();
         this.material.color = pc.math.vec4.create(0, 0, 1, 1);
         this.material.update();
-        
+
         this.debugRender = false;
 
         this.on('remove', this.onRemove, this);
@@ -114,10 +77,12 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CollisionCapsuleComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            var axis = data.axis;
+            var radius = data.radius;
+            var height = Math.max(data.height - 2 * radius, 0);
+
             if (typeof(Ammo) !== 'undefined') {
-                var radius = data.radius;
-                var height = Math.max(data.height - 2 * radius, 0);
-                switch (data.axis) {
+                switch (axis) {
                     case 0:
                         data.shape = new Ammo.btCapsuleShapeX(radius, height);
                         break;
@@ -129,14 +94,13 @@ pc.extend(pc.fw, function () {
                         break;
                 }
             }
-
-            data.model = new pc.scene.Model();
-            data.model.graph = new pc.scene.GraphNode();
-            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
+            this.createDebugShape(component, data);
 
             properties = ['axis', 'height', 'radius', 'shape', 'model'];
 
             CollisionCapsuleComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+
+            component.updateDebugShape(axis, radius, height);
 
             if (component.entity.rigidbody) {
                 component.entity.rigidbody.createBody();
@@ -164,6 +128,28 @@ pc.extend(pc.fw, function () {
             this.debugRender = value;
         },
 
+        createDebugShape: function (component, data) {
+            // Create the graphical resources required to render a capsule shape
+            var format = new pc.gfx.VertexFormat();
+            format.begin();
+            format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+            format.end();
+
+            var vertexBuffer = new pc.gfx.VertexBuffer(format, 328, pc.gfx.BUFFER_DYNAMIC);
+
+            var mesh = new pc.scene.Mesh();
+            mesh.vertexBuffer = vertexBuffer;
+            mesh.indexBuffer[0] = this.indexBuffer;
+            mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+            mesh.primitive[0].base = 0;
+            mesh.primitive[0].count = vertexBuffer.getNumVertices();
+            mesh.primitive[0].indexed = false;
+
+            data.model = new pc.scene.Model();
+            data.model.graph = new pc.scene.GraphNode();
+            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, mesh, this.material) ];
+        },
+
         onUpdate: function (dt) {
             if (this.debugRender) {
                 this.updateDebugShapes();
@@ -180,18 +166,17 @@ pc.extend(pc.fw, function () {
                 var entity = components[id].entity;
                 var data = components[id].data;
 
-                var r = data.radius;
                 var model = data.model;
+                var root = model.graph;
 
-                if (!this.context.scene.containsModel(data.model)) {
-                    this.context.scene.addModel(data.model);
-                    this.context.root.addChild(data.model.graph);
+                if (!this.context.scene.containsModel(model)) {
+                    this.context.scene.addModel(model);
+                    this.context.root.addChild(root);
                 }
 
-                var root = model.graph;
                 root.setPosition(entity.getPosition());
                 root.setRotation(entity.getRotation());
-                root.setLocalScale(r * 2, r * 2, r * 2);
+                root.setLocalScale(1, 1, 1);
             }
         }
     });
