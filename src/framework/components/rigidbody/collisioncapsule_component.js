@@ -46,9 +46,7 @@ pc.extend(pc.fw, function () {
                 var height = Math.max(this.data.height - 2 * radius, 0);
 
                 this.data.shape = createCapsuleShape(axis, radius, height);
-                if (this.system.debugRender) {
-                    this.updateDebugShape(axis, radius, height);
-                }
+                this.updateDebugShape(axis, radius, height);
                 this.entity.rigidbody.createBody();
             }
         },
@@ -60,9 +58,7 @@ pc.extend(pc.fw, function () {
                 var height = Math.max(newValue - 2 * radius, 0);
 
                 this.data.shape = createCapsuleShape(axis, radius, height);
-                if (this.system.debugRender) {
-                    this.updateDebugShape(axis, radius, height);
-                }
+                this.updateDebugShape(axis, radius, height);
                 this.entity.rigidbody.createBody();
             }
         },
@@ -74,9 +70,7 @@ pc.extend(pc.fw, function () {
                 var height = Math.max(this.data.height - 2 * radius, 0);
 
                 this.data.shape = createCapsuleShape(axis, radius, height);
-                if (this.system.debugRender) {
-                    this.updateDebugShape(axis, radius, height);
-                }
+                this.updateDebugShape(axis, radius, height);
                 this.entity.rigidbody.createBody();
             }
         },
