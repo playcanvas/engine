@@ -94,58 +94,79 @@ pc.extend(pc.fw, function () {
 
             var positions = new Float32Array(vertexBuffer.lock());
 
+            var xo = 0;
+            var yo = 1;
+            var zo = 2;
+            if (axis === 0) {
+                xo = 1;
+                yo = 0;
+                zo = 2;
+            } else if (axis === 2) {
+                xo = 0;
+                yo = 2;
+                zo = 1;
+            }
+
             var i, x = 0;
             var theta;
             // Generate caps
             for (cap = -1; cap < 2; cap += 2) {
                 for (i = 0; i < 40; i++) {
                     theta = 2 * Math.PI * (i / 40);
-                    positions[x++] = radius * Math.cos(theta);
-                    positions[x++] = cap * height * 0.5;
-                    positions[x++] = radius * Math.sin(theta);
+                    positions[x+xo] = radius * Math.cos(theta);
+                    positions[x+yo] = cap * height * 0.5;
+                    positions[x+zo] = radius * Math.sin(theta);
+                    x += 3;
 
                     theta = 2 * Math.PI * ((i + 1) / 40);
-                    positions[x++] = radius * Math.cos(theta);
-                    positions[x++] = cap * height * 0.5;
-                    positions[x++] = radius * Math.sin(theta);
+                    positions[x+xo] = radius * Math.cos(theta);
+                    positions[x+yo] = cap * height * 0.5;
+                    positions[x+zo] = radius * Math.sin(theta);
+                    x += 3;
                 }
 
                 for (i = 0; i < 20; i++) {
                     theta = Math.PI * (i / 20) + Math.PI * 1.5;
-                    positions[x++] = 0;
-                    positions[x++] = cap * (height * 0.5 + radius * Math.cos(theta));
-                    positions[x++] = cap * (radius * Math.sin(theta));
+                    positions[x+xo] = 0;
+                    positions[x+yo] = cap * (height * 0.5 + radius * Math.cos(theta));
+                    positions[x+zo] = cap * (radius * Math.sin(theta));
+                    x += 3;
 
                     theta = Math.PI * ((i + 1) / 20) + Math.PI * 1.5;
-                    positions[x++] = 0;
-                    positions[x++] = cap * (height * 0.5 + radius * Math.cos(theta));
-                    positions[x++] = cap * (radius * Math.sin(theta));
+                    positions[x+xo] = 0;
+                    positions[x+yo] = cap * (height * 0.5 + radius * Math.cos(theta));
+                    positions[x+zo] = cap * (radius * Math.sin(theta));
+                    x += 3;
                 }
 
                 for (i = 0; i < 20; i++) {
                     theta = Math.PI * (i / 20) + Math.PI * 1.5;
-                    positions[x++] = cap * (radius * Math.sin(theta));
-                    positions[x++] = cap * (height * 0.5 + radius * Math.cos(theta));
-                    positions[x++] = 0;
+                    positions[x+xo] = cap * (radius * Math.sin(theta));
+                    positions[x+yo] = cap * (height * 0.5 + radius * Math.cos(theta));
+                    positions[x+zo] = 0;
+                    x += 3;
 
                     theta = Math.PI * ((i + 1) / 20) + Math.PI * 1.5;
-                    positions[x++] = cap * (radius * Math.sin(theta));
-                    positions[x++] = cap * (height * 0.5 + radius * Math.cos(theta));
-                    positions[x++] = 0;
+                    positions[x+xo] = cap * (radius * Math.sin(theta));
+                    positions[x+yo] = cap * (height * 0.5 + radius * Math.cos(theta));
+                    positions[x+zo] = 0;
+                    x += 3;
                 }
             }
 
             // Connect caps
             for (i = 0; i < 4; i++) {
                 theta = 2 * Math.PI * (i / 4);
-                positions[x++] = radius * Math.cos(theta);
-                positions[x++] = height * 0.5;
-                positions[x++] = radius * Math.sin(theta);
+                positions[x+xo] = radius * Math.cos(theta);
+                positions[x+yo] = height * 0.5;
+                positions[x+zo] = radius * Math.sin(theta);
+                x += 3;
 
                 theta = 2 * Math.PI * (i / 4);
-                positions[x++] = radius * Math.cos(theta);
-                positions[x++] = -height * 0.5;
-                positions[x++] = radius * Math.sin(theta);
+                positions[x+xo] = radius * Math.cos(theta);
+                positions[x+yo] = -height * 0.5;
+                positions[x+zo] = radius * Math.sin(theta);
+                x += 3;
             }
 
             vertexBuffer.unlock();
