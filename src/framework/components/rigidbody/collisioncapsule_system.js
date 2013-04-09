@@ -77,9 +77,9 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CollisionCapsuleComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            var axis = data.axis;
-            var radius = data.radius;
-            var height = Math.max(data.height - 2 * radius, 0);
+            var axis = data.axis || 1;
+            var radius = data.radius || 0.5;
+            var height = Math.max((data.height || 2) - 2 * radius, 0);
 
             if (typeof(Ammo) !== 'undefined') {
                 switch (axis) {
