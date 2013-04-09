@@ -476,7 +476,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
  * @param {Number} opts.radius The radius of the tube forming the body of the cylinder (defaults to 0.5).
  * @param {Number} opts.height The length of the body of the cylinder (defaults to 1.0).
  * @param {Number} opts.heightSegments The number of divisions along the length of the cylinder (defaults to 5).
- * @param {Number} opts.capSegments The number of divisions around the tubular body of the cylinder (defaults to 18).
+ * @param {Number} opts.capSegments The number of divisions around the tubular body of the cylinder (defaults to 20).
  * @returns {pc.scene.Mesh} A new cylinder-shaped mesh.
  * @author Will Eastcott
  */
@@ -485,7 +485,7 @@ pc.scene.procedural.createCylinder = function (opts) {
     var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
-    var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
+    var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
@@ -511,7 +511,7 @@ pc.scene.procedural.createCylinder = function (opts) {
  * @param {Number} opts.radius The radius of the tube forming the body of the capsule (defaults to 0.3).
  * @param {Number} opts.height The length of the body of the capsule from tip to tip (defaults to 1.0).
  * @param {Number} opts.heightSegments The number of divisions along the tubular length of the capsule (defaults to 1).
- * @param {Number} opts.sides The number of divisions around the tubular body of the capsule (defaults to 10).
+ * @param {Number} opts.sides The number of divisions around the tubular body of the capsule (defaults to 20).
  * @returns {pc.scene.Mesh} A new cylinder-shaped mesh.
  * @author Will Eastcott
  */
@@ -520,7 +520,7 @@ pc.scene.procedural.createCapsule = function (opts) {
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.3;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
-    var sides = opts && opts.sides !== undefined ? opts.sides : 10;
+    var sides = opts && opts.sides !== undefined ? opts.sides : 20;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc.scene.procedural._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
