@@ -46,15 +46,16 @@ pc.extend(pc.scene, function () {
 
         addPrimitive: function (vertices, vertexIndices, boneLimit) {
             // Build a list of all the bones used by the vertex that aren't currently in this partition  
+            var i, j;
             var bonesToAdd = [];
             var bonesToAddCount = 0;
             var vertexCount = vertices.length;
-            for (var i = 0; i < vertexCount; i++) {
+            for (i = 0; i < vertexCount; i++) {
                 for (var influence = 0; influence < 4; influence++) {
                     if (vertices[i].boneWeights[influence] > 0) {
                         var boneIndex = vertices[i].boneIndices[influence];  
                         var needToAdd = true;
-                        for (var j = 0; j < bonesToAddCount; j++) {
+                        for (j = 0; j < bonesToAddCount; j++) {
                             if (bonesToAdd[j] == boneIndex) {
                                 needToAdd = false;
                                 break;
@@ -68,19 +69,19 @@ pc.extend(pc.scene, function () {
                     }  
                 }  
             }  
-           
+
             // Check that we can fit more bones in this partition.  
             if ((this.boneIndices.length + bonesToAddCount) > boneLimit) {
                 return false;  
             }  
         
             // Add bones  
-            for (var i = 0; i < bonesToAddCount; i++) {
+            for (i = 0; i < bonesToAddCount; i++) {
                 this.boneIndices.push(bonesToAdd[i]);
             }
         
             // Add vertices and indices
-            for (var i = 0; i < vertexCount; i++) {
+            for (i = 0; i < vertexCount; i++) {
                 this.addVertex(vertices[i], vertexIndices[i]);  
             }
         
@@ -98,6 +99,8 @@ pc.extend(pc.scene, function () {
     };
 
     function partitionSkin(boneLimit, vertexBuffers, indexBuffer, meshes, skin) {
+        var i, j;
+        var partition;
         var partitions = [];
 
         // Phase 1:  
@@ -126,16 +129,15 @@ pc.extend(pc.scene, function () {
                 }
             }
             return vert;
-        }
+        };
 
         // Go through index list and extract primitives and add them to bone partitions  
         // Since we are working with a single triangle list, everything is a triangle
         var basePartition = 0;
 
         var geomIndices = new Uint16Array(indexBuffer.lock());
-        for (var i = 0; i < meshes.length; i++) {
-            var mesh = meshes[i];
-            var primitive = mesh.primitive[0];
+        for (i = 0; i < meshes.length; i++) {
+            var primitive = meshes[i].primitive[0];
             for (var iIndex = primitive.base; iIndex < primitive.base + primitive.count; ) {
                 // Extact primitive  
                 // Convert vertices  
@@ -157,7 +159,7 @@ pc.extend(pc.scene, function () {
                 // Attempt to add the primitive to an existing bone partition  
                 var added = false;
                 for (var iBonePartition = basePartition; iBonePartition < partitions.length; iBonePartition++) {
-                    var partition = partitions[iBonePartition];
+                    partition = partitions[iBonePartition];
                     if (partition.addPrimitive(primitiveVertices, primitiveIndices, boneLimit)) {  
                         added = true;
                         break;
@@ -166,8 +168,8 @@ pc.extend(pc.scene, function () {
 
                 // If the primitive was not added to an existing bone partition, we need to make a new bone partition and add the primitive to it  
                 if (!added) {
-                    var partition = new SkinPartition();
-                    partition.material = mesh._material;
+                    partition = new SkinPartition();
+                    partition.material = meshes[i]._material;
                     partition.addPrimitive(primitiveVertices, primitiveIndices, boneLimit);  
                     partitions.push(partition);
                 }
@@ -181,8 +183,8 @@ pc.extend(pc.scene, function () {
         var partitionedVertices = [];
         var partitionedIndices = [];
 
-        for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-            var partition = partitions[iPartition];  
+        for (i = 0; i < partitions.length; i++) {
+            partition = partitions[i];  
     
             if (partition.vertices.length && partition.indices.length) {
                 // this bone partition contains vertices and indices  
@@ -194,7 +196,7 @@ pc.extend(pc.scene, function () {
                 var indexCount = partition.indices.length;  
 
                 // Make a new sub set  
-                partition.partition = iPartition;
+                partition.partition = i;
                 partition.vertexStart = vertexStart;
                 partition.vertexCount = vertexCount;
                 partition.indexStart = indexStart;
@@ -223,11 +225,11 @@ pc.extend(pc.scene, function () {
         // Phase 3:
         // Build new vertex buffer from partitioned vertices
         var partitionedVbs = [];
-        for (var i = 0; i < vbs.length; i++) {
+        for (i = 0; i < vbs.length; i++) {
             var partitionedVb = new pc.gfx.VertexBuffer(vbs[i].getFormat(), partitionedVertices.length);
             var lockedBuffer = partitionedVb.lock();
             var byteArray = new Uint8Array(lockedBuffer);
-            for (var j = 0; j < partitionedVertices.length; j++) {
+            for (j = 0; j < partitionedVertices.length; j++) {
                 byteArray.set(new Uint8Array(partitionedVertices[j].vertexData[i]), j * partitionedVb.getFormat().size);
             }
             partitionedVb.unlock();
@@ -238,8 +240,8 @@ pc.extend(pc.scene, function () {
         // Build new index buffer from partitioned indices
         var indices = [];
 
-        for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-            var partition = partitions[iPartition];
+        for (i = 0; i < partitions.length; i++) {
+            partition = partitions[i];
 
             indices = indices.concat(partitionedIndices.splice(0, partition.indexCount));
         }
@@ -254,14 +256,14 @@ pc.extend(pc.scene, function () {
         var partitionedMeshes = [];
         var base = 0;
 
-        for (var iPartition = 0; iPartition < partitions.length; iPartition++) {
-            var partition = partitions[iPartition];
+        for (i = 0; i < partitions.length; i++) {
+            partition = partitions[i];
 
             var ibp = [];
             var boneNames = [];
-            for (i = 0; i < partition.boneIndices.length; i++) {
-                ibp.push(skin.inverseBindPose[partition.boneIndices[i]]);
-                boneNames.push(skin.boneNames[partition.boneIndices[i]]);
+            for (j = 0; j < partition.boneIndices.length; j++) {
+                ibp.push(skin.inverseBindPose[partition.boneIndices[j]]);
+                boneNames.push(skin.boneNames[partition.boneIndices[j]]);
             }
 
             var partitionedSkin = new pc.scene.Skin(ibp, boneNames);

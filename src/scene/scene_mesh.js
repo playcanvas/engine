@@ -17,9 +17,9 @@ pc.extend(pc.scene, function () {
         this.vertexBuffer = null;
         this.indexBuffer = [ null ];
         this.primitive = [{
-        	type: 0,
-        	base: 0,
-        	count: 0
+            type: 0,
+            base: 0,
+            count: 0
         }];
         this.skin = null;
 
@@ -67,6 +67,6 @@ pc.extend(pc.scene, function () {
     return {
         Command: Command,
         Mesh: Mesh,
-        MeshInstance: MeshInstance,
+        MeshInstance: MeshInstance
     }; 
 }());

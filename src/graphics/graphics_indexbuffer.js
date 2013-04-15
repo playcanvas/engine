@@ -113,7 +113,7 @@ pc.extend(pc.gfx, function () {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufferId);
             gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, this.storage, glUsage);
         }
-    }
+    };
 
     return {
         IndexBuffer: IndexBuffer

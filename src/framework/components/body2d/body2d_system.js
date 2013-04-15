@@ -23,7 +23,6 @@ pc.extend(pc.fw, function () {
         pos2d = new b2Vec2();
     }
 
-
     /**
      * @private
      * @name pc.fw.Body2dComponentSystem
@@ -38,7 +37,7 @@ pc.extend(pc.fw, function () {
             unpack();
         }
 
-        this.id = 'body2d'
+        this.id = 'body2d';
         context.systems.add(this.id, this);
         
         this.ComponentType = pc.fw.Body2dComponent;
@@ -86,7 +85,7 @@ pc.extend(pc.fw, function () {
     pc.extend(Body2dComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
-            var properties = ['static'];
+            properties = ['static'];
             Body2dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             if (typeof(Box2D) !== 'undefined') {
@@ -216,7 +215,7 @@ pc.extend(pc.fw, function () {
             var positionIterations = 2;
             var components = this.store;
 
-            for (id in components) {
+            for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;

@@ -160,7 +160,7 @@ pc.extend(pc.fw, function () {
             // Populate the AssetCache and register hashes
             this.context.assets.update(toc, this.context.loader);
 
-            for (guid in toc.assets) {
+            for (var guid in toc.assets) {
                 var asset = this.context.assets.getAsset(guid);
                 // Create a request for all files
                 requests.push(this.context.loader.createFileRequest(asset.getFileUrl(), asset.file.type));
@@ -176,8 +176,8 @@ pc.extend(pc.fw, function () {
                 var request = new pc.resources.PackRequest(guid);
                 this.context.loader.request(request, function (resources) {
                     var pack = resources[guid];
-                    this.context.root.addChild(pack['hierarchy']);
-                    pc.fw.ComponentSystem.initialize(pack['hierarchy']);
+                    this.context.root.addChild(pack.hierarchy);
+                    pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     success(resources[guid]);
                 }.bind(this), error, progress);
             }.bind(this);
@@ -199,7 +199,7 @@ pc.extend(pc.fw, function () {
             if (!this.librariesLoaded) {
                 this.on('librariesloaded', function () {
                     load();
-                })
+                });
             } else {
                 load();
             }
@@ -212,10 +212,10 @@ pc.extend(pc.fw, function () {
                     var pack = resources[guid];
 
                     // add to hierarchy
-                    this.context.root.addChild(pack['hierarchy']);
+                    this.context.root.addChild(pack.hierarchy);
                     
                     // Initialise any systems with an initialize() method after pack is loaded
-                    pc.fw.ComponentSystem.initialize(pack['hierarchy']);
+                    pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     
                     // callback
                     if (success) {
@@ -229,7 +229,7 @@ pc.extend(pc.fw, function () {
                 }.bind(this), function (value) {
                     // progress
                     if (progress) {
-                        progress(value)
+                        progress(value);
                     }
                 }.bind(this));
             }.bind(this);
@@ -237,7 +237,7 @@ pc.extend(pc.fw, function () {
             if (!this.librariesLoaded) {
                 this.on('librariesloaded', function () {
                     load();
-                })
+                });
             } else {
                 load();
             }
@@ -537,6 +537,7 @@ pc.extend(pc.fw, function () {
 
             var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
             var collisionboxsys = new pc.fw.CollisionBoxComponentSystem(this.context);
+            var collisioncapsulesys = new pc.fw.CollisionCapsuleComponentSystem(this.context);
             var collisionmeshsys = new pc.fw.CollisionMeshComponentSystem(this.context);
             var collisionspheresys = new pc.fw.CollisionSphereComponentSystem(this.context);
         },
@@ -548,6 +549,8 @@ pc.extend(pc.fw, function () {
          * @param {pc.fw.LiveLiveMessage} msg The received message
          */
         _handleMessage: function (msg) {
+            var entity;
+
             switch(msg.type) {
                 case pc.fw.LiveLinkMessageType.UPDATE_COMPONENT:
                     this._linkUpdateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
@@ -559,20 +562,21 @@ pc.extend(pc.fw, function () {
                     this._linkUpdateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME:
-                    var entity = this.context.root.findOne("getGuid", msg.content.id);
+                    entity = this.context.root.findOne("getGuid", msg.content.id);
                     entity.setName(msg.content.name);
                     break;
                 case pc.fw.LiveLinkMessageType.REPARENT_ENTITY:
                     this._linkReparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
                     break;
                 case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
-                    var entity = this.context.root.findOne("getGuid", msg.content.id);
+                    entity = this.context.root.findOne("getGuid", msg.content.id);
                     if(entity) {
                         logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid())); 
                         entity.destroy();
                     }
                     break;
                 case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
+                    var parent;
                     var entities = {};
                     var guid = null;
                     if (msg.content.entity) {
@@ -581,12 +585,12 @@ pc.extend(pc.fw, function () {
                             application_data: {},
                             hierarchy: msg.content.entity
                         };
-                        var pack = this.context.loader.open(pc.resources.PackRequest, pack);
+                        pack = this.context.loader.open(pc.resources.PackRequest, pack);
 
                         // Get the root entity back from the fake pack
-                        var entity = pack['hierarchy'];
+                        entity = pack.hierarchy;
                         if (entity.__parent) {
-                            var parent = this.context.root.findByGuid(entity.__parent);
+                            parent = this.context.root.findByGuid(entity.__parent);
                             parent.addChild(entity);
                         } else {
                             this.context.root.addChild(entity);
@@ -597,7 +601,7 @@ pc.extend(pc.fw, function () {
 
                         for (i = 0; i < len; i++) {
                             var model = msg.content.models[i];
-                            var entity = this.context.loader.open(pc.resources.EntityRequest, model);
+                            entity = this.context.loader.open(pc.resources.EntityRequest, model);
                             entities[entity.getGuid()] = entity;
                         }
                         
@@ -609,7 +613,7 @@ pc.extend(pc.fw, function () {
                                     this.context.root.addChild(entities[guid]);
                                 } else if (!entities[entities[guid].__parent]) {
                                     // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
-                                    var parent = this.context.root.findByGuid(entities[guid].__parent);
+                                    parent = this.context.root.findByGuid(entities[guid].__parent);
                                     parent.addChild(entities[guid]);
                                 }
                             }
@@ -639,7 +643,7 @@ pc.extend(pc.fw, function () {
                         entity[componentName][attributeName] = value;
                         //system.set(entity, attributeName, value);
                     } else {
-                        logWARNING(pc.string.format("No component system called '{0}' exists", componentName))
+                        logWARNING(pc.string.format("No component system called '{0}' exists", componentName));
                     }
                 } else {
                     // set value on node
@@ -748,7 +752,7 @@ pc.extend(pc.fw, function () {
                 get: function () {
                     return document.webkitCurrentFullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
                 }
-            })
+            });
         }
         
         if (!document.fullscreenEnabled) {
@@ -758,7 +762,7 @@ pc.extend(pc.fw, function () {
                 get: function () {
                     return document.webkitFullscreenEnabled || document.mozFullScreenEnabled;
                 }
-            })
+            });
         }
 
     }());

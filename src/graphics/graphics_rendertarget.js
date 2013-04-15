@@ -53,8 +53,8 @@ pc.extend(pc.gfx, function () {
             if (this._viewport) {
                 return this._viewport;
             } else {
-                this._defaultViewport.width = this._frameBuffer.getWidth(),
-                this._defaultViewport.height = this._frameBuffer.getHeight()
+                this._defaultViewport.width = this._frameBuffer.getWidth();
+                this._defaultViewport.height = this._frameBuffer.getHeight();
                 return this._defaultViewport;
             }
         },
@@ -102,7 +102,7 @@ pc.extend(pc.gfx, function () {
             gl.viewport(vp.x, vp.y, vp.width, vp.height);
             gl.scissor(vp.x, vp.y, vp.width, vp.height);
         }
-    }
+    };
 
     return {
         RenderTarget: RenderTarget

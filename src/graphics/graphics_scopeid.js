@@ -1,7 +1,7 @@
 pc.extend(pc.gfx, function () {
     var ScopeId = function (name) {
         // Set the name
-        this.name = name
+        this.name = name;
 
         // Set the default value
         this.value = null;
@@ -22,7 +22,7 @@ pc.extend(pc.gfx, function () {
         getValue: function(value) {
             return this.value;
         }
-    }
+    };
 
     return {
         ScopeId: ScopeId

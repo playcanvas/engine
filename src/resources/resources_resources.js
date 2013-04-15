@@ -63,7 +63,7 @@ pc.resources = function () {
      */
     ResourceLoader.prototype.registerHandler = function (RequestType, handler) {
         var request = new RequestType();
-        if (request.type == "") {
+        if (request.type === "") {
             throw Error("ResourceRequests must have a type");
         }
         this._types[request.type] = RequestType;
@@ -184,7 +184,7 @@ pc.resources = function () {
         
         // Convert single request into a list
         if (!requests.length) {
-            requests = [requests]
+            requests = [requests];
         }
                 
         // Create a batch for this request
@@ -250,7 +250,7 @@ pc.resources = function () {
     ResourceLoader.prototype.open = function (RequestType, data, success, error, progress, options) {
        var request = new RequestType();
        return this._handlers[request.type].open(data, success, error, progress, options);
-    }
+    };
     
     /**
      * @name pc.resources.ResourceLoader#cancel
@@ -266,9 +266,9 @@ pc.resources = function () {
             if (batch.handle == handle) {
                 batch.requests.forEach(function (request, index, arr) {
                     // remove all requests from pending list
-                    var index = this._pending.indexOf(request.identifier)
-                    if(index >= 0) {
-                        this._pending.splice(index, 1);    
+                    var reqIndex = this._pending.indexOf(request.identifier);
+                    if (reqIndex >= 0) {
+                        this._pending.splice(reqIndex, 1);    
                     }
                 }, this);
             }    
@@ -304,7 +304,7 @@ pc.resources = function () {
         this._pending.sort(function (a,b) {
             var s = this._requests[a].priority - this._requests[b].priority;
             // If the priorities are the same, then sort on sequence order
-            if (s == 0) {
+            if (s === 0) {
                 return this._requests[a].sequence - this._requests[b].sequence;
             } else {
                 return s;    
@@ -351,7 +351,7 @@ pc.resources = function () {
                         var i, len = request.batches.length;
                         for (i = 0; i < len; i++) {
                             var resource = handler.open(response, options);
-                            this._afterOpened(request, resource, handler, request.batches[i], options)
+                            this._afterOpened(request, resource, handler, request.batches[i], options);
                         }
                         
                         // Make any new requests
@@ -439,7 +439,8 @@ pc.resources = function () {
         this._batches.splice(this._batches.indexOf(batch), 1);
 
         this.fire('batchcomplete', this, batch);
-    }
+    };
+
     /**
      * @name pc.resources.ResourceHandler
      * @class Abstract base class for ResourceHandler. The resource handler performs the request to fetch the resource from a remote location,
@@ -662,29 +663,29 @@ pc.resources = function () {
         }
         
         return false;
-    }
+    };
     
     RequestBatch.prototype._getCount = function () {
         var count = this.count;
         var i;
         var length = this.children.length;
         for (i=0;i<length;++i) {
-            count += this.children[i]._getCount()
+            count += this.children[i]._getCount();
         }
         
         return count;
-    }
+    };
     
     RequestBatch.prototype._getTotal = function () {
         var total = this.requests.length;
         var i;
         var length = this.children.length;
-        for (i=0;i<length;++i) {
-            total += this.children[i]._getTotal()
+        for (i = 0; i < length; i++) {
+            total += this.children[i]._getTotal();
         }
-        
+
         return total;
-    }
+    };
     
     /**
      * @name pc.resources.ResourceRequest

@@ -1,5 +1,5 @@
 pc.extend(pc.fw, function () {
-    function DirectionalLightComponentData() {
+    var DirectionalLightComponentData = function () {
         // Serialized
         this.enable = true;
         this.color = "0xffffff";

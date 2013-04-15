@@ -2,12 +2,12 @@ pc.anim.Key = function Key() {
     this._quat = pc.math.quat.create(0, 0, 0, 0);
     this._pos  = pc.math.vec3.create(0, 0, 0);
     this._time = 0;
-}
+};
 
 pc.anim.Node = function Node() {
     this._name = "";
     this._keys = [];
-}
+};
 
 pc.extend(pc.anim, function () {
     /**

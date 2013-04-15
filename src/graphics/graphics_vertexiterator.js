@@ -81,7 +81,7 @@ pc.extend(pc.gfx, function () {
             this.setters[i] = new VertexIteratorSetter(this.buffer, vertexElement);
             this.element[vertexElement.scopeId.name] = this.setters[i];
         }
-    }
+    };
 
     VertexIterator.prototype = {
         /**
@@ -136,7 +136,7 @@ pc.extend(pc.gfx, function () {
             // Unlock the vertex buffer
             this.vertexBuffer.unlock();
         }
-    }
+    };
 
     return {
         VertexIterator: VertexIterator

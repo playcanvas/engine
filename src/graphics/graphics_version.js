@@ -25,7 +25,7 @@ pc.extend(pc.gfx, function () {
             this.globalId = 0;
             this.revision = 0;
         }
-    }
+    };
 
     return {
         Version: Version

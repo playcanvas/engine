@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
                 var position = this.system.current.getPosition();
                 this.system.manager.listener.setPosition(position);
             }
-        },
+        }
     });
 
     return {

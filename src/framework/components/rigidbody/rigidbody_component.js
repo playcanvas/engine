@@ -63,6 +63,8 @@ pc.extend(pc.fw, function () {
 
             if (entity.collisionbox) {
                 shape = entity.collisionbox.shape;
+            } else if (entity.collisioncapsule) {
+                shape = entity.collisioncapsule.shape;
             } else if (entity.collisionsphere) {
                 shape = entity.collisionsphere.shape;
             } else if (entity.collisionmesh) {
@@ -273,7 +275,7 @@ pc.extend(pc.fw, function () {
             if (!this.isKinematic()) {
                 if (this.body) {
                     var vel = this.body.getLinearVelocity();
-                    pc.math.vec3.set(this.linearVelocity, vel.x(), vel.y(), vel.z())
+                    pc.math.vec3.set(this.linearVelocity, vel.x(), vel.y(), vel.z());
                     return this.linearVelocity;
                 }
             } else {
@@ -291,7 +293,7 @@ pc.extend(pc.fw, function () {
             if (!this.isKinematic()) {
                 if (this.body) {
                     var vel = this.body.getAngularVelocity();
-                    pc.math.vec3.set(this.angularVelocity, vel.x(), vel.y(), vel.z())
+                    pc.math.vec3.set(this.angularVelocity, vel.x(), vel.y(), vel.z());
                     return this.angularVelocity;
                 }
             } else {

@@ -140,7 +140,7 @@ pc.extend(pc.input, function () {
         },
 
         getMap: function (pad) {
-            for (code in PRODUCT_CODES) {
+            for (var code in PRODUCT_CODES) {
                 if (pad.id.indexOf(code) >= 0) {
                     return MAPS[PRODUCT_CODES[code]];
                 }
@@ -318,5 +318,5 @@ pc.extend(pc.input, function () {
         PAD_R_STICK_Y: 3,
 
         GamePads: GamePads
-    }
+    };
 }());

@@ -27,7 +27,7 @@ pc.cookie = function () {
         },
 
         get: function (name) {
-            var cookies = document.cookie.split(";")
+            var cookies = document.cookie.split(";");
             var i, len = cookies.length;
 
             for(i = 0; i < len; i++) {
@@ -41,6 +41,5 @@ pc.cookie = function () {
             options.lifetime = 0;
             pc.cookie.set(name,"", options);
         }
-
-    }
+    };
 }();

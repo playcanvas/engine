@@ -24,8 +24,6 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
     var triangleCount = indices.length / 3;
     var vertexCount   = vertices.length / 3;
     var i1, i2, i3;
-    var v1, v2, v3;
-    var w1, w2, w3;
     var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
     var sdir = pc.math.vec3.create(0, 0, 0);
     var tdir = pc.math.vec3.create(0, 0, 0);
@@ -95,9 +93,9 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
         tan2[i3 * 3 + 2] += tdir[2];
     }
 
+    t1 = pc.math.vec3.create(0, 0, 0);
+    t2 = pc.math.vec3.create(0, 0, 0);
     var n    = pc.math.vec3.create(0, 0, 0);
-    var t1   = pc.math.vec3.create(0, 0, 0);
-    var t2   = pc.math.vec3.create(0, 0, 0);
     var temp = pc.math.vec3.create(0, 0, 0);
 
     for (i = 0; i < vertexCount; i++) {
@@ -121,7 +119,7 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
     }
     
     return tangents;
-}
+};
 
 /**
  * @function
@@ -209,7 +207,7 @@ pc.scene.procedural.createMesh = function (positions, opts) {
     mesh.primitive[0].indexed = indexed;
     mesh.aabb = aabb;
     return mesh;
-}
+};
 
 /**
  * @function
@@ -243,8 +241,8 @@ pc.scene.procedural.createTorus = function (opts) {
     var uvs = [];
     var indices = [];
 
-    for (var i = 0; i <= sides; i++) {
-        for (var j = 0; j <= segments; j++) {
+    for (i = 0; i <= sides; i++) {
+        for (j = 0; j <= segments; j++) {
             x  = Math.cos(2.0 * Math.PI * j / segments) * (rt + rc * Math.cos(2.0 * Math.PI * i / sides));
             y  = Math.sin(2.0 * Math.PI * i / sides) * rc;
             z  = Math.sin(2.0 * Math.PI * j / segments) * (rt + rc * Math.cos(2.0 * Math.PI * i / sides));
@@ -285,13 +283,13 @@ pc.scene.procedural.createTorus = function (opts) {
     }
 
     return pc.scene.procedural.createMesh(positions, options);
-}
+};
 
 pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments, roundedCaps) {
     // Variable declarations
     var i, j;
     var x, y, z, u, v;
-    var pos = pc.math.vec3.create()
+    var pos = pc.math.vec3.create();
     var bottomToTop = pc.math.vec3.create();
     var norm = pc.math.vec3.create();
     var top, bottom, tangent;
@@ -301,6 +299,8 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
     var indices = [];
     var cosTheta, sinTheta;
     var sinPhi, cosPhi;
+    var first, second, third, fourth;
+    var offset;
 
     // Define the body of the cone/cylinder
     if (height > 0) {
@@ -324,7 +324,6 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
                 uvs.push(j / capSegments, i / heightSegments);
 
                 if ((i < heightSegments) && (j < capSegments)) {
-                    var first, second, third, fourth;
                     first   = ((i))     * (capSegments + 1) + ((j));
                     second  = ((i))     * (capSegments + 1) + ((j + 1));
                     third   = ((i + 1)) * (capSegments + 1) + ((j));
@@ -338,17 +337,18 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
     }
 
     if (roundedCaps) {
+        var lat, lon;
         var latitudeBands = Math.floor(capSegments / 2);
         var longitudeBands = capSegments;
         var capOffset = height / 2;
 
         // Generate top cap
-        for (var lat = 0; lat <= latitudeBands; lat++) {
+        for (lat = 0; lat <= latitudeBands; lat++) {
             theta = (lat * Math.PI * 0.5) / latitudeBands;
             sinTheta = Math.sin(theta);
             cosTheta = Math.cos(theta);
 
-            for (var lon = 0; lon <= longitudeBands; lon++) {
+            for (lon = 0; lon <= longitudeBands; lon++) {
                 // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
                 phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2.0;
                 sinPhi = Math.sin(phi);
@@ -366,7 +366,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
             }
         }
 
-        var offset = (heightSegments + 1) * (capSegments + 1);
+        offset = (heightSegments + 1) * (capSegments + 1);
         for (lat = 0; lat < latitudeBands; ++lat) {
             for (lon = 0; lon < longitudeBands; ++lon) {
                 first  = (lat * (longitudeBands+1)) + lon;
@@ -378,12 +378,12 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
         }
 
         // Generate bottom cap
-        for (var lat = 0; lat <= latitudeBands; lat++) {
+        for (lat = 0; lat <= latitudeBands; lat++) {
             theta = Math.PI * 0.5 + (lat * Math.PI * 0.5) / latitudeBands;
             sinTheta = Math.sin(theta);
             cosTheta = Math.cos(theta);
 
-            for (var lon = 0; lon <= longitudeBands; lon++) {
+            for (lon = 0; lon <= longitudeBands; lon++) {
                 // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
                 phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2.0;
                 sinPhi = Math.sin(phi);
@@ -413,7 +413,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
         }
     } else {
         // Generate bottom cap
-        var offset = (heightSegments + 1) * (capSegments + 1);
+        offset = (heightSegments + 1) * (capSegments + 1);
         if (baseRadius > 0.0) {
             for (i = 0; i < capSegments; i++) {
                 theta = (i / capSegments) * 2.0 * Math.PI;
@@ -461,7 +461,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
         uvs: uvs,
         indices: indices
     };
-}
+};
 
 /**
  * @function
@@ -476,7 +476,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
  * @param {Number} opts.radius The radius of the tube forming the body of the cylinder (defaults to 0.5).
  * @param {Number} opts.height The length of the body of the cylinder (defaults to 1.0).
  * @param {Number} opts.heightSegments The number of divisions along the length of the cylinder (defaults to 5).
- * @param {Number} opts.capSegments The number of divisions around the tubular body of the cylinder (defaults to 18).
+ * @param {Number} opts.capSegments The number of divisions around the tubular body of the cylinder (defaults to 20).
  * @returns {pc.scene.Mesh} A new cylinder-shaped mesh.
  * @author Will Eastcott
  */
@@ -485,7 +485,7 @@ pc.scene.procedural.createCylinder = function (opts) {
     var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 5;
-    var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 18;
+    var capSegments = opts && opts.capSegments !== undefined ? opts.capSegments : 20;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
@@ -496,7 +496,7 @@ pc.scene.procedural.createCylinder = function (opts) {
     }
 
     return pc.scene.procedural.createMesh(options.positions, options);
-}
+};
 
 /**
  * @function
@@ -511,7 +511,7 @@ pc.scene.procedural.createCylinder = function (opts) {
  * @param {Number} opts.radius The radius of the tube forming the body of the capsule (defaults to 0.3).
  * @param {Number} opts.height The length of the body of the capsule from tip to tip (defaults to 1.0).
  * @param {Number} opts.heightSegments The number of divisions along the tubular length of the capsule (defaults to 1).
- * @param {Number} opts.sides The number of divisions around the tubular body of the capsule (defaults to 10).
+ * @param {Number} opts.sides The number of divisions around the tubular body of the capsule (defaults to 20).
  * @returns {pc.scene.Mesh} A new cylinder-shaped mesh.
  * @author Will Eastcott
  */
@@ -520,7 +520,7 @@ pc.scene.procedural.createCapsule = function (opts) {
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.3;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
     var heightSegments = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
-    var sides = opts && opts.sides !== undefined ? opts.sides : 10;
+    var sides = opts && opts.sides !== undefined ? opts.sides : 20;
 
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc.scene.procedural._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
@@ -531,7 +531,7 @@ pc.scene.procedural.createCapsule = function (opts) {
     }
 
     return pc.scene.procedural.createMesh(options.positions, options);
-}
+};
 
 /**
  * @function
@@ -567,7 +567,7 @@ pc.scene.procedural.createCone = function (opts) {
     }
 
     return pc.scene.procedural.createMesh(options.positions, options);
-}
+};
 
 /**
  * @function
@@ -591,6 +591,7 @@ pc.scene.procedural.createSphere = function (opts) {
     var longitudeBands = opts && opts.longitudeBands !== undefined ? opts.longitudeBands : 16;
 
     // Variable declarations
+    var lon, lat;
     var theta, sinTheta, cosTheta, phi, sinPhi, cosPhi;
     var first, second;
     var x, y, z, u, v;
@@ -599,12 +600,12 @@ pc.scene.procedural.createSphere = function (opts) {
     var uvs = [];
     var indices = [];
 
-    for (var lat = 0; lat <= latitudeBands; lat++) {
+    for (lat = 0; lat <= latitudeBands; lat++) {
         theta = lat * Math.PI / latitudeBands;
         sinTheta = Math.sin(theta);
         cosTheta = Math.cos(theta);
 
-        for (var lon = 0; lon <= longitudeBands; lon++) {
+        for (lon = 0; lon <= longitudeBands; lon++) {
             // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
             phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2.0;
             sinPhi = Math.sin(phi);
@@ -644,7 +645,7 @@ pc.scene.procedural.createSphere = function (opts) {
     }
 
     return pc.scene.procedural.createMesh(positions, options);
-}
+};
 
 /**
  * @function
@@ -717,7 +718,7 @@ pc.scene.procedural.createPlane = function (opts) {
     }
 
     return pc.scene.procedural.createMesh(positions, options);
-}
+};
 
 /**
  * @function
@@ -836,4 +837,4 @@ pc.scene.procedural.createBox = function (opts) {
     }
 
     return pc.scene.procedural.createMesh(positions, options);
-}
+};

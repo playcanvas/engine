@@ -13,7 +13,7 @@ pc.time = function () {
         this._isRunning = false;
         this._a = 0;
         this._b = 0;
-    }
+    };
     
     /**
      * @function
@@ -24,7 +24,7 @@ pc.time = function () {
     
         this._isRunning = true;
         this._a = (new Date()).getTime();
-    }
+    };
     
     /**
      * @function
@@ -35,7 +35,7 @@ pc.time = function () {
     
         this._isRunning = false;
         this._b = (new Date()).getTime();
-    }
+    };
     
     /**
      * @function
@@ -45,7 +45,7 @@ pc.time = function () {
     Timer.prototype.getMilliseconds = function() {
     
         return this._b - this._a;
-    }
+    };
 
     return {
         Timer: Timer,

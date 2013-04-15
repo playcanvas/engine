@@ -84,4 +84,4 @@ pc.gfx.ShaderInput = function (name, type, locationId) {
     this.commitFunc = f;
 
     this.slot = -1;
-}
+};

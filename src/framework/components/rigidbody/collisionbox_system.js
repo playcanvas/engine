@@ -20,7 +20,7 @@ pc.extend(pc.fw, function () {
             type: "vector",
             options: {
                 min: 0,
-                step: 0.1,
+                step: 0.1
             },
             defaultValue: [0.5, 0.5, 0.5]
         }, {
@@ -138,7 +138,7 @@ pc.extend(pc.fw, function () {
 
         updateDebugShapes: function () {
             var components = this.store;
-            for (id in components) {
+            for (var id in components) {
                 var entity = components[id].entity;
                 var data = components[id].data;
 

@@ -1,5 +1,5 @@
 pc.extend(pc.fw, function () {
-    function PrimitiveComponentData() {
+    var PrimitiveComponentData = function () {
         // Serialized
         this.type = pc.shape.Type.BOX;
         this.color = "0xffffff";
@@ -10,7 +10,6 @@ pc.extend(pc.fw, function () {
         this.material = null;
         this.model = null;
     };
-    
     PrimitiveComponentData = pc.inherits(PrimitiveComponentData, pc.fw.ComponentData);
     
     return {

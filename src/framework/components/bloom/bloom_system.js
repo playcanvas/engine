@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.ApplicationContext} context
      * @extends pc.fw.ComponentSystem
      */
-    var BloomComponentSystem = function BloomComponentSystem (context) {
+    var BloomComponentSystem = function BloomComponentSystem(context) {
         this.id = "bloom";
         context.systems.add(this.id, this);
 
@@ -84,7 +84,7 @@ pc.extend(pc.fw, function () {
         this.exposeProperties();
 
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-    }
+    };
     BloomComponentSystem = pc.inherits(BloomComponentSystem, pc.fw.ComponentSystem);
     
     pc.extend(BloomComponentSystem.prototype, {
@@ -129,7 +129,7 @@ pc.extend(pc.fw, function () {
                                         });
                                     }
                                 }
-                            }
+                            };
                         })(componentData, entity, this.context));
                 }
             }
@@ -138,5 +138,5 @@ pc.extend(pc.fw, function () {
     
     return {
         BloomComponentSystem: BloomComponentSystem
-    }
+    };
 }());

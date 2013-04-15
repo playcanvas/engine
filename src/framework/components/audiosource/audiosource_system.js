@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var AudioSourceComponentSystem = function (context, manager) {
-        this.id = "audiosource"
+        this.id = "audiosource";
         context.systems.add(this.id, this);
     
         this.ComponentType = pc.fw.AudioSourceComponent;
@@ -106,7 +106,7 @@ pc.extend(pc.fw, function () {
             properties = ['assets', 'volume', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         
-            component.paused = !data['activate'];
+            component.paused = !data.activate;
         },
 
         onInitialize: function(root) {

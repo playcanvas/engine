@@ -20,7 +20,7 @@ pc.extend(pc.fw, function () {
             type: "number",
             options: {
                 min: 0,
-                step: 0.1,
+                step: 0.1
             },
             defaultValue: 0.5
         }, {
@@ -42,9 +42,10 @@ pc.extend(pc.fw, function () {
         var vertexBuffer = new pc.gfx.VertexBuffer(format, 41);
         var positions = new Float32Array(vertexBuffer.lock());
 
+        var i;
         var r = 0.5;
         var numVerts = vertexBuffer.getNumVertices();
-        for (var i = 0; i < numVerts-1; i++) {
+        for (i = 0; i < numVerts-1; i++) {
             var theta = 2 * Math.PI * (i / (numVerts-2));
             var x = r * Math.cos(theta);
             var z = r * Math.sin(theta);
@@ -56,7 +57,7 @@ pc.extend(pc.fw, function () {
 
         var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 80);
         var inds = new Uint8Array(indexBuffer.lock());
-        for (var i = 0; i < 40; i++) {
+        for (i = 0; i < 40; i++) {
             inds[i * 2 + 0] = i;
             inds[i * 2 + 1] = i + 1;
         }
@@ -135,7 +136,7 @@ pc.extend(pc.fw, function () {
 
         updateDebugShapes: function () {
             var components = this.store;
-            for (id in components) {
+            for (var id in components) {
                 var entity = components[id].entity;
                 var data = components[id].data;
 

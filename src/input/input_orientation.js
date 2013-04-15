@@ -1,5 +1,5 @@
 pc.extend(pc.input, function () {
-	    
+
     var Orientation = function () {
         pc.extend(this, pc.events);
     };

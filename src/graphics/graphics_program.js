@@ -71,30 +71,28 @@ pc.extend(pc.gfx, function () {
 
         // Query the program for each vertex buffer input (GLSL 'attribute')
         var i = 0;
+        var info, locationId;
+
         var numAttributes = gl.getProgramParameter(this.programId, gl.ACTIVE_ATTRIBUTES);
         while (i < numAttributes) {
-            var info = gl.getActiveAttrib(this.programId, i++);
-            var locationId = gl.getAttribLocation(this.programId, info.name);
+            info = gl.getActiveAttrib(this.programId, i++);
+            locationId = gl.getAttribLocation(this.programId, info.name);
             this.attributes.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
-
-//            logDEBUG("Added shader attribute: " + _typeToString[info.type] + " " + info.name);
         }
 
         // Query the program for each shader state (GLSL 'uniform')
         i = 0;
         var numUniforms = gl.getProgramParameter(this.programId, gl.ACTIVE_UNIFORMS);
         while (i < numUniforms) {
-            var info = gl.getActiveUniform(this.programId, i++);
-            var locationId = gl.getUniformLocation(this.programId, info.name);
+            info = gl.getActiveUniform(this.programId, i++);
+            locationId = gl.getUniformLocation(this.programId, info.name);
             if ((info.type === gl.SAMPLER_2D) || (info.type === gl.SAMPLER_CUBE)) {
                 this.samplers.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
             } else {
                 this.uniforms.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
             }
-
-//            logDEBUG("Added shader uniform: " + _typeToString[info.type] + " " + info.name);
         }
-    }
+    };
 
     Program.prototype = {
         /**
@@ -106,10 +104,10 @@ pc.extend(pc.gfx, function () {
         destroy: function () {
             var gl = this.gl;
             gl.deleteProgram(this.programId);
-        },
-    }
+        }
+    };
 
     return {
         Program: Program
-    }; 
+    };
 }());

@@ -24,5 +24,5 @@ pc.extend(pc.shape, function () {
     
     return {
         Torus: Torus
-    }
+    };
 }());

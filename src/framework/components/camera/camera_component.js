@@ -40,7 +40,7 @@ pc.extend(pc.fw, function () {
          * @param {Number} x x coordinate on screen.
          * @param {Number} y y coordinate on screen.
          * @param {Number} z The distance from the camera in world space to create the new point.
-         * @param {pc.math.vec3} worldCoord [Optional] 3D vector to recieve world coordinate result.
+         * @param {pc.math.vec3} [worldCoord] 3D vector to recieve world coordinate result.
          * @returns {pc.math.vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, worldCoord) {
@@ -58,7 +58,7 @@ pc.extend(pc.fw, function () {
             this.entity.addChild(newValue);
         },
         onSetClearColor: function (name, oldValue, newValue) {
-            var color = parseInt(newValue);
+            var color = parseInt(newValue, 16);
             this.data.camera.getClearOptions().color = [
                 ((color >> 24) & 0xff) / 255.0,
                 ((color >> 16) & 0xff) / 255.0,

@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var SkyboxComponentSystem = function SkyboxComponentSystem (context) {
-        this.id = 'skybox'
+        this.id = 'skybox';
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.SkyboxComponent;
@@ -82,7 +82,7 @@ pc.extend(pc.fw, function () {
         this.exposeProperties();
 
         this.on('remove', this.onRemove, this);
-    }
+    };
     SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);
 
     pc.extend(SkyboxComponentSystem.prototype, {
@@ -110,6 +110,5 @@ pc.extend(pc.fw, function () {
 
     return {
         SkyboxComponentSystem: SkyboxComponentSystem
-    }
+    };
 }());
-

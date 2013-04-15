@@ -43,5 +43,5 @@ pc.extend(pc.shape, function () {
 
     return {
         Plane: Plane
-    }
+    };
 }());

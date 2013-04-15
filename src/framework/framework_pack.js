@@ -16,10 +16,10 @@ pc.extend(pc.fw, function () {
                 var pack = resources[guid];
 
                 // add to hierarchy
-                context.root.addChild(pack['hierarchy']);
+                context.root.addChild(pack.hierarchy);
                 
                 // Initialise any systems with an initialize() method after pack is loaded
-                pc.fw.ComponentSystem.initialize(pack['hierarchy']);
+                pc.fw.ComponentSystem.initialize(pack.hierarchy);
                 
                 // callback
                 if (success) {
@@ -33,9 +33,9 @@ pc.extend(pc.fw, function () {
             }.bind(this), function (value) {
                 // progress
                 if (progress) {
-                    progress(value)    
+                    progress(value); 
                 }
             }.bind(this));            
         }
-    }
+    };
 }());

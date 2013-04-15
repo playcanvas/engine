@@ -82,7 +82,7 @@ pc.extend(pc.audio, function () {
         
         // Fall off function which should be the same as the one in the Web Audio API, 
         // taken from OpenAL
-        function fallOff (posOne, posTwo, refDistance, maxDistance, rolloffFactor) {
+        var fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor) {
             var min = 0;
             
             offset = pc.math.vec3.subtract(posOne, posTwo, offset);

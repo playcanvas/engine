@@ -9,28 +9,26 @@ pc.extend(pc.audio, function () {
         * @param {pc.audio.AudioManager} manager The AudioManager instance
         * @param {pc.audio.Sound} sound The sound to playback
         * @param {Object} options
-        * @param {Number} [options.volume] The playback volume, between 0 and 1.
-        * @param {Boolean} [options.loop] Whether the sound should loop when it reaches the end or not.
+        * @param {Number} [options.volume=1] The playback volume, between 0 and 1.
+        * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
         */
         Channel = function (manager, sound, options) {
             options = options || {};
-            this.volume = options.volume || 1;
-            this.loop = options.loop || false;
+            this.volume = (typeof options.volume === 'undefined') ? 1 : options.volume;
+            this.loop = (typeof options.loop === 'undefined') ? false : options.loop;
             this.sound = sound;
                 
             this.paused = false;
             this.suspended = false;
 
-            this.startedAt = null;
-            this.pausedAt = null;
+            this.startTime = 0;
+            this.startOffset = 0;
 
             this.manager = manager;
 
             this.source = null;
             var context = manager.context;
             this.gain = context.createGain();
-
-            this.resetTimeout = null;
         };
         
         Channel.prototype = {
@@ -46,15 +44,14 @@ pc.extend(pc.audio, function () {
 
                 this._createSource();
 
-                this.startedAt = this.manager.context.currentTime;
-
                 // Initialize volume and loop
                 this.setVolume(this.volume);
                 this.setLoop(this.loop);
 
-                this.source.start(0);
+                this.startTime = this.manager.context.currentTime;
+                this.source.start(0, this.startOffset % this.source.buffer.duration);
 
-                this.manager.on('volumechange', this.onManagerVolumeChange, this)
+                this.manager.on('volumechange', this.onManagerVolumeChange, this);
                 this.manager.on('suspend', this.onManagerSuspend, this);
                 this.manager.on('resume', this.onManagerResume, this);
             },
@@ -66,16 +63,14 @@ pc.extend(pc.audio, function () {
             */
             pause: function () {
                 if (this.source) {
-                    if (this.resetTimeout !== null) {
-                      clearTimeout(this.resetTimeout);
-                    }
                     this.paused = true;
-                    this.pausedAt = (this.manager.context.currentTime - this.startedAt) % this.source.buffer.duration;
+
+                    this.startOffset += this.manager.context.currentTime - this.startTime;
                     this.source.stop(0);
                     this.source = null;
                 }
             },
-            
+
             /**
             * @function
             * @name pc.audio.Channel#unpause
@@ -84,7 +79,7 @@ pc.extend(pc.audio, function () {
             unpause: function () {
                 if (this.source || !this.paused) {
                     throw new Error('Call pause() before unpausing.');
-                };
+                }
 
                 this._createSource();
 
@@ -92,17 +87,8 @@ pc.extend(pc.audio, function () {
                 this.setVolume(this.volume);
                 this.setLoop(this.loop);
 
-                this.startedAt -= this.pausedAt;
-                var remainingTime = this.source.buffer.duration - this.pausedAt;
-                this.source.start(0, this.pausedAt, remainingTime);
-
-                this.resetTimeout = setTimeout(function () {
-                    // The loop property may have changed since the sound was restarted so check...
-                    if (this.getLoop()) {
-                        this.stop();
-                        this.play();
-                    }
-                }.bind(this), remainingTime * 1000);
+                this.startTime = this.manager.context.currentTime;
+                this.source.start(0, this.startOffset % this.source.buffer.duration);
 
                 this.paused = false;
             },
@@ -114,17 +100,13 @@ pc.extend(pc.audio, function () {
             */
             stop: function () {
                 if (this.source) {
-                    if (this.resetTimeout !== null) {
-                      clearTimeout(this.resetTimeout);
-                    }
                     this.source.stop(0);
                     this.source = null;
                 }
 
-                this.manager.off('volumechange', this.onManagerVolumeChange, this)
+                this.manager.off('volumechange', this.onManagerVolumeChange, this);
                 this.manager.off('suspend', this.onManagerSuspend, this);
                 this.manager.off('resume', this.onManagerResume, this);
-
             },
             
             /**
@@ -157,7 +139,7 @@ pc.extend(pc.audio, function () {
 
             getDuration: function () {
                 if (this.source) {
-                    return this.source.buffer.duration
+                    return this.source.buffer.duration;
                 }
                 else {
                     return 0;
@@ -189,7 +171,7 @@ pc.extend(pc.audio, function () {
             
             this.source = sound.audio.cloneNode(false);
             this.source.pause(); // not initially playing
-        }
+        };
         
         Channel.prototype = {
             play: function () {
@@ -200,7 +182,7 @@ pc.extend(pc.audio, function () {
                     this.source.play();
                 }
 
-                this.manager.on('volumechange', this.onManagerVolumeChange, this)
+                this.manager.on('volumechange', this.onManagerVolumeChange, this);
                 this.manager.on('suspend', this.onManagerSuspend, this);
                 this.manager.on('resume', this.onManagerResume, this);
 
@@ -227,7 +209,7 @@ pc.extend(pc.audio, function () {
                     this.source.currentTime = 0;
                 }
 
-                this.manager.off('volumechange', this.onManagerVolumeChange, this)
+                this.manager.off('volumechange', this.onManagerVolumeChange, this);
                 this.manager.off('suspend', this.onManagerSuspend, this);
                 this.manager.off('resume', this.onManagerResume, this);
             },

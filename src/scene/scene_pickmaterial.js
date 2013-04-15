@@ -23,7 +23,7 @@ pc.extend(pc.scene, function () {
         this.setParameter('uColor', this.color);
 
         this.transparent = false;
-    }
+    };
 
     PickMaterial.prototype.getProgram = function (mesh) {
         var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';

@@ -68,12 +68,12 @@ var pc = {
         /**
          * Extended typeof() function, returns the type of the object.
          * @param {Object} obj The object to get the type of
-         * @return {String} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date" or "regexp"
+         * @return {String} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array"
          * @function
          * @name pc.type
          */
         type: function (obj) {
-            if(obj == null) {
+            if (obj === null) {
                 return "null";
             }
             
@@ -130,7 +130,7 @@ var pc = {
          */
         isDefined: function(o) {
             var a;
-            return !(o === a)
+            return (o !== a);
         }
     };
 
@@ -147,7 +147,7 @@ var pc = {
         
         for(index = 0; index < names.length; ++index) {
             result["[object " + names[index] + "]"] = names[index].toLowerCase();
-        };
+        }
         
         return result;
     } ();

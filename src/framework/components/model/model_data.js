@@ -7,7 +7,7 @@ pc.extend(pc.fw, function() {
     * @constructor Create a new data object
     * @extends pc.fw.ComponentData
     */
-    function ModelComponentData() {
+    var ModelComponentData = function () {
         // serialized
         this.asset = null;
         this.castShadows = false;
@@ -15,7 +15,7 @@ pc.extend(pc.fw, function() {
         
         // non-serialized
         this.model = null;
-    }
+    };
     ModelComponentData = pc.inherits(ModelComponentData, pc.fw.ComponentData);
     
     return {

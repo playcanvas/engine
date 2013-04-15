@@ -66,7 +66,8 @@ pc.extend(pc.fw, function () {
 
                 var shape = new Ammo.btCompoundShape();
 
-                for (var i = 0; i < model.meshInstances.length; i++) {
+                var i, j;
+                for (i = 0; i < model.meshInstances.length; i++) {
                     var meshInstance = model.meshInstances[i];
                     var mesh = meshInstance.mesh;
                     var ib = mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID];
@@ -75,8 +76,8 @@ pc.extend(pc.fw, function () {
                     var format = vb.getFormat();
                     var stride = format.size / 4;
                     var positions;
-                    for (var i = 0; i < format.elements.length; i++) {
-                        var element = format.elements[i];
+                    for (j = 0; j < format.elements.length; j++) {
+                        var element = format.elements[j];
                         if (element.scopeId.name === 'vertex_position') {
                             positions = new Float32Array(vb.lock(), element.offset);
                         }
@@ -91,10 +92,10 @@ pc.extend(pc.fw, function () {
                     var i1, i2, i3;
 
                     var triMesh = new Ammo.btTriangleMesh();
-                    for (i = 0; i < numTriangles; i++) {
-                        i1 = indices[i*3] * stride;
-                        i2 = indices[i*3+1] * stride;
-                        i3 = indices[i*3+2] * stride;
+                    for (j = 0; j < numTriangles; j++) {
+                        i1 = indices[j*3] * stride;
+                        i2 = indices[j*3+1] * stride;
+                        i3 = indices[j*3+2] * stride;
                         v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
                         v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
                         v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);

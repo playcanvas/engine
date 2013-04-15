@@ -1,7 +1,7 @@
 pc.scene.Projection = {
     PERSPECTIVE  : 0,
     ORTHOGRAPHIC : 1
-}
+};
 
 pc.extend(pc.scene, function () {
     var v3 = pc.math.vec3;
@@ -49,7 +49,7 @@ pc.extend(pc.scene, function () {
             depth: 1.0,
             flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
         };
-    }
+    };
 
     // A CameraNode is a specialization of a GraphNode.  So inherit...
     CameraNode = pc.inherits(CameraNode, pc.scene.GraphNode);
@@ -196,15 +196,16 @@ pc.extend(pc.scene, function () {
         // Set the view related matrices
         var wtm = this.getWorldTransform();
         if (this._lookAtNode !== null) {
-            var eye = pc.math.mat4.getTranslation(wtm);
-            var target = pc.math.mat4.getTranslation(this._lookAtNode.getWorldTransform());
+            var up;
+            var eye = this.getPosition();
+            var target = this._lookAtNode.getPosition();
             if (this._upNode !== null) {
-                var upPos = pc.math.mat4.getTranslation(this._upNode.getWorldTransform());
-                var up = pc.math.vec3.create();
+                var upPos = this._upNode.getPosition();
+                up = pc.math.vec3.create();
                 pc.math.vec3.subtract(upPos, eye, up);
                 pc.math.vec3.normalize(up, up);
             } else {
-                var up = pc.math.vec3.create(0, 1, 0);
+                up = pc.math.vec3.create(0, 1, 0);
             }
             wtm = pc.math.mat4.makeLookAt(eye, target, up);
         }

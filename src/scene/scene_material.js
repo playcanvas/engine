@@ -202,7 +202,7 @@ pc.extend(pc.scene, function () {
      */
     Material.prototype.getState = function () {
         return this._state;
-    }
+    };
 
     /**
      * @function
@@ -215,7 +215,7 @@ pc.extend(pc.scene, function () {
      */
     Material.prototype.setState = function (state) {
         this._state = state;
-    }
+    };
 
     return {
         Material: Material

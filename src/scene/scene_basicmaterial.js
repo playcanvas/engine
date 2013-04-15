@@ -32,7 +32,7 @@ pc.extend(pc.scene, function () {
                 this.transparent = true;
             }
         }
-    }
+    };
 
     BasicMaterial.prototype.getProgram = function (mesh) {
 //        var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';
