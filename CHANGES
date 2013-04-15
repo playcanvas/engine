@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.103.0
+--------
+* Added collisioncapsule component
+* Engine updated to comply with JSHint
+* [FIX] No longer possible to pick line geometry
+* [FIX] Corrected primitive types for bloom and model loading
+* [FIX] Sounds (Web Audio API) now pause correctly if paused more than once on a single play through
+
+
+--------
 v0.102.3
 --------
 * [FIX] Updated to latest Web Audio API spec. PlayCanvas apps no longer crash in Firefox Nightly.
