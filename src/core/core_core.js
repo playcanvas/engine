@@ -68,7 +68,7 @@ var pc = {
         /**
          * Extended typeof() function, returns the type of the object.
          * @param {Object} obj The object to get the type of
-         * @return {String} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date" or "regexp"
+         * @return {String} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array"
          * @function
          * @name pc.type
          */
