@@ -300,7 +300,7 @@ pc.math.vec2 = function () {
             
             return arguments[num];
         }
-    }
+    };
 } ();
 
 /**
@@ -665,7 +665,7 @@ pc.math.vec3 = function () {
             r[2] = v0[2] - v1[2];
             return r;
         }
-    }
+    };
 } ();
 
 /**
@@ -831,5 +831,5 @@ pc.math.vec4 = function () {
             r[3] = v0[3] - v1[3];
             return r;
         }
-    }
+    };
 } ();

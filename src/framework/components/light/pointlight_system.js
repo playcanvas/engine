@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var PointLightComponentSystem = function (context) {
-        this.id = 'pointlight'
+        this.id = 'pointlight';
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.PointLightComponent;

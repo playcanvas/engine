@@ -11,8 +11,11 @@ pc.audio = function () {
     */
     var AudioManager = function () {
         if (pc.audio.hasAudioContext()) {
-            var AudioContext = AudioContext || webkitAudioContext;
-            this.context = new AudioContext();
+            if (typeof AudioContext !== "undefined") {
+                this.context = new AudioContext();
+            } else if (typeof webkitAudioContext !== "undefined") {
+                this.context = new webkitAudioContext();
+            }
         }
         this.listener = new pc.audio.Listener(this);
         
@@ -129,7 +132,7 @@ pc.audio = function () {
             return typeof(Audio) !== 'undefined';
         },
         hasAudioContext: function () {
-            return !!(typeof(AudioContext) !== 'undefined' || typeof(webkitAudioContext) !== 'undefined')
+            return !!(typeof(AudioContext) !== 'undefined' || typeof(webkitAudioContext) !== 'undefined');
         },
         /**
         * @description Estimate from the url/extension, whether the browser can play this audio type
@@ -139,7 +142,7 @@ pc.audio = function () {
                 '.ogg': 'audio/ogg',
                 '.mp3': 'audio/mpeg',
                 '.wav': 'audio/x-wav'
-            }
+            };
 
             var ext = pc.path.getExtension(url);
 
@@ -153,6 +156,5 @@ pc.audio = function () {
             }
 
         }
-
-    }
+    };
 }();

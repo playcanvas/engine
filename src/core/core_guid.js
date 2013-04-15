@@ -19,5 +19,5 @@ pc.guid = function() {
                 return v.toString(16);
             });
         }
-    }
+    };
 }();

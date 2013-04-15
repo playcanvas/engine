@@ -10,14 +10,14 @@ pc.extend(pc.fw, function () {
      * @property {String} asset The GUID of the asset for the model
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {pc.scene.Model} model The mode; node that is added to the scene graph.
+     * @property {pc.scene.Model} model The model that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity) {
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-    }
+    };
     ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
     
     pc.extend(ModelComponent.prototype, {
@@ -138,6 +138,5 @@ pc.extend(pc.fw, function () {
 
     return {
         ModelComponent: ModelComponent
-    }
+    };
 }());
-

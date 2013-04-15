@@ -10,10 +10,10 @@ pc.extend(pc.resources, function () {
         this._jsonToPrimitiveType = {
             "points":         pc.gfx.PRIMITIVE_POINTS,
             "lines":          pc.gfx.PRIMITIVE_LINES,
-            "linestrip":      pc.gfx.PRIMITIVE_LINE_STRIP,
+            "linestrip":      pc.gfx.PRIMITIVE_LINESTRIP,
             "triangles":      pc.gfx.PRIMITIVE_TRIANGLES,
-            "trianglestrip":  pc.gfx.PRIMITIVE_TRIANGLE_STRIP
-        }
+            "trianglestrip":  pc.gfx.PRIMITIVE_TRISTRIP
+        };
 
         this._jsonToVertexElementType = {
             "int8":     pc.gfx.VertexElementType.INT8,
@@ -23,19 +23,19 @@ pc.extend(pc.resources, function () {
             "int32":    pc.gfx.VertexElementType.INT32,
             "uint32":   pc.gfx.VertexElementType.UINT32,
             "float32":  pc.gfx.VertexElementType.FLOAT32
-        }
+        };
 
         this._jsonToLightType = {
             "directional": pc.scene.LightType.DIRECTIONAL,
             "point":       pc.scene.LightType.POINT,
             "spot":        pc.scene.LightType.SPOT
-        }
+        };
         
         this._jsonToAddressMode = {
             "repeat": pc.gfx.ADDRESS_REPEAT,
             "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
             "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
-        }
+        };
         
         this._jsonToFilterMode = {
             "nearest":             pc.gfx.FILTER_NEAREST,
@@ -44,12 +44,12 @@ pc.extend(pc.resources, function () {
             "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
             "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
             "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
-        }
+        };
         
         this._jsonToProjectionType = {
             "perspective"  : pc.scene.Projection.PERSPECTIVE,
             "orthographic" : pc.scene.Projection.ORTHOGRAPHIC
-        }
+        };
 	};
 	ModelResourceHandler = pc.inherits(ModelResourceHandler, pc.resources.ResourceHandler);
 	
@@ -69,7 +69,7 @@ pc.extend(pc.resources, function () {
         options = options || {};
         options.directory = pc.path.getDirectory(url);
 
-        var uri = new pc.URI(url)
+        var uri = new pc.URI(url);
         var ext = pc.path.getExtension(uri.path);
         options.binary = (ext === '.model');
 
@@ -91,10 +91,10 @@ pc.extend(pc.resources, function () {
      * @param {String} [options.identifier] The identifier used to load the resource, this is used to store the opened resource in the loader cache 
 	 */
     ModelResourceHandler.prototype.open = function (data, options) {
-    	options = options || {};
-    	options.directory = options.directory || "";
-    	options.priority = options.priority || 1; // default priority of 1
-    	options.batch = options.batch || null;
+        options = options || {};
+        options.directory = options.directory || "";
+        options.priority = options.priority || 1; // default priority of 1
+        options.batch = options.batch || null;
 
         if (options.binary) {
             model = this._loadModelBin(data, options);
@@ -102,12 +102,12 @@ pc.extend(pc.resources, function () {
             model = this._loadModelJson(data, options);
         }
 
-    	return model;
+        return model;
     };
 
     ModelResourceHandler.prototype.clone = function (model) {
         return model.clone();
-    }
+    };
 
     ModelResourceHandler.prototype._setNodeData = function (node, data) {
         node.setName(data.name);
@@ -381,11 +381,14 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadGeometry = function(model, modelData, geomData, buffers) {
+        var i;
+        var attribute;
+
         var device = pc.gfx.Device.getCurrent();
         if (device.precalculatedTangents) {
             // Calculate tangents if we have positions, normals and texture coordinates
             var positions = null, normals = null, uvs = null, tangents = null;
-            for (var i = 0; i < geomData.attributes.length; i++) {
+            for (i = 0; i < geomData.attributes.length; i++) {
                 var entry = geomData.attributes[i];
 
                 if (entry.name === "vertex_position") {
@@ -403,7 +406,7 @@ pc.extend(pc.resources, function () {
             }
 
             if (!tangents && positions && normals && uvs) {
-                var tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, geomData.indices.data);
+                tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, geomData.indices.data);
                 geomData.attributes.push({ name: "vertex_tangent", type: "float32", components: 4, data: tangents });
             }
         }
@@ -411,8 +414,8 @@ pc.extend(pc.resources, function () {
         // Generate the vertex format for the geometry's vertex buffer
         var vertexFormat = new pc.gfx.VertexFormat();
         vertexFormat.begin();
-        for (var i = 0; i < geomData.attributes.length; i++) {
-            var attribute = geomData.attributes[i];
+        for (i = 0; i < geomData.attributes.length; i++) {
+            attribute = geomData.attributes[i];
 
             // Create the vertex format for this buffer
             var attributeType = this._jsonToVertexElementType[attribute.type];
@@ -425,9 +428,9 @@ pc.extend(pc.resources, function () {
         var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
 
         var iterator = new pc.gfx.VertexIterator(vertexBuffer);
-        for (var i = 0; i < numVertices; i++) {
+        for (i = 0; i < numVertices; i++) {
             for (var j = 0; j < geomData.attributes.length; j++) {
-               var attribute = geomData.attributes[j];
+               attribute = geomData.attributes[j];
                 switch (attribute.components) {
                     case 1:
                         iterator.element[attribute.name].set(attribute.data[i]);
@@ -457,7 +460,7 @@ pc.extend(pc.resources, function () {
         var skin, skinInstance;
         if (geomData.inverse_bind_pose !== undefined) {
             var inverseBindPose = [];
-            for (var i = 0; i < geomData.inverse_bind_pose.length; i++) {
+            for (i = 0; i < geomData.inverse_bind_pose.length; i++) {
                 inverseBindPose[i] = pc.math.mat4.clone(geomData.inverse_bind_pose[i]);
             }
 
@@ -475,7 +478,7 @@ pc.extend(pc.resources, function () {
         var meshes = [];
 
         // Create and read each submesh
-        for (var i = 0; i < geomData.submeshes.length; i++) {
+        for (i = 0; i < geomData.submeshes.length; i++) {
             var subMesh = this._loadSubMesh(model, modelData, geomData.submeshes[i]);
 
             var mesh = new pc.scene.Mesh();
@@ -494,13 +497,12 @@ pc.extend(pc.resources, function () {
         }
 
         if (geomData.inverse_bind_pose !== undefined) {
-            var device = pc.gfx.Device.getCurrent();
             var maxBones = device.getBoneLimit();
             if (geomData.inverse_bind_pose.length > maxBones) {
                 meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
             }
 
-            for (var i = 0; i < meshes.length; i++) {
+            for (i = 0; i < meshes.length; i++) {
                 skin = meshes[i].skin;
                 var skinIndex = model.skins.indexOf(skin);
                 if (skinIndex === -1) {
@@ -548,7 +550,7 @@ pc.extend(pc.resources, function () {
             var geomData = modelData.geometries[i];
             model.geometries.push(this._loadGeometry(model, modelData, geomData));
         }
-    
+
         var _jsonToLoader = {
             "camera" : this._loadCamera.bind(this),
             "light"  : this._loadLight.bind(this),
@@ -579,7 +581,7 @@ pc.extend(pc.resources, function () {
             }
     
             return node;
-        }.bind(this);
+        };
 
         var _resolveCameraIds = function (node) {
             if (node instanceof pc.scene.CameraNode) {
@@ -598,7 +600,7 @@ pc.extend(pc.resources, function () {
             for (var i = 0; i < children.length; i++) {
                 _resolveCameraIds(children[i]);
             }
-        }
+        };
 
         var _clearGraphIds = function (node) {
             var i = 0;
@@ -616,7 +618,7 @@ pc.extend(pc.resources, function () {
             model.setGraph(graph);
 
             // Need to update JSON file format to have bone names instead of graph IDs
-            for (var i = 0; i < model.skins.length; i++) {
+            for (i = 0; i < model.skins.length; i++) {
                 var skin = model.skins[i];
                 for (var j = 0; j < skin.boneNames.length; j++) {
                     skin.boneNames[j] = graph.findByGraphId(skin.boneNames[j]).getName();
@@ -788,8 +790,6 @@ pc.extend(pc.resources, function () {
         var triangleCount = indices.length / 3;
         var vertexCount   = vertices.byteLength / stride;
         var i1, i2, i3;
-        var v1, v2, v3;
-        var w1, w2, w3;
         var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
         var sdir = pc.math.vec3.create(0, 0, 0);
         var tdir = pc.math.vec3.create(0, 0, 0);
@@ -857,9 +857,9 @@ pc.extend(pc.resources, function () {
             tan2[i3 * 3 + 2] += tdir[2];
         }
 
+        t1 = pc.math.vec3.create(0, 0, 0);
+        t2 = pc.math.vec3.create(0, 0, 0);
         var n    = pc.math.vec3.create(0, 0, 0);
-        var t1   = pc.math.vec3.create(0, 0, 0);
-        var t2   = pc.math.vec3.create(0, 0, 0);
         var temp = pc.math.vec3.create(0, 0, 0);
 
         for (i = 0; i < vertexCount; i++) {
@@ -893,7 +893,7 @@ pc.extend(pc.resources, function () {
         this.options = options;
         this.loader = loader;
         this.textureCache = textureCache;
-    };
+    }
 
     MemoryStream.prototype = {
 
@@ -1043,6 +1043,7 @@ pc.extend(pc.resources, function () {
         },
 
         readMaterialParamChunk: function () {
+            var i;
             var header = this.readChunkHeader();
             var name   = this.readStringChunk();
             var type   = this.readU32();
@@ -1059,73 +1060,73 @@ pc.extend(pc.resources, function () {
                     break;
                 case pc.gfx.ShaderInputType.VEC2:
                     data = pc.math.vec2.create();
-                    for (var i = 0; i < 2; i++) {
+                    for (i = 0; i < 2; i++) {
                         data[i] = this.readF32();
                     }
                     break;
                 case pc.gfx.ShaderInputType.VEC3:
                     data = pc.math.vec3.create();
-                    for (var i = 0; i < 3; i++) {
+                    for (i = 0; i < 3; i++) {
                         data[i] = this.readF32();
                     }
                     break;
                 case pc.gfx.ShaderInputType.VEC4:
                     data = pc.math.vec4.create();
-                    for (var i = 0; i < 4; i++) {
+                    for (i = 0; i < 4; i++) {
                         data[i] = this.readF32();
                     }
                     break;
                 case pc.gfx.ShaderInputType.IVEC2:
                     data = pc.math.vec2.create();
-                    for (var i = 0; i < 2; i++) {
+                    for (i = 0; i < 2; i++) {
                         data[i] = this.readU32();
                     }
                     break;
                 case pc.gfx.ShaderInputType.IVEC3:
                     data = pc.math.vec3.create();
-                    for (var i = 0; i < 3; i++) {
+                    for (i = 0; i < 3; i++) {
                         data[i] = this.readU32();
                     }
                     break;
                 case pc.gfx.ShaderInputType.IVEC4:
                     data = pc.math.vec4.create();
-                    for (var i = 0; i < 4; i++) {
+                    for (i = 0; i < 4; i++) {
                         data[i] = this.readU32();
                     }
                     break;
                 case pc.gfx.ShaderInputType.BVEC2:
                     data = [];
-                    for (var i = 0; i < 2; i++) {
+                    for (i = 0; i < 2; i++) {
                         data.push(this.readU32() !== 0);
                     }
                     break;
                 case pc.gfx.ShaderInputType.BVEC3:
                     data = [];
-                    for (var i = 0; i < 3; i++) {
+                    for (i = 0; i < 3; i++) {
                         data.push(this.readU32() !== 0);
                     }
                     break;
                 case pc.gfx.ShaderInputType.BVEC4:
                     data = [];
-                    for (var i = 0; i < 4; i++) {
+                    for (i = 0; i < 4; i++) {
                         data.push(this.readU32() !== 0);
                     }
                     break;
                 case pc.gfx.ShaderInputType.MAT2:
                     data = new Float32Array(4); // PlayCanvas doesn't currently have a 2D matrix type
-                    for (var i = 0; i < 4; i++) {
+                    for (i = 0; i < 4; i++) {
                         data[i] = this.readF32();
                     }
                     break;
                 case pc.gfx.ShaderInputType.MAT3:
                     data = pc.math.mat3.create();
-                    for (var i = 0; i < 9; i++) {
+                    for (i = 0; i < 9; i++) {
                         data[i] = this.readF32();
                     }
                     break;
                 case pc.gfx.ShaderInputType.MAT4:
                     data = pc.math.mat4.create();
-                    for (var i = 0; i < 16; i++) {
+                    for (i = 0; i < 16; i++) {
                         data[i] = this.readF32();
                     }
                     break;
@@ -1338,6 +1339,7 @@ pc.extend(pc.resources, function () {
         },
 
         readGeometryChunk: function () {
+            var i, j;
             var header = this.readChunkHeader();
 
             var aabb = this.readAabbChunk();
@@ -1348,14 +1350,14 @@ pc.extend(pc.resources, function () {
             var inverseBindPose = [];
             var boneNames = [];
             if (numBones > 0) {
-                for (var i = 0; i < numBones; i++) {
+                for (i = 0; i < numBones; i++) {
                     var ibm = pc.math.mat4.create();
-                    for (var j = 0; j < 16; j++) {
+                    for (j = 0; j < 16; j++) {
                         ibm[j] = this.readF32();
                     }
                     inverseBindPose.push(ibm);
                 }
-                for (var i = 0; i < numBones; i++) {
+                for (i = 0; i < numBones; i++) {
                     var boneName = this.readStringChunk();
                     boneNames.push(boneName);
                 }
@@ -1377,7 +1379,7 @@ pc.extend(pc.resources, function () {
             var meshes = [];
 
             // Create and read each submesh
-            for (var i = 0; i < subMeshes.length; i++) {
+            for (i = 0; i < subMeshes.length; i++) {
                 var subMesh = subMeshes[i];
 
                 var mesh = new pc.scene.Mesh();
@@ -1395,15 +1397,13 @@ pc.extend(pc.resources, function () {
                 meshes.push(mesh);
             }
 
-            var model = this.model;
             if (inverseBindPose.length > 0) {
-                var device = pc.gfx.Device.getCurrent();
                 var maxBones = device.getBoneLimit();
                 if (inverseBindPose.length > maxBones) {
                     meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
                 }
 
-                for (var i = 0; i < meshes.length; i++) {
+                for (i = 0; i < meshes.length; i++) {
                     skin = meshes[i].skin;
                     var skinIndex = model.skins.indexOf(skin);
                     if (skinIndex === -1) {
@@ -1432,6 +1432,7 @@ pc.extend(pc.resources, function () {
             var sx = this.readF32();
             var sy = this.readF32();
             var sz = this.readF32();
+            var r, g, b, a;
 
             var node;
             switch (nodeType) {
@@ -1453,10 +1454,10 @@ pc.extend(pc.resources, function () {
                     var nearClip = this.readF32();
                     var farClip = this.readF32();
                     var fov = this.readF32();
-                    var r = this.readF32();
-                    var g = this.readF32();
-                    var b = this.readF32();
-                    var a = this.readF32();
+                    r = this.readF32();
+                    g = this.readF32();
+                    b = this.readF32();
+                    a = this.readF32();
 
                     node.setProjection(projection);
                     node.setNearClip(nearClip);
@@ -1480,9 +1481,9 @@ pc.extend(pc.resources, function () {
                     var type = this.readU16();
                     var enabled = this.readU8();
                     var castShadows = this.readU8();
-                    var r = this.readF32();
-                    var g = this.readF32();
-                    var b = this.readF32();
+                    r = this.readF32();
+                    g = this.readF32();
+                    b = this.readF32();
                     var intensity = this.readF32();
                     var attStart = this.readF32();
                     var attEnd = this.readF32();
@@ -1601,5 +1602,5 @@ pc.extend(pc.resources, function () {
 	return {
 		ModelResourceHandler: ModelResourceHandler,
 		ModelRequest: ModelRequest
-	}
+	};
 }());

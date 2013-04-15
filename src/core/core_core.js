@@ -73,7 +73,7 @@ var pc = {
          * @name pc.type
          */
         type: function (obj) {
-            if(obj == null) {
+            if (obj === null) {
                 return "null";
             }
             
@@ -130,7 +130,7 @@ var pc = {
          */
         isDefined: function(o) {
             var a;
-            return !(o === a)
+            return (o !== a);
         }
     };
 
@@ -147,7 +147,7 @@ var pc = {
         
         for(index = 0; index < names.length; ++index) {
             result["[object " + names[index] + "]"] = names[index].toLowerCase();
-        };
+        }
         
         return result;
     } ();

@@ -15,11 +15,10 @@ function WebGLValidator(gl) {
 
             // Now return the result
             return result;
-        }
+        };
     }
 
     // Create wrapper functions for each WebGL function
-    var self = this;
     for (var member in gl) {
         if (typeof gl[member] === "function") {
             this[member] = makeWrapper(member);
@@ -47,4 +46,4 @@ WebGLValidator.prototype.validate = function (functionName) {
     }
 
     return true;
-}
+};

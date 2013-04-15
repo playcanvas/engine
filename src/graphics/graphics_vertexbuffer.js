@@ -116,7 +116,7 @@ pc.extend(pc.gfx, function () {
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferId);
             gl.bufferData(gl.ARRAY_BUFFER, this.storage, glUsage);
         }
-    }
+    };
 
     return {
         VertexBuffer: VertexBuffer

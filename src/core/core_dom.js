@@ -19,5 +19,5 @@ pc.dom = function () {
         getText: function (element) {
             return element.textContent || element.innerText;
         }
-    }
+    };
 }();

@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
         this.on("set_type", this.onSetType, this);
-    }
+    };
     PrimitiveComponent = pc.inherits(PrimitiveComponent, pc.fw.Component);
     pc.extend(PrimitiveComponent.prototype, {
         /**
@@ -38,6 +38,9 @@ pc.extend(pc.fw, function () {
                     case pc.shape.Type.BOX: 
                         mesh = this.system.box;
                         break;
+                    case pc.shape.Type.CAPSULE:
+                        mesh = this.system.capsule;
+                        break;
                     case pc.shape.Type.SPHERE:
                         mesh = this.system.sphere;
                         break;
@@ -49,8 +52,7 @@ pc.extend(pc.fw, function () {
                         break;
                     default:
                         throw new Error("Unknown shape type: " + newValue);
-                        break;
-                };
+                }
 
                 var node = new pc.scene.GraphNode();
 
@@ -98,7 +100,7 @@ pc.extend(pc.fw, function () {
             var color = new Float32Array([0, 0, 0]);
             
             if (newValue) {
-                rgb = parseInt(newValue);
+                rgb = parseInt(newValue, 16);
                 rgb = pc.math.intToBytes24(rgb);
                 color[0] = rgb[0] / 255;
                 color[1] = rgb[1] / 255;
@@ -147,6 +149,6 @@ pc.extend(pc.fw, function () {
     });
 
     return {
-        PrimitiveComponent: PrimitiveComponent,
+        PrimitiveComponent: PrimitiveComponent
     };
 }());

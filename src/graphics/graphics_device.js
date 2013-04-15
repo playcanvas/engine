@@ -240,7 +240,6 @@ pc.extend(pc.gfx, function () {
         this.commitFunction[pc.gfx.ShaderInputType.MAT4 ] = function (locationId, value) { self.gl.uniformMatrix4fv(locationId, false, value); };
 
         // Set the default render state
-        var gl = this.gl;
         gl.enable(gl.DEPTH_TEST);
         gl.depthMask(true);
         gl.depthFunc(gl.LEQUAL);
@@ -282,14 +281,14 @@ pc.extend(pc.gfx, function () {
         this._localState = {};
 
         this._stateFuncs = {};
-        this._stateFuncs["alphaTest"] = function (value) {
+        this._stateFuncs.alphaTest = function (value) {
             self._currentState.alphaTest = value;
         };
-        this._stateFuncs["alphaRef"] = function (value) {
+        this._stateFuncs.alphaRef = function (value) {
             self.scope.resolve("alpha_ref").setValue(value);
             self._currentState.alphaRef = value;
         };
-        this._stateFuncs["blend"] = function (value) {
+        this._stateFuncs.blend = function (value) {
             if (self._currentState.blend !== value) {
                 if (value) {
                     self.gl.enable(gl.BLEND);
@@ -299,15 +298,15 @@ pc.extend(pc.gfx, function () {
                 self._currentState.blend = value;
             }
         };
-        this._stateFuncs["blendModes"] = function (value) {
+        this._stateFuncs.blendModes = function (value) {
             if ((self._currentState.blendModes.srcBlend !== value.srcBlend) ||
                 (self._currentState.blendModes.dstBlend !== value.dstBlend)) {
                 self.gl.blendFunc(self.lookup.blendMode[value.srcBlend], self.lookup.blendMode[value.dstBlend]);
                 self._currentState.blendModes.srcBlend = value.srcBlend;
                 self._currentState.blendModes.dstBlend = value.dstBlend;
             }
-        }
-        this._stateFuncs["colorWrite"] = function (value) {
+        };
+        this._stateFuncs.colorWrite = function (value) {
             if ((self._currentState.colorWrite.red !== value.red) ||
                 (self._currentState.colorWrite.green !== value.green) || 
                 (self._currentState.colorWrite.blue !== value.blue) || 
@@ -319,7 +318,7 @@ pc.extend(pc.gfx, function () {
                 self._currentState.colorWrite.alpha = value.alpha;
             }
         };
-        this._stateFuncs["cull"] = function (value) {
+        this._stateFuncs.cull = function (value) {
             if (self._currentState.cull !== value) {
                 if (value) {
                     self.gl.enable(gl.CULL_FACE);
@@ -329,7 +328,7 @@ pc.extend(pc.gfx, function () {
                 self._currentState.cull = value;
             }
         };
-        this._stateFuncs["depthTest"] = function (value) {
+        this._stateFuncs.depthTest = function (value) {
             if (self._currentState.depthTest !== value) {
                 if (value) {
                     self.gl.enable(gl.DEPTH_TEST);
@@ -339,26 +338,26 @@ pc.extend(pc.gfx, function () {
                 self._currentState.depthTest = value;
             }
         };
-        this._stateFuncs["depthWrite"] = function (value) { 
+        this._stateFuncs.depthWrite = function (value) { 
             if (self._currentState.depthWrite !== value) {
                 self.gl.depthMask(value);
                 self._currentState.depthWrite = value;
             }
         };
-        this._stateFuncs["fog"] = function (value) {
+        this._stateFuncs.fog = function (value) {
             self._currentState.fog = value;
         };
-        this._stateFuncs["fogColor"] = function (value) {
+        this._stateFuncs.fogColor = function (value) {
             self.scope.resolve("fog_color").setValue(value);
             self._currentState.fogColor = value;
         };
-        this._stateFuncs["fogDensity"] = function (value) {
+        this._stateFuncs.fogDensity = function (value) {
             if (self._currentState.fogDensity !== value) {
                 self.scope.resolve("fog_density").setValue(value);
                 self._currentState.fogDensity = value;
             }
         };
-        this._stateFuncs["frontFace"] = function (value) {
+        this._stateFuncs.frontFace = function (value) {
             if (self._currentState.frontFace !== value) {
                 self.gl.frontFace(self.lookup.frontFace[value]);
                 self._currentState.frontFace = value;

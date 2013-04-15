@@ -82,7 +82,7 @@ pc.events = function () {
                 // Clear all callbacks
                 callbacks[name] = [];
             } else {
-                events = callbacks[name]
+                events = callbacks[name];
                 if (!events) {
                     return this;
                 }
@@ -145,7 +145,7 @@ pc.events = function () {
         * o.hasEvent('event_name'); // returns true
         */
         hasEvent: function (name) {
-            return (typeof(this._callbacks) !== 'undefined' && typeof(this._callbacks[name]) !== 'undefined' && this._callbacks[name].length > 0)
+            return (typeof(this._callbacks) !== 'undefined' && typeof(this._callbacks[name]) !== 'undefined' && this._callbacks[name].length > 0);
         }
     };
 

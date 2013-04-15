@@ -2,6 +2,59 @@
 PlayCanvas Runtime Changes 
 --------------------------
 
+--------
+v0.102.3
+--------
+* [FIX] Updated to latest Web Audio API spec. PlayCanvas apps no longer crash in Firefox Nightly.
+
+--------
+v0.102.2
+--------
+* [FIX] GraphNode right, up and forwards properties now work.
+* [FIX] pc.math.multiply now creates a result quaternion correctly if not supplied as parameter.
+
+--------
+v0.102.1
+--------
+* [FIX] Don't add collision meshes to the hierarchy.
+
+--------
+v0.102.0
+--------
+* Added new collision mesh component.
+
+--------
+v0.101.1
+--------
+* [FIX] Animation blending works again (broken in 0.99.1).
+
+--------
+v0.101.0
+--------
+* Documented almost all of pc.math and renamed a number of functions for uniformity.
+
+--------
+v0.100.0
+--------
+* Added pc.math.smoothstep and pc.math.smootherstep.
+* pc.math.pot -> pc.math.powerOfTwo
+* Removed pc.math trigonometric functions.
+* Documented the whole quaternion API.
+* Allow skybox to be rendered at any time with any camera (much more robust and faster too!).
+
+-------
+v0.99.1
+-------
+* Update a skeleton's graph if a time is explicitly set. Prevents you seeing previous animation frame on playing an anim from an entity script, since entity script udpates occur after animation component update.
+
+-------
+v0.99.0
+-------
+* Aspect ratio of Designer-rendered cameras is now fixed at 16/9.
+* Exposed aspectRatio on camera component.
+* Added right, up and forwards properties to pc.scene.GraphNode.
+* Update a skeleton's interpolated keyframes immediately upon setting a new time.
+
 -------
 v0.98.6
 -------
@@ -41,6 +94,7 @@ v0.98.1
 v0.97.2
 -------
 * [FIX] Work around presumed GLSL compiler bug on Mac where directional light appears inverted in Y axis. Code should be equivalent.
+
 -------
 v0.97.1
 -------

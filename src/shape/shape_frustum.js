@@ -140,9 +140,9 @@ pc.extend(pc.shape, function () {
                 c++;
         }
         return (c === 6) ? 2 : 1;
-    }
+    };
 
     return {
         Frustum: Frustum
-    }
+    };
 }());

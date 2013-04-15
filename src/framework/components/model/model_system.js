@@ -66,6 +66,5 @@ pc.extend(pc.fw, function () {
 
     return {
         ModelComponentSystem: ModelComponentSystem
-    }
+    };
 }());
-

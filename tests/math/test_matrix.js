@@ -440,48 +440,6 @@ test("compose", function() {
     QUnit.deepEqual(clip(m1),clip(m2));
 });
 
-test("toQuat", function () { 
-    // Indentity matrix to indentity quaternion
-    var s;
-    var m = pc.math.mat4.create();
-    var q = pc.math.mat4.toQuat(m);
-
-    QUnit.equal(q[0], 0);
-    QUnit.equal(q[1], 0);
-    QUnit.equal(q[2], 0);
-    QUnit.equal(q[3], 1);
-
-    // 180 degrees around +ve X
-    m = pc.math.mat4.makeRotate(180, [1, 0, 0]);
-    q = pc.math.mat4.toQuat(m);
-
-    QUnit.equal(q[0], 1);
-    QUnit.equal(q[1], 0);
-    QUnit.equal(q[2], 0);
-    QUnit.close(q[3], 0, 0.0001);
-
-    // -90 degrees around +ve Z
-    m = pc.math.mat4.makeRotate(-90, [0, 0, 1]);
-    q = pc.math.mat4.toQuat(m);
-
-    QUnit.equal(q[0], 0);
-    QUnit.equal(q[1], 0);
-    QUnit.close(q[2], -Math.sqrt(0.5), 0.0001);
-    QUnit.close(q[3], Math.sqrt(0.5), 0.0001);
-
-    // 45 degrees around +ve Z, scaled
-    s = pc.math.mat4.makeScale(2, 2, 2);
-    m = pc.math.mat4.makeRotate(-90, [0, 0, 1]);
-    pc.math.mat4.multiply(m, s, m);
-    q = pc.math.mat4.toQuat(m);
-    pc.math.quat.normalize(q, q);
-
-    QUnit.equal(q[0], 0);
-    QUnit.equal(q[1], 0);
-    QUnit.close(q[2], -Math.sqrt(0.5), 0.0001);
-    QUnit.close(q[3], Math.sqrt(0.5), 0.0001);
-});
-
 
 /*
 

@@ -32,7 +32,7 @@ pc.extend(pc.resources, function () {
 	};
 	
 	AssetResourceHandler.prototype.open = function (data, options) {
-	    var prefix = "";
+        var prefix = "";
         if (this._depot) {
             prefix = this._depot.assets.getServer().getBaseUrl();
         }

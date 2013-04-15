@@ -29,7 +29,7 @@ pc.extend(pc.scene, function () {
                                       this.matrixPaletteEntryF32[i]);
             }
         }
-    }
+    };
 
     return {
         Skin: Skin,

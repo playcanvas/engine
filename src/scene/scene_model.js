@@ -16,48 +16,48 @@ pc.extend(pc.scene, function () {
         this.cameras = [];
         this.lights = [];
         this.graph = null;
-	}
+    };
 
-	Model.prototype.getGraph = function () {
-	    return this.graph;
-	};
+    Model.prototype.getGraph = function () {
+        return this.graph;
+    };
 
-	Model.prototype.setGraph = function (graph) {
-	    this.graph = graph;
-	};
-	
-	Model.prototype.getCameras = function () {
-	    return this.cameras;
-	};
-	
-	Model.prototype.setCameras = function (cameras) {
-	    this.cameras = cameras;
-	};
-	
-	Model.prototype.getLights = function () {
-	    return this.lights;
-	};
-	
-	Model.prototype.setLights = function (lights) {
-	    this.lights = lights;
-	};
-	
-	Model.prototype.getTextures = function () {
-	    return this.textures;
-	};
-	
-	Model.prototype.setTextures = function (textures) {
-	    this.textures = textures;
-	};
-	
-	Model.prototype.getMaterials = function () {
-	    return this.materials;
-	};
-	
-	Model.prototype.setMaterials = function (materials) {
-	    this.materials = materials;
-	};
-	
+    Model.prototype.setGraph = function (graph) {
+        this.graph = graph;
+    };
+
+    Model.prototype.getCameras = function () {
+        return this.cameras;
+    };
+
+    Model.prototype.setCameras = function (cameras) {
+        this.cameras = cameras;
+    };
+
+    Model.prototype.getLights = function () {
+        return this.lights;
+    };
+
+    Model.prototype.setLights = function (lights) {
+        this.lights = lights;
+    };
+
+    Model.prototype.getTextures = function () {
+        return this.textures;
+    };
+
+    Model.prototype.setTextures = function (textures) {
+        this.textures = textures;
+    };
+
+    Model.prototype.getMaterials = function () {
+        return this.materials;
+    };
+
+    Model.prototype.setMaterials = function (materials) {
+        this.materials = materials;
+    };
+
     /**
      * @function
      * @name pc.scene.Model#clone
@@ -70,13 +70,14 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
 	Model.prototype.clone = function () {
+        var i;
         var clone = new pc.scene.Model();
 
         clone.textures = this.textures.slice(0);
         clone.materials = this.materials.slice(0);
         clone.skins = this.skins.slice(0);
 
-        for (var i = 0; i < clone.skins.length; i++) {
+        for (i = 0; i < clone.skins.length; i++) {
             clone.skinInstances.push(new pc.scene.SkinInstance(clone.skins[i]));
         }
 
@@ -101,11 +102,12 @@ pc.extend(pc.scene, function () {
             }
 
             return newNode;
-        }
+        };
+
         clone.graph = _duplicate(this.graph);
 
         // Clone the mesh instances
-        for (var i = 0; i < this.meshInstances.length; i++) {
+        for (i = 0; i < this.meshInstances.length; i++) {
             var meshInstance = this.meshInstances[i];
             var nodeIndex = srcNodes.indexOf(meshInstance.node);
             var cloneInstance = new pc.scene.MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);

@@ -18,7 +18,7 @@ pc.math.mat3 = function () {
         },
 
         createFromMat4: function (m4, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.Mat3.create();
             }
             r[0] = m4[0];
@@ -34,7 +34,7 @@ pc.math.mat3 = function () {
         },
 
         getScale: function (m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                r = pc.math.vec3.create();
             }
 
@@ -52,7 +52,7 @@ pc.math.mat3 = function () {
         },
 
         toEulerXYZ : function (m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.vec3.create();
             }
 
@@ -83,7 +83,7 @@ pc.math.mat3 = function () {
 
             return r;
         }
-    }
+    };
 } ();
 
 /**
@@ -91,11 +91,6 @@ pc.math.mat3 = function () {
  * @name pc.math.mat4
  */
 pc.math.mat4 = function () {
-
-    var scratchVecs = [];
-    for (var i = 0; i < 3; i++) {
-        scratchVecs.push(pc.math.vec3.create());
-    }
 
     // Public functions
     return {
@@ -242,7 +237,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         multiply: function (a, b, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -322,7 +317,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         multiplyVec3: function (v, w, m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.vec3.create();
             }
 
@@ -348,41 +343,64 @@ pc.math.mat4 = function () {
             return r;
         },
 
-        makeLookAt: function (position, target, up, r) {
-            if (r === undefined) {
-                r = pc.math.mat4.create();
-            }
+        /**
+         * @function
+         * @name pc.math.mat4.makeLookAt
+         * @description Creates a viewing matrix derived from an eye point, a reference point indicating the center
+         * of the scene, and an up vector. The matrix maps the reference point to the negative z-axis and the eye
+         * point to the origin, so that when you use a typical projection matrix, the center of the scene maps to 
+         * the center of the viewport. Similarly, the direction described by the up vector projected onto the
+         * viewing plane is mapped to the positive y-axis so that it points upward in the viewport. The up vector
+         * must not be parallel to the line of sight from the eye to the reference point.
+         * @param {Float32Array} position 3-d vector holding view position.
+         * @param {Float32Array} target 3-d vector holding reference point.
+         * @param {Float32Array} up 3-d vector holding the up direction.
+         * @param {Float32Array} [r] 4x4 matrix to receive the calculated lookAt matrix.
+         * @returns {Float32Array} The calculated lookAt matrix.
+         * @example
+         * var position = pc.math.vec3.create(10, 10, 10);
+         * var target = pc.math.vec3.create(0, 0, 0);
+         * var up = pc.math.vec3.create(0, 1, 0);
+         * var lookAt = pc.math.mat4.makeLookAt(position, target, up);
+         * @author Will Eastcott
+         */
+        makeLookAt: function () {
+            var x = pc.math.vec3.create();
+            var y = pc.math.vec3.create();
+            var z = pc.math.vec3.create();
 
-            var x = scratchVecs[0];
-            var y = scratchVecs[1];
-            var z = scratchVecs[2];
+            return function (position, target, up, r) {
+                if (typeof r === 'undefined') {
+                    r = pc.math.mat4.create();
+                }
 
-            pc.math.vec3.subtract(position, target, z);
-            pc.math.vec3.normalize(z, z);
-            pc.math.vec3.normalize(up, y);
-            pc.math.vec3.cross(y, z, x);
-            pc.math.vec3.normalize(x, x);
-            pc.math.vec3.cross(z, x, y);
+                pc.math.vec3.subtract(position, target, z);
+                pc.math.vec3.normalize(z, z);
+                pc.math.vec3.normalize(up, y);
+                pc.math.vec3.cross(y, z, x);
+                pc.math.vec3.normalize(x, x);
+                pc.math.vec3.cross(z, x, y);
 
-            r[0]  = x[0];
-            r[1]  = x[1];
-            r[2]  = x[2];
-            r[3]  = 0.0;
-            r[4]  = y[0];
-            r[5]  = y[1];
-            r[6]  = y[2];
-            r[7]  = 0.0;
-            r[8]  = z[0];
-            r[9]  = z[1];
-            r[10] = z[2];
-            r[11] = 0.0;
-            r[12] = position[0];
-            r[13] = position[1];
-            r[14] = position[2];
-            r[15] = 1.0;
+                r[0]  = x[0];
+                r[1]  = x[1];
+                r[2]  = x[2];
+                r[3]  = 0.0;
+                r[4]  = y[0];
+                r[5]  = y[1];
+                r[6]  = y[2];
+                r[7]  = 0.0;
+                r[8]  = z[0];
+                r[9]  = z[1];
+                r[10] = z[2];
+                r[11] = 0.0;
+                r[12] = position[0];
+                r[13] = position[1];
+                r[14] = position[2];
+                r[15] = 1.0;
 
-            return r;
-        },
+                return r;
+            };
+        }(),
 
         /**
          * @function
@@ -403,7 +421,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         makeFrustum: function (left, right, bottom, top, znear, zfar, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -448,7 +466,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         makePerspective: function (fovy, aspect, znear, zfar, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -477,7 +495,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         makeOrtho: function (left, right, bottom, top, near, far, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -517,7 +535,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         makeRotate: function (angle, axis, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -564,7 +582,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         makeTranslate: function (x, y, z, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -603,7 +621,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         makeScale: function(sx, sy, sz, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -648,7 +666,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         transpose: function (m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
             
@@ -691,7 +709,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         invert: function (m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -750,7 +768,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         getTranslation: function (m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                r = pc.math.vec3.create();
             }
 
@@ -778,7 +796,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         getX: function (m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                r = pc.math.vec3.create();
             }
 
@@ -806,7 +824,7 @@ pc.math.mat4 = function () {
          * @author Will Eastcott
          */
         getY: function (m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                r = pc.math.vec3.create();
             }
 
@@ -824,18 +842,18 @@ pc.math.mat4 = function () {
          * @param {Array} m The source matrix to be queried.
          * @returns {Array} The z-axis of the specified 4x4 matrix.
          * @example
-         * var zaxis = pc.math.vec3.create(0, 1, 0);
+         * var yaxis = pc.math.vec3.create(0, 1, 0);
          *
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = pc.math.mat4.makeRotate(180, zaxis);
+         * var rot = pc.math.mat4.makeRotate(180, yaxis);
          *
          * // Query the z-axis component
          * var z = pc.math.mat4.getZ(rot);
          * @author Will Eastcott
          */
         getZ: function (m, r) {
-            if (r === undefined) {
-               r = pc.math.vec3.create();
+            if (typeof r === 'undefined') {
+                r = pc.math.vec3.create();
             }
 
             r[0] = m[8];
@@ -845,29 +863,60 @@ pc.math.mat4 = function () {
             return r;
         },
         
-        getScale: function (m, r) {
-            if (r === undefined) {
-               r = pc.math.vec3.create();
-            }
+        /**
+         * @function
+         * @name pc.math.mat4.getScale
+         * @description Extracts the scale component from the specified 4x4 matrix.
+         * @param {Float32Array} m The source matrix to be queried.
+         * @returns {Float32Array} The scale in X, Y and Z of the specified 4x4 matrix.
+         * @example
+         * // Create a 4x4 scale matrix
+         * var scaleMat = pc.math.mat4.makeScale(2, 3, 4);
+         *
+         * // Query the scale component
+         * var scale = pc.math.mat4.getScale(scaleMat);
+         * @author Will Eastcott
+         */
+        getScale: function () {
+            var x = pc.math.vec3.create();
+            var y = pc.math.vec3.create();
+            var z = pc.math.vec3.create();
 
-            var x = scratchVecs[0];
-            var y = scratchVecs[1];
-            var z = scratchVecs[2];
-            pc.math.vec3.set(x, m[0], m[1], m[2]);
-            pc.math.vec3.set(y, m[4], m[5], m[6]);
-            pc.math.vec3.set(z, m[8], m[9], m[10]);
-            r[0] = pc.math.vec3.length(x);
-            r[1] = pc.math.vec3.length(y);
-            r[2] = pc.math.vec3.length(z);
+            return function (m, r) {
+                if (typeof r === 'undefined') {
+                    r = pc.math.vec3.create();
+                }
 
-            return r;
-        },
-        
+                pc.math.mat4.getX(m, x);
+                pc.math.mat4.getY(m, y);
+                pc.math.mat4.getZ(m, z);
+                r[0] = pc.math.vec3.length(x);
+                r[1] = pc.math.vec3.length(y);
+                r[2] = pc.math.vec3.length(z);
+
+                return r;
+            };
+        }(),
+
+        /**
+         * @function
+         * @name pc.math.mat4.fromEulerXYZ
+         * @description Sets a 4x4 matrix from Euler angles specified in XYZ order.
+         * @param {Number} ex Angle to rotate around X axis in degrees.
+         * @param {Number} ey Angle to rotate around Y axis in degrees.
+         * @param {Number} ez Angle to rotate around Z axis in degrees.
+         * @param {Float32Array} [r] The matrix to set.
+         * @returns The 4x4 matrix representation of the supplied Euler angles.
+         * @example
+         * // Create a 4x4 scale matrix
+         * var rotationMatrix = pc.math.mat4.fromEulerXYZ(45, 90, 180);
+         * @author Will Eastcott
+         */
         // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
         // The 3D space is right-handed, so the rotation around each axis will be counterclockwise 
         // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
         fromEulerXYZ: function (x, y, z, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.mat4.create();
             }
 
@@ -900,8 +949,24 @@ pc.math.mat4 = function () {
             return r;
         },
 
+        /**
+         * @function
+         * @name pc.math.mat4.toEulerXYZ
+         * @description Converts a 4x4 matrix to Euler angles specified in degrees in XYZ order.
+         * @param {Float32Array} m The matrix to convert.
+         * @param {Float32Array} [r] A 3-d vector to receive the Euler angles.
+         * @returns A 3-d vector containing the Euler angles.
+         * @example
+         * var yaxis = pc.math.vec3.create(0, 1, 0);
+         *
+         * // Create a 4x4 rotation matrix of 45 degrees around the y-axis
+         * var m = pc.math.mat4.makeRotate(45, yaxis);
+         *
+         * var eulers = pc.math.mat4.toEulerXYZ(m);
+         * @author Will Eastcott
+         */
         toEulerXYZ: function (m, r) {
-            if (r === undefined) {
+            if (typeof r === 'undefined') {
                 r = pc.math.vec3.create();
             }
 
@@ -935,127 +1000,32 @@ pc.math.mat4 = function () {
 
         /**
          * @function
-         * @name pc.math.quat.fromMat4
-         * @description Converts the specified 4x4 matrix to a quaternion. Note that since
-         * a quaternion is purely a representation for orientation, only the translational part
-         * of the matrix is lost.
-         * @param {Array} m The 4x4 matrix to convert.
-         * @param {Array} r An optional quaternion that will receive the result of the conversion. If
-         * this parameter is omitted, the function will create a new quaternion internally and return it.
-         * @returns {Array} A quaternion corresponding to the specified 4x4 matrix. If the r parameter is
-         * specified, the return value will be equal to r. Otherwise, it will be a newly created quaternion.
+         * @name pc.math.mat4.compose
+         * @description Composes a 4x4 matrix from a translation, a quaternion rotation and
+         * a scale.
+         * @param {Float32Array} t A 3-d vector translation.
+         * @param {Float32Array} q A quaternion rotation.
+         * @param {Float32Array} s A 3-d vector scale.
+         * @param {Float32Array} [r] A 4x4 matrix to receive the result of the composition.
+         * @returns A newly composed 4x4 matrix.
          * @example
          * var yaxis = pc.math.vec3.create(0, 1, 0);
          *
-         * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = pc.math.mat4.makeRotate(180, yaxis);
+         * // Create a 4x4 rotation matrix of 45 degrees around the y-axis
+         * var m = pc.math.mat4.makeRotate(45, yaxis);
          *
-         * // Allow toQuat to create a new quaternion internally
-         * var q1 = pc.math.quat.fromMat4(rot);
-         *
-         * // Supply a quaternion to receive the result of the conversion
-         * var q2 = pc.math.quat.create();
-         * pc.math.quat.fromMat4(m, q2);
+         * var eulers = pc.math.mat4.toEulerXYZ(m);
          * @author Will Eastcott
          */
-        toQuat: function (m, r) {
-            if (r === undefined) {
-                r = pc.math.quat.create();
+        compose: function (t, q, s, r) {
+            if (typeof r === 'undefined') {
+                r = pc.math.mat4.create();
             }
 
-            var m00 = m[0], m01 = m[1], m02 = m[2];
-            var m10 = m[4], m11 = m[5], m12 = m[6];
-            var m20 = m[8], m21 = m[9], m22 = m[10];
-
-            var lx = Math.sqrt(m00 * m00 + m01 * m01 + m02 * m02);
-            var ly = Math.sqrt(m10 * m10 + m11 * m11 + m12 * m12);
-            var lz = Math.sqrt(m20 * m20 + m21 * m21 + m22 * m22);
-            m00 /= lx; m01 /= lx; m02 /= lx;
-            m10 /= ly; m11 /= ly; m12 /= ly;
-            m20 /= lz; m21 /= lz; m22 /= lz;
-
-            // http://www.cs.ucr.edu/~vbz/resources/quatut.pdf
-            var tr, s;
-
-            tr = m00 + m11 + m22;
-            if (tr >= 0.0)
-            {
-                s = Math.sqrt(tr + 1.0);
-                r[3] = s * 0.5;
-                s = 0.5 / s;
-                r[0] = (m12 - m21) * s;
-                r[1] = (m20 - m02) * s;
-                r[2] = (m01 - m10) * s;
-            }
-            else
-            {
-                var rs;
-                if (m00 > m11)
-                {
-                    if (m00 > m22)
-                    {
-                        // XDiagDomMatrix
-                        rs = (m00 - (m11 + m22)) + 1.0;
-                        rs = Math.sqrt(rs);
-
-                        r[0] = rs * 0.5;
-                        rs = 0.5 / rs;
-                        r[3] = (m12 - m21) * rs;
-                        r[1] = (m01 + m10) * rs;
-                        r[2] = (m02 + m20) * rs;
-                    }
-                    else
-                    {
-                        // ZDiagDomMatrix
-                        rs = (m22 - (m00 + m11)) + 1.0;
-                        rs = Math.sqrt(rs);
-
-                        r[2] = rs * 0.5;
-                        rs = 0.5 / rs;
-                        r[3] = (m01 - m10) * rs;
-                        r[0] = (m20 + m02) * rs;
-                        r[1] = (m21 + m12) * rs;
-                    }
-                }
-                else if (m11 > m22)
-                {
-                    // YDiagDomMatrix
-                    rs = (m11 - (m22 + m00)) + 1.0;
-                    rs = Math.sqrt(rs);
-
-                    r[1] = rs * 0.5;
-                    rs = 0.5 / rs;
-                    r[3] = (m20 - m02) * rs;
-                    r[2] = (m12 + m21) * rs;
-                    r[0] = (m10 + m01) * rs;
-                }
-                else
-                {
-                    // ZDiagDomMatrix
-                    rs = (m22 - (m00 + m11)) + 1.0;
-                    rs = Math.sqrt(rs);
-
-                    r[2] = rs * 0.5;
-                    rs = 0.5 / rs;
-                    r[3] = (m01 - m10) * rs;
-                    r[0] = (m20 + m02) * rs;
-                    r[1] = (m21 + m12) * rs;
-                }            
-            }
-
-
-            return r;
-        },
-
-        compose: function (t, r, s, result) {
-            if (result === undefined) {
-                result = pc.math.mat4.create();
-            }
-
-            var qx = r[0];
-            var qy = r[1];
-            var qz = r[2];
-            var qw = r[3];
+            var qx = q[0];
+            var qy = q[1];
+            var qz = q[2];
+            var qw = q[3];
 
             var x2 = qx + qx;
             var y2 = qy + qy;
@@ -1070,27 +1040,27 @@ pc.math.mat4 = function () {
             var wy = qw * y2;
             var wz = qw * z2;
 
-            result[0] = (1.0 - (yy + zz)) * s[0];
-            result[1] = (xy + wz) * s[0];
-            result[2] = (xz - wy) * s[0];
-            result[3] = 0.0;
+            r[0] = (1.0 - (yy + zz)) * s[0];
+            r[1] = (xy + wz) * s[0];
+            r[2] = (xz - wy) * s[0];
+            r[3] = 0.0;
 
-            result[4] = (xy - wz) * s[1];
-            result[5] = (1.0 - (xx + zz)) * s[1];
-            result[6] = (yz + wx) * s[1];
-            result[7] = 0.0;
+            r[4] = (xy - wz) * s[1];
+            r[5] = (1.0 - (xx + zz)) * s[1];
+            r[6] = (yz + wx) * s[1];
+            r[7] = 0.0;
 
-            result[8] = (xz + wy) * s[2];
-            result[9] = (yz - wx) * s[2];
-            result[10] = (1.0 - (xx + yy)) * s[2];
-            result[11] = 0.0;
+            r[8] = (xz + wy) * s[2];
+            r[9] = (yz - wx) * s[2];
+            r[10] = (1.0 - (xx + yy)) * s[2];
+            r[11] = 0.0;
 
-            result[12] = t[0];
-            result[13] = t[1];
-            result[14] = t[2];
-            result[15] = 1.0;
+            r[12] = t[0];
+            r[13] = t[1];
+            r[14] = t[2];
+            r[15] = 1.0;
 
-            return result;
+            return r;
         }
-    }
+    };
 } ();

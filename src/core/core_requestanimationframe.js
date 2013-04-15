@@ -8,8 +8,7 @@
     var vendors = ['ms', 'moz', 'webkit', 'o'];
     for(var x = 0; x < vendors.length && !exports.requestAnimationFrame; ++x) {
         exports.requestAnimationFrame = exports[vendors[x]+'RequestAnimationFrame'];
-        exports.cancelAnimationFrame = exports[vendors[x]+'CancelAnimationFrame'] 
-                                   || exports[vendors[x]+'CancelRequestAnimationFrame'];
+        exports.cancelAnimationFrame = exports[vendors[x]+'CancelAnimationFrame'] || exports[vendors[x]+'CancelRequestAnimationFrame'];
     }
  
     if (!exports.requestAnimationFrame)

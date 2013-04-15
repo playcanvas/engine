@@ -27,7 +27,7 @@ pc.extend(pc.input, function () {
 
         if (event) {
             if ( event instanceof MouseEvent) {
-                throw Error("Expected MouseEvent")
+                throw Error("Expected MouseEvent");
             }
             coords = pc.input.getTargetCoords(event);
         } else {
@@ -310,7 +310,7 @@ pc.extend(pc.input, function () {
 
         _handleWheel: function (event) {
             this.fire(pc.input.EVENT_MOUSEWHEEL, new MouseEvent(this, event));
-        },
+        }
     };
 
     // Apply PointerLock shims
@@ -334,7 +334,7 @@ pc.extend(pc.input, function () {
             var e = document.createEvent('CustomEvent');
             e.initCustomEvent('pointerlockerror', true, false, null);
             document.dispatchEvent(e);
-        }
+        };
 
         document.addEventListener('webkitpointerlockchange', pointerlockchange, false);
         document.addEventListener('webkitpointerlocklost', pointerlockchange, false);
@@ -352,7 +352,7 @@ pc.extend(pc.input, function () {
                 get: function () {
                     return document.webkitPointerLockElement || document.mozPointerLockElement;
                 }
-            })
+            });
         }
 
         // requestPointerLock
@@ -381,7 +381,7 @@ pc.extend(pc.input, function () {
                     document.pointerLockElement = null;
                     navigator.pointer.unlock();
                 }
-            }
+            };
         }
     })();
 

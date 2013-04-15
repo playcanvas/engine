@@ -53,7 +53,7 @@ pc.extend(pc.input, function () {
         if (this._mouse) {
             this._mouse.attach(element);
         }
-    }
+    };
     
     /**
      * @function
@@ -68,7 +68,7 @@ pc.extend(pc.input, function () {
             this._mouse.detach();
         }
         this._element = null;
-    }
+    };
     
     /**
      * @function
@@ -103,7 +103,7 @@ pc.extend(pc.input, function () {
      * @param {Object} dt The time since the last frame
      */
     Controller.prototype.update = function (dt) {
-        if(this._keyboard) {
+        if (this._keyboard) {
             this._keyboard.update(dt);
         }
 
@@ -117,7 +117,7 @@ pc.extend(pc.input, function () {
 
         // clear axes values
         this._axesValues = {};
-        for (key in this._axes) {
+        for (var key in this._axes) {
             this._axesValues[key] = [];
         }
     };
@@ -138,7 +138,7 @@ pc.extend(pc.input, function () {
         }
 
         if (typeof(keys) === 'undefined') {
-            throw new Error('Invalid button')
+            throw new Error('Invalid button');
         }
 
         // convert to an array
@@ -172,7 +172,7 @@ pc.extend(pc.input, function () {
         }
 
         if (typeof(button) === 'undefined') {
-            throw new Error('Invalid button')
+            throw new Error('Invalid button');
         }
 
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
@@ -180,12 +180,12 @@ pc.extend(pc.input, function () {
             this._actions[action].push({
                 type: pc.input.ACTION_MOUSE,
                 button: button
-            })
+            });
         } else {
             this._actions[action] = [{
                 type: pc.input.ACTION_MOUSE,
                 button: -button
-            }]
+            }];
         }
     };
     
@@ -199,7 +199,7 @@ pc.extend(pc.input, function () {
      */
     Controller.prototype.registerPadButton = function (action, pad, button) {
         if (typeof(button) === 'undefined') {
-            throw new Error('Invalid button')
+            throw new Error('Invalid button');
         }
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.
         if (this._actions[action]) {
@@ -207,13 +207,13 @@ pc.extend(pc.input, function () {
                 type: pc.input.ACTION_GAMEPAD,
                 button: button,
                 pad: pad
-            })
+            });
         } else {
             this._actions[action] = [{
                 type: pc.input.ACTION_GAMEPAD,
                 button: button,
                 pad: pad
-            }]
+            }];
         }
     };
 
@@ -225,7 +225,7 @@ pc.extend(pc.input, function () {
     * @param {Object} [options.pad] The index of the game pad to register for (use pc.input.PAD_1, etc)
     */
     Controller.prototype.registerAxis = function (options) {
-        var name = options['name'];
+        var name = options.name;
         if (!this._axes[name]) {
             this._axes[name] = [];
         }
@@ -273,8 +273,7 @@ pc.extend(pc.input, function () {
                     });
                     break;
                 default:
-                    throw new Error('Unknown axis')
-                    break;
+                    throw new Error('Unknown axis');
             }
         };
 
@@ -323,7 +322,7 @@ pc.extend(pc.input, function () {
                         return true;
                     }
                     break;                
-            };
+            }
         }
         return false;
     };
@@ -335,11 +334,10 @@ pc.extend(pc.input, function () {
      * @param {String} action The name of the action
      */
     Controller.prototype.wasPressed = function (actionName) {
-        if(!this._actions[actionName]) {
+        if (!this._actions[actionName]) {
             return false;
         }
 
-        var actionName;
         var index = 0;
         var length = this._actions[actionName].length;
         
@@ -366,7 +364,7 @@ pc.extend(pc.input, function () {
                         return true;
                     }
                     break;                
-            };
+            }
         }
         return false;
     };

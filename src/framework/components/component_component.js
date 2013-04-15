@@ -59,7 +59,7 @@ pc.extend(pc.fw, function () {
                             this.fire('set', prop.name, oldValue, value);                            
                         }
                     });
-                };
+                }
             }.bind(this));
         }
     };

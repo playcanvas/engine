@@ -10,7 +10,7 @@ pc.extend(pc.fw, function () {
      * @private
      */
     var LiveLinkUpdateComponentMessage = function(id, component, attribute, value) {
-        this.type = pc.fw.LiveLinkMessageType.UPDATE_COMPONENT
+        this.type = pc.fw.LiveLinkMessageType.UPDATE_COMPONENT;
         this.content = {
             id: id,
             component: component,

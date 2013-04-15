@@ -1,5 +1,5 @@
 pc.extend(pc.fw, function () {
-    function ScriptComponentData() {
+    var ScriptComponentData = function () {
         // serialized
         this.urls = [];
 
@@ -7,11 +7,10 @@ pc.extend(pc.fw, function () {
         this.instances = {};
         this._scripts = [];
         this.runInTools = false;
-    }
+    };
     ScriptComponentData = pc.inherits(ScriptComponentData, pc.fw.ComponentData);
     
     return {
         ScriptComponentData: ScriptComponentData
     };
-    
 }());

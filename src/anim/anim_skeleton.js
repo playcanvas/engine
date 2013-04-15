@@ -11,7 +11,7 @@ pc.extend(pc.anim, function () {
 
         // Optional destination for interpolated keyframe
         this._targetNode = null;
-    };
+    }
 
     InterpolatedKey.prototype = {
         getTarget: function () {
@@ -35,6 +35,8 @@ pc.extend(pc.anim, function () {
         this._interpolatedKeys = [];
         this._interpolatedKeyDict = {};
         this._currKeyIndices = {};
+
+        this.graph = null;
 
         var self = this;
         
@@ -77,6 +79,9 @@ pc.extend(pc.anim, function () {
             var vlerp = pc.math.vec3.lerp;
             var qslerp = pc.math.quat.slerp;
             
+            var node, nodeName;
+            var keys, interpKey;
+            var k1, k2, alpha;
             var nodes = this._animation.getNodes();
 
             // Step the current time and work out if we need to jump ahead, clamp or wrap around
@@ -85,20 +90,20 @@ pc.extend(pc.anim, function () {
             if (this._time > duration) {
                 this._time = this.looping ? 0.0 : duration;
                 for (i = 0; i < nodes.length; i++) {
-                    var node = nodes[i];
-                    var nodeName = node._name;
+                    node = nodes[i];
+                    nodeName = node._name;
                     this._currKeyIndices[nodeName] = 0;
                 }
             }
 
             // For each animated node...
             for (i = 0; i < nodes.length; i++) {
-                var node = nodes[i];
-                var nodeName = node._name;
-                var keys = node._keys;
+                node = nodes[i];
+                nodeName = node._name;
+                keys = node._keys;
 
                 // Determine the interpolated keyframe for this animated node
-                var interpKey = this._interpolatedKeyDict[nodeName];
+                interpKey = this._interpolatedKeyDict[nodeName];
 
                 // If there's only a single key, just copy the key to the interpolated key...
                 if (keys.length === 1) {
@@ -108,11 +113,11 @@ pc.extend(pc.anim, function () {
                 } else {
                     // Otherwise, find the keyframe pair for this node
                     for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1; currKeyIndex++) {
-                        var k1 = keys[currKeyIndex];
-                        var k2 = keys[currKeyIndex + 1];
+                        k1 = keys[currKeyIndex];
+                        k2 = keys[currKeyIndex + 1];
 
                         if ((k1._time <= this._time) && (k2._time >= this._time)) {
-                            var alpha = (this._time - k1._time) / (k2._time - k1._time);
+                            alpha = (this._time - k1._time) / (k2._time - k1._time);
 
                             qslerp(k1._quat, k2._quat, alpha, interpKey._quat);
                             vlerp(k1._pos, k2._pos, alpha, interpKey._pos);
@@ -187,7 +192,7 @@ pc.extend(pc.anim, function () {
      */
     Skeleton.prototype.getCurrentTime = function () {
         return this._time;
-    }
+    };
 
     /**
      * @function
@@ -206,7 +211,10 @@ pc.extend(pc.anim, function () {
             var nodeName = node._name;
             this._currKeyIndices[nodeName] = 0;
         }
-    }
+
+        this.addTime(0);
+        this.updateGraph();
+    };
 
     /**
      * @function
@@ -217,7 +225,7 @@ pc.extend(pc.anim, function () {
      */
     Skeleton.prototype.getNumNodes = function () {
         return this._interpolatedKeys.length;
-    }
+    };
     
     /**
      * @function
@@ -241,10 +249,19 @@ pc.extend(pc.anim, function () {
      * @author Will Eastcott
      */
     Skeleton.prototype.setGraph = function (graph) {
-        for (var i = 0; i < this._interpolatedKeys.length; i++) {
-            var interpKey = this._interpolatedKeys[i];
-            var graphNode = graph.findByName(interpKey._name);
-            this._interpolatedKeys[i].setTarget(graphNode);
+        var i;
+        this.graph = graph;
+
+        if (graph) {
+            for (i = 0; i < this._interpolatedKeys.length; i++) {
+                var interpKey = this._interpolatedKeys[i];
+                var graphNode = graph.findByName(interpKey._name);
+                this._interpolatedKeys[i].setTarget(graphNode);
+            }
+        } else {
+            for (i = 0; i < this._interpolatedKeys.length; i++) {
+                this._interpolatedKeys[i].setTarget(null);
+            }
         }
     };
 
@@ -258,17 +275,19 @@ pc.extend(pc.anim, function () {
      * @author Will Eastcott
      */
     Skeleton.prototype.updateGraph = function () {
-        for (var i = 0; i < this._interpolatedKeys.length; i++) {
-            var interpKey = this._interpolatedKeys[i];
-            if (interpKey._written) {
-                var transform = interpKey.getTarget();
+        if (this.graph) {
+            for (var i = 0; i < this._interpolatedKeys.length; i++) {
+                var interpKey = this._interpolatedKeys[i];
+                if (interpKey._written) {
+                    var transform = interpKey.getTarget();
 
-                pc.math.vec3.copy(interpKey._pos, transform.localPosition);
-                pc.math.quat.copy(interpKey._quat, transform.localRotation);
-                pc.math.vec3.copy(interpKey._scale, transform.localScale);
-                transform.dirtyLocal = true;
+                    pc.math.vec3.copy(interpKey._pos, transform.localPosition);
+                    pc.math.quat.copy(interpKey._quat, transform.localRotation);
+                    pc.math.vec3.copy(interpKey._scale, transform.localScale);
+                    transform.dirtyLocal = true;
 
-                interpKey._written = false;
+                    interpKey._written = false;
+                }
             }
         }
     };

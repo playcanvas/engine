@@ -77,7 +77,7 @@ pc.extend(pc.gfx, function () {
             this.size += vertexElement.size;
             this.elements.push(vertexElement);
         }
-    }
+    };
 
     return {
         VertexFormat: VertexFormat

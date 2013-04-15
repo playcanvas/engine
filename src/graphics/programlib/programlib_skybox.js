@@ -9,22 +9,19 @@ pc.gfx.programlib.skybox = {
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
-        code += "attribute vec3 vertex_position;\n";
-        code += "uniform mat4 matrix_projection;\n";
-        code += "uniform mat4 matrix_view;\n";
-        code += "uniform mat4 matrix_model;\n";
+        code += getSnippet('vs_static_position_decl');
+
+        code += "uniform vec3 view_position;\n";
         code += "varying vec3 vViewDir;\n\n";
 
         // VERTEX SHADER BODY
         code += getSnippet('common_main_begin');
 
-        // Recreate the view projection matrix with no translation component in the view matrix
-        code += "    mat4 viewMat = matrix_view;\n";
-        code += "    viewMat[3][0] = viewMat[3][1] = viewMat[3][2] = 0.0;\n";
-        code += "    mat4 matrix_viewProjection = matrix_projection * viewMat;\n";
+        code += '    vec4 positionW = matrix_model * vec4(vertex_position + view_position, 1.0);\n';
+        code += '    gl_Position = matrix_viewProjection * positionW;\n';
 
-        code += getSnippet('vs_static_position');
-
+        // Force skybox to far Z, regardless of the clip planes on the camera
+        code += "    gl_Position = gl_Position.xyww;\n";
         code += "    vViewDir = vertex_position;\n";
 
         code += getSnippet('common_main_end');

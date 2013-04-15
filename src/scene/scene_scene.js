@@ -15,8 +15,7 @@ pc.scene = {
     LAYER_HUD: 0,
     LAYER_GIZMO: 1,
     LAYER_FX: 2,
-    LAYER_WORLD: 3,
-    LAYER_SKYBOX: 4
+    LAYER_WORLD: 3
 };
 
 pc.extend(pc.scene, function () {
@@ -153,6 +152,8 @@ pc.extend(pc.scene, function () {
     };
 
     Scene.prototype.addModel = function (model) {
+        var i;
+
         // Check the model is not already in the scene
         var index = this._models.indexOf(model);
         if (index === -1) {
@@ -161,7 +162,7 @@ pc.extend(pc.scene, function () {
             // Insert the model's mesh instances into lists ready for rendering
             var meshInstance;
             var numMeshInstances = model.meshInstances.length;
-            for (var i = 0; i < numMeshInstances; i++) {
+            for (i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
                 if (this.drawCalls.indexOf(meshInstance) === -1) {
                     this.drawCalls.push(meshInstance);
@@ -178,13 +179,15 @@ pc.extend(pc.scene, function () {
 
             // Add all model lights to the scene
             var lights = model.getLights();
-            for (var i = 0, len = lights.length; i < len; i++) {
+            for (i = 0, len = lights.length; i < len; i++) {
                 this.addLight(lights[i]);
             }
         }
     };
 
     Scene.prototype.removeModel = function (model) {
+        var i;
+
         // Verify the model is in the scene
         var index = this._models.indexOf(model);
         if (index !== -1) {
@@ -193,7 +196,7 @@ pc.extend(pc.scene, function () {
             // Remove the model's mesh instances from render queues
             var meshInstance;
             var numMeshInstances = model.meshInstances.length;
-            for (var i = 0; i < numMeshInstances; i++) {
+            for (i = 0; i < numMeshInstances; i++) {
                 meshInstance = model.meshInstances[i];
                 index = this.drawCalls.indexOf(meshInstance);
                 if (index !== -1) {
@@ -213,7 +216,7 @@ pc.extend(pc.scene, function () {
 
             // Remove all model lights from the scene
             var lights = model.getLights();
-            for (var i = 0, len = lights.length; i < len; i++) {
+            for (i = 0, len = lights.length; i < len; i++) {
                 this.removeLight(lights[i]);
             }
         }
@@ -240,11 +243,11 @@ pc.extend(pc.scene, function () {
      * @description Synchronizes the graph node hierarchy of every model in the scene.
      * @author Will Eastcott
      */
-	Scene.prototype.update = function () {
-	    for (var i = 0, len = this._models.length; i < len; i++) {
-	        this._models[i].getGraph().syncHierarchy();
-	    }
-	};
+    Scene.prototype.update = function () {
+        for (var i = 0, len = this._models.length; i < len; i++) {
+            this._models[i].getGraph().syncHierarchy();
+        }
+    };
 
     Scene.prototype.render = function (camera) {
 
@@ -255,8 +258,9 @@ pc.extend(pc.scene, function () {
         this._localLights[1].length = 0;
         var castShadows = false;
         var lights = this._lights;
+        var light;
         for (i = 0, len = lights.length; i < len; i++) {
-            var light = lights[i];
+            light = lights[i];
             if (light.getCastShadows()) {
                 castShadows = true;
             }
@@ -289,7 +293,7 @@ pc.extend(pc.scene, function () {
 
         // Render all shadowmaps
         for (i = 0; i < lights.length; i++) {
-            var light = lights[i];
+            light = lights[i];
             var type = light.getType();
 
             if (type === pc.scene.LightType.POINT) {
@@ -475,9 +479,9 @@ pc.extend(pc.scene, function () {
 
 /*
         var camMat = camera.getWorldTransform();
-	
-	    // Sort alpha meshes back to front
-	    var sortBackToFront = function (meshA, meshB) {
+
+        // Sort alpha meshes back to front
+        var sortBackToFront = function (meshA, meshB) {
             var posA = meshA.getAabb().center;
             var posB = meshB.getAabb().center;
             var cmx = camMat[12];
@@ -493,9 +497,9 @@ pc.extend(pc.scene, function () {
             var distSqrB = tempx * tempx + tempy * tempy + tempz * tempz;
 
             return distSqrA < distSqrB;
-	    }
-	    alphaMeshes.sort(sortBackToFront);
-	    opaqueMeshes.sort(sortBackToFront);
+        }
+        alphaMeshes.sort(sortBackToFront);
+        opaqueMeshes.sort(sortBackToFront);
 */
 
     /**

@@ -66,5 +66,5 @@ pc.extend(pc, function () {
 
             return Func;
         }
-    }
+    };
 }());

@@ -35,7 +35,7 @@ pc.extend(pc, function() {
             }
             
             if (options.host) {
-                s += options.host
+                s += options.host;
             }
             
             if(options.path) {
@@ -125,7 +125,7 @@ pc.extend(pc, function() {
                 }
                 
                 return s;
-            }
+            };
             
             /**
              * @function
@@ -147,9 +147,9 @@ pc.extend(pc, function() {
                 var result = {};
                 
                 if (this.query) {
-                    vars = decodeURIComponent(this.query).split("&")
+                    vars = decodeURIComponent(this.query).split("&");
                     vars.forEach(function (item, index, arr) {
-                        pair = item.split("=")
+                        pair = item.split("=");
                         result[pair[0]] = pair[1];
                     }, this);                    
                 }
@@ -170,9 +170,9 @@ pc.extend(pc, function() {
              */
             this.setQuery = function (params) {
                 q = "";
-                for(key in params) {
-                    if(params.hasOwnProperty(key)) {
-                        if(q !== "") {
+                for (var key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        if (q !== "") {
                             q += "&";
                         }
                         q += encodeURIComponent(key) + "=" + encodeURIComponent(params[key]);
@@ -180,7 +180,7 @@ pc.extend(pc, function() {
                 }
                 
                 this.query = q;
-            }
+            };
         }
     };
 } ());

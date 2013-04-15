@@ -27,5 +27,5 @@ pc.extend(pc.fw, function () {
 
     return {
         Asset: Asset
-    }
+    };
 }());

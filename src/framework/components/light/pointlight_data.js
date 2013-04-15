@@ -1,5 +1,5 @@
 pc.extend(pc.fw, function () {
-    function PointLightComponentData() {
+    var PointLightComponentData = function () {
         // Serialized
         this.enable = true;
         this.color = "0xffffff";
@@ -9,7 +9,6 @@ pc.extend(pc.fw, function () {
         // Non-serialized
         this.model = null;
     };
-
     PointLightComponentData = pc.inherits(PointLightComponentData, pc.fw.ComponentData);
 
     return {

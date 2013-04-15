@@ -9,7 +9,7 @@ pc.extend(pc.fw, function () {
      */
     var SkyboxComponent = function SkyboxComponent (system, entity) {
         this.on("set", this.onSet, this);
-    }
+    };
     SkyboxComponent = pc.inherits(SkyboxComponent, pc.fw.Component);
 
     pc.extend(SkyboxComponent.prototype, {
@@ -34,10 +34,9 @@ pc.extend(pc.fw, function () {
                         return;
                     }
                     this.data.assets = assets;
-                    
+
                     // Once all assets are loaded create the skybox
-                    if(assets[0] && assets[1] && assets[2] 
-                    && assets[3] && assets[4] && assets[5]) {
+                    if (assets[0] && assets[1] && assets[2] && assets[3] && assets[4] && assets[5]) {
                         var urls = assets.map(function (asset) { 
                             return asset.getFileUrl();
                         });
@@ -49,28 +48,28 @@ pc.extend(pc.fw, function () {
                 } else {
                     delete assets[index];
                 }
-            };
+            }
             
             var functions = {
                 "posx": function (entity, name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "negx": function (entity, name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "posy": function (entity, name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "negy": function (entity, name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "posz": function (entity, name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     },
                 "negz": function (entity, name, oldValue, newValue) { 
-                        _loadTextureAsset.call(this, name, newValue) 
+                        _loadTextureAsset.call(this, name, newValue);
                     }
-            }
+            };
 
             if (functions[name]) {
                 functions[name].call(this, this.entity, name, oldValue, newValue);
@@ -111,19 +110,14 @@ pc.extend(pc.fw, function () {
 
         var material = new pc.scene.Material();
         material.setState({
-            cull: false,
-            depthWrite: false
+            cull: false
         });
         material.setProgram(program);
         material.setParameter("texture_cubeMap", texture);
 
         var node = new pc.scene.GraphNode();
-        var mesh = pc.scene.procedural.createBox({
-            halfExtents: [1, 1, 1]
-        });
+        var mesh = pc.scene.procedural.createBox();
         var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
-        meshInstance.layer = pc.scene.LAYER_SKYBOX;
-        meshInstance.updateKey();
 
         var model = new pc.scene.Model();
         model.graph = node;
@@ -143,6 +137,6 @@ pc.extend(pc.fw, function () {
 
     return {
         SkyboxComponent: SkyboxComponent
-    }
+    };
 }());
 

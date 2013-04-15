@@ -34,7 +34,7 @@ pc.debug = (function () {
             }
 
             table.innerHTML = '';
-            for (key in data) {
+            for (var key in data) {
                 var r = row.cloneNode();
                 var t = title.cloneNode();
                 var f = field.cloneNode();
@@ -47,5 +47,5 @@ pc.debug = (function () {
                 table.appendChild(r);  
             }
         }
-    }
+    };
 }());

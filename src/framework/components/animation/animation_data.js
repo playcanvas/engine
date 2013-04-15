@@ -1,5 +1,5 @@
 pc.extend(pc.fw, function() {
-    function AnimationComponentData() {
+    var AnimationComponentData = function () {
         // Serialized
         this.assets = null;
         this.speed = 1.0;
@@ -18,7 +18,7 @@ pc.extend(pc.fw, function() {
         this.blendTime = 0;
         this.blendTimeRemaining = 0;
         this.playing = false;
-    }
+    };
     AnimationComponentData = pc.inherits(AnimationComponentData, pc.fw.ComponentData);
 
     return {

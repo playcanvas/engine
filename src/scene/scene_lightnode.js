@@ -206,7 +206,7 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setAttenuationEnd = function (radius) {
         this._attenuationEnd = radius;
-   }
+    };
 
     /**
      * @function
@@ -218,7 +218,7 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setAttenuationStart = function (radius) {
         this._attenuationStart = radius;
-    }
+    };
 
     LightNode.prototype._createShadowMap = function () {
         var shadowBuffer = new pc.gfx.FrameBuffer(this._shadowWidth, this._shadowHeight, true);
