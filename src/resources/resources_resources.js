@@ -697,11 +697,13 @@ pc.resources = function () {
         this.identifier = identifier; // The identifier for this resource
         this.canonical = identifier;  // The canonical identifier using the file hash (if available) to match identical resources
         this.alternatives = [];       // Alternative identifiers to the canonical
+        this.promise = null;
     };
 
     return {
-        ResourceLoader: ResourceLoader,
+        //ResourceLoader: ResourceLoader,
         ResourceHandler: ResourceHandler,
         ResourceRequest: ResourceRequest
     };
+
 } ();
