@@ -10,24 +10,31 @@ pc.extend(pc.resources, function () {
     };
     PackResourceHandler = pc.inherits(PackResourceHandler, pc.resources.ResourceHandler);
     
-    PackResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
+    PackResourceHandler.prototype.load = function (request, options) {
         options = options || {};
         
-        var guid = identifier;
-        if(guid in pc.content.packs) {
-            setTimeout( function () {
-                success(pc.content.packs[guid], options);
-            }, 0);
-        } else {
-            this._depot.packs.getOne(guid, function (pack) {
-                success(pack, options);
-            }.bind(this), function (errors) {
-                error(errors);
-            });
-        }
+        var promise = new RSVP.Promise(function (resolve, reject) {
+            var guid = request.canonical;
+            if(guid in pc.content.packs) {
+                // Get the pack from the content file
+                setTimeout( function () {
+                    resolve(pc.content.packs[guid]);
+                }, 0);
+            } else {
+                // Request pack from the API
+                this._depot.packs.getOne(guid, function (pack) {
+                    resolve(pack);
+                }.bind(this), function (errors) {
+                    reject(errors);
+                });
+            }
+        });
+
+        return promise;
+
     };
 
-    PackResourceHandler.prototype.open = function (data, options) {
+    PackResourceHandler.prototype.open = function (data, request, options) {
         var pack = this.openPack(data, options);
 
         return pack;

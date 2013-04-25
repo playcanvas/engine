@@ -10,10 +10,23 @@ pc.extend(pc.resources, function () {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
+        
+        // Counters for progress
+        this._requested = 0;
+        this._loaded = 0;
+
+        pc.extend(this, pc.events);
     };
 
     ResourceLoader.prototype = {
-
+        /**
+         * @function
+         * @name pc.resources.ResourceLoader#registerHandler
+         * @description Register a handler for a new type of resource. To register a handler you need to provided an instance of a ResourceHandler, 
+         * and the ResourceRequest type to be associated with the handler.
+         * @param {pc.resources.ResourceRequest} RequestType The type of request to associate with this handler
+         * @param {pc.resources.ResourceHandler} handler A ResourceHandler instance.
+         */
         registerHandler: function (RequestType, handler) {
             var request = new RequestType();
             if (request.type === "") {
@@ -24,6 +37,14 @@ pc.extend(pc.resources, function () {
             handler.setLoader(this);
         },
 
+        /**
+        * @function
+        * @name pc.resources.ResourceLoader#request
+        * @description Make a request for one or more resources from a remote location. A call to request() will try to retrieve all the resources requested,
+        * using the ResourceHandlers for the specific type of request. Resources are cached once they have been requested, and subsequent requests will return the
+        * the cached value.
+        * The request() call returns a Promise object which is used to access the resources once they have all been loaded.
+        */
         request: function (requests, options) {
             options = options || {};
             
@@ -40,9 +61,11 @@ pc.extend(pc.resources, function () {
                 }
 
                 var requested = [];
-                for (i = 0, n = requests.length; i < n; i++) {  
+                for (i = 0, n = requests.length; i < n; i++) {
+                    // Use an existing request if there is one already in progress
                     var request = self._requests[requests[i].canonical] || requests[i];
-                    self.makeCanonical(request);
+                    
+                    self._makeCanonical(request);
 
                     if (!request.promise) {
                         self._request(request, options);
@@ -50,26 +73,18 @@ pc.extend(pc.resources, function () {
 
                     requested.push(request);
 
-                    // if (self._requests[request.canonical]) {
-                    //     // merge with existing request
-                    //     promises.push(self._requests[request.canonical].promise);
-                    // } else {
-                    //     // new request
-                    //     promises.push(self._request(request, options));
-                    // }
-
                     // If there is a parent request, add all child requests on parent
                     if (parent) {
                         parent.children.push(request);
                     }
                 }
 
-
                 var promises = [];
                 requested.forEach(function (r) {
                     promises.push(r.promise);
                 });
 
+                // Check that all child promises of the requests have been completed
                 var check = function (resources, requests, promises) {
                     var i, n;
                     var childPromises = [];
@@ -84,60 +99,24 @@ pc.extend(pc.resources, function () {
                     if (childPromises.length) {
                         RSVP.all(childPromises).then(function(childResources) {
                             check(resources, childRequests, childPromises);
+                        }, function (error) {
+                            reject(error);
                         });
                     } else {
+                        self.fire("complete", resources)
                         resolve(resources)
                     }
                 }
 
                 RSVP.all(promises).then(function (resources) {
                     check(resources, requested, promises);
+                }, function (error) {
+                    reject(error);
                 });
                 
             });
 
             return promise;
-        },
-
-        _request: function (request, options) {
-            var self = this;
-
-            request.promise = new RSVP.Promise(function (resolve, reject) {
-                var handler = self._handlers[request.type];
-                var resource = self.getFromCache(request.canonical);
-
-                if (resource) {
-                    // In cache resolve 
-                    delete self._requests[request.canonical];
-                    resolve(resource);
-                } else {
-                    // Not in cache, load the resource
-                    var promise = handler.load(request, options);
-                    promise.then(function (resource) {
-                        delete self._requests[request.canonical];
-                        resolve(self._open(resource, request, options));
-                    }, function (error) {
-                        reject(error);
-                    })
-                }
-            });
-
-            self._requests[request.canonical] = request;
-
-            return request.promise;
-        },
-
-        _open: function (resource, request, options) {
-            var handler = this._handlers[request.type];
-            resource = handler.open(resource, request, options);
-            resource = handler.clone(resource, request);
-            this.addToCache(request.canonical, resource);
-            return resource;
-        },
-
-        makeCanonical: function (request) {
-            // TODO: do this properly
-            request.canonical = request.identifier;
         },
 
         addToCache: function (identifier, resource) {
@@ -152,6 +131,73 @@ pc.extend(pc.resources, function () {
             }
 
             return null;
+        },
+
+        /**
+        * @name pc.resources.ResourceLoader#resetProgress
+        * @description Call this to reset the progress counter to 0
+        */
+        resetProgress: function () {
+            this._requested = 0;
+            this._loaded = 0;
+        },
+
+        // Make a request for a single resource and open it
+        _request: function (request, options) {
+            var self = this;
+
+            request.promise = new RSVP.Promise(function (resolve, reject) {
+                var handler = self._handlers[request.type];
+                var resource = self.getFromCache(request.canonical);
+
+                if (resource) {
+                    // In cache resolve 
+                    delete self._requests[request.canonical];
+                    self._loaded++;
+                    self.fire("progress", this._loaded / this._requested);
+                    resolve(resource);
+                } else {
+                    // Not in cache, load the resource
+                    var promise = handler.load(request, options);
+                    promise.then(function (data) {
+                        var resource = self._open(data, request, options);
+                        delete self._requests[request.canonical];
+                        self._loaded++
+                        self.fire("progress", self._loaded / self._requested);
+                        self.fire("load", request, resource);
+                        resolve(resource);
+                    }, function (error) {
+                        self.fire("error", request, error);
+                        reject(error);
+                    });
+                }
+            });
+
+            self._requests[request.canonical] = request;
+            this._requested++;
+
+            return request.promise;
+        },
+
+        // Convert loaded data into the resource using the handler's open() and clone() methods
+        _open: function (data, request, options) {
+            var handler = this._handlers[request.type];
+            var resource = handler.open(data, request, options);
+            resource = handler.clone(resource, request);
+            this.addToCache(request.canonical, resource);
+            return resource;
+        },
+
+        /**
+        * @name pc.resources.ResourceLoader#_makeCanonical
+        * @description Set the canonical property on the request object. The canonical identifier is the identifier used
+        * to make all requests. Resources with the same hash but different URLs will have the same canonical so that requests are not
+        * duplicated
+        * 
+        */
+        _makeCanonical: function (request) {
+            // TODO: do this properly
+            request.canonical = request.identifier;
         }
     };
 
@@ -162,12 +208,15 @@ pc.extend(pc.resources, function () {
      * @constructor Create a new request for a resoiurce
      * @param {String} identifier Used by the request handler to locate and access the resource. Usually this will be the URL or GUID of the resource.
      */
-    var ResourceRequest = function ResourceRequest(identifier) {
+    var ResourceRequest = function ResourceRequest(identifier, result) {
         this.identifier = identifier; // The identifier for this resource
         this.canonical = identifier;  // The canonical identifier using the file hash (if available) to match identical resources
         this.alternatives = [];       // Alternative identifiers to the canonical
         this.promise = null;          // The promise that will be honored when this request completes
         this.children = [];           // Any child requests which were made while this request was being processed
+        if (result !== undefined) {
+            this.result = result;     // The result object can be supplied and used by a handler, instead of creating a new resource
+        }
     };
 
     /**
