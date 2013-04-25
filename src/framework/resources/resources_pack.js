@@ -108,7 +108,7 @@ pc.extend(pc.resources, function () {
         var child, length = data.children.length;
         var children = entity.getChildren();
         for (i = 0; i < length; i++) {
-            children[i] = this.openComponentData(children[i], data.children[i], options);
+            children[i] = this.openComponentData(children[i], data.children[i], request);
         }
 
         return entity;
@@ -121,8 +121,8 @@ pc.extend(pc.resources, function () {
     * @example
     * var guid = ...; // get pack GUID from somewhere
     * var r = new pc.resources.PackRequest(guid);
-    * context.loader.request(r, function (resources) {
-    *     var pack = resources[guid];
+    * context.loader.request(r).then(function (resources) {
+    *     var pack = resources[0];
     * });
     */
     var PackRequest = function PackRequest(identifier) {

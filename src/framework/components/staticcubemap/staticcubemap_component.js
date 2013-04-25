@@ -96,16 +96,11 @@ pc.extend(pc.fw, function () {
             return new pc.resources.ImageRequest(url);
         });
         var options = {
-            batch: entity.getRequestBatch()
+            parent: entity.getRequest()
         };
-        context.loader.request(requests, function (resources) {
-            var images = urls.map(function (url) {
-                return resources[url];
-            });
-            texture.setSource(images);
-        }.bind(this), function (errors) {
-        }, function (progress) {
-        }, options);
+        context.loader.request(requests, options).then(function (resources) {
+            texture.setSource(resources);
+        });
         
         return texture;
     };

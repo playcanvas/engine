@@ -5,12 +5,13 @@ pc.extend(pc.resources, function () {
     }
 
     var ResourceLoader = function () {
-        this._maxConcurrentRequests = 4;
-        this._types = {};
-        this._handlers = {};
-        this._requests = {};
-        this._cache = {};
-        
+        this._types = {}; // Registered resource types
+        this._handlers = {}; // Registered resource handlers indexed by type
+        this._requests = {}; // Currently active requests
+        this._cache = {}; // Loaded resources indexed by hash
+        this._hashes = {}; // Lookup from identifier to hash
+        this._canonicals = {}; // Lookup from hash to canonical identifier
+
         // Counters for progress
         this._requested = 0;
         this._loaded = 0;
@@ -19,6 +20,22 @@ pc.extend(pc.resources, function () {
     };
 
     ResourceLoader.prototype = {
+        /**
+        * @function
+        * @name pc.resources.ResourceLoader#createFileRequest
+        * @description Return a new {@link pc.resources.ResourceRequest} from the types that have been registered.
+        * @param {Object} file A file entry like that from a {@link pc.fw.Asset}
+        * @example
+        * var request = loader.createRequest({
+        *    url: 'assets/12/12341234-1234-1234-123412341234/image.jpg',
+        *    type: 'image'
+        * });
+        * request; // pc.resources.ImageRequest
+        */
+        createFileRequest: function (url, type) {
+            return new this._types[type](url);
+        },
+
         /**
          * @function
          * @name pc.resources.ResourceLoader#registerHandler
@@ -119,6 +136,30 @@ pc.extend(pc.resources, function () {
             return promise;
         },
 
+        /**
+        * @name pc.resources.ResourceLoader#open
+        * @description Open 
+        */
+        open: function (RequestType, data, options) {
+           var request = new RequestType();
+           return this._handlers[request.type].open(data, request, options);
+        },
+
+        registerHash: function (hash, identifier) {
+            if (!this._hashes[identifier]) {
+                this._hashes[identifier] = hash;
+            }
+
+            if (!this._canonicals[hash]) {
+                // First hash registered to a url gets to be canonical
+                this._canonicals[hash] = identifier;
+            }
+        },
+
+        getHash: function(identifier) {
+            return this._hashes[identifier];
+        },
+
         addToCache: function (identifier, resource) {
             // TODO: use hash instead of identifier
             this._cache[identifier] = resource;
@@ -157,20 +198,15 @@ pc.extend(pc.resources, function () {
                 var resource = self.getFromCache(request.canonical);
 
                 if (resource) {
-                    // In cache resolve 
-                    delete self._requests[request.canonical];
-                    self._loaded++;
-                    self.fire("progress", this._loaded / this._requested);
+                    // In cache, just resolve
+                    resource = self._postOpen(resource, request);
                     resolve(resource);
                 } else {
                     // Not in cache, load the resource
                     var promise = handler.load(request, options);
                     promise.then(function (data) {
                         var resource = self._open(data, request, options);
-                        delete self._requests[request.canonical];
-                        self._loaded++
-                        self.fire("progress", self._loaded / self._requested);
-                        self.fire("load", request, resource);
+                        resource = self._postOpen(resource, request);
                         resolve(resource);
                     }, function (error) {
                         self.fire("error", request, error);
@@ -187,10 +223,18 @@ pc.extend(pc.resources, function () {
 
         // Convert loaded data into the resource using the handler's open() and clone() methods
         _open: function (data, request, options) {
-            var handler = this._handlers[request.type];
-            var resource = handler.open(data, request, options);
-            resource = handler.clone(resource, request);
+            return this._handlers[request.type].open(data, request, options);
+        },
+
+        _postOpen: function (resource, request) {
+            resource = this._handlers[request.type].clone(resource, request);
             this.addToCache(request.canonical, resource);
+
+            delete this._requests[request.canonical];
+            this._loaded++
+            this.fire("progress", this._loaded / this._requested);
+            this.fire("load", request, resource);
+
             return resource;
         },
 

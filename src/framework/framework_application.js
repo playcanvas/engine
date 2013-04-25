@@ -103,12 +103,10 @@ pc.extend(pc.fw, function () {
             var requests = options.libraries.map(function (url) {
                 return new pc.resources.ScriptRequest(url);
             });
-            loader.request(requests, function (resources) {
+            loader.request(requests).then( function (resources) {
                 this.fire('librariesloaded', this);
                 this.librariesLoaded = true;
-            }.bind(this), function (errors) {
-
-            });
+            }.bind(this));
         } else {
             this.fire('librariesloaded', this);
             this.librariesLoaded = true;
@@ -173,21 +171,24 @@ pc.extend(pc.fw, function () {
                 // load pack 
                 guid = toc.packs[0];
                 
-                var request = new pc.resources.PackRequest(guid);
-                this.context.loader.request(request, function (resources) {
-                    var pack = resources[guid];
+                this.context.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
+                    var pack = resources[0];
                     this.context.root.addChild(pack.hierarchy);
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
-                    success(resources[guid]);
-                }.bind(this), error, progress);
+                    success(pack);
+                }, function (msg) {
+                    error(msg);
+                });
             }.bind(this);
 
             var load = function () {
                 if (requests.length) {
                     // Request all asset files
-                    this.context.loader.request(requests, function (resources) {
+                    this.context.loader.request(requests).then(function (resources) {
                         onLoaded(resources);
-                    }.bind(this), error, progress);                
+                    }, function (msg) {
+                        error(msg);
+                    });
                 } else {
                     // No assets to load
                     setTimeout(function () {
@@ -205,43 +206,43 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        loadPack: function (guid, success, error, progress) {
-            var load = function() {
-                var request = new pc.resources.PackRequest(guid);
-                this.context.loader.request(request, function (resources) {
-                    var pack = resources[guid];
+        // loadPack: function (guid, success, error, progress) {
+        //     var load = function() {
+        //         var request = new pc.resources.PackRequest(guid);
+        //         this.context.loader.request(request, function (resources) {
+        //             var pack = resources[guid];
 
-                    // add to hierarchy
-                    this.context.root.addChild(pack.hierarchy);
+        //             // add to hierarchy
+        //             this.context.root.addChild(pack.hierarchy);
                     
-                    // Initialise any systems with an initialize() method after pack is loaded
-                    pc.fw.ComponentSystem.initialize(pack.hierarchy);
+        //             // Initialise any systems with an initialize() method after pack is loaded
+        //             pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     
-                    // callback
-                    if (success) {
-                        success(pack);
-                    }
-                }.bind(this), function (errors) {
-                    // error
-                    if (error) {
-                        error(errors);
-                    }
-                }.bind(this), function (value) {
-                    // progress
-                    if (progress) {
-                        progress(value);
-                    }
-                }.bind(this));
-            }.bind(this);
+        //             // callback
+        //             if (success) {
+        //                 success(pack);
+        //             }
+        //         }.bind(this), function (errors) {
+        //             // error
+        //             if (error) {
+        //                 error(errors);
+        //             }
+        //         }.bind(this), function (value) {
+        //             // progress
+        //             if (progress) {
+        //                 progress(value);
+        //             }
+        //         }.bind(this));
+        //     }.bind(this);
 
-            if (!this.librariesLoaded) {
-                this.on('librariesloaded', function () {
-                    load();
-                });
-            } else {
-                load();
-            }
-        },
+        //     if (!this.librariesLoaded) {
+        //         this.on('librariesloaded', function () {
+        //             load();
+        //         });
+        //     } else {
+        //         load();
+        //     }
+        // },
 
         /**
          * @function
