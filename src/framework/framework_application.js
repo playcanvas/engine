@@ -176,13 +176,16 @@ pc.extend(pc.fw, function () {
                     this.context.root.addChild(pack.hierarchy);
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     success(pack);
-                }, function (msg) {
+                    this.context.loader.off('progress', progress);
+                }.bind(this), function (msg) {
                     error(msg);
                 });
             }.bind(this);
 
             var load = function () {
                 if (requests.length) {
+                    // Start recording progress events now
+                    this.context.loader.on('progress', progress);
                     // Request all asset files
                     this.context.loader.request(requests).then(function (resources) {
                         onLoaded(resources);

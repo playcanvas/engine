@@ -28,7 +28,7 @@ pc.extend(pc.resources, function () {
                     reject(errors);
                 });
             }
-        });
+        }.bind(this));
 
         return promise;
 

@@ -480,7 +480,6 @@ pc.resources = function () {
             } else {
                 logWARNING(pc.string.format("Could not add resource {0} to cache, no hash stored", identifier));
             }
-            
         },
 
         /**

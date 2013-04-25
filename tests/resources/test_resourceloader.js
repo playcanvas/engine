@@ -15,7 +15,7 @@ TestResourceHandler.prototype.load = function (request, options) {
         if (identifier.indexOf("delay") >= 0) {
             setTimeout(function () {
                 resolve(identifier);        
-            }, 4000);
+            }, 500);
         } else {
             resolve(identifier);
         }
@@ -62,6 +62,39 @@ ErrorResourceHandler.prototype.open = function (response, request, options) {
 var ErrorRequest = function ErrorRequest() {};
 ErrorRequest = pc.inherits(ErrorRequest, pc.resources.ResourceRequest);
 ErrorRequest.prototype.type = "error";
+
+
+// Request that returns a cloned object
+var ClonedResourceHandler = function () {
+};
+ClonedResourceHandler = pc.inherits(ClonedResourceHandler, pc.resources.ResourceHandler);
+pc.extend(ClonedResourceHandler.prototype, {
+    load: function (request, options) {
+        var self = this;
+        var identifier = request.canonical;
+        
+        return new RSVP.Promise(function (resolve, reject) {
+            resolve(identifier);
+        });
+    },
+    open: function (data, request, options) {
+        var resource = {
+            value: data + "-opened"
+        };
+        return resource;
+    },
+    clone: function (resource) {
+        // return a new object
+        return {
+            value: resource.value
+        }
+    }
+});
+
+var ClonedRequest = function ClonedRequest() {};
+ClonedRequest = pc.inherits(ClonedRequest, pc.resources.ResourceRequest);
+ClonedRequest.prototype.type = "cloned";
+
 
 // A request that makes child requests
 // Set the max depth when you create it, and then format the identifier, "foo_0", each request will increment the last digit of the identifier
@@ -266,6 +299,53 @@ test("ResourceLoader: request multiple resources, correct order", function () {
     stop();
 });
 
+
+test("ResourceLoader: two requests, same content, both callbacks called", 3, function () {
+    var loader = new pc.resources.ResourceLoader();
+    var handler = new TestResourceHandler();
+    loader.registerHandler(TestRequest, handler);
+    
+    var p1 = loader.request(new TestRequest("delayed"));
+    var p2 = loader.request(new TestRequest("delayed"));
+        
+    var count = 0;
+    p1.then(function (resources) {
+        equal(resources[0], "delayed-opened");
+        count++;
+    });
+    
+    p2.then(function (resources) {
+        equal(resources[0], "delayed-opened");
+        count++;
+    });
+
+    stop();
+    setTimeout(function () {
+        equal(count, 2);
+        start();
+    }, 1500);
+});
+
+
+test("ResourceLoader: Multiple requests for same content", 2, function () {
+    var loader = new pc.resources.ResourceLoader();
+    var handler = new TestResourceHandler();
+    loader.registerHandler(TestRequest, handler);
+    
+    var p1 = loader.request([
+        new TestRequest("delayed"),
+        new TestRequest("delayed")
+    ]);
+        
+    p1.then(function (resources) {
+        equal(resources[0], "delayed-opened");
+        equal(resources[1], "delayed-opened");
+        start();
+    });
+
+    stop();
+});
+
 test("ResourceLoader: request called twice with different resources", function () {
 	var loader = new pc.resources.ResourceLoader();
 	var handler = new TestResourceHandler();
@@ -357,6 +437,7 @@ test("ResourceLoader: second request returned from cache", function () {
 
     var handler = new TestResourceHandler();
     loader.registerHandler(TestRequest, handler);
+    loader.registerHash('1234', 'http://abc.com/directory/resource/1');
 
     var p = loader.request(new TestRequest('http://abc.com/directory/resource/1'));
 
@@ -379,7 +460,12 @@ test("ChildRequest: request a hierarchical resource", 11, function () {
     var loader = new pc.resources.ResourceLoader();
     var handler = new ChildResourceHandler(1);
     loader.registerHandler(ChildRequest, handler);
-    
+        
+    loader.registerHash('delay_1_1', 'delay_1_1');
+    loader.registerHash('delay_2_1', 'delay_2_1');
+    loader.registerHash('delay_3_1', 'delay_3_1');
+    loader.registerHash('delay_4_1', 'delay_4_1');
+
     var first = [
         new ChildRequest("1_0"),
         new ChildRequest("2_0"),
@@ -419,6 +505,10 @@ test("ChildRequest: request a deep hierarchical resource", 7, function () {
     var handler = new ChildResourceHandler(3);
     loader.registerHandler(ChildRequest, handler);
     
+    loader.registerHash('delay_1_1', 'delay_1_1');
+    loader.registerHash('delay_delay_1_2', 'delay_delay_1_2');
+    loader.registerHash('delay_delay_delay_1_3', 'delay_delay_delay_1_3');
+
     var first = [
         new ChildRequest("1_0")
     ];
@@ -446,6 +536,10 @@ test("ChildRequest: hierarchical request made in open()", function () {
     var loader = new pc.resources.ResourceLoader();
     var handler = new ChildResourceHandler(3, true);
     loader.registerHandler(ChildRequest, handler);
+        
+    loader.registerHash('delay_1_1', 'delay_1_1');
+    loader.registerHash('delay_delay_1_3', 'delay_delay_1_2');
+    loader.registerHash('delay_delay_delay_1_3', 'delay_delay_delay_1_3');
     
     var first = [
         new ChildRequest("1_0")
@@ -655,3 +749,55 @@ test("ResourceLoader: FillInRequest ", function () {
     stop();
 })
 
+test("ResourceLoader: ClonedRequest returns clone", function () {
+    var loader = new pc.resources.ResourceLoader();
+    loader.registerHandler(ClonedRequest, new ClonedResourceHandler());
+    loader.registerHash('123', "http://abc.com/directory/resource/1");
+
+    var i, j;
+    var res = [];
+    loader.request(new ClonedRequest("http://abc.com/directory/resource/1")).then(function (resources) {
+        res.push(resources[0]);
+        loader.request(new ClonedRequest("http://abc.com/directory/resource/1")).then(function (resources) {
+            res.push(resources[0]);
+            for (i = 0; i < res.length; i++) {
+                for (j = 0; j < res.length; j++) {
+                    if (i === j) {
+                        continue;
+                    }
+                    notStrictEqual(res[i], res[j]);
+                }
+            }
+        });
+        loader.request(new ClonedRequest("http://abc.com/directory/resource/1")).then(function (resources) {
+            res.push(resources[0]);
+            for (i = 0; i < res.length; i++) {
+                for (j = 0; j < res.length; j++) {
+                    if (i === j) {
+                        continue;
+                    }
+                    notStrictEqual(res[i], res[j]);
+                }
+            }
+        });
+    })
+
+    stop();
+    setTimeout(start, 3000);
+});
+
+test("ResourceLoader: ClonedRequest simultaneous requests", function () {
+    var loader = new pc.resources.ResourceLoader();
+    loader.registerHandler(ClonedRequest, new ClonedResourceHandler());
+    loader.registerHash('123', "http://abc.com/directory/resource/1");
+
+    loader.request([
+        new ClonedRequest("http://abc.com/directory/resource/1"),
+        new ClonedRequest("http://abc.com/directory/resource/1")
+    ]).then(function (resources) {
+        notStrictEqual(resources[0], resources[1]);
+        start();
+    })
+
+    stop();
+})

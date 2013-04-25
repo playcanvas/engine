@@ -78,15 +78,14 @@ pc.extend(pc.resources, function () {
                 }
 
                 var requested = [];
+                var promises = [];
                 for (i = 0, n = requests.length; i < n; i++) {
                     // Use an existing request if there is one already in progress
                     var request = self._requests[requests[i].canonical] || requests[i];
                     
                     self._makeCanonical(request);
 
-                    if (!request.promise) {
-                        self._request(request, options);
-                    }
+                    promises.push(self._request(request, options));
 
                     requested.push(request);
 
@@ -96,10 +95,10 @@ pc.extend(pc.resources, function () {
                     }
                 }
 
-                var promises = [];
-                requested.forEach(function (r) {
-                    promises.push(r.promise);
-                });
+                // var promises = [];
+                // requested.forEach(function (r) {
+                //     promises.push(r.promise);
+                // });
 
                 // Check that all child promises of the requests have been completed
                 var check = function (resources, requests, promises) {
@@ -161,17 +160,21 @@ pc.extend(pc.resources, function () {
         },
 
         addToCache: function (identifier, resource) {
-            // TODO: use hash instead of identifier
-            this._cache[identifier] = resource;
+            var hash = this.getHash(identifier);
+            if (hash) {
+                this._cache[hash] = resource;    
+            } else {
+                logWARNING(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
+            }
         },
 
         getFromCache: function (identifier) {
-            // TODO: use hash instead of identifier
-            if (this._cache[identifier]) {
-                return this._cache[identifier];
+            var hash = this.getHash(identifier);
+            if (hash) {
+                return this._cache[hash];    
+            } else {
+                return null;
             }
-
-            return null;
         },
 
         /**
@@ -186,39 +189,49 @@ pc.extend(pc.resources, function () {
         // Make a request for a single resource and open it
         _request: function (request, options) {
             var self = this;
+            var promise = null;
 
-            request.promise = new RSVP.Promise(function (resolve, reject) {
-                var handler = self._handlers[request.type];
-                if (!handler) {
-                    var msg = "Missing handler for type: " + request.type;
-                    self.fire("error", request, msg);
-                    reject(msg);
-                    return;
-                }
-                var resource = self.getFromCache(request.canonical);
+            if (request.promise) {
+                promise = new RSVP.Promise(function (resolve, reject) {
+                    request.promise.then(function (resource) {
+                        var resource = self._postOpen(resource, request);
+                        resolve(resource);
+                    });
+                });
+            } else {
+                request.promise = new RSVP.Promise(function (resolve, reject) {
+                    var handler = self._handlers[request.type];
+                    if (!handler) {
+                        var msg = "Missing handler for type: " + request.type;
+                        self.fire("error", request, msg);
+                        reject(msg);
+                        return;
+                    }
 
-                if (resource) {
-                    // In cache, just resolve
-                    resource = self._postOpen(resource, request);
-                    resolve(resource);
-                } else {
-                    // Not in cache, load the resource
-                    var promise = handler.load(request, options);
-                    promise.then(function (data) {
-                        var resource = self._open(data, request, options);
+                    var resource = self.getFromCache(request.canonical);
+                    if (resource) {
+                        // In cache, just resolve
                         resource = self._postOpen(resource, request);
                         resolve(resource);
-                    }, function (error) {
-                        self.fire("error", request, error);
-                        reject(error);
-                    });
-                }
-            });
+                    } else {
+                        // Not in cache, load the resource
+                        var promise = handler.load(request, options);
+                        promise.then(function (data) {
+                            var resource = self._open(data, request, options);
+                            resource = self._postOpen(resource, request);
+                            resolve(resource);
+                        }, function (error) {
+                            self.fire("error", request, error);
+                            reject(error);
+                        });
+                    }
+                });
+            }
 
             self._requests[request.canonical] = request;
             this._requested++;
 
-            return request.promise;
+            return promise || request.promise;
         },
 
         // Convert loaded data into the resource using the handler's open() and clone() methods
@@ -227,9 +240,10 @@ pc.extend(pc.resources, function () {
         },
 
         _postOpen: function (resource, request) {
-            resource = this._handlers[request.type].clone(resource, request);
             this.addToCache(request.canonical, resource);
-
+    
+            resource = this._handlers[request.type].clone(resource, request);
+            
             delete this._requests[request.canonical];
             this._loaded++
             this.fire("progress", this._loaded / this._requested);
