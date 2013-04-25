@@ -148,6 +148,12 @@ pc.extend(pc.resources, function () {
 
             request.promise = new RSVP.Promise(function (resolve, reject) {
                 var handler = self._handlers[request.type];
+                if (!handler) {
+                    var msg = "Missing handler for type: " + request.type;
+                    self.fire("error", request, msg);
+                    reject(msg);
+                    return;
+                }
                 var resource = self.getFromCache(request.canonical);
 
                 if (resource) {
@@ -272,7 +278,7 @@ pc.extend(pc.resources, function () {
          * @param {Number} [options.priority] The priority of the request for this resource
          * @returns {Promise} A promise of the resource data
           */
-        load: function (identifier, options) {
+        load: function (request, options) {
             throw Error("Not implemented");
         },
 

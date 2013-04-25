@@ -63,23 +63,23 @@ pc.extend(pc.fw, function () {
     /**
      * @private
      * @function
-     * @name pc.fw.Entity#setRequestBatch
+     * @name pc.fw.Entity#setRequest
      * @description Used during resource loading to ensure that child resources of Entities are tracked
-     * @param {Number} handle The handle of the RequestBatch used to load this Entity
+     * @param {ResourceRequest} request The request being used to load this entity
      */
-    Entity.prototype.setRequestBatch = function (handle) {
-        this._batchHandle = handle;
+    Entity.prototype.setRequest = function (request) {
+        this._request = request;
     };
 
     /**
      * @private
      * @function
-     * @name pc.fw.Entity#getRequestBatch
-     * @description Get the RequestBatch handle that is being used to load this Entity
-     * @returns {Number} The RequestBatch handle
+     * @name pc.fw.Entity#getRequest
+     * @description Get the Request that is being used to load this Entity
+     * @returns {ResourceRequest} The Request
      */
-    Entity.prototype.getRequestBatch = function () {
-        return this._batchHandle;
+    Entity.prototype.getRequest = function () {
+        return this._request;
     };
 
     Entity.prototype.addChild = function (child) {

@@ -1,5 +1,14 @@
 pc.extend(pc.fw, function () {
+    var Pack = function (hierarchy) {
+        this.hierarchy = hierarchy;
+    };
+
+    Pack.prototype = {
+
+    };
+
     return {
+        Pack: Pack,
         /**
          * @function
          * @name pc.fw.loadPack

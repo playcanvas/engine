@@ -35,34 +35,27 @@ pc.extend(pc.resources, function () {
     };
 
     PackResourceHandler.prototype.open = function (data, request, options) {
-        var pack = this.openPack(data, options);
+        var pack = this.openPack(data, request);
 
         return pack;
     };
     
-    PackResourceHandler.prototype.openPack = function (data, options) {
-        options = options || {};
-        options.priority = options.priority || 1; // default priority of 1
-        options.batch = options.batch || null;
-
+    PackResourceHandler.prototype.openPack = function (data, request) {
         var pack = data.hierarchy;
-        return {
-            application_data: data.application_data,
-            hierarchy: this.openEntity(pack, options)
-        };
+        return new pc.fw.Pack(this.openEntity(pack, request));
     };
 
-    PackResourceHandler.prototype.openEntity = function (data, options) {
+    PackResourceHandler.prototype.openEntity = function (data, request) {
         var hierarchy;
 
-        hierarchy = this.openEntityHierarchy(data, options);
+        hierarchy = this.openEntityHierarchy(data, request);
         hierarchy.syncHierarchy();
-        hierarchy = this.openComponentData(hierarchy, data, options);
+        hierarchy = this.openComponentData(hierarchy, data, request);
         
         return hierarchy;
     };
     
-    PackResourceHandler.prototype.openEntityHierarchy = function (data, options) {
+    PackResourceHandler.prototype.openEntityHierarchy = function (data, request) {
         var entity = new pc.fw.Entity();
 
         entity.setName(data.name);
@@ -89,15 +82,15 @@ pc.extend(pc.resources, function () {
         // Open all children and add them to the node
         var i, child, length = data.children.length;
         for (i = 0; i < length; i++) {
-            child = this.openEntityHierarchy(data.children[i], options);
+            child = this.openEntityHierarchy(data.children[i], request);
             entity.addChild(child);
         }
 
         return entity;
     };
 
-    PackResourceHandler.prototype.openComponentData = function (entity, data, options) {
-        entity.setRequestBatch(options.batch);
+    PackResourceHandler.prototype.openComponentData = function (entity, data, request) {
+        entity.setRequest(request);
 
         // Create Components in order
         var systems = this._registry.list();
@@ -109,7 +102,7 @@ pc.extend(pc.resources, function () {
             }
         }
 
-        entity.setRequestBatch(null);
+        entity.setRequest(null);
 
         // Open all children and add them to the node
         var child, length = data.children.length;

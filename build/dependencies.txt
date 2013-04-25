@@ -28,6 +28,7 @@
 ../src/shape/shape_sphere.js
 ../src/shape/shape_torus.js
 ../src/resources/resources_resources.js
+../src/resources/resources_loader.js
 ../src/resources/resources_resourceloaderdisplay.js
 ../src/resources/resources_image.js
 ../src/resources/resources_texturecache.js
@@ -104,8 +105,6 @@
 ../src/framework/framework_applicationcontext.js
 ../src/framework/framework_application.js
 ../src/framework/resources/resources_pack.js
-../src/framework/resources/resources_entity.js
-../src/framework/resources/resources_asset.js
 ../src/framework/components/component_registry.js
 ../src/framework/components/component_system.js
 ../src/framework/components/component_component.js

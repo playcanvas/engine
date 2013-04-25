@@ -187,9 +187,13 @@ test("ResourceLoader: missing handler", function () {
     var handler = new TestResourceHandler();
     loader.registerHandler(TestRequest, handler);
     
-    throws(function () {
-        loader.request(new ErrorRequest);
-    }, "missing handler");
+    var promise = loader.request(new ErrorRequest);
+    promise.then(null, function (error) {
+        equal(error, "Missing handler for type: error");
+        start();
+    });
+
+    stop();
 });
 
 test("ResourceLoader: request single resource", function () {

@@ -1,0 +1,91 @@
+{
+	"model": {
+		"version": 1,
+		"textures": [],
+		"materials": [
+			{
+				"name": "02 - Default",
+				"shader": "phong",
+				"parameters": [
+					{
+						"name": "material_shininess",
+						"type": "float",
+						"data": 2.56
+					},
+					{
+						"name": "material_opacity",
+						"type": "float",
+						"data": 1
+					},
+					{
+						"name": "material_ambient",
+						"type": "vec3",
+						"data": [0.588235,0.588235,0.588235]
+					}
+				]
+			}
+		],
+		"geometries": [
+			{
+				"bbox": {
+					"min": [-10,-10,0],
+					"max": [10,10,20]
+				},
+				"attributes": [
+					{
+						"name": "vertex_position",
+						"type": "float32",
+						"components": 3,
+						"data": [-10,-10,0,-10,10,0,10,10,0,10,-10,0,-10,-10,20,10,-10,20,10,10,20,-10,10,20,-10,-10,0,10,-10,0,10,-10,20,-10,-10,20,10,-10,0,10,10,0,10,10,20,10,-10,20,10,10,0,-10,10,0,-10,10,20,10,10,20,-10,10,0,-10,-10,0,-10,-10,20,-10,10,20]
+					},
+					{
+						"name": "vertex_normal",
+						"type": "float32",
+						"components": 3,
+						"data": [0,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0,1,0,0,1,0,0,1,0,0,1,0,-1,0,0,-1,0,0,-1,0,0,-1,0,1,0,0,1,0,0,1,0,0,1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,-1,0,0,-1,0,0,-1,0,0,-1,0,0]
+					},
+					{
+						"name": "vertex_texCoord0",
+						"type": "float32",
+						"components": 2,
+						"data": [1,0,1,1,0,1,0,0,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,1]
+					}
+				],
+				"indices": {
+					"type": "uint16",
+					"data": [0,1,2,2,3,0,4,5,6,6,7,4,8,9,10,10,11,8,12,13,14,14,15,12,16,17,18,18,19,16,20,21,22,22,23,20]
+				},
+				"submeshes": [
+					{
+						"material": 0,
+						"primitive": {
+							"type": "triangles",
+							"base": 0,
+							"count": 36,
+							"indexed": true
+						}
+					}
+				]
+			}
+		],
+		"graph": {
+			"type": "node",
+			"name": "RootNode",
+			"uid": 9,
+			"position": [0,0,0],
+			"rotation": [0,0,0],
+			"scale": [1,1,1],
+			"children": [
+				{
+					"type": "mesh",
+					"name": "Box001",
+					"uid": 33,
+					"position": [0,-10,0],
+					"rotation": [-90,-0,0],
+					"scale": [1,1,1],
+					"geometry": 0
+				}
+			]
+		}
+	}
+}
