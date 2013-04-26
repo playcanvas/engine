@@ -1,5 +1,20 @@
-pc.resources = {};
 pc.extend(pc.resources, function () {
+    /**
+    * @name pc.resources
+    * @constructor Create a new instance of a ResourceLoader
+    * @class Use to make requests for remote resources.
+    * The ResourceLoader is used to request a resource using an identifier (often the url of a remote file). 
+    * Registered {@link pc.resources.ResourceHandler} perform the specific loading and opening functionality and will return
+    * a new instance of a resource. The ResourceLoader contains a built in cache, that uses file hashes to ensure that 
+    * resources are not fetched multiple times. Hashes must be registered against an identifier prior to making requests.
+    * @example
+    * var loader = new pc.resources.Loader();
+    * loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
+    * var promise = loader.request(new pc.resources.ImageRequest("http://example.com/image.png"));
+    * promise.then(function (resources) {
+    *   var img = resources[0];
+    * });
+    */
     var ResourceLoader = function () {
         if (typeof(window.RSVP) === 'undefined') {
             logERROR('Missing RSVP library');
@@ -130,7 +145,7 @@ pc.extend(pc.resources, function () {
                     check(resources, requested, promises);
                 }, function (error) {
                     reject(error);
-                });
+                });⁄
                 
             });
 
@@ -138,14 +153,26 @@ pc.extend(pc.resources, function () {
         },
 
         /**
+        * @private
+        * @function
         * @name pc.resources.ResourceLoader#open
-        * @description Open 
+        * @description Perform just the open() part of the resource loading process. Useful if you already have the data from somewhere.
+        * @param {pc.resources.ResourceRequest} RequestType The type of request to open
+        * @param {Object} data The data to use for the new resource
+        * @param {Object} options Optional arguments
         */
         open: function (RequestType, data, options) {
            var request = new RequestType();
            return this._handlers[request.type].open(data, request, options);
         },
 
+        /**
+        * @function
+        * @name pc.resources.ResourceLoader#registerHash
+        * @description Register a connection between a file hash and an identifier. If the same file is located via several identifiers, the hash ensures that only a single request is made.
+        * @param {String} hash The file hash
+        * @param {String} identifier The resource identifier
+        */
         registerHash: function (hash, identifier) {
             if (!this._hashes[identifier]) {
                 this._hashes[identifier] = hash;
@@ -157,10 +184,24 @@ pc.extend(pc.resources, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.resources.ResourceLoader#getHash
+        * @description Return the hash registered against the identifier
+        * @param {String} identifier The identifier of a resource
+        * @returns {String|undefined} The hash if the identifier is registered or undefined
+        */
         getHash: function(identifier) {
             return this._hashes[identifier];
         },
 
+        /**
+        * @function
+        * @name pc.resources.ResourceLoader#addToCache
+        * @description Add a resource into the cache so that future requests will not make new requests.
+        * @param {String} identifier The identifier for the resource
+        * @param {Object} resource The resource to be cached
+        */
         addToCache: function (identifier, resource) {
             var hash = this.getHash(identifier);
             if (hash) {
@@ -170,6 +211,13 @@ pc.extend(pc.resources, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.resources.getFromCache(identifier)
+        * @description Try and get a resource from the cache.
+        * @param {String} identifier The identifier of the resource
+        * @returns {Object|null} The resource if it exists in the cache, otherwise returns null
+        */
         getFromCache: function (identifier) {
             var hash = this.getHash(identifier);
             if (hash) {
@@ -180,6 +228,7 @@ pc.extend(pc.resources, function () {
         },
 
         /**
+        * @function
         * @name pc.resources.ResourceLoader#resetProgress
         * @description Call this to reset the progress counter to 0
         */
@@ -310,7 +359,7 @@ pc.extend(pc.resources, function () {
      * 
      * load() which fetches the resource data from a remote location (a file, a remote server, etc)
      * open() which takes the response from load() and creates a new instance of a Resource
-     * postopen() which takes the opened resource and performs optional additional resource loading
+     * clone() which takes the opened resource and _may_ return a new copy of it, if necessary. Otherwise returns the original.
      */
     var ResourceHandler = function () {
     }; 
