@@ -1,6 +1,6 @@
 pc.extend(pc.resources, function () {
     /**
-    * @name pc.resources
+    * @name pc.resources.ResourceLoader
     * @constructor Create a new instance of a ResourceLoader
     * @class Use to make requests for remote resources.
     * The ResourceLoader is used to request a resource using an identifier (often the url of a remote file). 
