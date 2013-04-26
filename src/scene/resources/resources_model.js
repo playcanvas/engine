@@ -1,7 +1,7 @@
 pc.extend(pc.resources, function () {
 	/**
 	 * @name pc.resources.ModelResourceHandler
-	 * @description Resource Handler for creating pc.scene.Model resources
+	 * @class Resource Handler for creating pc.scene.Model resources
 	 */
 	var ModelResourceHandler = function (textureCache) {
         // optional textureCache for new texture cache
