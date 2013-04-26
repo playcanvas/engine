@@ -43,16 +43,16 @@ pc.extend(pc.fw, function () {
         onSetUrls: function(name, oldValue, newValue) {
             var urls = newValue;
 
-            var options = {
-                batch: this.entity.getRequestBatch()
-            };
-            
             if (!this.system._inTools || this.runInTools) {
                 // Load and register new scripts and instances
                 urls.forEach(function (url, index, arr) {
                     var url = urls[index].trim();
-                    this.system.context.loader.request(new pc.resources.ScriptRequest(url), function (resources) {
-                        var ScriptType = resources[url];
+                    var options = {
+                        parent: this.entity.getRequest()
+                    };
+                    var promise = this.system.context.loader.request(new pc.resources.ScriptRequest(url), options); 
+                    promise.then(function (resources) {
+                        var ScriptType = resources[0];
 
                         // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
                         if (ScriptType) {
@@ -61,17 +61,11 @@ pc.extend(pc.fw, function () {
                             
                             // If there is no request batch, then this is not part of a load request and so we need 
                             // to register the instances immediately to call the initialize function
-                            if (!options.batch) {
+                            if (!options.parent) {
                                 this.system.onInitialize(this.entity);
-                            }                        
+                            }
                         }
-                    }.bind(this), function (errors) {
-                        Object.keys(errors).forEach(function (key) {
-                            logERROR(errors[key]);
-                        });
-                    }, function (progress) {
-                        
-                    }, options);
+                    }.bind(this));
                 }, this);            
             }
         }

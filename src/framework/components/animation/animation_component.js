@@ -98,7 +98,7 @@ pc.extend(pc.fw, function () {
             }
             
             var options = {
-                batch: this.entity.getRequestBatch()
+                parent: this.entity.getRequest()
             };
 
             var assets = guids.map(function (guid) {
@@ -115,18 +115,13 @@ pc.extend(pc.fw, function () {
                 }
             });
 
-            this.system.context.loader.request(requests, function (animResources) {
+            this.system.context.loader.request(requests, options).then(function (animResources) {
                 var animations = {};
                 for (var i = 0; i < requests.length; i++) {
-                    animations[names[i]] = animResources[requests[i].identifier];
+                    animations[names[i]] = animResources[i];
                 }
                 this.animations = animations;
-            }.bind(this), function (errors) {
-                
-            }, function (progress) {
-                
-            }, options);
-        
+            }.bind(this));
         },
 
         onSetAnimations: function (name, oldValue, newValue) {

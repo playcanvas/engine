@@ -20,9 +20,6 @@ pc.extend(pc.fw, function () {
 
                 var index = CUBE_MAP_NAMES.indexOf(name);
                 var assets = this.entity.skybox.assets;
-                var options = {
-                    batch: this.entity.getRequestBatch()
-                };
                 
                 // clear existing skybox
                 this.data.model = null;
@@ -88,22 +85,16 @@ pc.extend(pc.fw, function () {
         texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
 
+        var options = {
+            parent: entity.getRequest()
+        };
         var requests = urls.map(function (url) {
             return new pc.resources.ImageRequest(url);
         });
-        var options = {
-            batch: entity.getRequestBatch()
-        };
-        context.loader.request(requests, function (resources) {
-            var images = urls.map(function (url) {
-                return resources[url];
-            });
-            texture.setSource(images);
-        }, function (errors) {
-            
-        }, function (progress) {
-            
-        }, options);
+        
+        context.loader.request(requests, options).then(function (resources) {
+            texture.setSource(resources);
+        });
 
         var library = pc.gfx.Device.getCurrent().getProgramLibrary();
         var program = library.getProgram('skybox');

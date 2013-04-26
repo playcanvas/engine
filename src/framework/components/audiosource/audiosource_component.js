@@ -149,7 +149,7 @@ pc.extend(pc.fw, function () {
          
         loadAudioSourceAssets: function (guids) {
             var options = {
-                batch: this.entity.getRequestBatch()
+                parent: this.entity.getRequest()
             };
             
             var assets = guids.map(function (guid) {
@@ -168,10 +168,10 @@ pc.extend(pc.fw, function () {
                 }
             });
 
-            this.system.context.loader.request(requests, function (audioResources) {
+            this.system.context.loader.request(requests, options).then(function (audioResources) {
                 var sources = {};
                 for (var i = 0; i < requests.length; i++) {
-                    sources[names[i]] = audioResources[requests[i].identifier];
+                    sources[names[i]] = audioResources[i];
                 }
                 // set the current source to the first entry (before calling set, so that it can play if needed)
                 if(names.length) {
@@ -179,14 +179,10 @@ pc.extend(pc.fw, function () {
                 }
                 this.data.sources = sources;
 
-                if (!options.batch && this.activate) {
+                if (!options.parent && this.activate) {
                     this.play(names[0]);
                 }
-            }.bind(this), function (errors) {
-                
-            }, function (progress) {
-                
-            }, options);
+            }.bind(this));
         }
     });
 

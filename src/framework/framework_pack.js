@@ -1,5 +1,14 @@
 pc.extend(pc.fw, function () {
+    var Pack = function (hierarchy) {
+        this.hierarchy = hierarchy;
+    };
+
+    Pack.prototype = {
+
+    };
+
     return {
+        Pack: Pack,
         /**
          * @function
          * @name pc.fw.loadPack
@@ -10,32 +19,32 @@ pc.extend(pc.fw, function () {
          * @param {Function} error Callback fired if there are problems, passed a list of error messages
          * @param {Function} progress Callback fired on each progress event, usually when a file or Entity is loaded, passed a percentage complete value
          */
-        loadPack: function (guid, context, success, error, progress) {
-            var request = new pc.resources.PackRequest(guid);
-            context.loader.request(request, function (resources) {
-                var pack = resources[guid];
+        // loadPack: function (guid, context, success, error, progress) {
+        //     var request = new pc.resources.PackRequest(guid);
+        //     context.loader.request(request, function (resources) {
+        //         var pack = resources[guid];
 
-                // add to hierarchy
-                context.root.addChild(pack.hierarchy);
+        //         // add to hierarchy
+        //         context.root.addChild(pack.hierarchy);
                 
-                // Initialise any systems with an initialize() method after pack is loaded
-                pc.fw.ComponentSystem.initialize(pack.hierarchy);
+        //         // Initialise any systems with an initialize() method after pack is loaded
+        //         pc.fw.ComponentSystem.initialize(pack.hierarchy);
                 
-                // callback
-                if (success) {
-                    success(pack);    
-                }
-            }.bind(this), function (errors) {
-                // error
-                if (error) {
-                    error(errors);    
-                }
-            }.bind(this), function (value) {
-                // progress
-                if (progress) {
-                    progress(value); 
-                }
-            }.bind(this));            
-        }
+        //         // callback
+        //         if (success) {
+        //             success(pack);    
+        //         }
+        //     }.bind(this), function (errors) {
+        //         // error
+        //         if (error) {
+        //             error(errors);    
+        //         }
+        //     }.bind(this), function (value) {
+        //         // progress
+        //         if (progress) {
+        //             progress(value); 
+        //         }
+        //     }.bind(this));            
+        // }
     };
 }());

@@ -23,53 +23,53 @@ pc.extend(pc.resources, function () {
     /**
      * @name pc.resources.ScriptResourceHandler#load
      * @description Load a new javascript resource
-     * @param {String} identifier The url of the script file to download
-     * @param {Function} success The success callback
-     * @param {Function} error The error callback
-     * @param {Function} progress The progress callback
+     * @param {ScriptResourceRequest} request The request for the script
      * @param {Object} [options] Optional parameters 
      * @param {Number} [options.timeout] A timeout value in milliseconds before the error callback is fired if the script loading has failed, defaults to 10000
      */
-    ScriptResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
+    ScriptResourceHandler.prototype.load = function (request, options) {
         options = options || {};
         options.timeout = options.timeout || 60000; // default 10 second timeout
-        
-        var url = new pc.URI(identifier);
-        url.path = pc.path.join(this._prefix, url.path);
-        url = url.toString();
-        
-        if(this._loaded[url]) {
-            if (this._loaded[url] !== true) {
-                success(this._loaded[url]);
+
+        var promise = new RSVP.Promise(function (resolve, reject) {
+            var url = new pc.URI(request.canonical);
+            url.path = pc.path.join(this._prefix, url.path);
+            url = url.toString();
+            
+            if(this._loaded[url]) {
+                if (this._loaded[url] !== true) {
+                    resolve(this._loaded[url]);
+                } else {
+                    // regular js script
+                    resolve(null);
+                }
             } else {
-                // regular js script
-                success(null);
+                if (this._loading) {
+                    this._queue.push({
+                        url: url.toString(),
+                        success: resolve,
+                        error: reject
+                    });
+                } else {
+                    this._addScriptTag(url.toString(), resolve, reject);
+                }
             }
-        } else {
-            if (this._loading) {
-                this._queue.push({
-                    url: url.toString(),
-                    success: success,
-                    error: error,
-                    progress: progress
-                });
-            } else {
-                this._addScriptTag(url.toString(), success, error, progress);
+            
+            if(options.timeout) {
+                (function () {
+                    setTimeout(function () {
+                        if (!this._loaded[url]) {
+                            reject(pc.string.format("Loading script {0} timed out after {1}s", url, options.timeout / 1000));
+                        }
+                    }.bind(this), options.timeout);
+                }).call(this);
             }
-        }
-        
-        if(options.timeout) {
-            (function () {
-                setTimeout(function () {
-                    if (!this._loaded[url]) {
-                        error(pc.string.format("Loading script {0} timed out after {1}s", url, options.timeout / 1000));
-                    }
-                }.bind(this), options.timeout);
-            }).call(this);
-        }
+        }.bind(this));
+
+        return promise;
     };
     
-    ScriptResourceHandler.prototype.open = function (data, options) {
+    ScriptResourceHandler.prototype.open = function (data, request, options) {
         return data;
     };
     
@@ -93,7 +93,7 @@ pc.extend(pc.resources, function () {
      * @description Add a new script tag to the document.head and set it's src to load a new script.
      * Handle success and errors and load the next in the queue 
      */
-    ScriptResourceHandler.prototype._addScriptTag = function (url, success, error, progress) {
+    ScriptResourceHandler.prototype._addScriptTag = function (url, success, error) {
         var self = this;
         var head = document.getElementsByTagName("head")[0];
         var element = document.createElement("script");
@@ -126,7 +126,7 @@ pc.extend(pc.resources, function () {
                 // Load next one in the queue
                 if (self._queue.length) {
                    var loadable = self._queue.shift();
-                   self._addScriptTag(loadable.url, loadable.success, loadable.error, loadable.progress);
+                   self._addScriptTag(loadable.url, loadable.success, loadable.error);
                 }                    
             }
         };

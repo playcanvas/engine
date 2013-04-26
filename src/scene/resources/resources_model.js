@@ -64,20 +64,27 @@ pc.extend(pc.resources, function () {
 	 * @param {Object} [options]
 	 * @param {Number} [options.priority] The priority to load the model textures at.
 	 */
-    ModelResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
-        var url = identifier;
-        options = options || {};
-        options.directory = pc.path.getDirectory(url);
+    ModelResourceHandler.prototype.load = function (request, options) {
 
-        var uri = new pc.URI(url);
-        var ext = pc.path.getExtension(uri.path);
-        options.binary = (ext === '.model');
+        var promise = new RSVP.Promise(function (resolve, reject) {
+            var url = request.canonical;
+            options = options || {};
+            options.directory = pc.path.getDirectory(url);
 
-        pc.net.http.get(url, function (response) {
-            success(response, options);
-        }.bind(this), {
-            cache: false
+            var uri = new pc.URI(url);
+            var ext = pc.path.getExtension(uri.path);
+            
+            pc.net.http.get(url, function (response) {
+                resolve(response);
+            }.bind(this), {
+                cache: false,
+                error: function (status, xhr, e) {
+                    reject(pc.string("Error loading model: {0} [{1}]", url, status));
+                }
+            });
         });
+
+        return promise;
     };
 	
 	/**
@@ -88,15 +95,14 @@ pc.extend(pc.resources, function () {
 	 * @param {Object} [options]
 	 * @param {Number} [options.priority] The priority to load the textures at
 	 * @param {String} [options.directory] The directory to load textures from
-     * @param {String} [options.identifier] The identifier used to load the resource, this is used to store the opened resource in the loader cache 
 	 */
-    ModelResourceHandler.prototype.open = function (data, options) {
+    ModelResourceHandler.prototype.open = function (data, request, options) {
         options = options || {};
         options.directory = options.directory || "";
-        options.priority = options.priority || 1; // default priority of 1
-        options.batch = options.batch || null;
+        options.parent = request; // the model request is used as the parent for any texture requests
 
-        if (options.binary) {
+        var binary = pc.path.getExtension(request.canonical) === '.model';
+        if (binary) {
             model = this._loadModelBin(data, options);
         } else {
             model = this._loadModelJson(data, options);
@@ -215,8 +221,7 @@ pc.extend(pc.resources, function () {
      * @param texturesData
      * @param options
      * @param options.directory The directory to load the texture from
-     * @param options.priority The priority to load the textures with
-     * @param [options.batch] An existing request batch handle to add the texture request to 
+     * @param [options.parent] An existing request to add the texture request to 
      */
     ModelResourceHandler.prototype._loadTexture = function (model, modelData, textureData, options) {
         var url = options.directory + "/" + textureData.uri;
@@ -244,16 +249,11 @@ pc.extend(pc.resources, function () {
                 this._textureCache.addTexture(url, texture);
             }
             
-            // Make a new request for the Image resource at the same priority as the Model was requested.
-            this._loader.request([new pc.resources.ImageRequest(url)], options.priority, function (resources) {
-                texture.setSource(resources[url]);
-            }, function (errors, resources) {
-                Object.keys(errors).forEach(function (key) {
-                   logERROR(errors[key]);    
-                });
-            }, function (progress) {
-                // no progress features
-            }, options);
+            // Make a new request for the Image resource
+            var promise = this._loader.request(new pc.resources.ImageRequest(url), options);
+            promise.then(function (resources) {
+                texture.setSource(resources[0]);
+            });
         }
 
         return texture;
@@ -1027,16 +1027,11 @@ pc.extend(pc.resources, function () {
                     this.textureCache.addTexture(url, texture);
                 }
 
-                // Make a new request for the Image resource at the same priority as the Model was requested.
-                this.loader.request([new pc.resources.ImageRequest(url)], this.options.priority, function (resources) {
-                    texture.setSource(resources[url]);  
-                }, function (errors, resources) {
-                    Object.keys(errors).forEach(function (key) {
-                       logERROR(errors[key]);    
-                    });
-                }, function (progress) {
-                    // no progress features
-                }, this.options);                
+                // Make a request for the Image resource
+                var promise = this.loader.request(new pc.resources.ImageRequest(url), this.options);
+                promise.then(function (resources) {
+                    texture.setSource(resources[0]);
+                });
             }
 
             return texture;

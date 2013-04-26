@@ -3,24 +3,29 @@ pc.extend(pc.resources, function () {
 	};
 	ImageResourceHandler = pc.inherits(ImageResourceHandler, pc.resources.ResourceHandler);
 	
-    ImageResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
+    ImageResourceHandler.prototype.load = function (request, options) {
         var self = this;
+        
+        var promise = new RSVP.Promise(function (resolve, reject) {
+            var image = new Image();
+            // Call success callback after opening Image
+            image.onload = function () {
+                resolve(image);
+            };
 
-        var image = new Image();
-        // Call success callback after opening Image
-        image.onload = function () {
-            success(image);
-        };
+            // Call error callback with details.
+            image.onerror = function (event) {
+                var element = event.srcElement;
+                reject(pc.string.format("Error loading Image from: '{0}'", element.src));
+            };
+            image.src = request.canonical;
 
-        // Call error callback with details.
-        image.onerror = function (event) {
-            var element = event.srcElement;
-            error(pc.string.format("Error loading Image from: '{0}'", element.src));
-        };
-        image.src = identifier;
+        });
+
+        return promise;
     };
 
-    ImageResourceHandler.prototype.open = function (data, options) {
+    ImageResourceHandler.prototype.open = function (data, request, options) {
         return data;
     };
 	
