@@ -145,7 +145,7 @@ pc.extend(pc.resources, function () {
                     check(resources, requested, promises);
                 }, function (error) {
                     reject(error);
-                });⁄
+                });
                 
             });
 
