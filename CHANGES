@@ -1,6 +1,10 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+--------
+v0.104.1
+--------
+* Documentation fixes for ResourceLoader
 
 --------
 v0.104.0
