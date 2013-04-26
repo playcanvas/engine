@@ -2,7 +2,7 @@ pc.extend(pc.resources, function () {
     /**
     * @name pc.resources.ResourceLoader
     * @constructor Create a new instance of a ResourceLoader
-    * @class Use to make requests for remote resources.
+    * @class Used to make requests for remote resources.
     * The ResourceLoader is used to request a resource using an identifier (often the url of a remote file). 
     * Registered {@link pc.resources.ResourceHandler} perform the specific loading and opening functionality and will return
     * a new instance of a resource. The ResourceLoader contains a built in cache, that uses file hashes to ensure that 
@@ -42,6 +42,7 @@ pc.extend(pc.resources, function () {
         * @name pc.resources.ResourceLoader#createFileRequest
         * @description Return a new {@link pc.resources.ResourceRequest} from the types that have been registered.
         * @param {Object} file A file entry like that from a {@link pc.fw.Asset}
+        * @returns {pc.resources.ResourceRequest} A new ResourceRequest instance
         * @example
         * var request = loader.createRequest({
         *    url: 'assets/12/12341234-1234-1234-123412341234/image.jpg',
@@ -78,7 +79,18 @@ pc.extend(pc.resources, function () {
         * using the ResourceHandlers for the specific type of request. Resources are cached once they have been requested, and subsequent requests will return the
         * the cached value.
         * The request() call returns a Promise object which is used to access the resources once they have all been loaded.
-        * @param {pc.resources.ResourceRequest|pc.resources.ResourceRequest[]} requests A single or 
+        * @param {pc.resources.ResourceRequest|pc.resources.ResourceRequest[]} requests A single or list of {@link pc.resources.ResourceRequest}s which will be requested in this batch.
+        * @returns {RSVP.Promise} A Promise object which is used to retrieve the resources once they have completed
+        * @example
+        * var requests = [
+        *   new pc.resources.ImageRequest("http://example.com/image_one.png"),
+        *   new pc.resources.ImageRequest("http://example.com/image_two.png")
+        * ];
+        * var promise = loader.request(requests);
+        * promise.then(function(resources) {
+        *   var img1 = resources[0];
+        *   var img2 = resources[2];
+        * });
         */
         request: function (requests, options) {
             options = options || {};
@@ -213,7 +225,7 @@ pc.extend(pc.resources, function () {
 
         /**
         * @function
-        * @name pc.resources.getFromCache(identifier)
+        * @name pc.resources.ResourceLoader#getFromCache
         * @description Try and get a resource from the cache.
         * @param {String} identifier The identifier of the resource
         * @returns {Object|null} The resource if it exists in the cache, otherwise returns null
