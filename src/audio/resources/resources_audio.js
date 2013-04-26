@@ -4,13 +4,21 @@ pc.extend(pc.resources, function () {
     };
     AudioResourceHandler = pc.inherits(AudioResourceHandler, pc.resources.ResourceHandler);
         
-    AudioResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
-        var sound = this.manager.createSound(identifier, function (sound) {
-            success(sound);
-        }, error, progress);
+    AudioResourceHandler.prototype.load = function (request, options) {
+        var self = this;
+
+        var promise = new RSVP.Promise(function (resolve, reject) {
+            var sound = self.manager.createSound(request.canonical, function (sound) {
+                resolve(sound);
+            }, function (error) {
+                reject(error);
+            });
+        });
+        
+        return promise;
     };
     
-    AudioResourceHandler.prototype.open = function (data, options) {
+    AudioResourceHandler.prototype.open = function (data, request, options) {
         return data;
     };
 

@@ -20,7 +20,7 @@ pc.extend(pc.fw, function () {
 
         loadModelAsset: function(guid) {
             var options = {
-                batch: this.entity.getRequestBatch()
+                parent: this.entity.getRequest()
             };
 
             var asset = this.system.context.assets.getAsset(guid);
@@ -30,8 +30,8 @@ pc.extend(pc.fw, function () {
             }
 
             var url = asset.getFileUrl();
-            this.system.context.loader.request(new pc.resources.ModelRequest(url), function (resources) {
-                var model = resources[url];
+            this.system.context.loader.request(new pc.resources.ModelRequest(url), options).then(function (resources) {
+                var model = resources[0];
 
                 this.model = model;
 
@@ -40,13 +40,7 @@ pc.extend(pc.fw, function () {
                 if (this.entity.rigidbody) {
                     this.entity.rigidbody.createBody();
                 }
-            }.bind(this), function (errors, resources) {
-                Object.keys(errors).forEach(function (key) {
-                    logERROR(errors[key]);
-                });
-            }, function (progress) {
-
-            }, options);
+            }.bind(this));
         },
 
         onSetAsset: function (name, oldValue, newValue) {

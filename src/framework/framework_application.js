@@ -103,12 +103,10 @@ pc.extend(pc.fw, function () {
             var requests = options.libraries.map(function (url) {
                 return new pc.resources.ScriptRequest(url);
             });
-            loader.request(requests, function (resources) {
+            loader.request(requests).then( function (resources) {
                 this.fire('librariesloaded', this);
                 this.librariesLoaded = true;
-            }.bind(this), function (errors) {
-
-            });
+            }.bind(this));
         } else {
             this.fire('librariesloaded', this);
             this.librariesLoaded = true;
@@ -173,21 +171,27 @@ pc.extend(pc.fw, function () {
                 // load pack 
                 guid = toc.packs[0];
                 
-                var request = new pc.resources.PackRequest(guid);
-                this.context.loader.request(request, function (resources) {
-                    var pack = resources[guid];
+                this.context.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
+                    var pack = resources[0];
                     this.context.root.addChild(pack.hierarchy);
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
-                    success(resources[guid]);
-                }.bind(this), error, progress);
+                    success(pack);
+                    this.context.loader.off('progress', progress);
+                }.bind(this), function (msg) {
+                    error(msg);
+                });
             }.bind(this);
 
             var load = function () {
                 if (requests.length) {
+                    // Start recording progress events now
+                    this.context.loader.on('progress', progress);
                     // Request all asset files
-                    this.context.loader.request(requests, function (resources) {
+                    this.context.loader.request(requests).then(function (resources) {
                         onLoaded(resources);
-                    }.bind(this), error, progress);                
+                    }, function (msg) {
+                        error(msg);
+                    });
                 } else {
                     // No assets to load
                     setTimeout(function () {
@@ -205,43 +209,43 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        loadPack: function (guid, success, error, progress) {
-            var load = function() {
-                var request = new pc.resources.PackRequest(guid);
-                this.context.loader.request(request, function (resources) {
-                    var pack = resources[guid];
+        // loadPack: function (guid, success, error, progress) {
+        //     var load = function() {
+        //         var request = new pc.resources.PackRequest(guid);
+        //         this.context.loader.request(request, function (resources) {
+        //             var pack = resources[guid];
 
-                    // add to hierarchy
-                    this.context.root.addChild(pack.hierarchy);
+        //             // add to hierarchy
+        //             this.context.root.addChild(pack.hierarchy);
                     
-                    // Initialise any systems with an initialize() method after pack is loaded
-                    pc.fw.ComponentSystem.initialize(pack.hierarchy);
+        //             // Initialise any systems with an initialize() method after pack is loaded
+        //             pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     
-                    // callback
-                    if (success) {
-                        success(pack);
-                    }
-                }.bind(this), function (errors) {
-                    // error
-                    if (error) {
-                        error(errors);
-                    }
-                }.bind(this), function (value) {
-                    // progress
-                    if (progress) {
-                        progress(value);
-                    }
-                }.bind(this));
-            }.bind(this);
+        //             // callback
+        //             if (success) {
+        //                 success(pack);
+        //             }
+        //         }.bind(this), function (errors) {
+        //             // error
+        //             if (error) {
+        //                 error(errors);
+        //             }
+        //         }.bind(this), function (value) {
+        //             // progress
+        //             if (progress) {
+        //                 progress(value);
+        //             }
+        //         }.bind(this));
+        //     }.bind(this);
 
-            if (!this.librariesLoaded) {
-                this.on('librariesloaded', function () {
-                    load();
-                });
-            } else {
-                load();
-            }
-        },
+        //     if (!this.librariesLoaded) {
+        //         this.on('librariesloaded', function () {
+        //             load();
+        //         });
+        //     } else {
+        //         load();
+        //     }
+        // },
 
         /**
          * @function
@@ -596,29 +600,29 @@ pc.extend(pc.fw, function () {
                             this.context.root.addChild(entity);
                         }
                     }
-                    if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
-                        var i, len = msg.content.models.length;
+                    // if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
+                    //     var i, len = msg.content.models.length;
 
-                        for (i = 0; i < len; i++) {
-                            var model = msg.content.models[i];
-                            entity = this.context.loader.open(pc.resources.EntityRequest, model);
-                            entities[entity.getGuid()] = entity;
-                        }
+                    //     for (i = 0; i < len; i++) {
+                    //         var model = msg.content.models[i];
+                    //         entity = this.context.loader.open(pc.resources.EntityRequest, model);
+                    //         entities[entity.getGuid()] = entity;
+                    //     }
                         
-                        for (guid in entities) {
-                            if (entities.hasOwnProperty(guid)) {
-                                pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
-                                if (!entities[guid].__parent) {
-                                    // If entity has no parent add to the root
-                                    this.context.root.addChild(entities[guid]);
-                                } else if (!entities[entities[guid].__parent]) {
-                                    // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
-                                    parent = this.context.root.findByGuid(entities[guid].__parent);
-                                    parent.addChild(entities[guid]);
-                                }
-                            }
-                        }
-                    }
+                    //     for (guid in entities) {
+                    //         if (entities.hasOwnProperty(guid)) {
+                    //             pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
+                    //             if (!entities[guid].__parent) {
+                    //                 // If entity has no parent add to the root
+                    //                 this.context.root.addChild(entities[guid]);
+                    //             } else if (!entities[entities[guid].__parent]) {
+                    //                 // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
+                    //                 parent = this.context.root.findByGuid(entities[guid].__parent);
+                    //                 parent.addChild(entities[guid]);
+                    //             }
+                    //         }
+                    //     }
+                    // }
                 break;
             }
         },

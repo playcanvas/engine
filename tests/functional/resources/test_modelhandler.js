@@ -1,66 +1,51 @@
 module("pc.resources.ModelResourceHandler", {
-	setup: function (){
-		_http = pc.net.http;
-	}, 
-	
+	setup: function () {
+		var canvas = document.createElement('canvas');
+
+		// Create the graphics device
+        var device = new pc.gfx.Device(canvas);
+
+        // Activate the graphics device
+        pc.gfx.Device.setCurrent(device);
+	},
+
 	teardown: function () {
-		pc.net.http = _http;
-		
-		delete _http;
+
 	}
 });
 
-test("create", function () {
-	var manager = {};
-	var mrh = new pc.resources.ModelResourceHandler(manager);
-	
-	ok(mrh);
-	equal(mrh._manager, manager);
+
+test("Load model", 1, function () {
+    var loader = new pc.resources.ResourceLoader();
+
+    loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler());
+
+    var promise = loader.request(new pc.resources.ModelRequest("/engine/tests/functional/resources/resources/cube.json"));
+    promise.then(function (resources) {
+        ok(resources[0] instanceof pc.scene.Model);
+        start();
+    }, function (error) {
+        ok(false, error);
+        start();
+    });
+
+    stop();
 });
 
+test("Load textured model", 1, function () {
+    var loader = new pc.resources.ResourceLoader();
 
-asyncTest("load: success", 3, function () {
-	jack(function () {
-		var resourceUrl = "http://abc.com/resource/file.json";
-		var loader = {};
-		var mrh = new pc.resources.ModelResourceHandler(loader);		
-	
-		pc.net = {};
-		pc.net.http = jack.create('pc.net.http', ['get']);
-		jack.expect('pc.net.http.get')
-			.exactly('1 time')
-			.mock(function (url, success) {
-				equal(url, resourceUrl)
-				success({mock: true});
-			})
-		
-		mrh.open = function (data) {
-			equal(data.mock, true)
-			return {model:true};
-		}
-	
-		mrh.load(resourceUrl, function (resource, options) {
-			equal(resource.mock, true);
-			equal(options.directory, "http://abc.com/resource");
-            start();
-		});
-		
-	});
-});
+    loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler());
+    loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
 
-asyncTest("open", 1, function () {
-	jack(function () {
-		var resourceUrl = "http://abc.com/directory/resource";
-		var directory = "http://abc.com/directory";
-		var data = {data:"abc"};
-		
-		var handler = new pc.resources.ModelResourceHandler({});
-		handler._loadModel = function () {return {model: true}};
-		
-		var model = handler.open(data, function (model) {
-            equal(model.model, true);       
-	        start();	    
-		}, null, null, {directory:directory});
+    var promise = loader.request(new pc.resources.ModelRequest("/engine/tests/functional/resources/resources/cube_textured.json"));
+    promise.then(function (resources) {
+        ok(resources[0] instanceof pc.scene.Model);
+        start();
+    }, function (error) {
+        ok(false, error);
+        start();
+    });
 
-	});	
+    stop();
 });

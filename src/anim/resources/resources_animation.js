@@ -3,20 +3,29 @@ pc.extend(pc.resources, function () {
 
     AnimationResourceHandler = pc.inherits(AnimationResourceHandler, pc.resources.ResourceHandler);
 
-    AnimationResourceHandler.prototype.load = function (identifier, success, error, progress, options) {
-        var url = identifier;
-        var dir = pc.path.getDirectory(url);
+    AnimationResourceHandler.prototype.load = function (request, options) {
+        var promise = new RSVP.Promise(function (resolve, reject) {
+            var url = request.canonical;
+            var dir = pc.path.getDirectory(url);
 
-        pc.net.http.get(url, function (response) {
-            try {
-                success(response);
-            } catch (e) {
-                error(pc.string.format("An error occured while loading animation from: '{0}'", url));
-            }
-        }.bind(this), {cache:false});
+            pc.net.http.get(url, function (response) {
+                try {
+                    resolve(response);
+                } catch (e) {
+                    reject(pc.string.format("An error occured while loading animation from: '{0}'", url));
+                }
+            }.bind(this), {
+                cache: false,
+                error: function (errors) {
+                    reject(errors);
+                }
+            });
+        });
+
+        return promise;
     };
 
-    AnimationResourceHandler.prototype.open = function (data, options) {
+    AnimationResourceHandler.prototype.open = function (data, request, options) {
         return this._loadAnimation(data);
     };
 
