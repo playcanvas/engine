@@ -93,9 +93,6 @@ pc.extend(pc.fw, function () {
         });
         
         context.loader.request(requests, options).then(function (resources) {
-            // var images = urls.map(function (url) {
-            //     return resources[url];
-            // });
             texture.setSource(resources);
         });
 

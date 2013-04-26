@@ -320,31 +320,6 @@ pc.extend(pc.resources, function () {
             this._loader = loader;
         },
 
-        // getFromCache: function (identifier) {
-        //     var hash = this._loader.getHash(identifier);
-        //     var resource = null;
-
-        //     if (hash) {
-        //         resource = this._loader.getFromCache(hash);
-        //         if (resource) {
-        //             console.log('Found in cache: ' + identifier);
-        //         }
-        //     }
-
-        //     return resource;
-        // },
-
-        // addToCache: function (identifier, resource) {
-        //     var hash = this._loader.getHash(identifier);
-        //     if (hash) {
-        //         logDEBUG('Added to cache: ' + identifier);
-        //         this._loader.addToCache(hash, resource);
-        //     } else {
-        //         logWARNING(pc.string.format("Could not add resource {0} to cache, no hash stored", identifier));
-        //     }
-            
-        // },
-
         /**
          * @function
          * @name pc.resources.ResourceHandler#load
