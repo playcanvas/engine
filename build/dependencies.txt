@@ -192,3 +192,4 @@
 ../src/framework/entity/entity_entity.js
 ../src/framework/asset/asset_asset.js
 ../src/framework/asset/asset_assetcache.js
+../contrib/rsvp.min.js

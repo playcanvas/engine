@@ -1,10 +1,10 @@
 pc.resources = {};
 pc.extend(pc.resources, function () {
-    if (typeof(window.RSVP) === 'undefined') {
-        throw Error('Missing RSVP library');
-    }
-
     var ResourceLoader = function () {
+        if (typeof(window.RSVP) === 'undefined') {
+            logERROR('Missing RSVP library');
+        }
+
         this._types = {}; // Registered resource types
         this._handlers = {}; // Registered resource handlers indexed by type
         this._requests = {}; // Currently active requests
@@ -15,6 +15,8 @@ pc.extend(pc.resources, function () {
         // Counters for progress
         this._requested = 0;
         this._loaded = 0;
+
+        this._sequence = 0; // counter for tracking requests uniquely
 
         pc.extend(this, pc.events);
     };
@@ -61,6 +63,7 @@ pc.extend(pc.resources, function () {
         * using the ResourceHandlers for the specific type of request. Resources are cached once they have been requested, and subsequent requests will return the
         * the cached value.
         * The request() call returns a Promise object which is used to access the resources once they have all been loaded.
+        * @param {pc.resources.ResourceRequest|pc.resources.ResourceRequest[]} requests A single or 
         */
         request: function (requests, options) {
             options = options || {};
@@ -86,7 +89,6 @@ pc.extend(pc.resources, function () {
                     self._makeCanonical(request);
 
                     promises.push(self._request(request, options));
-
                     requested.push(request);
 
                     // If there is a parent request, add all child requests on parent
@@ -187,11 +189,21 @@ pc.extend(pc.resources, function () {
         },
 
         // Make a request for a single resource and open it
-        _request: function (request, options) {
+        _request: function (request, _options) {
             var self = this;
             var promise = null;
+            var options = {}; // Make a copy of the options per request
+            for (key in _options) {
+                options[key] = _options[key];
+            }
+
+            if (request.id === null) {
+                request.id = this._sequence++;    
+            }
+            this.fire("request", request);
 
             if (request.promise) {
+                // If the request has already been made, then wait for the result to come in
                 promise = new RSVP.Promise(function (resolve, reject) {
                     request.promise.then(function (resource) {
                         var resource = self._postOpen(resource, request);
@@ -199,6 +211,8 @@ pc.extend(pc.resources, function () {
                     });
                 });
             } else {
+
+                // Check cache, load and open the requested data
                 request.promise = new RSVP.Promise(function (resolve, reject) {
                     var handler = self._handlers[request.type];
                     if (!handler) {
@@ -239,6 +253,11 @@ pc.extend(pc.resources, function () {
             return this._handlers[request.type].open(data, request, options);
         },
 
+        // After loading and opening clean up and fire events
+        // Note, this method is called in three places, 
+        // - with a newly opened resource
+        // - with a resource retrieved from the cache
+        // - with a resource that was requested twice concurrently, this is called again for the second request.
         _postOpen: function (resource, request) {
             this.addToCache(request.canonical, resource);
     
@@ -273,6 +292,7 @@ pc.extend(pc.resources, function () {
      * @param {String} identifier Used by the request handler to locate and access the resource. Usually this will be the URL or GUID of the resource.
      */
     var ResourceRequest = function ResourceRequest(identifier, result) {
+        this.id = null;               // Sequence ID, given to the request when it is made
         this.identifier = identifier; // The identifier for this resource
         this.canonical = identifier;  // The canonical identifier using the file hash (if available) to match identical resources
         this.alternatives = [];       // Alternative identifiers to the canonical
@@ -353,6 +373,14 @@ pc.extend(pc.resources, function () {
             throw Error("Not implemented");
         },
 
+        /**
+        * @function
+        * @name pc.resources.ResourceHandler#clone
+        * @description If necessary return a clone of the resource. This is called after open(), if it is not possible to share a single instance
+        * of a resource from the cache, then clone should return a new copy, otherwise the default is to return the original.
+        * @param {Object} resource The resource that has just been requested
+        * @returns {Object} Either the resource that was passed in, or a new clone of that resource
+        */
         clone: function (resource) {
             return resource;
         }

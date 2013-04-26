@@ -20,9 +20,6 @@ pc.extend(pc.fw, function () {
 
                 var index = CUBE_MAP_NAMES.indexOf(name);
                 var assets = this.entity.skybox.assets;
-                var options = {
-                    batch: this.entity.getRequestBatch()
-                };
                 
                 // clear existing skybox
                 this.data.model = null;

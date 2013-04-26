@@ -73,10 +73,9 @@ pc.extend(pc.resources, function () {
 
             var uri = new pc.URI(url);
             var ext = pc.path.getExtension(uri.path);
-            options.binary = (ext === '.model');
-
+            
             pc.net.http.get(url, function (response) {
-                resolve(response, options);
+                resolve(response);
             }.bind(this), {
                 cache: false,
                 error: function (status, xhr, e) {
@@ -102,7 +101,8 @@ pc.extend(pc.resources, function () {
         options.directory = options.directory || "";
         options.parent = request; // the model request is used as the parent for any texture requests
 
-        if (options.binary) {
+        var binary = pc.path.getExtension(request.canonical) === '.model';
+        if (binary) {
             model = this._loadModelBin(data, options);
         } else {
             model = this._loadModelJson(data, options);

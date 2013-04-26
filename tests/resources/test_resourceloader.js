@@ -154,7 +154,10 @@ pc.extend(ChildResourceHandler.prototype, {
             depth++;
             var childRequest; 
             if (!this.errorRequest) {
-                childRequest = new ChildRequest("delay_" + identifier.substr(0, identifier.length-1) + depth)    
+                childRequest = [
+                    new ChildRequest("delay_" + identifier.substr(0, identifier.length-1) + depth),
+                    new ChildRequest("delay_" + identifier.substr(0, identifier.length-1) + depth)
+                ];
             } else {
                 childRequest = new ErrorRequest("error_" + identifier.substr(0, identifier.length-1) + depth)
             }
@@ -202,7 +205,7 @@ test("new ResourceLoader", function () {
     ok(loader);	
 });
 
-test("ResourceLoader: registerHandler", function () {
+test("registerHandler", function () {
 	var loader = new pc.resources.ResourceLoader();
 	
 	var handler = new TestResourceHandler();
@@ -214,7 +217,7 @@ test("ResourceLoader: registerHandler", function () {
 });
 
 
-test("ResourceLoader: missing handler", function () {
+test("missing handler", function () {
     var loader = new pc.resources.ResourceLoader();
     
     var handler = new TestResourceHandler();
@@ -229,7 +232,7 @@ test("ResourceLoader: missing handler", function () {
     stop();
 });
 
-test("ResourceLoader: request single resource", function () {
+test("request single resource", function () {
 	var loader = new pc.resources.ResourceLoader();
 	var handler = new TestResourceHandler();
 	loader.registerHandler(TestRequest, handler);
@@ -250,7 +253,7 @@ test("ResourceLoader: request single resource", function () {
     stop();
 });
 
-test("ResourceLoader: request multiple resources", function () {
+test("request multiple resources", function () {
 	var loader = new pc.resources.ResourceLoader();
 	var handler = new TestResourceHandler();
 	loader.registerHandler(TestRequest, handler);
@@ -275,7 +278,7 @@ test("ResourceLoader: request multiple resources", function () {
 });
 
 
-test("ResourceLoader: request multiple resources, correct order", function () {
+test("request multiple resources, correct order", function () {
     var loader = new pc.resources.ResourceLoader();
     var handler = new TestResourceHandler();
     loader.registerHandler(TestRequest, handler);
@@ -300,7 +303,7 @@ test("ResourceLoader: request multiple resources, correct order", function () {
 });
 
 
-test("ResourceLoader: two requests, same content, both callbacks called", 3, function () {
+test("two requests, same content, both callbacks called", 3, function () {
     var loader = new pc.resources.ResourceLoader();
     var handler = new TestResourceHandler();
     loader.registerHandler(TestRequest, handler);
@@ -327,7 +330,7 @@ test("ResourceLoader: two requests, same content, both callbacks called", 3, fun
 });
 
 
-test("ResourceLoader: Multiple requests for same content", 2, function () {
+test("Multiple requests for same content", 2, function () {
     var loader = new pc.resources.ResourceLoader();
     var handler = new TestResourceHandler();
     loader.registerHandler(TestRequest, handler);
@@ -346,7 +349,7 @@ test("ResourceLoader: Multiple requests for same content", 2, function () {
     stop();
 });
 
-test("ResourceLoader: request called twice with different resources", function () {
+test("request called twice with different resources", function () {
 	var loader = new pc.resources.ResourceLoader();
 	var handler = new TestResourceHandler();
 	loader.registerHandler(TestRequest, handler);
@@ -386,7 +389,7 @@ test("ResourceLoader: request called twice with different resources", function (
     stop();
 });
 
-test("ResourceLoader: request called twice with same resources", function () {
+test("request called twice with same resources", function () {
 	var expectedMaxConcurrentRequests = 2;
 	
 	var loader = new pc.resources.ResourceLoader({
@@ -432,7 +435,7 @@ test("ResourceLoader: request called twice with same resources", function () {
     stop();	
 });
 
-test("ResourceLoader: second request returned from cache", function () {
+test("second request returned from cache", function () {
     var loader = new pc.resources.ResourceLoader();
 
     var handler = new TestResourceHandler();
@@ -456,7 +459,7 @@ test("ResourceLoader: second request returned from cache", function () {
     stop();
 });
 
-test("ChildRequest: request a hierarchical resource", 11, function () {
+test("request a hierarchical resource", 11, function () {
     var loader = new pc.resources.ResourceLoader();
     var handler = new ChildResourceHandler(1);
     loader.registerHandler(ChildRequest, handler);
@@ -498,7 +501,7 @@ test("ChildRequest: request a hierarchical resource", 11, function () {
 });
 
 
-test("ChildRequest: request a deep hierarchical resource", 7, function () {
+test("request a deep hierarchical resource", 7, function () {
     var expectedMaxConcurrentRequests = 8;
     
     var loader = new pc.resources.ResourceLoader();
@@ -532,7 +535,7 @@ test("ChildRequest: request a deep hierarchical resource", 7, function () {
     stop();
 });
 
-test("ChildRequest: hierarchical request made in open()", function () {
+test("hierarchical request made in open()", function () {
     var loader = new pc.resources.ResourceLoader();
     var handler = new ChildResourceHandler(3, true);
     loader.registerHandler(ChildRequest, handler);
@@ -565,7 +568,7 @@ test("ChildRequest: hierarchical request made in open()", function () {
 });
 
 
-test("ChildRequest: hierarchical request with child error", 2, function () {
+test("hierarchical request with child error", 2, function () {
     var loader = new pc.resources.ResourceLoader();
 
     loader.registerHandler(ChildRequest, new ChildResourceHandler(3, false, true));
@@ -589,7 +592,7 @@ test("ChildRequest: hierarchical request with child error", 2, function () {
     setTimeout(start, 1000);
 })
 
-test("ResourceLoader: Progress event", 4, function () {
+test("Progress event", 4, function () {
     var loader = new pc.resources.ResourceLoader();
     
     var handler = new TestResourceHandler();
@@ -622,7 +625,7 @@ test("ResourceLoader: Progress event", 4, function () {
 });
 
 
-test("ResourceLoader: Progress event with multiple batches", 4, function () {
+test("Progress event with multiple batches", 4, function () {
     var loader = new pc.resources.ResourceLoader();
     
     var handler = new TestResourceHandler();
@@ -660,7 +663,7 @@ test("ResourceLoader: Progress event with multiple batches", 4, function () {
 });
 
 
-test("ResourceLoader: resetProgress()", 4, function () {
+test("resetProgress()", 4, function () {
     var loader = new pc.resources.ResourceLoader();
     
     var handler = new TestResourceHandler();
@@ -700,7 +703,7 @@ test("ResourceLoader: resetProgress()", 4, function () {
     stop();
 });
 
-test("ResourceLoader: Error while loading", 2, function () {
+test("Error while loading", 2, function () {
     var loader = new pc.resources.ResourceLoader();
     
     var handler = new ErrorResourceHandler();
@@ -729,7 +732,7 @@ test("ResourceLoader: Error while loading", 2, function () {
     setTimeout(start, 1000);
 });
 
-test("ResourceLoader: FillInRequest ", function () {
+test("FillInRequest ", function () {
     var loader = new pc.resources.ResourceLoader();
 
     loader.registerHandler(FillInRequest, new FillInResourceHandler())
@@ -749,7 +752,7 @@ test("ResourceLoader: FillInRequest ", function () {
     stop();
 })
 
-test("ResourceLoader: ClonedRequest returns clone", function () {
+test("ClonedRequest returns clone", function () {
     var loader = new pc.resources.ResourceLoader();
     loader.registerHandler(ClonedRequest, new ClonedResourceHandler());
     loader.registerHash('123', "http://abc.com/directory/resource/1");
@@ -786,7 +789,7 @@ test("ResourceLoader: ClonedRequest returns clone", function () {
     setTimeout(start, 3000);
 });
 
-test("ResourceLoader: ClonedRequest simultaneous requests", function () {
+test("ClonedRequest simultaneous requests", function () {
     var loader = new pc.resources.ResourceLoader();
     loader.registerHandler(ClonedRequest, new ClonedResourceHandler());
     loader.registerHash('123', "http://abc.com/directory/resource/1");
@@ -800,4 +803,93 @@ test("ResourceLoader: ClonedRequest simultaneous requests", function () {
     })
 
     stop();
-})
+});
+
+test("request, load, progress events", function () {
+    var loader = new pc.resources.ResourceLoader();
+    loader.registerHandler(TestRequest, new TestResourceHandler());
+
+    loader.on('request', function (request) {
+        equal(request.id, 0);
+        equal(request.identifier, 'http://abc.com/directory/resource/1');
+    });
+    loader.on('progress', function (value) {
+        equal(value, 1);
+    });
+    loader.on('load', function (request, resource) {
+        equal(request.id, 0);
+        equal(request.identifier, 'http://abc.com/directory/resource/1');
+        equal(resource, 'http://abc.com/directory/resource/1-opened');
+        start();
+    });
+
+    loader.request([
+        new TestRequest('http://abc.com/directory/resource/1')
+    ]);
+
+    stop();
+});
+
+test("request, load, progress events, simultaneous requests", function () {
+    var loader = new pc.resources.ResourceLoader();
+    loader.registerHandler(TestRequest, new TestResourceHandler());
+
+    var request = 0;
+    var progress = 0;
+    var load = 0;
+
+    loader.on('request', function (r) {
+        request++;
+    });
+    loader.on('progress', function (value) {
+        progress++;
+    });
+    loader.on('load', function (request, resource) {
+        equal(request.identifier, 'http://abc.com/directory/resource/1');
+        equal(resource, 'http://abc.com/directory/resource/1-opened');
+    });
+
+    loader.request([
+        new TestRequest('http://abc.com/directory/resource/1'),
+        new TestRequest('http://abc.com/directory/resource/1')
+    ]);
+
+    stop();
+    setTimeout(function () {
+        equal(request, 2);
+        equal(progress, 2);
+        start();
+    }, 1000);
+});
+
+
+test("request, load, progress events, Child requests", function () {
+    var loader = new pc.resources.ResourceLoader();
+    loader.registerHandler(ChildRequest, new ChildResourceHandler(1));
+
+    var request = 0;
+    var progress = 0;
+    var load = 0;
+
+    loader.on('request', function (r) {
+        request++;
+    });
+    loader.on('progress', function (value) {
+        progress++;
+    });
+    loader.on('load', function (request, resource) {
+        load++;
+    });
+
+    loader.request([
+        new ChildRequest('1_0')
+    ]);
+
+    stop();
+    setTimeout(function () {
+        equal(request, 2);
+        equal(progress, 2);
+        equal(load, 2);
+        start();
+    }, 1000);
+});

@@ -21,9 +21,6 @@ pc.extend(pc.fw, function () {
 
                 var index = CUBE_MAP_NAMES.indexOf(name);
                 var assets = this.assets;
-                var options = {
-                    batch: this.entity.getRequestBatch()
-                };
                 
                 // clear existing cubemap
                 this.cubemap = null;
