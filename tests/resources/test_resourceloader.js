@@ -154,10 +154,7 @@ pc.extend(ChildResourceHandler.prototype, {
             depth++;
             var childRequest; 
             if (!this.errorRequest) {
-                childRequest = [
-                    new ChildRequest("delay_" + identifier.substr(0, identifier.length-1) + depth),
-                    new ChildRequest("delay_" + identifier.substr(0, identifier.length-1) + depth)
-                ];
+                childRequest = new ChildRequest("delay_" + identifier.substr(0, identifier.length-1) + depth);
             } else {
                 childRequest = new ErrorRequest("error_" + identifier.substr(0, identifier.length-1) + depth)
             }
