@@ -99,11 +99,9 @@ pc.extend(pc.fw, function () {
                     var useQuantizedAabbCompression = true;
                     var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
 
-/*
                     var wtm = meshInstance.node.getWorldTransform();
                     var scl = pc.math.mat4.getScale(wtm);
                     triMeshShape.setLocalScaling(new Ammo.btVector3(scl[0], scl[1], scl[2]));
-*/
 
                     var position = meshInstance.node.getPosition();
                     var rotation = meshInstance.node.getRotation();
