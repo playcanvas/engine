@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.104.0
+--------
+* New pc.resources.ResourceLoader which returns a RSVP.Promise instead of using callbacks
+
+--------
 v0.103.0
 --------
 * Added collisioncapsule component
