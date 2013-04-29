@@ -179,6 +179,12 @@ pc.extend(pc.fw, function () {
                     this.context.loader.off('progress', progress);
                 }.bind(this), function (msg) {
                     error(msg);
+                }).then(null, function (error) {
+                    // Re-throw any exceptions from the script's initialize method to stop them being swallowed by the Promises lib
+                    setTimeout(function () {
+                        throw error;    
+                    }, 0);
+                    
                 });
             }.bind(this);
 
