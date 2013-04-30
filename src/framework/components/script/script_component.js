@@ -65,7 +65,12 @@ pc.extend(pc.fw, function () {
                                 this.system.onInitialize(this.entity);
                             }
                         }
-                    }.bind(this));
+                    }.bind(this)).then(null, function (error) {
+                        // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
+                        setTimeout(function () {
+                            throw error;
+                        })
+                    });
                 }, this);            
             }
         }
