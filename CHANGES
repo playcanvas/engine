@@ -1,6 +1,12 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+
+--------
+v0.104.2
+--------
+* Added support for scaled collision meshes.
+
 --------
 v0.104.1
 --------
