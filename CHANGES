@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.104.3
+--------
+* [FIX] Exceptions that are thrown in script constructors or initialize() are no longer swallowed
+
+--------
 v0.104.2
 --------
 * Added support for scaled collision meshes.
