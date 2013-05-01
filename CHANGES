@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.104.4
+--------
+* [FIX] Rigid body system now steps the simulation independent of frame rate.
+
+--------
 v0.104.3
 --------
 * [FIX] Exceptions that are thrown in script constructors or initialize() are no longer swallowed
