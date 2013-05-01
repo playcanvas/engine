@@ -459,6 +459,7 @@ pc.extend(pc.gfx, function () {
             logASSERT(this.canvas !== null, "Device has not been started");
 
             this.boundBuffer = null;
+            this.attributesInvalidated = true;
 
             // Set the render target
             this.renderTarget.bind();
