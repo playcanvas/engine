@@ -262,7 +262,7 @@ pc.extend(pc.fw, function () {
 
         onUpdate: function (dt) {
             // Update the transforms of all bodies
-            this.dynamicsWorld.stepSimulation(dt);//, this.maxSubSteps, this.fixedTimeStep);
+            this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
 
             // Update the transforms of all entities referencing a body
             var components = this.store;
