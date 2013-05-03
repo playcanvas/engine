@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.104.5
+--------
+* Store the DOM touch event in pc.input.TouchEvent to allow calling of prevent Default in handler.
+
+--------
 v0.104.4
 --------
 * [FIX] Rigid body system now steps the simulation independent of frame rate.
