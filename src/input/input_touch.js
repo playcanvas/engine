@@ -11,22 +11,21 @@ pc.extend(pc.input, function () {
     * @property {pc.input.Touch[]} changedTouches A list of touches that have changed since the last event
     */
     var TouchEvent = function (device, event) {
-        var self = this;
-    
-        self.element = event.target;
+        this.element = event.target;
+        this.event = event;
 
-        self.touches = [];
-        self.changedTouches = [];
+        this.touches = [];
+        this.changedTouches = [];
         
         if (event) {
             var i, l = event.touches.length;
             for (i = 0; i < l; i++) {
-                self.touches.push(new Touch(event.touches[i]));
+                this.touches.push(new Touch(event.touches[i]));
             }
             
             l = event.changedTouches.length;
             for (i = 0; i < l; i++) {
-                self.changedTouches.push(new Touch(event.changedTouches[i]));
+                this.changedTouches.push(new Touch(event.changedTouches[i]));
             }            
         }
     };
