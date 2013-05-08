@@ -105,7 +105,11 @@ pc.extend(pc.resources, function () {
         if (binary) {
             model = this._loadModelBin(data, options);
         } else {
-            model = this._loadModelJson(data, options);
+            if (data.model.version <= 1) {
+                model = this._loadModelJson(data, options);
+            } else {
+                model = this._loadModelJsonV2(data, options);
+            }
         }
 
         return model;
@@ -641,6 +645,133 @@ pc.extend(pc.resources, function () {
             meshInstances[i].syncAabb();
         }
 
+        return model;
+    };
+
+
+    /**
+    * @function
+    * @name pc.resources.ModelResourceHandler#_loadModelJson
+    * @description Load a pc.scene.Model from data in the PlayCanvas JSON format
+    * @param {Object} json The data
+    */
+    ModelResourceHandler.prototype._loadModelJsonV2 = function (data, options) {
+        var modelData = data.model;
+        var i;
+
+        var nodes = [];
+        for (i = 0; i < modelData.nodes.length; i++) {
+            var nodeData = modelData.nodes[i];
+
+            var node = new pc.scene.GraphNode();
+            node.setName(nodeData.name);
+            node.setLocalPosition(nodeData.position);
+            node.setLocalEulerAngles(nodeData.rotation);
+            node.setLocalScale(nodeData.scale);
+
+            nodes.push(node);
+        }
+
+        for (i = 1; i < modelData.parents.length; i++) {
+            nodes[modelData.parents[i]].addChild(nodes[i]);
+        }
+
+        var vertexBuffers = [];
+        for (i = 0; i < modelData.vertices.length; i++) {
+            var vertexData = modelData.vertices[i];
+            var attribute, attributeName;
+
+            // Generate the vertex format for the geometry's vertex buffer
+            var vertexFormat = new pc.gfx.VertexFormat();
+            vertexFormat.begin();
+            for (attributeName in vertexData) {
+                attribute = vertexData[attributeName];
+
+                // Create the vertex format for this buffer
+                var attributeType = this._jsonToVertexElementType[attribute.type];
+                vertexFormat.addElement(new pc.gfx.VertexElement("vertex_" + attributeName, attribute.components, attributeType));
+            }
+            vertexFormat.end();
+
+            // Create the vertex buffer
+            var numVertices = vertexData.position.data.length / vertexData.position.components;
+            var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
+
+            var iterator = new pc.gfx.VertexIterator(vertexBuffer);
+            for (i = 0; i < numVertices; i++) {
+                for (attributeName in vertexData) {
+                    attribute = vertexData[attributeName];
+                    attributeName = "vertex_" + attributeName;
+
+                    switch (attribute.components) {
+                        case 1:
+                            iterator.element[attributeName].set(attribute.data[i]);
+                            break;
+                        case 2:
+                            iterator.element[attributeName].set(attribute.data[i * 2], attribute.data[i * 2 + 1]);
+                            break;
+                        case 3:
+                            iterator.element[attributeName].set(attribute.data[i * 3], attribute.data[i * 3 + 1], attribute.data[i * 3 + 2]);
+                            break;
+                        case 4:
+                            iterator.element[attributeName].set(attribute.data[i * 4], attribute.data[i * 4 + 1], attribute.data[i * 4 + 2], attribute.data[i * 4 + 3]);
+                            break;
+                    }
+                }
+                iterator.next();
+            }
+            iterator.end();
+
+            vertexBuffers.push(vertexBuffer);
+        }
+
+        var meshes = [];
+        for (i = 0; i < modelData.meshes.length; i++) {
+            var meshData = modelData.meshes[i];
+            var indexBuffer;
+
+            var min = meshData.aabb.min;
+            var max = meshData.aabb.max;
+            var aabb = new pc.shape.Aabb(
+                pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+                pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+            );
+
+            var indexed = (typeof meshData.indices !== 'undefined');
+            if (indexed) {
+                // Create the index buffer
+                indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, meshData.indices.length);
+                var dst = new Uint16Array(indexBuffer.lock());
+                dst.set(meshData.indices);
+                indexBuffer.unlock();
+            }
+
+            var mesh = new pc.scene.Mesh();
+            mesh.vertexBuffer = vertexBuffers[meshData.vertices];
+            mesh.indexBuffer[0] = indexBuffer;
+            mesh.primitive[0].type = this._jsonToPrimitiveType[meshData.type];
+            mesh.primitive[0].base = meshData.base;
+            mesh.primitive[0].count = meshData.count;
+            mesh.primitive[0].indexed = indexed;
+            mesh.skin = null;
+            mesh.aabb = aabb;
+            
+            meshes.push(mesh);
+        }
+
+        var material = new pc.scene.PhongMaterial();
+
+        var meshInstances = [];
+        for (i = 0; i < modelData.meshInstances.length; i++) {
+            var meshInstanceData = modelData.meshInstances[i];
+
+            var meshInstance = new pc.scene.MeshInstance(nodes[meshInstanceData.node], meshes[meshInstanceData.mesh], material);
+            meshInstances.push(meshInstance);
+        }
+
+        var model = new pc.scene.Model();
+        model.graph = nodes[0];
+        model.meshInstances = meshInstances;
         return model;
     };
 
