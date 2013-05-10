@@ -699,6 +699,18 @@ pc.extend(pc.resources, function () {
             var vertexData = modelData.vertices[i];
             var attribute, attributeName;
 
+            // Check to see if we need to generate tangents
+            if (!vertexData.tangent && vertexData.position && vertexData.normal && vertexData.uv0) {
+                var indices = [];
+                for (j = 0; j < modelData.meshes.length; j++) {
+                    if (modelData.meshes[j].vertices === i) {
+                        indices = indices.concat(modelData.meshes[j].indices);
+                    }
+                }
+                tangents = pc.scene.procedural.calculateTangents(vertexData.position.data, vertexData.normal.data, vertexData.uv0.data, indices);
+                vertexData.tangent = { type: "float32", components: 4, data: tangents };
+            }
+
             // Generate the vertex format for the geometry's vertex buffer
             var vertexFormat = new pc.gfx.VertexFormat();
             vertexFormat.begin();
