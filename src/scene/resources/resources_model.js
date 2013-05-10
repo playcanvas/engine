@@ -828,7 +828,7 @@ pc.extend(pc.resources, function () {
             texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
             texture.minFilter = this._jsonToFilterMode[textureData.minfilter];
 
-            assets.load([asset], [texture], {});
+            this._assets.load([asset], [texture], {});
             return texture;
         } else {
             return null;
