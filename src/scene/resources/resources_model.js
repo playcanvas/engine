@@ -699,23 +699,23 @@ pc.extend(pc.resources, function () {
             var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
 
             var iterator = new pc.gfx.VertexIterator(vertexBuffer);
-            for (i = 0; i < numVertices; i++) {
+            for (j = 0; j < numVertices; j++) {
                 for (attributeName in vertexData) {
                     attribute = vertexData[attributeName];
                     attributeName = "vertex_" + attributeName;
 
                     switch (attribute.components) {
                         case 1:
-                            iterator.element[attributeName].set(attribute.data[i]);
+                            iterator.element[attributeName].set(attribute.data[j]);
                             break;
                         case 2:
-                            iterator.element[attributeName].set(attribute.data[i * 2], attribute.data[i * 2 + 1]);
+                            iterator.element[attributeName].set(attribute.data[j * 2], attribute.data[j * 2 + 1]);
                             break;
                         case 3:
-                            iterator.element[attributeName].set(attribute.data[i * 3], attribute.data[i * 3 + 1], attribute.data[i * 3 + 2]);
+                            iterator.element[attributeName].set(attribute.data[j * 3], attribute.data[j * 3 + 1], attribute.data[j * 3 + 2]);
                             break;
                         case 4:
-                            iterator.element[attributeName].set(attribute.data[i * 4], attribute.data[i * 4 + 1], attribute.data[i * 4 + 2], attribute.data[i * 4 + 3]);
+                            iterator.element[attributeName].set(attribute.data[j * 4], attribute.data[j * 4 + 1], attribute.data[j * 4 + 2], attribute.data[j * 4 + 3]);
                             break;
                     }
                 }
@@ -773,6 +773,14 @@ pc.extend(pc.resources, function () {
         var model = new pc.scene.Model();
         model.graph = nodes[0];
         model.meshInstances = meshInstances;
+
+        model.getGraph().syncHierarchy();
+
+        var meshInstances = model.meshInstances;
+        for (i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].syncAabb();
+        }
+
         return model;
     };
 
