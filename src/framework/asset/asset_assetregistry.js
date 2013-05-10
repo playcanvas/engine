@@ -93,7 +93,12 @@ pc.extend(pc.fw, function () {
             }, this);
 
             // request all assets
-            return this.loader.request(requests, options);
+            return this.loader.request(requests, options).then(null, function (error) {
+                // Ensure exceptions while loading are thrown and not swallowed by promises
+                setTimeout(function () {
+                    throw error;
+                }, 0)
+            });
         },
 
         _createAssetRequest: function (asset, result) {

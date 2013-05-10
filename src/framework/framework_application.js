@@ -58,24 +58,26 @@ pc.extend(pc.fw, function () {
         
 		// Create resource loader
 		var loader = new pc.resources.ResourceLoader();
+            
+        // Display shows debug loading information. Only really fit for debug display at the moment.
+        if (options.displayLoader) {
+            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
+        }
+        
+        // The ApplicationContext is passed to new Components and user scripts
+        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options);
         
         // Enable new texture bank feature to cache textures
         var textureCache = new pc.resources.TextureCache(loader);
         
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler());
-        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(textureCache));
+        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
-        // Display shows debug loading information. Only really fit for debug display at the moment.
-        if (options.displayLoader) {
-            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
-        }
-
-		// The ApplicationContext is passed to new Components and user scripts
-        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options);
+        
     
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
