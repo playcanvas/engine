@@ -790,11 +790,19 @@ pc.extend(pc.resources, function () {
         var asset = assets.getAsset(textureId);
 
         var url = asset.getFileUrl();
+        var textureData = asset.data;
         if (url) {
             var texture = new pc.gfx.Texture({
                 format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
             });
-            assets.loadTexture(asset, texture);
+
+            texture.name = textureData.name;
+            texture.addressU = this._jsonToAddressMode[textureData.addressu];
+            texture.addressV = this._jsonToAddressMode[textureData.addressv];
+            texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
+            texture.minFilter = this._jsonToFilterMode[textureData.minfilter];
+
+            assets.load([asset], [texture], {});
             return texture;
         } else {
             return null;

@@ -36,6 +36,12 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        all: function () {
+            return Object.keys(this._cache).map(function (resourceId) {
+                return this.getAsset(resourceId);
+            }, this);
+        },
+
         addAsset: function (resourceId, asset) {
             this._cache[resourceId] = asset;
             this._names[asset.name] = resourceId;
@@ -54,28 +60,61 @@ pc.extend(pc.fw, function () {
             }            
         },
 
-        load: function (asset, options) {
-            switch(asset.type) {
-                case 'model':
-                    return this.loadModel(asset, options);
-                case 'texture':
-                    return this.loadTexture(asset, options);
+        load: function (assets, results, options) {
+            if (!assets.length) {
+                assets = [assets];
             }
+            
+            if (typeof(options) === 'undefined') {
+                // shift arguments
+                options = results;
+                results = [];
+            }
+
+            var requests = []
+
+            assets.forEach(function (asset, index) {
+                switch(asset.type) {
+                    case pc.fw.ASSET_TYPE_MODEL:
+                        requests.push(this._createModelRequest(asset));
+                        break;
+                    case pc.fw.ASSET_TYPE_TEXTURE:
+                        requests.push(this._createTextureRequest(asset, results[index]));
+                        break;
+                    default: {
+                        var request = this._createAssetRequest(asset);
+                        if (request) {
+                            requests.push(request);
+                        }
+                        break;
+                    }
+                }
+
+            }, this);
+
+            // request all assets
+            return this.loader.request(requests, options);
         },
 
-        loadModel: function (asset, options) {
+        _createAssetRequest: function (asset, result) {
+            var url = asset.getFileUrl();
+            if (url) {
+                return this.loader.createFileRequest(url, asset.type);
+            } else {
+                return null;
+            }
+            
+        },
+
+        _createModelRequest: function (asset) {
             var url = asset.getFileUrl();
             var mapping = asset.data;
 
-            var request = new pc.resources.ModelRequest(url, asset.data);
-            return this.loader.request(request, options);
+            return new pc.resources.ModelRequest(url, asset.data);
         },
 
-        loadTexture: function (asset, texture, options) {
-            var url = asset.getFileUrl();
-
-            var request = new pc.resources.TextureRequest(url, null, texture);
-            return this.loader.request(request, options);
+        _createTextureRequest: function (asset, texture) {
+            return new pc.resources.TextureRequest(asset.getFileUrl(), null, texture);
         }
     };
 
