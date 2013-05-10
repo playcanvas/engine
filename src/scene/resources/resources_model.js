@@ -657,6 +657,24 @@ pc.extend(pc.resources, function () {
     * @param {Object} mapping The mapping data for materials and textures
     */
     ModelResourceHandler.prototype._loadModelJsonV2 = function (data, mapping, options) {
+        var attributeMap = {
+            "position": "vertex_position",
+            "normal": "vertex_normal",
+            "tangent": "vertex_tangent",
+            "binormal": "vertex_binormal",
+            "blendWeights": "vertex_skinWeights",
+            "blendIndices": "vertex_skinIndices",
+            "color": "vertex_color",
+            "uv0": "vertex_texCoord0",
+            "uv1": "vertex_texCoord1",
+            "uv2": "vertex_texCoord2",
+            "uv3": "vertex_texCoord3",
+            "uv4": "vertex_texCoord4",
+            "uv5": "vertex_texCoord5",
+            "uv6": "vertex_texCoord6",
+            "uv7": "vertex_texCoord7"
+        };
+
         var modelData = data.model;
         var i;
 
@@ -690,7 +708,7 @@ pc.extend(pc.resources, function () {
 
                 // Create the vertex format for this buffer
                 var attributeType = this._jsonToVertexElementType[attribute.type];
-                vertexFormat.addElement(new pc.gfx.VertexElement("vertex_" + attributeName, attribute.components, attributeType));
+                vertexFormat.addElement(new pc.gfx.VertexElement(attributeMap[attributeName], attribute.components, attributeType));
             }
             vertexFormat.end();
 
@@ -702,20 +720,19 @@ pc.extend(pc.resources, function () {
             for (j = 0; j < numVertices; j++) {
                 for (attributeName in vertexData) {
                     attribute = vertexData[attributeName];
-                    attributeName = "vertex_" + attributeName;
 
                     switch (attribute.components) {
                         case 1:
-                            iterator.element[attributeName].set(attribute.data[j]);
+                            iterator.element[attributeMap[attributeName]].set(attribute.data[j]);
                             break;
                         case 2:
-                            iterator.element[attributeName].set(attribute.data[j * 2], attribute.data[j * 2 + 1]);
+                            iterator.element[attributeMap[attributeName]].set(attribute.data[j * 2], attribute.data[j * 2 + 1]);
                             break;
                         case 3:
-                            iterator.element[attributeName].set(attribute.data[j * 3], attribute.data[j * 3 + 1], attribute.data[j * 3 + 2]);
+                            iterator.element[attributeMap[attributeName]].set(attribute.data[j * 3], attribute.data[j * 3 + 1], attribute.data[j * 3 + 2]);
                             break;
                         case 4:
-                            iterator.element[attributeName].set(attribute.data[j * 4], attribute.data[j * 4 + 1], attribute.data[j * 4 + 2], attribute.data[j * 4 + 3]);
+                            iterator.element[attributeMap[attributeName]].set(attribute.data[j * 4], attribute.data[j * 4 + 1], attribute.data[j * 4 + 2], attribute.data[j * 4 + 3]);
                             break;
                     }
                 }
