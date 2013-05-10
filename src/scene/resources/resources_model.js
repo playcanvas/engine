@@ -108,7 +108,7 @@ pc.extend(pc.resources, function () {
             if (data.model.version <= 1) {
                 model = this._loadModelJson(data, options);
             } else {
-                model = this._loadModelJsonV2(data, options);
+                model = this._loadModelJsonV2(data, request.data, options);
             }
         }
 
@@ -654,8 +654,9 @@ pc.extend(pc.resources, function () {
     * @name pc.resources.ModelResourceHandler#_loadModelJson
     * @description Load a pc.scene.Model from data in the PlayCanvas JSON format
     * @param {Object} json The data
+    * @param {Object} mapping The mapping data for materials and textures
     */
-    ModelResourceHandler.prototype._loadModelJsonV2 = function (data, options) {
+    ModelResourceHandler.prototype._loadModelJsonV2 = function (data, mapping, options) {
         var modelData = data.model;
         var i;
 
@@ -759,10 +760,10 @@ pc.extend(pc.resources, function () {
             meshes.push(mesh);
         }
 
-        var material = new pc.scene.PhongMaterial();
-
         var meshInstances = [];
         for (i = 0; i < modelData.meshInstances.length; i++) {
+            var material = this._loadMaterialV2(mapping[i].material);
+
             var meshInstanceData = modelData.meshInstances[i];
 
             var meshInstance = new pc.scene.MeshInstance(nodes[meshInstanceData.node], meshes[meshInstanceData.mesh], material);
@@ -773,6 +774,128 @@ pc.extend(pc.resources, function () {
         model.graph = nodes[0];
         model.meshInstances = meshInstances;
         return model;
+    };
+
+    ModelResourceHandler.prototype._loadTextureV2 = function(textureId) {
+        // TODO: get this from an internal value
+        var assets = app.context.assets;
+        var asset = assets.getAsset(textureId);
+
+        var url = asset.getFileUrl();
+        if (url) {
+            var texture = new pc.gfx.Texture({
+                format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
+            });
+            assets.loadTexture(asset, texture);
+            return texture;
+        } else {
+            return null;
+        }
+    };
+
+    ModelResourceHandler.prototype._loadMaterialV2 = function(materialId) {
+        // TODO: get this from an internal value
+        var assets = app.context.assets;
+        var asset = assets.getAsset(materialId);
+        var materialData = asset.data;
+
+        var material = new pc.scene.PhongMaterial();
+        material.name = materialData.name;
+
+        // Read each shader parameter
+        for (var i = 0; i < materialData.parameters.length; i++) {
+            var param = materialData.parameters[i];
+            switch (param.name) {
+                case 'ambient': 
+                    material.ambient = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'diffuse': 
+                    material.diffuse = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'diffuseMap': 
+                    material.diffuseMap = this._loadTextureV2(param.data);
+                    break;
+                case 'diffuseMapTransform': 
+                    material.diffuseMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'specular': 
+                    material.specular = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'specularMap': 
+                    material.specularMap = this._loadTextureV2(param.data);
+                    break;
+                case 'specularMapTransform': 
+                    material.specularMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'specularFactorMap':
+                    break;
+                case 'specularFactorMapTransform': 
+                    material.specularFactorMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'shininess':
+                    material.shininess = param.data;
+                    break;
+                case 'glossMap': 
+                    material.glossMap = this._loadTextureV2(param.data);
+                    break;
+                case 'glossMapTransform':
+                    material.glossMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'emissive':
+                    material.emissive = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'emissiveMap': 
+                    material.emissiveMap = this._loadTextureV2(param.data);
+                    break;
+                case 'emissiveMapTransform': 
+                    material.emissiveMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'opacity':
+                    material.opacity = param.data;
+                    if (material.opacity < 1) {
+                        material.blendType = pc.scene.BLEND_NORMAL;
+                    }
+                    break;
+                case 'opacityMap': 
+                    material.opacityMap = this._loadTextureV2(param.data);
+                    material.blendType = pc.scene.BLEND_NORMAL;
+                    break;
+                case 'opacityMapTransform': 
+                    material.opacityMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'sphereMap': 
+                    material.reflectionMap = this._loadTextureV2(param.data);
+                    break;
+                case 'cubeMap': 
+                    material.reflectionMap = this._loadTextureV2(param.data);
+                    break;
+                case 'reflectionFactor':
+                    material.reflectivity = param.data;
+                    break;
+                case 'normalMap': 
+                    material.normalMap = this._loadTextureV2(param.data);
+                    break;
+                case 'normalMapTransform': 
+                    material.normalMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'heightMap': 
+                    material.heightMap = this._loadTextureV2(param.data);
+                    break;
+                case 'heightMapTransform': 
+                    material.heightMapTransform = pc.math[param.type].clone(param.data); 
+                    break;
+                case 'bumpMapFactor': 
+                    material.bumpMapFactor = param.data;
+                    break;
+                case 'lightMap': 
+                    material.lightMap = this._loadTextureV2(param.data);
+                    break;
+            }
+        }
+
+        material.update();
+    
+        return material;
     };
 
     ///////////////////

@@ -6,6 +6,10 @@ pc.extend(pc.fw, function () {
     };
     
     Asset.prototype.getFileUrl = function () {
+        if (!this.file) {
+            return null;
+        }
+
         var url = this.file.url;
         var prefix = "";
         // Non-exported files use the Corazon API to load, so they need an added prefix

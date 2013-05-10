@@ -50,8 +50,7 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            var url = asset.getFileUrl();
-            this.system.context.loader.request(new pc.resources.ModelRequest(url), options).then(function (resources) {
+            this.system.context.assets.loadModel(asset, options).then(function (resources) {
                 var model = resources[0];
 
                 if (this.system.context.designer) {
@@ -60,6 +59,17 @@ pc.extend(pc.fw, function () {
 
                 this.model = model;
             }.bind(this));
+
+            // var url = asset.getFileUrl();
+            // this.system.context.loader.request(new pc.resources.ModelRequest(url), options).then(function (resources) {
+            //     var model = resources[0];
+
+            //     if (this.system.context.designer) {
+            //         model.generateWireframe();
+            //     }
+
+            //     this.model = model;
+            // }.bind(this));
         },
 
         onSetAsset: function (name, oldValue, newValue) {

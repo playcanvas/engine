@@ -112,7 +112,12 @@ pc.extend(pc.resources, function () {
                 for (i = 0, n = requests.length; i < n; i++) {
                     // Use an existing request if there is one already in progress
                     var request = self._requests[requests[i].canonical] || requests[i];
-                    
+
+                    // If the new request has a result object... this is going to get messy
+                    if (request !== requests[i]) {
+                        request.result = requests[i].result;
+                    }
+
                     self._makeCanonical(request);
 
                     promises.push(self._request(request, options));
@@ -351,17 +356,18 @@ pc.extend(pc.resources, function () {
      * @class A request for a single resource, located by a unique identifier.
      * @constructor Create a new request for a resoiurce
      * @param {String} identifier Used by the request handler to locate and access the resource. Usually this will be the URL or GUID of the resource.
+     * @param {Object} [data] Additional data that the resource handler might need when creating the resource after loading
+     * @param {Object} [result] If a result object is supplied, this will be used instead of creating a new instance of the resource (only for supporting resource types)
      */
-    var ResourceRequest = function ResourceRequest(identifier, result) {
+    var ResourceRequest = function ResourceRequest(identifier, data, result) {
         this.id = null;               // Sequence ID, given to the request when it is made
         this.identifier = identifier; // The identifier for this resource
         this.canonical = identifier;  // The canonical identifier using the file hash (if available) to match identical resources
         this.alternatives = [];       // Alternative identifiers to the canonical
         this.promise = null;          // The promise that will be honored when this request completes
         this.children = [];           // Any child requests which were made while this request was being processed
-        if (result !== undefined) {
-            this.result = result;     // The result object can be supplied and used by a handler, instead of creating a new resource
-        }
+        this.data = data;             // Additional data that the resource handler might need once it has loaded
+        this.result = result;         // The result object can be supplied and used by a handler, instead of creating a new resource
     };
 
     /**

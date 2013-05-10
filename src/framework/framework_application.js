@@ -63,6 +63,7 @@ pc.extend(pc.fw, function () {
         var textureCache = new pc.resources.TextureCache(loader);
         
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
+        loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler());
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(textureCache));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
@@ -160,11 +161,20 @@ pc.extend(pc.fw, function () {
 
             for (var guid in toc.assets) {
                 var asset = this.context.assets.getAsset(guid);
-                // Create a request for all files
-                requests.push(this.context.loader.createFileRequest(asset.getFileUrl(), asset.file.type));
-                asset.subfiles.forEach(function (file, index) {
-                    requests.push(this.context.loader.createFileRequest(asset.getSubAssetFileUrl(index), file.type));
-                }.bind(this));
+                if (asset.type === 'model') {
+                    this.context.assets.loadModel(asset);
+                } else if (asset.type === 'texture') {
+                    this.context.assets.loadTexture(asset);
+                } else {
+                    // Create a request for all files
+                    var url = asset.getFileUrl();
+                    if (url) {
+                        requests.push(this.context.loader.createFileRequest(url, asset.file.type));
+                        asset.subfiles.forEach(function (file, index) {
+                            requests.push(this.context.loader.createFileRequest(asset.getSubAssetFileUrl(index), file.type));
+                        }.bind(this));
+                    }                    
+                }
             }
 
             var onLoaded = function (resources) {

@@ -31,6 +31,7 @@
 ../src/resources/resources_loader.js
 ../src/resources/resources_resourceloaderdisplay.js
 ../src/resources/resources_image.js
+../src/resources/resources_texture.js
 ../src/resources/resources_texturecache.js
 ../src/graphics/graphics_graphics.js
 ../src/graphics/graphics_scopeid.js
@@ -191,5 +192,5 @@
 ../src/framework/livelink/livelink_open_entity_message.js
 ../src/framework/entity/entity_entity.js
 ../src/framework/asset/asset_asset.js
-../src/framework/asset/asset_assetcache.js
+../src/framework/asset/asset_assetregistry.js
 ../contrib/rsvp-461e814fd8.min.js
