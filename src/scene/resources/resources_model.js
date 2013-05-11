@@ -657,22 +657,23 @@ pc.extend(pc.resources, function () {
     * @param {Object} mapping The mapping data for materials and textures
     */
     ModelResourceHandler.prototype._loadModelJsonV2 = function (data, mapping, options) {
+        // TODO: Support vertex semantics somehow...
         var attributeMap = {
             "position": "vertex_position",
             "normal": "vertex_normal",
             "tangent": "vertex_tangent",
             "binormal": "vertex_binormal",
-            "blendWeights": "vertex_skinWeights",
+            "blendWeight": "vertex_skinWeights",
             "blendIndices": "vertex_skinIndices",
             "color": "vertex_color",
-            "uv0": "vertex_texCoord0",
-            "uv1": "vertex_texCoord1",
-            "uv2": "vertex_texCoord2",
-            "uv3": "vertex_texCoord3",
-            "uv4": "vertex_texCoord4",
-            "uv5": "vertex_texCoord5",
-            "uv6": "vertex_texCoord6",
-            "uv7": "vertex_texCoord7"
+            "texCoord0": "vertex_texCoord0",
+            "texCoord1": "vertex_texCoord1",
+            "texCoord2": "vertex_texCoord2",
+            "texCoord3": "vertex_texCoord3",
+            "texCoord4": "vertex_texCoord4",
+            "texCoord5": "vertex_texCoord5",
+            "texCoord6": "vertex_texCoord6",
+            "texCoord7": "vertex_texCoord7"
         };
 
         var modelData = data.model;
@@ -701,14 +702,14 @@ pc.extend(pc.resources, function () {
             var attribute, attributeName;
 
             // Check to see if we need to generate tangents
-            if (!vertexData.tangent && vertexData.position && vertexData.normal && vertexData.uv0) {
+            if (vertexData.position && vertexData.normal && vertexData.texCoord0) {
                 var indices = [];
                 for (j = 0; j < modelData.meshes.length; j++) {
                     if (modelData.meshes[j].vertices === i) {
                         indices = indices.concat(modelData.meshes[j].indices);
                     }
                 }
-                tangents = pc.scene.procedural.calculateTangents(vertexData.position.data, vertexData.normal.data, vertexData.uv0.data, indices);
+                tangents = pc.scene.procedural.calculateTangents(vertexData.position.data, vertexData.normal.data, vertexData.texCoord0.data, indices);
                 vertexData.tangent = { type: "float32", components: 4, data: tangents };
             }
 
@@ -755,10 +756,27 @@ pc.extend(pc.resources, function () {
             vertexBuffers.push(vertexBuffer);
         }
 
+        // Count the number of vertices in the model
+        var numIndices = 0;
+        for (i = 0; i < modelData.meshes.length; i++) {
+            var meshData = modelData.meshes[i];
+            if (typeof meshData.indices !== 'undefined') {
+                numIndices += meshData.indices.length;
+            }
+        }
+
+        // Create an index buffer big enough to store all indices in the model
+        var indexBuffer = null;
+        var indexData = null;
+        var indexBase = 0;
+        if (numIndices > 0) {
+            indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, numIndices);
+            indexData = new Uint16Array(indexBuffer.lock());
+        }
+
         var meshes = [];
         for (i = 0; i < modelData.meshes.length; i++) {
             var meshData = modelData.meshes[i];
-            var indexBuffer;
 
             var min = meshData.aabb.min;
             var max = meshData.aabb.max;
@@ -768,30 +786,33 @@ pc.extend(pc.resources, function () {
             );
 
             var indexed = (typeof meshData.indices !== 'undefined');
-            if (indexed) {
-                // Create the index buffer
-                indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, meshData.indices.length);
-                var dst = new Uint16Array(indexBuffer.lock());
-                dst.set(meshData.indices);
-                indexBuffer.unlock();
-            }
-
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = vertexBuffers[meshData.vertices];
-            mesh.indexBuffer[0] = indexBuffer;
+            mesh.indexBuffer[0] = indexed ? indexBuffer : null;
             mesh.primitive[0].type = this._jsonToPrimitiveType[meshData.type];
-            mesh.primitive[0].base = meshData.base;
+            mesh.primitive[0].base = indexed ? (meshData.base + indexBase) : meshData.base;
             mesh.primitive[0].count = meshData.count;
             mesh.primitive[0].indexed = indexed;
             mesh.skin = null;
             mesh.aabb = aabb;
+
+            if (indexed) {
+                // Create the index buffer
+                indexData.set(meshData.indices, indexBase);
+                indexBase += meshData.indices.length;
+            }
             
             meshes.push(mesh);
         }
 
+        if (numIndices > 0) {
+            indexBuffer.unlock();
+        }
+
         var meshInstances = [];
+        var defaultMaterial = new pc.scene.PhongMaterial();
         for (i = 0; i < modelData.meshInstances.length; i++) {
-            var material = this._loadMaterialV2(mapping[i].material);
+            var material = mapping ? this._loadMaterialV2(mapping[i].material) : defaultMaterial;
 
             var meshInstanceData = modelData.meshInstances[i];
 
