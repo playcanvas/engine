@@ -30,6 +30,14 @@ pc.extend(pc.fw, function () {
     };
 
     return {
-        Asset: Asset
+        Asset: Asset,
+        ASSET_TYPE_ANIMATION: 'animation',
+        ASSET_TYPE_AUDIO: 'audio',
+        ASSET_TYPE_IMAGE: 'image',
+        ASSET_TYPE_JSON: 'json',
+        ASSET_TYPE_MODEL: 'model',
+        ASSET_TYPE_MATERIAL: 'material',
+        ASSET_TYPE_TEXT: 'text',
+        ASSET_TYPE_TEXTURE: 'texture'
     };
 }());

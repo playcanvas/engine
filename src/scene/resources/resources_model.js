@@ -3,9 +3,8 @@ pc.extend(pc.resources, function () {
 	 * @name pc.resources.ModelResourceHandler
 	 * @class Resource Handler for creating pc.scene.Model resources
 	 */
-	var ModelResourceHandler = function (textureCache) {
-        // optional textureCache for new texture cache
-        this._textureCache = textureCache;
+	var ModelResourceHandler = function (assetRegistry) {
+        this._assets = assetRegistry;
 
         this._jsonToPrimitiveType = {
             "points":         pc.gfx.PRIMITIVE_POINTS,
@@ -835,16 +834,22 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadTextureV2 = function(textureId) {
-        // TODO: get this from an internal value
-        var assets = app.context.assets;
-        var asset = assets.getAsset(textureId);
+        var asset = this._assets.getAsset(textureId);
 
         var url = asset.getFileUrl();
+        var textureData = asset.data;
         if (url) {
             var texture = new pc.gfx.Texture({
                 format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
             });
-            assets.loadTexture(asset, texture);
+
+            texture.name = textureData.name;
+            texture.addressU = this._jsonToAddressMode[textureData.addressu];
+            texture.addressV = this._jsonToAddressMode[textureData.addressv];
+            texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
+            texture.minFilter = this._jsonToFilterMode[textureData.minfilter];
+
+            this._assets.load([asset], [texture], {});
             return texture;
         } else {
             return null;
@@ -852,9 +857,7 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadMaterialV2 = function(materialId) {
-        // TODO: get this from an internal value
-        var assets = app.context.assets;
-        var asset = assets.getAsset(materialId);
+        var asset = this._assets.getAsset(materialId);
         var materialData = asset.data;
 
         var material = new pc.scene.PhongMaterial();

@@ -50,7 +50,7 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            this.system.context.assets.loadModel(asset, options).then(function (resources) {
+            this.system.context.assets.load(asset, [], options).then(function (resources) {
                 var model = resources[0];
 
                 if (this.system.context.designer) {

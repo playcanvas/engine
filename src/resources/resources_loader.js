@@ -113,9 +113,11 @@ pc.extend(pc.resources, function () {
                     // Use an existing request if there is one already in progress
                     var request = self._requests[requests[i].canonical] || requests[i];
 
-                    // If the new request has a result object... this is going to get messy
+                    // If we are using an existing request, we need to copy over result and data fields.
+                    // TODO: What happens if the existing request has a result/data field!
                     if (request !== requests[i]) {
                         request.result = requests[i].result;
+                        request.data = requests[i].data;
                     }
 
                     self._makeCanonical(request);

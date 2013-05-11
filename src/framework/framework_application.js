@@ -58,24 +58,26 @@ pc.extend(pc.fw, function () {
         
 		// Create resource loader
 		var loader = new pc.resources.ResourceLoader();
+            
+        // Display shows debug loading information. Only really fit for debug display at the moment.
+        if (options.displayLoader) {
+            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
+        }
+        
+        // The ApplicationContext is passed to new Components and user scripts
+        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options);
         
         // Enable new texture bank feature to cache textures
         var textureCache = new pc.resources.TextureCache(loader);
         
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler());
-        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(textureCache));
+        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
-        // Display shows debug loading information. Only really fit for debug display at the moment.
-        if (options.displayLoader) {
-            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
-        }
-
-		// The ApplicationContext is passed to new Components and user scripts
-        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options);
+        
     
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
@@ -156,26 +158,8 @@ pc.extend(pc.fw, function () {
             
             var requests = [];
 
-            // Populate the AssetCache and register hashes
-            this.context.assets.update(toc, this.context.loader);
-
-            for (var guid in toc.assets) {
-                var asset = this.context.assets.getAsset(guid);
-                if (asset.type === 'model') {
-                    this.context.assets.loadModel(asset);
-                } else if (asset.type === 'texture') {
-                    this.context.assets.loadTexture(asset);
-                } else {
-                    // Create a request for all files
-                    var url = asset.getFileUrl();
-                    if (url) {
-                        requests.push(this.context.loader.createFileRequest(url, asset.file.type));
-                        asset.subfiles.forEach(function (file, index) {
-                            requests.push(this.context.loader.createFileRequest(asset.getSubAssetFileUrl(index), file.type));
-                        }.bind(this));
-                    }                    
-                }
-            }
+            // Populate the AssetRegistry and register hashes
+            this.context.assets.update(toc);
 
             var onLoaded = function (resources) {
                 // load pack 
@@ -194,26 +178,23 @@ pc.extend(pc.fw, function () {
                     setTimeout(function () {
                         throw error;    
                     }, 0);
-                    
                 });
             }.bind(this);
 
             var load = function () {
-                if (requests.length) {
-                    // Start recording progress events now
-                    this.context.loader.on('progress', progress);
-                    // Request all asset files
-                    this.context.loader.request(requests).then(function (resources) {
+                // Get a list of all assets
+                var assets = this.context.assets.all();
+
+                if (assets.length) {
+                    this.context.assets.load(assets).then(function (resources) {
                         onLoaded(resources);
-                    }, function (msg) {
-                        error(msg);
                     });
                 } else {
-                    // No assets to load
+                    // no assets to load
                     setTimeout(function () {
-                        onLoaded([]);
+                        onLoaded([])
                     }, 0);
-                }                
+                }       
             }.bind(this);
 
             if (!this.librariesLoaded) {
