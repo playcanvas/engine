@@ -79,7 +79,7 @@ pc.extend(pc.gfx, function () {
         for (var i = 0; i < vertexFormat.elements.length; i++) {
             var vertexElement = vertexFormat.elements[i];
             this.setters[i] = new VertexIteratorSetter(this.buffer, vertexElement);
-            this.element[vertexElement.scopeId.name] = this.setters[i];
+            this.element[vertexElement.name] = this.setters[i];
         }
     };
 

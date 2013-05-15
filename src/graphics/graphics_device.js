@@ -208,7 +208,7 @@ pc.extend(pc.gfx, function () {
         }
 
         // Create the default render target
-        var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
+        var backBuffer = new pc.gfx.FrameBuffer(this);
         var viewport = { x: 0, y: 0, width: canvas.width, height: canvas.height };
         this.renderTarget = new pc.gfx.RenderTarget(backBuffer, viewport);
 
@@ -364,7 +364,7 @@ pc.extend(pc.gfx, function () {
             }
         };
 
-        this.programLib = new pc.gfx.ProgramLibrary();
+        this.programLib = new pc.gfx.ProgramLibrary(this);
         for (var generator in pc.gfx.programlib) {
             this.programLib.register(generator, pc.gfx.programlib[generator]);
         }
@@ -395,29 +395,6 @@ pc.extend(pc.gfx, function () {
         this.textureUnits = [];
 
         this.attributesInvalidated = true;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device.setCurrent
-     * @description Sets the current graphics device. After creating a new pc.gfx.Device,
-     * it must be set as the current device before it can be used.
-     * @param {pc.gfx.Device} device The graphics device to make current.
-     * @author Will Eastcott
-     */
-    Device.setCurrent = function (device) {
-        Device._current = device;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device.getCurrent
-     * @description Returns the current graphics device.
-     * @returns {pc.gfx.Device} The current graphics device.
-     * @author Will Eastcott
-     */
-    Device.getCurrent = function () {
-        return Device._current;
     };
 
     Device.prototype = {
@@ -699,6 +676,9 @@ pc.extend(pc.gfx, function () {
                 while (i < numElements) {
                     var vertexElement = elements[i++];
                     vertexElement.stream = stream;
+                    if (vertexElement.scopeId === null) {
+                        vertexElement.scopeId = this.scope.resolve(vertexElement.name);
+                    }
                     vertexElement.scopeId.setValue(vertexElement);
                 }
 

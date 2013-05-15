@@ -15,7 +15,9 @@ pc.extend(pc.gfx, function () {
      * @property {Number} format [Read only] The pixel format of the texture (see pc.gfx.PIXELFORMAT_*).
      * @author Will Eastcott
      */
-    var Texture = function (options) {
+    var Texture = function (device, options) {
+        this.device = device;
+
         // Defaults
         var width = 4;
         var height = 4;
@@ -36,10 +38,8 @@ pc.extend(pc.gfx, function () {
         this.autoMipmap = true;
 
         // PRIVATE
-        var device = pc.gfx.Device.getCurrent();
-        var gl = device.gl;
+        var gl = this.device.gl;
         var ext;
-        this._gl = gl;
         this._glTextureId = gl.createTexture();
         this._glTarget = cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
 
@@ -88,17 +88,17 @@ pc.extend(pc.gfx, function () {
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
             case pc.gfx.PIXELFORMAT_DXT1:
-                ext = device.extCompressedTextureS3TC;
+                ext = this.device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
                 break;
             case pc.gfx.PIXELFORMAT_DXT3:
-                ext = device.extCompressedTextureS3TC;
+                ext = this.device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
                 break;
             case pc.gfx.PIXELFORMAT_DXT5:
-                ext = device.extCompressedTextureS3TC;
+                ext = this.device.extCompressedTextureS3TC;
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
                 break;
@@ -136,7 +136,7 @@ pc.extend(pc.gfx, function () {
                 }
             }
             this.bind();
-            var gl = this._gl;
+            var gl = this.device.gl;
             var _filterLookup = [gl.NEAREST, gl.LINEAR, gl.NEAREST_MIPMAP_NEAREST, gl.NEAREST_MIPMAP_LINEAR, gl.LINEAR_MIPMAP_NEAREST, gl.LINEAR_MIPMAP_LINEAR];
             gl.texParameteri(this._glTarget, gl.TEXTURE_MIN_FILTER, _filterLookup[filter]);
             this._minFilter = filter;
@@ -150,7 +150,7 @@ pc.extend(pc.gfx, function () {
                 logWARNING("Invalid maginication filter mode. Must be set to FILTER_NEAREST or FILTER_LINEAR.");
             }
             this.bind();
-            var gl = this._gl;
+            var gl = this.device.gl;
             var _filterLookup = [gl.NEAREST, gl.LINEAR, gl.NEAREST_MIPMAP_NEAREST, gl.NEAREST_MIPMAP_LINEAR, gl.LINEAR_MIPMAP_NEAREST, gl.LINEAR_MIPMAP_LINEAR];
             gl.texParameteri(this._glTarget, gl.TEXTURE_MAG_FILTER, _filterLookup[magFilter]);
             this._magFilter = magFilter;
@@ -167,7 +167,7 @@ pc.extend(pc.gfx, function () {
                 }
             }
             this.bind();
-            var gl = this._gl;
+            var gl = this.device.gl;
             var _addressLookup = [gl.REPEAT, gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT];
             gl.texParameteri(this._glTarget, gl.TEXTURE_WRAP_S, _addressLookup[addressu]);
             this._addressu = addressu;
@@ -184,7 +184,7 @@ pc.extend(pc.gfx, function () {
                 }
             }
             this.bind();
-            var gl = this._gl;
+            var gl = this.device.gl;
             var _addressLookup = [gl.REPEAT, gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT];
             gl.texParameteri(this._glTarget, gl.TEXTURE_WRAP_T, _addressLookup[addressv]);
             this._addressv = addressv;
@@ -194,11 +194,11 @@ pc.extend(pc.gfx, function () {
     Object.defineProperty(Texture.prototype, 'maxAnisotropy', {
         get: function() { return this._maxAnisotropy; },
         set: function(maxAnisotropy) {
-            var device = pc.gfx.Device.getCurrent();
+            var device = this.device;
             var ext = device.extTextureFilterAnisotropic;
             if (ext) {
                 this.bind();
-                var gl = this._gl;
+            var gl = this.device.gl;
                 gl.texParameterf(this._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
                 this._maxAnisotropy = maxAnisotropy;
             }
@@ -226,7 +226,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         bind: function () {
-            var gl = this._gl;
+            var gl = this.device.gl;
             gl.bindTexture(this._glTarget, this._glTextureId);
         },
 
@@ -237,7 +237,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         destroy: function () {
-            var gl = this._gl;
+            var gl = this.device.gl;
             gl.deleteTexture(this._glTextureId);
         },
 
@@ -300,7 +300,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         recover: function () {
-            var gl = this._gl;
+            var gl = this.device.gl;
             this._glTextureId = gl.createTexture();
             this.addressU = this._addressu;
             this.addressV = this._addressv;
@@ -328,20 +328,17 @@ pc.extend(pc.gfx, function () {
                     return new pc.resources.ImageRequest(url);
                 });
                 
-                loader.request(requests, function (resources) {
+                loader.request(requests).then(function (resources) {
                     var images = src.map(function (url) {
                         return resources[url];
                     });
                     this.setSource(images);
-                }.bind(this), function (errors) {
-                    logERROR(errors);
-                }, function (progress) {
-                }, options);
+                }.bind(this));
             } else {
                 var request = new pc.resources.ImageRequest(src);
 
-                loader.request(request, function (resources) {
-                    this.setSource(resources[src]);
+                loader.request(request).then(function (resources) {
+                    this.setSource(resources[0]);
                 }.bind(this));
             }
         },
@@ -424,7 +421,7 @@ pc.extend(pc.gfx, function () {
         upload: function () {
             this.bind();
 
-            var gl = this._gl;
+            var gl = this.device.gl;
             var pixels = this._levels[0];
 
             if (this._cubemap) {

@@ -1,5 +1,5 @@
 pc.gfx.programlib.phong = {
-    generateKey: function (options) {
+    generateKey: function (device, options) {
         var key = "phong";
         if (options.skin)                key += "_skin";
         if (options.fog)                 key += "_fog";
@@ -73,7 +73,7 @@ pc.gfx.programlib.phong = {
         return key;
     },
 
-    generateVertexShader: function (options) {
+    generateVertexShader: function (device, options) {
         var code = "";
 
         var i;
@@ -94,7 +94,7 @@ pc.gfx.programlib.phong = {
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
             (options.heightMap && !options.heightMapTransform));
-        var useTangents = pc.gfx.Device.getCurrent().precalculatedTangents;
+        var useTangents = device.precalculatedTangents;
 
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec3 vertex_position;\n";
@@ -124,7 +124,7 @@ pc.gfx.programlib.phong = {
         code += "uniform mat4 matrix_viewProjection;\n";
         code += "uniform mat4 matrix_model;\n";
         if (options.skin) {
-            var numBones = pc.gfx.Device.getCurrent().getBoneLimit();
+            var numBones = device.getBoneLimit();
             code += "uniform mat4 matrix_pose[" + numBones + "];\n";
         }
         for (i = 0; i < totalLights; i++) {
@@ -391,7 +391,7 @@ pc.gfx.programlib.phong = {
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
             (options.heightMap && !options.heightMapTransform));
-        var useTangents = pc.gfx.Device.getCurrent().precalculatedTangents;
+        var useTangents = device.precalculatedTangents;
 
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = getSnippet('fs_precision');

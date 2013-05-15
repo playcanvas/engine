@@ -9,11 +9,12 @@ pc.extend(pc.gfx, function () {
      * @param {Boolean} isCube True if the frame buffer is represented as a cube map and false if it is
      * represented as a 2D surface.
      */
-    var FrameBuffer = function (width, height, depth, isCube) {
+    var FrameBuffer = function (device, width, height, depth, isCube) {
+        this.device = device;
+
         if (typeof isCube === 'undefined') isCube = false;
 
         if ((width !== undefined) && (height !== undefined)) {
-            var device = pc.gfx.Device.getCurrent();
             var gl = device.gl;
 
             this._width     = width  || 1;
@@ -23,7 +24,7 @@ pc.extend(pc.gfx, function () {
                 this._depthBuffers = [];
             }
 
-            this._colorTexture = new pc.gfx.Texture({
+            this._colorTexture = new pc.gfx.Texture(device, {
                 width: width, 
                 height: height, 
                 format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
@@ -98,25 +99,13 @@ pc.extend(pc.gfx, function () {
 
     /**
      * @function
-     * @name pc.gfx.FrameBuffer.getBackBuffer
-     * @description Returns a reference to the back buffer attached to the canvas from which the PlayCanvas graphics
-     * device was created.
-     * @returns {pc.gfx.FrameBuffer} A frame buffer instance representing the back buffer of the application's canvas.
-     * @author Will Eastcott
-     */
-    FrameBuffer.getBackBuffer = function () {
-        return new pc.gfx.FrameBuffer();
-    };
-
-    /**
-     * @function
      * @name pc.gfx.FrameBuffer#bind
      * @description Activates the framebuffer to receive the rasterization of all subsequent draw commands issued by
      * the graphics device.
      * @author Will Eastcott
      */
     FrameBuffer.prototype.bind = function () {
-        var gl = pc.gfx.Device.getCurrent().gl;
+        var gl = this.device.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers ? this._colorBuffers[this._activeBuffer] : null);
     };
 
@@ -141,7 +130,7 @@ pc.extend(pc.gfx, function () {
      * @author Will Eastcott
      */
     FrameBuffer.prototype.getWidth = function () {
-        var gl = pc.gfx.Device.getCurrent().gl;
+        var gl = this.device.gl;
         return (this._colorBuffers) ? this._width : gl.canvas.width;
     };
 
@@ -153,7 +142,7 @@ pc.extend(pc.gfx, function () {
      * @author Will Eastcott
      */
     FrameBuffer.prototype.getHeight = function () {
-        var gl = pc.gfx.Device.getCurrent().gl;
+        var gl = this.device.gl;
         return (this._colorBuffers) ? this._height : gl.canvas.height;
     };
 

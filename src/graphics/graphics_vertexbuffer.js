@@ -7,7 +7,7 @@ pc.extend(pc.gfx, function () {
      * @param {Number} numVertices The number of vertices that this vertex buffer will hold.
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
      */
-    var VertexBuffer = function (format, numVertices, usage) {
+    var VertexBuffer = function (device, format, numVertices, usage) {
         // Initialize optional parameters
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.gfx.BUFFER_STATIC;
@@ -21,10 +21,10 @@ pc.extend(pc.gfx, function () {
         // Calculate the size
         this.numBytes = format.size * numVertices;
 
-        // Create the WebGL program ID
-        this.gl = pc.gfx.Device.getCurrent().gl;
+        // Create the WebGL vertex buffer object
+        this.device = device;
 
-        var gl = this.gl;
+        var gl = this.device.gl;
         this.bufferId = gl.createBuffer();
 
         // Allocate the storage
@@ -39,7 +39,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         destroy: function () {
-            var gl = this.gl;
+            var gl = this.device.gl;
             gl.deleteBuffer(this.bufferId);
         },
 
@@ -99,7 +99,7 @@ pc.extend(pc.gfx, function () {
          */
         unlock: function () {
             // Upload the new vertex data
-            var gl = this.gl;
+            var gl = this.device.gl;
             var glUsage;
             switch (this.usage) {
                 case pc.gfx.BUFFER_STATIC:
