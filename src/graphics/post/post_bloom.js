@@ -211,7 +211,7 @@ pc.gfx.post.bloom = function () {
             blurProg = new pc.gfx.Program(device, passThroughShader, blurShader);
             combineProg = new pc.gfx.Program(device, passThroughShader, combineShader);
 
-            var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
+            var backBuffer = new pc.gfx.FrameBuffer(device);
             width = backBuffer.getWidth();
             height = backBuffer.getHeight();
 

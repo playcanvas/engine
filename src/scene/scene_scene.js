@@ -115,16 +115,15 @@ pc.extend(pc.scene, function () {
         shadowTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         shadowTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
 
-        return shadowBuffer;
+        return new pc.gfx.RenderTarget(shadowBuffer);
     };
 
     function createShadowCamera(device) {
         // We don't need to clear the color buffer if we're rendering a depth map
-        var flags = (device.extDepthTexture) ? pc.gfx.CLEARFLAG_DEPTH : CLEARFLAG_DEPTH | CLEARFLAG_DEPTH;
+        var flags = pc.gfx.CLEARFLAG_DEPTH;
+        if (device.extDepthTexture) flags |= pc.gfx.CLEARFLAG_DEPTH;
 
         var shadowCam = new pc.scene.CameraNode();
-        var shadowBuffer = this.createShadowMap(device, this._shadowWidth, this._shadowHeight);
-        shadowCam.setRenderTarget(new pc.gfx.RenderTarget(shadowBuffer));
         shadowCam.setClearOptions({
             color: [1.0, 1.0, 1.0, 1.0],
             depth: 1.0,
@@ -135,16 +134,23 @@ pc.extend(pc.scene, function () {
     };
 
     function getShadowCamera(device, light) {
-        if (light._shadowCamera === null) {
-            light._shadowCamera = createShadowCamera(device);
+        var shadowCam = light._shadowCamera;
+        var shadowBuffer;
+
+        if (shadowCam === null) {
+            shadowCam = createShadowCamera(device);
+            shadowBuffer = createShadowMap(device, light._shadowWidth, light._shadowHeight);
+            shadowCam.setRenderTarget(shadowBuffer);
+            light._shadowCamera = shadowCam;
+        } else {
+            shadowBuffer = shadowCam.getRenderTarget().getFrameBuffer();
+            if ((shadowBuffer.getWidth() !== light._shadowWidth) || (shadowBuffer.getHeight() !== light._shadowHeight)) {
+                shadowBuffer = createShadowMap(device, this._shadowWidth, this._shadowHeight);
+                shadowCam.setRenderTarget(shadowBuffer);
+            }
         }
 
-        var shadowCam = light._shadowCamera;
-        var shadowBuffer = shadowCam.getRenderTarget().getFrameBuffer();
-        if ((shadowBuffer.getWidth() !== light._shadowWidth) || (shadowBuffer.getHeight() !== light._shadowHeight)) {
-            shadowBuffer = this.createShadowMap(device, this._shadowWidth, this._shadowHeight);
-            shadowCam.setRenderTarget(new pc.gfx.RenderTarget(shadowBuffer));
-        }
+        return shadowCam;
     }
 
 
@@ -491,9 +497,7 @@ pc.extend(pc.scene, function () {
                 // Point the camera along direction of light
                 pc.math.mat4.copy(shadowCamWtm, shadowCam.worldTransform);
 
-                device.setRenderTarget(shadowCam.getRenderTarget());
-                device.updateBegin();
-                device.clear(shadowCam.getClearOptions());
+                setCamera(shadowCam);
 
                 if (device.extDepthTexture) {
                     device.gl.colorMask(false, false, false, false);

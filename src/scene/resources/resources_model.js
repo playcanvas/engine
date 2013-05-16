@@ -236,7 +236,7 @@ pc.extend(pc.resources, function () {
         if (!texture) {
             var ext = pc.path.getExtension(url);
             var format = (ext === '.png') ? pc.gfx.PIXELFORMAT_R8_G8_B8_A8 : pc.gfx.PIXELFORMAT_R8_G8_B8;
-            texture = new pc.gfx.Texture({
+            texture = new pc.gfx.Texture(this._device, {
                 format: format
             });
             texture.name = textureData.name;
@@ -497,9 +497,9 @@ pc.extend(pc.resources, function () {
         }
 
         if (geomData.inverse_bind_pose !== undefined) {
-            var maxBones = device.getBoneLimit();
+            var maxBones = this._device.getBoneLimit();
             if (geomData.inverse_bind_pose.length > maxBones) {
-                meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
+                meshes = pc.scene.partitionSkin(this._device, maxBones, [vertexBuffer], indexBuffer, meshes, skin);
             }
 
             for (i = 0; i < meshes.length; i++) {
@@ -1391,9 +1391,9 @@ pc.extend(pc.resources, function () {
             }
 
             if (inverseBindPose.length > 0) {
-                var maxBones = device.getBoneLimit();
+                var maxBones = this.device.getBoneLimit();
                 if (inverseBindPose.length > maxBones) {
-                    meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
+                    meshes = pc.scene.partitionSkin(this.device, maxBones, [vertexBuffer], indexBuffer, meshes, skin);
                 }
 
                 for (i = 0; i < meshes.length; i++) {
