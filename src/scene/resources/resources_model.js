@@ -3,8 +3,9 @@ pc.extend(pc.resources, function () {
 	 * @name pc.resources.ModelResourceHandler
 	 * @class Resource Handler for creating pc.scene.Model resources
 	 */
-	var ModelResourceHandler = function (textureCache) {
+	var ModelResourceHandler = function (device, textureCache) {
         // optional textureCache for new texture cache
+        this._device = device;
         this._textureCache = textureCache;
 
         this._jsonToPrimitiveType = {
@@ -235,7 +236,7 @@ pc.extend(pc.resources, function () {
         if (!texture) {
             var ext = pc.path.getExtension(url);
             var format = (ext === '.png') ? pc.gfx.PIXELFORMAT_R8_G8_B8_A8 : pc.gfx.PIXELFORMAT_R8_G8_B8;
-            texture = new pc.gfx.Texture({
+            texture = new pc.gfx.Texture(this._device, {
                 format: format
             });
             texture.name = textureData.name;
@@ -384,8 +385,7 @@ pc.extend(pc.resources, function () {
         var i;
         var attribute;
 
-        var device = pc.gfx.Device.getCurrent();
-        if (device.precalculatedTangents) {
+        if (pc.gfx.precalculatedTangents) {
             // Calculate tangents if we have positions, normals and texture coordinates
             var positions = null, normals = null, uvs = null, tangents = null;
             for (i = 0; i < geomData.attributes.length; i++) {
@@ -425,7 +425,7 @@ pc.extend(pc.resources, function () {
 
         // Create the vertex buffer
         var numVertices = geomData.attributes[0].data.length / geomData.attributes[0].components;
-        var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
+        var vertexBuffer = new pc.gfx.VertexBuffer(this._device, vertexFormat, numVertices);
 
         var iterator = new pc.gfx.VertexIterator(vertexBuffer);
         for (i = 0; i < numVertices; i++) {
@@ -451,7 +451,7 @@ pc.extend(pc.resources, function () {
         iterator.end();
     
         // Create the index buffer
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, geomData.indices.data.length);
+        var indexBuffer = new pc.gfx.IndexBuffer(this._device, pc.gfx.INDEXFORMAT_UINT16, geomData.indices.data.length);
         var dst = new Uint16Array(indexBuffer.lock());
         dst.set(geomData.indices.data);
         indexBuffer.unlock();
@@ -497,9 +497,9 @@ pc.extend(pc.resources, function () {
         }
 
         if (geomData.inverse_bind_pose !== undefined) {
-            var maxBones = device.getBoneLimit();
+            var maxBones = this._device.getBoneLimit();
             if (geomData.inverse_bind_pose.length > maxBones) {
-                meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
+                meshes = pc.scene.partitionSkin(this._device, maxBones, [vertexBuffer], indexBuffer, meshes, skin);
             }
 
             for (i = 0; i < meshes.length; i++) {
@@ -720,8 +720,7 @@ pc.extend(pc.resources, function () {
         if (attributes & attribs.NORMAL) {
             vertexFormat.addElement(new pc.gfx.VertexElement("vertex_normal", 3, pc.gfx.VertexElementType.FLOAT32));
         }
-        var device = pc.gfx.Device.getCurrent();
-        if (device.precalculatedTangents) {
+        if (pc.gfx.precalculatedTangents) {
             // If we've got positions, normals and uvs, add tangents which will be auto-generated
             if ((attributes & attribs.POSITION) && (attributes & attribs.NORMAL) && (attributes & attribs.UV0)) {
                 vertexFormat.addElement(new pc.gfx.VertexElement("vertex_tangent", 4, pc.gfx.VertexElementType.FLOAT32));
@@ -774,13 +773,13 @@ pc.extend(pc.resources, function () {
         var positions, normals, tangents, uvs;
         for (var el = 0; el < vertexFormat.elements.length; el++) {
             var element = vertexFormat.elements[el];
-            if (element.scopeId.name === 'vertex_position') {
+            if (element.name === 'vertex_position') {
                 positions = new Float32Array(vertices, element.offset);
-            } else if (element.scopeId.name === 'vertex_normal') {
+            } else if (element.name === 'vertex_normal') {
                 normals = new Float32Array(vertices, element.offset);
-            } else if (element.scopeId.name === 'vertex_tangent') {
+            } else if (element.name === 'vertex_tangent') {
                 tangents = new Float32Array(vertices, element.offset);
-            } else if (element.scopeId.name === 'vertex_texCoord0') {
+            } else if (element.name === 'vertex_texCoord0') {
                 uvs = new Float32Array(vertices, element.offset);
             }
         }
@@ -886,12 +885,13 @@ pc.extend(pc.resources, function () {
         vertexBuffer.unlock();
     }
 
-    function MemoryStream(arrayBuffer, loader, textureCache, options) {
+    function MemoryStream(arrayBuffer, loader, device, textureCache, options) {
         this.memory = arrayBuffer;
         this.dataView = (typeof DataView !== 'undefined') ? new DataView(arrayBuffer) : null;
         this.filePointer = 0;
         this.options = options;
         this.loader = loader;
+        this.device = device;
         this.textureCache = textureCache;
     }
 
@@ -1013,7 +1013,7 @@ pc.extend(pc.resources, function () {
             if (!texture) {
                 var ext = pc.path.getExtension(url);
                 var format = (ext === '.png') ? pc.gfx.PIXELFORMAT_R8_G8_B8_A8 : pc.gfx.PIXELFORMAT_R8_G8_B8;
-                texture = new pc.gfx.Texture({
+                texture = new pc.gfx.Texture(this.device, {
                     format: format
                 });
                 texture.name = name;
@@ -1266,13 +1266,12 @@ pc.extend(pc.resources, function () {
             // Create the vertex buffer format
             var vertexFormat = translateFormat(format);
 
-            var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, count);
+            var vertexBuffer = new pc.gfx.VertexBuffer(this.device, vertexFormat, count);
             var vbuff = vertexBuffer.lock();
             var dst = new Uint8Array(vbuff);
             var src = this.readU8(count * stride);
 
-            var device = pc.gfx.Device.getCurrent();
-            if (device.precalculatedTangents) {
+            if (pc.gfx.precalculatedTangents) {
                 copyToBuffer(dst, src, format, stride);
             } else {
                 dst.set(src);
@@ -1287,7 +1286,7 @@ pc.extend(pc.resources, function () {
             var type = this.readU32();
             var numIndices = this.readU32();
 
-            var indexBuffer = new pc.gfx.IndexBuffer(type, numIndices);
+            var indexBuffer = new pc.gfx.IndexBuffer(this.device, type, numIndices);
             var ibuff = indexBuffer.lock();
             var src, dst;
             if (type === pc.gfx.INDEXFORMAT_UINT8) {
@@ -1358,8 +1357,7 @@ pc.extend(pc.resources, function () {
                 }
             }
 
-            var device = pc.gfx.Device.getCurrent();
-            if (device.precalculatedTangents) {
+            if (pc.gfx.precalculatedTangents) {
                 generateTangentsInPlace(vertexBuffer, indexBuffer);
             }
 
@@ -1393,9 +1391,9 @@ pc.extend(pc.resources, function () {
             }
 
             if (inverseBindPose.length > 0) {
-                var maxBones = device.getBoneLimit();
+                var maxBones = this.device.getBoneLimit();
                 if (inverseBindPose.length > maxBones) {
-                    meshes = pc.scene.partitionSkin(maxBones, [vertexBuffer], indexBuffer, meshes, skin);
+                    meshes = pc.scene.partitionSkin(this.device, maxBones, [vertexBuffer], indexBuffer, meshes, skin);
                 }
 
                 for (i = 0; i < meshes.length; i++) {
@@ -1585,7 +1583,7 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadModelBin = function (data, options) {
-        var stream = new MemoryStream(data, this._loader, this._textureCache, options);
+        var stream = new MemoryStream(data, this._loader, this._device, this._textureCache, options);
         return stream.readModelChunk();
     };
     

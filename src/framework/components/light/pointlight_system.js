@@ -57,7 +57,7 @@ pc.extend(pc.fw, function () {
         this.lightMat.color = new Float32Array([1, 1, 0, 1]);
         this.lightMat.update();
 
-        this.sphereMesh = pc.scene.procedural.createSphere({
+        this.sphereMesh = pc.scene.procedural.createSphere(context.graphicsDevice, {
             radius: 0.1
         });
 

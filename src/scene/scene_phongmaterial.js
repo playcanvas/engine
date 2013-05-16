@@ -167,7 +167,7 @@ pc.extend(pc.scene, function () {
         }
     };
 
-    PhongMaterial.prototype.getProgram = function (mesh) {
+    PhongMaterial.prototype.getProgram = function (device, mesh) {
         var scene = pc.scene.Scene.current;
         var i;
         var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
@@ -196,7 +196,6 @@ pc.extend(pc.scene, function () {
             }
         }
         var skinned = (mesh.skin !== null);
-        var device = pc.gfx.Device.getCurrent();
         var currState = device.getCurrentState();
         var key = '';
         if (skinned) key += 'skin_';
