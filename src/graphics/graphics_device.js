@@ -210,9 +210,7 @@ pc.extend(pc.gfx, function () {
         }
 
         // Create the default render target
-        var backBuffer = new pc.gfx.FrameBuffer(this);
-        var viewport = { x: 0, y: 0, width: canvas.width, height: canvas.height };
-        this.renderTarget = new pc.gfx.RenderTarget(backBuffer, viewport);
+        this.renderTarget = null;
 
         // Create the ScopeNamespace for shader attributes and variables
         this.scope = new pc.gfx.ScopeSpace("Device");
