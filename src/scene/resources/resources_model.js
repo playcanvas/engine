@@ -773,13 +773,13 @@ pc.extend(pc.resources, function () {
         var positions, normals, tangents, uvs;
         for (var el = 0; el < vertexFormat.elements.length; el++) {
             var element = vertexFormat.elements[el];
-            if (element.scopeId.name === 'vertex_position') {
+            if (element.name === 'vertex_position') {
                 positions = new Float32Array(vertices, element.offset);
-            } else if (element.scopeId.name === 'vertex_normal') {
+            } else if (element.name === 'vertex_normal') {
                 normals = new Float32Array(vertices, element.offset);
-            } else if (element.scopeId.name === 'vertex_tangent') {
+            } else if (element.name === 'vertex_tangent') {
                 tangents = new Float32Array(vertices, element.offset);
-            } else if (element.scopeId.name === 'vertex_texCoord0') {
+            } else if (element.name === 'vertex_texCoord0') {
                 uvs = new Float32Array(vertices, element.offset);
             }
         }
@@ -1013,7 +1013,7 @@ pc.extend(pc.resources, function () {
             if (!texture) {
                 var ext = pc.path.getExtension(url);
                 var format = (ext === '.png') ? pc.gfx.PIXELFORMAT_R8_G8_B8_A8 : pc.gfx.PIXELFORMAT_R8_G8_B8;
-                texture = new pc.gfx.Texture({
+                texture = new pc.gfx.Texture(this.device, {
                     format: format
                 });
                 texture.name = name;
@@ -1286,7 +1286,7 @@ pc.extend(pc.resources, function () {
             var type = this.readU32();
             var numIndices = this.readU32();
 
-            var indexBuffer = new pc.gfx.IndexBuffer(type, numIndices);
+            var indexBuffer = new pc.gfx.IndexBuffer(this.device, type, numIndices);
             var ibuff = indexBuffer.lock();
             var src, dst;
             if (type === pc.gfx.INDEXFORMAT_UINT8) {

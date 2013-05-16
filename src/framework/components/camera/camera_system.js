@@ -193,6 +193,7 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
+/*
             var device = pc.gfx.Device.getCurrent();
             var w = device.canvas.width;
             var h = device.canvas.height;
@@ -216,8 +217,9 @@ pc.extend(pc.fw, function () {
                     camera.setRenderTarget(new pc.gfx.RenderTarget(backBuffer));
                 }
             }
-
-            var aspect = viewport.width / viewport.height;
+*/
+            var device = this.context.graphicsDevice;
+            var aspect = device.width / device.height;
             if (aspect !== camera.getAspectRatio()) {
                 camera.setAspectRatio(aspect);
             }

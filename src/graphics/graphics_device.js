@@ -914,6 +914,14 @@ pc.extend(pc.gfx, function () {
         }
     });
 
+    Object.defineProperty(Device.prototype, 'width', {
+        get: function() { return this.gl.drawingBufferWidth || this.canvas.width; }
+    });
+
+    Object.defineProperty(Device.prototype, 'height', {
+        get: function() { return this.gl.drawingBufferHeight || this.canvas.height; }
+    });
+
     return {
         UnsupportedBrowserError: UnsupportedBrowserError,
         ContextCreationError: ContextCreationError,
