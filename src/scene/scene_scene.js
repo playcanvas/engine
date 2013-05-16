@@ -121,7 +121,7 @@ pc.extend(pc.scene, function () {
     function createShadowCamera(device) {
         // We don't need to clear the color buffer if we're rendering a depth map
         var flags = pc.gfx.CLEARFLAG_DEPTH;
-        if (device.extDepthTexture) flags |= pc.gfx.CLEARFLAG_DEPTH;
+        if (!device.extDepthTexture) flags |= pc.gfx.CLEARFLAG_COLOR;
 
         var shadowCam = new pc.scene.CameraNode();
         shadowCam.setClearOptions({
