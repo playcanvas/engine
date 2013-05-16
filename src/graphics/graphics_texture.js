@@ -329,10 +329,7 @@ pc.extend(pc.gfx, function () {
                 });
                 
                 loader.request(requests).then(function (resources) {
-                    var images = src.map(function (url) {
-                        return resources[url];
-                    });
-                    this.setSource(images);
+                    this.setSource(resources);
                 }.bind(this));
             } else {
                 var request = new pc.resources.ImageRequest(src);

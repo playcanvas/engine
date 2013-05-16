@@ -7,7 +7,6 @@ pc.extend(pc.scene, function () {
     var v3 = pc.math.vec3;
     var m4 = pc.math.mat4;
 
-
     /**
      * @name pc.scene.CameraNode
      * @class A camera.
@@ -19,29 +18,16 @@ pc.extend(pc.scene, function () {
         this._fov = 45;
         this._orthoHeight = 10;
         this._aspect = 16 / 9;
-        this._lookAtNode = null;
-        this._upNode = null;
-
-        // Uniforms that are automatically set by a camera at the start of a scene render
-        var scope = pc.gfx.Device.getCurrent().scope;
-        this._projId = scope.resolve("matrix_projection");
-        this._viewId = scope.resolve("matrix_view");
-        this._viewInvId = scope.resolve("matrix_viewInverse");
-        this._viewProjId = scope.resolve("matrix_viewProjection");
-        this._viewPosId = scope.resolve("view_position");
-        this._nearClipId = scope.resolve("camera_near");
-        this._farClipId = scope.resolve("camera_far");
 
         this._projMatDirty = true;
         this._projMat = m4.create();
         this._viewMat = m4.create();
         this._viewProjMat = m4.create();
-        this._viewPosition = v3.create(0, 0, 0);
 
         this._frustum = new pc.shape.Frustum(this._projMat, this._viewMat);
 
         // Create a full size viewport onto the backbuffer
-        this._renderTarget = new pc.gfx.RenderTarget(pc.gfx.FrameBuffer.getBackBuffer());
+        this._renderTarget = null;
 
         // Create the clear options
         this._clearOptions = {
@@ -71,8 +57,6 @@ pc.extend(pc.scene, function () {
         clone.setFarClip(this.getFarClip());
         clone.setFov(this.getFov());
         clone.setAspectRatio(this.getAspectRatio());
-        clone.setLookAtNode(this.getLookAtNode());
-        clone.setUpNode(this.getUpNode());
         clone.setRenderTarget(this.getRenderTarget());
         clone.setClearOptions(this.getClearOptions());
     };
@@ -173,86 +157,6 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.CameraNode#frameBegin
-     * @description Marks the beginning of a block of rendering to the specified camera.
-     * This function begins by setting its render target and the currently target for the active graphics
-     * device. It then clears the render target with the clear options set for the camera. Finally, it
-     * internally sets the value of three shader uniforms: 'matrix_projection' (the 4x4 projection matrix
-     * for the specified camera, 'matrix_view' (the 4x4 inverse of the specified camera's world transformation
-     * matrix) and 'view_position' (the eye coordinate of the camera in world space).
-     * Note that calls to frameBegin/frameEnd cannot be nested.
-     * @author Will Eastcott
-     */
-    CameraNode.prototype.frameBegin = function (clear) {
-        clear = (clear === undefined) ? true : clear;
-
-        var device = pc.gfx.Device.getCurrent();
-        device.setRenderTarget(this._renderTarget);
-        device.updateBegin();
-        if (clear) {
-            device.clear(this._clearOptions);
-        }
-        
-        // Set the view related matrices
-        var wtm = this.getWorldTransform();
-        if (this._lookAtNode !== null) {
-            var up;
-            var eye = this.getPosition();
-            var target = this._lookAtNode.getPosition();
-            if (this._upNode !== null) {
-                var upPos = this._upNode.getPosition();
-                up = pc.math.vec3.create();
-                pc.math.vec3.subtract(upPos, eye, up);
-                pc.math.vec3.normalize(up, up);
-            } else {
-                up = pc.math.vec3.create(0, 1, 0);
-            }
-            wtm = pc.math.mat4.makeLookAt(eye, target, up);
-        }
-
-        // Projection Matrix
-        var projMat = this.getProjectionMatrix();
-        this._projId.setValue(projMat);
-
-        // View Matrix
-        m4.invert(wtm, this._viewMat);
-        this._viewId.setValue(this._viewMat);
-
-        // ViewProjection Matrix
-        m4.multiply(projMat, this._viewMat, this._viewProjMat);
-        this._viewProjId.setValue(this._viewProjMat);
-
-        // ViewInverse Matrix
-        this._viewInvId.setValue(wtm);
-
-        // View Position (world space)
-        this._viewPosition[0] = wtm[12];
-        this._viewPosition[1] = wtm[13];
-        this._viewPosition[2] = wtm[14];
-        this._viewPosId.setValue(this._viewPosition);
-
-        // Near and far clip values
-        this._nearClipId.setValue(this._nearClip);
-        this._farClipId.setValue(this._farClip);
-
-        this._frustum.update(projMat, this._viewMat);
-    };
-
-    /**
-     * @function
-     * @name pc.scene.CameraNode#frameEnd
-     * @description Marks the end of a block of rendering to the specified camera.
-     * This function must be come after a matching call to frameBegin.
-     * Note that calls to frameBegin/frameEnd cannot be nested.
-     * @author Will Eastcott
-     */
-    CameraNode.prototype.frameEnd = function () {
-        var device = pc.gfx.Device.getCurrent();
-        device.updateEnd();
-    };
-
-    /**
-     * @function
      * @name pc.scene.CameraNode#getAspectRatio
      * @description Retrieves the setting for the specified camera's aspect ratio.
      * @returns {Number} The aspect ratio of the camera (width divided by height).
@@ -341,6 +245,28 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.getProjection = function () {
         return this._projection;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.CameraNode#getProjectionMatrix
+     * @description Retrieves the projection matrix for the specified camera.
+     * @returns {pc.math.mat4} The camera's projection matrix.
+     * @author Will Eastcott
+     */
+    CameraNode.prototype.getProjectionMatrix = function () {
+        if (this._projMatDirty) {
+            if (this._projection === pc.scene.Projection.PERSPECTIVE) {
+                m4.makePerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._projMat);
+            } else {
+                var y = this._orthoHeight;
+                var x = y * this._aspect;
+                m4.makeOrtho(-x, x, -y, y, this._nearClip, this._farClip, this._projMat);
+            }
+
+            this._projMatDirty = false;
+        }
+        return this._projMat;
     };
 
     /**
@@ -475,23 +401,6 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setRenderTarget = function (target) {
         this._renderTarget = target;
-        this._projMatDirty = true;
-    };
-
-    CameraNode.prototype.setLookAtNode = function (node) {
-        this._lookAtNode = node;
-    };
-
-    CameraNode.prototype.getLookAtNode = function () {
-        return this._lookAtNode;
-    };
-
-    CameraNode.prototype.setUpNode = function (node) {
-        this._upNode = node;
-    };
-
-    CameraNode.prototype.getUpNode = function () {
-        return this._upNode;
     };
 
     return {

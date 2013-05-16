@@ -122,13 +122,12 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     Material.prototype.setParameter = function (name, data) {
-        var device = pc.gfx.Device.getCurrent();
         var param = this._parameters[name];
         if (param) {
             param._data = data;
         } else {
             this._parameters[name] = {
-                _scopeId : device.scope.resolve(name),
+                _scopeId : null,
                 _data    : data
             };
 
@@ -161,10 +160,13 @@ pc.extend(pc.scene, function () {
      * @description Pushes all material parameters into scope.
      * @author Will Eastcott
      */
-    Material.prototype.setParameters = function () {    
+    Material.prototype.setParameters = function (device) {    
         // Push each shader parameter into scope
         for (var paramName in this._parameters) {
             var parameter = this._parameters[paramName];
+            if (!parameter._scopeId) {
+                parameter._scopeId = device.scope.resolve(paramName);
+            }
             parameter._scopeId.setValue(parameter._data);
         }
     };
@@ -176,7 +178,7 @@ pc.extend(pc.scene, function () {
      * @returns {pc.gfx.Program} The program assigned to the material.
      * @author Will Eastcott
      */
-    Material.prototype.getProgram = function (mesh) {
+    Material.prototype.getProgram = function (device, mesh) {
         return this._program;
     };
 

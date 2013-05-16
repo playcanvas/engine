@@ -36,6 +36,8 @@ pc.gfx.FrontFace = {
     CCW: 1
 };
 
+pc.gfx.precalculatedTangents = true;
+
 pc.extend(pc.gfx, function () {
     // Exceptions
     function UnsupportedBrowserError(message) {
@@ -390,8 +392,6 @@ pc.extend(pc.gfx, function () {
         
         this.boundBuffer = null;
 
-        this.precalculatedTangents = true;
-
         this.textureUnits = [];
 
         this.attributesInvalidated = true;
@@ -438,7 +438,9 @@ pc.extend(pc.gfx, function () {
             this.boundBuffer = null;
 
             // Set the render target
-            this.renderTarget.bind();
+            if (this.renderTarget) {
+                this.renderTarget.bind();
+            }
 
             for (var i = 0; i < 16; i++) {
                 this.textureUnits[i] = null;

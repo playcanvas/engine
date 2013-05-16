@@ -372,7 +372,7 @@ pc.gfx.programlib.phong = {
         return code;
     },
 
-    generateFragmentShader: function (options) {
+    generateFragmentShader: function (device, options) {
         var i;
 
         var numNormalLights = options.numDirs + options.numPnts + options.numSpts;
@@ -394,7 +394,7 @@ pc.gfx.programlib.phong = {
         var useTangents = device.precalculatedTangents;
 
         var getSnippet = pc.gfx.programlib.getSnippet;
-        var code = getSnippet('fs_precision');
+        var code = getSnippet(device, 'fs_precision');
 
         if ((options.normalMap && !useTangents) || options.heightMap) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
@@ -526,16 +526,16 @@ pc.gfx.programlib.phong = {
             }
         }
         if (options.fog) {
-            code += getSnippet('fs_fog_decl');
+            code += getSnippet(device, 'fs_fog_decl');
         }
         if (options.alphaTest) {
-            code += getSnippet('fs_alpha_test_decl');
+            code += getSnippet(device, 'fs_alpha_test_decl');
         }
 
         if (options.normalMap) {
-            code += getSnippet('fs_normal_map_funcs');
+            code += getSnippet(device, 'fs_normal_map_funcs');
         } else if (options.heightMap) {
-            code += getSnippet('fs_height_map_funcs');
+            code += getSnippet(device, 'fs_height_map_funcs');
         }
 
         code += "\n"; // End of uniform declarations
@@ -661,7 +661,7 @@ pc.gfx.programlib.phong = {
         }
 
         // FRAGMENT SHADER BODY
-        code += getSnippet('common_main_begin');
+        code += getSnippet(device, 'common_main_begin');
 
         // We can't write to varyings to copy them to temporarys
         if (options.diffuseMap) {
@@ -786,7 +786,7 @@ pc.gfx.programlib.phong = {
         code += "\n";
 
         if (options.alphaTest) {
-            code += getSnippet('fs_alpha_test');
+            code += getSnippet(device, 'fs_alpha_test');
         }
 
         if (lighting || options.lightMap) {
@@ -898,14 +898,14 @@ pc.gfx.programlib.phong = {
         code += "    gl_FragColor.a    = opacity;\n\n";
 
         // Make sure all components are between 0 and 1
-        code += getSnippet('fs_clamp');
+        code += getSnippet(device, 'fs_clamp');
 
         // Fog
         if (options.fog) {
-            code += getSnippet('fs_fog');
+            code += getSnippet(device, 'fs_fog');
         }
 
-        code += getSnippet('common_main_end');
+        code += getSnippet(device, 'common_main_end');
 
         return code;
     }

@@ -3,8 +3,9 @@ pc.extend(pc.resources, function () {
 	 * @name pc.resources.ModelResourceHandler
 	 * @class Resource Handler for creating pc.scene.Model resources
 	 */
-	var ModelResourceHandler = function (textureCache) {
+	var ModelResourceHandler = function (device, textureCache) {
         // optional textureCache for new texture cache
+        this._device = device;
         this._textureCache = textureCache;
 
         this._jsonToPrimitiveType = {
@@ -384,8 +385,7 @@ pc.extend(pc.resources, function () {
         var i;
         var attribute;
 
-        var device = pc.gfx.Device.getCurrent();
-        if (device.precalculatedTangents) {
+        if (pc.gfx.precalculatedTangents) {
             // Calculate tangents if we have positions, normals and texture coordinates
             var positions = null, normals = null, uvs = null, tangents = null;
             for (i = 0; i < geomData.attributes.length; i++) {
@@ -425,7 +425,7 @@ pc.extend(pc.resources, function () {
 
         // Create the vertex buffer
         var numVertices = geomData.attributes[0].data.length / geomData.attributes[0].components;
-        var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
+        var vertexBuffer = new pc.gfx.VertexBuffer(this._device, vertexFormat, numVertices);
 
         var iterator = new pc.gfx.VertexIterator(vertexBuffer);
         for (i = 0; i < numVertices; i++) {
@@ -451,7 +451,7 @@ pc.extend(pc.resources, function () {
         iterator.end();
     
         // Create the index buffer
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, geomData.indices.data.length);
+        var indexBuffer = new pc.gfx.IndexBuffer(this._device, pc.gfx.INDEXFORMAT_UINT16, geomData.indices.data.length);
         var dst = new Uint16Array(indexBuffer.lock());
         dst.set(geomData.indices.data);
         indexBuffer.unlock();
@@ -720,8 +720,7 @@ pc.extend(pc.resources, function () {
         if (attributes & attribs.NORMAL) {
             vertexFormat.addElement(new pc.gfx.VertexElement("vertex_normal", 3, pc.gfx.VertexElementType.FLOAT32));
         }
-        var device = pc.gfx.Device.getCurrent();
-        if (device.precalculatedTangents) {
+        if (pc.gfx.precalculatedTangents) {
             // If we've got positions, normals and uvs, add tangents which will be auto-generated
             if ((attributes & attribs.POSITION) && (attributes & attribs.NORMAL) && (attributes & attribs.UV0)) {
                 vertexFormat.addElement(new pc.gfx.VertexElement("vertex_tangent", 4, pc.gfx.VertexElementType.FLOAT32));
@@ -886,12 +885,13 @@ pc.extend(pc.resources, function () {
         vertexBuffer.unlock();
     }
 
-    function MemoryStream(arrayBuffer, loader, textureCache, options) {
+    function MemoryStream(arrayBuffer, loader, device, textureCache, options) {
         this.memory = arrayBuffer;
         this.dataView = (typeof DataView !== 'undefined') ? new DataView(arrayBuffer) : null;
         this.filePointer = 0;
         this.options = options;
         this.loader = loader;
+        this.device = device;
         this.textureCache = textureCache;
     }
 
@@ -1266,13 +1266,12 @@ pc.extend(pc.resources, function () {
             // Create the vertex buffer format
             var vertexFormat = translateFormat(format);
 
-            var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, count);
+            var vertexBuffer = new pc.gfx.VertexBuffer(this.device, vertexFormat, count);
             var vbuff = vertexBuffer.lock();
             var dst = new Uint8Array(vbuff);
             var src = this.readU8(count * stride);
 
-            var device = pc.gfx.Device.getCurrent();
-            if (device.precalculatedTangents) {
+            if (pc.gfx.precalculatedTangents) {
                 copyToBuffer(dst, src, format, stride);
             } else {
                 dst.set(src);
@@ -1358,8 +1357,7 @@ pc.extend(pc.resources, function () {
                 }
             }
 
-            var device = pc.gfx.Device.getCurrent();
-            if (device.precalculatedTangents) {
+            if (pc.gfx.precalculatedTangents) {
                 generateTangentsInPlace(vertexBuffer, indexBuffer);
             }
 
@@ -1585,7 +1583,7 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadModelBin = function (data, options) {
-        var stream = new MemoryStream(data, this._loader, this._textureCache, options);
+        var stream = new MemoryStream(data, this._loader, this._device, this._textureCache, options);
         return stream.readModelChunk();
     };
     

@@ -32,7 +32,7 @@ pc.extend(pc.gfx, function () {
         var key = generator.generateKey(gd, options);
         var program = this._cache[key];
         if (!program) {
-            var gd = this.device;
+            var gd = this._device;
             var vsCode = generator.generateVertexShader(gd, options);
             var fsCode = generator.generateFragmentShader(gd, options);
             logDEBUG("\n" + key + ": vertex shader\n" + vsCode);
