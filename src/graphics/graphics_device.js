@@ -398,6 +398,16 @@ pc.extend(pc.gfx, function () {
     };
 
     Device.prototype = {
+        setViewport: function (x, y, width, height) {
+            var gl = this.gl;
+            gl.viewport(x, y, width, height);
+        },
+
+        setScissor: function (x, y, width, height) {
+            var gl = this.gl;
+            gl.scissor(x, y, width, height);
+        },
+
         /**
          * @function
          * @name pc.gfx.Device#getProgramLibrary
@@ -438,8 +448,18 @@ pc.extend(pc.gfx, function () {
             this.boundBuffer = null;
 
             // Set the render target
+            var gl = this.gl;
             if (this.renderTarget) {
-                this.renderTarget.bind();
+                var buffer = this.renderTarget.getFrameBuffer();
+                var w = buffer.getWidth();
+                var h = buffer.getHeight();
+                gl.scissor(0, 0, w, h);
+                gl.viewport(0, 0, w, h);
+                buffer.bind();
+            } else {
+                gl.scissor(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+                gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 
             for (var i = 0; i < 16; i++) {

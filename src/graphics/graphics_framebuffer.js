@@ -14,87 +14,85 @@ pc.extend(pc.gfx, function () {
 
         if (typeof isCube === 'undefined') isCube = false;
 
-        if ((width !== undefined) && (height !== undefined)) {
-            var gl = device.gl;
+        var gl = device.gl;
 
-            this._width     = width  || 1;
-            this._height    = height || 1;
-            this._colorBuffers = [];
-            if (depth && !device.extDepthTexture) {
-                this._depthBuffers = [];
-            }
+        this._width     = width  || 1;
+        this._height    = height || 1;
+        this._colorBuffers = [];
+        if (depth && !device.extDepthTexture) {
+            this._depthBuffers = [];
+        }
 
-            this._colorTexture = new pc.gfx.Texture(device, {
+        this._colorTexture = new pc.gfx.Texture(device, {
+            width: width, 
+            height: height, 
+            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+            cubemap: isCube
+        });
+        this._colorTexture.upload();
+        if (depth && device.extDepthTexture) {
+            this._depthTexture = new pc.gfx.Texture({
                 width: width, 
                 height: height, 
-                format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+                format: pc.gfx.PIXELFORMAT_D16,
                 cubemap: isCube
             });
-            this._colorTexture.upload();
-            if (depth && device.extDepthTexture) {
-                this._depthTexture = new pc.gfx.Texture({
-                    width: width, 
-                    height: height, 
-                    format: pc.gfx.PIXELFORMAT_D16,
-                    cubemap: isCube
-                });
-                this._depthTexture.upload();
-            }
-
-            var numBuffers = isCube ? 6 : 1;
-            this._activeBuffer = 0;
-
-            for (var i = 0; i < numBuffers; i++) {
-                // Create a new WebGL frame buffer object
-                this._colorBuffers[i] = gl.createFramebuffer();
-
-                // Attach the specified texture to the frame buffer
-                gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers[i]);
-                gl.framebufferTexture2D(gl.FRAMEBUFFER,
-                                        gl.COLOR_ATTACHMENT0,
-                                        isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
-                                        this._colorTexture._glTextureId,
-                                        0);
-                if (depth) {
-                    if (device.extDepthTexture) {
-                        gl.framebufferTexture2D(gl.FRAMEBUFFER,
-                                                gl.DEPTH_ATTACHMENT,
-                                                isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
-                                                this._depthTexture._glTextureId, 
-                                                0);
-                    } else {
-                        this._depthBuffers[i] = gl.createRenderbuffer();
-                        gl.bindRenderbuffer(gl.RENDERBUFFER, this._depthBuffers[i]);
-                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this._width, this._height);
-                        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._depthBuffers[i]);
-                    }
-                }
-
-                var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-                switch (status)
-                {
-                    case gl.FRAMEBUFFER_COMPLETE:
-                        //logINFO("FrameBuffer status OK");
-                        break;
-                    case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                        logERROR("FrameBuffer error: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
-                        break;
-                    case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                        logERROR("FrameBuffer error: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
-                        break;
-                    case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-                        logERROR("FrameBuffer error: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
-                        break;
-                    case gl.FRAMEBUFFER_UNSUPPORTED:
-                        logERROR("FrameBuffer error: FRAMEBUFFER_UNSUPPORTED");
-                        break;
-                }
-            }
-
-            // Set current render target back to default frame buffer
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            this._depthTexture.upload();
         }
+
+        var numBuffers = isCube ? 6 : 1;
+        this._activeBuffer = 0;
+
+        for (var i = 0; i < numBuffers; i++) {
+            // Create a new WebGL frame buffer object
+            this._colorBuffers[i] = gl.createFramebuffer();
+
+            // Attach the specified texture to the frame buffer
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers[i]);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                    gl.COLOR_ATTACHMENT0,
+                                    isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
+                                    this._colorTexture._glTextureId,
+                                    0);
+            if (depth) {
+                if (device.extDepthTexture) {
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                            gl.DEPTH_ATTACHMENT,
+                                            isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
+                                            this._depthTexture._glTextureId, 
+                                            0);
+                } else {
+                    this._depthBuffers[i] = gl.createRenderbuffer();
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, this._depthBuffers[i]);
+                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this._width, this._height);
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._depthBuffers[i]);
+                }
+            }
+
+            var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+            switch (status)
+            {
+                case gl.FRAMEBUFFER_COMPLETE:
+                    //logINFO("FrameBuffer status OK");
+                    break;
+                case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                    logERROR("FrameBuffer error: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                    break;
+                case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                    logERROR("FrameBuffer error: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                    break;
+                case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                    logERROR("FrameBuffer error: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+                    break;
+                case gl.FRAMEBUFFER_UNSUPPORTED:
+                    logERROR("FrameBuffer error: FRAMEBUFFER_UNSUPPORTED");
+                    break;
+            }
+        }
+
+        // Set current render target back to default frame buffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
     /**
@@ -106,7 +104,7 @@ pc.extend(pc.gfx, function () {
      */
     FrameBuffer.prototype.bind = function () {
         var gl = this.device.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers ? this._colorBuffers[this._activeBuffer] : null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers[this._activeBuffer]);
     };
 
     /**

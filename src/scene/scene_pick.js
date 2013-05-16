@@ -133,6 +133,7 @@ pc.extend(pc.scene, function () {
 
         // Ready the device for rendering to the pick buffer
         device.setRenderTarget(this._pickBufferTarget);
+        device.updateBegin();
         device.clear(this._clearOptions);
 
         // Build mesh instance list (ideally done by visibility query)
@@ -179,6 +180,8 @@ pc.extend(pc.scene, function () {
                 device.draw(mesh.primitive[pc.scene.RENDERSTYLE_SOLID]);
             }
         }
+
+        device.updateEnd();
 
         // Restore render target
         device.setRenderTarget(prevRenderTarget);
