@@ -271,28 +271,6 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.CameraNode#getProjectionMatrix
-     * @description Retrieves the projection matrix for the specified camera.
-     * @returns {pc.math.mat4} The camera's projection matrix.
-     * @author Will Eastcott
-     */
-    CameraNode.prototype.getProjectionMatrix = function () {
-        if (this._projMatDirty) {
-            if (this._projection === pc.scene.Projection.PERSPECTIVE) {
-                m4.makePerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._projMat);
-            } else {
-                var y = this._orthoHeight;
-                var x = y * this._aspect;
-                m4.makeOrtho(-x, x, -y, y, this._nearClip, this._farClip, this._projMat);
-            }
-
-            this._projMatDirty = false;
-        }
-        return this._projMat;
-    };
-
-    /**
-     * @function
      * @name pc.scene.CameraNode#getRenderTarget
      * @description Retrieves the render target currently set on the specified camera.
      * @returns {pc.gfx.RenderTarget} The camera's render target.
