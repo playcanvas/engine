@@ -7,8 +7,9 @@ pc.extend(pc.scene, function () {
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
      */
-    var Picker = function(width, height) {
-        var device = pc.gfx.Device.getCurrent();
+    var Picker = function(device, width, height) {
+        this.device = device;
+
         var library = device.getProgramLibrary();
         this.pickProgStatic = library.getProgram('pick', {
             skin: false
@@ -83,7 +84,7 @@ pc.extend(pc.scene, function () {
 
         var pixels = new ArrayBuffer(4 * rect.width * rect.height);
         var pixelsBytes = new Uint8Array(pixels);
-        var gl = pc.gfx.Device.getCurrent().gl;
+        var gl = this.device.gl;
         gl.readPixels(rect.x, rect.y, rect.width, rect.height, gl.RGBA, gl.UNSIGNED_BYTE, pixelsBytes);
 
         var selection = [];
@@ -125,15 +126,14 @@ pc.extend(pc.scene, function () {
      */
     Picker.prototype.prepare = function (camera, scene) {
         this.scene = scene;
+        device = this.device;
 
-        // Cache camera properties
-        var prevRenderTarget = camera.getRenderTarget();
-        var prevClearOptions = camera.getClearOptions();
+        // Cache active render target
+        var prevRenderTarget = device.getRenderTarget();
 
-        // Ready the camera for rendering to the pick buffer
-        camera.setRenderTarget(this._pickBufferTarget);
-        camera.setClearOptions(this._clearOptions);
-        camera.frameBegin();
+        // Ready the device for rendering to the pick buffer
+        device.setRenderTarget(this._pickBufferTarget);
+        device.clear(this._clearOptions);
 
         // Build mesh instance list (ideally done by visibility query)
         var i;
@@ -141,10 +141,20 @@ pc.extend(pc.scene, function () {
         var type;
         var meshInstances = scene.meshInstances;
         var numMeshInstances = meshInstances.length;
-        var device = pc.gfx.Device.getCurrent();
-        var modelMatrixId = device.scope.resolve('matrix_model');
-        var poseMatrixId = device.scope.resolve('matrix_pose[0]');
-        var pickColorId = device.scope.resolve('uColor');
+        var device = this.device;
+        var scope = device.scope;
+        var modelMatrixId = scope.resolve('matrix_model');
+        var poseMatrixId = scope.resolve('matrix_pose[0]');
+        var pickColorId = scope.resolve('uColor');
+        var projId = scope.resolve('matrix_projection');
+        var viewProjId = scope.resolve('matrix_viewProjection');
+
+        var wtm = camera.getWorldTransform();
+        var projMat = camera.getProjectionMatrix();
+        projId.setValue(projMat);
+        var viewMat = pc.math.mat4.invert(wtm);
+        var viewProjMat = pc.math.mat4.multiply(projMat, viewMat);
+        viewProjId.setValue(viewProjMat);
 
         for (i = 0; i < numMeshInstances; i++) {
             meshInstance = meshInstances[i];
@@ -170,11 +180,8 @@ pc.extend(pc.scene, function () {
             }
         }
 
-        camera.frameEnd();
-
-        // Restore camera
-        camera.setRenderTarget(prevRenderTarget);
-        camera.setClearOptions(prevClearOptions);
+        // Restore render target
+        device.setRenderTarget(prevRenderTarget);
     };
 
     /**
@@ -191,7 +198,7 @@ pc.extend(pc.scene, function () {
     Picker.prototype.setDimensions = function (width, height) {
         this._width = width;
         this._height = height;
-        var pickBuffer = new pc.gfx.FrameBuffer(this._width, this._height, true);
+        var pickBuffer = new pc.gfx.FrameBuffer(this.device, this._width, this._height, true);
         var pickBufferTexture = pickBuffer.getTexture();
         pickBufferTexture.minFilter = pc.gfx.FILTER_NEAREST;
         pickBufferTexture.magFilter = pc.gfx.FILTER_NEAREST;
