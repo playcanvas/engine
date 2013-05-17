@@ -19,17 +19,17 @@ pc.extend(pc.fw, function () {
 
             switch (shape.type) {
                 case pc.shape.Type.BOX:
-                    mesh = pc.scene.procedural.createBox({
+                    mesh = pc.scene.procedural.createBox(system.context.graphicsDevice, {
                         halfExtents: shape.halfExtents
                     });
                     break;
                 case pc.shape.Type.SPHERE:
-                    mesh = pc.scene.procedural.createSphere({
+                    mesh = pc.scene.procedural.createSphere(system.context.graphicsDevice, {
                         radius: shape.radius
                     });
                     break;
                 case pc.shape.Type.TORUS:
-                    mesh = pc.scene.procedural.createTorus({
+                    mesh = pc.scene.procedural.createTorus(system.context.graphicsDevice, {
                         tubeRadius: shape.iradius,
                         ringRadius: shape.oradius
                     });
