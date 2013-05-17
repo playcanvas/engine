@@ -396,28 +396,34 @@ pc.extend(pc.gfx, function () {
     };
 
     Device.prototype = {
+        /**
+         * @function
+         * @name pc.gfx.Device#setViewport
+         * @description Set the active rectangle for rendering on the specified device.
+         * @param {Number} x The pixel space x-coordinate of the bottom left corner of the viewport.
+         * @param {Number} y The pixel space y-coordinate of the bottom left corner of the viewport.
+         * @param {Number} w The width of the viewport in pixels.
+         * @param {Number} h The height of the viewport in pixels.
+         * @author Will Eastcott
+         */
         setViewport: function (x, y, width, height) {
             var gl = this.gl;
-            var pixelWidth = this.renderTarget ? this.renderTarget.getFrameBuffer().getWidth() : this.width;
-            var pixelHeight = this.renderTarget ? this.renderTarget.getFrameBuffer().getHeight() : this.height;
-            gl.viewport(
-                Math.floor(x * pixelWidth), 
-                Math.floor(y * pixelHeight),
-                Math.floor(width * pixelWidth),
-                Math.floor(height * pixelHeight)
-            );
+            gl.viewport(x, y, width, height);
         },
 
+        /**
+         * @function
+         * @name pc.gfx.Device#setScissor
+         * @description Set the active scissor rectangle on the specified device.
+         * @param {Number} x The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
+         * @param {Number} y The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
+         * @param {Number} w The width of the scissor rectangle in pixels.
+         * @param {Number} h The height of the scissor rectangle in pixels.
+         * @author Will Eastcott
+         */
         setScissor: function (x, y, width, height) {
             var gl = this.gl;
-            var pixelWidth = this.renderTarget ? this.renderTarget.getFrameBuffer().getWidth() : this.width;
-            var pixelHeight = this.renderTarget ? this.renderTarget.getFrameBuffer().getHeight() : this.height;
-            gl.scissor(
-                Math.floor(x * pixelWidth), 
-                Math.floor(y * pixelHeight),
-                Math.floor(width * pixelWidth),
-                Math.floor(height * pixelHeight)
-            );
+            gl.scissor(x, y, width, height);
         },
 
         /**

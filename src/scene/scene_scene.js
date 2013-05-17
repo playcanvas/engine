@@ -357,12 +357,19 @@ pc.extend(pc.scene, function () {
 
             cam._frustum.update(projMat, viewMat);
 
-            device.setRenderTarget(cam.getRenderTarget());
+            var target = cam.getRenderTarget();
+            device.setRenderTarget(target);
             device.updateBegin();
 
             var rect = cam.getRect();
-            device.setViewport(rect.x, rect.y, rect.width, rect.height);
-            device.setScissor(rect.x, rect.y, rect.width, rect.height);
+            var pixelWidth = target ? target.getFrameBuffer().getWidth() : device.width;
+            var pixelHeight = target ? target.getFrameBuffer().getHeight() : device.height;
+            var x = Math.floor(rect.x * pixelWidth);
+            var y = Math.floor(rect.y * pixelHeight);
+            var w = Math.floor(rect.width * pixelWidth);
+            var h = Math.floor(rect.height * pixelHeight);
+            device.setViewport(x, y, w, h);
+            device.setScissor(x, y, w, h);
 
             device.clear(cam.getClearOptions());
         }
