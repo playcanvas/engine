@@ -359,6 +359,11 @@ pc.extend(pc.scene, function () {
 
             device.setRenderTarget(cam.getRenderTarget());
             device.updateBegin();
+
+            var rect = cam.getRect();
+            device.setViewport(rect.x, rect.y, rect.width, rect.height);
+            device.setScissor(rect.x, rect.y, rect.width, rect.height);
+
             device.clear(cam.getClearOptions());
         }
 

@@ -398,12 +398,26 @@ pc.extend(pc.gfx, function () {
     Device.prototype = {
         setViewport: function (x, y, width, height) {
             var gl = this.gl;
-            gl.viewport(x, y, width, height);
+            var pixelWidth = this.renderTarget ? this.renderTarget.getFrameBuffer().getWidth() : this.width;
+            var pixelHeight = this.renderTarget ? this.renderTarget.getFrameBuffer().getHeight() : this.height;
+            gl.viewport(
+                Math.floor(x * pixelWidth), 
+                Math.floor(y * pixelHeight),
+                Math.floor(width * pixelWidth),
+                Math.floor(height * pixelHeight)
+            );
         },
 
         setScissor: function (x, y, width, height) {
             var gl = this.gl;
-            gl.scissor(x, y, width, height);
+            var pixelWidth = this.renderTarget ? this.renderTarget.getFrameBuffer().getWidth() : this.width;
+            var pixelHeight = this.renderTarget ? this.renderTarget.getFrameBuffer().getHeight() : this.height;
+            gl.scissor(
+                Math.floor(x * pixelWidth), 
+                Math.floor(y * pixelHeight),
+                Math.floor(width * pixelWidth),
+                Math.floor(height * pixelHeight)
+            );
         },
 
         /**
@@ -451,12 +465,8 @@ pc.extend(pc.gfx, function () {
                 var buffer = this.renderTarget.getFrameBuffer();
                 var w = buffer.getWidth();
                 var h = buffer.getHeight();
-                gl.scissor(0, 0, w, h);
-                gl.viewport(0, 0, w, h);
                 buffer.bind();
             } else {
-                gl.scissor(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-                gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 

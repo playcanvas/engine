@@ -24,6 +24,13 @@ pc.extend(pc.scene, function () {
         this._viewMat = m4.create();
         this._viewProjMat = m4.create();
 
+        this._rect = { 
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1
+        };
+
         this._frustum = new pc.shape.Frustum(this._projMat, this._viewMat);
 
         // Create a full size viewport onto the backbuffer
@@ -269,6 +276,10 @@ pc.extend(pc.scene, function () {
         return this._projMat;
     };
 
+    CameraNode.prototype.getRect = function () {
+        return this._rect;
+    };
+
     /**
      * @function
      * @name pc.scene.CameraNode#getRenderTarget
@@ -368,6 +379,13 @@ pc.extend(pc.scene, function () {
     CameraNode.prototype.setProjection = function (type) {
         this._projection = type;
         this._projMatDirty = true;
+    };
+
+    CameraNode.prototype.setRect = function (x, y, width, height) {
+        this._rect.x = x;
+        this._rect.y = y;
+        this._rect.width = width;
+        this._rect.height = height;
     };
 
     /**

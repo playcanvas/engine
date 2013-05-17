@@ -211,9 +211,8 @@ pc.gfx.post.bloom = function () {
             blurProg = new pc.gfx.Program(device, passThroughShader, blurShader);
             combineProg = new pc.gfx.Program(device, passThroughShader, combineShader);
 
-            var backBuffer = new pc.gfx.FrameBuffer(device);
-            width = backBuffer.getWidth();
-            height = backBuffer.getHeight();
+            var width = device.width;
+            var height = device.height;
 
             for (var i = 0; i < 2; i++) {
                 var buffer = new pc.gfx.FrameBuffer(device, width >> 1, height >> 1, false);
@@ -224,7 +223,7 @@ pc.gfx.post.bloom = function () {
                 buffTex.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
                 targets.push(new pc.gfx.RenderTarget(buffer));
             }
-            
+
             // Create the vertex format
             var vertexFormat = new pc.gfx.VertexFormat();
             vertexFormat.begin();
