@@ -72,7 +72,7 @@ pc.extend(pc.fw, function () {
                     var positions;
                     for (j = 0; j < format.elements.length; j++) {
                         var element = format.elements[j];
-                        if (element.scopeId.name === 'vertex_position') {
+                        if (element.name === 'vertex_position') {
                             positions = new Float32Array(vb.lock(), element.offset);
                         }
                     }
