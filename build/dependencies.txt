@@ -190,6 +190,7 @@
 ../src/framework/livelink/livelink_update_entity_message.js
 ../src/framework/livelink/livelink_close_entity_message.js
 ../src/framework/livelink/livelink_open_entity_message.js
+../src/framework/livelink/livelink_update_asset_message.js
 ../src/framework/entity/entity_entity.js
 ../src/framework/asset/asset_asset.js
 ../src/framework/asset/asset_assetregistry.js

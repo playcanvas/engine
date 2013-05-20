@@ -77,8 +77,6 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
-        
-    
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
@@ -597,30 +595,11 @@ pc.extend(pc.fw, function () {
                             this.context.root.addChild(entity);
                         }
                     }
-                    // if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
-                    //     var i, len = msg.content.models.length;
+                    break;
+                case pc.fw.LiveLinkMessageType.UPDATE_ASSET:
+                    this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
+                    break;
 
-                    //     for (i = 0; i < len; i++) {
-                    //         var model = msg.content.models[i];
-                    //         entity = this.context.loader.open(pc.resources.EntityRequest, model);
-                    //         entities[entity.getGuid()] = entity;
-                    //     }
-                        
-                    //     for (guid in entities) {
-                    //         if (entities.hasOwnProperty(guid)) {
-                    //             pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
-                    //             if (!entities[guid].__parent) {
-                    //                 // If entity has no parent add to the root
-                    //                 this.context.root.addChild(entities[guid]);
-                    //             } else if (!entities[entities[guid].__parent]) {
-                    //                 // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
-                    //                 parent = this.context.root.findByGuid(entities[guid].__parent);
-                    //                 parent.addChild(entities[guid]);
-                    //             }
-                    //         }
-                    //     }
-                    // }
-                break;
             }
         },
 
@@ -705,6 +684,25 @@ pc.extend(pc.fw, function () {
                     if(this.context.systems.hasOwnProperty(type)) {
                         if(!components.hasOwnProperty(type) && entity[type]) {
                             this.context.systems[type].removeComponent(entity);
+                        }
+                    }
+                }
+            }
+        },
+
+        _linkUpdateAsset: function (guid, attribute, value) {
+            var asset = this.context.assets.getAsset(guid);
+            if (asset) {
+                asset[attribute] = value;
+
+                if (asset.type === 'model') {
+                    var store = this.context.systems.model.store;
+                    for (var resourceId in store) {
+                        if (store[resourceId].data.asset === guid) {
+                            // reload asset
+                            this.context.loader.removeFromCache(asset.getFileUrl())
+                            store[resourceId].entity.model.asset = null;
+                            store[resourceId].entity.model.asset = guid;
                         }
                     }
                 }

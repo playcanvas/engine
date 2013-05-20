@@ -653,7 +653,7 @@ pc.extend(pc.resources, function () {
     * @name pc.resources.ModelResourceHandler#_loadModelJson
     * @description Load a pc.scene.Model from data in the PlayCanvas JSON format
     * @param {Object} json The data
-    * @param {Object} mapping The mapping data for materials and textures
+    * @param {Object} mapping An array of mapping data, for each mesh there should be a entry with a 'material' field mapping meshInstance to material asset
     */
     ModelResourceHandler.prototype._loadModelJsonV2 = function (data, mapping, options) {
         // TODO: Support vertex semantics somehow...
@@ -811,7 +811,7 @@ pc.extend(pc.resources, function () {
         var meshInstances = [];
         var defaultMaterial = new pc.scene.PhongMaterial();
         for (i = 0; i < modelData.meshInstances.length; i++) {
-            var material = mapping ? this._loadMaterialV2(mapping[i].material) : defaultMaterial;
+            var material = (mapping && mapping[i].material) ? this._loadMaterialV2(mapping[i].material) : defaultMaterial;
 
             var meshInstanceData = modelData.meshInstances[i];
 
@@ -839,15 +839,19 @@ pc.extend(pc.resources, function () {
         var url = asset.getFileUrl();
         var textureData = asset.data;
         if (url) {
-            var texture = new pc.gfx.Texture({
-                format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
-            });
 
-            texture.name = textureData.name;
-            texture.addressU = this._jsonToAddressMode[textureData.addressu];
-            texture.addressV = this._jsonToAddressMode[textureData.addressv];
-            texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
-            texture.minFilter = this._jsonToFilterMode[textureData.minfilter];
+            var texture = this._assets.loader.getFromCache(url);
+            if (!texture) {
+                var texture = new pc.gfx.Texture({
+                    format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
+                });
+
+                texture.name = textureData.name;
+                texture.addressU = this._jsonToAddressMode[textureData.addressu];
+                texture.addressV = this._jsonToAddressMode[textureData.addressv];
+                texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
+                texture.minFilter = this._jsonToFilterMode[textureData.minfilter];                
+            }
 
             this._assets.load([asset], [texture], {});
             return texture;
@@ -859,7 +863,6 @@ pc.extend(pc.resources, function () {
     ModelResourceHandler.prototype._loadMaterialV2 = function(materialId) {
         var asset = this._assets.getAsset(materialId);
         var materialData = asset.data;
-
         var material = new pc.scene.PhongMaterial();
         material.name = materialData.name;
 

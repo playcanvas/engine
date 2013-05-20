@@ -24,9 +24,6 @@ pc.extend(pc.fw, function () {
                     // Register hashes with the resource loader
                     if (asset.file) {
                         this.loader.registerHash(asset.file.hash, asset.getFileUrl());
-                        asset.subfiles.forEach(function (file, i) {
-                            loader.registerHash(file.hash, asset.getSubAssetFileUrl(i));
-                        });
                     }
                 } else {
                     // Update asset data
@@ -113,9 +110,9 @@ pc.extend(pc.fw, function () {
 
         _createModelRequest: function (asset) {
             var url = asset.getFileUrl();
-            var mapping = asset.data;
+            var mapping = asset.data.mapping ? asset.data.mapping : [];
 
-            return new pc.resources.ModelRequest(url, asset.data);
+            return new pc.resources.ModelRequest(url, mapping);
         },
 
         _createTextureRequest: function (asset, texture) {

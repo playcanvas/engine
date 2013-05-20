@@ -247,6 +247,21 @@ pc.extend(pc.resources, function () {
         },
 
         /**
+        * @function 
+        * @name pc.resources.ResourceLoader#removeFromCache
+        * @description Remove a resource from the cache
+        * @param {String} identifier The identifier for the resource
+        */
+        removeFromCache: function (identifier) {
+            var hash = this.getHash(identifier);
+            if (hash) {
+                delete this._cache[hash]
+            } else {
+                return null;
+            }
+        },
+
+        /**
         * @function
         * @name pc.resources.ResourceLoader#resetProgress
         * @description Call this to reset the progress counter to 0
@@ -299,9 +314,13 @@ pc.extend(pc.resources, function () {
                         // Not in cache, load the resource
                         var promise = handler.load(request, options);
                         promise.then(function (data) {
-                            var resource = self._open(data, request, options);
-                            resource = self._postOpen(resource, request);
-                            resolve(resource);
+                            try {
+                                var resource = self._open(data, request, options);
+                                resource = self._postOpen(resource, request);
+                                resolve(resource);                                
+                            } catch (e) {
+                                reject(e);
+                            }
                         }, function (error) {
                             self.fire("error", request, error);
                             reject(error);
