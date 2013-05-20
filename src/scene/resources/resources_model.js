@@ -726,7 +726,7 @@ pc.extend(pc.resources, function () {
 
             // Create the vertex buffer
             var numVertices = vertexData.position.data.length / vertexData.position.components;
-            var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
+            var vertexBuffer = new pc.gfx.VertexBuffer(this._device, vertexFormat, numVertices);
 
             var iterator = new pc.gfx.VertexIterator(vertexBuffer);
             for (j = 0; j < numVertices; j++) {
@@ -769,7 +769,7 @@ pc.extend(pc.resources, function () {
         var indexData = null;
         var indexBase = 0;
         if (numIndices > 0) {
-            indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, numIndices);
+            indexBuffer = new pc.gfx.IndexBuffer(this._device, pc.gfx.INDEXFORMAT_UINT16, numIndices);
             indexData = new Uint16Array(indexBuffer.lock());
         }
 
@@ -842,7 +842,7 @@ pc.extend(pc.resources, function () {
 
             var texture = this._assets.loader.getFromCache(url);
             if (!texture) {
-                var texture = new pc.gfx.Texture({
+                var texture = new pc.gfx.Texture(this._device, {
                     format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
                 });
 
