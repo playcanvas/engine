@@ -1,5 +1,5 @@
 pc.gfx.programlib.basic = {
-    generateKey: function (options) {
+    generateKey: function (device, options) {
         var key = 'basic';
         if (options.fog)          key += '_fog';
         if (options.alphaTest)    key += '_atst';
@@ -8,15 +8,15 @@ pc.gfx.programlib.basic = {
         return key;
     },
 
-    generateVertexShader: function (options) {
+    generateVertexShader: function (device, options) {
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
         if (options.skin) {
-            code += getSnippet('vs_skin_position_decl');
+            code += getSnippet(device, 'vs_skin_position_decl');
         } else {
-            code += getSnippet('vs_static_position_decl');
+            code += getSnippet(device, 'vs_static_position_decl');
         }
         if (options.vertexColors) {
             code += 'attribute vec4 vertex_color;\n';
@@ -28,13 +28,13 @@ pc.gfx.programlib.basic = {
         }
 
         // VERTEX SHADER BODY
-        code += getSnippet('common_main_begin');
+        code += getSnippet(device, 'common_main_begin');
 
         // Skinning is performed in world space
         if (options.skin) {
-            code += getSnippet('vs_skin_position');
+            code += getSnippet(device, 'vs_skin_position');
         } else {
-            code += getSnippet('vs_static_position');
+            code += getSnippet(device, 'vs_static_position');
         }
 
         if (options.vertexColors) {
@@ -44,14 +44,14 @@ pc.gfx.programlib.basic = {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        code += getSnippet('common_main_end');
+        code += getSnippet(device, 'common_main_end');
         
         return code;
     },
 
-    generateFragmentShader: function (options) {
+    generateFragmentShader: function (device, options) {
         var getSnippet = pc.gfx.programlib.getSnippet;
-        var code = getSnippet('fs_precision');
+        var code = getSnippet(device, 'fs_precision');
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
@@ -64,14 +64,14 @@ pc.gfx.programlib.basic = {
             code += 'uniform sampler2D texture_diffuseMap;\n';
         }
         if (options.fog) {
-            code += getSnippet('fs_fog_decl');
+            code += getSnippet(device, 'fs_fog_decl');
         }
         if (options.alphatest) {
-            code += getSnippet('fs_alpha_test_decl');
+            code += getSnippet(device, 'fs_alpha_test_decl');
         }
 
         // FRAGMENT SHADER BODY
-        code += getSnippet('common_main_begin');
+        code += getSnippet(device, 'common_main_begin');
 
         // Read the map texels that the shader needs
         if (options.vertexColors) {
@@ -84,16 +84,16 @@ pc.gfx.programlib.basic = {
         }
 
         if (options.alphatest) {
-            code += getSnippet('fs_alpha_test');
+            code += getSnippet(device, 'fs_alpha_test');
         }
 
-        code += getSnippet('fs_clamp');
+        code += getSnippet(device, 'fs_clamp');
 
         if (options.fog) {
-            code += getSnippet('fs_fog');
+            code += getSnippet(device, 'fs_fog');
         }
 
-        code += getSnippet('common_main_end');
+        code += getSnippet(device, 'common_main_end');
 
         return code;
     }

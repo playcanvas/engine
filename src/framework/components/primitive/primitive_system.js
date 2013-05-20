@@ -65,22 +65,23 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.box = pc.scene.procedural.createBox({
+        var gd = context.graphicsDevice;
+        this.box = pc.scene.procedural.createBox(gd, {
             halfExtents: [0.5,0.5,0.5]
         });
-        this.capsule = pc.scene.procedural.createCapsule({
+        this.capsule = pc.scene.procedural.createCapsule(gd, {
             radius: 0.5,
             height: 2
         });
-        this.sphere = pc.scene.procedural.createSphere({
+        this.sphere = pc.scene.procedural.createSphere(gd, {
             radius: 0.5
         });
-        this.cone = pc.scene.procedural.createCone({
+        this.cone = pc.scene.procedural.createCone(gd, {
             baseRadius: 0.5,
             peakRadius: 0,
             height: 1
         });
-        this.cylinder = pc.scene.procedural.createCylinder({
+        this.cylinder = pc.scene.procedural.createCylinder(gd, {
             radius: 0.5,
             height: 1
         });

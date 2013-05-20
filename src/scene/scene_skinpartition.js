@@ -98,7 +98,7 @@ pc.extend(pc.scene, function () {
         }
     };
 
-    function partitionSkin(boneLimit, vertexBuffers, indexBuffer, meshes, skin) {
+    function partitionSkin(device, boneLimit, vertexBuffers, indexBuffer, meshes, skin) {
         var i, j;
         var partition;
         var partitions = [];
@@ -120,10 +120,10 @@ pc.extend(pc.scene, function () {
                 // Not doing an unlock because we're reading....but yeah, it's naughty
 
                 for (var j = 0; j < format.elements.length; j++) {
-                    if (format.elements[j].scopeId.name === 'vertex_boneIndices') {
+                    if (format.elements[j].name === 'vertex_boneIndices') {
                         vert.boneIndices = new Uint8Array(vert.vertexData[i], format.elements[j].offset, 4);
                     }
-                    if (format.elements[j].scopeId.name === 'vertex_boneWeights') {
+                    if (format.elements[j].name === 'vertex_boneWeights') {
                         vert.boneWeights = new Float32Array(vert.vertexData[i], format.elements[j].offset, 4);
                     }
                 }
@@ -226,7 +226,7 @@ pc.extend(pc.scene, function () {
         // Build new vertex buffer from partitioned vertices
         var partitionedVbs = [];
         for (i = 0; i < vbs.length; i++) {
-            var partitionedVb = new pc.gfx.VertexBuffer(vbs[i].getFormat(), partitionedVertices.length);
+            var partitionedVb = new pc.gfx.VertexBuffer(device, vbs[i].getFormat(), partitionedVertices.length);
             var lockedBuffer = partitionedVb.lock();
             var byteArray = new Uint8Array(lockedBuffer);
             for (j = 0; j < partitionedVertices.length; j++) {
@@ -246,7 +246,7 @@ pc.extend(pc.scene, function () {
             indices = indices.concat(partitionedIndices.splice(0, partition.indexCount));
         }
 
-        var partitionedIb = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, indices.length);
+        var partitionedIb = new pc.gfx.IndexBuffer(device, pc.gfx.INDEXFORMAT_UINT16, indices.length);
         var idata = new Uint16Array(partitionedIb.lock());
         idata.set(indices);
         partitionedIb.unlock();

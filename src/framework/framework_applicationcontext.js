@@ -5,7 +5,8 @@ pc.extend(pc.fw, function() {
      * @constructor Create a new ApplicationContext
      * @name pc.fw.ApplicationContext
      * @param {pc.resources.ResourceLoader} loaders LoaderManager which is used to load resources
-     * @param {Object} scene Used to manage models to render
+     * @param {pc.scene.Scene} scene Used to manage models to render
+     * @param {pc.gfx.Device} graphicsDevice Global graphics device
      * @param {Object} registry ComponentSystemRegistry stores all the ComponentSystems and is used to access Component data
      * @param {Object} [options] Optional extras such as input handlers      
      * @param {Object} [options.controller] Generic controller for getting user input
@@ -13,9 +14,10 @@ pc.extend(pc.fw, function() {
      * @param {Object} [options.mouse] Mouse controller for getting user input
      * @param {Object} [options.gamepads] GamePads controller for getting user input
      */
-    var ApplicationContext = function (loader, scene, registry, options) {
+    var ApplicationContext = function (loader, scene, graphicsDevice, registry, options) {
         this.loader = loader;
         this.scene = scene;
+        this.graphicsDevice = graphicsDevice;
         this.root = new pc.fw.Entity();
 
         var prefix = options.depot ? options.depot.assets.getServer().getBaseUrl() : null;

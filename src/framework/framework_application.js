@@ -44,10 +44,7 @@ pc.extend(pc.fw, function () {
         // Create the graphics device
         this.graphicsDevice = new pc.gfx.Device(canvas);
 
-        // Activate the graphics device
-        pc.gfx.Device.setCurrent(this.graphicsDevice);        
-
-        pc.gfx.post.initialize();
+        pc.gfx.post.initialize(this.graphicsDevice);
 
         // Enable validation of each WebGL command
         this.graphicsDevice.enableValidation(false);            
@@ -65,14 +62,14 @@ pc.extend(pc.fw, function () {
         }
         
         // The ApplicationContext is passed to new Components and user scripts
-        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), registry, options);
+        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
         
         // Enable new texture bank feature to cache textures
         var textureCache = new pc.resources.TextureCache(loader);
         
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler());
-        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.context.assets));
+        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
@@ -188,9 +185,9 @@ pc.extend(pc.fw, function () {
                         onLoaded(resources);
                     });
                 } else {
-                    // no assets to load
+                    // No assets to load
                     setTimeout(function () {
-                        onLoaded([])
+                        onLoaded([]);
                     }, 0);
                 }       
             }.bind(this);
@@ -298,13 +295,11 @@ pc.extend(pc.fw, function () {
 
             context.root.syncHierarchy();
 
-            pc.gfx.Device.setCurrent(this.graphicsDevice);
-
             var cameraEntity = context.systems.camera.current;
             if (cameraEntity) {
                 context.systems.camera.frameBegin();
 
-                context.scene.render(cameraEntity.camera.camera);
+                context.scene.render(cameraEntity.camera.camera, this.graphicsDevice);
 
                 context.systems.camera.frameEnd();            
             }

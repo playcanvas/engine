@@ -98,7 +98,7 @@ pc.gfx.post.bloom = function () {
     };
     
     return {
-        initialize: function () {
+        initialize: function (device) {
             var passThroughVert = [
                 "attribute vec3 aPosition;",
                 "",
@@ -203,20 +203,19 @@ pc.gfx.post.bloom = function () {
                 "}"
             ].join("\n");
 
-            var passThroughShader = new pc.gfx.Shader(pc.gfx.SHADERTYPE_VERTEX, passThroughVert);
-            var extractShader = new pc.gfx.Shader(pc.gfx.SHADERTYPE_FRAGMENT, bloomExtractFrag);
-            var blurShader = new pc.gfx.Shader(pc.gfx.SHADERTYPE_FRAGMENT, gaussianBlurFrag);
-            var combineShader = new pc.gfx.Shader(pc.gfx.SHADERTYPE_FRAGMENT, bloomCombineFrag);
-            extractProg = new pc.gfx.Program(passThroughShader, extractShader);
-            blurProg = new pc.gfx.Program(passThroughShader, blurShader);
-            combineProg = new pc.gfx.Program(passThroughShader, combineShader);
+            var passThroughShader = new pc.gfx.Shader(device, pc.gfx.SHADERTYPE_VERTEX, passThroughVert);
+            var extractShader = new pc.gfx.Shader(device, pc.gfx.SHADERTYPE_FRAGMENT, bloomExtractFrag);
+            var blurShader = new pc.gfx.Shader(device, pc.gfx.SHADERTYPE_FRAGMENT, gaussianBlurFrag);
+            var combineShader = new pc.gfx.Shader(device, pc.gfx.SHADERTYPE_FRAGMENT, bloomCombineFrag);
+            extractProg = new pc.gfx.Program(device, passThroughShader, extractShader);
+            blurProg = new pc.gfx.Program(device, passThroughShader, blurShader);
+            combineProg = new pc.gfx.Program(device, passThroughShader, combineShader);
 
-            var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
-            width = backBuffer.getWidth();
-            height = backBuffer.getHeight();
+            var width = device.width;
+            var height = device.height;
 
             for (var i = 0; i < 2; i++) {
-                var buffer = new pc.gfx.FrameBuffer(width >> 1, height >> 1, false);
+                var buffer = new pc.gfx.FrameBuffer(device, width >> 1, height >> 1, false);
                 var buffTex = buffer.getTexture();
                 buffTex.minFilter = pc.gfx.FILTER_LINEAR;
                 buffTex.magFilter = pc.gfx.FILTER_LINEAR;
@@ -224,7 +223,7 @@ pc.gfx.post.bloom = function () {
                 buffTex.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
                 targets.push(new pc.gfx.RenderTarget(buffer));
             }
-            
+
             // Create the vertex format
             var vertexFormat = new pc.gfx.VertexFormat();
             vertexFormat.begin();
@@ -232,7 +231,7 @@ pc.gfx.post.bloom = function () {
             vertexFormat.end();
 
             // Create a vertex buffer
-            vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, 4);
+            vertexBuffer = new pc.gfx.VertexBuffer(device, vertexFormat, 4);
 
             // Fill the vertex buffer
             var iterator = new pc.gfx.VertexIterator(vertexBuffer);
@@ -246,7 +245,7 @@ pc.gfx.post.bloom = function () {
             iterator.end();
         },
 
-        render: function (inputTarget, outputTarget, options) {
+        render: function (device, inputTarget, outputTarget, options) {
             if (options === undefined) {
                 options = options || defaults;
             } else {
@@ -255,7 +254,6 @@ pc.gfx.post.bloom = function () {
                 }
             }
 
-            var device = pc.gfx.Device.getCurrent();
             var scope = device.scope;
 
             // Pass 1: draw the scene into rendertarget 1, using a

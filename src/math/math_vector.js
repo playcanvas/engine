@@ -42,7 +42,9 @@ pc.math.vec2 = function () {
          * @author Will Eastcott
          */
         clone: function (v0) {
-            return new Float32Array(v0);
+            var c = pc.math.vec2.create();
+            pc.math.vec2.copy(v0, c);
+            return c;
         },
 
         /**
@@ -392,7 +394,9 @@ pc.math.vec3 = function () {
          * @author Will Eastcott
          */
         clone: function (v0) {
-            return new Float32Array(v0);
+            var c = pc.math.vec3.create();
+            pc.math.vec3.copy(v0, c);
+            return c;
         },
 
         /**
@@ -686,7 +690,9 @@ pc.math.vec4 = function () {
         },
 
         clone : function (v0) {
-            return new Float32Array(v0);
+            var c = pc.math.vec4.create();
+            pc.math.vec4.copy(v0, c);
+            return c;
         },
 
         copy : function (v0, r) {

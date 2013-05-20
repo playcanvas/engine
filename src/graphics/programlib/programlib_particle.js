@@ -1,10 +1,10 @@
 pc.gfx.programlib.particle = {
-    generateKey: function (options) {
+    generateKey: function (device, options) {
         var key = "particle";
         return key;
     },
 
-    generateVertexShader: function (options) {
+    generateVertexShader: function (device, options) {
         var code = "";
 
         // VERTEX SHADER INPUTS: ATTRIBUTES
@@ -73,7 +73,7 @@ pc.gfx.programlib.particle = {
         return code;
     },
 
-    generateFragmentShader: function (options) {
+    generateFragmentShader: function (device, options) {
         var code = "";
 
         code += "precision mediump float;\n";

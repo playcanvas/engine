@@ -7,7 +7,7 @@ pc.extend(pc.gfx, function () {
      * @param {pc.gfx.Shader} vertexShader The vertex shader to be linked into the new program.
      * @param {pc.gfx.Shader} fragmentShader The fragment shader to be linked into the new program.
      */
-    var Program = function (vertexShader, fragmentShader) {
+    var Program = function (device, vertexShader, fragmentShader) {
         this.id = id++;
 
         this.attributes = [];
@@ -15,8 +15,8 @@ pc.extend(pc.gfx, function () {
         this.uniforms   = [];
         
         // Create the WebGL program ID
-        this.gl = pc.gfx.Device.getCurrent().gl;
-        var gl = this.gl;
+        this.device = device;
+        var gl = this.device.gl;
 
         var _typeToString = {};
         _typeToString[gl.BOOL]         = "bool";
@@ -77,7 +77,7 @@ pc.extend(pc.gfx, function () {
         while (i < numAttributes) {
             info = gl.getActiveAttrib(this.programId, i++);
             locationId = gl.getAttribLocation(this.programId, info.name);
-            this.attributes.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
+            this.attributes.push(new pc.gfx.ShaderInput(device, info.name, _typeToPc[info.type], locationId));
         }
 
         // Query the program for each shader state (GLSL 'uniform')
@@ -87,9 +87,9 @@ pc.extend(pc.gfx, function () {
             info = gl.getActiveUniform(this.programId, i++);
             locationId = gl.getUniformLocation(this.programId, info.name);
             if ((info.type === gl.SAMPLER_2D) || (info.type === gl.SAMPLER_CUBE)) {
-                this.samplers.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
+                this.samplers.push(new pc.gfx.ShaderInput(device, info.name, _typeToPc[info.type], locationId));
             } else {
-                this.uniforms.push(new pc.gfx.ShaderInput(info.name, _typeToPc[info.type], locationId));
+                this.uniforms.push(new pc.gfx.ShaderInput(device, info.name, _typeToPc[info.type], locationId));
             }
         }
     };
@@ -102,7 +102,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         destroy: function () {
-            var gl = this.gl;
+            var gl = this.device.gl;
             gl.deleteProgram(this.programId);
         }
     };

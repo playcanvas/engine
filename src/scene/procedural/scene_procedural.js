@@ -141,7 +141,7 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
  *     });
  * @author Will Eastcott
  */
-pc.scene.procedural.createMesh = function (positions, opts) {
+pc.scene.procedural.createMesh = function (device, positions, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var normals = opts && opts.normals !== undefined ? opts.normals : null;
     var tangents = opts && opts.tangents !== undefined ? opts.tangents : null;
@@ -164,7 +164,7 @@ pc.scene.procedural.createMesh = function (positions, opts) {
 
     // Create the vertex buffer
     var numVertices  = positions.length / 3;
-    var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
+    var vertexBuffer = new pc.gfx.VertexBuffer(device, vertexFormat, numVertices);
 
     // Write the vertex data into the vertex buffer
     var iterator = new pc.gfx.VertexIterator(vertexBuffer);
@@ -187,7 +187,7 @@ pc.scene.procedural.createMesh = function (positions, opts) {
     var indexBuffer = null;
     var indexed = (indices !== null);
     if (indexed) {
-        indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, indices.length);
+        indexBuffer = new pc.gfx.IndexBuffer(device, pc.gfx.INDEXFORMAT_UINT16, indices.length);
 
         // Read the indicies into the index buffer
         var dst = new Uint16Array(indexBuffer.lock());
@@ -226,7 +226,7 @@ pc.scene.procedural.createMesh = function (positions, opts) {
  * @returns {pc.scene.Mesh} A new torus-shaped mesh.
  * @author Will Eastcott
  */
-pc.scene.procedural.createTorus = function (opts) {
+pc.scene.procedural.createTorus = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var rc = opts && opts.tubeRadius !== undefined ? opts.tubeRadius : 0.2;
     var rt = opts && opts.ringRadius !== undefined ? opts.ringRadius : 0.3;
@@ -277,12 +277,11 @@ pc.scene.procedural.createTorus = function (opts) {
         indices:   indices
     };
 
-    var device = pc.gfx.Device.getCurrent();
-    if (device.precalculatedTangents) {
+    if (pc.gfx.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.scene.procedural.createMesh(positions, options);
+    return pc.scene.procedural.createMesh(device, positions, options);
 };
 
 pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, heightSegments, capSegments, roundedCaps) {
@@ -480,7 +479,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
  * @returns {pc.scene.Mesh} A new cylinder-shaped mesh.
  * @author Will Eastcott
  */
-pc.scene.procedural.createCylinder = function (opts) {
+pc.scene.procedural.createCylinder = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
@@ -490,12 +489,11 @@ pc.scene.procedural.createCylinder = function (opts) {
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
 
-    var device = pc.gfx.Device.getCurrent();
-    if (device.precalculatedTangents) {
+    if (pc.gfx.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
-    return pc.scene.procedural.createMesh(options.positions, options);
+    return pc.scene.procedural.createMesh(device, options.positions, options);
 };
 
 /**
@@ -515,7 +513,7 @@ pc.scene.procedural.createCylinder = function (opts) {
  * @returns {pc.scene.Mesh} A new cylinder-shaped mesh.
  * @author Will Eastcott
  */
-pc.scene.procedural.createCapsule = function (opts) {
+pc.scene.procedural.createCapsule = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.3;
     var height = opts && opts.height !== undefined ? opts.height : 1.0;
@@ -525,12 +523,11 @@ pc.scene.procedural.createCapsule = function (opts) {
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc.scene.procedural._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
-    var device = pc.gfx.Device.getCurrent();
-    if (device.precalculatedTangents) {
+    if (pc.gfx.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
-    return pc.scene.procedural.createMesh(options.positions, options);
+    return pc.scene.procedural.createMesh(device, options.positions, options);
 };
 
 /**
@@ -551,7 +548,7 @@ pc.scene.procedural.createCapsule = function (opts) {
  * @returns {pc.scene.Mesh} A new cone-shaped mesh.
  * @author Will Eastcott
  */
-pc.scene.procedural.createCone = function (opts) {
+pc.scene.procedural.createCone = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var baseRadius = opts && opts.baseRadius !== undefined ? opts.baseRadius : 0.5;
     var peakRadius = opts && opts.peakRadius !== undefined ? opts.peakRadius : 0.0;
@@ -561,12 +558,11 @@ pc.scene.procedural.createCone = function (opts) {
 
     var options = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
-    var device = pc.gfx.Device.getCurrent();
-    if (device.precalculatedTangents) {
+    if (pc.gfx.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
-    return pc.scene.procedural.createMesh(options.positions, options);
+    return pc.scene.procedural.createMesh(device, options.positions, options);
 };
 
 /**
@@ -584,7 +580,7 @@ pc.scene.procedural.createCone = function (opts) {
  * @returns {pc.scene.Mesh} A new sphere-shaped mesh.
  * @author Will Eastcott
  */
-pc.scene.procedural.createSphere = function (opts) {
+pc.scene.procedural.createSphere = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var radius = opts && opts.radius !== undefined ? opts.radius : 0.5;
     var latitudeBands = opts && opts.latitudeBands !== undefined ? opts.latitudeBands : 16;
@@ -639,12 +635,11 @@ pc.scene.procedural.createSphere = function (opts) {
         indices:   indices
     };
 
-    var device = pc.gfx.Device.getCurrent();
-    if (device.precalculatedTangents) {
+    if (pc.gfx.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.scene.procedural.createMesh(positions, options);
+    return pc.scene.procedural.createMesh(device, positions, options);
 };
 
 /**
@@ -664,7 +659,7 @@ pc.scene.procedural.createSphere = function (opts) {
  * @returns {pc.scene.Mesh} A new plane-shaped mesh.
  * @author Will Eastcott
  */
-pc.scene.procedural.createPlane = function (opts) {
+pc.scene.procedural.createPlane = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : [0.5, 0.5];
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
@@ -712,12 +707,11 @@ pc.scene.procedural.createPlane = function (opts) {
         indices:   indices
     };
 
-    var device = pc.gfx.Device.getCurrent();
-    if (device.precalculatedTangents) {
+    if (pc.gfx.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.scene.procedural.createMesh(positions, options);
+    return pc.scene.procedural.createMesh(device, positions, options);
 };
 
 /**
@@ -737,7 +731,7 @@ pc.scene.procedural.createPlane = function (opts) {
  * @return {pc.scene.Mesh} A new box-shaped mesh.
  * @author Will Eastcott
  */
-pc.scene.procedural.createBox = function (opts) {
+pc.scene.procedural.createBox = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
     var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : [0.5, 0.5, 0.5];
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 1;
@@ -831,10 +825,9 @@ pc.scene.procedural.createBox = function (opts) {
         indices:   indices
     };
 
-    var device = pc.gfx.Device.getCurrent();
-    if (device.precalculatedTangents) {
+    if (pc.gfx.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
     }
 
-    return pc.scene.procedural.createMesh(positions, options);
+    return pc.scene.procedural.createMesh(device, positions, options);
 };
