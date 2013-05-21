@@ -113,7 +113,7 @@ pc.gfx.programlib = {
                 break;
 
             case 'fs_normal_map_funcs':
-                if (!device.precalculatedTangents) {
+                if (!pc.gfx.precalculatedTangents) {
                     code += 'mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )\n';
                     code += '{\n';
                                  // get edge vectors of the pixel triangle
