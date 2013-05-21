@@ -3,11 +3,12 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.IndexBuffer
      * @class An index buffer is the mechanism via which the application specifies vertex 
      * index data to the graphics hardware.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this index buffer.
      * @param {Number} format The type of each index to be stored in the index buffer (see pc.gfx.INDEXFORMAT_*).
      * @param {Number} numIndices The number of indices to be stored in the index buffer.
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
      */
-    var IndexBuffer = function (device, format, numIndices, usage) {
+    var IndexBuffer = function (graphicsDevice, format, numIndices, usage) {
         // Initialize optional parameters
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.gfx.BUFFER_STATIC;
@@ -19,9 +20,9 @@ pc.extend(pc.gfx, function () {
         this.numIndices = numIndices;
 
         // Create the WebGL buffer
-        this.device = device;
+        this.device = graphicsDevice;
 
-        var gl = device.gl;
+        var gl = this.device.gl;
         this.bufferId = gl.createBuffer();
 
         // Allocate the storage

@@ -3,6 +3,7 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Texture
      * @class A texture is a container for texel data that can be utilized in a fragment shader.
      * Typically, the texel data represents an image that is mapped over geometry.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this texture.
      * @param {Object} options Options that control the main properties of a texture.
      * @property {Number} minFilter The minification filter to be applied to the texture (see pc.gfx.FILTER_*).
      * @property {Number} magFilter The magnification filter to be applied to the texture (see pc.gfx.FILTER_*).
@@ -15,8 +16,8 @@ pc.extend(pc.gfx, function () {
      * @property {Number} format [Read only] The pixel format of the texture (see pc.gfx.PIXELFORMAT_*).
      * @author Will Eastcott
      */
-    var Texture = function (device, options) {
-        this.device = device;
+    var Texture = function (graphicsDevice, options) {
+        this.device = graphicsDevice;
 
         // Defaults
         var width = 4;

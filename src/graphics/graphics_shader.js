@@ -3,11 +3,11 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Shader
      * @class A shader object. Can be a vertex or fragment shader. A vertex and fragment shader
      * pair can be linked into a program which is used to process geometry on the GPU (see pc.gfx.Program).
-     * @param {pc.gfx.Device} type The graphics device used to manage this vertex buffer.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this shader.
      * @param {Number} type The type of shader to generate (see pc.gfx.SHADERTYPE_*).
      * @param {String} src The shader source to be compiled into the shader object.
      */
-    var Shader = function (device, type, src) {
+    var Shader = function (graphicsDevice, type, src) {
         // Store the shader type
         this.type = type;
 
@@ -15,9 +15,9 @@ pc.extend(pc.gfx, function () {
         this.src = src;
 
         // Create the WebGL shader ID
-        this.device = device;
+        this.device = graphicsDevice;
         
-        var gl = device.gl;
+        var gl = this.device.gl;
         var glType = (this.type === pc.gfx.SHADERTYPE_VERTEX) ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER;
         this.shaderId = gl.createShader(glType);
 

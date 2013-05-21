@@ -18,12 +18,12 @@ pc.gfx.ShaderInputType = {
     TEXTURECUBE: 16
 };
 
-pc.gfx.ShaderInput = function (device, name, type, locationId) {
+pc.gfx.ShaderInput = function (graphicsDevice, name, type, locationId) {
     // Set the shader attribute location
     this.locationId = locationId;
 
     // Resolve the ScopeId for the attribute name
-    this.scopeId = device.scope.resolve(name);
+    this.scopeId = graphicsDevice.scope.resolve(name);
 
     // Create the version
     this.version = new pc.gfx.Version();
