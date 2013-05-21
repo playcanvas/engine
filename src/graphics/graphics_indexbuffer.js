@@ -7,7 +7,7 @@ pc.extend(pc.gfx, function () {
      * @param {Number} numIndices The number of indices to be stored in the index buffer.
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
      */
-    var IndexBuffer = function (format, numIndices, usage) {
+    var IndexBuffer = function (device, format, numIndices, usage) {
         // Initialize optional parameters
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.gfx.BUFFER_STATIC;
@@ -19,9 +19,9 @@ pc.extend(pc.gfx, function () {
         this.numIndices = numIndices;
 
         // Create the WebGL buffer
-        this.gl = pc.gfx.Device.getCurrent().gl;
+        this.device = device;
 
-        var gl = this.gl;
+        var gl = device.gl;
         this.bufferId = gl.createBuffer();
 
         // Allocate the storage
@@ -49,7 +49,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         destroy: function () {
-            var gl = this.gl;
+            var gl = this.device.gl;
             gl.deleteBuffer(this.bufferId);
         },
 
@@ -96,7 +96,7 @@ pc.extend(pc.gfx, function () {
          */
         unlock: function () {
             // Upload the new index data
-            var gl = this.gl;
+            var gl = this.device.gl;
             var glUsage;
             switch (this.usage) {
                 case pc.gfx.BUFFER_STATIC:

@@ -33,12 +33,14 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
+        var gd = context.graphicsDevice;
+
         var format = new pc.gfx.VertexFormat();
         format.begin();
         format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(format, 8);
+        var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 8);
         var positions = new Float32Array(vertexBuffer.lock());
         positions.set([
             -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5,
@@ -46,7 +48,7 @@ pc.extend(pc.fw, function () {
         ]);
         vertexBuffer.unlock();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 24);
+        var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 24);
         var indices = new Uint8Array(indexBuffer.lock());
         indices.set([
             0,1,1,2,2,3,3,0,

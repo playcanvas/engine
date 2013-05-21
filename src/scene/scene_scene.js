@@ -35,6 +35,9 @@ pc.extend(pc.scene, function () {
     var shadowCamView = pc.math.mat4.create();
     var shadowCamViewProj = pc.math.mat4.create();
 
+    var viewMat = pc.math.mat4.create();
+    var viewProjMat = pc.math.mat4.create();
+
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (i = 0; i < 8; i++) {
@@ -100,6 +103,57 @@ pc.extend(pc.scene, function () {
         return points;
     }
 
+    //////////////////////////////////////
+    // Shadow mapping support functions //
+    //////////////////////////////////////
+    function createShadowMap(device, width, height) {
+        var shadowBuffer = new pc.gfx.FrameBuffer(device, width, height, true);
+
+        var shadowTexture = shadowBuffer.getTexture();
+        shadowTexture.minFilter = pc.gfx.FILTER_NEAREST;
+        shadowTexture.magFilter = pc.gfx.FILTER_NEAREST;
+        shadowTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        shadowTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+
+        return new pc.gfx.RenderTarget(shadowBuffer);
+    };
+
+    function createShadowCamera(device) {
+        // We don't need to clear the color buffer if we're rendering a depth map
+        var flags = pc.gfx.CLEARFLAG_DEPTH;
+        if (!device.extDepthTexture) flags |= pc.gfx.CLEARFLAG_COLOR;
+
+        var shadowCam = new pc.scene.CameraNode();
+        shadowCam.setClearOptions({
+            color: [1.0, 1.0, 1.0, 1.0],
+            depth: 1.0,
+            flags: flags
+        });
+
+        return shadowCam;
+    };
+
+    function getShadowCamera(device, light) {
+        var shadowCam = light._shadowCamera;
+        var shadowBuffer;
+
+        if (shadowCam === null) {
+            shadowCam = createShadowCamera(device);
+            shadowBuffer = createShadowMap(device, light._shadowWidth, light._shadowHeight);
+            shadowCam.setRenderTarget(shadowBuffer);
+            light._shadowCamera = shadowCam;
+        } else {
+            shadowBuffer = shadowCam.getRenderTarget().getFrameBuffer();
+            if ((shadowBuffer.getWidth() !== light._shadowWidth) || (shadowBuffer.getHeight() !== light._shadowHeight)) {
+                shadowBuffer = createShadowMap(device, this._shadowWidth, this._shadowHeight);
+                shadowCam.setRenderTarget(shadowBuffer);
+            }
+        }
+
+        return shadowCam;
+    }
+
+
     /**
      * @name pc.scene.Scene
      * @class A scene.
@@ -108,10 +162,6 @@ pc.extend(pc.scene, function () {
         this.drawCalls = [];     // All mesh instances and commands
         this.meshInstances = []; // All mesh instances
         this.shadowCasters = []; // All mesh instances that cast shadows
-
-        var device = pc.gfx.Device.getCurrent();
-        this.modelMatrixId = device.scope.resolve('matrix_model');
-        this.poseMatrixId = device.scope.resolve('matrix_pose[0]');
 
         // Models
         this._models = [];
@@ -123,28 +173,17 @@ pc.extend(pc.scene, function () {
         this._localLights = [[], []]; // All currently enabled points and spots
 
         // Shadows
-        var library = device.getProgramLibrary();
-        this._depthProgStatic = library.getProgram('depth', {
-            skin: false,
-            opacityMap: false
-        });
-        this._depthProgSkin = library.getProgram('depth', {
-            skin: true,
-            opacityMap: false
-        });
-        this._depthProgStaticOp = library.getProgram('depth', {
-            skin: false,
-            opacityMap: true
-        });
-        this._depthProgSkinOp = library.getProgram('depth', {
-            skin: true,
-            opacityMap: true
-        });
+        this._shadowAabb = new pc.shape.Aabb();
+        this._sceneAabb = new pc.shape.Aabb();
+
+        this._shadersCreated = false;
+        this._depthProgStatic = null;
+        this._depthProgSkin = null;
+        this._depthProgStaticOp = null;
+        this._depthProgSkinOp = null;
         this._shadowState = {
             blend: false
         };
-        this._shadowAabb = new pc.shape.Aabb();
-        this._sceneAabb = new pc.shape.Aabb();
     };
 
     Scene.prototype.getModels = function () {
@@ -249,9 +288,91 @@ pc.extend(pc.scene, function () {
         }
     };
 
-    Scene.prototype.render = function (camera) {
+    /**
+     * @function
+     * @name pc.scene.Scene#render
+     * @description Renders the scene using the specified camera.
+     * @author Will Eastcott
+     */
+    Scene.prototype.render = function (camera, device) {
+
+        if (!this._shadersCreated) {
+            var library = device.getProgramLibrary();
+            this._depthProgStatic = library.getProgram('depth', {
+                skin: false,
+                opacityMap: false
+            });
+            this._depthProgSkin = library.getProgram('depth', {
+                skin: true,
+                opacityMap: false
+            });
+            this._depthProgStaticOp = library.getProgram('depth', {
+                skin: false,
+                opacityMap: true
+            });
+            this._depthProgSkinOp = library.getProgram('depth', {
+                skin: true,
+                opacityMap: true
+            });
+            this._shadersCreated = true;
+        }
 
         pc.scene.Scene.current = this;
+
+        // Fish out all the uniforms we need to render the scene
+        var scope = device.scope;
+        var modelMatrixId = scope.resolve('matrix_model');
+        var poseMatrixId = scope.resolve('matrix_pose[0]');
+        var projId = scope.resolve('matrix_projection');
+        var viewId = scope.resolve('matrix_view');
+        var viewInvId = scope.resolve('matrix_viewInverse');
+        var viewProjId = scope.resolve('matrix_viewProjection');
+        var viewPosId = scope.resolve('view_position');
+        var nearClipId = scope.resolve('camera_near');
+        var farClipId = scope.resolve('camera_far');
+
+        var setCamera = function (cam) {
+            // Projection Matrix
+            var projMat = cam.getProjectionMatrix();
+            projId.setValue(projMat);
+
+            // ViewInverse Matrix
+            var wtm = cam.getWorldTransform();
+            viewInvId.setValue(wtm);
+
+            // View Matrix
+            pc.math.mat4.invert(wtm, viewMat);
+            viewId.setValue(viewMat);
+
+            // ViewProjection Matrix
+            pc.math.mat4.multiply(projMat, viewMat, viewProjMat);
+            viewProjId.setValue(viewProjMat);
+
+            // View Position (world space)
+            viewPosId.setValue(cam.getPosition());
+
+            // Near and far clip values
+            nearClipId.setValue(cam.getNearClip());
+            farClipId.setValue(cam.getFarClip());
+
+            cam._frustum.update(projMat, viewMat);
+
+            var target = cam.getRenderTarget();
+            device.setRenderTarget(target);
+            device.updateBegin();
+
+            var rect = cam.getRect();
+            var pixelWidth = target ? target.getFrameBuffer().getWidth() : device.width;
+            var pixelHeight = target ? target.getFrameBuffer().getHeight() : device.height;
+            var x = Math.floor(rect.x * pixelWidth);
+            var y = Math.floor(rect.y * pixelHeight);
+            var w = Math.floor(rect.width * pixelWidth);
+            var h = Math.floor(rect.height * pixelHeight);
+            device.setViewport(x, y, w, h);
+            device.setScissor(x, y, w, h);
+
+            device.clear(cam.getClearOptions());
+        }
 
         this._globalLights.length = 0;
         this._localLights[0].length = 0;
@@ -278,7 +399,6 @@ pc.extend(pc.scene, function () {
         }
 
         var i, j, numInstances;
-        var device = pc.gfx.Device.getCurrent();
         var drawCall, meshInstance, mesh, material, prevMaterial = null, style;
 
         // Update all skin matrix palettes
@@ -301,7 +421,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (light.getCastShadows() && light.getEnabled()) {
-                var shadowCam = light._shadowCamera;
+                var shadowCam = getShadowCamera(device, light);
 
                 if (type === pc.scene.LightType.DIRECTIONAL) {
                     // 1. Starting at the centroid of the view frustum, back up in the opposite
@@ -389,7 +509,7 @@ pc.extend(pc.scene, function () {
                 // Point the camera along direction of light
                 pc.math.mat4.copy(shadowCamWtm, shadowCam.worldTransform);
 
-                shadowCam.frameBegin();
+                setCamera(shadowCam);
 
                 if (device.extDepthTexture) {
                     device.gl.colorMask(false, false, false, false);
@@ -402,12 +522,12 @@ pc.extend(pc.scene, function () {
                     mesh = meshInstance.mesh;
                     material = meshInstance.material;
 
-                    this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                    modelMatrixId.setValue(meshInstance.node.worldTransform);
                     if (material.opacityMap) {
                         device.scope.resolve('texture_opacityMap').setValue(material.opacityMap);
                     }
                     if (meshInstance.skinInstance) {
-                        this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                        poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
                         device.setProgram(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                     } else {
                         device.setProgram(material.opacityMap ? this._depthProgStaticOp : this._depthProgStatic);
@@ -425,18 +545,16 @@ pc.extend(pc.scene, function () {
                 if (device.extDepthTexture) {
                     device.gl.colorMask(true, true, true, true);
                 }
-
-                shadowCam.frameEnd();
             }
         }
 
         // Sort meshes into the correct render order
         this.drawCalls.sort(sortDrawCalls);
 
-        camera.frameBegin();
+        setCamera(camera);
 
-        this.dispatchGlobalLights();
-        this.dispatchLocalLights();
+        this.dispatchGlobalLights(device);
+        this.dispatchLocalLights(device);
 
         for (i = 0, numDrawCalls = this.drawCalls.length; i < numDrawCalls; i++) {
             drawCall = this.drawCalls[i];
@@ -449,14 +567,14 @@ pc.extend(pc.scene, function () {
                 mesh = meshInstance.mesh;
                 material = meshInstance.material;
 
-                this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                modelMatrixId.setValue(meshInstance.node.worldTransform);
                 if (meshInstance.skinInstance) {
-                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                    poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
                 }
 
                 if (material !== prevMaterial) {
-                    device.setProgram(material.getProgram(mesh));
-                    material.setParameters();
+                    device.setProgram(material.getProgram(device, mesh));
+                    material.setParameters(device);
                     device.clearLocalState();
                     device.updateLocalState(material.getState());
                 }
@@ -472,8 +590,6 @@ pc.extend(pc.scene, function () {
         }
 
         device.clearLocalState();
-
-        camera.frameEnd();
     };
 
 
@@ -546,11 +662,10 @@ pc.extend(pc.scene, function () {
         }
     };
 
-    Scene.prototype.dispatchGlobalLights = function () {
+    Scene.prototype.dispatchGlobalLights = function (device) {
         var dirs = this._globalLights;
         var numDirs = dirs.length;
 
-        var device = pc.gfx.Device.getCurrent();
         var scope = device.scope;
 
         scope.resolve("light_globalAmbient").setValue(this._globalAmbient);
@@ -578,7 +693,7 @@ pc.extend(pc.scene, function () {
         }
     };
 
-    Scene.prototype.dispatchLocalLights = function () {
+    Scene.prototype.dispatchLocalLights = function (device) {
         var i, wtm;
         var point, spot;
         var localLights = this._localLights;
@@ -590,7 +705,6 @@ pc.extend(pc.scene, function () {
         var numPnts = pnts.length;
         var numSpts = spts.length;
 
-        var device = pc.gfx.Device.getCurrent();
         var scope = device.scope;
 
         for (i = 0; i < numPnts; i++) {

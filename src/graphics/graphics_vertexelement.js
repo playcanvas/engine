@@ -34,6 +34,8 @@ pc.extend(pc.gfx, function () {
      * them unaltered. Defaults to false.
      */
     var VertexElement = function (name, numComponents, dataType, normalize) {
+        this.name = name;
+
         // These will be initialized by the VertexFormat constructor
         this.offset = 0;
         this.stride = 0;
@@ -41,9 +43,8 @@ pc.extend(pc.gfx, function () {
         // This is used by the graphics device to tag the associated stream
         this.stream = -1;
 
-        // Resolve the ScopeId for the element name
-        var device = pc.gfx.Device.getCurrent();
-        this.scopeId = device.scope.resolve(name);
+        // Initialize scope id to something sensible
+        this.scopeId = null; // Initialized when setting vertex buffer in the graphics device
 
         // Store the data type information
         this.dataType      = dataType;

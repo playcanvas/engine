@@ -220,52 +220,13 @@ pc.extend(pc.scene, function () {
         this._attenuationStart = radius;
     };
 
-    LightNode.prototype._createShadowMap = function () {
-        var shadowBuffer = new pc.gfx.FrameBuffer(this._shadowWidth, this._shadowHeight, true);
-
-        var shadowTexture = shadowBuffer.getTexture();
-        shadowTexture.minFilter = pc.gfx.FILTER_NEAREST;
-        shadowTexture.magFilter = pc.gfx.FILTER_NEAREST;
-        shadowTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        shadowTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-
-        return shadowBuffer;
-    };
-
-    LightNode.prototype._createShadowCamera = function () {
-        if (this._shadowCamera)
-            return;
-
-        var shadowBuffer = this._createShadowMap();
-
-        // We don't need to clear the color buffer if we're rendering a depth map
-        var device = pc.gfx.Device.getCurrent();
-        var flags = (device.extDepthTexture) ? pc.gfx.CLEARFLAG_DEPTH : pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH;
-
-        var shadowCam = new pc.scene.CameraNode();
-        shadowCam.setRenderTarget(new pc.gfx.RenderTarget(shadowBuffer));
-        shadowCam.setClearOptions({
-            color: [1.0, 1.0, 1.0, 1.0],
-            depth: 1.0,
-            flags: flags
-        });
-
-        return shadowCam;
-    };
-
     LightNode.prototype.setShadowBias = function (bias) {
         this._shadowBias = bias;
     };
 
     LightNode.prototype.setShadowResolution = function (width, height) {
-        if ((width !== this._shadowWidth) && (height !== this._shadowHeight)) {
-            this._shadowWidth = width;
-            this._shadowHeight = height;
-            if (this._shadowCamera) {
-                var shadowBuffer = this._createShadowMap();
-                this._shadowCamera.setRenderTarget(new pc.gfx.RenderTarget(shadowBuffer));
-            }
-        }
+        this._shadowWidth = width;
+        this._shadowHeight = height;
     };
 
     /**
@@ -277,13 +238,6 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setCastShadows = function (castShadows) {
         this._castShadows = castShadows;
-
-        // No support for point lights yet
-        if (this._castShadows && this._type !== pc.scene.LightType.POINT) {
-            this._shadowCamera = this._createShadowCamera();
-        } else {
-            this._shadowCamera = null;
-        }
     };
 
     /**
@@ -374,13 +328,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     LightNode.prototype.setType = function (type) {
-        if (this._type !== type) {
-            this._type = type;
-
-            if (this._castShadows && type !== pc.scene.LightType.POINT) {
-                this._shadowCamera = this._createShadowCamera();
-            }
-        }
+        this._type = type;
     };
 
     return {

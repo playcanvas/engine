@@ -9,7 +9,7 @@ pc.extend(pc.scene, function () {
 
     DepthMaterial = pc.inherits(DepthMaterial, pc.scene.Material);
 
-    DepthMaterial.prototype.getProgram = function (mesh) {
+    DepthMaterial.prototype.getProgram = function (device, mesh) {
         var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';
 
         var program = this._programs[key];
@@ -17,7 +17,6 @@ pc.extend(pc.scene, function () {
             return program;
         }
 
-        var device = pc.gfx.Device.getCurrent();
         var skinned = mesh.getGeometry().isSkinned();
         var options = {
             skin: skinned

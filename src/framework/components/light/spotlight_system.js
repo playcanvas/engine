@@ -102,7 +102,7 @@ pc.extend(pc.fw, function () {
         // TODO: Only allocate graphics resources when running in Designer
         this.material = new pc.scene.BasicMaterial();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT8, 88);
+        var indexBuffer = new pc.gfx.IndexBuffer(context.graphicsDevice, pc.gfx.INDEXFORMAT_UINT8, 88);
         var inds = new Uint8Array(indexBuffer.lock());
         // Spot cone side lines
         inds[0] = 0;
@@ -143,7 +143,7 @@ pc.extend(pc.fw, function () {
             model.lights = [ node ];
 
             if (this.context.designer) {
-                var vertexBuffer = new pc.gfx.VertexBuffer(this.vertexFormat, 42, pc.gfx.BUFFER_DYNAMIC);
+                var vertexBuffer = new pc.gfx.VertexBuffer(this.context.graphicsDevice, this.vertexFormat, 42, pc.gfx.BUFFER_DYNAMIC);
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;

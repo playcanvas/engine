@@ -3,7 +3,7 @@
  * @name pc.gfx.programlib
  */
 pc.gfx.programlib = {
-    getSnippet: function (id) {
+    getSnippet: function (device, id) {
         var code = '';
 
         switch (id) {
@@ -61,7 +61,7 @@ pc.gfx.programlib = {
 
 /*
             case 'fs_depth_decl':
-                if (!pc.gfx.Device.getCurrent().extDepthTexture) {
+                if (!device.extDepthTexture) {
                     code += 'uniform float camera_near;\n';
                     code += 'uniform float camera_far;\n';
                     code += 'varying vec4 vPositionE;\n\n';
@@ -70,7 +70,7 @@ pc.gfx.programlib = {
 */
 
             case 'fs_depth_write':
-                if (pc.gfx.Device.getCurrent().extDepthTexture) {
+                if (device.extDepthTexture) {
                     code += '    gl_FragData[0] = vec4(1.0);\n';
                 } else {
                     // Using a bit-shift of vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0)
@@ -113,7 +113,7 @@ pc.gfx.programlib = {
                 break;
 
             case 'fs_normal_map_funcs':
-                if (!pc.gfx.Device.getCurrent().precalculatedTangents) {
+                if (!device.precalculatedTangents) {
                     code += 'mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )\n';
                     code += '{\n';
                                  // get edge vectors of the pixel triangle
@@ -150,7 +150,7 @@ pc.gfx.programlib = {
             // VERTEX SHADER SNIPPETS //
             ////////////////////////////
             case 'vs_skin_position_decl':
-                var numBones = pc.gfx.Device.getCurrent().getBoneLimit();
+                var numBones = device.getBoneLimit();
                 code += 'attribute vec3 vertex_position;\n';
                 code += 'attribute vec4 vertex_boneWeights;\n';
                 code += 'attribute vec4 vertex_boneIndices;\n';

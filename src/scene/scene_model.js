@@ -190,7 +190,7 @@ pc.extend(pc.scene, function () {
 
             indexBuffer.unlock();
 
-            wireBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, lines.length);
+            wireBuffer = new pc.gfx.IndexBuffer(indexBuffer.device, pc.gfx.INDEXFORMAT_UINT16, lines.length);
             dstIndices = new Uint16Array(wireBuffer.lock());
             dstIndices.set(lines);
             wireBuffer.unlock();

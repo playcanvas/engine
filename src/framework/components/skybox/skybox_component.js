@@ -76,7 +76,9 @@ pc.extend(pc.fw, function () {
 
     // Private    
     var _createSkybox = function (entity, context, urls) {
-        var texture = new pc.gfx.Texture({
+        var gd = context.graphicsDevice;
+
+        var texture = new pc.gfx.Texture(gd, {
             format: pc.gfx.PIXELFORMAT_R8_G8_B8,
             cubemap: true
         });
@@ -96,7 +98,7 @@ pc.extend(pc.fw, function () {
             texture.setSource(resources);
         });
 
-        var library = pc.gfx.Device.getCurrent().getProgramLibrary();
+        var library = gd.getProgramLibrary();
         var program = library.getProgram('skybox');
 
         var material = new pc.scene.Material();
@@ -107,7 +109,7 @@ pc.extend(pc.fw, function () {
         material.setParameter("texture_cubeMap", texture);
 
         var node = new pc.scene.GraphNode();
-        var mesh = pc.scene.procedural.createBox();
+        var mesh = pc.scene.procedural.createBox(gd);
         var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
 
         var model = new pc.scene.Model();

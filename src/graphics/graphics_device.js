@@ -36,6 +36,8 @@ pc.gfx.FrontFace = {
     CCW: 1
 };
 
+pc.gfx.precalculatedTangents = true;
+
 pc.extend(pc.gfx, function () {
     // Exceptions
     function UnsupportedBrowserError(message) {
@@ -208,9 +210,7 @@ pc.extend(pc.gfx, function () {
         }
 
         // Create the default render target
-        var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
-        var viewport = { x: 0, y: 0, width: canvas.width, height: canvas.height };
-        this.renderTarget = new pc.gfx.RenderTarget(backBuffer, viewport);
+        this.renderTarget = null;
 
         // Create the ScopeNamespace for shader attributes and variables
         this.scope = new pc.gfx.ScopeSpace("Device");
@@ -364,7 +364,7 @@ pc.extend(pc.gfx, function () {
             }
         };
 
-        this.programLib = new pc.gfx.ProgramLibrary();
+        this.programLib = new pc.gfx.ProgramLibrary(this);
         for (var generator in pc.gfx.programlib) {
             this.programLib.register(generator, pc.gfx.programlib[generator]);
         }
@@ -390,37 +390,42 @@ pc.extend(pc.gfx, function () {
         
         this.boundBuffer = null;
 
-        this.precalculatedTangents = true;
-
         this.textureUnits = [];
 
         this.attributesInvalidated = true;
     };
 
-    /**
-     * @function
-     * @name pc.gfx.Device.setCurrent
-     * @description Sets the current graphics device. After creating a new pc.gfx.Device,
-     * it must be set as the current device before it can be used.
-     * @param {pc.gfx.Device} device The graphics device to make current.
-     * @author Will Eastcott
-     */
-    Device.setCurrent = function (device) {
-        Device._current = device;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.Device.getCurrent
-     * @description Returns the current graphics device.
-     * @returns {pc.gfx.Device} The current graphics device.
-     * @author Will Eastcott
-     */
-    Device.getCurrent = function () {
-        return Device._current;
-    };
-
     Device.prototype = {
+        /**
+         * @function
+         * @name pc.gfx.Device#setViewport
+         * @description Set the active rectangle for rendering on the specified device.
+         * @param {Number} x The pixel space x-coordinate of the bottom left corner of the viewport.
+         * @param {Number} y The pixel space y-coordinate of the bottom left corner of the viewport.
+         * @param {Number} w The width of the viewport in pixels.
+         * @param {Number} h The height of the viewport in pixels.
+         * @author Will Eastcott
+         */
+        setViewport: function (x, y, width, height) {
+            var gl = this.gl;
+            gl.viewport(x, y, width, height);
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setScissor
+         * @description Set the active scissor rectangle on the specified device.
+         * @param {Number} x The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
+         * @param {Number} y The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
+         * @param {Number} w The width of the scissor rectangle in pixels.
+         * @param {Number} h The height of the scissor rectangle in pixels.
+         * @author Will Eastcott
+         */
+        setScissor: function (x, y, width, height) {
+            var gl = this.gl;
+            gl.scissor(x, y, width, height);
+        },
+
         /**
          * @function
          * @name pc.gfx.Device#getProgramLibrary
@@ -461,7 +466,15 @@ pc.extend(pc.gfx, function () {
             this.boundBuffer = null;
 
             // Set the render target
-            this.renderTarget.bind();
+            var gl = this.gl;
+            if (this.renderTarget) {
+                var buffer = this.renderTarget.getFrameBuffer();
+                var w = buffer.getWidth();
+                var h = buffer.getHeight();
+                buffer.bind();
+            } else {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
 
             for (var i = 0; i < 16; i++) {
                 this.textureUnits[i] = null;
@@ -699,6 +712,9 @@ pc.extend(pc.gfx, function () {
                 while (i < numElements) {
                     var vertexElement = elements[i++];
                     vertexElement.stream = stream;
+                    if (vertexElement.scopeId === null) {
+                        vertexElement.scopeId = this.scope.resolve(vertexElement.name);
+                    }
                     vertexElement.scopeId.setValue(vertexElement);
                 }
 
@@ -910,6 +926,14 @@ pc.extend(pc.gfx, function () {
             }
             return maxAnisotropy;
         }
+    });
+
+    Object.defineProperty(Device.prototype, 'width', {
+        get: function() { return this.gl.drawingBufferWidth || this.canvas.width; }
+    });
+
+    Object.defineProperty(Device.prototype, 'height', {
+        get: function() { return this.gl.drawingBufferHeight || this.canvas.height; }
     });
 
     return {

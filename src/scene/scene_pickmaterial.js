@@ -25,7 +25,7 @@ pc.extend(pc.scene, function () {
         this.transparent = false;
     };
 
-    PickMaterial.prototype.getProgram = function (mesh) {
+    PickMaterial.prototype.getProgram = function (device, mesh) {
         var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';
 
         var program = this._programs[key];
@@ -33,7 +33,6 @@ pc.extend(pc.scene, function () {
             return program;
         }
 
-        var device = pc.gfx.Device.getCurrent();
         var skinned = mesh.getGeometry().isSkinned();
         var options = {
             skin: skinned

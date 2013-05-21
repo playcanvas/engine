@@ -34,7 +34,7 @@ pc.extend(pc.scene, function () {
         }
     };
 
-    BasicMaterial.prototype.getProgram = function (mesh) {
+    BasicMaterial.prototype.getProgram = function (device, mesh) {
 //        var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';
         var key = 'static';
 
@@ -43,7 +43,6 @@ pc.extend(pc.scene, function () {
             return program;
         }
 
-        var device = pc.gfx.Device.getCurrent();
 //        var skinned = mesh.getGeometry().isSkinned();
         var skinned = false;
         var options = {

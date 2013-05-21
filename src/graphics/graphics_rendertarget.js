@@ -93,7 +93,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         bind: function () {
-            var gl = pc.gfx.Device.getCurrent().gl;
+            var gl = this._frameBuffer.device.gl;
             // Make the render target's frame buffer the current recipient of any rasterization.
             this._frameBuffer.bind();
 
