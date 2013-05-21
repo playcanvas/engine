@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.105.1
+--------
+* [FIX] Correct lookup of precalculatedTangents setting.
+
+--------
 v0.105.0
 --------
 * Engine updated to support multiple canvases on a single page
