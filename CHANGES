@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.105.0
+--------
+* Engine updated to support multiple canvases on a single page
+* [BREAKING] pc.gfx.Device.getCurrent() and pc.gfx.Device.setCurrent() removed
+* pc.gfx.Device now avaiable in pc.fw.ApplicationContext
+* [FIX] pc.math.vec3.clone creates a proper clone now
+
+--------
 v0.104.5
 --------
 * Store the DOM touch event in pc.input.TouchEvent to allow calling of prevent Default in handler.
