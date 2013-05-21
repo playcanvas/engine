@@ -94,7 +94,7 @@ pc.gfx.programlib.phong = {
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
             (options.heightMap && !options.heightMapTransform));
-        var useTangents = device.precalculatedTangents;
+        var useTangents = pc.gfx.precalculatedTangents;
 
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec3 vertex_position;\n";
@@ -391,7 +391,7 @@ pc.gfx.programlib.phong = {
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
             (options.heightMap && !options.heightMapTransform));
-        var useTangents = device.precalculatedTangents;
+        var useTangents = pc.gfx.precalculatedTangents;
 
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = getSnippet(device, 'fs_precision');
