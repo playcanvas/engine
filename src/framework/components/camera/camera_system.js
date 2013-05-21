@@ -193,31 +193,6 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-/*
-            var device = pc.gfx.Device.getCurrent();
-            var w = device.canvas.width;
-            var h = device.canvas.height;
-            var target = camera.getRenderTarget();
-            var viewport = target.getViewport();
-            var texture = target.getFrameBuffer().getTexture();
-            var offscreen = this._currentEntity.camera.data.offscreen;
-            if (offscreen) {
-                if (!texture || (viewport.width !== w) || (viewport.height !== h)) {
-                    var offscreenBuffer = new pc.gfx.FrameBuffer(w, h, true);
-                    var offscreenTexture = offscreenBuffer.getTexture();
-                    offscreenTexture.minFilter = pc.gfx.FILTER_LINEAR;
-                    offscreenTexture.magFilter = pc.gfx.FILTER_LINEAR;
-                    offscreenTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-                    offscreenTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-                    camera.setRenderTarget(new pc.gfx.RenderTarget(offscreenBuffer));
-                }
-            } else {
-                if (texture) {
-                    var backBuffer = pc.gfx.FrameBuffer.getBackBuffer();
-                    camera.setRenderTarget(new pc.gfx.RenderTarget(backBuffer));
-                }
-            }
-*/
             var device = this.context.graphicsDevice;
             var aspect = device.width / device.height;
             if (aspect !== camera.getAspectRatio()) {
@@ -231,10 +206,6 @@ pc.extend(pc.fw, function () {
          * @name pc.fw.CameraComponentSystem#frameEnd
          */
         frameEnd: function () {
-            var camera = this._currentNode;
-            if (!camera) {
-                return;
-            }
         },
 
         onRemove: function (entity, data) {
