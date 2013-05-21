@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.105.2
+--------
+* Updated pc.gfx docs.
+
+--------
 v0.105.1
 --------
 * [FIX] Correct lookup of precalculatedTangents setting.

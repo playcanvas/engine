@@ -4,10 +4,11 @@ pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.Program
      * @class A program representing a compiled and linked vertex and fragment shader pair.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this program.
      * @param {pc.gfx.Shader} vertexShader The vertex shader to be linked into the new program.
      * @param {pc.gfx.Shader} fragmentShader The fragment shader to be linked into the new program.
      */
-    var Program = function (device, vertexShader, fragmentShader) {
+    var Program = function (graphicsDevice, vertexShader, fragmentShader) {
         this.id = id++;
 
         this.attributes = [];
@@ -15,7 +16,7 @@ pc.extend(pc.gfx, function () {
         this.uniforms   = [];
         
         // Create the WebGL program ID
-        this.device = device;
+        this.device = graphicsDevice;
         var gl = this.device.gl;
 
         var _typeToString = {};
@@ -77,7 +78,7 @@ pc.extend(pc.gfx, function () {
         while (i < numAttributes) {
             info = gl.getActiveAttrib(this.programId, i++);
             locationId = gl.getAttribLocation(this.programId, info.name);
-            this.attributes.push(new pc.gfx.ShaderInput(device, info.name, _typeToPc[info.type], locationId));
+            this.attributes.push(new pc.gfx.ShaderInput(graphicsDevice, info.name, _typeToPc[info.type], locationId));
         }
 
         // Query the program for each shader state (GLSL 'uniform')
@@ -87,9 +88,9 @@ pc.extend(pc.gfx, function () {
             info = gl.getActiveUniform(this.programId, i++);
             locationId = gl.getUniformLocation(this.programId, info.name);
             if ((info.type === gl.SAMPLER_2D) || (info.type === gl.SAMPLER_CUBE)) {
-                this.samplers.push(new pc.gfx.ShaderInput(device, info.name, _typeToPc[info.type], locationId));
+                this.samplers.push(new pc.gfx.ShaderInput(graphicsDevice, info.name, _typeToPc[info.type], locationId));
             } else {
-                this.uniforms.push(new pc.gfx.ShaderInput(device, info.name, _typeToPc[info.type], locationId));
+                this.uniforms.push(new pc.gfx.ShaderInput(graphicsDevice, info.name, _typeToPc[info.type], locationId));
             }
         }
     };

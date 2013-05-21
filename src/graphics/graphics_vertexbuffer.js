@@ -3,11 +3,12 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.VertexBuffer
      * @class A vertex buffer is the mechanism via which the application specifies vertex 
      * data to the graphics hardware.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this vertex buffer.
      * @param {pc.gfx.VertexFormat} format The vertex format of this vertex buffer.
      * @param {Number} numVertices The number of vertices that this vertex buffer will hold.
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
      */
-    var VertexBuffer = function (device, format, numVertices, usage) {
+    var VertexBuffer = function (graphicsDevice, format, numVertices, usage) {
         // Initialize optional parameters
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.gfx.BUFFER_STATIC;
@@ -22,7 +23,7 @@ pc.extend(pc.gfx, function () {
         this.numBytes = format.size * numVertices;
 
         // Create the WebGL vertex buffer object
-        this.device = device;
+        this.device = graphicsDevice;
 
         var gl = this.device.gl;
         this.bufferId = gl.createBuffer();

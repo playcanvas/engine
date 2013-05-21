@@ -3,34 +3,35 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.FrameBuffer
      * @class A frame buffer is a rectangular rendering surface. It can be rendered to via a pc.gfx.RenderTarget.
      * @description Creates a new FrameBuffer object.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this frame buffer.
      * @param {Number} width The width of the frame buffer in pixels.
      * @param {Number} height The height of the frame buffer in pixels.
      * @param {Boolean} depth True if the frame buffer is to include a depth buffer and false otherwise.
      * @param {Boolean} isCube True if the frame buffer is represented as a cube map and false if it is
      * represented as a 2D surface.
      */
-    var FrameBuffer = function (device, width, height, depth, isCube) {
-        this.device = device;
+    var FrameBuffer = function (graphicsDevice, width, height, depth, isCube) {
+        this.device = graphicsDevice;
 
         if (typeof isCube === 'undefined') isCube = false;
 
-        var gl = device.gl;
+        var gl = this.device.gl;
 
         this._width     = width  || 1;
         this._height    = height || 1;
         this._colorBuffers = [];
-        if (depth && !device.extDepthTexture) {
+        if (depth && !this.device.extDepthTexture) {
             this._depthBuffers = [];
         }
 
-        this._colorTexture = new pc.gfx.Texture(device, {
+        this._colorTexture = new pc.gfx.Texture(this.device, {
             width: width, 
             height: height, 
             format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
             cubemap: isCube
         });
         this._colorTexture.upload();
-        if (depth && device.extDepthTexture) {
+        if (depth && this.device.extDepthTexture) {
             this._depthTexture = new pc.gfx.Texture({
                 width: width, 
                 height: height, 
@@ -55,7 +56,7 @@ pc.extend(pc.gfx, function () {
                                     this._colorTexture._glTextureId,
                                     0);
             if (depth) {
-                if (device.extDepthTexture) {
+                if (this.device.extDepthTexture) {
                     gl.framebufferTexture2D(gl.FRAMEBUFFER,
                                             gl.DEPTH_ATTACHMENT,
                                             isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
