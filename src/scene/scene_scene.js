@@ -107,15 +107,16 @@ pc.extend(pc.scene, function () {
     // Shadow mapping support functions //
     //////////////////////////////////////
     function createShadowMap(device, width, height) {
-        var shadowTarget = new pc.gfx.RenderTarget(device, width, height, true);
-
-        var shadowTexture = shadowTarget.getTexture();
-        shadowTexture.minFilter = pc.gfx.FILTER_NEAREST;
-        shadowTexture.magFilter = pc.gfx.FILTER_NEAREST;
-        shadowTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        shadowTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-
-        return shadowTarget;
+        var shadowMap = new pc.gfx.Texture(device, {
+            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+            width: width,
+            height: height
+        });
+        shadowMap.minFilter = pc.gfx.FILTER_NEAREST;
+        shadowMap.magFilter = pc.gfx.FILTER_NEAREST;
+        shadowMap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        shadowMap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        return new pc.gfx.RenderTarget(device, shadowMap, true);
     };
 
     function createShadowCamera(device) {
@@ -144,7 +145,7 @@ pc.extend(pc.scene, function () {
             light._shadowCamera = shadowCam;
         } else {
             shadowBuffer = shadowCam.getRenderTarget();
-            if ((shadowBuffer.getWidth() !== light._shadowWidth) || (shadowBuffer.getHeight() !== light._shadowHeight)) {
+            if ((shadowBuffer.width !== light._shadowWidth) || (shadowBuffer.height !== light._shadowHeight)) {
                 shadowBuffer = createShadowMap(device, this._shadowWidth, this._shadowHeight);
                 shadowCam.setRenderTarget(shadowBuffer);
             }
@@ -362,8 +363,8 @@ pc.extend(pc.scene, function () {
             device.updateBegin();
 
             var rect = cam.getRect();
-            var pixelWidth = target ? target.getWidth() : device.width;
-            var pixelHeight = target ? target.getHeight() : device.height;
+            var pixelWidth = target ? target.width : device.width;
+            var pixelHeight = target ? target.height : device.height;
             var x = Math.floor(rect.x * pixelWidth);
             var y = Math.floor(rect.y * pixelHeight);
             var w = Math.floor(rect.width * pixelWidth);

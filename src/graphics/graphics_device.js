@@ -132,7 +132,6 @@ pc.extend(pc.gfx, function () {
             gl.TRIANGLES, 
             gl.TRIANGLE_STRIP 
         ];
-
         this.lookupClear = [
             0,
             gl.COLOR_BUFFER_BIT,
@@ -468,13 +467,8 @@ pc.extend(pc.gfx, function () {
             this.boundBuffer = null;
 
             // Set the render target
-            var gl = this.gl;
             if (this.renderTarget) {
-                var w = this.renderTarget.getWidth();
-                var h = this.renderTarget.getHeight();
                 this.renderTarget.bind();
-            } else {
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 
             for (var i = 0; i < 16; i++) {
@@ -491,6 +485,9 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         updateEnd: function () {
+            if (this.renderTarget) {
+                this.renderTarget.unbind();
+            }
         },
 
         /**

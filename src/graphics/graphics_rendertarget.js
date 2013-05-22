@@ -4,37 +4,30 @@ pc.extend(pc.gfx, function () {
      * @class A render target is a rectangular rendering surface.
      * @description Creates a new RenderTarget object.
      * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this frame buffer.
-     * @param {Number} width The width of the render target in pixels.
-     * @param {Number} height The height of the render target in pixels.
+     * @param {pc.gfx.Texture} colorBuffer The texture surface to be rasterized to.
      * @param {Boolean} depth True if the render target is to include a depth buffer and false otherwise.
-     * @param {Boolean} isCube True if the render target is represented as a cube map and false if it is
      * represented as a 2D surface.
+     * @property {Number} width Width of the render target in pixels (read-only).
+     * @property {Number} height Height of the render target in pixels (read-only).
      */
-    var RenderTarget = function (graphicsDevice, width, height, depth, isCube) {
+    var RenderTarget = function (graphicsDevice, colorBuffer, depth) {
         this.device = graphicsDevice;
 
-        if (typeof isCube === 'undefined') isCube = false;
+        var isCube = colorBuffer._cubemap;
 
         var gl = this.device.gl;
 
-        this._width     = width  || 1;
-        this._height    = height || 1;
         this._colorBuffers = [];
         if (depth && !this.device.extDepthTexture) {
             this._depthBuffers = [];
         }
 
-        this._colorTexture = new pc.gfx.Texture(this.device, {
-            width: width, 
-            height: height, 
-            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
-            cubemap: isCube
-        });
+        this._colorTexture = colorBuffer;
         this._colorTexture.upload();
         if (depth && this.device.extDepthTexture) {
-            this._depthTexture = new pc.gfx.Texture({
-                width: width, 
-                height: height, 
+            this._depthTexture = new pc.gfx.Texture(this.device, {
+                width: colorBuffer.getWidth(),
+                height: colorBuffer.getHeight(),
                 format: pc.gfx.PIXELFORMAT_D16,
                 cubemap: isCube
             });
@@ -65,7 +58,7 @@ pc.extend(pc.gfx, function () {
                 } else {
                     this._depthBuffers[i] = gl.createRenderbuffer();
                     gl.bindRenderbuffer(gl.RENDERBUFFER, this._depthBuffers[i]);
-                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this._width, this._height);
+                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
                     gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._depthBuffers[i]);
                 }
@@ -110,6 +103,18 @@ pc.extend(pc.gfx, function () {
 
     /**
      * @function
+     * @name pc.gfx.RenderTarget#unbind
+     * @description Deactivates the specified render target, restoring the device's main rendering buffer as the
+     * active render target.
+     * @author Will Eastcott
+     */
+    RenderTarget.prototype.unbind = function () {
+        var gl = this.device.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    };
+
+    /**
+     * @function
      * @name pc.gfx.RenderTarget#setActiveBuffer
      * @description Marks a specific buffer of a framebuffer as active. If the framebuffer is a cube map, this 
      * buffer index must be in the range 0 to 5 representing each face of the cube. If the framebuffer is the
@@ -119,30 +124,6 @@ pc.extend(pc.gfx, function () {
      */
     RenderTarget.prototype.setActiveBuffer = function (bufferIndex) {
         this._activeBuffer = bufferIndex;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.RenderTarget#getWidth
-     * @description Returns the width of the specified frame buffer in pixels.
-     * @returns {number} The width of the frame buffer in pixels.
-     * @author Will Eastcott
-     */
-    RenderTarget.prototype.getWidth = function () {
-        var gl = this.device.gl;
-        return (this._colorBuffers) ? this._width : gl.canvas.width;
-    };
-
-    /**
-     * @function
-     * @name pc.gfx.RenderTarget#getHeight
-     * @description Returns the height of the specified frame buffer in pixels.
-     * @returns {number} The height of the frame buffer in pixels.
-     * @author Will Eastcott
-     */
-    RenderTarget.prototype.getHeight = function () {
-        var gl = this.device.gl;
-        return (this._colorBuffers) ? this._height : gl.canvas.height;
     };
 
     /**
@@ -158,6 +139,14 @@ pc.extend(pc.gfx, function () {
     RenderTarget.prototype.getTexture = function () {
         return (this._colorBuffers) ? this._colorTexture : null;
     };
+
+    Object.defineProperty(RenderTarget.prototype, 'width', {
+        get: function() { return this._colorTexture.width; }
+    });
+
+    Object.defineProperty(RenderTarget.prototype, 'height', {
+        get: function() { return this._colorTexture.height; }
+    });
 
     return {
         RenderTarget: RenderTarget

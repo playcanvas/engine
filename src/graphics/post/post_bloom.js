@@ -215,12 +215,16 @@ pc.gfx.post.bloom = function () {
             var height = device.height;
 
             for (var i = 0; i < 2; i++) {
-                var target = new pc.gfx.RenderTarget(device, width >> 1, height >> 1, false);
-                var buffTex = target.getTexture();
-                buffTex.minFilter = pc.gfx.FILTER_LINEAR;
-                buffTex.magFilter = pc.gfx.FILTER_LINEAR;
-                buffTex.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-                buffTex.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+                var colorBuffer = new pc.gfx.Texture(device, {
+                    format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+                    width: width >> 1,
+                    height: height >> 1
+                });
+                colorBuffer.minFilter = pc.gfx.FILTER_LINEAR;
+                colorBuffer.magFilter = pc.gfx.FILTER_LINEAR;
+                colorBuffer.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+                colorBuffer.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+                var target = new pc.gfx.RenderTarget(device, colorBuffer, false);
                 targets.push(target);
             }
 
@@ -264,7 +268,7 @@ pc.gfx.post.bloom = function () {
             
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
-            calculateBlurValues(1.0 / targets[1].getWidth(), 0, options.blurAmount);
+            calculateBlurValues(1.0 / targets[1].width, 0, options.blurAmount);
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
             scope.resolve("uBloomTexture").setValue(targets[0].getTexture());
@@ -272,7 +276,7 @@ pc.gfx.post.bloom = function () {
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
-            calculateBlurValues(0, 1.0 / targets[0].getHeight(), options.blurAmount);
+            calculateBlurValues(0, 1.0 / targets[0].height, options.blurAmount);
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
             scope.resolve("uBloomTexture").setValue(targets[1].getTexture());
