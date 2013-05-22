@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.105.3
+--------
+* [FIX] Updated screenToWorld function to no longer require pc.gfx.Device.getCurrent.
+
+--------
 v0.105.2
 --------
 * Updated pc.gfx docs.
