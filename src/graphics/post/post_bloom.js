@@ -215,13 +215,13 @@ pc.gfx.post.bloom = function () {
             var height = device.height;
 
             for (var i = 0; i < 2; i++) {
-                var buffer = new pc.gfx.FrameBuffer(device, width >> 1, height >> 1, false);
-                var buffTex = buffer.getTexture();
+                var target = new pc.gfx.RenderTarget(device, width >> 1, height >> 1, false);
+                var buffTex = target.getTexture();
                 buffTex.minFilter = pc.gfx.FILTER_LINEAR;
                 buffTex.magFilter = pc.gfx.FILTER_LINEAR;
                 buffTex.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
                 buffTex.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-                targets.push(new pc.gfx.RenderTarget(buffer));
+                targets.push(target);
             }
 
             // Create the vertex format
@@ -259,23 +259,23 @@ pc.gfx.post.bloom = function () {
             // Pass 1: draw the scene into rendertarget 1, using a
             // shader that extracts only the brightest parts of the image.
             scope.resolve("uBloomThreshold").setValue(options.bloomThreshold);
-            scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
+            scope.resolve("uBaseTexture").setValue(inputTarget.getTexture());
             drawFullscreenQuad(device, targets[0], extractProg);
             
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
-            calculateBlurValues(1.0 / targets[1].getFrameBuffer().getWidth(), 0, options.blurAmount);
+            calculateBlurValues(1.0 / targets[1].getWidth(), 0, options.blurAmount);
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
-            scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
+            scope.resolve("uBloomTexture").setValue(targets[0].getTexture());
             drawFullscreenQuad(device, targets[1], blurProg);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
-            calculateBlurValues(0, 1.0 / targets[0].getFrameBuffer().getHeight(), options.blurAmount);
+            calculateBlurValues(0, 1.0 / targets[0].getHeight(), options.blurAmount);
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
-            scope.resolve("uBloomTexture").setValue(targets[1].getFrameBuffer().getTexture());
+            scope.resolve("uBloomTexture").setValue(targets[1].getTexture());
             drawFullscreenQuad(device, targets[0], blurProg);
             
             // Pass 4: draw both rendertarget 1 and the original scene
@@ -286,8 +286,8 @@ pc.gfx.post.bloom = function () {
             combineParams[2] = options.bloomSaturation;
             combineParams[3] = options.baseSaturation;
             scope.resolve("uCombineParams").setValue(combineParams);
-            scope.resolve("uBloomTexture").setValue(targets[0].getFrameBuffer().getTexture());
-            scope.resolve("uBaseTexture").setValue(inputTarget.getFrameBuffer().getTexture());
+            scope.resolve("uBloomTexture").setValue(targets[0].getTexture());
+            scope.resolve("uBaseTexture").setValue(inputTarget.getTexture());
             drawFullscreenQuad(device, outputTarget, combineProg);
         }
     };

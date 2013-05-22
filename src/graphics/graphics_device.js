@@ -470,10 +470,9 @@ pc.extend(pc.gfx, function () {
             // Set the render target
             var gl = this.gl;
             if (this.renderTarget) {
-                var buffer = this.renderTarget.getFrameBuffer();
-                var w = buffer.getWidth();
-                var h = buffer.getHeight();
-                buffer.bind();
+                var w = this.renderTarget.getWidth();
+                var h = this.renderTarget.getHeight();
+                this.renderTarget.bind();
             } else {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }

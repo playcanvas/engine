@@ -107,15 +107,15 @@ pc.extend(pc.scene, function () {
     // Shadow mapping support functions //
     //////////////////////////////////////
     function createShadowMap(device, width, height) {
-        var shadowBuffer = new pc.gfx.FrameBuffer(device, width, height, true);
+        var shadowTarget = new pc.gfx.RenderTarget(device, width, height, true);
 
-        var shadowTexture = shadowBuffer.getTexture();
+        var shadowTexture = shadowTarget.getTexture();
         shadowTexture.minFilter = pc.gfx.FILTER_NEAREST;
         shadowTexture.magFilter = pc.gfx.FILTER_NEAREST;
         shadowTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         shadowTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
 
-        return new pc.gfx.RenderTarget(shadowBuffer);
+        return shadowTarget;
     };
 
     function createShadowCamera(device) {
@@ -143,7 +143,7 @@ pc.extend(pc.scene, function () {
             shadowCam.setRenderTarget(shadowBuffer);
             light._shadowCamera = shadowCam;
         } else {
-            shadowBuffer = shadowCam.getRenderTarget().getFrameBuffer();
+            shadowBuffer = shadowCam.getRenderTarget();
             if ((shadowBuffer.getWidth() !== light._shadowWidth) || (shadowBuffer.getHeight() !== light._shadowHeight)) {
                 shadowBuffer = createShadowMap(device, this._shadowWidth, this._shadowHeight);
                 shadowCam.setRenderTarget(shadowBuffer);
@@ -362,8 +362,8 @@ pc.extend(pc.scene, function () {
             device.updateBegin();
 
             var rect = cam.getRect();
-            var pixelWidth = target ? target.getFrameBuffer().getWidth() : device.width;
-            var pixelHeight = target ? target.getFrameBuffer().getHeight() : device.height;
+            var pixelWidth = target ? target.getWidth() : device.width;
+            var pixelHeight = target ? target.getHeight() : device.height;
             var x = Math.floor(rect.x * pixelWidth);
             var y = Math.floor(rect.y * pixelHeight);
             var w = Math.floor(rect.width * pixelWidth);
@@ -684,8 +684,8 @@ pc.extend(pc.scene, function () {
 
             if (directional.getCastShadows()) {
                 var shadowMap = device.extDepthTexture ? 
-                        directional._shadowCamera._renderTarget._frameBuffer._depthTexture :
-                        directional._shadowCamera._renderTarget._frameBuffer.getTexture();
+                        directional._shadowCamera._renderTarget._depthTexture :
+                        directional._shadowCamera._renderTarget.getTexture();
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
                 scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
                 scope.resolve(light + "_shadowParams").setValue([directional._shadowWidth, directional._shadowHeight, directional._shadowBias]);
@@ -741,8 +741,8 @@ pc.extend(pc.scene, function () {
 
             if (spot.getCastShadows()) {
                 var shadowMap = device.extDepthTexture ? 
-                        spot._shadowCamera._renderTarget._frameBuffer._depthTexture :
-                        spot._shadowCamera._renderTarget._frameBuffer.getTexture();
+                        spot._shadowCamera._renderTarget._depthTexture :
+                        spot._shadowCamera._renderTarget.getTexture();
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
                 scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
                 scope.resolve(light + "_shadowParams").setValue([spot._shadowWidth, spot._shadowHeight, spot._shadowBias]);

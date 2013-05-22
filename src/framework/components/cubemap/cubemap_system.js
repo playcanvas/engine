@@ -25,7 +25,7 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CubeMapComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            data.buffer = new pc.gfx.FrameBuffer(256, 256, true, true);
+            data.buffer = new pc.gfx.RenderTarget(256, 256, true, true);
             data.cubemap = data.buffer.getTexture();
             data.cubemap.minFilter = pc.gfx.FILTER_LINEAR;
             data.cubemap.magFilter = pc.gfx.FILTER_LINEAR;
@@ -36,7 +36,7 @@ pc.extend(pc.fw, function () {
             data.camera.setNearClip(0.01);
             data.camera.setFarClip(100);
             data.camera.setAspectRatio(1);
-            data.camera.setRenderTarget(new pc.gfx.RenderTarget(data.buffer));
+            data.camera.setRenderTarget(data.buffer);
         
             CubeMapComponentSystem._super.initializeComponentData.call(this, component, data, ['buffer', 'cubemap', 'camera']);
         },

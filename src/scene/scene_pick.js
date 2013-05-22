@@ -201,13 +201,12 @@ pc.extend(pc.scene, function () {
     Picker.prototype.setDimensions = function (width, height) {
         this._width = width;
         this._height = height;
-        var pickBuffer = new pc.gfx.FrameBuffer(this.device, this._width, this._height, true);
-        var pickBufferTexture = pickBuffer.getTexture();
+        this._pickBufferTarget = new pc.gfx.RenderTarget(this.device, this._width, this._height, true);
+        var pickBufferTexture = this._pickBufferTarget.getTexture();
         pickBufferTexture.minFilter = pc.gfx.FILTER_NEAREST;
         pickBufferTexture.magFilter = pc.gfx.FILTER_NEAREST;
         pickBufferTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         pickBufferTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        this._pickBufferTarget = new pc.gfx.RenderTarget(pickBuffer);
     };
 
     return {

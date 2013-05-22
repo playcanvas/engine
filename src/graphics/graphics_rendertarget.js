@@ -1,107 +1,162 @@
 pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.RenderTarget
-     * @class A render target is a viewport onto a frame buffer.
-     * @constructor Creates a new render target. A render target is a viewport onto a frame
-     * buffer. If no viewport is specified, it is assumed that the entire frame buffer is 
-     * rendered to.
-     * @param {pc.gfx.FrameBuffer} frameBuffer The frame buffer bound to this render target.
-     * @param {Object} viewport (Optional) The viewport to set with the following members:
-     * @param {Number} viewport.x The top left corner x coordinate in pixel space.
-     * @param {Number} viewport.y The top left corner y coordinate in pixel space.
-     * @param {Number} viewport.width The viewport width in pixels.
-     * @param {Number} viewport.height The viewport height in pixels.
+     * @class A render target is a rectangular rendering surface.
+     * @description Creates a new RenderTarget object.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this frame buffer.
+     * @param {Number} width The width of the render target in pixels.
+     * @param {Number} height The height of the render target in pixels.
+     * @param {Boolean} depth True if the render target is to include a depth buffer and false otherwise.
+     * @param {Boolean} isCube True if the render target is represented as a cube map and false if it is
+     * represented as a 2D surface.
      */
-    var RenderTarget = function (frameBuffer, viewport) {
-        this._frameBuffer = frameBuffer;
-        if (viewport) {
-            this._viewport = viewport;
+    var RenderTarget = function (graphicsDevice, width, height, depth, isCube) {
+        this.device = graphicsDevice;
+
+        if (typeof isCube === 'undefined') isCube = false;
+
+        var gl = this.device.gl;
+
+        this._width     = width  || 1;
+        this._height    = height || 1;
+        this._colorBuffers = [];
+        if (depth && !this.device.extDepthTexture) {
+            this._depthBuffers = [];
         }
-        this._defaultViewport = {
-            x: 0,
-            y: 0,
-            width: 0,
-            height: 0
-        };
+
+        this._colorTexture = new pc.gfx.Texture(this.device, {
+            width: width, 
+            height: height, 
+            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+            cubemap: isCube
+        });
+        this._colorTexture.upload();
+        if (depth && this.device.extDepthTexture) {
+            this._depthTexture = new pc.gfx.Texture({
+                width: width, 
+                height: height, 
+                format: pc.gfx.PIXELFORMAT_D16,
+                cubemap: isCube
+            });
+            this._depthTexture.upload();
+        }
+
+        var numBuffers = isCube ? 6 : 1;
+        this._activeBuffer = 0;
+
+        for (var i = 0; i < numBuffers; i++) {
+            // Create a new WebGL frame buffer object
+            this._colorBuffers[i] = gl.createFramebuffer();
+
+            // Attach the specified texture to the frame buffer
+            gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers[i]);
+            gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                    gl.COLOR_ATTACHMENT0,
+                                    isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
+                                    this._colorTexture._glTextureId,
+                                    0);
+            if (depth) {
+                if (this.device.extDepthTexture) {
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                            gl.DEPTH_ATTACHMENT,
+                                            isCube ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + i : gl.TEXTURE_2D,
+                                            this._depthTexture._glTextureId, 
+                                            0);
+                } else {
+                    this._depthBuffers[i] = gl.createRenderbuffer();
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, this._depthBuffers[i]);
+                    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this._width, this._height);
+                    gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._depthBuffers[i]);
+                }
+            }
+
+            var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+            switch (status)
+            {
+                case gl.FRAMEBUFFER_COMPLETE:
+                    //logINFO("RenderTarget status OK");
+                    break;
+                case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                    logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                    break;
+                case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                    logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                    break;
+                case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                    logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+                    break;
+                case gl.FRAMEBUFFER_UNSUPPORTED:
+                    logERROR("RenderTarget error: FRAMEBUFFER_UNSUPPORTED");
+                    break;
+            }
+        }
+
+        // Set current render target back to default frame buffer
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
-    RenderTarget.prototype = {
-        /**
-         * @function
-         * @name pc.gfx.RenderTarget#setViewport
-         * @description Sets the viewport on the render target's frame buffer. The viewport is a
-         * rectangular region specified by a top left corner coordinate and a width and height.
-         * @param {Object} viewport The viewport to set with the following members:
-         * @param {Number} viewport.x The top left corner x coordinate in pixel space.
-         * @param {Number} viewport.y The top left corner y coordinate in pixel space.
-         * @param {Number} viewport.width The viewport width in pixels.
-         * @param {Number} viewport.height The viewport height in pixels.
-         * @author Will Eastcott
-         */
-        setViewport: function (viewport) {
-            this._viewport = viewport;
-        },
+    /**
+     * @function
+     * @name pc.gfx.RenderTarget#bind
+     * @description Activates the framebuffer to receive the rasterization of all subsequent draw commands issued by
+     * the graphics device.
+     * @author Will Eastcott
+     */
+    RenderTarget.prototype.bind = function () {
+        var gl = this.device.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._colorBuffers[this._activeBuffer]);
+    };
 
-        /**
-         * @function
-         * @name pc.gfx.RenderTarget#getViewport
-         * @description Returns the viewport used by the specified render target.
-         * @returns {Object} The viewport for the specified render target.
-         * @author Will Eastcott
-         */
-        getViewport: function () {
-            if (this._viewport) {
-                return this._viewport;
-            } else {
-                this._defaultViewport.width = this._frameBuffer.getWidth();
-                this._defaultViewport.height = this._frameBuffer.getHeight();
-                return this._defaultViewport;
-            }
-        },
+    /**
+     * @function
+     * @name pc.gfx.RenderTarget#setActiveBuffer
+     * @description Marks a specific buffer of a framebuffer as active. If the framebuffer is a cube map, this 
+     * buffer index must be in the range 0 to 5 representing each face of the cube. If the framebuffer is the
+     * back buffer or a 2D framebuffer, this function has no effect.
+     * @param {Number} bufferIndex The index of the buffer to write to.
+     * @author Will Eastcott
+     */
+    RenderTarget.prototype.setActiveBuffer = function (bufferIndex) {
+        this._activeBuffer = bufferIndex;
+    };
 
-        /**
-         * @function
-         * @name pc.gfx.RenderTarget#setFrameBuffer
-         * @description Assigns a frame buffer to the render target. The frame buffer will
-         * receive the results of all rendering output sent to this render target according
-         * to the viewport.
-         * @param {pc.gfx.FrameBuffer} frameBuffer The frame buffer to set on the specified render
-         * target.
-         * @author Will Eastcott
-         */
-        setFrameBuffer: function (frameBuffer) {
-            this._frameBuffer = frameBuffer;
-        },
+    /**
+     * @function
+     * @name pc.gfx.RenderTarget#getWidth
+     * @description Returns the width of the specified frame buffer in pixels.
+     * @returns {number} The width of the frame buffer in pixels.
+     * @author Will Eastcott
+     */
+    RenderTarget.prototype.getWidth = function () {
+        var gl = this.device.gl;
+        return (this._colorBuffers) ? this._width : gl.canvas.width;
+    };
 
-        /**
-         * @function
-         * @name pc.gfx.RenderTarget#getFrameBuffer
-         * @description Returns the frame buffer assigned to the specified render target.
-         * @returns {pc.gfx.FrameBuffer} The frame buffer assigned to the render target.
-         * @author Will Eastcott
-         */
-        getFrameBuffer: function () {
-            return this._frameBuffer;
-        },
+    /**
+     * @function
+     * @name pc.gfx.RenderTarget#getHeight
+     * @description Returns the height of the specified frame buffer in pixels.
+     * @returns {number} The height of the frame buffer in pixels.
+     * @author Will Eastcott
+     */
+    RenderTarget.prototype.getHeight = function () {
+        var gl = this.device.gl;
+        return (this._colorBuffers) ? this._height : gl.canvas.height;
+    };
 
-        /**
-         * @function
-         * @name pc.gfx.RenderTarget#bind
-         * @description Activates the specified render target to receive all subsequent rendering
-         * output. All rendering will be clipped to the viewport of the render target and rendered
-         * to the render target's frame buffer.
-         * @author Will Eastcott
-         */
-        bind: function () {
-            var gl = this._frameBuffer.device.gl;
-            // Make the render target's frame buffer the current recipient of any rasterization.
-            this._frameBuffer.bind();
-
-            // Restrict rendering to the viewport of the rendering target.
-            var vp = this.getViewport();
-            gl.viewport(vp.x, vp.y, vp.width, vp.height);
-            gl.scissor(vp.x, vp.y, vp.width, vp.height);
-        }
+    /**
+     * @function
+     * @name pc.gfx.RenderTarget#getTexture
+     * @description Returns a texture instance that corresponds to the image rasterized to the 
+     * frame buffer itself. This can then be rasterized using geometric primitives into anther 
+     * render target, thereby allowing for the implementation of frame buffer post-processing,
+     * dynamic cube maps and other effects.
+     * @returns {pc.gfx.Texture} A texture holding a copy of the frame buffer's contents.
+     * @author Will Eastcott
+     */
+    RenderTarget.prototype.getTexture = function () {
+        return (this._colorBuffers) ? this._colorTexture : null;
     };
 
     return {
