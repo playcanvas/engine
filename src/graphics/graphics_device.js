@@ -469,6 +469,9 @@ pc.extend(pc.gfx, function () {
             // Set the render target
             if (this.renderTarget) {
                 this.renderTarget.bind();
+            } else {
+                var gl = this.gl;
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 
             for (var i = 0; i < 16; i++) {
@@ -485,9 +488,6 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         updateEnd: function () {
-            if (this.renderTarget) {
-                this.renderTarget.unbind();
-            }
         },
 
         /**

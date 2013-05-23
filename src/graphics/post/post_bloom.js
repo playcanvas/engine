@@ -224,7 +224,8 @@ pc.gfx.post.bloom = function () {
                 colorBuffer.magFilter = pc.gfx.FILTER_LINEAR;
                 colorBuffer.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
                 colorBuffer.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-                var target = new pc.gfx.RenderTarget(device, colorBuffer, false);
+                var target = new pc.gfx.RenderTarget(device, colorBuffer, { depth: false });
+
                 targets.push(target);
             }
 
@@ -263,7 +264,7 @@ pc.gfx.post.bloom = function () {
             // Pass 1: draw the scene into rendertarget 1, using a
             // shader that extracts only the brightest parts of the image.
             scope.resolve("uBloomThreshold").setValue(options.bloomThreshold);
-            scope.resolve("uBaseTexture").setValue(inputTarget.getTexture());
+            scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
             drawFullscreenQuad(device, targets[0], extractProg);
             
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
@@ -271,7 +272,7 @@ pc.gfx.post.bloom = function () {
             calculateBlurValues(1.0 / targets[1].width, 0, options.blurAmount);
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
-            scope.resolve("uBloomTexture").setValue(targets[0].getTexture());
+            scope.resolve("uBloomTexture").setValue(targets[0].colorBuffer);
             drawFullscreenQuad(device, targets[1], blurProg);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
@@ -279,9 +280,9 @@ pc.gfx.post.bloom = function () {
             calculateBlurValues(0, 1.0 / targets[0].height, options.blurAmount);
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
-            scope.resolve("uBloomTexture").setValue(targets[1].getTexture());
+            scope.resolve("uBloomTexture").setValue(targets[1].colorBuffer);
             drawFullscreenQuad(device, targets[0], blurProg);
-            
+
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
@@ -290,8 +291,8 @@ pc.gfx.post.bloom = function () {
             combineParams[2] = options.bloomSaturation;
             combineParams[3] = options.baseSaturation;
             scope.resolve("uCombineParams").setValue(combineParams);
-            scope.resolve("uBloomTexture").setValue(targets[0].getTexture());
-            scope.resolve("uBaseTexture").setValue(inputTarget.getTexture());
+            scope.resolve("uBloomTexture").setValue(targets[0].colorBuffer);
+            scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
             drawFullscreenQuad(device, outputTarget, combineProg);
         }
     };

@@ -686,7 +686,7 @@ pc.extend(pc.scene, function () {
             if (directional.getCastShadows()) {
                 var shadowMap = device.extDepthTexture ? 
                         directional._shadowCamera._renderTarget._depthTexture :
-                        directional._shadowCamera._renderTarget.getTexture();
+                        directional._shadowCamera._renderTarget.colorBuffer;
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
                 scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
                 scope.resolve(light + "_shadowParams").setValue([directional._shadowWidth, directional._shadowHeight, directional._shadowBias]);
@@ -743,7 +743,7 @@ pc.extend(pc.scene, function () {
             if (spot.getCastShadows()) {
                 var shadowMap = device.extDepthTexture ? 
                         spot._shadowCamera._renderTarget._depthTexture :
-                        spot._shadowCamera._renderTarget.getTexture();
+                        spot._shadowCamera._renderTarget.colorBuffer;
                 scope.resolve(light + "_shadowMap").setValue(shadowMap);
                 scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
                 scope.resolve(light + "_shadowParams").setValue([spot._shadowWidth, spot._shadowHeight, spot._shadowBias]);
