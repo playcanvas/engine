@@ -81,6 +81,8 @@ pc.extend(pc.gfx, function () {
      * device is tied to a specific canvas HTML element. It is valid to have more than one 
      * canvas element per page and create a new graphics device against each.
      * @param {Object} canvas The canvas to which the graphics device is tied.
+     * @property {Number} width Width of the back buffer in pixels (read-only).
+     * @property {Number} height Height of the back buffer in pixels (read-only).
      */
     var Device = function (canvas) {
         if (!window.WebGLRenderingContext) {
@@ -130,7 +132,6 @@ pc.extend(pc.gfx, function () {
             gl.TRIANGLES, 
             gl.TRIANGLE_STRIP 
         ];
-
         this.lookupClear = [
             0,
             gl.COLOR_BUFFER_BIT,
@@ -466,13 +467,10 @@ pc.extend(pc.gfx, function () {
             this.boundBuffer = null;
 
             // Set the render target
-            var gl = this.gl;
             if (this.renderTarget) {
-                var buffer = this.renderTarget.getFrameBuffer();
-                var w = buffer.getWidth();
-                var h = buffer.getHeight();
-                buffer.bind();
+                this.renderTarget.bind();
             } else {
+                var gl = this.gl;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 

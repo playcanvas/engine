@@ -6,6 +6,9 @@ pc.extend(pc.scene, function () {
      * @constructor Create a new instance of a Picker object
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
+     * @property {Number} width Width of the pick buffer in pixels (read-only).
+     * @property {Number} height Height of the pick buffer in pixels (read-only).
+     * @property {pc.gfx.RenderTarget} renderTarget The render target used by the picker internally (read-only).
      */
     var Picker = function(device, width, height) {
         this.device = device;
@@ -22,32 +25,12 @@ pc.extend(pc.scene, function () {
 
         this.scene = null;
 
-        this._clearOptions = {
+        this.clearOptions = {
             color: [1.0, 1.0, 1.0, 1.0],
             depth: 1.0,
             flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
         };
-        this.setDimensions(width, height);
-    };
-
-    /**
-     * @function
-     * @name pc.scene.Picker#getHeight
-     * @description Queries the height of the pick buffer.
-     * @returns {Number} The height of the pick buffer in pixels.
-     */
-    Picker.prototype.getHeight = function () {
-        return this._height;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.Picker#getPickBuffer
-     * @description Retrieves the pc.gfx.FrameBuffer object used internally as a pick buffer.
-     * @returns {pc.gfx.FrameBuffer} The pick buffer.
-     */
-    Picker.prototype.getPickBuffer = function () {
-        return this._pickBufferTarget.getFrameBuffer();
+        this.resize(width, height);
     };
 
     /**
@@ -106,16 +89,6 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Picker#getWidth
-     * @description Queries the width of the pick buffer.
-     * @returns {Number} The width of the pick buffer in pixels.
-     */
-    Picker.prototype.getWidth = function () {
-        return this._width;
-    };
-
-    /**
-     * @function
      * @name pc.scene.Picker#prepare
      * @description Primes the pick buffer with a rendering of the specified models from the point of view
      * of the supplied camera. Once the pick buffer has been prepared, pc.scene.Picker#getSelection can be
@@ -134,7 +107,9 @@ pc.extend(pc.scene, function () {
         // Ready the device for rendering to the pick buffer
         device.setRenderTarget(this._pickBufferTarget);
         device.updateBegin();
-        device.clear(this._clearOptions);
+        device.setViewport(0, 0, this._pickBufferTarget.width, this._pickBufferTarget.height);
+        device.setScissor(0, 0, this._pickBufferTarget.width, this._pickBufferTarget.height);
+        device.clear(this.clearOptions);
 
         // Build mesh instance list (ideally done by visibility query)
         var i;
@@ -181,6 +156,8 @@ pc.extend(pc.scene, function () {
             }
         }
 
+        device.setViewport(0, 0, device.width, device.height);
+        device.setScissor(0, 0, device.width, device.height);
         device.updateEnd();
 
         // Restore render target
@@ -189,7 +166,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Picker#setDimensions
+     * @name pc.scene.Picker#resize
      * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
      * to match the resolution of the corresponding frame buffer use for general rendering of the 
      * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
@@ -198,17 +175,30 @@ pc.extend(pc.scene, function () {
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
      */
-    Picker.prototype.setDimensions = function (width, height) {
-        this._width = width;
-        this._height = height;
-        var pickBuffer = new pc.gfx.FrameBuffer(this.device, this._width, this._height, true);
-        var pickBufferTexture = pickBuffer.getTexture();
-        pickBufferTexture.minFilter = pc.gfx.FILTER_NEAREST;
-        pickBufferTexture.magFilter = pc.gfx.FILTER_NEAREST;
-        pickBufferTexture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        pickBufferTexture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        this._pickBufferTarget = new pc.gfx.RenderTarget(pickBuffer);
+    Picker.prototype.resize = function (width, height) {
+        var colorBuffer = new pc.gfx.Texture(this.device, {
+            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+            width: width,
+            height: height
+        });
+        colorBuffer.minFilter = pc.gfx.FILTER_NEAREST;
+        colorBuffer.magFilter = pc.gfx.FILTER_NEAREST;
+        colorBuffer.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        colorBuffer.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        this._pickBufferTarget = new pc.gfx.RenderTarget(this.device, colorBuffer, { depth: true });
     };
+
+    Object.defineProperty(Picker.prototype, 'renderTarget', {
+        get: function() { return this._pickBufferTarget; }
+    });
+
+    Object.defineProperty(Picker.prototype, 'width', {
+        get: function() { return this._pickBufferTarget.width; }
+    });
+
+    Object.defineProperty(Picker.prototype, 'height', {
+        get: function() { return this._pickBufferTarget.height; }
+    });
 
     return {
         Picker: Picker

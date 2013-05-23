@@ -45,7 +45,6 @@
 ../src/graphics/graphics_vertexbuffer.js
 ../src/graphics/graphics_indexbuffer.js
 ../src/graphics/graphics_texture.js
-../src/graphics/graphics_framebuffer.js
 ../src/graphics/graphics_rendertarget.js
 ../src/graphics/graphics_shaderinput.js
 ../src/graphics/graphics_shader.js

@@ -37,14 +37,17 @@ pc.extend(pc.fw, function () {
          * @function 
          * @name pc.fw.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
-         * @param {Number} x x coordinate on screen.
-         * @param {Number} y y coordinate on screen.
+         * @param {Number} x x coordinate on PlayCanvas' canvas element.
+         * @param {Number} y y coordinate on PlayCanvas' canvas element.
          * @param {Number} z The distance from the camera in world space to create the new point.
          * @param {pc.math.vec3} [worldCoord] 3D vector to recieve world coordinate result.
          * @returns {pc.math.vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, worldCoord) {
-            return this.data.camera.screenToWorld(x, y, z, worldCoord);
+            var device = this.system.context.graphicsDevice;
+            var width = parseInt(device.canvas.style.width);
+            var height = parseInt(device.canvas.style.height);
+            return this.data.camera.screenToWorld(x, y, z, width, height, worldCoord);
         },
 
         onSetAspectRatio: function (name, oldValue, newValue) {
