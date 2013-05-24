@@ -96,19 +96,15 @@ pc.extend(pc.fw, function () {
          */
         onSetColor: function (name, oldValue, newValue) {
             var data = this.data;
-            var rbg = 0;
-            var color = new Float32Array([0, 0, 0]);
-            
-            if (newValue) {
-                rgb = parseInt(newValue, 16);
-                rgb = pc.math.intToBytes24(rgb);
-                color[0] = rgb[0] / 255;
-                color[1] = rgb[1] / 255;
-                color[2] = rgb[2] / 255;
-            }
 
-            data.material.ambient = color;
-            data.material.diffuse = color;
+            data.material.ambient[0] = newValue.r;
+            data.material.ambient[1] = newValue.g;
+            data.material.ambient[2] = newValue.b;
+            
+            data.material.diffuse[0] = newValue.r;
+            data.material.diffuse[1] = newValue.g;
+            data.material.diffuse[2] = newValue.b;
+
             data.material.update();
         },
 

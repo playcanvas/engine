@@ -15,7 +15,7 @@ pc.extend(pc, (function () {
     * @param {pc.Color|pc.math.vec4|pc.math.vec3|String} color An existing color value. String value should be in the form "#FFFFFF"
     */
     var Color = function (r, g, b, a) {
-        this.c = pc.math.vec4.create();
+        this.c = [r,g,b,a];
 
         if (arguments.length >= 3) {
             this.set(r, g, b, a);
@@ -88,7 +88,6 @@ pc.extend(pc, (function () {
                 }
                 pc.math.vec4.copy(r, this.c);
             }
-            pc.math.vec4.normalize(this.c, this.c);
         },
 
         fromString: function (hex) {
@@ -102,11 +101,21 @@ pc.extend(pc, (function () {
             }
 
             this.set(bytes[0]/255, bytes[1]/255, bytes[2]/255, bytes[3]/255);
+        },
+
+        toString: function (alpha) {
+            var s = "#" + ((1 << 24) + (parseInt(this.r*255) << 16) + (parseInt(this.g*255) << 8) + parseInt(this.b*255)).toString(16).slice(1);
+            if (alpha === true) {
+                var a = parseInt(this.a * 255).toString(16);
+                if (this.a < 16/255) {
+                    s += '0' + a;
+                } else {
+                    s += a;    
+                }
+                
+            }
+            return s;
         }
-
-        // toString: function () {
-
-        // }
     };
 
     return {

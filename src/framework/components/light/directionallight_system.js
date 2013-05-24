@@ -24,7 +24,7 @@ pc.extend(pc.fw, function () {
             displayName: "Color",
             description: "Light Color",
             type: "rgb",
-            defaultValue: "0xffffff"
+            defaultValue: [1,1,1]
         }, {
             name: "intensity",
             displayName: "Intensity",
@@ -145,6 +145,9 @@ pc.extend(pc.fw, function () {
 
             data = data || {};
             data.model = model;
+            if (data.color) {
+                data.color = new pc.Color(data.color);    
+            }
 
             properties = ['model', 'enable', 'color', 'intensity', 'castShadows', 'shadowResolution'];
             DirectionalLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);

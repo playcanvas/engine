@@ -28,31 +28,18 @@ pc.extend(pc.fw, function () {
         },
 
         onSetColor: function (name, oldValue, newValue) {
-            if (newValue) {
-                var rgb = parseInt(newValue, 16);
-                rgb = pc.math.intToBytes24(rgb);
-                var color = [
-                    rgb[0] / 255,
-                    rgb[1] / 255,
-                    rgb[2] / 255
-                ];
-                var light = this.data.model.lights[0];
-                light.setColor(color);
-            }
+            var light = this.data.model.lights[0];
+            light.setColor(newValue.c);
         },
 
         onSetEnable: function (name, oldValue, newValue) {
-            if (newValue !== undefined) {
-                var light = this.data.model.lights[0];
-                light.setEnabled(newValue);
-            }
+            var light = this.data.model.lights[0];
+            light.setEnabled(newValue);
         },
 
         onSetIntensity: function (name, oldValue, newValue) {
-            if (newValue !== undefined) {
-                var light = this.data.model.lights[0];
-                light.setIntensity(newValue);
-            }
+            var light = this.data.model.lights[0];
+            light.setIntensity(newValue);
         },
 
         onSetShadowResolution: function (name, oldValue, newValue) {
