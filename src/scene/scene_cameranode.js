@@ -364,6 +364,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setOrthoHeight = function (height) {
         this._orthoHeight = height;
+        this._projMatDirty = true;
     };
 
     /**
