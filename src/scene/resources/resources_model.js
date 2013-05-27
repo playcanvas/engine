@@ -676,21 +676,20 @@ pc.extend(pc.resources, function () {
     ModelResourceHandler.prototype._loadModelJsonV2 = function (data, mapping, options) {
         // TODO: Support vertex semantics somehow...
         var attributeMap = {
-            "position": "vertex_position",
-            "normal": "vertex_normal",
-            "tangent": "vertex_tangent",
-            "binormal": "vertex_binormal",
-            "blendWeight": "vertex_skinWeights",
-            "blendIndices": "vertex_skinIndices",
-            "color": "vertex_color",
-            "texCoord0": "vertex_texCoord0",
-            "texCoord1": "vertex_texCoord1",
-            "texCoord2": "vertex_texCoord2",
-            "texCoord3": "vertex_texCoord3",
-            "texCoord4": "vertex_texCoord4",
-            "texCoord5": "vertex_texCoord5",
-            "texCoord6": "vertex_texCoord6",
-            "texCoord7": "vertex_texCoord7"
+            position: pc.gfx.SEMANTIC_POSITION,
+            normal: pc.gfx.SEMANTIC_NORMAL,
+            tangent: pc.gfx.SEMANTIC_TANGENT,
+            blendWeight: pc.gfx.SEMANTIC_BLENDWEIGHT,
+            blendIndices: pc.gfx.SEMANTIC_BLENDINDICES,
+            color: pc.gfx.SEMANTIC_COLOR,
+            texCoord0: pc.gfx.SEMANTIC_TEXCOORD0,
+            texCoord1: pc.gfx.SEMANTIC_TEXCOORD1,
+            texCoord2: pc.gfx.SEMANTIC_TEXCOORD2,
+            texCoord3: pc.gfx.SEMANTIC_TEXCOORD3,
+            texCoord4: pc.gfx.SEMANTIC_TEXCOORD4,
+            texCoord5: pc.gfx.SEMANTIC_TEXCOORD5,
+            texCoord6: pc.gfx.SEMANTIC_TEXCOORD6,
+            texCoord7: pc.gfx.SEMANTIC_TEXCOORD7
         };
 
         var modelData = data.model;
