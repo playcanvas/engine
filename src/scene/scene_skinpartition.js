@@ -120,10 +120,10 @@ pc.extend(pc.scene, function () {
                 // Not doing an unlock because we're reading....but yeah, it's naughty
 
                 for (var j = 0; j < format.elements.length; j++) {
-                    if (format.elements[j].name === 'vertex_boneIndices') {
+                    if (format.elements[j].name === pc.gfx.SEMANTIC_BLENDINDICES) {
                         vert.boneIndices = new Uint8Array(vert.vertexData[i], format.elements[j].offset, 4);
                     }
-                    if (format.elements[j].name === 'vertex_boneWeights') {
+                    if (format.elements[j].name === pc.gfx.SEMANTIC_BLENDWEIGHT) {
                         vert.boneWeights = new Float32Array(vert.vertexData[i], format.elements[j].offset, 4);
                     }
                 }

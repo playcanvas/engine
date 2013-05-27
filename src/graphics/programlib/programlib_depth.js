@@ -6,7 +6,24 @@ pc.gfx.programlib.depth = {
         return key;
     },
 
-    generateVertexShader: function (device, options) {
+    createShaderDefinition: function (device, options) {
+        /////////////////////////
+        // GENERATE ATTRIBUTES //
+        /////////////////////////
+        var attributes = {
+            vertex_position: pc.gfx.SEMANTIC_POSITION
+        }
+        if (options.skin) {
+            attributes.vertex_boneWeights = pc.gfx.SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = pc.gfx.SEMANTIC_BLENDINDICES;
+        }
+        if (options.opacityMap) {
+            attributes.vertex_texCoord0 = pc.gfx.SEMANTIC_TEXCOORD0;
+        }
+
+        ////////////////////////////
+        // GENERATE VERTEX SHADER //
+        ////////////////////////////
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = '';
 
@@ -38,12 +55,12 @@ pc.gfx.programlib.depth = {
 
         code += getSnippet(device, 'common_main_end');
         
-        return code;
-    },
+        var vshader = code;
 
-    generateFragmentShader: function (device, options) {
-        var getSnippet = pc.gfx.programlib.getSnippet;
-        var code = getSnippet(device, 'fs_precision');
+        //////////////////////////////
+        // GENERATE FRAGMENT SHADER //
+        //////////////////////////////
+        code = getSnippet(device, 'fs_precision');
 
         if (options.opacityMap) {
             code += 'varying vec2 vUv0;\n\n';
@@ -61,6 +78,12 @@ pc.gfx.programlib.depth = {
 
         code += getSnippet(device, 'common_main_end');
 
-        return code;
+        var fshader = code;
+
+        return {
+            attributes: attributes,
+            vshader: vshader,
+            fshader: fshader
+        };
     }
 };

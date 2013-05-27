@@ -283,17 +283,89 @@ pc.gfx = {
     PRIMITIVE_TRISTRIP: 4,
 
     /**
-     * @enum pc.gfx.SHADERTYPE
-     * @name pc.gfx.SHADERTYPE_VERTEX
-     * @description A vertex shader.
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_POSITION
+     * @description Vertex attribute to be treated as a position.
      */
-    SHADERTYPE_VERTEX: 0,
+    SEMANTIC_POSITION: "POSITION",
     /**
-     * @enum pc.gfx.SHADERTYPE
-     * @name pc.gfx.SHADERTYPE_FRAGMENT
-     * @description A fragment shader.
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_NORMAL
+     * @description Vertex attribute to be treated as a normal.
      */
-    SHADERTYPE_FRAGMENT: 1,
+    SEMANTIC_NORMAL: "NORMAL",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TANGENT
+     * @description Vertex attribute to be treated as a tangent.
+     */
+    SEMANTIC_TANGENT: "TANGENT",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_BLENDWEIGHT
+     * @description Vertex attribute to be treated as skin blend weights.
+     */
+    SEMANTIC_BLENDWEIGHT: "BLENDWEIGHT",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_BLENDINDICES
+     * @description Vertex attribute to be treated as skin blend indices.
+     */
+    SEMANTIC_BLENDINDICES: "BLENDINDICES",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_COLOR
+     * @description Vertex attribute to be treated as a color.
+     */
+    SEMANTIC_COLOR: "COLOR",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TEXCOORD0
+     * @description Vertex attribute to be treated as a texture coordinate (set 0).
+     */
+    SEMANTIC_TEXCOORD0: "TEXCOORD0",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TEXCOORD1
+     * @description Vertex attribute to be treated as a texture coordinate (set 1).
+     */
+    SEMANTIC_TEXCOORD1: "TEXCOORD1",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TEXCOORD2
+     * @description Vertex attribute to be treated as a texture coordinate (set 2).
+     */
+    SEMANTIC_TEXCOORD2: "TEXCOORD2",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TEXCOORD3
+     * @description Vertex attribute to be treated as a texture coordinate (set 3).
+     */
+    SEMANTIC_TEXCOORD3: "TEXCOORD3",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TEXCOORD4
+     * @description Vertex attribute to be treated as a texture coordinate (set 4).
+     */
+    SEMANTIC_TEXCOORD4: "TEXCOORD4",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TEXCOORD5
+     * @description Vertex attribute to be treated as a texture coordinate (set 5).
+     */
+    SEMANTIC_TEXCOORD5: "TEXCOORD5",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TEXCOORD6
+     * @description Vertex attribute to be treated as a texture coordinate (set 6).
+     */
+    SEMANTIC_TEXCOORD6: "TEXCOORD6",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_TEXCOORD7
+     * @description Vertex attribute to be treated as a texture coordinate (set 7).
+     */
+    SEMANTIC_TEXCOORD7: "TEXCOORD7",
 
     /**
      * @enum pc.gfx.TEXTURELOCK

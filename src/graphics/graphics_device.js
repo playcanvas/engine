@@ -100,7 +100,7 @@ pc.extend(pc.gfx, function () {
         canvas.addEventListener("webglcontextrestored", _contextRestoredHandler, false);
 
         this.canvas        = canvas;
-        this.program       = null;
+        this.shader        = null;
         this.indexBuffer   = null;
         this.vertexBuffers = [];
 
@@ -516,7 +516,7 @@ pc.extend(pc.gfx, function () {
                 this.attributesInvalidated = false;
             }
 
-            // Commit the shader program variables
+            // Commit the shader uniforms
             this.commitSamplers();
             this.commitUniforms();
 
@@ -722,17 +722,18 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setProgram
+         * @name pc.gfx.Device#setShader
+         * @description Sets the active shader to be used during subsequent draw calls.
+         * @param {pc.gfx.Shader} shader The shader to set to assign to the device.
          * @author Will Eastcott
          */
-        setProgram: function(program) {
-            if (program !== this.program) {
-                // Store the program
-                this.program = program;
+        setShader: function(shader) {
+            if (shader !== this.shader) {
+                this.shader = shader;
 
-                // Set the active shader program
+                // Set the active shader
                 var gl = this.gl;
-                gl.useProgram(program.programId);
+                gl.useProgram(shader.program);
 
                 this.attributesInvalidated = true;
             }
@@ -745,7 +746,7 @@ pc.extend(pc.gfx, function () {
          */
         commitAttributes: function () {
             var i, len, attribute, element, vertexBuffer;
-            var attributes = this.program.attributes;
+            var attributes = this.shader.attributes;
             var gl = this.gl;
 
             for (i = 0, len = attributes.length; i < len; i++) {
@@ -785,7 +786,7 @@ pc.extend(pc.gfx, function () {
         commitSamplers: function () {
             var gl = this.gl;
             var i, len, sampler, value;
-            var samplers = this.program.samplers;
+            var samplers = this.shader.samplers;
 
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
@@ -809,7 +810,7 @@ pc.extend(pc.gfx, function () {
          */
         commitUniforms: function () {
             var i, len, uniform;
-            var uniforms = this.program.uniforms;
+            var uniforms = this.shader.uniforms;
             var gl = this.gl;
 
             for (i = 0, len = uniforms.length; i < len; i++) {
