@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.106.0
+--------
+* [BREAKING] Frame buffers are now render targets
+* [BREAKING] Decoupled PlayCanvas file format from shader code by introducing vertex semantics
+* [BREAKING] Updated Camera, Primitive, Directional Light, Spot Light and Point Light components to use pc.Color
+* Application code can create render targets of arbitary pixel format
+* pc.Color object for representing RGBA colors
+* [FIX] Camera setOrthoHeight() now updates the matrix
+
+--------
 v0.105.3
 --------
 * [FIX] Updated screenToWorld function to no longer require pc.gfx.Device.getCurrent.
