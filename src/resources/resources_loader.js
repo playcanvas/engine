@@ -110,13 +110,12 @@ pc.extend(pc.resources, function () {
                 var requested = [];
                 var promises = [];
                 for (i = 0, n = requests.length; i < n; i++) {
-                    // Use an existing request if there is one already in progress
-                    var request = self._requests[requests[i].canonical] || requests[i];
+                    // Use an existing request if there is a valid one in progress
+                    var request = self._findExistingRequest(requests[i]);
 
                     // If we are using an existing request, we need to copy over result and data fields.
-                    // TODO: What happens if the existing request has a result/data field!
+                    // TODO: What happens if the existing request has a data field!
                     if (request !== requests[i]) {
-                        request.result = requests[i].result;
                         request.data = requests[i].data;
                     }
 
@@ -130,11 +129,6 @@ pc.extend(pc.resources, function () {
                         parent.children.push(request);
                     }
                 }
-
-                // var promises = [];
-                // requested.forEach(function (r) {
-                //     promises.push(r.promise);
-                // });
 
                 // Check that all child promises of the requests have been completed
                 var check = function (resources, requests, promises) {
@@ -359,6 +353,7 @@ pc.extend(pc.resources, function () {
         },
 
         /**
+        * @private
         * @name pc.resources.ResourceLoader#_makeCanonical
         * @description Set the canonical property on the request object. The canonical identifier is the identifier used
         * to make all requests. Resources with the same hash but different URLs will have the same canonical so that requests are not
@@ -366,8 +361,31 @@ pc.extend(pc.resources, function () {
         * 
         */
         _makeCanonical: function (request) {
-            // TODO: do this properly
-            request.canonical = request.identifier;
+            var hash = this.getHash(request.identifier);
+            if (hash && this._canonicals[hash]) {
+                request.canonical = this._canonicals[hash];
+            } else {
+                request.canonical = request.identifier;
+            }
+        },
+
+        /**
+        * @private
+        * @name pc.resources.ResourceLoader#_findExistingRequest
+        * @description Using the canonical identifier, find and return an existing request for this resource
+        * This doesn't return a request if a result object was provided for either request
+        */
+        _findExistingRequest: function (request) {
+            var existing = this._requests[request.canonical];
+            if (existing) {
+                if (existing.result || request.result) {
+                    return request;
+                } else {
+                    return existing;
+                }                
+            } else {
+                return request;
+            }
         }
     };
 
