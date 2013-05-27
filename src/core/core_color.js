@@ -9,7 +9,7 @@ pc.extend(pc, (function () {
     * @param {Number} [a] The value of the alpha component (0-1)
     */
     /**
-    * @name pc.Color
+    * @name pc.Color^2
     * @class Representation of an RGBA color
     * @constructor Create a new Color object
     * @param {pc.Color|pc.math.vec4|pc.math.vec3|String} color An existing color value. String value should be in the form "#FFFFFF"
@@ -72,7 +72,7 @@ pc.extend(pc, (function () {
         */
         /**
         * @function
-        * @name pc.Color#set
+        * @name pc.Color#set^2
         * @description Assign values to the color components
         * @param {pc.Color|pc.math.vec4|pc.math.vec3} color An existing color or vector
         */
