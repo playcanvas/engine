@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
             displayName: "Clear Color",
             description: "Clear Color",
             type: "rgba",
-            defaultValue: "0xbabab1ff"
+            defaultValue: [0.7294117647058823, 0.7294117647058823, 0.6941176470588235, 1.0]
         }, {
             name: "projection",
             displayName: "Projection",
@@ -136,7 +136,11 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             data = data || {};
             data.camera = new pc.scene.CameraNode();
-
+            if (data.clearColor) {
+                data.clearColor = new pc.Color(data.clearColor);    
+            }
+            
+            
             if (this.context.designer && !component.entity.hasLabel("pc:designer")) {
                 var material = new pc.scene.BasicMaterial();
                 material.color = pc.math.vec4.create(1, 1, 0, 1);
@@ -151,7 +155,7 @@ pc.extend(pc.fw, function () {
 
                 var format = new pc.gfx.VertexFormat();
                 format.begin();
-                format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+                format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
                 format.end();
 
                 var vertexBuffer = new pc.gfx.VertexBuffer(this.context.graphicsDevice, format, 8, pc.gfx.BUFFER_DYNAMIC);

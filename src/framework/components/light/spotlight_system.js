@@ -24,7 +24,7 @@ pc.extend(pc.fw, function () {
             displayName: "Color",
             description: "Light color",
             type: "rgb",
-            defaultValue: "0xffffff"
+            defaultValue: [1,1,1]
         }, {
             name: "intensity",
             displayName: "Intensity",
@@ -123,7 +123,7 @@ pc.extend(pc.fw, function () {
 
         var format = new pc.gfx.VertexFormat();
         format.begin();
-        format.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+        format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
         format.end();
         this.vertexFormat = format;
 
@@ -160,6 +160,9 @@ pc.extend(pc.fw, function () {
             component.entity.addChild(node);
 
             data.model = model;
+            if (data.color) {
+                data.color = new pc.Color(data.color);    
+            }
 
             properties = ['model', 'enable', 'color', 'intensity', 'attenuationEnd', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
             SpotLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);

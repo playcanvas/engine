@@ -5,7 +5,21 @@ pc.gfx.programlib.pick = {
         return key;
     },
 
-    generateVertexShader: function (device, options) {
+    createShaderDefinition: function (device, options) {
+        /////////////////////////
+        // GENERATE ATTRIBUTES //
+        /////////////////////////
+        var attributes = {
+            vertex_position: pc.gfx.SEMANTIC_POSITION
+        }
+        if (options.skin) {
+            attributes.vertex_boneWeights = pc.gfx.SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = pc.gfx.SEMANTIC_BLENDINDICES;
+        }
+
+        ////////////////////////////
+        // GENERATE VERTEX SHADER //
+        ////////////////////////////
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = '';
 
@@ -28,12 +42,12 @@ pc.gfx.programlib.pick = {
 
         code += getSnippet(device, 'common_main_end');
         
-        return code;
-    },
+        var vshader = code;
 
-    generateFragmentShader: function (device, options) {
-        var getSnippet = pc.gfx.programlib.getSnippet;
-        var code = getSnippet(device, 'fs_precision');
+        //////////////////////////////
+        // GENERATE FRAGMENT SHADER //
+        //////////////////////////////
+        code = getSnippet(device, 'fs_precision');
 
         code += getSnippet(device, 'fs_flat_color_decl');
 
@@ -44,6 +58,12 @@ pc.gfx.programlib.pick = {
 
         code += getSnippet(device, 'common_main_end');
 
-        return code;
+        var fshader = code;
+
+        return {
+            attributes: attributes,
+            vshader: vshader,
+            fshader: fshader
+        };
     }
 };

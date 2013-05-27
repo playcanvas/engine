@@ -19,6 +19,7 @@
 ../src/math/math_matrix.js
 ../src/math/math_quaternion.js
 ../src/math/math_utils.js
+../src/core/core_color.js
 ../src/shape/shape_shape.js
 ../src/shape/shape_intersection.js
 ../src/shape/shape_aabb.js
@@ -44,11 +45,9 @@
 ../src/graphics/graphics_vertexbuffer.js
 ../src/graphics/graphics_indexbuffer.js
 ../src/graphics/graphics_texture.js
-../src/graphics/graphics_framebuffer.js
 ../src/graphics/graphics_rendertarget.js
 ../src/graphics/graphics_shaderinput.js
 ../src/graphics/graphics_shader.js
-../src/graphics/graphics_program.js
 ../src/graphics/graphics_programlibrary.js
 ../src/graphics/graphics_device.js
 ../src/graphics/post/post_post.js

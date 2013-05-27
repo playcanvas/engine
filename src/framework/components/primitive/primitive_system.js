@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+    pc.extend(pc.fw, function () {
 
     /**
      * @name pc.fw.PrimitiveComponentSystem
@@ -42,7 +42,7 @@ pc.extend(pc.fw, function () {
             displayName: "Color",
             description: "Material color",
             type: "rgb",
-            defaultValue: "0xffffff"
+            defaultValue: [1,1,1]
         }, {
             name: "castShadows",
             displayName: "Cast shadows",
@@ -94,7 +94,12 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             data.material = new pc.scene.PhongMaterial();
 
+            if(data.color) {
+                data.color = new pc.Color(data.color);    
+            }
+            
             properties = ['material', 'castShadows', 'color', 'receiveShadows', 'type'];
+
             PrimitiveComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 

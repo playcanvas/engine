@@ -25,19 +25,32 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CubeMapComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            data.buffer = new pc.gfx.FrameBuffer(256, 256, true, true);
-            data.cubemap = data.buffer.getTexture();
-            data.cubemap.minFilter = pc.gfx.FILTER_LINEAR;
-            data.cubemap.magFilter = pc.gfx.FILTER_LINEAR;
-            data.cubemap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-            data.cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+            var cubemap = new pc.gfx.Texture(this.context.graphicsDevice, {
+                format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+                width: 256,
+                height: 256
+            });
+            cubemap.minFilter = pc.gfx.FILTER_LINEAR;
+            cubemap.magFilter = pc.gfx.FILTER_LINEAR;
+            cubemap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+            cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+
+            data.cubemap = cubemap;
+            data.targets = [];
+
+            for (var i = 0; i < 6; i++) {
+                var target = new pc.gfx.RenderTarget(this.context, cubemap, {
+                    face: i,
+                    depth: true
+                });
+                data.targets.push(target);
+            }
 
             data.camera = new pc.scene.CameraNode();
             data.camera.setNearClip(0.01);
             data.camera.setFarClip(100);
             data.camera.setAspectRatio(1);
-            data.camera.setRenderTarget(new pc.gfx.RenderTarget(data.buffer));
-        
+
             CubeMapComponentSystem._super.initializeComponentData.call(this, component, data, ['buffer', 'cubemap', 'camera']);
         },
 
