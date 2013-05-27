@@ -2,10 +2,10 @@ pc.gfx.post.bloom = function () {
     // Render targets
     var targets = [];
     
-    // Bloom programs
-    var extractProg = null;
-    var blurProg = null;
-    var combineProg = null;
+    // Bloom shaders
+    var extractShader = null;
+    var blurShader = null;
+    var combineShader = null;
 
     // Effect defaults
     var defaults = {
@@ -33,12 +33,12 @@ pc.gfx.post.bloom = function () {
         depthWrite: false
     };
 
-    var drawFullscreenQuad = function (device, target, program) {
+    var drawFullscreenQuad = function (device, target, shader) {
         device.setRenderTarget(target);
         device.updateBegin();
         device.updateLocalState(quadState);
         device.setVertexBuffer(vertexBuffer, 0);
-        device.setProgram(program);
+        device.setShader(shader);
         device.draw(quadPrimitive);
         device.clearLocalState();
         device.updateEnd();
@@ -99,14 +99,18 @@ pc.gfx.post.bloom = function () {
     
     return {
         initialize: function (device) {
+            var attributes = {
+                aPosition: pc.gfx.SEMANTIC_POSITION
+            };
+
             var passThroughVert = [
-                "attribute vec3 aPosition;",
+                "attribute vec2 aPosition;",
                 "",
                 "varying vec2 vUv0;",
                 "",
                 "void main(void)",
                 "{",
-                "    gl_Position = vec4(aPosition, 1.0);",
+                "    gl_Position = vec4(aPosition, 0.0, 1.0);",
                 "    vUv0 = (aPosition.xy + 1.0) * 0.5;",
                 "}"
             ].join("\n");
@@ -203,13 +207,21 @@ pc.gfx.post.bloom = function () {
                 "}"
             ].join("\n");
 
-            var passThroughShader = new pc.gfx.Shader(device, pc.gfx.SHADERTYPE_VERTEX, passThroughVert);
-            var extractShader = new pc.gfx.Shader(device, pc.gfx.SHADERTYPE_FRAGMENT, bloomExtractFrag);
-            var blurShader = new pc.gfx.Shader(device, pc.gfx.SHADERTYPE_FRAGMENT, gaussianBlurFrag);
-            var combineShader = new pc.gfx.Shader(device, pc.gfx.SHADERTYPE_FRAGMENT, bloomCombineFrag);
-            extractProg = new pc.gfx.Program(device, passThroughShader, extractShader);
-            blurProg = new pc.gfx.Program(device, passThroughShader, blurShader);
-            combineProg = new pc.gfx.Program(device, passThroughShader, combineShader);
+            extractShader = new pc.gfx.Shader(device, {
+                attributes: attributes,
+                vshader: passThroughVert,
+                fshader: bloomExtractFrag
+            });
+            blurShader = new pc.gfx.Shader(device, {
+                attributes: attributes,
+                vshader: passThroughVert,
+                fshader: gaussianBlurFrag
+            });
+            combineShader = new pc.gfx.Shader(device, {
+                attributes: attributes,
+                vshader: passThroughVert,
+                fshader: bloomCombineFrag
+            });
 
             var width = device.width;
             var height = device.height;
@@ -232,7 +244,7 @@ pc.gfx.post.bloom = function () {
             // Create the vertex format
             var vertexFormat = new pc.gfx.VertexFormat();
             vertexFormat.begin();
-            vertexFormat.addElement(new pc.gfx.VertexElement("aPosition", 3, pc.gfx.VertexElementType.FLOAT32));
+            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 2, pc.gfx.VertexElementType.FLOAT32));
             vertexFormat.end();
 
             // Create a vertex buffer
@@ -240,13 +252,13 @@ pc.gfx.post.bloom = function () {
 
             // Fill the vertex buffer
             var iterator = new pc.gfx.VertexIterator(vertexBuffer);
-            iterator.element.aPosition.set(-1.0, -1.0, 0.0);
+            iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, -1.0);
             iterator.next();
-            iterator.element.aPosition.set(1.0, -1.0, 0.0);
+            iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, -1.0);
             iterator.next();
-            iterator.element.aPosition.set(-1.0, 1.0, 0.0);
+            iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, 1.0);
             iterator.next();
-            iterator.element.aPosition.set(1.0, 1.0, 0.0);
+            iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, 1.0);
             iterator.end();
         },
 
@@ -265,7 +277,7 @@ pc.gfx.post.bloom = function () {
             // shader that extracts only the brightest parts of the image.
             scope.resolve("uBloomThreshold").setValue(options.bloomThreshold);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            drawFullscreenQuad(device, targets[0], extractProg);
+            drawFullscreenQuad(device, targets[0], extractShader);
             
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
@@ -273,7 +285,7 @@ pc.gfx.post.bloom = function () {
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
             scope.resolve("uBloomTexture").setValue(targets[0].colorBuffer);
-            drawFullscreenQuad(device, targets[1], blurProg);
+            drawFullscreenQuad(device, targets[1], blurShader);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
@@ -281,7 +293,7 @@ pc.gfx.post.bloom = function () {
             scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
             scope.resolve("uBloomTexture").setValue(targets[1].colorBuffer);
-            drawFullscreenQuad(device, targets[0], blurProg);
+            drawFullscreenQuad(device, targets[0], blurShader);
 
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
@@ -293,7 +305,7 @@ pc.gfx.post.bloom = function () {
             scope.resolve("uCombineParams").setValue(combineParams);
             scope.resolve("uBloomTexture").setValue(targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            drawFullscreenQuad(device, outputTarget, combineProg);
+            drawFullscreenQuad(device, outputTarget, combineShader);
         }
     };
 } ();

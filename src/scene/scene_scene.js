@@ -529,9 +529,9 @@ pc.extend(pc.scene, function () {
                     }
                     if (meshInstance.skinInstance) {
                         poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
-                        device.setProgram(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
+                        device.setShader(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                     } else {
-                        device.setProgram(material.opacityMap ? this._depthProgStaticOp : this._depthProgStatic);
+                        device.setShader(material.opacityMap ? this._depthProgStaticOp : this._depthProgStatic);
                     }
 
                     style = meshInstance.renderStyle;
@@ -574,7 +574,7 @@ pc.extend(pc.scene, function () {
                 }
 
                 if (material !== prevMaterial) {
-                    device.setProgram(material.getProgram(device, mesh));
+                    device.setShader(material.getProgram(device, mesh));
                     material.setParameters(device);
                     device.clearLocalState();
                     device.updateLocalState(material.getState());

@@ -30,18 +30,15 @@ pc.extend(pc.gfx, function () {
             return null;
         }
         var key = generator.generateKey(gd, options);
-        var program = this._cache[key];
-        if (!program) {
+        var shader = this._cache[key];
+        if (!shader) {
             var gd = this._device;
-            var vsCode = generator.generateVertexShader(gd, options);
-            var fsCode = generator.generateFragmentShader(gd, options);
-            logDEBUG("\n" + key + ": vertex shader\n" + vsCode);
-            logDEBUG("\n" + key + ": fragment shader\n" + fsCode);
-            var vs = new pc.gfx.Shader(gd, pc.gfx.SHADERTYPE_VERTEX, vsCode);
-            var fs = new pc.gfx.Shader(gd, pc.gfx.SHADERTYPE_FRAGMENT, fsCode);
-            program = this._cache[key] = new pc.gfx.Program(gd, vs, fs);
+            var shaderDefinition = generator.createShaderDefinition(gd, options);
+            logDEBUG("\n" + key + ": vertex shader\n" + shaderDefinition.vshader);
+            logDEBUG("\n" + key + ": fragment shader\n" + shaderDefinition.fshader);
+            shader = this._cache[key] = new pc.gfx.Shader(gd, shaderDefinition);
         }
-        return program;
+        return shader;
     };
 
     return {

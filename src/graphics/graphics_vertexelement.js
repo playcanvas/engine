@@ -27,14 +27,14 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.VertexElement
      * @class An attribute stored in a vertex buffer. Positions, normals, texture coordinates
      * and vertex colors are all examples of vertex elements.
-     * @param {String} name The name of the vertex element as referenced by any shaders.
+     * @param {String} semantic The semantic of the vertex element (see pc.gfx.SEMANTIC_*).
      * @param {Number} numComponents The number of distinct components in this particular element.
      * @param {pc.gfx.VertexElementType} dataType The type of each element component.
      * @param {Boolean} normalize If true, map integer values to the range 0 to 1, otherwise leave
      * them unaltered. Defaults to false.
      */
-    var VertexElement = function (name, numComponents, dataType, normalize) {
-        this.name = name;
+    var VertexElement = function (semantic, numComponents, dataType, normalize) {
+        this.name = semantic;
 
         // These will be initialized by the VertexFormat constructor
         this.offset = 0;
