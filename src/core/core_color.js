@@ -29,6 +29,12 @@ pc.extend(pc, (function () {
     };
 
     Color.prototype = {
+        /**
+        * @field
+        * @type Number
+        * @name pc.Color#r
+        * @description The red component of the color, 0-1.
+        */
         get r () {
             return this.c[0];
         },
@@ -37,6 +43,12 @@ pc.extend(pc, (function () {
             this.c[0] = v;
         },
 
+        /**
+        * @field
+        * @type Number
+        * @name pc.Color#g
+        * @description The green component of the color, 0-1.
+        */
         get g () {
             return this.c[1];
         },
@@ -45,6 +57,12 @@ pc.extend(pc, (function () {
             this.c[1] = v;
         },
 
+        /**
+        * @field
+        * @type Number
+        * @name pc.Color#b
+        * @description The blue component of the color, 0-1.
+        */
         get b () {
             return this.c[2];
         },
@@ -53,6 +71,12 @@ pc.extend(pc, (function () {
             this.c[2] = v;
         },
 
+        /**
+        * @field
+        * @type Number
+        * @name pc.Color#a
+        * @description The alpha component of the color, 0-1.
+        */
         get a () {
             return this.c[3];
         },
@@ -90,6 +114,13 @@ pc.extend(pc, (function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.Color#fromString
+        * @description Set the values of the color from a string representation '#11223344' or '#112233'.
+        * @param {String} hex A string representation in the format '#RRGGBBAA' or '#RRGGBB'. Where RR, GG, BB, AA are red, green, blue and alpha values. 
+        * This is the same format used in HTML/CSS.
+        */
         fromString: function (hex) {
             var i = parseInt(hex.replace('#', '0x'));
             var bytes;
@@ -103,6 +134,13 @@ pc.extend(pc, (function () {
             this.set(bytes[0]/255, bytes[1]/255, bytes[2]/255, bytes[3]/255);
         },
 
+        /**
+        * @function
+        * @name pc.Color#toString()
+        * @description Return a string representation of the color value. In the format '#RRGGBBAA', where RR, GG, BB, AA are the red, green, blue and alph values.
+        * When the alpha value is not included (the default), this is the same format as used in HTML/CSS.
+        * @param {Boolean} [alpha] Include or exlude the alpha part of the color. Defaults to false
+        */
         toString: function (alpha) {
             var s = "#" + ((1 << 24) + (parseInt(this.r*255) << 16) + (parseInt(this.g*255) << 8) + parseInt(this.b*255)).toString(16).slice(1);
             if (alpha === true) {
