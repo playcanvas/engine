@@ -150,15 +150,15 @@ pc.scene.procedural.createMesh = function (device, positions, opts) {
 
     var vertexFormat = new pc.gfx.VertexFormat();
     vertexFormat.begin();
-    vertexFormat.addElement(new pc.gfx.VertexElement("vertex_position", 3, pc.gfx.VertexElementType.FLOAT32));
+    vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
     if (normals !== null) {
-        vertexFormat.addElement(new pc.gfx.VertexElement("vertex_normal", 3, pc.gfx.VertexElementType.FLOAT32));
+        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_NORMAL, 3, pc.gfx.VertexElementType.FLOAT32));
     }
     if (tangents !== null) {
-        vertexFormat.addElement(new pc.gfx.VertexElement("vertex_tangent", 4, pc.gfx.VertexElementType.FLOAT32));
+        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TANGENT, 4, pc.gfx.VertexElementType.FLOAT32));
     }
     if (uvs !== null) {
-        vertexFormat.addElement(new pc.gfx.VertexElement("vertex_texCoord0", 2, pc.gfx.VertexElementType.FLOAT32));
+        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD0, 2, pc.gfx.VertexElementType.FLOAT32));
     }
     vertexFormat.end();
 
@@ -169,15 +169,15 @@ pc.scene.procedural.createMesh = function (device, positions, opts) {
     // Write the vertex data into the vertex buffer
     var iterator = new pc.gfx.VertexIterator(vertexBuffer);
     for (var i = 0; i < numVertices; i++) {
-        iterator.element.vertex_position.set(positions[i*3], positions[i*3+1], positions[i*3+2]);
+        iterator.element[pc.gfx.SEMANTIC_POSITION].set(positions[i*3], positions[i*3+1], positions[i*3+2]);
         if (normals !== null) {
-            iterator.element.vertex_normal.set(normals[i*3], normals[i*3+1], normals[i*3+2]);
+            iterator.element[pc.gfx.SEMANTIC_NORMAL].set(normals[i*3], normals[i*3+1], normals[i*3+2]);
         }
         if (tangents !== null) {
-            iterator.element.vertex_tangent.set(tangents[i*4], tangents[i*4+1], tangents[i*4+2], tangents[i*4+3]);
+            iterator.element[pc.gfx.SEMANTIC_TANGENT].set(tangents[i*4], tangents[i*4+1], tangents[i*4+2], tangents[i*4+3]);
         }
         if (uvs !== null) {
-            iterator.element.vertex_texCoord0.set(uvs[i*2], uvs[i*2+1]);
+            iterator.element[pc.gfx.SEMANTIC_TEXCOORD0].set(uvs[i*2], uvs[i*2+1]);
         }
         iterator.next();
     }

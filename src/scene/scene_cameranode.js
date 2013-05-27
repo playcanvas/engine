@@ -121,14 +121,16 @@ pc.extend(pc.scene, function () {
     /**
      * @function
      * @name pc.scene.CameraNode#screenToWorld
-     * @description Convert a point from 2D screen space to 3D world space.
-     * @param {Number} x x coordinate on screen.
-     * @param {Number} y y coordinate on screen.
+     * @description Convert a point from 2D canvas pixel space to 3D world space.
+     * @param {Number} x x coordinate on PlayCanvas' canvas element.
+     * @param {Number} y y coordinate on PlayCanvas' canvas element.
      * @param {Number} z The distance from the camera in world space to create the new point.
-     * @param {pc.math.vec3} worldCoord [Optional] 3D vector to recieve world coordinate result.
+     * @param {Number} cw The width of PlayCanvas' canvas element.
+     * @param {Number} ch The height of PlayCanvas' canvas element.
+     * @param {pc.math.vec3} [worldCoord] 3D vector to recieve world coordinate result.
      * @returns {pc.math.vec3} The world space coordinate.
      */
-    CameraNode.prototype.screenToWorld = function (x, y, z, worldCoord) {
+    CameraNode.prototype.screenToWorld = function (x, y, z, cw, ch, worldCoord) {
         if (typeof worldCoord === 'undefined') {
             worldCoord = v3.create();
         }
@@ -139,11 +141,7 @@ pc.extend(pc.scene, function () {
         m4.multiply(projMat, this._viewMat, this._viewProjMat);
         var invViewProjMat = m4.invert(this._viewProjMat);
 
-        var gd = pc.gfx.Device.getCurrent();
-        var width = parseFloat(gd.canvas.style.width);
-        var height = parseFloat(gd.canvas.style.height);
-
-        var far = v3.create(x / width * 2 - 1, (height - y) / height * 2 - 1, 1);
+        var far = v3.create(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
         var farW = m4.multiplyVec3(far, 1.0, invViewProjMat);
 
         var w = far[0] * invViewProjMat[3] +
@@ -366,6 +364,7 @@ pc.extend(pc.scene, function () {
      */
     CameraNode.prototype.setOrthoHeight = function (height) {
         this._orthoHeight = height;
+        this._projMatDirty = true;
     };
 
     /**

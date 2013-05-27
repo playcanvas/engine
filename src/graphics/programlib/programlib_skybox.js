@@ -4,7 +4,17 @@ pc.gfx.programlib.skybox = {
         return key;
     },
 
-    generateVertexShader: function (device, options) {
+    createShaderDefinition: function (device, options) {
+        /////////////////////////
+        // GENERATE ATTRIBUTES //
+        /////////////////////////
+        var attributes = {
+            vertex_position: pc.gfx.SEMANTIC_POSITION
+        }
+
+        ////////////////////////////
+        // GENERATE VERTEX SHADER //
+        ////////////////////////////
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = '';
 
@@ -25,13 +35,13 @@ pc.gfx.programlib.skybox = {
         code += "    vViewDir = vertex_position;\n";
 
         code += getSnippet(device, 'common_main_end');
-        
-        return code;
-    },
 
-    generateFragmentShader: function (device, options) {
-        var getSnippet = pc.gfx.programlib.getSnippet;
-        var code = getSnippet(device, 'fs_precision');
+        var vshader = code;
+
+        //////////////////////////////
+        // GENERATE FRAGMENT SHADER //
+        //////////////////////////////
+        code = getSnippet(device, 'fs_precision');
 
         // FRAGMENT SHADER DECLARATIONS
         code += "varying vec3 vViewDir;\n";
@@ -44,6 +54,12 @@ pc.gfx.programlib.skybox = {
 
         code += getSnippet(device, 'common_main_end');
 
-        return code;
+        var fshader = code;
+
+        return {
+            attributes: attributes,
+            vshader: vshader,
+            fshader: fshader
+        };
     }
 };

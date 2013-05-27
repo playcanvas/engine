@@ -73,11 +73,8 @@ pc.gfx.programlib.phong = {
         return key;
     },
 
-    generateVertexShader: function (device, options) {
-        var code = "";
-
+    createShaderDefinition: function (device, options) {
         var i;
-
         var numNormalLights = options.numDirs + options.numPnts + options.numSpts;
         var numShadowLights = options.numSDirs + options.numSPnts + options.numSSpts;
         var totalDirs = options.numDirs + options.numSDirs;
@@ -94,7 +91,40 @@ pc.gfx.programlib.phong = {
             (options.opacityMap && !options.opacityMapTransform) ||
             (options.normalMap && !options.normalMapTransform) ||
             (options.heightMap && !options.heightMapTransform));
-        var useTangents = device.precalculatedTangents;
+        var useTangents = pc.gfx.precalculatedTangents;
+
+        /////////////////////////
+        // GENERATE ATTRIBUTES //
+        /////////////////////////
+        var attributes = {
+            vertex_position: pc.gfx.SEMANTIC_POSITION
+        }
+        if (lighting || options.cubeMap || options.sphereMap) {
+            attributes.vertex_normal = pc.gfx.SEMANTIC_NORMAL;
+            if (options.normalMap && useTangents) {
+                attributes.vertex_tangent = pc.gfx.SEMANTIC_TANGENT;
+            }
+        }
+        if (options.diffuseMap || options.specularMap || options.specularFactorMap || options.glossMap ||
+            options.emissiveMap || options.normalMap || options.heightMap || options.opacityMap) {
+            attributes.vertex_texCoord0 = pc.gfx.SEMANTIC_TEXCOORD0;
+        }
+        if (options.lightMap) {
+            attributes.vertex_texCoord1 = pc.gfx.SEMANTIC_TEXCOORD1;
+        }
+        if (options.vertexColors) {
+            attributes.vertex_color = pc.gfx.SEMANTIC_COLOR;
+        }
+        if (options.skin) {
+            attributes.vertex_boneWeights = pc.gfx.SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = pc.gfx.SEMANTIC_BLENDINDICES;
+        }
+
+        ////////////////////////////
+        // GENERATE VERTEX SHADER //
+        ////////////////////////////
+        var getSnippet = pc.gfx.programlib.getSnippet;
+        var code = '';
 
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec3 vertex_position;\n";
@@ -369,32 +399,12 @@ pc.gfx.programlib.phong = {
         }
         code += "}";
         
-        return code;
-    },
+        var vshader = code;
 
-    generateFragmentShader: function (device, options) {
-        var i;
-
-        var numNormalLights = options.numDirs + options.numPnts + options.numSpts;
-        var numShadowLights = options.numSDirs + options.numSPnts + options.numSSpts;
-        var totalDirs = options.numDirs + options.numSDirs;
-        var totalPnts = options.numPnts + options.numSPnts;
-        var totalSpts = options.numSpts + options.numSSpts;
-        var totalLights = numNormalLights + numShadowLights;
-        var lighting = totalLights > 0;
-        var mapWithoutTransform =
-           ((options.diffuseMap && !options.diffuseMapTransform) ||
-            (options.specularMap && !options.specularMapTransform) ||
-            (options.specularFactorMap && !options.specularFactorMapTransform) ||
-            (options.glossMap && !options.glossMapTransform) ||
-            (options.emissiveMap && !options.emissiveMapTransform) ||
-            (options.opacityMap && !options.opacityMapTransform) ||
-            (options.normalMap && !options.normalMapTransform) ||
-            (options.heightMap && !options.heightMapTransform));
-        var useTangents = device.precalculatedTangents;
-
-        var getSnippet = pc.gfx.programlib.getSnippet;
-        var code = getSnippet(device, 'fs_precision');
+        //////////////////////////////
+        // GENERATE FRAGMENT SHADER //
+        //////////////////////////////
+        code = getSnippet(device, 'fs_precision');
 
         if ((options.normalMap && !useTangents) || options.heightMap) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
@@ -907,6 +917,12 @@ pc.gfx.programlib.phong = {
 
         code += getSnippet(device, 'common_main_end');
 
-        return code;
+        var fshader = code;
+
+        return {
+            attributes: attributes,
+            vshader: vshader,
+            fshader: fshader
+        };
     }
 };
