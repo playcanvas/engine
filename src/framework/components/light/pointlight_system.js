@@ -24,7 +24,7 @@ pc.extend(pc.fw, function () {
             displayName: "Color",
             description: "Light Color",
             type: "rgb",
-            defaultValue: "0xffffff"
+            defaultValue: [1,1,1]
         }, {
             name: "intensity",
             displayName: "Intensity",
@@ -83,6 +83,10 @@ pc.extend(pc.fw, function () {
             component.entity.addChild(node);
 
             data.model = model;
+            if (data.color) {
+                data.color = new pc.Color(data.color);    
+            }
+            
 
             properties = ['model', 'enable', 'color', 'intensity', 'attenuationEnd'];
             PointLightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
