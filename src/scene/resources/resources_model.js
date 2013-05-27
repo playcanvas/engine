@@ -877,105 +877,79 @@ pc.extend(pc.resources, function () {
         }
     };
 
-    ModelResourceHandler.prototype._loadMaterialV2 = function(materialId) {
-        var asset = this._assets.getAsset(materialId);
-        var materialData = asset.data;
-        var material = new pc.scene.PhongMaterial();
-        material.name = materialData.name;
+    // Copy asset data into material
+    ModelResourceHandler.prototype._updatePhongMaterial = function (material, data) {
+        material.name = data.name;
 
         // Read each shader parameter
-        for (var i = 0; i < materialData.parameters.length; i++) {
-            var param = materialData.parameters[i];
-            switch (param.name) {
-                case 'ambient': 
-                    material.ambient = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'diffuse': 
-                    material.diffuse = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'diffuseMap': 
-                    material.diffuseMap = this._loadTextureV2(param.data);
-                    break;
-                case 'diffuseMapTransform': 
-                    material.diffuseMapTransform = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'specular': 
-                    material.specular = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'specularMap': 
-                    material.specularMap = this._loadTextureV2(param.data);
-                    break;
-                case 'specularMapTransform': 
-                    material.specularMapTransform = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'specularFactorMap':
-                    break;
-                case 'specularFactorMapTransform': 
-                    material.specularFactorMapTransform = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'shininess':
-                    material.shininess = param.data;
-                    break;
-                case 'glossMap': 
-                    material.glossMap = this._loadTextureV2(param.data);
-                    break;
-                case 'glossMapTransform':
-                    material.glossMapTransform = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'emissive':
-                    material.emissive = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'emissiveMap': 
-                    material.emissiveMap = this._loadTextureV2(param.data);
-                    break;
-                case 'emissiveMapTransform': 
-                    material.emissiveMapTransform = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'opacity':
-                    material.opacity = param.data;
-                    if (material.opacity < 1) {
-                        material.blendType = pc.scene.BLEND_NORMAL;
+        for (var i = 0; i < data.parameters.length; i++) {
+            var param = data.parameters[i];
+
+            function isMathType(type) {
+                if (type === 'vec2' ||
+                    type === 'vec3' ||
+                    type === 'vec4' ||
+                    type === 'mat3' ||
+                    type === 'mat4') {
+                    return true;
+                }
+
+                return false;
+            }
+            // Update material based on type
+            if (isMathType(param.type)) {
+                if (param.data) {
+                    material[param.name] = pc.math[param.type].clone(param.data);
+                } else {
+                    material[param.name] = null;
+                }
+
+                // special case
+                if (param.name === 'opacityMap') {
+                    if (param.data) {
+                        material.blendType = pc.scene.BLEND_NORMAL;    
+                    } else {
+                        material.blendType = pc.scene.BLEND_NONE;
                     }
-                    break;
-                case 'opacityMap': 
-                    material.opacityMap = this._loadTextureV2(param.data);
-                    material.blendType = pc.scene.BLEND_NORMAL;
-                    break;
-                case 'opacityMapTransform': 
-                    material.opacityMapTransform = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'sphereMap': 
-                    material.reflectionMap = this._loadTextureV2(param.data);
-                    break;
-                case 'cubeMap': 
-                    material.reflectionMap = this._loadTextureV2(param.data);
-                    break;
-                case 'reflectionFactor':
-                    material.reflectivity = param.data;
-                    break;
-                case 'normalMap': 
-                    material.normalMap = this._loadTextureV2(param.data);
-                    break;
-                case 'normalMapTransform': 
-                    material.normalMapTransform = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'heightMap': 
-                    material.heightMap = this._loadTextureV2(param.data);
-                    break;
-                case 'heightMapTransform': 
-                    material.heightMapTransform = pc.math[param.type].clone(param.data); 
-                    break;
-                case 'bumpMapFactor': 
-                    material.bumpMapFactor = param.data;
-                    break;
-                case 'lightMap': 
-                    material.lightMap = this._loadTextureV2(param.data);
-                    break;
+                    
+                }
+            } else if (param.type === "texture") {
+                if (param.data) {
+                    material[param.name] = this._loadTextureV2(param.data);    
+                } else {
+                    material[param.name] = null;
+                }
+                
+            } else if (param.type === "float") {
+                material[param.name] = param.data;
+                // special case
+                if (param.name === 'opacity') {
+                    if (material.opacity && material.opacity < 1) {
+                        material.blendType = pc.scene.BLEND_NORMAL;
+                    } else {
+                        material.blendType = pc.scene.BLEND_NONE;
+                    }
+                }
             }
         }
 
         material.update();
-    
+    };
+
+    ModelResourceHandler.prototype._loadMaterialV2 = function(materialId) {
+        var asset = this._assets.getAsset(materialId);
+        var materialData = asset.data;
+        var material = new pc.scene.PhongMaterial();
+        
+        this._updatePhongMaterial(material, asset.data);
+
+        // When running in the tools listen for change events on the asset so we can update the material
+        asset.on('change', function (asset, attribute, value) {
+            if (attribute === 'data') {
+                this._updatePhongMaterial(material, value);
+            }
+        }, this);
+
         return material;
     };
 

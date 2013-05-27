@@ -17,7 +17,7 @@
 				"parameters": [
 					{
 						"name": "texture_diffuseMap",
-						"type": "sampler",
+						"type": "texture",
 						"data": 0
 					},
 					{

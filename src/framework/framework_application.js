@@ -68,7 +68,7 @@ pc.extend(pc.fw, function () {
         var textureCache = new pc.resources.TextureCache(loader);
         
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
-        loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler());
+        loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
@@ -698,18 +698,7 @@ pc.extend(pc.fw, function () {
             var asset = this.context.assets.getAsset(guid);
             if (asset) {
                 asset[attribute] = value;
-
-                if (asset.type === 'model') {
-                    var store = this.context.systems.model.store;
-                    for (var resourceId in store) {
-                        if (store[resourceId].data.asset === guid) {
-                            // reload asset
-                            this.context.loader.removeFromCache(asset.getFileUrl())
-                            store[resourceId].entity.model.asset = null;
-                            store[resourceId].entity.model.asset = guid;
-                        }
-                    }
-                }
+                asset.fire('change', asset, attribute, value);
             }
         }
     };

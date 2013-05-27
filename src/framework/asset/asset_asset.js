@@ -2,6 +2,7 @@ pc.extend(pc.fw, function () {
     var Asset = function (resource_id, data, prefix) {
         this.resourceId = resource_id;
         pc.extend(this, data);
+        pc.extend(this, pc.events);
         this.prefix = prefix || "";
     };
     

@@ -12,7 +12,8 @@ pc.extend(pc.resources, function () {
         }
     }
 
-    var TextureResourceHandler = function () {
+    var TextureResourceHandler = function (device) {
+        this._device = device;
     };
     TextureResourceHandler = pc.inherits(TextureResourceHandler, pc.resources.ResourceHandler);
     
@@ -59,7 +60,7 @@ pc.extend(pc.resources, function () {
             if (request.result) {
                 texture = request.result;
             } else {            
-                texture = new pc.gfx.Texture({
+                texture = new pc.gfx.Texture(this._device, {
                     width: img.width,
                     height: img.height,
                     format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
