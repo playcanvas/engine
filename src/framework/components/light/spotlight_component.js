@@ -27,15 +27,8 @@ pc.extend(pc.fw, function () {
         },
 
         onSetColor: function (name, oldValue, newValue) {
-            var rgb = parseInt(newValue, 16);
-            rgb = pc.math.intToBytes24(rgb);
-            var color = [
-                rgb[0] / 255,
-                rgb[1] / 255,
-                rgb[2] / 255
-            ];
             var light = this.data.model.lights[0];
-            light.setColor(color);
+            light.setColor(newValue.c);
         },
 
         onSetInnerConeAngle: function (name, oldValue, newValue) {

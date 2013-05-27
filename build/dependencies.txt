@@ -19,6 +19,7 @@
 ../src/math/math_matrix.js
 ../src/math/math_quaternion.js
 ../src/math/math_utils.js
+../src/core/core_color.js
 ../src/shape/shape_shape.js
 ../src/shape/shape_intersection.js
 ../src/shape/shape_aabb.js

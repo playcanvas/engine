@@ -66,7 +66,7 @@ pc.extend(pc.fw, function () {
         * @example 
         *   var data = {
         *       type: 'Box',
-        *       color: '0xff0000'
+        *       color: new pc.Color(1,1,1)
         *   };
         *   var entity = new pc.fw.Entity();
         *   context.systems.primitive.addComponent(entity, data);

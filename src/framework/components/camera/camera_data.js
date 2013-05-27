@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      */
     CameraComponentData = function () {
         // serialized
-        this.clearColor = "0xbabab1ff";
+        this.clearColor = new pc.Color(0.729411780834198, 0.729411780834198, 0.6941176652908325, 1);
         this.nearClip = 0.1;
         this.farClip = 1000;
         this.fov = 45;
