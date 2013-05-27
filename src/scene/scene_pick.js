@@ -148,7 +148,7 @@ pc.extend(pc.scene, function () {
                 this.pickColor[2] = (i & 0xff) / 255.0;
                 this.pickColor[3] = 1.0;
                 pickColorId.setValue(this.pickColor);
-                device.setProgram(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
+                device.setShader(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
 
                 device.setVertexBuffer(mesh.vertexBuffer, 0);
                 device.setIndexBuffer(mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID]);
