@@ -38,9 +38,9 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Shader
      * @class A shader is a program that is repsonsible for rendering graphical primitives on a device's
      * graphics processor.
-     * @description Creates a new shader object. The shader is generated from a shader definition. This 
+     * @constructor Creates a new shader object. The shader is generated from a shader definition. This 
      * shader definition specifies the code for processing vertices and fragments processed by the GPU.
-     * The language of the code is GLSL (otherwise known as ESSL, the OpenGL ES Shading Language). The
+     * The language of the code is GLSL (or more specifically ESSL, the OpenGL ES Shading Language). The
      * shader definition also describes how the PlayCanvas engine should map vertex buffer elements onto
      * the attributes specified in the vertex shader code.
      * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this shader.

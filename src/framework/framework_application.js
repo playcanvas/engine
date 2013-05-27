@@ -613,10 +613,19 @@ pc.extend(pc.fw, function () {
                 
             if (entity) {
                 if(componentName) {
-                    //system = this.context.systems[componentName];
                     if(entity[componentName]) {
-                        entity[componentName][attributeName] = value;
-                        //system.set(entity, attributeName, value);
+                        if (editor && editor.link.exposed[componentName][attributeName]) {
+                            // Override Type provided
+                            if (editor.link.exposed[componentName][attributeName].RuntimeType) {
+                                    entity[componentName][attributeName] = new editor.link.exposed[componentName][attributeName].RuntimeType(value);
+                            } else {
+                                entity[componentName][attributeName] = value;        
+                            }
+                        } else {
+                            entity[componentName][attributeName] = value;
+                        }
+
+                        
                     } else {
                         logWARNING(pc.string.format("No component system called '{0}' exists", componentName));
                     }

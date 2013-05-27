@@ -2,7 +2,7 @@ pc.extend(pc.fw, function () {
     var SpotLightComponentData = function () {
         // Serialized
         this.enable = true;
-        this.color = "0xffffff";
+        this.color = new pc.Color(1,1,1);
         this.intensity = 1;
         this.attenuationEnd = 10;
         this.innerConeAngle = 40;

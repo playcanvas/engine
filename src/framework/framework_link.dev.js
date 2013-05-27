@@ -33,6 +33,18 @@ pc.extend(editor, function () {
         // Add default values
         details.options = details.options || {};        
 
+        if (details.type === 'vector') {
+            // indicate that this is an array type (and therefore is a reference type and needs copying)
+            details.array = true;
+        }
+
+        if (details.type === 'rgb' || 
+            details.type === 'rgba') {
+            // indicate that this is an array type (and therefore is a reference type and needs copying)
+            details.array = true;
+            // Provide an RuntimeType which is instatiated after passing an object over livelink
+            details.RuntimeType = pc.Color;
+        }
 
         if (!this.exposed[system][details.name]) {
             this.exposed[system][details.name] = {};
