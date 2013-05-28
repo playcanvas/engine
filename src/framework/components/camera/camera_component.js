@@ -9,7 +9,7 @@ pc.extend(pc.fw, function () {
     * @extends pc.fw.Component
     * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
     * @property {pc.scene.Camera} camera The {@link pc.scene.CameraNode} used to render the scene
-    * @property {String} clearColor The color used to clear the canvas to before the camera starts to render
+    * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render
     * @property {Number} nearClip The distance from the camera before which no rendering will take place
     * @property {Number} farClip The distance from the camera after which no rendering will take place
     * @property {Number} fov The Y-axis field of view of the camera, in degrees. Used for {@link pc.scene.Projection.PERSPECTIVE} cameras only. Defaults to 45.

@@ -106,18 +106,22 @@ pc.extend(pc.gfx, function () {
 
         var gl = this.gl;
         logINFO("Device started");
-        logINFO("WebGL version:             " + gl.getParameter(gl.VERSION));
-        logINFO("WebGL shader version:      " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
-        logINFO("WebGL vendor:              " + gl.getParameter(gl.VENDOR));
-        logINFO("WebGL renderer:            " + gl.getParameter(gl.RENDERER));
-        logINFO("WebGL extensions:          " + gl.getSupportedExtensions());
-        logINFO("WebGL num texture units:   " + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
-        logINFO("WebGL max texture size:    " + gl.getParameter(gl.MAX_TEXTURE_SIZE));
-        logINFO("WebGL max cubemap size:    " + gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE));
-        logINFO("WebGL max vertex attribs:  " + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
-        logINFO("WebGL max vshader vectors: " + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
-        logINFO("WebGL max fshader vectors: " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
-        logINFO("WebGL max varying vectors: " + gl.getParameter(gl.MAX_VARYING_VECTORS));
+        logINFO("WebGL version:                " + gl.getParameter(gl.VERSION));
+        logINFO("WebGL shader version:         " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+        logINFO("WebGL vendor:                 " + gl.getParameter(gl.VENDOR));
+        logINFO("WebGL renderer:               " + gl.getParameter(gl.RENDERER));
+        logINFO("WebGL extensions:             " + gl.getSupportedExtensions());
+        logINFO("WebGL max vertex attribs:     " + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
+        logINFO("WebGL max vshader vectors:    " + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
+        logINFO("WebGL max varying vectors:    " + gl.getParameter(gl.MAX_VARYING_VECTORS));
+        logINFO("WebGL max fshader vectors:    " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
+
+        logINFO("WebGL max combined tex units: " + gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
+        logINFO("WebGL max vertex tex units:   " + gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS));
+        logINFO("WebGL max tex units:          " + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
+
+        logINFO("WebGL max texture size:       " + gl.getParameter(gl.MAX_TEXTURE_SIZE));
+        logINFO("WebGL max cubemap size:       " + gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE));
 
         this.defaultClearOptions = {
             color: [0, 0, 0, 1],
@@ -208,6 +212,14 @@ pc.extend(pc.gfx, function () {
                 }
             }
             logINFO(formatMsg);
+        }
+        this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
+        if (this.extDrawBuffers) {
+            logINFO("WebGL max draw buffers:       " + gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT));
+            logINFO("WebGL max color attachments:  " + gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT));
+        } else {
+            logINFO("WebGL max draw buffers:       " + 1);
+            logINFO("WebGL max color attachments:  " + 1);
         }
 
         // Create the default render target
