@@ -4,8 +4,24 @@ pc.gfx.programlib.particle = {
         return key;
     },
 
-    generateVertexShader: function (device, options) {
-        var code = "";
+    createShaderDefinition: function (device, options) {
+        /////////////////////////
+        // GENERATE ATTRIBUTES //
+        /////////////////////////
+        var attributes = {
+            particle_uvLifeTimeFrameStart: pc.gfx.SEMANTIC_ATTR0,
+            particle_positionStartTime: pc.gfx.SEMANTIC_ATTR1,
+            particle_velocityStartSize: pc.gfx.SEMANTIC_ATTR2,
+            particle_accelerationEndSize: pc.gfx.SEMANTIC_ATTR3,
+            particle_spinStartSpinSpeed: pc.gfx.SEMANTIC_ATTR4,
+            particle_colorMult: pc.gfx.SEMANTIC_ATTR5
+        }
+
+        ////////////////////////////
+        // GENERATE VERTEX SHADER //
+        ////////////////////////////
+        var getSnippet = pc.gfx.programlib.getSnippet;
+        var code = '';
 
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec4 particle_uvLifeTimeFrameStart;\n"; // uv, lifeTime, frameStart
@@ -70,13 +86,12 @@ pc.gfx.programlib.particle = {
         code += "    gl_Position = matrix_viewProjection * vec4(localPosition + matrix_model[3].xyz, 1.0);\n";
         code += "}";
         
-        return code;
-    },
+        var vshader = code;
 
-    generateFragmentShader: function (device, options) {
-        var code = "";
-
-        code += "precision mediump float;\n";
+        //////////////////////////////
+        // GENERATE FRAGMENT SHADER //
+        //////////////////////////////
+        code = getSnippet(device, 'fs_precision');
 
         // FRAGMENT SHADER INPUTS: VARYINGS
         code += "varying vec2 vUv0;\n";
@@ -93,6 +108,12 @@ pc.gfx.programlib.particle = {
         code += "    gl_FragColor = texture2D(texture_colorMap, vUv0) * colorMult;\n";
         code += "}";
 
-        return code;
+        var fshader = code;
+
+        return {
+            attributes: attributes,
+            vshader: vshader,
+            fshader: fshader
+        };
     }
 };
