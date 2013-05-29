@@ -1,29 +1,6 @@
 pc.extend(pc.posteffect, function () {
     var SAMPLE_COUNT = 15;
 
-    // Full screen quad rendering
-    var quadPrimitive = {
-        type: pc.gfx.PRIMITIVE_TRISTRIP,
-        base: 0,
-        count: 4,
-        indexed: false
-    };
-    var quadState = {
-        depthTest: false,
-        depthWrite: false
-    };
-
-    var drawFullscreenQuad = function (device, target, vertexBuffer, shader) {
-        device.setRenderTarget(target);
-        device.updateBegin();
-        device.updateLocalState(quadState);
-        device.setVertexBuffer(vertexBuffer, 0);
-        device.setShader(shader);
-        device.draw(quadPrimitive);
-        device.clearLocalState();
-        device.updateEnd();
-    }
-
     function computeGaussian(n, theta) {
         return ((1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta)));
     }
@@ -264,7 +241,7 @@ pc.extend(pc.posteffect, function () {
             // shader that extracts only the brightest parts of the image.
             scope.resolve("uBloomThreshold").setValue(this.bloomThreshold);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            drawFullscreenQuad(this.targets[0], this.vertexBuffer, this.extractShader);
+            pc.posteffect.drawFullscreenQuad(this.targets[0], this.vertexBuffer, this.extractShader);
 
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
@@ -272,7 +249,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
-            drawFullscreenQuad(this.targets[1], this.vertexBuffer, this.blurShader);
+            pc.posteffect.drawFullscreenQuad(this.targets[1], this.vertexBuffer, this.blurShader);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
@@ -280,7 +257,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
             scope.resolve("uBloomTexture").setValue(this.targets[1].colorBuffer);
-            drawFullscreenQuad(this.targets[0], this.vertexBuffer, this.blurShader);
+            pc.posteffect.drawFullscreenQuad(this.targets[0], this.vertexBuffer, this.blurShader);
 
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
@@ -289,7 +266,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uCombineParams").setValue(combineParams);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            drawFullscreenQuad(outputTarget, this.vertexBuffer, this.combineShader);
+            pc.posteffect.drawFullscreenQuad(outputTarget, this.vertexBuffer, this.combineShader);
         }
     };
 

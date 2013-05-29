@@ -1,29 +1,6 @@
 pc.extend(pc.posteffect, function () {
 
-    // Full screen quad rendering
-    var quadPrimitive = {
-        type: pc.gfx.PRIMITIVE_TRISTRIP,
-        base: 0,
-        count: 4,
-        indexed: false
-    };
-    var quadState = {
-        depthTest: false,
-        depthWrite: false
-    };
-
-    var drawFullscreenQuad = function (device, target, vertexBuffer, shader) {
-        device.setRenderTarget(target);
-        device.updateBegin();
-        device.updateLocalState(quadState);
-        device.setVertexBuffer(vertexBuffer, 0);
-        device.setShader(shader);
-        device.draw(quadPrimitive);
-        device.clearLocalState();
-        device.updateEnd();
-    }
-
-    function Fxaa() {
+    function Fxaa(graphicsDevice) {
         this.device = graphicsDevice;
 
         // Shaders
@@ -135,7 +112,7 @@ pc.extend(pc.posteffect, function () {
             pc.math.vec2.set(this.resolution, inputTarget.width, inputTarget.height);
             scope.resolve("resolution").setValue(this.resolution);
             scope.resolve("tDiffuse").setValue(inputTarget.colorBuffer);
-            drawFullscreenQuad(outputTarget, this.vertexBuffer, this.fxaaShader);
+            pc.posteffect.drawFullscreenQuad(outputTarget, this.vertexBuffer, this.fxaaShader);
         }
     };
 
