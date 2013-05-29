@@ -111,9 +111,6 @@
 ../src/framework/components/animation/animation_component.js
 ../src/framework/components/animation/animation_system.js
 ../src/framework/components/animation/animation_data.js
-../src/framework/components/bloom/bloom_system.js
-../src/framework/components/bloom/bloom_component.js
-../src/framework/components/bloom/bloom_data.js
 ../src/framework/components/model/model_system.js
 ../src/framework/components/model/model_component.js
 ../src/framework/components/model/model_data.js
