@@ -366,6 +366,102 @@ pc.gfx = {
      * @description Vertex attribute to be treated as a texture coordinate (set 7).
      */
     SEMANTIC_TEXCOORD7: "TEXCOORD7",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR0
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR0: "ATTR0",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR1
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR1: "ATTR1",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR2
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR2: "ATTR2",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR3
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR3: "ATTR3",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR4
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR4: "ATTR4",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR5
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR5: "ATTR5",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR6
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR6: "ATTR6",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR7
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR7: "ATTR7",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR8
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR8: "ATTR8",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR9
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR9: "ATTR9",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR10
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR10: "ATTR10",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR11
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR11: "ATTR11",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR12
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR12: "ATTR12",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR13
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR13: "ATTR13",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR14
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR14: "ATTR14",
+    /**
+     * @enum pc.gfx.SEMANTIC
+     * @name pc.gfx.SEMANTIC_ATTR15
+     * @description Vertex attribute with a user defined semantic.
+     */
+    SEMANTIC_ATTR15: "ATTR15",
 
     /**
      * @enum pc.gfx.TEXTURELOCK
