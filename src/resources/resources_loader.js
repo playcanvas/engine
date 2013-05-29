@@ -137,7 +137,7 @@ pc.extend(pc.resources, function () {
                     requests.forEach(function (r) {
                         r.children.forEach(function (c) {
                             childRequests.push(c);
-                            childPromises.push(c.promise);
+                            childPromises.push.apply(childPromises, c.promises);
                         })
                     });
 
@@ -263,18 +263,18 @@ pc.extend(pc.resources, function () {
             }
             this.fire("request", request);
 
-            if (request.promise) {
+            if (request.promises.length) {
                 // If the request has already been made, then wait for the result to come in
-                promise = new RSVP.Promise(function (resolve, reject) {
-                    request.promise.then(function (resource) {
+                request.promises.push(new RSVP.Promise(function (resolve, reject) {
+                    request.promises[0].then(function (resource) {
                         var resource = self._postOpen(resource, request);
                         resolve(resource);
                     });
-                });
+                }));
             } else {
 
                 // Check cache, load and open the requested data
-                request.promise = new RSVP.Promise(function (resolve, reject) {
+                request.promises[0] = new RSVP.Promise(function (resolve, reject) {
                     var handler = self._handlers[request.type];
                     if (!handler) {
                         var msg = "Missing handler for type: " + request.type;
@@ -306,7 +306,7 @@ pc.extend(pc.resources, function () {
             self._requests[request.canonical] = request;
             this._requested++;
 
-            return promise || request.promise;
+            return request.promises[request.promises.length - 1];
         },
 
         // Convert loaded data into the resource using the handler's open() and clone() methods
@@ -357,7 +357,7 @@ pc.extend(pc.resources, function () {
         this.identifier = identifier; // The identifier for this resource
         this.canonical = identifier;  // The canonical identifier using the file hash (if available) to match identical resources
         this.alternatives = [];       // Alternative identifiers to the canonical
-        this.promise = null;          // The promise that will be honored when this request completes
+        this.promises = [];           // List of promises that will be honoured when the request is complete. The first promise in the list is the primary one.
         this.children = [];           // Any child requests which were made while this request was being processed
         if (result !== undefined) {
             this.result = result;     // The result object can be supplied and used by a handler, instead of creating a new resource
