@@ -879,61 +879,16 @@ pc.extend(pc.resources, function () {
 
     // Copy asset data into material
     ModelResourceHandler.prototype._updatePhongMaterial = function (material, data) {
-        material.name = data.name;
-
-        // Read each shader parameter
+        // Replace texture ids with actual textures
+        // Should we copy 'data' here instead of updating in place?
         for (var i = 0; i < data.parameters.length; i++) {
             var param = data.parameters[i];
-
-            function isMathType(type) {
-                if (type === 'vec2' ||
-                    type === 'vec3' ||
-                    type === 'vec4' ||
-                    type === 'mat3' ||
-                    type === 'mat4') {
-                    return true;
-                }
-
-                return false;
-            }
-            // Update material based on type
-            if (isMathType(param.type)) {
-                if (param.data) {
-                    material[param.name] = pc.math[param.type].clone(param.data);
-                } else {
-                    material[param.name] = null;
-                }
-
-                // special case
-                if (param.name === 'opacityMap') {
-                    if (param.data) {
-                        material.blendType = pc.scene.BLEND_NORMAL;    
-                    } else {
-                        material.blendType = pc.scene.BLEND_NONE;
-                    }
-                    
-                }
-            } else if (param.type === "texture") {
-                if (param.data) {
-                    material[param.name] = this._loadTextureV2(param.data);    
-                } else {
-                    material[param.name] = null;
-                }
-                
-            } else if (param.type === "float") {
-                material[param.name] = param.data;
-                // special case
-                if (param.name === 'opacity') {
-                    if (material.opacity && material.opacity < 1) {
-                        material.blendType = pc.scene.BLEND_NORMAL;
-                    } else {
-                        material.blendType = pc.scene.BLEND_NONE;
-                    }
-                }
+            if (param.type === 'texture' && param.data && !(param.data instanceof pc.gfx.Texture)) {
+                param.data = this._loadTextureV2(param.data);
             }
         }
 
-        material.update();
+        material.init(data);
     };
 
     ModelResourceHandler.prototype._loadMaterialV2 = function(materialId) {
