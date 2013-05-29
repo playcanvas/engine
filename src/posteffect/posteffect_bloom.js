@@ -26,7 +26,7 @@ pc.extend(pc.posteffect, function () {
 
     function computeGaussian(n, theta) {
         return ((1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta)));
-    };
+    }
 
     function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {        
         // Look up how many samples our gaussian blur effect supports.
@@ -71,19 +71,12 @@ pc.extend(pc.posteffect, function () {
         for (i = 0, len = sampleWeights.length; i < len; i++) {
             sampleWeights[i] /= totalWeights;
         }
-    };
+    }
 
     function Bloom(graphicsDevice) {
         this.device = graphicsDevice;
 
-        // Render targets
-        this.targets = [];
-        this.vertexBuffer = null;
-
-        this.sampleWeights = new Float32Array(SAMPLE_COUNT);
-        this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
-        
-        // Bloom shaders
+        // Shaders
         var attributes = {
             aPosition: pc.gfx.SEMANTIC_POSITION
         };
@@ -211,6 +204,8 @@ pc.extend(pc.posteffect, function () {
         var width = graphicsDevice.width;
         var height = graphicsDevice.height;
 
+        // Render targets
+        this.targets = [];
         for (var i = 0; i < 2; i++) {
             var colorBuffer = new pc.gfx.Texture(graphicsDevice, {
                 format: pc.gfx.PIXELFORMAT_R8_G8_B8,
@@ -254,8 +249,11 @@ pc.extend(pc.posteffect, function () {
         this.bloomSaturation = 1;
         this.baseSaturation = 1;
 
+        // Uniforms
         this.combineParams = pc.math.vec4.create(0, 0, 0, 0);
-    };
+        this.sampleWeights = new Float32Array(SAMPLE_COUNT);
+        this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
+    }
 
     Bloom.prototype = {
         render: function (inputTarget, outputTarget) {
@@ -270,17 +268,17 @@ pc.extend(pc.posteffect, function () {
 
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
-            calculateBlurValues(1.0 / this.targets[1].width, 0, this.blurAmount);
-            scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
-            scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
+            calculateBlurValues(this.sampleWeights, this.sampleOffsets, 1.0 / this.targets[1].width, 0, this.blurAmount);
+            scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
+            scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             drawFullscreenQuad(this.targets[1], this.vertexBuffer, this.blurShader);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
-            calculateBlurValues(0, 1.0 / this.targets[0].height, this.blurAmount);
-            scope.resolve("uBlurWeights[0]").setValue(sampleWeights);
-            scope.resolve("uBlurOffsets[0]").setValue(sampleOffsets);
+            calculateBlurValues(this.sampleWeights, this.sampleOffsets, 0, 1.0 / this.targets[0].height, this.blurAmount);
+            scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
+            scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
             scope.resolve("uBloomTexture").setValue(this.targets[1].colorBuffer);
             drawFullscreenQuad(this.targets[0], this.vertexBuffer, this.blurShader);
 
