@@ -194,6 +194,34 @@ var FillInRequest = function FillInRequest() {};
 FillInRequest = pc.inherits(FillInRequest, pc.resources.ResourceRequest);
 FillInRequest.prototype.type = "fillin";
 
+var DualChildRequest = function DualChildRequest() {};
+DualChildRequest = pc.inherits(DualChildRequest, pc.resources.ResourceRequest);
+
+var DualChildResourceHandler = function () {
+    this.responses = [];
+};
+DualChildResourceHandler = pc.inherits(DualChildResourceHandler, pc.resources.ResourceHandler);
+DualChildResourceHandler.prototype.load = function (request, options) {
+    var self = this;
+    return new RSVP.Promise(function (resolve, reject) {
+
+        resolve(self);
+    });
+};
+DualChildResourceHandler.prototype.open = function (data, request, options) {
+    var self = this;
+    var options = {
+        parent: request
+    };
+    self._loader.request(new TestRequest("delay-abc"), options).then(function (responses) {
+        self.responses.push(responses[0]);
+    });
+    self._loader.request(new TestRequest("delay-abc"), options).then(function (responses) {
+        self.responses.push(responses[0]);
+    });
+
+    return data;
+}
 
 test("new ResourceLoader", function () {
     ok(pc.resources.ResourceLoader);
@@ -889,4 +917,20 @@ test("request, load, progress events, Child requests", function () {
         equal(load, 2);
         start();
     }, 1000);
+});
+
+test("request, two identical children", function () {
+    var loader = new pc.resources.ResourceLoader();
+    loader.registerHandler(TestRequest, new TestResourceHandler());
+    loader.registerHandler(DualChildRequest, new DualChildResourceHandler());
+
+    loader.request([
+        new DualChildRequest('parent')
+    ]).then(function (responses) {
+        equal(responses[0].responses[0], 'delay-abc-opened');
+        equal(responses[0].responses[1], 'delay-abc-opened');
+        start();
+    });
+
+    stop();
 });
