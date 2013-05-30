@@ -20,8 +20,8 @@ pc.extend(pc.posteffect, function () {
         var fxaaFrag = [
             "precision mediump float;",
             "",
-            "uniform sampler2D tDiffuse;",
-            "uniform vec2 resolution;",
+            "uniform sampler2D uColorBuffer;",
+            "uniform vec2 uResolution;",
             "",
             "#define FXAA_REDUCE_MIN   (1.0/128.0)",
             "#define FXAA_REDUCE_MUL   (1.0/8.0)",
@@ -29,11 +29,11 @@ pc.extend(pc.posteffect, function () {
             "",
             "void main()",
             "{",
-            "    vec3 rgbNW = texture2D( tDiffuse, ( gl_FragCoord.xy + vec2( -1.0, -1.0 ) ) * resolution ).xyz;",
-            "    vec3 rgbNE = texture2D( tDiffuse, ( gl_FragCoord.xy + vec2( 1.0, -1.0 ) ) * resolution ).xyz;",
-            "    vec3 rgbSW = texture2D( tDiffuse, ( gl_FragCoord.xy + vec2( -1.0, 1.0 ) ) * resolution ).xyz;",
-            "    vec3 rgbSE = texture2D( tDiffuse, ( gl_FragCoord.xy + vec2( 1.0, 1.0 ) ) * resolution ).xyz;",
-            "    vec4 rgbaM  = texture2D( tDiffuse,  gl_FragCoord.xy  * resolution );",
+            "    vec3 rgbNW = texture2D( uColorBuffer, ( gl_FragCoord.xy + vec2( -1.0, -1.0 ) ) * uResolution ).xyz;",
+            "    vec3 rgbNE = texture2D( uColorBuffer, ( gl_FragCoord.xy + vec2( 1.0, -1.0 ) ) * uResolution ).xyz;",
+            "    vec3 rgbSW = texture2D( uColorBuffer, ( gl_FragCoord.xy + vec2( -1.0, 1.0 ) ) * uResolution ).xyz;",
+            "    vec3 rgbSE = texture2D( uColorBuffer, ( gl_FragCoord.xy + vec2( 1.0, 1.0 ) ) * uResolution ).xyz;",
+            "    vec4 rgbaM  = texture2D( uColorBuffer,  gl_FragCoord.xy  * uResolution );",
             "    vec3 rgbM  = rgbaM.xyz;",
             "    float opacity  = rgbaM.w;",
             "",
@@ -54,15 +54,15 @@ pc.extend(pc.posteffect, function () {
             "    float dirReduce = max( ( lumaNW + lumaNE + lumaSW + lumaSE ) * ( 0.25 * FXAA_REDUCE_MUL ), FXAA_REDUCE_MIN );",
             "",
             "    float rcpDirMin = 1.0 / ( min( abs( dir.x ), abs( dir.y ) ) + dirReduce );",
-            "    dir = min( vec2( FXAA_SPAN_MAX, FXAA_SPAN_MAX), max( vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * resolution;",
+            "    dir = min( vec2( FXAA_SPAN_MAX, FXAA_SPAN_MAX), max( vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX), dir * rcpDirMin)) * uResolution;",
             "",
             "    vec3 rgbA = 0.5 * (",
-            "        texture2D( tDiffuse, gl_FragCoord.xy  * resolution + dir * ( 1.0 / 3.0 - 0.5 ) ).xyz +",
-            "        texture2D( tDiffuse, gl_FragCoord.xy  * resolution + dir * ( 2.0 / 3.0 - 0.5 ) ).xyz );",
+            "        texture2D( uColorBuffer, gl_FragCoord.xy  * uResolution + dir * ( 1.0 / 3.0 - 0.5 ) ).xyz +",
+            "        texture2D( uColorBuffer, gl_FragCoord.xy  * uResolution + dir * ( 2.0 / 3.0 - 0.5 ) ).xyz );",
             "",
             "    vec3 rgbB = rgbA * 0.5 + 0.25 * (",
-            "        texture2D( tDiffuse, gl_FragCoord.xy  * resolution + dir * -0.5 ).xyz +",
-            "        texture2D( tDiffuse, gl_FragCoord.xy  * resolution + dir * 0.5 ).xyz );",
+            "        texture2D( uColorBuffer, gl_FragCoord.xy  * uResolution + dir * -0.5 ).xyz +",
+            "        texture2D( uColorBuffer, gl_FragCoord.xy  * uResolution + dir * 0.5 ).xyz );",
             "",
             "    float lumaB = dot( rgbB, luma );",
             "",
@@ -83,24 +83,7 @@ pc.extend(pc.posteffect, function () {
             fshader: fxaaFrag
         });
 
-        // Create the vertex format
-        var vertexFormat = new pc.gfx.VertexFormat(graphicsDevice, [
-            { semantic: pc.gfx.SEMANTIC_POSITION, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-        ]);
-
-        // Create a vertex buffer
-        this.vertexBuffer = new pc.gfx.VertexBuffer(graphicsDevice, vertexFormat, 4);
-
-        // Fill the vertex buffer
-        var iterator = new pc.gfx.VertexIterator(this.vertexBuffer);
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, -1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, -1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, 1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, 1.0);
-        iterator.end();
+        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
 
         // Uniforms
         this.resolution = pc.math.vec2.create(0, 0);
@@ -112,8 +95,8 @@ pc.extend(pc.posteffect, function () {
             var scope = device.scope;
 
             pc.math.vec2.set(this.resolution, 1/inputTarget.width, 1/inputTarget.height);
-            scope.resolve("resolution").setValue(this.resolution);
-            scope.resolve("tDiffuse").setValue(inputTarget.colorBuffer);
+            scope.resolve("uResolution").setValue(this.resolution);
+            scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.fxaaShader);
         }
     };

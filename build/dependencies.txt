@@ -59,6 +59,7 @@
 ../src/posteffect/posteffect_bloom.js
 ../src/posteffect/posteffect_fxaa.js
 ../src/posteffect/posteffect_luminosity.js
+../src/posteffect/posteffect_vignette.js
 ../src/scene/scene_scene.js
 ../src/scene/scene_graphnode.js
 ../src/scene/scene_cameranode.js

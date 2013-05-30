@@ -41,24 +41,7 @@ pc.extend(pc.posteffect, function () {
             fshader: luminosityFrag
         });
 
-        // Create the vertex format
-        var vertexFormat = new pc.gfx.VertexFormat(graphicsDevice, [
-            { semantic: pc.gfx.SEMANTIC_POSITION, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-        ]);
-
-        // Create a vertex buffer
-        this.vertexBuffer = new pc.gfx.VertexBuffer(graphicsDevice, vertexFormat, 4);
-
-        // Fill the vertex buffer
-        var iterator = new pc.gfx.VertexIterator(this.vertexBuffer);
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, -1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, -1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, 1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, 1.0);
-        iterator.end();
+        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
     }
 
     Luminosity.prototype = {

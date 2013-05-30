@@ -178,10 +178,11 @@ pc.extend(pc.posteffect, function () {
             fshader: bloomCombineFrag
         });
 
-        var width = graphicsDevice.width;
-        var height = graphicsDevice.height;
+        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
 
         // Render targets
+        var width = graphicsDevice.width;
+        var height = graphicsDevice.height;
         this.targets = [];
         for (var i = 0; i < 2; i++) {
             var colorBuffer = new pc.gfx.Texture(graphicsDevice, {
@@ -197,25 +198,6 @@ pc.extend(pc.posteffect, function () {
 
             this.targets.push(target);
         }
-
-        // Create the vertex format
-        var vertexFormat = new pc.gfx.VertexFormat(graphicsDevice, [
-            { semantic: pc.gfx.SEMANTIC_POSITION, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-        ]);
-
-        // Create a vertex buffer
-        this.vertexBuffer = new pc.gfx.VertexBuffer(graphicsDevice, vertexFormat, 4);
-
-        // Fill the vertex buffer
-        var iterator = new pc.gfx.VertexIterator(this.vertexBuffer);
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, -1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, -1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, 1.0);
-        iterator.next();
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, 1.0);
-        iterator.end();
 
         // Effect defaults
         this.bloomThreshold = 0.25;
