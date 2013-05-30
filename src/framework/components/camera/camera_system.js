@@ -153,10 +153,9 @@ pc.extend(pc.fw, function () {
                              0,4,1,5,2,6,3,7]); // Near to far edges
                 indexBuffer.unlock();
 
-                var format = new pc.gfx.VertexFormat();
-                format.begin();
-                format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32));
-                format.end();
+                var format = new pc.gfx.VertexFormat(this.context.graphicsDevice, [
+                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                ]);
 
                 var vertexBuffer = new pc.gfx.VertexBuffer(this.context.graphicsDevice, format, 8, pc.gfx.BUFFER_DYNAMIC);
 

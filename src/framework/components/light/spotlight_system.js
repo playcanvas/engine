@@ -121,10 +121,9 @@ pc.extend(pc.fw, function () {
         indexBuffer.unlock();
         this.indexBuffer = indexBuffer;
 
-        var format = new pc.gfx.VertexFormat();
-        format.begin();
-        format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32));
-        format.end();
+        var format = new pc.gfx.VertexFormat(context.graphicsDevice, [
+            { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+        ]);
         this.vertexFormat = format;
 
         this.on('remove', this.onRemove, this);

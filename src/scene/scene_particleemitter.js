@@ -124,15 +124,14 @@ pc.extend(pc.scene, function () {
         var program = programLib.getProgram("particle");
 
         // Create the particle vertex format
-        var particleFormat = new pc.gfx.VertexFormat();
-        particleFormat.begin();
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_uvLifeTimeFrameStart", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_positionStartTime", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_velocityStartSize", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_accelerationEndSize", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_spinStartSpinSpeed", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_colorMult", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
-        particleFormat.end();
+        var particleFormat = new pc.gfx.VertexFormat(device, [
+            { semantic: pc.gfx.SEMANTIC_ATTR0, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR1, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR2, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR3, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR4, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR5, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+        ]);
 
         var vertexBuffer = new pc.gfx.VertexBuffer(particleFormat, 4 * this.numParticles);
 
