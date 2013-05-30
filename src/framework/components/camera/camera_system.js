@@ -149,7 +149,7 @@ pc.extend(pc.fw, function () {
 
                 var format = new pc.gfx.VertexFormat();
                 format.begin();
-                format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
+                format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32));
                 format.end();
 
                 var vertexBuffer = new pc.gfx.VertexBuffer(this.context.graphicsDevice, format, 8, pc.gfx.BUFFER_DYNAMIC);

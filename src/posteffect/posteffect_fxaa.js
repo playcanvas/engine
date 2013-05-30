@@ -86,7 +86,7 @@ pc.extend(pc.posteffect, function () {
         // Create the vertex format
         var vertexFormat = new pc.gfx.VertexFormat();
         vertexFormat.begin();
-        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 2, pc.gfx.VertexElementType.FLOAT32));
+        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 2, pc.gfx.ELEMENTTYPE_FLOAT32));
         vertexFormat.end();
 
         // Create a vertex buffer

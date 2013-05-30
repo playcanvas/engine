@@ -126,12 +126,12 @@ pc.extend(pc.scene, function () {
         // Create the particle vertex format
         var particleFormat = new pc.gfx.VertexFormat();
         particleFormat.begin();
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_uvLifeTimeFrameStart", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_positionStartTime", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_velocityStartSize", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_accelerationEndSize", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_spinStartSpinSpeed", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_colorMult", 4, pc.gfx.VertexElementType.FLOAT32));
+        particleFormat.addElement(new pc.gfx.VertexElement("particle_uvLifeTimeFrameStart", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
+        particleFormat.addElement(new pc.gfx.VertexElement("particle_positionStartTime", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
+        particleFormat.addElement(new pc.gfx.VertexElement("particle_velocityStartSize", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
+        particleFormat.addElement(new pc.gfx.VertexElement("particle_accelerationEndSize", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
+        particleFormat.addElement(new pc.gfx.VertexElement("particle_spinStartSpinSpeed", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
+        particleFormat.addElement(new pc.gfx.VertexElement("particle_colorMult", 4, pc.gfx.ELEMENTTYPE_FLOAT32));
         particleFormat.end();
 
         var vertexBuffer = new pc.gfx.VertexBuffer(particleFormat, 4 * this.numParticles);

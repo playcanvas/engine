@@ -112,21 +112,64 @@ pc.gfx = {
     /**
      * @enum pc.gfx.CLEARFLAG
      * @name pc.gfx.CLEARFLAG_COLOR
-     * @description Clear the color buffer
+     * @description Clear the color buffer.
      */
     CLEARFLAG_COLOR: 1,
     /**
      * @enum pc.gfx.CLEARFLAG
      * @name pc.gfx.CLEARFLAG_DEPTH
-     * @description Clear the depth buffer
+     * @description Clear the depth buffer.
      */
     CLEARFLAG_DEPTH: 2,
     /**
      * @enum pc.gfx.CLEARFLAG
      * @name pc.gfx.CLEARFLAG_STENCIL
-     * @description Clear the stencil buffer
+     * @description Clear the stencil buffer.
      */
     CLEARFLAG_STENCIL: 4,
+
+    /**
+     * @enum pc.gfx.ELEMENTTYPE
+     * @name pc.gfx.ELEMENTTYPE_INT8
+     * @description Signed byte vertex element type.
+     */
+    ELEMENTTYPE_INT8: 0,
+    /**
+     * @enum pc.gfx.ELEMENTTYPE
+     * @name pc.gfx.ELEMENTTYPE_UINT8
+     * @description Unsigned byte vertex element type.
+     */
+    ELEMENTTYPE_UINT8: 1,
+    /**
+     * @enum pc.gfx.ELEMENTTYPE
+     * @name pc.gfx.ELEMENTTYPE_INT16
+     * @description Signed short vertex element type.
+     */
+    ELEMENTTYPE_INT16: 2,
+    /**
+     * @enum pc.gfx.ELEMENTTYPE
+     * @name pc.gfx.ELEMENTTYPE_UINT16
+     * @description Unsigned short vertex element type.
+     */
+    ELEMENTTYPE_UINT16: 3,
+    /**
+     * @enum pc.gfx.ELEMENTTYPE
+     * @name pc.gfx.ELEMENTTYPE_INT32
+     * @description Signed integer vertex element type.
+     */
+    ELEMENTTYPE_INT32: 4,
+    /**
+     * @enum pc.gfx.ELEMENTTYPE
+     * @name pc.gfx.ELEMENTTYPE_UINT32
+     * @description Unsigned integer vertex element type.
+     */
+    ELEMENTTYPE_UINT32: 5,
+    /**
+     * @enum pc.gfx.ELEMENTTYPE
+     * @name pc.gfx.ELEMENTTYPE_FLOAT32
+     * @description Floating point vertex element type.
+     */
+    ELEMENTTYPE_FLOAT32: 6,
 
     /**
      * @enum pc.gfx.FILTER

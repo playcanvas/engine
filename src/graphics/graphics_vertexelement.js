@@ -1,7 +1,7 @@
 /**
- * @enum {number}
+ * @private
  * @name pc.gfx.VertexElementType
- * @description Constants for primitive type.
+ * @description DEPRECATED. Constants for primitive type.
  */
 pc.gfx.VertexElementType = {
     INT8: 0,
@@ -15,13 +15,13 @@ pc.gfx.VertexElementType = {
 
 pc.extend(pc.gfx, function () {
     var _typeSize = [];
-    _typeSize[pc.gfx.VertexElementType.INT8   ] = 1;
-    _typeSize[pc.gfx.VertexElementType.UINT8  ] = 1;
-    _typeSize[pc.gfx.VertexElementType.INT16  ] = 2;
-    _typeSize[pc.gfx.VertexElementType.UINT16 ] = 2;
-    _typeSize[pc.gfx.VertexElementType.INT32  ] = 4;
-    _typeSize[pc.gfx.VertexElementType.UINT32 ] = 4;
-    _typeSize[pc.gfx.VertexElementType.FLOAT32] = 4;
+    _typeSize[pc.gfx.ELEMENTTYPE_INT8   ] = 1;
+    _typeSize[pc.gfx.ELEMENTTYPE_UINT8  ] = 1;
+    _typeSize[pc.gfx.ELEMENTTYPE_INT16  ] = 2;
+    _typeSize[pc.gfx.ELEMENTTYPE_UINT16 ] = 2;
+    _typeSize[pc.gfx.ELEMENTTYPE_INT32  ] = 4;
+    _typeSize[pc.gfx.ELEMENTTYPE_UINT32 ] = 4;
+    _typeSize[pc.gfx.ELEMENTTYPE_FLOAT32] = 4;
 
     /**
      * @name pc.gfx.VertexElement
