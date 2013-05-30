@@ -1,81 +1,68 @@
 pc.extend(pc.gfx, function () {
+    var _typeSize = [];
+    _typeSize[pc.gfx.ELEMENTTYPE_INT8   ] = 1;
+    _typeSize[pc.gfx.ELEMENTTYPE_UINT8  ] = 1;
+    _typeSize[pc.gfx.ELEMENTTYPE_INT16  ] = 2;
+    _typeSize[pc.gfx.ELEMENTTYPE_UINT16 ] = 2;
+    _typeSize[pc.gfx.ELEMENTTYPE_INT32  ] = 4;
+    _typeSize[pc.gfx.ELEMENTTYPE_UINT32 ] = 4;
+    _typeSize[pc.gfx.ELEMENTTYPE_FLOAT32] = 4;
+
     /**
      * @name pc.gfx.VertexFormat
      * @class A vertex format is a descriptor that defines the layout of vertex element data inside
      * a pc.gfx.VertexBuffer object.
-     * @description Returns a new pc.gfx.VertexFormat object.
+     * @description Returns a new pc.gfx.VertexFormat object. It is constructed from a description
+     * that explicitly defines how data is to be laid out inside a vertex buffer (pc.gfx.VertexBuffer).
+     * The description is defined as an array of elements, where each element is an object with the 
+     * following properties: 
+     *   semantic: pc.gfx.SEMANTIC_.
+     *   components: the number of components used by the element.
+     *   type: (pc.gfx.ELEMENTTYPE_).
+     *   normalize: true to remap element values to a range of 0 to 1. Defaults to false.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this vertex format.
+     * @param {Array} description An array of vertex element descriptions.
+     * @example
+     * var vertexFormat = new pc.gfx.VertexFormat(graphicsDevice, [
+     *     { semantic: pc.gfx.SEMANTIC_POSITION, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+     *     { semantic: pc.gfx.SEMANTIC_TEXCOORD0, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+     *     { semantic: pc.gfx.SEMANTIC_COLOR, components: 4, type: pc.gfx.ELEMENTTYPE_UINT8, normalize: true }
+     * ]);
+     *
      * @author Will Eastcott
      */
-    var VertexFormat = function () {
-        this.size = 0;
+    var VertexFormat = function (graphicsDevice, description) {
+        var i;
+
         this.elements = [];
-    };
 
-    VertexFormat.prototype = {
-        /**
-         * @function
-         * @name pc.gfx.VertexFormat#begin
-         * @description Marks the start of a definition block that builds the vertex format structure.
-         * @example
-         * var format = new pc.gfx.VertexFormat();
-         * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32, false));
-         * vertexFormat.end();
-         * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
-         * @author Will Eastcott
-         */
-        begin: function () {
-            this.size = 0;
-            this.elements = [];
-        },
+        this.size = 0;
+        for (var i = 0, len = description.length; i < len; i++) {
+            var elementDesc = description[i];
+            var element = {
+                name: elementDesc.semantic,
+                offset: 0,
+                stride: 0,
+                stream: -1,
+                scopeId: graphicsDevice.scope.resolve(elementDesc.semantic),
+                dataType: elementDesc.type,
+                numComponents: elementDesc.components,
+                normalize: (typeof elementDesc.normalize === 'undefined') ? false : elementDesc.normalize,
+                size: elementDesc.components * _typeSize[elementDesc.type]
+            };
+            this.elements.push(element);
 
-        /**
-         * @function
-         * @name pc.gfx.VertexFormat#end
-         * @description Marks the end of a definition block that builds the vertex format structure.
-         * @example
-         * var format = new pc.gfx.VertexFormat();
-         * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32, false));
-         * vertexFormat.end();
-         * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
-         * @author Will Eastcott
-         */
-        end: function () {
-            var offset = 0;
+            this.size += element.size;
+        }
 
-            // Now we have the complete format, update the
-            // offset and stride of each vertex element
-            var i = 0;
-            var elements = this.elements;
-            var numElements = elements.length;
-            while (i < numElements) {
-                var vertexElement = elements[i++];
+        var offset = 0;
+        for (var i = 0, len = this.elements.length; i < len; i++) {
+            var element = this.elements[i];
 
-                vertexElement.offset = offset;
-                vertexElement.stride = this.size;
+            element.offset = offset;
+            element.stride = this.size;
 
-                offset += vertexElement.size;
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.gfx.VertexFormat#addElement
-         * @description Adds a new vertex element defintion to the vertex format.
-         * @example
-         * var format = new pc.gfx.VertexFormat();
-         * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32, false));
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD0, 2, pc.gfx.ELEMENTTYPE_FLOAT32, false));
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_COLOR, 4, pc.gfx.ELEMENTTYPE_UINT8, true));
-         * vertexFormat.end();
-         * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
-         * @author Will Eastcott
-         */
-        addElement: function (vertexElement) {
-            this.size += vertexElement.size;
-            this.elements.push(vertexElement);
+            offset += element.size;
         }
     };
 

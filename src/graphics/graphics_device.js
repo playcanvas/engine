@@ -22,11 +22,6 @@ pc.gfx.BlendMode = {
     ONE_MINUS_DST_ALPHA: 10
 };
 
-/**
- * @enum {Number}
- * @name pc.gfx.DepthFunc
- * @description Constants for blending modes.
- */
 pc.gfx.DepthFunc = {
     LEQUAL: 0
 };
@@ -722,9 +717,6 @@ pc.extend(pc.gfx, function () {
                 while (i < numElements) {
                     var vertexElement = elements[i++];
                     vertexElement.stream = stream;
-                    if (vertexElement.scopeId === null) {
-                        vertexElement.scopeId = this.scope.resolve(vertexElement.name);
-                    }
                     vertexElement.scopeId.setValue(vertexElement);
                 }
 

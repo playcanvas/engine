@@ -41,7 +41,6 @@
 ../src/graphics/graphics_validation.js
 ../src/graphics/graphics_vertexiterator.js
 ../src/graphics/graphics_vertexformat.js
-../src/graphics/graphics_vertexelement.js
 ../src/graphics/graphics_vertexbuffer.js
 ../src/graphics/graphics_indexbuffer.js
 ../src/graphics/graphics_texture.js
