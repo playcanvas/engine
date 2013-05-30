@@ -42,10 +42,9 @@ pc.extend(pc.posteffect, function () {
         });
 
         // Create the vertex format
-        var vertexFormat = new pc.gfx.VertexFormat();
-        vertexFormat.begin();
-        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 2, pc.gfx.ELEMENTTYPE_FLOAT32));
-        vertexFormat.end();
+        var vertexFormat = new pc.gfx.VertexFormat(graphicsDevice, [
+            { semantic: pc.gfx.SEMANTIC_POSITION, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+        ]);
 
         // Create a vertex buffer
         this.vertexBuffer = new pc.gfx.VertexBuffer(graphicsDevice, vertexFormat, 4);
