@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.106.2
+--------
+* [FIX] ResourceLoader now correctly loads identical child resources concurrently.
+
+--------
 v0.106.1
 --------
 * Added generic vertex semantics for things like particle data.
