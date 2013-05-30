@@ -17,7 +17,6 @@ pc.extend(pc.fw, function () {
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
     * @property {pc.scene.Projection} projection The type of projection used to render the camera.
     * @property {Boolean} activate Activate on load. If true the {@link pc.fw.CameraComponentSystem} will set {@link pc.fw.CameraComponentSystem#current} to this camera as soon as it is loaded.
-    * @property {Boolean} offscreen Render offscreen. If true, the camera will render to an offscreen buffer.
     */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes

@@ -14,7 +14,6 @@ pc.extend(pc.fw, function () {
         this.orthoHeight = 100;
         this.projection = pc.scene.Projection.PERSPECTIVE;
         this.activate = true;
-        this.offscreen = false;
 
         // not serialized
         this.camera = null;
