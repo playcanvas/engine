@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.107.1
+--------
+* [FIX] pc.Color accepts another pc.Color as a constructor argument
+
+--------
 v0.107.0
 --------
 * [BREAKING] Removed Bloom Component
