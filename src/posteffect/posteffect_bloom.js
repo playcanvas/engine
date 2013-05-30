@@ -241,7 +241,7 @@ pc.extend(pc.posteffect, function () {
             // shader that extracts only the brightest parts of the image.
             scope.resolve("uBloomThreshold").setValue(this.bloomThreshold);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(this.targets[0], this.vertexBuffer, this.extractShader);
+            pc.posteffect.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.extractShader);
 
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
@@ -249,7 +249,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
-            pc.posteffect.drawFullscreenQuad(this.targets[1], this.vertexBuffer, this.blurShader);
+            pc.posteffect.drawFullscreenQuad(device, this.targets[1], this.vertexBuffer, this.blurShader);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
@@ -257,16 +257,16 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
             scope.resolve("uBloomTexture").setValue(this.targets[1].colorBuffer);
-            pc.posteffect.drawFullscreenQuad(this.targets[0], this.vertexBuffer, this.blurShader);
+            pc.posteffect.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.blurShader);
 
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
-            pc.math.vec4.set(this.bloomIntensity, this.baseIntensity, this.bloomSaturation, this.baseSaturation);
-            scope.resolve("uCombineParams").setValue(combineParams);
+            pc.math.vec4.set(this.combineParams, this.bloomIntensity, this.baseIntensity, this.bloomSaturation, this.baseSaturation);
+            scope.resolve("uCombineParams").setValue(this.combineParams);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(outputTarget, this.vertexBuffer, this.combineShader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader);
         }
     };
 

@@ -102,6 +102,9 @@ pc.extend(pc.posteffect, function () {
         iterator.next();
         iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, 1.0);
         iterator.end();
+
+        // Uniforms
+        this.resolution = pc.math.vec2.create(0, 0);
     }
 
     Fxaa.prototype = {
@@ -109,10 +112,10 @@ pc.extend(pc.posteffect, function () {
             var device = this.device;
             var scope = device.scope;
 
-            pc.math.vec2.set(this.resolution, inputTarget.width, inputTarget.height);
+            pc.math.vec2.set(this.resolution, 1/inputTarget.width, 1/inputTarget.height);
             scope.resolve("resolution").setValue(this.resolution);
             scope.resolve("tDiffuse").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(outputTarget, this.vertexBuffer, this.fxaaShader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.fxaaShader);
         }
     };
 
