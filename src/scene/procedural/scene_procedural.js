@@ -150,15 +150,15 @@ pc.scene.procedural.createMesh = function (device, positions, opts) {
 
     var vertexFormat = new pc.gfx.VertexFormat();
     vertexFormat.begin();
-    vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
+    vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32));
     if (normals !== null) {
-        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_NORMAL, 3, pc.gfx.VertexElementType.FLOAT32));
+        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_NORMAL, 3, pc.gfx.ELEMENTTYPE_FLOAT32));
     }
     if (tangents !== null) {
-        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TANGENT, 4, pc.gfx.VertexElementType.FLOAT32));
+        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TANGENT, 4, pc.gfx.ELEMENTTYPE_FLOAT32));
     }
     if (uvs !== null) {
-        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD0, 2, pc.gfx.VertexElementType.FLOAT32));
+        vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD0, 2, pc.gfx.ELEMENTTYPE_FLOAT32));
     }
     vertexFormat.end();
 

@@ -3,25 +3,25 @@ pc.extend(pc.gfx, function () {
         this.index = 0;
 
         switch (vertexElement.dataType) {
-            case pc.gfx.VertexElementType.INT8:    
+            case pc.gfx.ELEMENTTYPE_INT8:    
                 this.array = new Int8Array(buffer, vertexElement.offset);    
                 break;
-            case pc.gfx.VertexElementType.UINT8:   
+            case pc.gfx.ELEMENTTYPE_UINT8:   
                 this.array = new Uint8Array(buffer, vertexElement.offset);   
                 break;
-            case pc.gfx.VertexElementType.INT16:   
+            case pc.gfx.ELEMENTTYPE_INT16:   
                 this.array = new Int16Array(buffer, vertexElement.offset);   
                 break;
-            case pc.gfx.VertexElementType.UINT16:  
+            case pc.gfx.ELEMENTTYPE_UINT16:  
                 this.array = new Uint16Array(buffer, vertexElement.offset);  
                 break;
-            case pc.gfx.VertexElementType.INT32:   
+            case pc.gfx.ELEMENTTYPE_INT32:   
                 this.array = new Int32Array(buffer, vertexElement.offset);   
                 break;
-            case pc.gfx.VertexElementType.UINT32:  
+            case pc.gfx.ELEMENTTYPE_UINT32:  
                 this.array = new Uint32Array(buffer, vertexElement.offset);  
                 break;
-            case pc.gfx.VertexElementType.FLOAT32: 
+            case pc.gfx.ELEMENTTYPE_FLOAT32: 
                 this.array = new Float32Array(buffer, vertexElement.offset); 
                 break;
         }

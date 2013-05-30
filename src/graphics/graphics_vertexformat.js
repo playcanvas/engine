@@ -19,7 +19,7 @@ pc.extend(pc.gfx, function () {
          * @example
          * var format = new pc.gfx.VertexFormat();
          * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32, false));
+         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32, false));
          * vertexFormat.end();
          * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
          * @author Will Eastcott
@@ -36,7 +36,7 @@ pc.extend(pc.gfx, function () {
          * @example
          * var format = new pc.gfx.VertexFormat();
          * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32, false));
+         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32, false));
          * vertexFormat.end();
          * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
          * @author Will Eastcott
@@ -66,9 +66,9 @@ pc.extend(pc.gfx, function () {
          * @example
          * var format = new pc.gfx.VertexFormat();
          * format.begin();
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32, false));
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD0, 2, pc.gfx.VertexElementType.FLOAT32, false));
-         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_COLOR, 4, pc.gfx.VertexElementType.UINT8, true));
+         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.ELEMENTTYPE_FLOAT32, false));
+         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD0, 2, pc.gfx.ELEMENTTYPE_FLOAT32, false));
+         * vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_COLOR, 4, pc.gfx.ELEMENTTYPE_UINT8, true));
          * vertexFormat.end();
          * var vertexBuffer = new pc.gfx.VertexBuffer(vertexFormat, numVertices);
          * @author Will Eastcott
