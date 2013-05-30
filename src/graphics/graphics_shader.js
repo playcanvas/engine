@@ -1,5 +1,16 @@
 pc.extend(pc.gfx, function () {
 
+    function addLineNumbers(src) {
+        var chunks = src.split("\n");
+
+        // Chrome reports shader errors on lines indexed from 1
+        for (var i = 0, len = chunks.length; i < len; i ++) {
+            chunks[i] = (i+1) + ":\t" + chunks[i];
+        }
+
+        return chunks.join( "\n" );
+    }
+
     function createShader(gl, type, src) {
         var shader = gl.createShader(type);
 
@@ -11,7 +22,7 @@ pc.extend(pc.gfx, function () {
         if (!ok) {
             var error = gl.getShaderInfoLog(shader);
             var typeName = (type === gl.VERTEX_SHADER) ? "vertex" : "fragment";
-            logERROR("Failed to compile " + typeName + " shader:\n" + src + "\n" + error);
+            logERROR("Failed to compile " + typeName + " shader:\n\n" + addLineNumbers(src) + "\n\n" + error);
         }
 
         return shader;
