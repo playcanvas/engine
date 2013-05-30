@@ -64,6 +64,15 @@ test('new Color("#ff00ff00")', function () {
     equal(c.a, 0);
 });
 
+test('new Color(color)', function () {
+    var c = new pc.Color(new pc.Color(1,2,3,4));
+
+    equal(c.r, 1);
+    equal(c.g, 2);
+    equal(c.b, 3);
+    equal(c.a, 4);
+});
+
 test('Color.toString()', function () {
     var c = new pc.Color(1,1,1);
     equal(c.toString(), '#ffffff');

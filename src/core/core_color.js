@@ -23,6 +23,8 @@ pc.extend(pc, (function () {
             this.set(0,0,0,1);
         } else if (typeof(r) === 'string') {
             this.fromString(r);
+        } else if (r instanceof pc.Color) {
+            this.set(r.c);
         } else if (r.length !== undefined) {
             this.set(r);
         }
