@@ -41,7 +41,6 @@
 ../src/graphics/graphics_validation.js
 ../src/graphics/graphics_vertexiterator.js
 ../src/graphics/graphics_vertexformat.js
-../src/graphics/graphics_vertexelement.js
 ../src/graphics/graphics_vertexbuffer.js
 ../src/graphics/graphics_indexbuffer.js
 ../src/graphics/graphics_texture.js
@@ -50,14 +49,17 @@
 ../src/graphics/graphics_shader.js
 ../src/graphics/graphics_programlibrary.js
 ../src/graphics/graphics_device.js
-../src/graphics/post/post_post.js
-../src/graphics/post/post_bloom.js
 ../src/graphics/programlib/programlib_programlib.js
 ../src/graphics/programlib/programlib_basic.js
 ../src/graphics/programlib/programlib_depth.js
 ../src/graphics/programlib/programlib_phong.js
 ../src/graphics/programlib/programlib_pick.js
 ../src/graphics/programlib/programlib_skybox.js
+../src/posteffect/posteffect_post.js
+../src/posteffect/posteffect_bloom.js
+../src/posteffect/posteffect_fxaa.js
+../src/posteffect/posteffect_luminosity.js
+../src/posteffect/posteffect_vignette.js
 ../src/scene/scene_scene.js
 ../src/scene/scene_graphnode.js
 ../src/scene/scene_cameranode.js
@@ -111,9 +113,6 @@
 ../src/framework/components/animation/animation_component.js
 ../src/framework/components/animation/animation_system.js
 ../src/framework/components/animation/animation_data.js
-../src/framework/components/bloom/bloom_system.js
-../src/framework/components/bloom/bloom_component.js
-../src/framework/components/bloom/bloom_data.js
 ../src/framework/components/model/model_system.js
 ../src/framework/components/model/model_component.js
 ../src/framework/components/model/model_data.js

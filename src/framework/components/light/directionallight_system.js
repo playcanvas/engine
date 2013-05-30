@@ -76,10 +76,9 @@ pc.extend(pc.fw, function () {
         material.update();
         this.material = material;
 
-        var format = new pc.gfx.VertexFormat();
-        format.begin();
-        format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
-        format.end();
+        var format = new pc.gfx.VertexFormat(context.graphicsDevice, [
+            { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+        ]);
 
         // Generate the directional light arrow vertex data
         vertexData = [ 

@@ -25,8 +25,8 @@ pc.extend(pc.scene, function () {
         return v;
     };
 
-    var _createTexture = function (width, height, pixelData) {
-        var texture = new pc.gfx.Texture({
+    var _createTexture = function (device, width, height, pixelData) {
+        var texture = new pc.gfx.Texture(device, {
             width: width,
             height: height,
             format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
@@ -47,7 +47,9 @@ pc.extend(pc.scene, function () {
         return texture;
     };
 
-    var ParticleEmitter = function ParticleEmitter(numParticles) {
+    var ParticleEmitter = function ParticleEmitter(graphicsDevice, numParticles) {
+        this.graphicsDevice = graphicsDevice;
+
         // The number of particles to emit.
         this.numParticles = 1;
         // The number of frames in the particle texture.
@@ -119,22 +121,20 @@ pc.extend(pc.scene, function () {
         this.worldAcceleration = [0, -20, 0];
         this.spinSpeedRange = 4;
         
-        var device = pc.gfx.Device.getCurrent();
-        var programLib = device.getProgramLibrary();
+        var programLib = graphicsDevice.getProgramLibrary();
         var program = programLib.getProgram("particle");
 
         // Create the particle vertex format
-        var particleFormat = new pc.gfx.VertexFormat();
-        particleFormat.begin();
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_uvLifeTimeFrameStart", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_positionStartTime", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_velocityStartSize", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_accelerationEndSize", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_spinStartSpinSpeed", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.addElement(new pc.gfx.VertexElement("particle_colorMult", 4, pc.gfx.VertexElementType.FLOAT32));
-        particleFormat.end();
+        var particleFormat = new pc.gfx.VertexFormat(graphicsDevice, [
+            { semantic: pc.gfx.SEMANTIC_ATTR0, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR1, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR2, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR3, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR4, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+            { semantic: pc.gfx.SEMANTIC_ATTR5, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+        ]);
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(particleFormat, 4 * this.numParticles);
+        var vertexBuffer = new pc.gfx.VertexBuffer(graphicsDevice, particleFormat, 4 * this.numParticles);
 
         var position = pc.math.vec3.create();
         var velocity = pc.math.vec3.create();
@@ -155,19 +155,19 @@ pc.extend(pc.scene, function () {
 
             for (var corner = 0; corner < 4; corner++) {
                 var e = iterator.element;
-                e.particle_uvLifeTimeFrameStart.set(particleVerts[corner][0], particleVerts[corner][1], lifeTime, frameStart);
-                e.particle_positionStartTime.set(position[0], position[1], position[2], startTime);
-                e.particle_velocityStartSize.set(velocity[0], velocity[1], velocity[2], startSize);
-                e.particle_accelerationEndSize.set(acceleration[0], acceleration[1], acceleration[2], endSize);
-                e.particle_spinStartSpinSpeed.set(spinStart, spinSpeed, 0.0, 0.0);
-                e.particle_colorMult.set(1, 1, 1, 1);
+                e[pc.gfx.SEMANTIC_ATTR0].set(particleVerts[corner][0], particleVerts[corner][1], lifeTime, frameStart);
+                e[pc.gfx.SEMANTIC_ATTR1].set(position[0], position[1], position[2], startTime);
+                e[pc.gfx.SEMANTIC_ATTR2].set(velocity[0], velocity[1], velocity[2], startSize);
+                e[pc.gfx.SEMANTIC_ATTR3].set(acceleration[0], acceleration[1], acceleration[2], endSize);
+                e[pc.gfx.SEMANTIC_ATTR4].set(spinStart, spinSpeed, 0.0, 0.0);
+                e[pc.gfx.SEMANTIC_ATTR5].set(1, 1, 1, 1);
                 iterator.next();
             }
         }
         iterator.end();
 
         // Create a index buffer
-        var indexBuffer = new pc.gfx.IndexBuffer(pc.gfx.INDEXFORMAT_UINT16, 6 * this.numParticles);
+        var indexBuffer = new pc.gfx.IndexBuffer(graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, 6 * this.numParticles);
 
         // Fill the index buffer
         var dst = 0;
@@ -200,8 +200,8 @@ pc.extend(pc.scene, function () {
             }
         }
 
-        this.colorMap = _createTexture(8, 8, pixels);
-        this.rampMap = _createTexture(2, 1, [255,255,255,255,255,255,255,0]);
+        this.colorMap = _createTexture(graphicsDevice, 8, 8, pixels);
+        this.rampMap = _createTexture(graphicsDevice, 2, 1, [255,255,255,255,255,255,255,0]);
 
         var material = new pc.scene.Material();
         material.setProgram(program);
@@ -232,7 +232,7 @@ pc.extend(pc.scene, function () {
             for (var i = 0; i < pixels.length; i++) {
                 pixels[i] = Math.floor(pixels[i] * 255);
             }
-            this.rampMap = _createTexture(pixels.length / 4, 1, pixels);
+            this.rampMap = _createTexture(this.graphicsDevice, this.pixels.length / 4, 1, pixels);
             this.meshInstance.material.setParameter('texture_rampMap', this.rampMap);
         }
     };

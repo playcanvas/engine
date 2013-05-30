@@ -132,10 +132,9 @@ pc.extend(pc.fw, function () {
             var gd = this.context.graphicsDevice;
 
             // Create the graphical resources required to render a capsule shape
-            var format = new pc.gfx.VertexFormat();
-            format.begin();
-            format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
-            format.end();
+            var format = new pc.gfx.VertexFormat(gd, [
+                { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+            ]);
 
             var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 328, pc.gfx.BUFFER_DYNAMIC);
 
