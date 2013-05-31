@@ -18,6 +18,7 @@ pc.extend(pc.fw, function () {
         // not serialized
         this.camera = null;
         this.aspectRatio = 16 / 9;
+        this.renderTarget = null;
     };
     CameraComponentData = pc.inherits(CameraComponentData, pc.fw.ComponentData);
     
