@@ -80,7 +80,7 @@ pc.extend(pc.fw, function () {
 
     // Private    
     var _createCubemap = function (entity, context, urls) {
-        var texture = new pc.gfx.Texture({
+        var texture = new pc.gfx.Texture(context.graphicsDevice, {
             format: pc.gfx.PIXELFORMAT_R8_G8_B8,
             cubemap: true
         });
