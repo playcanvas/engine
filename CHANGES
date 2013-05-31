@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.107.3
+--------
+* [FIX] Flip skybox in X.
+
+--------
 v0.107.2
 --------
 * Docs improvements.
