@@ -5,61 +5,41 @@ pc.gfx.programlib.skybox = {
     },
 
     createShaderDefinition: function (device, options) {
-        /////////////////////////
-        // GENERATE ATTRIBUTES //
-        /////////////////////////
-        var attributes = {
-            vertex_position: pc.gfx.SEMANTIC_POSITION
-        }
-
-        ////////////////////////////
-        // GENERATE VERTEX SHADER //
-        ////////////////////////////
         var getSnippet = pc.gfx.programlib.getSnippet;
-        var code = '';
-
-        // VERTEX SHADER DECLARATIONS
-        code += getSnippet(device, 'vs_static_position_decl');
-
-        code += "uniform vec3 view_position;\n";
-        code += "varying vec3 vViewDir;\n\n";
-
-        // VERTEX SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
-
-        code += '    vec4 positionW = matrix_model * vec4(vertex_position + view_position, 1.0);\n';
-        code += '    gl_Position = matrix_viewProjection * positionW;\n';
-
-        // Force skybox to far Z, regardless of the clip planes on the camera
-        code += "    gl_Position = gl_Position.xyww;\n";
-        code += "    vViewDir = vertex_position;\n";
-
-        code += getSnippet(device, 'common_main_end');
-
-        var vshader = code;
-
-        //////////////////////////////
-        // GENERATE FRAGMENT SHADER //
-        //////////////////////////////
-        code = getSnippet(device, 'fs_precision');
-
-        // FRAGMENT SHADER DECLARATIONS
-        code += "varying vec3 vViewDir;\n";
-        code += "uniform samplerCube texture_cubeMap;\n\n";
-
-        // FRAGMENT SHADER BODY
-        code += getSnippet(device, 'common_main_begin');
-
-        code += "    gl_FragColor = textureCube(texture_cubeMap, normalize(vViewDir));\n";
-
-        code += getSnippet(device, 'common_main_end');
-
-        var fshader = code;
 
         return {
-            attributes: attributes,
-            vshader: vshader,
-            fshader: fshader
-        };
+            attributes: {
+                aPosition: pc.gfx.SEMANTIC_POSITION
+            },
+            vshader: [
+                'attribute vec3 aPosition;',
+                '',
+                'uniform mat4 matrix_view;',
+                'uniform mat4 matrix_projection;',
+                '',
+                'varying vec3 vViewDir;',
+                '',
+                'void main(void)',
+                '{',
+                '    mat4 view = matrix_view;',
+                '    view[3][0] = view[3][1] = view[3][2] = 0.0;',
+                '    gl_Position = matrix_projection * view * vec4(aPosition, 1.0);',
+
+                // Force skybox to far Z, regardless of the clip planes on the camera
+                '    gl_Position = gl_Position.xyww;',
+                '    vViewDir = aPosition;',
+                '}'
+            ].join('\n'),
+            fshader: getSnippet(device, 'fs_precision') + [
+                'varying vec3 vViewDir;',
+                '',
+                'uniform samplerCube texture_cubeMap;',
+                '',
+                'void main(void)',
+                '{',
+                '    gl_FragColor = textureCube(texture_cubeMap, vec3(-vViewDir.x, vViewDir.yz));',
+                '}'
+            ].join('\n')
+        }
     }
 };

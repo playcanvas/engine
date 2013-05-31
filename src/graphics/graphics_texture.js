@@ -427,10 +427,10 @@ pc.extend(pc.gfx, function () {
                 var face;
 
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 if ((pixels[0] instanceof HTMLCanvasElement) || (pixels[0] instanceof HTMLImageElement) || (pixels[0] instanceof HTMLVideoElement)) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
-                        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                         gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, this._glInternalFormat, this._glFormat, this._glPixelType, pixels[face]);
                     }
                 } else {
