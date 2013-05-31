@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.107.2
+--------
+* Docs improvements.
+
+--------
 v0.107.1
 --------
 * [FIX] pc.Color accepts another pc.Color as a constructor argument

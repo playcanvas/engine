@@ -12,7 +12,7 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.VertexFormat
      * @class A vertex format is a descriptor that defines the layout of vertex element data inside
      * a pc.gfx.VertexBuffer object.
-     * @description Returns a new pc.gfx.VertexFormat object. It is constructed from a description
+     * @constructor Returns a new pc.gfx.VertexFormat object. It is constructed from a description
      * that explicitly defines how data is to be laid out inside a vertex buffer (pc.gfx.VertexBuffer).
      * The description is defined as an array of elements, where each element is an object with the 
      * following properties: 

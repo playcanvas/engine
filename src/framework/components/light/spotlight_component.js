@@ -4,8 +4,18 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.SpotLightComponent
      * @constructor Create a new SpotLightComponent
      * @class A Light Component is used to dynamically light the scene.
-    * @param {pc.fw.SpotlightComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.fw.SpotlightComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
+     * @property {Boolean} enable Enable the light.
+     * @property {pc.Color} color The color of the light.
+     * @property {Number} intensity The intensity of the light.
+     * @property {Number} attenuationEnd The radius of the light at which its contribution falls to zero.
+     * @property {Number} innerConeAngle The angle between the directional axis of the spotlight and the side
+     * of a cone beyond which light begins to fall off from the specified intensity.
+     * @property {Number} outerConeAngle The angle between the directional axis of the spotlight and the side
+     * of a cone where the light's contribution falls off to zero.
+     * @property {Boolean} castShadows Enable shadow casting from this light.
+     * @property {Number} shadowResolution Resolution of the shadowmap used by this light. Must be a power of 2.
      * @extends pc.fw.Component
      */
     var SpotLightComponent = function (system, entity) {

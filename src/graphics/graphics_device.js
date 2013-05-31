@@ -75,6 +75,7 @@ pc.extend(pc.gfx, function () {
      * for submitting render state changes and graphics primitives to the hardware. A graphics
      * device is tied to a specific canvas HTML element. It is valid to have more than one 
      * canvas element per page and create a new graphics device against each.
+     * @constructor Creates a new graphics device.
      * @param {Object} canvas The canvas to which the graphics device is tied.
      * @property {Number} width Width of the back buffer in pixels (read-only).
      * @property {Number} height Height of the back buffer in pixels (read-only).
