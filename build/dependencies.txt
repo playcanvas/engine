@@ -58,6 +58,7 @@
 ../src/posteffect/posteffect_posteffect.js
 ../src/posteffect/posteffect_blend.js
 ../src/posteffect/posteffect_bloom.js
+../src/posteffect/posteffect_edgedetect.js
 ../src/posteffect/posteffect_fxaa.js
 ../src/posteffect/posteffect_luminosity.js
 ../src/posteffect/posteffect_sepia.js
