@@ -7,13 +7,13 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CubeMapComponentData;
 
         this.schema = [{
-            name: 'buffer',
-            exposed: false
-        }, {
             name: 'cubemap',
             exposed: false
         }, {
             name: 'camera',
+            exposed: false
+        }, {
+            name: 'targets',
             exposed: false
         }];
 
@@ -28,30 +28,33 @@ pc.extend(pc.fw, function () {
             var cubemap = new pc.gfx.Texture(this.context.graphicsDevice, {
                 format: pc.gfx.PIXELFORMAT_R8_G8_B8,
                 width: 256,
-                height: 256
+                height: 256,
+                cubemap: true
             });
-            cubemap.minFilter = pc.gfx.FILTER_LINEAR;
+            cubemap.minFilter = pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR;
             cubemap.magFilter = pc.gfx.FILTER_LINEAR;
             cubemap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
             cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
 
-            data.cubemap = cubemap;
-            data.targets = [];
-
+            var targets = [];
             for (var i = 0; i < 6; i++) {
-                var target = new pc.gfx.RenderTarget(this.context, cubemap, {
+                var target = new pc.gfx.RenderTarget(this.context.graphicsDevice, cubemap, {
                     face: i,
                     depth: true
                 });
-                data.targets.push(target);
+                targets.push(target);
             }
 
-            data.camera = new pc.scene.CameraNode();
-            data.camera.setNearClip(0.01);
-            data.camera.setFarClip(100);
-            data.camera.setAspectRatio(1);
+            var camera = new pc.scene.CameraNode();
+            camera.setNearClip(0.01);
+            camera.setFarClip(10000);
+            camera.setAspectRatio(1);
 
-            CubeMapComponentSystem._super.initializeComponentData.call(this, component, data, ['buffer', 'cubemap', 'camera']);
+            data.cubemap = cubemap;
+            data.targets = targets;
+            data.camera = camera;
+
+            CubeMapComponentSystem._super.initializeComponentData.call(this, component, data, ['targets', 'cubemap', 'camera']);
         },
 
         onUpdate: function (dt) {
@@ -61,68 +64,52 @@ pc.extend(pc.fw, function () {
             var components = this.store;
             var transform;
 
-            if (this.renderingCubeMap) return;
-            this.renderingCubeMap = true;
-
             for (id in components) {
                 if (components.hasOwnProperty(id)) {
                     entity = components[id].entity;
                     componentData = components[id].data;
 
-                    this.context.scene.enqueue("first", (function(data, ent, ctx) {
-                            return function () {
-                                ctx.systems.camera.frameEnd();
+                    var model;
+                    // Get the model from either the model or primitive component
+                    if (entity.model) {
+                        model = entity.model.model;
+                    } else if (entity.primitive) {
+                        model = entity.primitive.model;
+                    }
 
-                                var model;
-                                // Get the model from either the model or primitive component
-                                if (ent.model) {
-                                    model = ent.model.model;
-                                } else if (ent.primitive) {
-                                    model = ent.primitive.model;
-                                }
+                    if (model) {
+                        var scene = this.context.scene;
+                        scene.removeModel(model);
 
-                                // TODO: This needs to be changed to use scene.enqueue
-                                if (model) {
-                                    ctx.scene.removeModel(model);
+                        var lookAts = [
+                          { target: [ 1, 0, 0], up: [0,-1, 0]},
+                          { target: [-1, 0, 0], up: [0,-1, 0]},
+                          { target: [ 0, 1, 0], up: [0, 0, 1]},
+                          { target: [ 0,-1, 0], up: [0, 0,-1]},
+                          { target: [ 0, 0, 1], up: [0,-1, 0]},
+                          { target: [ 0, 0,-1], up: [0,-1, 0]}
+                        ];
+                        var pos = entity.getPosition();
 
-                                    var lookAts = [
-                                      { target: [ 1, 0, 0], up: [0,-1, 0]},
-                                      { target: [-1, 0, 0], up: [0,-1, 0]},
-                                      { target: [ 0, 1, 0], up: [0, 0, 1]},
-                                      { target: [ 0,-1, 0], up: [0, 0,-1]},
-                                      { target: [ 0, 0, 1], up: [0,-1, 0]},
-                                      { target: [ 0, 0,-1], up: [0,-1, 0]}
-                                    ];
-                                    var pos = ent.getPosition();
+                        for (var face = 0; face < 6; face++) {
+                            var camera = componentData.camera;
 
-                                    for (var face = 0; face < 6; face++) {
-                                        // Set the face of the cubemap
-                                        data.buffer.setActiveBuffer(face);
+                            // Set the face of the cubemap
+                            camera.setRenderTarget(componentData.targets[face]);
 
-                                        // Point the camera in the right direction
-                                        data.camera.setPosition(pos);
-                                        data.camera.lookAt(lookAts[face].target, lookAts[face].up);
-                                        data.camera.syncHierarchy();
+                            // Point the camera in the right direction
+                            camera.setPosition(pos);
+                            camera.lookAt(lookAts[face].target, lookAts[face].up);
+                            camera.syncHierarchy();
 
-                                        // Render the scene
-                                        data.camera.frameBegin();
-                                        var models = ctx.scene.getModels();
-                                        for (var i = 0; i < models.length; i++) {
-                                            models[i].dispatch();
-                                        }
-                                        data.camera.frameEnd();
-                                    }
+                            // Render the scene
+                            scene.render(camera, this.context.graphicsDevice);
+                        }
 
-                                    ctx.scene.addModel(model);
-                                }
-
-                                ctx.systems.camera.frameBegin(false);
-                            };
-                        })(componentData, entity, this.context));
+                        scene.addModel(model);
+                    }
                 }
             }
-
-            this.renderingCubeMap = false;
         }
     });
 

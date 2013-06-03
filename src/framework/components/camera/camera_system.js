@@ -75,13 +75,7 @@ pc.extend(pc.fw, function () {
             description: "Activate camera when scene loads",
             type: "boolean",
             defaultValue: true            
-        }, {
-            name: "offscreen",
-            displayName: "Offscreen",
-            description: "Render to an offscreen buffer",
-            type: "boolean",
-            defaultValue: false
-        }, {
+        },{
             name: "camera",
             exposed: false
         }, {
@@ -153,10 +147,9 @@ pc.extend(pc.fw, function () {
                              0,4,1,5,2,6,3,7]); // Near to far edges
                 indexBuffer.unlock();
 
-                var format = new pc.gfx.VertexFormat();
-                format.begin();
-                format.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
-                format.end();
+                var format = new pc.gfx.VertexFormat(this.context.graphicsDevice, [
+                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                ]);
 
                 var vertexBuffer = new pc.gfx.VertexBuffer(this.context.graphicsDevice, format, 8, pc.gfx.BUFFER_DYNAMIC);
 
@@ -177,7 +170,7 @@ pc.extend(pc.fw, function () {
                 data.model = model;
             }
 
-            properties = ['model', 'camera', 'aspectRatio', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'offscreen', 'projection'];
+            properties = ['model', 'camera', 'aspectRatio', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'projection'];
     
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 

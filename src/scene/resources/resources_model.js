@@ -16,13 +16,13 @@ pc.extend(pc.resources, function () {
         };
 
         this._jsonToVertexElementType = {
-            "int8":     pc.gfx.VertexElementType.INT8,
-            "uint8":    pc.gfx.VertexElementType.UINT8,
-            "int16":    pc.gfx.VertexElementType.INT16,
-            "uint16":   pc.gfx.VertexElementType.UINT16,
-            "int32":    pc.gfx.VertexElementType.INT32,
-            "uint32":   pc.gfx.VertexElementType.UINT32,
-            "float32":  pc.gfx.VertexElementType.FLOAT32
+            "int8":     pc.gfx.ELEMENTTYPE_INT8,
+            "uint8":    pc.gfx.ELEMENTTYPE_UINT8,
+            "int16":    pc.gfx.ELEMENTTYPE_INT16,
+            "uint16":   pc.gfx.ELEMENTTYPE_UINT16,
+            "int32":    pc.gfx.ELEMENTTYPE_INT32,
+            "uint32":   pc.gfx.ELEMENTTYPE_UINT32,
+            "float32":  pc.gfx.ELEMENTTYPE_FLOAT32
         };
 
         this._jsonToLightType = {
@@ -432,16 +432,18 @@ pc.extend(pc.resources, function () {
             vertex_texCoord6: pc.gfx.SEMANTIC_TEXCOORD6,
             vertex_texCoord7: pc.gfx.SEMANTIC_TEXCOORD7
         }
-        var vertexFormat = new pc.gfx.VertexFormat();
-        vertexFormat.begin();
+        var formatDesc = [];
         for (i = 0; i < geomData.attributes.length; i++) {
             attribute = geomData.attributes[i];
 
-            // Create the vertex format for this buffer
-            var attributeType = this._jsonToVertexElementType[attribute.type];
-            vertexFormat.addElement(new pc.gfx.VertexElement(semanticMap[attribute.name], attribute.components, attributeType));
+            formatDesc.push({
+                semantic: semanticMap[attribute.name],
+                components: attribute.components,
+                type: this._jsonToVertexElementType[attribute.type],
+                normalize: false
+            });
         }
-        vertexFormat.end();
+        var vertexFormat = new pc.gfx.VertexFormat(this._device, formatDesc);
 
         // Create the vertex buffer
         var numVertices = geomData.attributes[0].data.length / geomData.attributes[0].components;
@@ -975,57 +977,55 @@ pc.extend(pc.resources, function () {
     }
 
     function translateFormat(attributes) {
-        var vertexFormat = new pc.gfx.VertexFormat();
+        var vertexDesc = [];
 
-        vertexFormat.begin();
         if (attributes & attribs.POSITION) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_POSITION, 3, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.NORMAL) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_NORMAL, 3, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_NORMAL, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (pc.gfx.precalculatedTangents) {
             // If we've got positions, normals and uvs, add tangents which will be auto-generated
             if ((attributes & attribs.POSITION) && (attributes & attribs.NORMAL) && (attributes & attribs.UV0)) {
-                vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TANGENT, 4, pc.gfx.VertexElementType.FLOAT32));
+                vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TANGENT, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
             }
         }
         if (attributes & attribs.COLORS) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_COLOR, 4, pc.gfx.VertexElementType.UINT8), true);
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_COLOR, components: 4, type: pc.gfx.ELEMENTTYPE_UINT8, normalize: true });
         }
         if (attributes & attribs.BONEINDICES) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_BLENDINDICES, 4, pc.gfx.VertexElementType.UINT8));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_BLENDINDICES, components: 4, type: pc.gfx.ELEMENTTYPE_UINT8 });
         }
         if (attributes & attribs.BONEWEIGHTS) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_BLENDWEIGHT, 4, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_BLENDWEIGHT, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.UV0) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD0, 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD0, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.UV1) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD1, 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD1, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.UV2) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD2, 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD2, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.UV3) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD3, 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD3, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.UV4) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD4, 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD4, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.UV5) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD5, 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD5, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.UV6) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD6, 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD6, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
         if (attributes & attribs.UV7) {
-            vertexFormat.addElement(new pc.gfx.VertexElement(pc.gfx.SEMANTIC_TEXCOORD7, 2, pc.gfx.VertexElementType.FLOAT32));
+            vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD7, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
         }
-        vertexFormat.end();
 
-        return vertexFormat;
+        return vertexDesc;
     }
 
     function generateTangentsInPlace(vertexBuffer, indexBuffer) {
@@ -1528,8 +1528,8 @@ pc.extend(pc.resources, function () {
             var stride = this.readU32();
 
             // Create the vertex buffer format
-            var vertexFormat = translateFormat(format);
-
+            var vertexDesc = translateFormat(format);
+            var vertexFormat = new pc.gfx.VertexFormat(this.device, vertexDesc);
             var vertexBuffer = new pc.gfx.VertexBuffer(this.device, vertexFormat, count);
             var vbuff = vertexBuffer.lock();
             var dst = new Uint8Array(vbuff);

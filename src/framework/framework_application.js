@@ -44,8 +44,6 @@ pc.extend(pc.fw, function () {
         // Create the graphics device
         this.graphicsDevice = new pc.gfx.Device(canvas);
 
-        pc.gfx.post.initialize(this.graphicsDevice);
-
         // Enable validation of each WebGL command
         this.graphicsDevice.enableValidation(false);            
 
@@ -78,7 +76,6 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
-        var bloomsys = new pc.fw.BloomComponentSystem(this.context);
         var modelsys = new pc.fw.ModelComponentSystem(this.context);
         var camerasys = new pc.fw.CameraComponentSystem(this.context);
         var cubemapsys = new pc.fw.CubeMapComponentSystem(this.context);

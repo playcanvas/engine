@@ -3,6 +3,32 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.107.1
+--------
+* [FIX] pc.Color accepts another pc.Color as a constructor argument
+
+--------
+v0.107.0
+--------
+* [BREAKING] Removed Bloom Component
+* [BREAKING] Removed 'offscreen' attribute from Camera Component
+* [BREAKING] Changed pc.gfx.VertexElementType to pc.gfx.ELEMENTTYPE_
+* [BREAKING] Removed pc.gfx.VertexElement
+* [FIX] Cubemap Component no longer crashes
+* Added new pc.posteffect namespace for Post Effects
+* Added Bloom, FXAA and Luminosity post effects
+
+--------
+v0.106.2
+--------
+* [FIX] ResourceLoader now correctly loads identical child resources concurrently.
+
+--------
+v0.106.1
+--------
+* Added generic vertex semantics for things like particle data.
+
+--------
 v0.106.0
 --------
 * [BREAKING] Frame buffers are now render targets
