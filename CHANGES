@@ -3,6 +3,22 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.107.4
+--------
+* [FIX] Static cubemap component fixed.
+* Add camera component property to get/set the render target.
+
+--------
+v0.107.3
+--------
+* [FIX] Flip skybox in X.
+
+--------
+v0.107.2
+--------
+* Docs improvements.
+
+--------
 v0.107.1
 --------
 * [FIX] pc.Color accepts another pc.Color as a constructor argument

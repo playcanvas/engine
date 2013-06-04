@@ -17,6 +17,10 @@ pc.extend(pc.fw, function () {
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
     * @property {pc.scene.Projection} projection The type of projection used to render the camera.
     * @property {Boolean} activate Activate on load. If true the {@link pc.fw.CameraComponentSystem} will set {@link pc.fw.CameraComponentSystem#current} to this camera as soon as it is loaded.
+    * @property {pc.gfx.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
+    * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
+    * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
+    * effects).
     */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
@@ -28,6 +32,7 @@ pc.extend(pc.fw, function () {
         this.on("set_nearClip", this.onSetNearClip, this);
         this.on("set_farClip", this.onSetFarClip, this);
         this.on("set_projection", this.onSetProjection, this);
+        this.on("set_renderTarget", this.onSetRenderTarget, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
 
@@ -60,9 +65,10 @@ pc.extend(pc.fw, function () {
             this.entity.addChild(newValue);
         },
         onSetClearColor: function (name, oldValue, newValue) {
-            this.data.camera.getClearOptions().color[0] = newValue.r;
-            this.data.camera.getClearOptions().color[1] = newValue.g;
-            this.data.camera.getClearOptions().color[2] = newValue.b;
+            var clearOptions = this.data.camera.getClearOptions();
+            clearOptions.color[0] = newValue.r;
+            clearOptions.color[1] = newValue.g;
+            clearOptions.color[2] = newValue.b;
         },
         onSetFov: function (name, oldValue, newValue) {
             this.data.camera.setFov(newValue);
@@ -78,6 +84,9 @@ pc.extend(pc.fw, function () {
         },
         onSetProjection: function (name, oldValue, newValue) {
             this.data.camera.setProjection(newValue);
+        },
+        onSetRenderTarget: function (name, oldValue, newValue) {
+            this.data.camera.setRenderTarget(newValue);
         }
     });
 

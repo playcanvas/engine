@@ -84,6 +84,9 @@ pc.extend(pc.fw, function () {
         }, {
             name: "model",
             exposed: false
+        }, {
+            name: "renderTarget",
+            exposed: false
         }];
 
         this.exposeProperties();
@@ -170,7 +173,7 @@ pc.extend(pc.fw, function () {
                 data.model = model;
             }
 
-            properties = ['model', 'camera', 'aspectRatio', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'projection'];
+            properties = ['model', 'camera', 'aspectRatio', 'renderTarget', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'projection'];
     
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 

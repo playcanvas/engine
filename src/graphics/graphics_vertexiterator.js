@@ -60,10 +60,11 @@ pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.VertexIterator
      * @class A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
-     * @description Returns a new pc.gfx.VertexIterator object.
+     * @constructor Returns a new pc.gfx.VertexIterator object.
+     * @param {pc.gfx.VertexBuffer} vertexBuffer The vertex buffer to be iterated.
      * @author Will Eastcott
      */
-    var VertexIterator = function VertexIterator(vertexBuffer) {
+    function VertexIterator(vertexBuffer) {
         // Store the vertex buffer
         this.vertexBuffer = vertexBuffer;
 
@@ -81,7 +82,7 @@ pc.extend(pc.gfx, function () {
             this.setters[i] = new VertexIteratorSetter(this.buffer, vertexElement);
             this.element[vertexElement.name] = this.setters[i];
         }
-    };
+    }
 
     VertexIterator.prototype = {
         /**
@@ -90,14 +91,14 @@ pc.extend(pc.gfx, function () {
          * @description Moves the vertex iterator on to the next vertex.
          * @example
          * var iterator = new pc.gfx.VertexIterator(vertexBuffer);
-         * iterator.element.aPosition.set(-0.9, -0.9, 0.0);
-         * iterator.element.aColor.set(255, 0, 0, 255);
+         * iterator.element[pc.gfx.SEMANTIC_POSTIION].set(-0.9, -0.9, 0.0);
+         * iterator.element[pc.gfx.SEMANTIC_COLOR].set(255, 0, 0, 255);
          * iterator.next();
-         * iterator.element.aPosition.set(0.9, -0.9, 0.0);
-         * iterator.element.aColor.set(0, 255, 0, 255);
+         * iterator.element[pc.gfx.SEMANTIC_POSTIION].set(0.9, -0.9, 0.0);
+         * iterator.element[pc.gfx.SEMANTIC_COLOR].set(0, 255, 0, 255);
          * iterator.next();
-         * iterator.element.aPosition.set(0.0, 0.9, 0.0);
-         * iterator.element.aColor.set(0, 0, 255, 255);
+         * iterator.element[pc.gfx.SEMANTIC_POSTIION].set(0.0, 0.9, 0.0);
+         * iterator.element[pc.gfx.SEMANTIC_COLOR].set(0, 0, 255, 255);
          * iterator.end();
          * @author Will Eastcott
          */
@@ -121,14 +122,14 @@ pc.extend(pc.gfx, function () {
          * the vertex buffer is unlocked and vertex data is uploaded to video memory.
          * @example
          * var iterator = new pc.gfx.VertexIterator(vertexBuffer);
-         * iterator.element.aPosition.set(-0.9, -0.9, 0.0);
-         * iterator.element.aColor.set(255, 0, 0, 255);
+         * iterator.element[pc.gfx.SEMANTIC_POSTIION].set(-0.9, -0.9, 0.0);
+         * iterator.element[pc.gfx.SEMANTIC_COLOR].set(255, 0, 0, 255);
          * iterator.next();
-         * iterator.element.aPosition.set(0.9, -0.9, 0.0);
-         * iterator.element.aColor.set(0, 255, 0, 255);
+         * iterator.element[pc.gfx.SEMANTIC_POSTIION].set(0.9, -0.9, 0.0);
+         * iterator.element[pc.gfx.SEMANTIC_COLOR].set(0, 255, 0, 255);
          * iterator.next();
-         * iterator.element.aPosition.set(0.0, 0.9, 0.0);
-         * iterator.element.aColor.set(0, 0, 255, 255);
+         * iterator.element[pc.gfx.SEMANTIC_POSTIION].set(0.0, 0.9, 0.0);
+         * iterator.element[pc.gfx.SEMANTIC_COLOR].set(0, 0, 255, 255);
          * iterator.end();
          * @author Will Eastcott
          */

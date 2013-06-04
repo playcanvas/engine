@@ -2,10 +2,14 @@ pc.extend(pc.fw, function () {
     /**
      * @component
      * @name pc.fw.PointLightComponent
-     * @constructor Create a new PointLightComponent
-     * @class The Point Light Component attaches a Point Light node to the Entity
-     * @param {pc.fw.PointLightComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.fw.Entity} entity The Entity that this Component is attached to
+     * @class The Point Light Component attaches a Point Light node to the Entity.
+     * @constructor Creates a new PointLightComponent.
+     * @param {pc.fw.PointLightComponentSystem} system The ComponentSystem that created this Component.
+     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
+     * @property {Boolean} enable Enable the light.
+     * @property {pc.Color} color The color of the light.
+     * @property {Number} intensity The intensity of the light.
+     * @property {Number} attenuationEnd The radius of the light at which its contribution falls to zero.
      * @extends pc.fw.Component
      */
     var PointLightComponent = function (system, entity) {
