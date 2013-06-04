@@ -55,10 +55,13 @@
 ../src/graphics/programlib/programlib_phong.js
 ../src/graphics/programlib/programlib_pick.js
 ../src/graphics/programlib/programlib_skybox.js
-../src/posteffect/posteffect_post.js
+../src/posteffect/posteffect_posteffect.js
+../src/posteffect/posteffect_blend.js
 ../src/posteffect/posteffect_bloom.js
+../src/posteffect/posteffect_edgedetect.js
 ../src/posteffect/posteffect_fxaa.js
 ../src/posteffect/posteffect_luminosity.js
+../src/posteffect/posteffect_sepia.js
 ../src/posteffect/posteffect_vignette.js
 ../src/scene/scene_scene.js
 ../src/scene/scene_graphnode.js

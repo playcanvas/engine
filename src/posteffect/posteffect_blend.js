@@ -1,6 +1,6 @@
 pc.extend(pc.posteffect, function () {
 
-    function Luminosity(graphicsDevice) {
+    function Blend(graphicsDevice) {
         this.device = graphicsDevice;
 
         this.shader = new pc.gfx.Shader(graphicsDevice, {
@@ -21,33 +21,41 @@ pc.extend(pc.posteffect, function () {
             fshader: [
                 "precision mediump float;",
                 "",
+                "uniform float uMixRatio;",
                 "uniform sampler2D uColorBuffer;",
+                "uniform sampler2D uBlendMap;",
                 "",
                 "varying vec2 vUv0;",
                 "",
-                "void main() {",
-                    "vec4 texel = texture2D(uColorBuffer, vUv0);",
-                    "vec3 luma = vec3(0.299, 0.587, 0.114);",
-                    "float v = dot(texel.xyz, luma);",
-                    "gl_FragColor = vec4(v, v, v, texel.w);",
+                "void main(void)",
+                "{",
+                "    vec4 texel1 = texture2D(uColorBuffer, vUv0);",
+                "    vec4 texel2 = texture2D(uBlendMap, vUv0);",
+                "    gl_FragColor = mix(texel1, texel2, uMixRatio);",
                 "}"
             ].join("\n")
         });
 
         this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
+
+        // Uniforms
+        this.mixRatio = 0.5;
+        this.blendMap = new pc.gfx.Texture(graphicsDevice);
     }
 
-    Luminosity.prototype = {
+    Blend.prototype = {
         render: function (inputTarget, outputTarget) {
             var device = this.device;
             var scope = device.scope;
 
+            scope.resolve("uMixRatio").setValue(this.mixRatio);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
+            scope.resolve("uBlendMap").setValue(this.blendMap);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
         }
     };
 
     return {
-        Luminosity: Luminosity
+        Blend: Blend
     };
 }());
