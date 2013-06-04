@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.108.0
+--------
+* [FIX] Check for supported audio types when loading for Web Audio API
+* Added sepia post effect
+* Added blend post effect
+* Added edge detect post effect
+
+--------
 v0.107.4
 --------
 * [FIX] Static cubemap component fixed.
