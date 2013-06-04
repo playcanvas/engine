@@ -11,7 +11,11 @@ pc.extend(pc.resources, function () {
             var sound = self.manager.createSound(request.canonical, function (sound) {
                 resolve(sound);
             }, function (error) {
-                reject(error);
+                logERROR(error);
+                // Resolve a success even if there is an error loading.
+                // Audio resources might fail if they are in an unsupported format.
+                // However, we'd still want to the game to load, we handle Sounds that didn't load in the component
+                resolve(sound);
             });
         });
         
