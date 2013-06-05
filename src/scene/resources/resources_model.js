@@ -715,9 +715,10 @@ pc.extend(pc.resources, function () {
         }
 
         var vertexBuffers = [];
+        var attribute, attributeName;
+
         for (i = 0; i < modelData.vertices.length; i++) {
             var vertexData = modelData.vertices[i];
-            var attribute, attributeName;
 
             // Check to see if we need to generate tangents
             if (vertexData.position && vertexData.normal && vertexData.texCoord0) {
@@ -731,17 +732,18 @@ pc.extend(pc.resources, function () {
                 vertexData.tangent = { type: "float32", components: 4, data: tangents };
             }
 
-            // Generate the vertex format for the geometry's vertex buffer
-            var vertexFormat = new pc.gfx.VertexFormat();
-            vertexFormat.begin();
-            for (attributeName in vertexData) {
+            var formatDesc = [];
+            for(attributeName in vertexData) {
                 attribute = vertexData[attributeName];
 
-                // Create the vertex format for this buffer
-                var attributeType = this._jsonToVertexElementType[attribute.type];
-                vertexFormat.addElement(new pc.gfx.VertexElement(attributeMap[attributeName], attribute.components, attributeType));
+                formatDesc.push({
+                    semantic: attributeMap[attributeName],
+                    components: attribute.components,
+                    type: this._jsonToVertexElementType[attribute.type],
+                    normalize: false
+                });
             }
-            vertexFormat.end();
+            var vertexFormat = new pc.gfx.VertexFormat(this._device, formatDesc);
 
             // Create the vertex buffer
             var numVertices = vertexData.position.data.length / vertexData.position.components;
