@@ -66,6 +66,7 @@
 ../src/posteffect/posteffect_sepia.js
 ../src/posteffect/posteffect_vignette.js
 ../src/scene/scene_scene.js
+../src/scene/scene_forwardrenderer.js
 ../src/scene/scene_graphnode.js
 ../src/scene/scene_cameranode.js
 ../src/scene/scene_lightnode.js
