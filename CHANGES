@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.109.1
+--------
+* [FIX] 109 broke scene rendering/picking in Designer.
+
+--------
 v0.109.0
 --------
 * Added a forward render for scene rendering.
