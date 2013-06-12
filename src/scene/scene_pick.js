@@ -133,7 +133,7 @@ pc.extend(pc.scene, function () {
         var viewProjMat = pc.math.mat4.multiply(projMat, viewMat);
         viewProjId.setValue(viewProjMat);
 
-        for (i = 0; i < numMeshInstances; i++) {
+        for (i = 0; i < numDrawCalls; i++) {
             if (!drawCalls[i].command) {
                 meshInstance = drawCalls[i];
                 mesh = meshInstance.mesh;
