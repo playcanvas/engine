@@ -39,7 +39,7 @@ pc.extend(pc.posteffect, function () {
                 "    G[0] = g0;",
                 "    G[1] = g1;",
                 "",
-                     /* fetch the 3x3 neighbourhood and use the RGB vector's length as intensity value */
+                     /* Fetch the 3x3 neighbourhood and use the RGB vector's length as intensity value */
                 "    for (float i = 0.0; i < 3.0; i++)",
                 "    {",
                 "        for (float j = 0.0; j < 3.0; j++)",
@@ -49,7 +49,7 @@ pc.extend(pc.posteffect, function () {
                 "         }",
                 "    }",
                 "",
-                     /* calculate the convolution values for all the masks */
+                     /* Calculate the convolution values for all the masks */
                 "    for (int i=0; i<2; i++)",
                 "    {",
                 "        float dp3 = dot(G[i][0], I[0]) + dot(G[i][1], I[1]) + dot(G[i][2], I[2]);",

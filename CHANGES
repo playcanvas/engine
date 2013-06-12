@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.109.0
+--------
+* Added a forward render for scene rendering.
+* Added Bokeh post effect.
+* Added depth shader.
+
+--------
 v0.108.0
 --------
 * [FIX] Check for supported audio types when loading for Web Audio API
