@@ -78,7 +78,7 @@ pc.extend(pc.scene, function () {
             var index = pixel[0] << 16 | pixel[1] << 8 | pixel[2];
             // White is 'no selection'
             if (index !== 0xffffff) {
-                var selectedMeshInstance = this.scene.meshInstances[index];
+                var selectedMeshInstance = this.scene.drawCalls[index];
                 if (selection.indexOf(selectedMeshInstance) === -1) {
                     selection.push(selectedMeshInstance);
                 }
@@ -116,8 +116,8 @@ pc.extend(pc.scene, function () {
         var i;
         var mesh, meshInstance;
         var type;
-        var meshInstances = scene.meshInstances;
-        var numMeshInstances = meshInstances.length;
+        var drawCalls = scene.drawCalls;
+        var numDrawCalls = drawCalls.length;
         var device = this.device;
         var scope = device.scope;
         var modelMatrixId = scope.resolve('matrix_model');
@@ -133,27 +133,29 @@ pc.extend(pc.scene, function () {
         var viewProjMat = pc.math.mat4.multiply(projMat, viewMat);
         viewProjId.setValue(viewProjMat);
 
-        for (i = 0; i < numMeshInstances; i++) {
-            meshInstance = meshInstances[i];
-            mesh = meshInstance.mesh;
+        for (i = 0; i < numDrawCalls; i++) {
+            if (!drawCalls[i].command) {
+                meshInstance = drawCalls[i];
+                mesh = meshInstance.mesh;
 
-            type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type; 
-            if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP)) {
-                modelMatrixId.setValue(meshInstance.node.worldTransform);
-                if (meshInstance.skinInstance) {
-                    poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type; 
+                if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP)) {
+                    modelMatrixId.setValue(meshInstance.node.worldTransform);
+                    if (meshInstance.skinInstance) {
+                        poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                    }
+
+                    this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;
+                    this.pickColor[1] = ((i >> 8) & 0xff) / 255.0;
+                    this.pickColor[2] = (i & 0xff) / 255.0;
+                    this.pickColor[3] = 1.0;
+                    pickColorId.setValue(this.pickColor);
+                    device.setShader(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
+
+                    device.setVertexBuffer(mesh.vertexBuffer, 0);
+                    device.setIndexBuffer(mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID]);
+                    device.draw(mesh.primitive[pc.scene.RENDERSTYLE_SOLID]);
                 }
-
-                this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;
-                this.pickColor[1] = ((i >> 8) & 0xff) / 255.0;
-                this.pickColor[2] = (i & 0xff) / 255.0;
-                this.pickColor[3] = 1.0;
-                pickColorId.setValue(this.pickColor);
-                device.setShader(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
-
-                device.setVertexBuffer(mesh.vertexBuffer, 0);
-                device.setIndexBuffer(mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID]);
-                device.draw(mesh.primitive[pc.scene.RENDERSTYLE_SOLID]);
             }
         }
 
