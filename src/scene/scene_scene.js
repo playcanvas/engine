@@ -289,6 +289,58 @@ pc.extend(pc.scene, function () {
         }
     };
 
+    Scene.prototype.setCamera = function (cam, device) {
+        var scope = device.scope;
+        var projId = scope.resolve('matrix_projection');
+        var viewId = scope.resolve('matrix_view');
+        var viewInvId = scope.resolve('matrix_viewInverse');
+        var viewProjId = scope.resolve('matrix_viewProjection');
+        var viewPosId = scope.resolve('view_position');
+        var nearClipId = scope.resolve('camera_near');
+        var farClipId = scope.resolve('camera_far');
+
+        // Projection Matrix
+        var projMat = cam.getProjectionMatrix();
+        projId.setValue(projMat);
+
+        // ViewInverse Matrix
+        var wtm = cam.getWorldTransform();
+        viewInvId.setValue(wtm);
+
+        // View Matrix
+        pc.math.mat4.invert(wtm, viewMat);
+        viewId.setValue(viewMat);
+
+        // ViewProjection Matrix
+        pc.math.mat4.multiply(projMat, viewMat, viewProjMat);
+        viewProjId.setValue(viewProjMat);
+
+        // View Position (world space)
+        viewPosId.setValue(cam.getPosition());
+
+        // Near and far clip values
+        nearClipId.setValue(cam.getNearClip());
+        farClipId.setValue(cam.getFarClip());
+
+        cam._frustum.update(projMat, viewMat);
+
+        var target = cam.getRenderTarget();
+        device.setRenderTarget(target);
+        device.updateBegin();
+
+        var rect = cam.getRect();
+        var pixelWidth = target ? target.width : device.width;
+        var pixelHeight = target ? target.height : device.height;
+        var x = Math.floor(rect.x * pixelWidth);
+        var y = Math.floor(rect.y * pixelHeight);
+        var w = Math.floor(rect.width * pixelWidth);
+        var h = Math.floor(rect.height * pixelHeight);
+        device.setViewport(x, y, w, h);
+        device.setScissor(x, y, w, h);
+
+        device.clear(cam.getClearOptions());
+    }
+
     /**
      * @function
      * @name pc.scene.Scene#render
@@ -299,22 +351,30 @@ pc.extend(pc.scene, function () {
 
         if (!this._shadersCreated) {
             var library = device.getProgramLibrary();
-            this._depthProgStatic = library.getProgram('depth', {
+            this._depthProgStatic = library.getProgram('depthrgba', {
                 skin: false,
                 opacityMap: false
             });
-            this._depthProgSkin = library.getProgram('depth', {
+            this._depthProgSkin = library.getProgram('depthrgba', {
                 skin: true,
                 opacityMap: false
             });
-            this._depthProgStaticOp = library.getProgram('depth', {
+            this._depthProgStaticOp = library.getProgram('depthrgba', {
                 skin: false,
                 opacityMap: true
             });
-            this._depthProgSkinOp = library.getProgram('depth', {
+            this._depthProgSkinOp = library.getProgram('depthrgba', {
                 skin: true,
                 opacityMap: true
             });
+
+            this._depthShaderStatic = library.getProgram('depth', {
+                skin: false
+            });
+            this._depthShaderSkin = library.getProgram('depth', {
+                skin: true
+            });
+
             this._shadersCreated = true;
         }
 
@@ -324,56 +384,6 @@ pc.extend(pc.scene, function () {
         var scope = device.scope;
         var modelMatrixId = scope.resolve('matrix_model');
         var poseMatrixId = scope.resolve('matrix_pose[0]');
-        var projId = scope.resolve('matrix_projection');
-        var viewId = scope.resolve('matrix_view');
-        var viewInvId = scope.resolve('matrix_viewInverse');
-        var viewProjId = scope.resolve('matrix_viewProjection');
-        var viewPosId = scope.resolve('view_position');
-        var nearClipId = scope.resolve('camera_near');
-        var farClipId = scope.resolve('camera_far');
-
-        var setCamera = function (cam) {
-            // Projection Matrix
-            var projMat = cam.getProjectionMatrix();
-            projId.setValue(projMat);
-
-            // ViewInverse Matrix
-            var wtm = cam.getWorldTransform();
-            viewInvId.setValue(wtm);
-
-            // View Matrix
-            pc.math.mat4.invert(wtm, viewMat);
-            viewId.setValue(viewMat);
-
-            // ViewProjection Matrix
-            pc.math.mat4.multiply(projMat, viewMat, viewProjMat);
-            viewProjId.setValue(viewProjMat);
-
-            // View Position (world space)
-            viewPosId.setValue(cam.getPosition());
-
-            // Near and far clip values
-            nearClipId.setValue(cam.getNearClip());
-            farClipId.setValue(cam.getFarClip());
-
-            cam._frustum.update(projMat, viewMat);
-
-            var target = cam.getRenderTarget();
-            device.setRenderTarget(target);
-            device.updateBegin();
-
-            var rect = cam.getRect();
-            var pixelWidth = target ? target.width : device.width;
-            var pixelHeight = target ? target.height : device.height;
-            var x = Math.floor(rect.x * pixelWidth);
-            var y = Math.floor(rect.y * pixelHeight);
-            var w = Math.floor(rect.width * pixelWidth);
-            var h = Math.floor(rect.height * pixelHeight);
-            device.setViewport(x, y, w, h);
-            device.setScissor(x, y, w, h);
-
-            device.clear(cam.getClearOptions());
-        }
 
         this._globalLights.length = 0;
         this._localLights[0].length = 0;
@@ -410,7 +420,45 @@ pc.extend(pc.scene, function () {
             }
         }
 
-        var calcBbox = false;
+        // Sort meshes into the correct render order
+        this.drawCalls.sort(sortDrawCalls);
+
+        if (camera._depthTarget) {
+            var oldTarget = camera.getRenderTarget();
+            camera.setRenderTarget(camera._depthTarget);
+
+            this.setCamera(camera, device);
+
+            device.updateLocalState(this._shadowState);
+
+            for (i = 0, numDrawCalls = this.drawCalls.length; i < numDrawCalls; i++) {
+                drawCall = this.drawCalls[i];
+                if (!drawCall.command) {
+                    meshInstance = drawCall;
+                    if (meshInstance.layer !== pc.scene.LAYER_SKYBOX) {
+                        mesh = meshInstance.mesh;
+
+                        modelMatrixId.setValue(meshInstance.node.worldTransform);
+                        if (meshInstance.skinInstance) {
+                            poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                            device.setShader(this._depthShaderSkin);
+                        } else {
+                            device.setShader(this._depthShaderStatic);
+                        }
+
+                        style = meshInstance.renderStyle;
+
+                        device.setVertexBuffer(mesh.vertexBuffer, 0);
+                        device.setIndexBuffer(mesh.indexBuffer[style]);
+                        device.draw(mesh.primitive[style]);
+                    }
+                }
+
+                device.clearLocalState();
+
+                camera.setRenderTarget(oldTarget);
+            }
+        }
 
         // Render all shadowmaps
         for (i = 0; i < lights.length; i++) {
@@ -510,7 +558,7 @@ pc.extend(pc.scene, function () {
                 // Point the camera along direction of light
                 pc.math.mat4.copy(shadowCamWtm, shadowCam.worldTransform);
 
-                setCamera(shadowCam);
+                this.setCamera(shadowCam, device);
 
                 if (device.extDepthTexture) {
                     device.gl.colorMask(false, false, false, false);
@@ -549,10 +597,7 @@ pc.extend(pc.scene, function () {
             }
         }
 
-        // Sort meshes into the correct render order
-        this.drawCalls.sort(sortDrawCalls);
-
-        setCamera(camera);
+        this.setCamera(camera, device);
 
         this.dispatchGlobalLights(device);
         this.dispatchLocalLights(device);
