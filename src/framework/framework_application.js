@@ -68,6 +68,8 @@ pc.extend(pc.fw, function () {
             var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
         }
 
+        this.renderer = new pc.scene.ForwardRenderer(this.graphicsDevice);
+
 		// The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
     
@@ -307,7 +309,7 @@ pc.extend(pc.fw, function () {
             if (cameraEntity) {
                 context.systems.camera.frameBegin();
 
-                context.scene.render(cameraEntity.camera.camera, this.graphicsDevice);
+                this.renderer.render(context.scene, cameraEntity.camera.camera);
 
                 context.systems.camera.frameEnd();            
             }
