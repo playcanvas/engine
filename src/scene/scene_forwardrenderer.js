@@ -347,8 +347,8 @@ pc.extend(pc.scene, function () {
             var drawCall, meshInstance, mesh, material, prevMaterial = null, style;
 
             // Update all skin matrix palettes
-            for (i = 0, numDrawCalls = this.drawCalls.length; i < numDrawCalls; i++) {
-                drawCall = this.drawCalls[i];
+            for (i = 0, numDrawCalls = scene.drawCalls.length; i < numDrawCalls; i++) {
+                drawCall = scene.drawCalls[i];
                 if (drawCall.skinInstance) {
                     drawCall.skinInstance.updateMatrixPalette();
                 }
