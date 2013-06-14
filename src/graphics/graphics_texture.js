@@ -3,6 +3,7 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Texture
      * @class A texture is a container for texel data that can be utilized in a fragment shader.
      * Typically, the texel data represents an image that is mapped over geometry.
+     * @constructor Creates a new texture.
      * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this texture.
      * @param {Object} options Options that control the main properties of a texture.
      * @property {Number} minFilter The minification filter to be applied to the texture (see pc.gfx.FILTER_*).
@@ -426,10 +427,10 @@ pc.extend(pc.gfx, function () {
                 var face;
 
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 if ((pixels[0] instanceof HTMLCanvasElement) || (pixels[0] instanceof HTMLImageElement) || (pixels[0] instanceof HTMLVideoElement)) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
-                        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                         gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, this._glInternalFormat, this._glFormat, this._glPixelType, pixels[face]);
                     }
                 } else {

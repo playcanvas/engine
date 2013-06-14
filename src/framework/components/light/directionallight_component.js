@@ -1,16 +1,19 @@
 pc.extend(pc.fw, function () {
     /**
-    * @component
-    * @name pc.fw.DirectionalLightComponent
-    * @class The Directional Light Component enables the Entity to light the scene. The light is directional only so the position of the Entity has no effect.
-    * @param {pc.fw.DirectionalLightComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
-    * @extends pc.fw.Component
-    * @property {Boolean} enable Enable the light.
-    * @property {String} color The color of the light
-    * @property {Number} intensity The intensity of the light
-    * @property {Boolean} castShadows Enable shadow casting from this light
-    */
+     * @component
+     * @name pc.fw.DirectionalLightComponent
+     * @class The Directional Light Component enables the Entity to light the scene. The light is directional 
+     * only so the position of the attached entity has no effect.
+     * @constructor Creates a new DirectionalLightComponent.
+     * @param {pc.fw.DirectionalLightComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
+     * @extends pc.fw.Component
+     * @property {Boolean} enable Enable the light.
+     * @property {pc.Color} color The color of the light.
+     * @property {Number} intensity The intensity of the light.
+     * @property {Boolean} castShadows Enable shadow casting from this light.
+     * @property {Number} shadowResolution Resolution of the shadowmap used by this light. Must be a power of 2.
+     */
     var DirectionalLightComponent = function DirectionalLightComponent(system, entity) {
         this.on("set_color", this.onSetColor, this);
         this.on("set_enable", this.onSetEnable, this);

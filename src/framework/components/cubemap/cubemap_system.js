@@ -31,7 +31,7 @@ pc.extend(pc.fw, function () {
                 height: 256,
                 cubemap: true
             });
-            cubemap.minFilter = pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR;
+            cubemap.minFilter = pc.gfx.FILTER_LINEAR;
             cubemap.magFilter = pc.gfx.FILTER_LINEAR;
             cubemap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
             cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
@@ -90,10 +90,9 @@ pc.extend(pc.fw, function () {
                           { target: [ 0, 0,-1], up: [0,-1, 0]}
                         ];
                         var pos = entity.getPosition();
+                        var camera = componentData.camera;
 
                         for (var face = 0; face < 6; face++) {
-                            var camera = componentData.camera;
-
                             // Set the face of the cubemap
                             camera.setRenderTarget(componentData.targets[face]);
 

@@ -51,8 +51,8 @@ pc.extend(pc.fw, function () {
     
         this.audioManager = new pc.audio.AudioManager();
         
-		// Create resource loader
-		var loader = new pc.resources.ResourceLoader();
+        // Create resource loader
+        var loader = new pc.resources.ResourceLoader();
             
         // Display shows debug loading information. Only really fit for debug display at the moment.
         if (options.displayLoader) {
@@ -71,6 +71,8 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
+
+        this.renderer = new pc.scene.ForwardRenderer(this.graphicsDevice);
 
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
@@ -296,7 +298,7 @@ pc.extend(pc.fw, function () {
             if (cameraEntity) {
                 context.systems.camera.frameBegin();
 
-                context.scene.render(cameraEntity.camera.camera, this.graphicsDevice);
+                this.renderer.render(context.scene, cameraEntity.camera.camera);
 
                 context.systems.camera.frameEnd();            
             }

@@ -1,6 +1,6 @@
-pc.gfx.programlib.depth = {
+pc.gfx.programlib.depthrgba = {
     generateKey: function (device, options) {
-        var key = "depth";
+        var key = "depthrgba";
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam";
         return key;
@@ -62,15 +62,19 @@ pc.gfx.programlib.depth = {
         //////////////////////////////
         code = getSnippet(device, 'fs_precision');
 
-        code += 'uniform float camera_near;\n';
-        code += 'uniform float camera_far;\n';
+        if (options.opacityMap) {
+            code += 'varying vec2 vUv0;\n\n';
+            code += 'uniform sampler2D texture_opacityMap;\n\n';
+        }
 
         // FRAGMENT SHADER BODY
         code += getSnippet(device, 'common_main_begin');
 
-        code += "float depth = gl_FragCoord.z / gl_FragCoord.w;";
-        code += "float color = 1.0 - smoothstep(camera_near, camera_far, depth);";
-        code += "gl_FragColor = vec4(vec3(color), 1.0);";
+        if (options.opacityMap) {
+            code += '    if (texture2D(texture_opacityMap, vUv0).r < 0.25) discard;\n\n';
+        }
+
+        code += getSnippet(device, 'fs_depth_encode_rgba');
 
         code += getSnippet(device, 'common_main_end');
 

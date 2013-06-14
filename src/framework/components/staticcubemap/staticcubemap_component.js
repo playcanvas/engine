@@ -1,6 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
-     * @component
+     * @private
      * @name pc.fw.StaticCubeMapComponent
      * @class Creates a static cubemap from assigned images
      * @constructor Create a new StaticCubeMapComponent

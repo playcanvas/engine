@@ -42,6 +42,10 @@ pc.extend(pc.fw, function () {
             var channel;
             var componentData = this.data;            
             if(componentData.sources[name]) {
+                if (!componentData.sources[name].isLoaded) {
+                    logWARNING(pc.string.format("Audio asset '{0}' is not loaded (probably an unsupported format) and will not be played", name));
+                    return;
+                }
                 if (!componentData['3d']) {
                     channel = this.system.manager.playSound(componentData.sources[name], componentData);
                     componentData.currentSource = name;

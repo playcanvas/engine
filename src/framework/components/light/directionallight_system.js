@@ -1,9 +1,9 @@
 pc.extend(pc.fw, function () {
 /**
      * @name pc.fw.DirectionalLightComponentSystem
-     * @constructor Create a new DirectionalLightComponentSystem
-     * @class A Light Component is used to dynamically light the scene.
-     * @param {Object} context
+     * @constructor Create a new DirectionalLightComponentSystem.
+     * @class A Directional Light Component is used to dynamically light the scene.
+     * @param {pc.fw.ApplicationContext} context The application context.
      * @extends pc.fw.ComponentSystem
      */
     var DirectionalLightComponentSystem = function (context) {
