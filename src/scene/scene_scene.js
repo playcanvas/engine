@@ -403,10 +403,10 @@ pc.extend(pc.scene, function () {
         var drawCall, meshInstance, mesh, material, prevMaterial = null, style;
 
         // Update all skin matrix palettes
-        for (i = this._models.length - 1; i >= 0; i--) {
-            var skinInstances = this._models[i].skinInstances;
-            for (j = skinInstances.length - 1; j >= 0; j--) {
-                skinInstances[j].updateMatrixPalette();
+        for (i = 0, numDrawCalls = this.drawCalls.length; i < numDrawCalls; i++) {
+            drawCall = this.drawCalls[i];
+            if (drawCall.skinInstance) {
+                drawCall.skinInstance.updateMatrixPalette();
             }
         }
 
