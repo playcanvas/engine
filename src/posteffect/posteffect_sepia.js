@@ -1,6 +1,6 @@
 pc.extend(pc.posteffect, function () {
 
-    function Luminosity(graphicsDevice) {
+    function Sepia(graphicsDevice) {
         this.device = graphicsDevice;
 
         this.shader = new pc.gfx.Shader(graphicsDevice, {
@@ -21,33 +21,42 @@ pc.extend(pc.posteffect, function () {
             fshader: [
                 "precision mediump float;",
                 "",
+                "uniform float uAmount;",
                 "uniform sampler2D uColorBuffer;",
                 "",
                 "varying vec2 vUv0;",
                 "",
                 "void main() {",
-                    "vec4 texel = texture2D(uColorBuffer, vUv0);",
-                    "vec3 luma = vec3(0.299, 0.587, 0.114);",
-                    "float v = dot(texel.xyz, luma);",
-                    "gl_FragColor = vec4(v, v, v, texel.w);",
+                "    vec4 color = texture2D(uColorBuffer, vUv0);",
+                "    vec3 c = color.rgb;",
+                "",
+                "    color.r = dot(c, vec3(1.0 - 0.607 * uAmount, 0.769 * uAmount, 0.189 * uAmount));",
+                "    color.g = dot(c, vec3(0.349 * uAmount, 1.0 - 0.314 * uAmount, 0.168 * uAmount));",
+                "    color.b = dot(c, vec3(0.272 * uAmount, 0.534 * uAmount, 1.0 - 0.869 * uAmount));",
+                "",
+                "    gl_FragColor = vec4(min(vec3(1.0), color.rgb), color.a);",
                 "}"
             ].join("\n")
         });
 
         this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
+
+        // Uniforms
+        this.amount = 1;
     }
 
-    Luminosity.prototype = {
+    Sepia.prototype = {
         render: function (inputTarget, outputTarget) {
             var device = this.device;
             var scope = device.scope;
 
+            scope.resolve("uAmount").setValue(this.amount);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
         }
     };
 
     return {
-        Luminosity: Luminosity
+        Sepia: Sepia
     };
 }());

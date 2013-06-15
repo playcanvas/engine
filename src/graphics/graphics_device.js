@@ -75,6 +75,7 @@ pc.extend(pc.gfx, function () {
      * for submitting render state changes and graphics primitives to the hardware. A graphics
      * device is tied to a specific canvas HTML element. It is valid to have more than one 
      * canvas element per page and create a new graphics device against each.
+     * @constructor Creates a new graphics device.
      * @param {Object} canvas The canvas to which the graphics device is tied.
      * @property {Number} width Width of the back buffer in pixels (read-only).
      * @property {Number} height Height of the back buffer in pixels (read-only).
@@ -749,6 +750,71 @@ pc.extend(pc.gfx, function () {
          */
         getRenderTarget: function () {
             return this.renderTarget;
+        },
+
+
+        setDepthTest: function (depthTest) {
+            if (this.depthTest !== depthTest) {
+                var gl = this.gl;
+                if (depthTest) {
+                    gl.enable(gl.DEPTH_TEST);
+                } else {
+                    gl.disable(gl.DEPTH_TEST);
+                }
+                this.depthTest = depthTest;
+            }
+        },
+
+        setDepthWrite: function (writeDepth) {
+            if (this.writeDepth !== writeDepth) {
+                this.gl.depthMask(writeDepth);
+                this.writeDepth = writeDepth;
+            }
+        },
+
+        setColorWrite: function (writeRed, writeGreen, writeBlue, writeAlpha) {
+            if ((this.writeRed !== writeRed) ||
+                (this.writeGreen !== writeGreen) ||
+                (this.writeBlue !== writeBlue) ||
+                (this.writeAlpha !== writeAlpha)) {
+                this.gl.colorMask(writeRed, writeGreen, writeBlue, writeAlpha);
+                this.writeRed = writeRed;
+                this.writeGreen = writeGreen;
+                this.writeBlue = writeBlue;
+                this.writeAlpha = writeAlpha;
+            }
+        },
+
+        setFaceCulling: function (cullMode) {
+            if (this.cullMode !== cullMode) {
+                var gl = this.gl;
+                switch (cullMode) {
+                    case pc.gfx.CULLFACE_NONE:
+                        gl.disable(gl.CULL_FACE);
+                        break;
+                    case pc.gfx.CULLFACE_FRONT:
+                        gl.enable(gl.CULL_FACE);
+                        gl.cullMode(gl.FRONT);
+                        break;
+                    case pc.gfx.CULLFACE_BACK:
+                        gl.enable(gl.CULL_FACE);
+                        gl.cullMode(gl.BACK);
+                        break;
+                    case pc.gfx.CULLFACE_FRONTANDBACK:
+                        gl.enable(gl.CULL_FACE);
+                        gl.cullMode(gl.FRONT_AND_BACK);
+                        break;
+                }
+                this.cullMode = cullMode;
+            }
+        },
+
+        setFrontFace: function (winding) {
+            if (this.frontFace !== winding) {
+                var gl = this.gl;
+                gl.frontFace((winding === pc.gfx.FRONTFACE_CW) ? gl.CW : gl.CCW);
+                this.frontFace = winding;
+            }
         },
 
         /**

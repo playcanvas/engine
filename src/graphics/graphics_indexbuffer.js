@@ -1,8 +1,13 @@
 pc.extend(pc.gfx, function () {
     /**
      * @name pc.gfx.IndexBuffer
-     * @class An index buffer is the mechanism via which the application specifies vertex 
+     * @class An index buffer is the mechanism via which the application specifies primitive
      * index data to the graphics hardware.
+     * @constructor Creates a new index buffer.
+     * @example
+     * // Create an index buffer holding 3 16-bit indices
+     * // The buffer is marked as static, hinting that the buffer will never be modified
+     * var indexBuffer = new pc.gfx.IndexBuffer(graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, 3, pc.gfx.BUFFER_STATIC);
      * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this index buffer.
      * @param {Number} format The type of each index to be stored in the index buffer (see pc.gfx.INDEXFORMAT_*).
      * @param {Number} numIndices The number of indices to be stored in the index buffer.

@@ -3,6 +3,42 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.109.1
+--------
+* [FIX] 109 broke scene rendering/picking in Designer.
+
+--------
+v0.109.0
+--------
+* Added a forward render for scene rendering.
+* Added Bokeh post effect.
+* Added depth shader.
+
+--------
+v0.108.0
+--------
+* [FIX] Check for supported audio types when loading for Web Audio API
+* Added sepia post effect
+* Added blend post effect
+* Added edge detect post effect
+
+--------
+v0.107.4
+--------
+* [FIX] Static cubemap component fixed.
+* Add camera component property to get/set the render target.
+
+--------
+v0.107.3
+--------
+* [FIX] Flip skybox in X.
+
+--------
+v0.107.2
+--------
+* Docs improvements.
+
+--------
 v0.107.1
 --------
 * [FIX] pc.Color accepts another pc.Color as a constructor argument

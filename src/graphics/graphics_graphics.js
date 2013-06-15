@@ -129,6 +129,32 @@ pc.gfx = {
     CLEARFLAG_STENCIL: 4,
 
     /**
+     * @enum pc.gfx.CULLFACE
+     * @name pc.gfx.CULLFACE_NONE
+     * @description No triangles are culled.
+     */
+    CULLFACE_NONE: 0,
+    /**
+     * @enum pc.gfx.CULLFACE
+     * @name pc.gfx.CULLFACE_BACK
+     * @description Triangles facing away from the view direction are culled.
+     */
+    CULLFACE_BACK: 1,
+    /**
+     * @enum pc.gfx.CULLFACE
+     * @name pc.gfx.CULLFACE_FRONT
+     * @description Triangles facing the view direction are culled.
+     */
+    CULLFACE_FRONT: 2,
+    /**
+     * @enum pc.gfx.CULLFACE
+     * @name pc.gfx.CULLFACE_FRONTANDBACK
+     * @description Triangles are culled regardless of their orientation with respect to the view
+     * direction. Note that point or line primitives are unaffected by this render state.
+     */
+    CULLFACE_FRONTANDBACK: 3,
+
+    /**
      * @enum pc.gfx.ELEMENTTYPE
      * @name pc.gfx.ELEMENTTYPE_INT8
      * @description Signed byte vertex element type.
@@ -207,6 +233,19 @@ pc.gfx = {
      * @description Linearly interpolate both the mipmap levels and between texels.
      */
     FILTER_LINEAR_MIPMAP_LINEAR: 5,
+
+    /**
+     * @enum pc.gfx.FRONTFACE
+     * @name pc.gfx.FRONTFACE_CW
+     * @description Front facing polygons have a clockwise vertex winding.
+     */
+    FRONTFACE_CW: 0,
+    /**
+     * @enum pc.gfx.FRONTFACE
+     * @name pc.gfx.FRONTFACE_CCW
+     * @description Front facing polygons have an counter-clockwise vertex winding.
+     */
+    FRONTFACE_CCW: 1,
 
     /**
      * @enum pc.gfx.INDEXFORMAT

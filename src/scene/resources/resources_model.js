@@ -676,7 +676,6 @@ pc.extend(pc.resources, function () {
     * @param {Object} mapping An array of mapping data, for each mesh there should be a entry with a 'material' field mapping meshInstance to material asset
     */
     ModelResourceHandler.prototype._loadModelJsonV2 = function (data, mapping, options) {
-        // TODO: Support vertex semantics somehow...
         var attributeMap = {
             position: pc.gfx.SEMANTIC_POSITION,
             normal: pc.gfx.SEMANTIC_NORMAL,
@@ -695,7 +694,7 @@ pc.extend(pc.resources, function () {
         };
 
         var modelData = data.model;
-        var i;
+        var i, j;
 
         var nodes = [];
         for (i = 0; i < modelData.nodes.length; i++) {
@@ -714,9 +713,21 @@ pc.extend(pc.resources, function () {
             nodes[modelData.parents[i]].addChild(nodes[i]);
         }
 
+        var skins = [];
+        for (i = 0; i < modelData.skins.length; i++) {
+            var skinData = modelData.skins[i];
+
+            var inverseBindMatrices = [];
+            for (j = 0; j < skinData.inverseBindMatrices.length; j++) {
+                inverseBindMatrices[j] = pc.math.mat4.clone(skinData.inverseBindMatrices[j]);
+            }
+
+            var skin = new pc.scene.Skin(inverseBindMatrices, skinData.boneNames);
+            skins.push(skin);
+        }
+
         var vertexBuffers = [];
         var attribute, attributeName;
-
         for (i = 0; i < modelData.vertices.length; i++) {
             var vertexData = modelData.vertices[i];
 
@@ -813,7 +824,7 @@ pc.extend(pc.resources, function () {
             mesh.primitive[0].base = indexed ? (meshData.base + indexBase) : meshData.base;
             mesh.primitive[0].count = meshData.count;
             mesh.primitive[0].indexed = indexed;
-            mesh.skin = null;
+            mesh.skin = (typeof meshData.skin !== 'undefined') ? skins[meshData.skin] : null;
             mesh.aabb = aabb;
 
             if (indexed) {
@@ -830,19 +841,32 @@ pc.extend(pc.resources, function () {
         }
 
         var meshInstances = [];
+        var skinInstances = [];
         var defaultMaterial = new pc.scene.PhongMaterial();
         for (i = 0; i < modelData.meshInstances.length; i++) {
             var material = (mapping && mapping[i].material) ? this._loadMaterialV2(mapping[i].material) : defaultMaterial;
 
             var meshInstanceData = modelData.meshInstances[i];
 
-            var meshInstance = new pc.scene.MeshInstance(nodes[meshInstanceData.node], meshes[meshInstanceData.mesh], material);
+            var mesh = meshes[meshInstanceData.mesh];
+            var meshInstance = new pc.scene.MeshInstance(nodes[meshInstanceData.node], mesh, material);
+
+            if (mesh.skin) {
+                var skinInstance = new pc.scene.SkinInstance(mesh.skin);
+                meshInstance.skinInstance = skinInstance;
+                skinInstances.push(skinInstance);
+            }
+
             meshInstances.push(meshInstance);
         }
 
         var model = new pc.scene.Model();
         model.graph = nodes[0];
         model.meshInstances = meshInstances;
+        model.skinInstances = skinInstances;
+
+        // Resolve bone IDs to actual graph nodes
+        model.resolveBoneNames();
 
         model.getGraph().syncHierarchy();
 

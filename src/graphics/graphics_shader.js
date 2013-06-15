@@ -91,9 +91,12 @@ pc.extend(pc.gfx, function () {
         this.definition = definition;
 
         var gl = this.device.gl;
-        this.vertexShader = createShader(gl, gl.VERTEX_SHADER, definition.vshader);
-        this.fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, definition.fshader);
-        this.program = createProgram(gl, this.vertexShader, this.fragmentShader);
+        var vertexShader = createShader(gl, gl.VERTEX_SHADER, definition.vshader);
+        var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, definition.fshader);
+        this.program = createProgram(gl, vertexShader, fragmentShader);
+        gl.deleteShader(vertexShader);
+        gl.deleteShader(fragmentShader);
+
         this.attributes = [];
         this.uniforms = [];
         this.samplers = [];
@@ -125,6 +128,12 @@ pc.extend(pc.gfx, function () {
         while (i < numAttributes) {
             info = gl.getActiveAttrib(this.program, i++);
             location = gl.getAttribLocation(this.program, info.name);
+
+            // Check attributes are correctly linked up
+            if (typeof definition.attributes[info.name] === 'undefined') {
+                console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
+            }
+
             var attr = new pc.gfx.ShaderInput(graphicsDevice, definition.attributes[info.name], _typeToPc[info.type], location);
             this.attributes.push(attr);
         }
@@ -152,8 +161,6 @@ pc.extend(pc.gfx, function () {
          */
         destroy: function () {
             var gl = this.device.gl;
-            gl.deleteShader(this.vertexShader);
-            gl.deleteShader(this.fragmentShader);
             gl.deleteProgram(this.program);
         }
     };
