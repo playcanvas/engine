@@ -856,29 +856,32 @@ pc.extend(pc.resources, function () {
 
     ModelResourceHandler.prototype._loadTextureV2 = function(textureId) {
         var asset = this._assets.getAsset(textureId);
-
-        var url = asset.getFileUrl();
-        var textureData = asset.data;
-        if (url) {
-
-            var texture = this._assets.loader.getFromCache(url);
-            if (!texture) {
-                var texture = new pc.gfx.Texture(this._device, {
-                    format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
-                });
-
-                texture.name = textureData.name;
-                texture.addressU = this._jsonToAddressMode[textureData.addressu];
-                texture.addressV = this._jsonToAddressMode[textureData.addressv];
-                texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
-                texture.minFilter = this._jsonToFilterMode[textureData.minfilter];                
-            }
-
-            this._assets.load([asset], [texture], {});
-            return texture;
-        } else {
+        if (!asset) {
             return null;
         }
+
+        var url = asset.getFileUrl();
+        if (!url) {
+            return null;
+        }
+
+        var textureData = asset.data;
+
+        var texture = this._assets.loader.getFromCache(url);
+        if (!texture) {
+            var texture = new pc.gfx.Texture(this._device, {
+                format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
+            });
+
+            texture.name = textureData.name;
+            texture.addressU = this._jsonToAddressMode[textureData.addressu];
+            texture.addressV = this._jsonToAddressMode[textureData.addressv];
+            texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
+            texture.minFilter = this._jsonToFilterMode[textureData.minfilter];                
+        }
+
+        this._assets.load([asset], [texture], {});
+        return texture;
     };
 
     // Copy asset data into material
@@ -896,19 +899,21 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadMaterialV2 = function(materialId) {
-        var asset = this._assets.getAsset(materialId);
-        var materialData = asset.data;
         var material = new pc.scene.PhongMaterial();
         
-        this._updatePhongMaterial(material, asset.data);
+        var asset = this._assets.getAsset(materialId);
+        if (asset) {
+            var materialData = asset.data;
+            this._updatePhongMaterial(material, asset.data);
 
-        // When running in the tools listen for change events on the asset so we can update the material
-        asset.on('change', function (asset, attribute, value) {
-            if (attribute === 'data') {
-                this._updatePhongMaterial(material, value);
-            }
-        }, this);
-
+            // When running in the tools listen for change events on the asset so we can update the material
+            asset.on('change', function (asset, attribute, value) {
+                if (attribute === 'data') {
+                    this._updatePhongMaterial(material, value);
+                }
+            }, this);
+        }
+        
         return material;
     };
 
