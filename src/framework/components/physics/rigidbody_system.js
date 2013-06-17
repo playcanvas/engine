@@ -178,6 +178,15 @@ pc.extend(pc.fw, function () {
             this.dynamicsWorld.removeRigidBody(body);
         },
 
+        addConstraint: function (constraint) {
+            this.dynamicsWorld.addConstraint(constraint);
+            return constraint;
+        },
+
+        removeConstraint: function (constraint) {
+            this.dynamicsWorld.removeConstraint(constraint);
+        },
+
         /**
         * @function
         * @name pc.fw.RigidBodyComponentSystem#setGravity
