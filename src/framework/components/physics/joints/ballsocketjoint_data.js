@@ -8,8 +8,8 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentData
      */
     var BallSocketJointComponentData = function () {
-        this.pivotA = [0, 0, 0];
-        this.pivotB = [0, 0, 0];
+        this.pivot = [0, 0, 0];
+        this.position = [0, 0, 0];
         this.tau = 0.3;
         this.damping = 1;
         this.impulseClamp = 0;

@@ -7,13 +7,13 @@ pc.extend(pc.fw, function () {
      * match in world space. A chain of rigidbodies can be connected using this constraint. 
      * @param {pc.fw.BallSocketJointComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
-     * @property {pc.math.vec3} pivotA The local space coordinate that constrains the entity's rigid body.
-     * @property {pc.math.vec3} pivotB The local space coordinate that constrains the entity's rigid body.
+     * @property {pc.math.vec3} pivot The position of the pivot in the local space of the entity.
+     * @property {pc.math.vec3} position The world space position of the constraint.
      * @extends pc.fw.Component
      */
     var BallSocketJointComponent = function BallSocketJointComponent (system, entity) {
-        this.on('set_pivotA', this.onSetPivotA, this);
-        this.on('set_pivotB', this.onSetPivotB, this);
+        this.on('set_pivot', this.onSetPivot, this);
+        this.on('set_position', this.onSetPosition, this);
         this.on('set_tau', this.onSetTau, this);
         this.on('set_damping', this.onSetDamping, this);
         this.on('set_impulseClamp', this.onSetImpulseClamp, this);
@@ -22,7 +22,7 @@ pc.extend(pc.fw, function () {
     
     pc.extend(BallSocketJointComponent.prototype, {
 
-        onSetPivotA: function (name, oldValue, newValue) {
+        onSetPivot: function (name, oldValue, newValue) {
             if (typeof(Ammo) !== 'undefined') {
                 if (this.data.constraint) {
                     var pivotA = new Ammo.btVector3(newValue[0], newValue[1], newValue[2]);
@@ -31,7 +31,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetPivotB: function (name, oldValue, newValue) {
+        onSetPosition: function (name, oldValue, newValue) {
             if (typeof(Ammo) !== 'undefined') {
                 if (this.data.constraint) {
                     var pivotB = new Ammo.btVector3(newValue[0], newValue[1], newValue[2]);

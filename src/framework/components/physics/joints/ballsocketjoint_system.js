@@ -14,9 +14,9 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.BallSocketJointComponentData;
 
         this.schema = [{
-            name: "pivotA",
-            displayName: "Pivot A",
-            description: "Local pivot A",
+            name: "pivot",
+            displayName: "Pivot",
+            description: "Local space pivot",
             type: "vector",
             options: {
                 min: 0,
@@ -24,9 +24,9 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: [0, 0, 0]
         }, {
-            name: "pivotB",
-            displayName: "Pivot B",
-            description: "Local pivot B",
+            name: "position",
+            displayName: "Position",
+            description: "World space joint position",
             type: "vector",
             options: {
                 min: 0,
@@ -83,20 +83,19 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             if (typeof(Ammo) !== 'undefined') {
                 if (component.entity.rigidbody) {
-                    var pivotA = data.pivotA;
-                    var btPivotA = new Ammo.btVector3(pivotA[0], pivotA[1], pivotA[2]);
+                    var pivotA = new Ammo.btVector3(data.pivot[0], data.pivot[1], data.pivot[2]);
                     var body = component.entity.rigidbody.body;
-                    data.constraint = new Ammo.btPoint2PointConstraint(body, btPivotA);
+                    data.constraint = new Ammo.btPoint2PointConstraint(body, pivotA);
 
                     var pivotB = data.constraint.getPivotInB();
-                    data.pivotB = [ pivotB.x(), pivotB.y(), pivotB.z() ];
+                    data.position = [ pivotB.x(), pivotB.y(), pivotB.z() ];
 
                     var context = this.context;
                     context.systems.rigidbody.addConstraint(data.constraint);
                 }
             }
 
-            properties = ['constraint', 'pivotA', 'pivotB', 'tau', 'damping', 'impulseClamp'];
+            properties = ['constraint', 'pivot', 'position', 'tau', 'damping', 'impulseClamp'];
 
             BallSocketJointComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -105,7 +104,8 @@ pc.extend(pc.fw, function () {
             // overridden to make sure pivotA is duplicated
             var src = this.dataStore[entity.getGuid()];
             var data = {
-                pivotA: pc.extend([], src.data.pivotA)
+                pivot: pc.extend([], src.data.pivot),
+                position: pc.extend([], src.data.position)
             };
             return this.addComponent(clone, data);
         },
