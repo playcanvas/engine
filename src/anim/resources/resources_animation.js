@@ -111,7 +111,8 @@ pc.extend(pc.resources, function () {
 
     AnimationRequest = pc.inherits(AnimationRequest, pc.resources.ResourceRequest);
     AnimationRequest.prototype.type = "animation";
-	
+    AnimationRequest.prototype.Type = pc.anim.Animation;
+    	
     return {
         AnimationResourceHandler: AnimationResourceHandler,
         AnimationRequest: AnimationRequest

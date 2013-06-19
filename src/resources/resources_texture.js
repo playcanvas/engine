@@ -91,7 +91,8 @@ pc.extend(pc.resources, function () {
     };
     TextureRequest = pc.inherits(TextureRequest, pc.resources.ResourceRequest);
     TextureRequest.prototype.type = "texture";
-
+    TextureRequest.prototype.Type = pc.gfx.Texture;
+    
     return {
         TextureResourceHandler: TextureResourceHandler,
         TextureRequest: TextureRequest

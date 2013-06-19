@@ -1886,7 +1886,8 @@ pc.extend(pc.resources, function () {
 	};
 	ModelRequest = pc.inherits(ModelRequest, pc.resources.ResourceRequest);
     ModelRequest.prototype.type = "model";
-
+    ModelRequest.prototype.Type = pc.scene.Model;
+    
 	return {
 		ModelResourceHandler: ModelResourceHandler,
 		ModelRequest: ModelRequest

@@ -300,7 +300,10 @@ pc.extend(pc.resources, function () {
                     }
 
                     var resource = self.getFromCache(request.canonical);
-                    if (resource) {
+                    
+                    // If there is a cached resource.
+                    // If the request specifies a type, we check the cached type matches
+                    if (resource && (request.Type === undefined || (resource instanceof request.Type))) { 
                         // In cache, just resolve
                         resource = self._postOpen(resource, request);
                         resolve(resource);
