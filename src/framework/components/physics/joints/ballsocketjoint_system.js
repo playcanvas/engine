@@ -68,7 +68,8 @@ pc.extend(pc.fw, function () {
             exposed: false
         }];
 
-        this.exposeProperties();
+        // Hide this component from Designer for the time being.
+        // this.exposeProperties();
 
         this.debugRender = false;
 
