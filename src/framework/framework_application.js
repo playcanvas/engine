@@ -178,6 +178,9 @@ pc.extend(pc.fw, function () {
             var load = function () {
                 // Get a list of all assets
                 var assets = this.context.assets.all();
+                
+                // start recording loading progress from here
+                this.context.loader.on('progress', progress);
 
                 if (assets.length) {
                     this.context.assets.load(assets).then(function (resources) {
