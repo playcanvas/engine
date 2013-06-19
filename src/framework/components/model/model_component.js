@@ -67,7 +67,9 @@ pc.extend(pc.fw, function () {
             if (oldValue) {
                 // Remove old listener
                 var asset = this.system.context.assets.getAsset(oldValue);
-                asset.off('change', this.onAssetChange, this);
+                if (asset) {
+                    asset.off('change', this.onAssetChange, this);    
+                }
             }
 
             if (newValue) {
