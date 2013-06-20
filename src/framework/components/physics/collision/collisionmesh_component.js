@@ -29,8 +29,7 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            var url = asset.getFileUrl();
-            this.system.context.loader.request(new pc.resources.ModelRequest(url), options).then(function (resources) {
+            this.systems.context.assets.load(asset, [], options).then(function (resources) {
                 var model = resources[0];
 
                 this.model = model;

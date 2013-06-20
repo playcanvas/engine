@@ -904,7 +904,8 @@ pc.extend(pc.resources, function () {
             texture.minFilter = this._jsonToFilterMode[textureData.minfilter];                
         }
 
-        this._assets.load([asset], [texture], {});
+        this._assets.load([asset], [texture], {});    
+
         return texture;
     };
 
