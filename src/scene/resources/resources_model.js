@@ -103,7 +103,8 @@ pc.extend(pc.resources, function () {
 
         var binary = pc.path.getExtension(request.canonical) === '.model';
         if (binary) {
-            model = this._loadModelBin(data, options);
+            model = null;
+            logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", request.canonical));
         } else {
             if (data.model.version <= 1) {
                 model = null;
