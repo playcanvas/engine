@@ -21,7 +21,7 @@ pc.extend(pc.fw, function() {
         this.root = new pc.fw.Entity();
 
         var prefix = options.depot ? options.depot.assets.getServer().getBaseUrl() : null;
-        this.assets = new pc.fw.AssetCache(prefix);
+        this.assets = new pc.fw.AssetRegistry(this.loader, prefix);
         
         /**
          * @name pc.fw.ApplicationContext#components

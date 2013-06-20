@@ -20,7 +20,8 @@ pc.extend(pc.fw, function () {
              description: "URL of the positive X face of skybox cubemap",
              type: "asset",
                 options: {
-                    max: 1
+                    max: 1,
+                    type: "texture"
                 },
                 defaultValue: null  
             }, {
@@ -29,7 +30,8 @@ pc.extend(pc.fw, function () {
              description: "URL of the negative X face of skybox cubemap",
                 type: "asset",
                 options: {
-                    max: 1
+                    max: 1,
+                    type: "texture"
                 },
                 defaultValue: null  
             }, {
@@ -38,7 +40,8 @@ pc.extend(pc.fw, function () {
              description: "URL of the positive Y face of skybox cubemap",
                 type: "asset",
                 options: {
-                    max: 1
+                    max: 1,
+                    type: "texture"
                 },
                 defaultValue: null  
             }, {
@@ -47,7 +50,8 @@ pc.extend(pc.fw, function () {
              description: "URL of the negative Y face of skybox cubemap",
                 type: "asset",
                 options: {
-                    max: 1
+                    max: 1,
+                    type: "texture"
                 },
                 defaultValue: null  
             }, {
@@ -56,7 +60,8 @@ pc.extend(pc.fw, function () {
              description: "URL of the positive Z face of skybox cubemap",
                 type: "asset",
                 options: {
-                    max: 1
+                    max: 1,
+                    type: "texture"
                 },
                 defaultValue: null  
             }, {
@@ -65,7 +70,8 @@ pc.extend(pc.fw, function () {
              description: "URL of the negative Z face of skybox cubemap",
                 type: "asset",
                 options: {
-                    max: 1
+                    max: 1,
+                    type: "texture"
                 },
                 defaultValue: null  
             }, {

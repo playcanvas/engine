@@ -133,6 +133,7 @@ pc.extend(pc.scene, function () {
         }
     };
 
+
     /**
      * @function
      * @name pc.scene.Scene#getGlobalAmbient

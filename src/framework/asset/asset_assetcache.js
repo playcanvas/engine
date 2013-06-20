@@ -16,7 +16,7 @@ pc.extend(pc.fw, function () {
                     this.addAsset(resourceId, asset);
 
                     // Register hashes with the resource loader
-                    if (loader) {
+                    if (loader && asset.file) {
                         loader.registerHash(asset.file.hash, asset.getFileUrl());
                         asset.subfiles.forEach(function (file, i) {
                             loader.registerHash(file.hash, asset.getSubAssetFileUrl(i));

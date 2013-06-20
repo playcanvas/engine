@@ -51,28 +51,29 @@ pc.extend(pc.fw, function () {
     
         this.audioManager = new pc.audio.AudioManager();
         
-		// Create resource loader
-		var loader = new pc.resources.ResourceLoader();
+        // Create resource loader
+        var loader = new pc.resources.ResourceLoader();
+            
+        // Display shows debug loading information. Only really fit for debug display at the moment.
+        if (options.displayLoader) {
+            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
+        }
+        
+        // The ApplicationContext is passed to new Components and user scripts
+        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
         
         // Enable new texture bank feature to cache textures
         var textureCache = new pc.resources.TextureCache(loader);
         
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
-        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, textureCache));
+        loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice));
+        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
-        // Display shows debug loading information. Only really fit for debug display at the moment.
-        if (options.displayLoader) {
-            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
-        }
-
         this.renderer = new pc.scene.ForwardRenderer(this.graphicsDevice);
 
-		// The ApplicationContext is passed to new Components and user scripts
-        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
-    
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
@@ -151,17 +152,8 @@ pc.extend(pc.fw, function () {
             
             var requests = [];
 
-            // Populate the AssetCache and register hashes
-            this.context.assets.update(toc, this.context.loader);
-
-            for (var guid in toc.assets) {
-                var asset = this.context.assets.getAsset(guid);
-                // Create a request for all files
-                requests.push(this.context.loader.createFileRequest(asset.getFileUrl(), asset.file.type));
-                asset.subfiles.forEach(function (file, index) {
-                    requests.push(this.context.loader.createFileRequest(asset.getSubAssetFileUrl(index), file.type));
-                }.bind(this));
-            }
+            // Populate the AssetRegistry and register hashes
+            this.context.assets.update(toc);
 
             var onLoaded = function (resources) {
                 // load pack 
@@ -180,26 +172,26 @@ pc.extend(pc.fw, function () {
                     setTimeout(function () {
                         throw error;    
                     }, 0);
-                    
                 });
             }.bind(this);
 
             var load = function () {
-                if (requests.length) {
-                    // Start recording progress events now
-                    this.context.loader.on('progress', progress);
-                    // Request all asset files
-                    this.context.loader.request(requests).then(function (resources) {
+                // Get a list of all assets
+                var assets = this.context.assets.all();
+                
+                // start recording loading progress from here
+                this.context.loader.on('progress', progress);
+
+                if (assets.length) {
+                    this.context.assets.load(assets).then(function (resources) {
                         onLoaded(resources);
-                    }, function (msg) {
-                        error(msg);
                     });
                 } else {
                     // No assets to load
                     setTimeout(function () {
                         onLoaded([]);
                     }, 0);
-                }                
+                }       
             }.bind(this);
 
             if (!this.librariesLoaded) {
@@ -601,30 +593,11 @@ pc.extend(pc.fw, function () {
                             this.context.root.addChild(entity);
                         }
                     }
-                    // if (msg.content.models) { // use old method that expects a flattened list and loads using EntityRequest
-                    //     var i, len = msg.content.models.length;
+                    break;
+                case pc.fw.LiveLinkMessageType.UPDATE_ASSET:
+                    this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
+                    break;
 
-                    //     for (i = 0; i < len; i++) {
-                    //         var model = msg.content.models[i];
-                    //         entity = this.context.loader.open(pc.resources.EntityRequest, model);
-                    //         entities[entity.getGuid()] = entity;
-                    //     }
-                        
-                    //     for (guid in entities) {
-                    //         if (entities.hasOwnProperty(guid)) {
-                    //             pc.resources.EntityResourceHandler.patchChildren(entities[guid], entities);
-                    //             if (!entities[guid].__parent) {
-                    //                 // If entity has no parent add to the root
-                    //                 this.context.root.addChild(entities[guid]);
-                    //             } else if (!entities[entities[guid].__parent]) {
-                    //                 // If entity has a parent in the existing tree add it (if entities[__parent] exists then this step will be performed in patchChildren for the parent)
-                    //                 parent = this.context.root.findByGuid(entities[guid].__parent);
-                    //                 parent.addChild(entities[guid]);
-                    //             }
-                    //         }
-                    //     }
-                    // }
-                break;
             }
         },
 
@@ -721,6 +694,14 @@ pc.extend(pc.fw, function () {
                         }
                     }
                 }
+            }
+        },
+
+        _linkUpdateAsset: function (guid, attribute, value) {
+            var asset = this.context.assets.getAsset(guid);
+            if (asset) {
+                asset[attribute] = value;
+                asset.fire('change', asset, attribute, value);
             }
         }
     };

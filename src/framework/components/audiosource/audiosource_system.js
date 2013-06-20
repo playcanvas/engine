@@ -19,7 +19,8 @@ pc.extend(pc.fw, function () {
             description: "Audio assets",
             type: "asset",
             options: {
-                max: 100
+                max: 100,
+                type: 'audio'
             },
             defaultValue: []
         }, {

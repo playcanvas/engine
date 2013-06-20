@@ -50,12 +50,13 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            var url = asset.getFileUrl();
-            this.system.context.loader.request(new pc.resources.ModelRequest(url), options).then(function (resources) {
+            this.system.context.assets.load(asset, [], options).then(function (resources) {
                 var model = resources[0];
 
                 if (this.system.context.designer) {
                     model.generateWireframe();
+                
+                    asset.on('change', this.onAssetChange, this);
                 }
 
                 this.model = model;
@@ -63,6 +64,14 @@ pc.extend(pc.fw, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
+            if (oldValue) {
+                // Remove old listener
+                var asset = this.system.context.assets.getAsset(oldValue);
+                if (asset) {
+                    asset.off('change', this.onAssetChange, this);    
+                }
+            }
+
             if (newValue) {
                 this.loadModelAsset(newValue);
             } else {
@@ -127,6 +136,18 @@ pc.extend(pc.fw, function () {
                     }
                 }
             }
+        },
+
+        /**
+        * @private
+        * @description Attached to the asset during loading (while running with the designer or over livelink), this callback
+        * is used to reload the asset if it is changed.
+        */
+        onAssetChange: function (asset) {
+            // Remove the asset from the cache and reload it
+            this.system.context.loader.removeFromCache(asset.getFileUrl());
+            this.asset = null;
+            this.asset = asset.resourceId;
         }
     });
 

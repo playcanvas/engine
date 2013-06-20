@@ -87,6 +87,75 @@ pc.extend(pc.scene, function () {
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.scene.Material);
 
+    /**
+    * @private
+    * @name pc.scene.PhoneMaterial#init
+    * @description Update material data from a data block, as found on a material Asset.
+    * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
+    */
+    PhongMaterial.prototype.init = function (data) {
+        // Initialise material from data
+        this.name = data.name;
+
+        // Read each shader parameter
+        for (var i = 0; i < data.parameters.length; i++) {
+            var param = data.parameters[i];
+
+            function isMathType(type) {
+                if (type === 'vec2' ||
+                    type === 'vec3' ||
+                    type === 'vec4' ||
+                    type === 'mat3' ||
+                    type === 'mat4') {
+                    return true;
+                }
+
+                return false;
+            }
+            // Update material based on type
+            if (isMathType(param.type)) {
+                if (param.data) {
+                    this[param.name] = pc.math[param.type].clone(param.data);
+                } else {
+                    this[param.name] = null;
+                }
+
+                // special case
+                if (param.name === 'opacityMap') {
+                    if (param.data) {
+                        this.blendType = pc.scene.BLEND_NORMAL;    
+                    } else {
+                        this.blendType = pc.scene.BLEND_NONE;
+                    }
+                    
+                }
+            } else if (param.type === "texture") {
+                if (param.data) {
+                    if (param.data instanceof pc.gfx.Texture) {
+                        this[param.name] = param.data;
+                    } else {
+                        throw Error("PhongMaterial.init() expects textures to already be created");
+                    }
+                } else {
+                    this[param.name] = null;
+                }
+                
+            } else if (param.type === "float") {
+                this[param.name] = param.data;
+                // special case
+                if (param.name === 'opacity') {
+                    if (this.opacity && this.opacity < 1) {
+                        this.blendType = pc.scene.BLEND_NORMAL;
+                    } else {
+                        this.blendType = pc.scene.BLEND_NONE;
+                    }
+                }
+            }
+        }
+
+        this.update();
+    };
+
     PhongMaterial.prototype.update = function () {
         this.clearParameters();
 

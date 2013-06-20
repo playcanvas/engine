@@ -110,9 +110,15 @@ pc.extend(pc.resources, function () {
                 var requested = [];
                 var promises = [];
                 for (i = 0, n = requests.length; i < n; i++) {
-                    // Use an existing request if there is one already in progress
-                    var request = self._requests[requests[i].canonical] || requests[i];
-                    
+                    // Use an existing request if there is a valid one in progress
+                    var request = self._findExistingRequest(requests[i]);
+
+                    // If we are using an existing request, we need to copy over result and data fields.
+                    // TODO: What happens if the existing request has a data field!
+                    if (request !== requests[i]) {
+                        request.data = requests[i].data;
+                    }
+
                     self._makeCanonical(request);
 
                     promises.push(self._request(request, options));
@@ -123,11 +129,6 @@ pc.extend(pc.resources, function () {
                         parent.children.push(request);
                     }
                 }
-
-                // var promises = [];
-                // requested.forEach(function (r) {
-                //     promises.push(r.promise);
-                // });
 
                 // Check that all child promises of the requests have been completed
                 var check = function (resources, requests, promises) {
@@ -219,7 +220,7 @@ pc.extend(pc.resources, function () {
             if (hash) {
                 this._cache[hash] = resource;    
             } else {
-                logWARNING(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
+                //logWARNING(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
             }
         },
 
@@ -234,6 +235,21 @@ pc.extend(pc.resources, function () {
             var hash = this.getHash(identifier);
             if (hash) {
                 return this._cache[hash];    
+            } else {
+                return null;
+            }
+        },
+
+        /**
+        * @function 
+        * @name pc.resources.ResourceLoader#removeFromCache
+        * @description Remove a resource from the cache
+        * @param {String} identifier The identifier for the resource
+        */
+        removeFromCache: function (identifier) {
+            var hash = this.getHash(identifier);
+            if (hash) {
+                delete this._cache[hash]
             } else {
                 return null;
             }
@@ -284,7 +300,10 @@ pc.extend(pc.resources, function () {
                     }
 
                     var resource = self.getFromCache(request.canonical);
-                    if (resource) {
+                    
+                    // If there is a cached resource.
+                    // If the request specifies a type, we check the cached type matches
+                    if (resource && (request.Type === undefined || (resource instanceof request.Type))) { 
                         // In cache, just resolve
                         resource = self._postOpen(resource, request);
                         resolve(resource);
@@ -292,9 +311,15 @@ pc.extend(pc.resources, function () {
                         // Not in cache, load the resource
                         var promise = handler.load(request, options);
                         promise.then(function (data) {
-                            var resource = self._open(data, request, options);
-                            resource = self._postOpen(resource, request);
-                            resolve(resource);
+                            try {
+                                var resource = self._open(data, request, options);
+                                if (resource) {
+                                    resource = self._postOpen(resource, request);    
+                                }
+                                resolve(resource);                                
+                            } catch (e) {
+                                reject(e);
+                            }
                         }, function (error) {
                             self.fire("error", request, error);
                             reject(error);
@@ -333,6 +358,7 @@ pc.extend(pc.resources, function () {
         },
 
         /**
+        * @private
         * @name pc.resources.ResourceLoader#_makeCanonical
         * @description Set the canonical property on the request object. The canonical identifier is the identifier used
         * to make all requests. Resources with the same hash but different URLs will have the same canonical so that requests are not
@@ -340,8 +366,31 @@ pc.extend(pc.resources, function () {
         * 
         */
         _makeCanonical: function (request) {
-            // TODO: do this properly
-            request.canonical = request.identifier;
+            var hash = this.getHash(request.identifier);
+            if (hash && this._canonicals[hash]) {
+                request.canonical = this._canonicals[hash];
+            } else {
+                request.canonical = request.identifier;
+            }
+        },
+
+        /**
+        * @private
+        * @name pc.resources.ResourceLoader#_findExistingRequest
+        * @description Using the canonical identifier, find and return an existing request for this resource
+        * This doesn't return a request if a result object was provided for either request
+        */
+        _findExistingRequest: function (request) {
+            var existing = this._requests[request.canonical];
+            if (existing) {
+                if (existing.result || request.result) {
+                    return request;
+                } else {
+                    return existing;
+                }                
+            } else {
+                return request;
+            }
         }
     };
 
@@ -351,17 +400,18 @@ pc.extend(pc.resources, function () {
      * @class A request for a single resource, located by a unique identifier.
      * @constructor Create a new request for a resoiurce
      * @param {String} identifier Used by the request handler to locate and access the resource. Usually this will be the URL or GUID of the resource.
+     * @param {Object} [data] Additional data that the resource handler might need when creating the resource after loading
+     * @param {Object} [result] If a result object is supplied, this will be used instead of creating a new instance of the resource (only for supporting resource types)
      */
-    var ResourceRequest = function ResourceRequest(identifier, result) {
+    var ResourceRequest = function ResourceRequest(identifier, data, result) {
         this.id = null;               // Sequence ID, given to the request when it is made
         this.identifier = identifier; // The identifier for this resource
         this.canonical = identifier;  // The canonical identifier using the file hash (if available) to match identical resources
         this.alternatives = [];       // Alternative identifiers to the canonical
         this.promises = [];           // List of promises that will be honoured when the request is complete. The first promise in the list is the primary one.
         this.children = [];           // Any child requests which were made while this request was being processed
-        if (result !== undefined) {
-            this.result = result;     // The result object can be supplied and used by a handler, instead of creating a new resource
-        }
+        this.data = data;             // Additional data that the resource handler might need once it has loaded
+        this.result = result;         // The result object can be supplied and used by a handler, instead of creating a new resource
     };
 
     /**

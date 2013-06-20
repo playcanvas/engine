@@ -60,7 +60,9 @@ pc.extend(pc.fw, function () {
             clone.model.data.asset = entity.model.asset;
             clone.model.data.castShadows = entity.model.castShadows;
             clone.model.data.receiveShadows = entity.model.receiveShadows;
-            clone.model.model = entity.model.model.clone();
+            if (entity.model.model) {
+                clone.model.model = entity.model.model.clone();    
+            }
         }
     });
 
