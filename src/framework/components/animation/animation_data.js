@@ -1,7 +1,7 @@
 pc.extend(pc.fw, function() {
     var AnimationComponentData = function () {
         // Serialized
-        this.assets = null;
+        this.assets = [];
         this.speed = 1.0;
         this.loop = true;
         this.activate = true;

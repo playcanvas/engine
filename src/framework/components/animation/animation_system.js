@@ -22,7 +22,7 @@ pc.extend(pc.fw, function () {
                 max: 100,
                 type: "animation"
             },
-            defaultValue: null
+            defaultValue: []
         }, {
             name: "speed",
             displayName: "Speed Factor",
