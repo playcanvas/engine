@@ -219,6 +219,14 @@ pc.extend(pc.scene, function () {
         this._state = state;
     };
 
+    Material.prototype.update = function () {
+        throw Error("Not Implemented in base class");
+    };
+
+    Material.prototype.init = function (data) {
+        throw Error("Not Implemented in base class");
+    };
+
     return {
         Material: Material
     }; 

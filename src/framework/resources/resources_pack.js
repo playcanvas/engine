@@ -129,7 +129,8 @@ pc.extend(pc.resources, function () {
     };
     PackRequest = pc.inherits(PackRequest, pc.resources.ResourceRequest);
     PackRequest.prototype.type = "pack";
-    
+    PackRequest.prototype.Type = pc.fw.Pack;
+        
     return {
         PackResourceHandler: PackResourceHandler,
         PackRequest: PackRequest

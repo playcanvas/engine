@@ -29,8 +29,7 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            var url = asset.getFileUrl();
-            this.system.context.loader.request(new pc.resources.ModelRequest(url), options).then(function (resources) {
+            this.system.context.assets.load(asset, [], options).then(function (resources) {
                 var model = resources[0];
 
                 this.model = model;
@@ -78,18 +77,19 @@ pc.extend(pc.fw, function () {
                     }
 
                     var indices = new Uint16Array(ib.lock());
-                    var numTriangles = indices.length / 3;
+                    var numTriangles = mesh.primitive[0].count / 3;
 
                     var v1 = new Ammo.btVector3();
                     var v2 = new Ammo.btVector3();
                     var v3 = new Ammo.btVector3();
                     var i1, i2, i3;
 
+                    var base = mesh.primitive[0].base;
                     var triMesh = new Ammo.btTriangleMesh();
                     for (j = 0; j < numTriangles; j++) {
-                        i1 = indices[j*3] * stride;
-                        i2 = indices[j*3+1] * stride;
-                        i3 = indices[j*3+2] * stride;
+                        i1 = indices[base+j*3] * stride;
+                        i2 = indices[base+j*3+1] * stride;
+                        i3 = indices[base+j*3+2] * stride;
                         v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
                         v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
                         v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);

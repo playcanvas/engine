@@ -402,6 +402,8 @@ pc.extend(pc.gfx, function () {
         this.textureUnits = [];
 
         this.attributesInvalidated = true;
+
+        this.enabledAttributes = {};
     };
 
     Device.prototype = {
@@ -473,6 +475,7 @@ pc.extend(pc.gfx, function () {
             logASSERT(this.canvas !== null, "Device has not been started");
 
             this.boundBuffer = null;
+            this.indexBuffer = null;
 
             // Set the render target
             if (this.renderTarget) {
@@ -518,17 +521,92 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         draw: function (primitive) {
+            var gl = this.gl;
+
+            var i, len, sampler, uniform, scopeId, uniformVersion, programVersion;
+            var shader = this.shader;
+            var samplers = shader.samplers;
+            var uniforms = shader.uniforms;
+
             // Commit the vertex buffer inputs
             if (this.attributesInvalidated) {
-                this.commitAttributes();
+                var attribute, element, vertexBuffer;
+                var attributes = shader.attributes;
+
+                for (i = 0, len = attributes.length; i < len; i++) {
+                    attribute = attributes[i];
+
+                    // Retrieve vertex element for this shader attribute
+                    element = attribute.scopeId.value;
+
+                    // Check the vertex element is valid
+                    if (element !== null) {
+                        // Retrieve the vertex buffer that contains this element
+                        vertexBuffer = this.vertexBuffers[element.stream];
+
+                        // Set the active vertex buffer object
+                        if (this.boundBuffer !== vertexBuffer.bufferId) {
+                            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
+                            this.boundBuffer = vertexBuffer.bufferId;
+                        }
+
+                        // Hook the vertex buffer to the shader program
+                        if (!this.enabledAttributes[attribute.locationId]) {
+                            gl.enableVertexAttribArray(attribute.locationId);
+                            this.enabledAttributes[attribute.locationId] = true;
+                        }
+                        gl.vertexAttribPointer(attribute.locationId, 
+                                               element.numComponents, 
+                                               this.lookup.elementType[element.dataType], 
+                                               element.normalize,
+                                               element.stride,
+                                               element.offset);
+                    }
+                }
+
                 this.attributesInvalidated = false;
             }
 
-            // Commit the shader uniforms
-            this.commitSamplers();
-            this.commitUniforms();
+            // Commit the shader program variables
+            for (i = 0, len = samplers.length; i < len; i++) {
+                sampler = samplers[i];
+                texture = sampler.scopeId.value;
+                if (this.textureUnits[i] !== texture) {
+                    gl.activeTexture(gl.TEXTURE0 + i);
+                    texture.bind();
+                    this.textureUnits[i] = texture;
+                }
+                if (sampler.slot !== i) {
+                    gl.uniform1i(sampler.locationId, i);
+                    sampler.slot = i;
+                }
+            }
 
-            var gl = this.gl;
+            // Commit any updated uniforms
+            for (i = 0, len = uniforms.length; i < len; i++) {
+                uniform = uniforms[i];
+                scopeId = uniform.scopeId;
+                uniformVersion = uniform.version;
+                programVersion = scopeId.versionObject.version;
+
+                // Check the value is valid
+                if (uniformVersion.globalId !== programVersion.globalId || uniformVersion.revision !== programVersion.revision) {
+//                if (uniformVersion.notequals(programVersion)) {
+
+                    // Copy the version to track that its now up to date
+        //            uniformVersion.copy(programVersion);
+                    uniformVersion.globalId = programVersion.globalId;
+                    uniformVersion.revision = programVersion.revision;
+
+
+                    // Call the function to commit the uniform value
+                    this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
+
+//                    uniform.commitArgs[uniform.valueIndex] = uniform.scopeId.value;
+  //                  uniform.commitFunc.apply(gl, uniform.commitArgs);
+                }
+            }
+
             if (primitive.indexed) {
                 gl.drawElements(this.lookupPrim[primitive.type],
                                 primitive.count,
@@ -810,100 +888,7 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
-         * @private
-         * @name pc.gfx.Device#commitAttributes
-         * @author Will Eastcott
-         */
-        commitAttributes: function () {
-            var i, len, attribute, element, vertexBuffer;
-            var attributes = this.shader.attributes;
-            var gl = this.gl;
-
-            for (i = 0, len = attributes.length; i < len; i++) {
-                attribute = attributes[i];
-
-                // Retrieve vertex element for this shader attribute
-                element = attribute.scopeId.value;
-
-                // Check the vertex element is valid
-                if (element !== null) {
-                    // Retrieve the vertex buffer that contains this element
-                    vertexBuffer = this.vertexBuffers[element.stream];
-
-                    // Set the active vertex buffer object
-                    if (this.boundBuffer !== vertexBuffer.bufferId) {
-                        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
-                        this.boundBuffer = vertexBuffer.bufferId;
-                    }
-
-                    // Hook the vertex buffer to the shader program
-                    gl.enableVertexAttribArray(attribute.locationId);
-                    gl.vertexAttribPointer(attribute.locationId, 
-                                           element.numComponents, 
-                                           this.lookup.elementType[element.dataType], 
-                                           element.normalize,
-                                           element.stride,
-                                           element.offset);
-                }
-            }
-        },
-
-        /**
-         * @private
-         * @name pc.gfx.Device#commitSamplers
-         * @author Will Eastcott
-         */
-        commitSamplers: function () {
-            var gl = this.gl;
-            var i, len, sampler, value;
-            var samplers = this.shader.samplers;
-
-            for (i = 0, len = samplers.length; i < len; i++) {
-                sampler = samplers[i];
-                texture = sampler.scopeId.value;
-                if (this.textureUnits[i] !== texture) {
-                    gl.activeTexture(gl.TEXTURE0 + i);
-                    texture.bind();
-                    this.textureUnits[i] = texture;
-                }
-                if (sampler.slot !== i) {
-                    gl.uniform1i(sampler.locationId, i);
-                    sampler.slot = i;
-                }
-            }
-        },
-
-        /**
-         * @private
-         * @name pc.gfx.Device#commitUniforms
-         * @author Will Eastcott
-         */
-        commitUniforms: function () {
-            var i, len, uniform;
-            var uniforms = this.shader.uniforms;
-            var gl = this.gl;
-
-            for (i = 0, len = uniforms.length; i < len; i++) {
-                uniform = uniforms[i];
-                // Check the value is valid
-                if (uniform.version.notequals(uniform.scopeId.versionObject.version)) {
-
-                    // Copy the version to track that its now up to date
-                    uniform.version.copy(uniform.scopeId.versionObject.version);
-
-                    // Retrieve value for this shader uniform
-                    var value = uniform.scopeId.value;
-
-                    // Call the function to commit the uniform value
-                    this.commitFunction[uniform.dataType](uniform.locationId, value);
-
-    //              uniform.commitArgs[uniform.valueIndex] = uniform.scopeId.value;
-    //              uniform.commitFunc.apply(gl, uniform.commitArgs);
-                }
-            }
-        },
-
-        /**
+        
          * @function
          * @name pc.gfx.Device#getBoneLimit
          * @description Queries the maximum number of bones that can be referenced by a shader.

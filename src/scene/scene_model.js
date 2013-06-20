@@ -5,17 +5,11 @@ pc.extend(pc.scene, function () {
      * @class A model.
      */
     var Model = function Model() {
-        this.textures = [];
-        this.materials = [];
-
-        this.skins = [];
-        this.skinInstances = [];
-
+        this.graph = null;
         this.meshInstances = [];
 
         this.cameras = [];
         this.lights = [];
-        this.graph = null;
     };
 
     Model.prototype.getGraph = function () {
@@ -46,16 +40,16 @@ pc.extend(pc.scene, function () {
         return this.textures;
     };
 
-    Model.prototype.setTextures = function (textures) {
-        this.textures = textures;
-    };
-
     Model.prototype.getMaterials = function () {
-        return this.materials;
-    };
-
-    Model.prototype.setMaterials = function (materials) {
-        this.materials = materials;
+        var i;
+        var materials = [];
+        for (i = 0; i < this.meshInstances.length; i++) {
+            var meshInstance = this.meshInstances[i];
+            if (materials.indexOf(meshInstance.material) === -1) {
+                materials.push(meshInstance.material);
+            }
+        }
+        return materials;
     };
 
     /**
@@ -71,15 +65,6 @@ pc.extend(pc.scene, function () {
      */
 	Model.prototype.clone = function () {
         var i;
-        var clone = new pc.scene.Model();
-
-        clone.textures = this.textures.slice(0);
-        clone.materials = this.materials.slice(0);
-        clone.skins = this.skins.slice(0);
-
-        for (i = 0; i < clone.skins.length; i++) {
-            clone.skinInstances.push(new pc.scene.SkinInstance(clone.skins[i]));
-        }
 
         // Duplicate the node hierarchy
         var srcNodes = [];
@@ -104,20 +89,24 @@ pc.extend(pc.scene, function () {
             return newNode;
         };
 
-        clone.graph = _duplicate(this.graph);
+        var cloneGraph = _duplicate(this.graph);
+        var cloneMeshInstances = [];
 
         // Clone the mesh instances
         for (i = 0; i < this.meshInstances.length; i++) {
             var meshInstance = this.meshInstances[i];
             var nodeIndex = srcNodes.indexOf(meshInstance.node);
-            var cloneInstance = new pc.scene.MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
-            clone.meshInstances.push(cloneInstance);
+            var cloneMeshInstance = new pc.scene.MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
+            cloneMeshInstances.push(cloneMeshInstance);
 
             if (meshInstance.skinInstance) {
-                var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
-                cloneInstance.skinInstance = clone.skinInstances[skinInstanceIndex];
+                cloneMeshInstance.skinInstance = new pc.scene.SkinInstance(meshInstance.mesh.skin);
             }
         }
+
+        var clone = new pc.scene.Model();
+        clone.graph = cloneGraph;
+        clone.meshInstances = cloneMeshInstances;
 
         // Resolve bone IDs to actual graph nodes
         clone.resolveBoneNames();
@@ -135,17 +124,16 @@ pc.extend(pc.scene, function () {
 	Model.prototype.resolveBoneNames = function () {
 		var i, j;
 
-        var skins = this.skins;
-        var skinInstances = this.skinInstances;
-        var graph = this.getGraph();
-        for (i = 0; i < skins.length; i++) {
-            var skin = skins[i];
-            var skinInstance = skinInstances[i];
-            skinInstance.bones = [];
-            for (j = 0; j < skin.boneNames.length; j++) {
-                var boneName = skin.boneNames[j];
-                var bone = graph.findByName(boneName);
-                skinInstance.bones.push(bone);
+        for (i = 0; i < this.meshInstances.length; i++) {
+            var skinInstance = this.meshInstances[i].skinInstance;
+            if (skinInstance) {
+                var skin = this.meshInstances[i].mesh.skin;
+                skinInstance.bones = [];
+                for (j = 0; j < skin.boneNames.length; j++) {
+                    var boneName = skin.boneNames[j];
+                    var bone = this.graph.findByName(boneName);
+                    skinInstance.bones.push(bone);
+                }
             }
         }
     };

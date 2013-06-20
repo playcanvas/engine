@@ -31,7 +31,8 @@ pc.extend(pc.resources, function () {
     };
     AudioRequest = pc.inherits(AudioRequest, pc.resources.ResourceRequest);
     AudioRequest.prototype.type = "audio";
-    
+    AudioRequest.prototype.Type = pc.audio.Sound;
+
     return {
         AudioResourceHandler: AudioResourceHandler,
         AudioRequest: AudioRequest

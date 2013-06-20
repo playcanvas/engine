@@ -24,12 +24,13 @@ TestResourceHandler.prototype.load = function (request, options) {
 
 TestResourceHandler.prototype.open = function (response, request, options) {
     this.opened++;
-    return response + "-opened";
+    return new String(response + "-opened");
 };
 
 var TestRequest = function TestRequest() {};
 TestRequest = pc.inherits(TestRequest, pc.resources.ResourceRequest);
 TestRequest.prototype.type = "test";
+TestRequest.prototype.Type = String;
 
 // Request that always errors
 var ErrorResourceHandler = function (errorInOpen) {
@@ -190,9 +191,12 @@ FillInResourceHandler.prototype.open = function (data, request, options) {
     return data;
 };
 
+var FillInResult = function FillInResult() {};
+
 var FillInRequest = function FillInRequest() {};
 FillInRequest = pc.inherits(FillInRequest, pc.resources.ResourceRequest);
 FillInRequest.prototype.type = "fillin";
+FillInRequest.prototype.Type = FillInResult;
 
 var DualChildRequest = function DualChildRequest() {};
 DualChildRequest = pc.inherits(DualChildRequest, pc.resources.ResourceRequest);
@@ -484,6 +488,34 @@ test("second request returned from cache", function () {
     stop();
 });
 
+test("request with no type is still cached", function () {
+    var type = TestRequest.prototype.Type;
+    TestRequest.prototype.Type = undefined;
+
+    var loader = new pc.resources.ResourceLoader();
+
+    var handler = new TestResourceHandler();
+    loader.registerHandler(TestRequest, handler);
+    loader.registerHash('1234', 'http://abc.com/directory/resource/1');
+
+    var p = loader.request(new TestRequest('http://abc.com/directory/resource/1'));
+
+    p.then(function (resource) {
+        var p = loader.request(new TestRequest('http://abc.com/directory/resource/1'));
+        p.then(function (resource) {
+            equal(handler.loaded, 1);
+            equal(handler.opened, 1);
+            equal(resource, 'http://abc.com/directory/resource/1-opened');
+            start();
+            TestRequest.prototype.Type = type;
+        });
+    }, function (error) {
+        asd;
+    });
+
+    stop();
+});
+
 test("request a hierarchical resource", 11, function () {
     var loader = new pc.resources.ResourceLoader();
     var handler = new ChildResourceHandler(1);
@@ -766,7 +798,7 @@ test("FillInRequest ", function () {
         value: null
     };
 
-    var promise = loader.request(new FillInRequest("http://abc.com/directory/resources/1", o));
+    var promise = loader.request(new FillInRequest("http://abc.com/directory/resources/1", null, o));
 
     promise.then(function (resources) {
         equal(resources[0].value, 'http://abc.com/directory/resources/1-opened')
@@ -934,3 +966,27 @@ test("request, two identical children", function () {
 
     stop();
 });
+
+test("request, same url, different request type", function () {
+    var loader = new pc.resources.ResourceLoader();
+    loader.registerHandler(TestRequest, new TestResourceHandler());
+    loader.registerHandler(FillInRequest, new FillInResourceHandler());
+    loader.registerHash('abcdef', 'abcdef');
+
+    var o = new FillInResult();
+    o.value = null;
+
+    loader.request([
+        new TestRequest("abcdef")
+    ]).then(function (resources) {
+        // Load a different resource, but with the same identifier.
+        // Loader should recognize this as a different type and ignore the cached value
+        return loader.request([new FillInRequest("abcdef", null, o)]);
+    }).then(function (resources) {
+        // Expecting new 
+        equal(resources[0].value, "abcdef-opened");
+        start();
+    });
+
+    stop();
+})

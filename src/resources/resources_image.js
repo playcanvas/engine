@@ -33,7 +33,8 @@ pc.extend(pc.resources, function () {
 	};
 	ImageRequest = pc.inherits(ImageRequest, pc.resources.ResourceRequest);
 	ImageRequest.prototype.type = "image";
-	
+	ImageRequest.prototype.Type = Image;
+    
 	return {
 		ImageResourceHandler: ImageResourceHandler,
 		ImageRequest: ImageRequest

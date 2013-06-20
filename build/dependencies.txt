@@ -31,7 +31,6 @@
 ../src/resources/resources_resources.js
 ../src/resources/resources_loader.js
 ../src/resources/resources_resourceloaderdisplay.js
-../src/resources/resources_image.js
 ../src/resources/resources_texturecache.js
 ../src/graphics/graphics_graphics.js
 ../src/graphics/graphics_scopeid.js
@@ -81,6 +80,8 @@
 ../src/scene/scene_model.js
 ../src/scene/scene_pick.js
 ../src/scene/procedural/scene_procedural.js
+../src/resources/resources_image.js
+../src/resources/resources_texture.js
 ../src/scene/resources/resources_model.js
 ../src/anim/anim_anim.js
 ../src/anim/anim_animation.js
@@ -196,7 +197,8 @@
 ../src/framework/livelink/livelink_update_entity_message.js
 ../src/framework/livelink/livelink_close_entity_message.js
 ../src/framework/livelink/livelink_open_entity_message.js
+../src/framework/livelink/livelink_update_asset_message.js
 ../src/framework/entity/entity_entity.js
 ../src/framework/asset/asset_asset.js
-../src/framework/asset/asset_assetcache.js
+../src/framework/asset/asset_assetregistry.js
 ../contrib/rsvp-461e814fd8.min.js
