@@ -220,7 +220,7 @@ pc.extend(pc.resources, function () {
             if (hash) {
                 this._cache[hash] = resource;    
             } else {
-                logWARNING(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
+                //logWARNING(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
             }
         },
 
@@ -313,7 +313,9 @@ pc.extend(pc.resources, function () {
                         promise.then(function (data) {
                             try {
                                 var resource = self._open(data, request, options);
-                                resource = self._postOpen(resource, request);
+                                if (resource) {
+                                    resource = self._postOpen(resource, request);    
+                                }
                                 resolve(resource);                                
                             } catch (e) {
                                 reject(e);

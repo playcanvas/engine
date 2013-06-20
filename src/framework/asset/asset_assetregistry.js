@@ -110,7 +110,7 @@ pc.extend(pc.fw, function () {
 
         _createModelRequest: function (asset) {
             var url = asset.getFileUrl();
-            var mapping = asset.data.mapping ? asset.data.mapping : [];
+            var mapping = (asset.data && asset.data.mapping) ? asset.data.mapping : [];
 
             return new pc.resources.ModelRequest(url, mapping);
         },
