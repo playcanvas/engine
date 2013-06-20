@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.111.1
+--------
+* [FIX] Default assets list in animation component to [] not null
+
+--------
 v0.111.0
 --------
 * [BREAKING] New Model Asset format
