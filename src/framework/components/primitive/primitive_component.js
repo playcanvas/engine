@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.    
     * @extends pc.fw.Component
     * @property {pc.shape.Type} type The type of primitive
-    * @property {String} color The color of the primitive
+    * @property {pc.Color} color The color of the primitive
     * @property {Boolean} castShadows If true, the primitive will cast shadows. Only for lights that have shadow casting enabled.
     * @property {Boolean} receiveShadows If true, the primitive will have shadows cast onto it.
     * @property {pc.scene.Material} material The material used to render the primitive
