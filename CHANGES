@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.111.1
+--------
+* [FIX] Default assets list in animation component to [] not null
+
+--------
+v0.111.0
+--------
+* [BREAKING] New Model Asset format
+* Support for Textures as first-class Assets
+* Support for Materials as first-class Assets
+
+--------
 v0.110.0
 --------
 * Added ballsocket joint component.
