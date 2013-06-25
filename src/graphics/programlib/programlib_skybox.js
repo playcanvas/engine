@@ -26,7 +26,10 @@ pc.gfx.programlib.skybox = {
                 '    gl_Position = matrix_projection * view * vec4(aPosition, 1.0);',
 
                 // Force skybox to far Z, regardless of the clip planes on the camera
-                '    gl_Position = gl_Position.xyww;',
+                // Subtract a tiny fudge factor to ensure floating point errors don't
+                // still push pixels beyond far Z. See:
+                // http://www.opengl.org/discussion_boards/showthread.php/171867-skybox-problem
+                '    gl_Position.z = gl_Position.w - 0.00001;',
                 '    vViewDir = aPosition;',
                 '}'
             ].join('\n'),

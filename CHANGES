@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.111.2
+--------
+* [FIX] Sky boxes no longer flicker.
+
+--------
 v0.111.1
 --------
 * [FIX] Default assets list in animation component to [] not null
