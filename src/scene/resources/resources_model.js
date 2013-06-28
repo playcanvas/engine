@@ -1,69 +1,70 @@
 pc.extend(pc.resources, function () {
-	/**
-	 * @name pc.resources.ModelResourceHandler
-	 * @class Resource Handler for creating pc.scene.Model resources
-	 */
-	var ModelResourceHandler = function (device, assetRegistry) {
+
+    var jsonToPrimitiveType = {
+        "points":        pc.gfx.PRIMITIVE_POINTS,
+        "lines":         pc.gfx.PRIMITIVE_LINES,
+        "linestrip":     pc.gfx.PRIMITIVE_LINESTRIP,
+        "triangles":     pc.gfx.PRIMITIVE_TRIANGLES,
+        "trianglestrip": pc.gfx.PRIMITIVE_TRISTRIP
+    };
+
+    var jsonToVertexElementType = {
+        "int8":    pc.gfx.ELEMENTTYPE_INT8,
+        "uint8":   pc.gfx.ELEMENTTYPE_UINT8,
+        "int16":   pc.gfx.ELEMENTTYPE_INT16,
+        "uint16":  pc.gfx.ELEMENTTYPE_UINT16,
+        "int32":   pc.gfx.ELEMENTTYPE_INT32,
+        "uint32":  pc.gfx.ELEMENTTYPE_UINT32,
+        "float32": pc.gfx.ELEMENTTYPE_FLOAT32
+    };
+
+    var jsonToLightType = {
+        "directional": pc.scene.LightType.DIRECTIONAL,
+        "point":       pc.scene.LightType.POINT,
+        "spot":        pc.scene.LightType.SPOT
+    };
+    
+    var jsonToAddressMode = {
+        "repeat": pc.gfx.ADDRESS_REPEAT,
+        "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
+        "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
+    };
+
+    var jsonToFilterMode = {
+        "nearest":             pc.gfx.FILTER_NEAREST,
+        "linear":              pc.gfx.FILTER_LINEAR,
+        "nearest_mip_nearest": pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST,
+        "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
+        "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
+        "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
+    };
+
+    var jsonToProjectionType = {
+        "perspective":  pc.scene.Projection.PERSPECTIVE,
+        "orthographic": pc.scene.Projection.ORTHOGRAPHIC
+    };
+
+    /**
+     * @name pc.resources.ModelResourceHandler
+     * @class Resource Handler for creating pc.scene.Model resources
+     */
+    var ModelResourceHandler = function (device, assetRegistry) {
         this._device = device;
         this._assets = assetRegistry;
+    };
+    ModelResourceHandler = pc.inherits(ModelResourceHandler, pc.resources.ResourceHandler);
 
-        this._jsonToPrimitiveType = {
-            "points":         pc.gfx.PRIMITIVE_POINTS,
-            "lines":          pc.gfx.PRIMITIVE_LINES,
-            "linestrip":      pc.gfx.PRIMITIVE_LINESTRIP,
-            "triangles":      pc.gfx.PRIMITIVE_TRIANGLES,
-            "trianglestrip":  pc.gfx.PRIMITIVE_TRISTRIP
-        };
-
-        this._jsonToVertexElementType = {
-            "int8":     pc.gfx.ELEMENTTYPE_INT8,
-            "uint8":    pc.gfx.ELEMENTTYPE_UINT8,
-            "int16":    pc.gfx.ELEMENTTYPE_INT16,
-            "uint16":   pc.gfx.ELEMENTTYPE_UINT16,
-            "int32":    pc.gfx.ELEMENTTYPE_INT32,
-            "uint32":   pc.gfx.ELEMENTTYPE_UINT32,
-            "float32":  pc.gfx.ELEMENTTYPE_FLOAT32
-        };
-
-        this._jsonToLightType = {
-            "directional": pc.scene.LightType.DIRECTIONAL,
-            "point":       pc.scene.LightType.POINT,
-            "spot":        pc.scene.LightType.SPOT
-        };
-        
-        this._jsonToAddressMode = {
-            "repeat": pc.gfx.ADDRESS_REPEAT,
-            "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
-            "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
-        };
-        
-        this._jsonToFilterMode = {
-            "nearest":             pc.gfx.FILTER_NEAREST,
-            "linear":              pc.gfx.FILTER_LINEAR,
-            "nearest_mip_nearest": pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST,
-            "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
-            "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
-            "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
-        };
-        
-        this._jsonToProjectionType = {
-            "perspective"  : pc.scene.Projection.PERSPECTIVE,
-            "orthographic" : pc.scene.Projection.ORTHOGRAPHIC
-        };
-	};
-	ModelResourceHandler = pc.inherits(ModelResourceHandler, pc.resources.ResourceHandler);
-	
-	/**
-	 * @function
-	 * @name pc.resources.ModelResourceHandler#load
-	 * @description Fetch model data from a remote url
-	 * @param {String} identifier The URL of the model data to load
-	 * @param {Function} success The callback used when the data is successfully loaded and the resource opened. Passed the new resource object
-	 * @param {Function} error The callback used when there is an error loading the resource. Passed a list of error messages
-	 * @param {Function} progress The callback used to indicate loading progress. Passed a percentage number.
-	 * @param {Object} [options]
-	 * @param {Number} [options.priority] The priority to load the model textures at.
-	 */
+    /**
+     * @function
+     * @name pc.resources.ModelResourceHandler#load
+     * @description Fetch model data from a remote url
+     * @param {String} identifier The URL of the model data to load
+     * @param {Function} success The callback used when the data is successfully loaded and the resource opened. Passed the new resource object
+     * @param {Function} error The callback used when there is an error loading the resource. Passed a list of error messages
+     * @param {Function} progress The callback used to indicate loading progress. Passed a percentage number.
+     * @param {Object} [options]
+     * @param {Number} [options.priority] The priority to load the model textures at.
+     */
     ModelResourceHandler.prototype.load = function (request, options) {
 
         var promise = new RSVP.Promise(function (resolve, reject) {
@@ -155,6 +156,10 @@ pc.extend(pc.resources, function () {
         ///////////
         // SKINS //
         ///////////
+        if (modelData.skins.length > 0) {
+            
+        }
+
         var skins = [];
         var skinInstances = [];
         for (i = 0; i < modelData.skins.length; i++) {
@@ -224,7 +229,7 @@ pc.extend(pc.resources, function () {
                 formatDesc.push({
                     semantic: attributeMap[attributeName],
                     components: attribute.components,
-                    type: this._jsonToVertexElementType[attribute.type],
+                    type: jsonToVertexElementType[attribute.type],
                     normalize: false
                 });
             }
@@ -301,7 +306,7 @@ pc.extend(pc.resources, function () {
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = vertexBuffers[meshData.vertices];
             mesh.indexBuffer[0] = indexed ? indexBuffer : null;
-            mesh.primitive[0].type = this._jsonToPrimitiveType[meshData.type];
+            mesh.primitive[0].type = jsonToPrimitiveType[meshData.type];
             mesh.primitive[0].base = indexed ? (meshData.base + indexBase) : meshData.base;
             mesh.primitive[0].count = meshData.count;
             mesh.primitive[0].indexed = indexed;
@@ -380,10 +385,10 @@ pc.extend(pc.resources, function () {
             });
 
             texture.name = textureData.name;
-            texture.addressU = this._jsonToAddressMode[textureData.addressu];
-            texture.addressV = this._jsonToAddressMode[textureData.addressv];
-            texture.magFilter = this._jsonToFilterMode[textureData.magfilter];
-            texture.minFilter = this._jsonToFilterMode[textureData.minfilter];                
+            texture.addressU = jsonToAddressMode[textureData.addressu];
+            texture.addressV = jsonToAddressMode[textureData.addressv];
+            texture.magFilter = jsonToFilterMode[textureData.magfilter];
+            texture.minFilter = jsonToFilterMode[textureData.minfilter];                
         }
 
         this._assets.load([asset], [texture], {});    
