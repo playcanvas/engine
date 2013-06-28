@@ -7,6 +7,7 @@ pc.extend(pc.scene, function () {
     var Model = function Model() {
         this.graph = null;
         this.meshInstances = [];
+        this.skinInstances = [];
 
         this.cameras = [];
         this.lights = [];
@@ -119,23 +120,6 @@ pc.extend(pc.scene, function () {
         }
 
         return clone;
-    };
-
-	Model.prototype.resolveBoneNames = function () {
-		var i, j;
-
-        for (i = 0; i < this.meshInstances.length; i++) {
-            var skinInstance = this.meshInstances[i].skinInstance;
-            if (skinInstance) {
-                var skin = this.meshInstances[i].mesh.skin;
-                skinInstance.bones = [];
-                for (j = 0; j < skin.boneNames.length; j++) {
-                    var boneName = skin.boneNames[j];
-                    var bone = this.graph.findByName(boneName);
-                    skinInstance.bones.push(bone);
-                }
-            }
-        }
     };
 
     Model.prototype.generateWireframe = function () {

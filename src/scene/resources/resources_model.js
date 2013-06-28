@@ -169,6 +169,14 @@ pc.extend(pc.resources, function () {
             skins.push(skin);
 
             var skinInstance = new pc.scene.SkinInstance(skin);
+            // Resolve bone IDs to actual graph nodes
+            var bones = [];
+            for (j = 0; j < skin.boneNames.length; j++) {
+                var boneName = skin.boneNames[j];
+                var bone = nodes[0].findByName(boneName);
+                bones.push(bone);
+            }
+            skinInstance.bones = bones;
             skinInstances.push(skinInstance);
         }
 
@@ -342,10 +350,6 @@ pc.extend(pc.resources, function () {
         model.graph = nodes[0];
         model.meshInstances = meshInstances;
         model.skinInstances = skinInstances;
-
-        // Resolve bone IDs to actual graph nodes
-        model.resolveBoneNames();
-
         model.getGraph().syncHierarchy();
 
         var meshInstances = model.meshInstances;
