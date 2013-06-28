@@ -716,6 +716,7 @@ pc.extend(pc.resources, function () {
         }
 
         var skins = [];
+        var skinInstances = [];
         for (i = 0; i < modelData.skins.length; i++) {
             var skinData = modelData.skins[i];
 
@@ -726,6 +727,9 @@ pc.extend(pc.resources, function () {
 
             var skin = new pc.scene.Skin(inverseBindMatrices, skinData.boneNames);
             skins.push(skin);
+
+            var skinInstance = new pc.scene.SkinInstance(skin);
+            skinInstances.push(skinInstance);
         }
 
         var vertexBuffers = [];
@@ -843,7 +847,6 @@ pc.extend(pc.resources, function () {
         }
 
         var meshInstances = [];
-        var skinInstances = [];
         var defaultMaterial = new pc.scene.PhongMaterial();
         for (i = 0; i < modelData.meshInstances.length; i++) {
             var material = (mapping && mapping[i].material) ? this._loadMaterialV2(mapping[i].material) : defaultMaterial;
@@ -854,9 +857,11 @@ pc.extend(pc.resources, function () {
             var meshInstance = new pc.scene.MeshInstance(nodes[meshInstanceData.node], mesh, material);
 
             if (mesh.skin) {
-                var skinInstance = new pc.scene.SkinInstance(mesh.skin);
-                meshInstance.skinInstance = skinInstance;
-                skinInstances.push(skinInstance);
+                var skinIndex = skins.indexOf(mesh.skin);
+                if (skinIndex === -1) {
+                    throw new Error('Mesh\'s skin does not appear in skin array.');
+                }
+                meshInstance.skinInstance = skinInstances[skinIndex];
             }
 
             meshInstances.push(meshInstance);
