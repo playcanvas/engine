@@ -102,17 +102,11 @@ pc.extend(pc.resources, function () {
         options.directory = options.directory || "";
         options.parent = request; // the model request is used as the parent for any texture requests
 
-        var binary = pc.path.getExtension(request.canonical) === '.model';
-        if (binary) {
-            model = null;
+        var model = null;
+        if (data.model.version <= 1) {
             logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", request.canonical));
         } else {
-            if (data.model.version <= 1) {
-                model = null;
-                logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", request.canonical));
-            } else {
-                model = this._loadModelJson(data, request.data, options);
-            }
+            model = this._loadModelJson(data, request.data, options);
         }
 
         return model;
@@ -157,7 +151,7 @@ pc.extend(pc.resources, function () {
         // SKINS //
         ///////////
         if (modelData.skins.length > 0) {
-            
+//            pc.scene.partitionSkin(modelData, mapping, 40);
         }
 
         var skins = [];
