@@ -5,7 +5,8 @@ module('pc.fw.ScriptComponent', {
         var scene = {};
         var registry = new pc.fw.ComponentSystemRegistry();
         var loader = new pc.resources.ResourceLoader();
-        context = new pc.fw.ApplicationContext(loader, scene, registry);
+        var device = {};
+        context = new pc.fw.ApplicationContext(loader, scene, device, registry, {});
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(context, ""));
         _resources = pc.resources;
     },
@@ -170,3 +171,52 @@ asyncTest("update event called with correct this", 1, function () {
         start();
     }, 1000);
 });
+
+test("addComponent, removeComponent", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        urls: ['script.js']
+    });
+
+    sc.removeComponent(e);
+
+    setTimeout(function () {
+        equal(e.script, undefined);
+        equal(e.destroyed, undefined);
+        start();
+    }, 2000);
+
+    stop();
+});
+
+
+test("addComponent, removeComponent, addComponent", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        urls: ['script.js']
+    });
+
+    setTimeout(function () {
+
+        sc.removeComponent(e);
+        sc.addComponent(e, {
+            urls: ['script.js']
+        });
+        sc.removeComponent(e);
+        sc.addComponent(e, {
+            urls: ['script.js']
+        });
+
+        setTimeout(function () {
+            equal(e.count, 1);
+            start();
+        });
+    }, 2000);
+
+    stop();
+});
+
