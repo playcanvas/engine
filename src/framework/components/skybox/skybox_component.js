@@ -6,6 +6,12 @@ pc.extend(pc.fw, function () {
      * @class Renders a cube skybox
      * @param {pc.fw.ApplicationContext} context
      * @extends pc.fw.Component
+     * @property {String} negx - Asset GUID of texture that is used for negative x face
+     * @property {String} posx - Asset GUID of texture that is used for positive x face
+     * @property {String} negy - Asset GUID of texture that is used for negative y face
+     * @property {String} posy - Asset GUID of texture that is used for positive y face
+     * @property {String} negz - Asset GUID of texture that is used for negative z face
+     * @property {String} posz - Asset GUID of texture that is used for positive z face
      */
     var SkyboxComponent = function SkyboxComponent (system, entity) {
         this.on("set", this.onSet, this);
