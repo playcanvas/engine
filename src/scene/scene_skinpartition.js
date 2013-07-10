@@ -125,7 +125,7 @@ pc.extend(pc.scene, function () {
 
         for (i = 0; i < meshes.length; i++) {
             meshes[i].vertices = vertices.indexOf(meshes[i].vertices);
-            meshes[i].skin = vertices.indexOf(meshes[i].skin);
+            meshes[i].skin = skins.indexOf(meshes[i].skin);
         }
         for (i = 0; i < meshInstances.length; i++) {
             meshInstances[i].mesh = meshes.indexOf(meshInstances[i].mesh);
@@ -242,8 +242,8 @@ pc.extend(pc.scene, function () {
                 var partitionedVertices = [];
                 var partitionedIndices = [];
 
-                for (i = 0; i < partitions.length; i++) {
-                    partition = partitions[i];  
+                for (j = 0; j < partitions.length; j++) {
+                    partition = partitions[j];
             
                     if (partition.vertices.length && partition.indices.length) {
                         // this bone partition contains vertices and indices  
@@ -255,7 +255,7 @@ pc.extend(pc.scene, function () {
                         var indexCount = partition.indices.length;  
 
                         // Make a new sub set  
-                        partition.partition = i;
+                        partition.partition = j;
                         partition.vertexStart = vertexStart;
                         partition.vertexCount = vertexCount;
                         partition.indexStart = indexStart;
@@ -294,14 +294,12 @@ pc.extend(pc.scene, function () {
                         boneNames.push(skin.boneNames[partition.boneIndices[k]]);
                     }
 
-                    splitSkins.push({
+                    var splitSkin = {
                         inverseBindMatrices: ibp, 
                         boneNames: boneNames
-                    });
-                }
-
-                for (j = 0; j < splitSkins.length; j++) {
-                    skins.push(splitSkins[j]);
+                    };
+                    splitSkins.push(splitSkin);
+                    skins.push(splitSkin);
                 }
 
                 /////////////
@@ -373,16 +371,20 @@ pc.extend(pc.scene, function () {
                     // Find all the original mesh instances that referred to the pre-split mesh
                     for (k = meshInstances.length - 1; k >= 0; k--) {
                         if (meshInstances[k].mesh === partition.originalMesh) {
-                             meshInstances.push({
+                            meshInstances.push({
                                 mesh: mesh,
                                 node: meshInstances[k].node
-                             });
-                             materialMappings.push({
-                                material: materialMappings[k].material
-                             });
+                            });
+                            if (materialMappings) {
+                                materialMappings.push({
+                                    material: materialMappings[k].material
+                                });
+                            }
 
-                             meshInstances.splice(k, 1);
-                             materialMappings.splice(k, 1);
+                            meshInstances.splice(k, 1);
+                            if (materialMappings) {
+                                materialMappings.splice(k, 1);
+                            }
                         }
                     }
 
