@@ -56,15 +56,21 @@ pc.extend(pc.fw, function () {
                         var ScriptType = resources[0];
 
                         // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
-                        if (ScriptType) {
-                            var instance = new ScriptType(this.entity);
-                            this.system._preRegisterInstance(this.entity, url, ScriptType._pcScriptName, instance);
-                            
-                            // If there is no request batch, then this is not part of a load request and so we need 
-                            // to register the instances immediately to call the initialize function
-                            if (!options.parent) {
-                                this.system.onInitialize(this.entity);
+                        // Make sure that script component hasn't been removed since we started loading
+                        if (ScriptType && this.entity.script) {
+                            // Make sure that we haven't already instaciated another identical script while loading
+                            // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
+                            if (!this.entity.script.instances[ScriptType._pcScriptName]) { 
+                                var instance = new ScriptType(this.entity);
+                                this.system._preRegisterInstance(this.entity, url, ScriptType._pcScriptName, instance);
+                                
+                                // If there is no request batch, then this is not part of a load request and so we need 
+                                // to register the instances immediately to call the initialize function
+                                if (!options.parent) {
+                                    this.system.onInitialize(this.entity);
+                                }
                             }
+                            
                         }
                     }.bind(this)).then(null, function (error) {
                         // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
