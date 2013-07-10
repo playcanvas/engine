@@ -276,7 +276,7 @@ pc.extend(pc.scene, function () {
                         iSour = 0;  
                         iDest = indexStart;
                         while (iSour < indexCount) {
-                            partitionedIndices[iDest++] = partition.indices[iSour++];    // adjust so they reference into flat vertex list  
+                            partitionedIndices[iDest++] = partition.indices[iSour++] + vertexStart;    // adjust so they reference into flat vertex list  
                         }
                     }  
                 }
@@ -380,15 +380,24 @@ pc.extend(pc.scene, function () {
                                     material: materialMappings[k].material
                                 });
                             }
+                        }
+                    }
 
+                    base += partition.indexCount;
+                }
+
+                for (j = 0; j < partitions.length; j++) {
+                    partition = partitions[j];
+
+                    // Find all the original mesh instances that referred to the pre-split mesh
+                    for (k = meshInstances.length - 1; k >= 0; k--) {
+                        if (meshInstances[k].mesh === partition.originalMesh) {
                             meshInstances.splice(k, 1);
                             if (materialMappings) {
                                 materialMappings.splice(k, 1);
                             }
                         }
                     }
-
-                    base += partition.indexCount;
                 }
             }
         }
