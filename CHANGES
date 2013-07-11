@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.111.3
+--------
+* Skin splitting works again.
+* pc.json API now private.
+
+--------
 v0.111.2
 --------
 * [FIX] Sky boxes no longer flicker.
