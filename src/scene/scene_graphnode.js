@@ -17,7 +17,6 @@ pc.extend(pc.scene, function () {
     var GraphNode = function GraphNode(name) {
         this._name = name || ""; // Non-unique human readable name
         this._labels = {};
-        this._graphId = -1;
 
         // Local-space properties of transform (only first 3 are settable by the user)
         this.localPosition = pc.math.vec3.create(0, 0, 0);
@@ -83,7 +82,6 @@ pc.extend(pc.scene, function () {
         _cloneInternal: function (clone) {
             clone._name = this._name;
             clone._labels = pc.extend(this._lables, {});
-            clone._graphId = this._graphId;
 
             pc.math.vec3.copy(this.localPosition, clone.localPosition);
             pc.math.quat.copy(this.localRotation, clone.localRotation);
@@ -105,27 +103,6 @@ pc.extend(pc.scene, function () {
             var clone = new pc.scene.GraphNode();
             this._cloneInternal(clone);
             return clone;
-        },
-
-        /**
-         * @function
-         * @name pc.scene.GraphNode#addGraphId
-         * @description The Graph ID is used to patch up nodes while loading graph data from files. A Graph ID is added during the loading process and should 
-         * be removed again by called removeGraphId() once the loading is complete.
-         * @param {String} id The ID from the data file which is added to the node temporarily
-         */
-        addGraphId: function (id) {
-            this._graphId = id;
-        },
-
-        /**
-         * @function
-         * @name pc.scene.GraphNode#removeGraphId
-         * @description The Graph ID is used to patch up nodes while loading graph data from files. A Graph ID is added during the loading process by calling addGraphId() and should 
-         * be removed again by called removeGraphId() once the loading is complete.
-         */
-        removeGraphId: function () {
-            delete this._graphId;
         },
 
         /**
@@ -215,23 +192,6 @@ pc.extend(pc.scene, function () {
                 if (found !== null) return found;
             }
             return null;
-        },
-
-        /**
-         * @function
-         * @name pc.scene.GraphNode#findByGraphId
-         * @description
-         * @returns {pc.scene.GraphNode}
-         */
-        findByGraphId: function (id) {
-            if (this._graphId === id) return this;
-
-            for (var i = 0; i < this._children.length; i++) {
-                var found = this._children[i].findByGraphId(id);
-                if (found !== null) return found;
-            }
-            return null;
-
         },
 
         /**

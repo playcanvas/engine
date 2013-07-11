@@ -10,7 +10,7 @@ pc.extend(pc.gfx, function () {
      * @constructor Creates a new render target.
      * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this frame buffer.
      * @param {pc.gfx.Texture} colorBuffer The texture that this render target will treat as a rendering surface.
-     * @param (Object} options Object for passing optional arguments.
+     * @param {Object} options Object for passing optional arguments.
      * @param {Boolean} options.depth True if the render target is to include a depth buffer and false otherwise.
      * @param {Number} options.face True if the render target is to include a depth buffer and false otherwise.
      * @example

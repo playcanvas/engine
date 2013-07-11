@@ -191,15 +191,17 @@ pc.extend(pc.fw, function () {
         * @param {Object} instance The instance of the Script Object
         */
         _preRegisterInstance: function (entity, url, name, instance) {
-            entity.script.data._instances = entity.script.data._instances || {};
-            if (entity.script.data._instances[name]) {
-                throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, entity.script.data._instances[name].url, entity.getGuid()));
+            if (entity.script) {
+                entity.script.data._instances = entity.script.data._instances || {};
+                if (entity.script.data._instances[name]) {
+                    throw Error(pc.string.format("Script name collision '{0}'. Scripts from '{1}' and '{2}' {{3}}", name, url, entity.script.data._instances[name].url, entity.getGuid()));
+                }
+                entity.script.data._instances[name] = {
+                    url: url,
+                    name: name,
+                    instance: instance
+                };
             }
-            entity.script.data._instances[name] = {
-                url: url,
-                name: name,
-                instance: instance
-            };
         },
     
         /**

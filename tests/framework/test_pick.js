@@ -3,7 +3,8 @@ module('pc.fw.PickComponent', {
         var scene = {};
         var registry = new pc.fw.ComponentSystemRegistry();
         var loader = new pc.resources.ResourceLoader();
-        context = new pc.fw.ApplicationContext(loader, scene, registry);
+        var device = {};
+        context = new pc.fw.ApplicationContext(loader, scene, device, registry, {});
     },
 
     teardown: function () {
