@@ -79,7 +79,6 @@ pc.extend(pc.gfx, function () {
      * @param {Object} canvas The canvas to which the graphics device is tied.
      * @property {Number} width Width of the back buffer in pixels (read-only).
      * @property {Number} height Height of the back buffer in pixels (read-only).
-     * @property {Boolean} fullscreen Controls whether the canvas to which the graphics device
      * is attached is fullscreen or not.
      */
     var Device = function (canvas) {
