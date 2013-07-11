@@ -145,10 +145,9 @@ pc.extend(pc.scene, function () {
         var meshInstances = model.meshInstances;
 
         for (i = skins.length - 1; i >= 0; i--) {
-            var skin = skins.splice(i, 1)[0];
-
             // This skin exceeds the bone limit. Split it!
-            if (skin.boneNames.length > boneLimit) {
+            if (skins[i].boneNames.length > boneLimit) {
+                var skin = skins.splice(i, 1)[0];
 
                 // Build a list of meshes that use this skin
                 var meshesToSplit = [];

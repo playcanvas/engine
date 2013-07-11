@@ -79,6 +79,8 @@ pc.extend(pc.gfx, function () {
      * @param {Object} canvas The canvas to which the graphics device is tied.
      * @property {Number} width Width of the back buffer in pixels (read-only).
      * @property {Number} height Height of the back buffer in pixels (read-only).
+     * @property {Boolean} fullscreen Controls whether the canvas to which the graphics device
+     * is attached is fullscreen or not.
      */
     var Device = function (canvas) {
         if (!window.WebGLRenderingContext) {
@@ -988,6 +990,18 @@ pc.extend(pc.gfx, function () {
 
     Object.defineProperty(Device.prototype, 'height', {
         get: function() { return this.gl.drawingBufferHeight || this.canvas.height; }
+    });
+
+    Object.defineProperty(Device.prototype, 'fullscreen', {
+        get: function() { return !!document.fullscreenElement; },
+        set: function(fullscreen) {
+            if (fullscreen) {
+                var canvas = this.gl.canvas;
+                canvas.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
     });
 
     return {

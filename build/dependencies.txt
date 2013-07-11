@@ -1,3 +1,4 @@
+../src/core/core_fullscreen.js
 ../src/core/core_core.js
 ../src/core/core_guid.js
 ../src/core/core_time.js
