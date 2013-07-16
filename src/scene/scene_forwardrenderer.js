@@ -344,7 +344,7 @@ pc.extend(pc.scene, function () {
             var shadowCasters = scene.shadowCasters;
 
             var i, j, numInstances;
-            var drawCall, meshInstance, mesh, material, prevMaterial = null, style;
+            var drawCall, meshInstance, prevMeshInstance = null, mesh, material, prevMaterial = null, style;
 
             // Update all skin matrix palettes
             for (i = 0, numDrawCalls = scene.drawCalls.length; i < numDrawCalls; i++) {
@@ -577,6 +577,8 @@ pc.extend(pc.scene, function () {
                         material.setParameters(device);
                         device.clearLocalState();
                         device.updateLocalState(material.getState());
+                    } else if (meshInstance.skinInstance !== prevMeshInstance.skinInstance) {
+                        device.setShader(material.getProgram(device, mesh));
                     }
 
                     style = meshInstance.renderStyle;
@@ -586,6 +588,7 @@ pc.extend(pc.scene, function () {
                     device.draw(mesh.primitive[style]);
 
                     prevMaterial = material;
+                    prevMeshInstance = meshInstance;
                 }
             }
 

@@ -109,7 +109,9 @@ pc.extend(pc.scene, function () {
 
         for (i = 0; i < meshes.length; i++) {
             meshes[i].vertices = vertices[meshes[i].vertices];
-            meshes[i].skin = skins[meshes[i].skin];
+            if (typeof meshes[i].skin !== 'undefined') {
+                meshes[i].skin = skins[meshes[i].skin];
+            }
         }
         for (i = 0; i < meshInstances.length; i++) {
             meshInstances[i].mesh = meshes[meshInstances[i].mesh];
@@ -125,7 +127,9 @@ pc.extend(pc.scene, function () {
 
         for (i = 0; i < meshes.length; i++) {
             meshes[i].vertices = vertices.indexOf(meshes[i].vertices);
-            meshes[i].skin = skins.indexOf(meshes[i].skin);
+            if (typeof meshes[i].skin !== 'undefined') {
+                meshes[i].skin = skins.indexOf(meshes[i].skin);
+            }
         }
         for (i = 0; i < meshInstances.length; i++) {
             meshInstances[i].mesh = meshes.indexOf(meshInstances[i].mesh);
