@@ -2,16 +2,17 @@ pc.extend(pc.fw, function () {
     /**
      * @component
      * @name pc.fw.SkyboxComponent
-     * @constructor Create a new SkyboxComponentS
-     * @class Renders a cube skybox
+     * @constructor Create a new SkyboxComponent
+     * @class A skybox is cube rendered around the camera. The texture on the inside of the cube is used to display the distant environment in a simple and efficient way.
+     * Set a texture Asset to be used for each face of the cube.
      * @param {pc.fw.ApplicationContext} context
      * @extends pc.fw.Component
-     * @property {String} negx - Asset GUID of texture that is used for negative x face
-     * @property {String} posx - Asset GUID of texture that is used for positive x face
-     * @property {String} negy - Asset GUID of texture that is used for negative y face
-     * @property {String} posy - Asset GUID of texture that is used for positive y face
-     * @property {String} negz - Asset GUID of texture that is used for negative z face
-     * @property {String} posz - Asset GUID of texture that is used for positive z face
+     * @property {String} negx Asset GUID of texture that is used for negative x face
+     * @property {String} posx Asset GUID of texture that is used for positive x face
+     * @property {String} negy Asset GUID of texture that is used for negative y face
+     * @property {String} posy Asset GUID of texture that is used for positive y face
+     * @property {String} negz Asset GUID of texture that is used for negative z face
+     * @property {String} posz Asset GUID of texture that is used for positive z face
      */
     var SkyboxComponent = function SkyboxComponent (system, entity) {
         this.on("set", this.onSet, this);
