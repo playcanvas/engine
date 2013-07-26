@@ -3,6 +3,17 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.111.4
+--------
+* [FIX] Handle the case where a single material is referenced by a skinned and an unskinned mesh.
+
+--------
+v0.111.3
+--------
+* Skin splitting works again.
+* pc.json API now private.
+
+--------
 v0.111.2
 --------
 * [FIX] Sky boxes no longer flicker.

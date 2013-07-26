@@ -151,7 +151,8 @@ pc.extend(pc.resources, function () {
         // SKINS //
         ///////////
         if (modelData.skins.length > 0) {
-//            pc.scene.partitionSkin(modelData, mapping, 40);
+            var boneLimit = this._device.getBoneLimit();
+            pc.scene.partitionSkin(modelData, mapping, boneLimit);
         }
 
         var skins = [];
