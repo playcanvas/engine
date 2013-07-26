@@ -990,3 +990,26 @@ test("request, same url, different request type", function () {
 
     stop();
 })
+
+
+test("multiple requests, same url, different request type", function () {
+    var loader = new pc.resources.ResourceLoader();
+    loader.registerHandler(TestRequest, new TestResourceHandler());
+    loader.registerHandler(ClonedRequest, new ClonedResourceHandler());
+    loader.registerHash('abcdef', 'abcdef');
+
+    RSVP.all([
+        loader.request([
+            new TestRequest("abcdef"),
+            new ClonedRequest("abcdef")
+        ]).then(function (resources) {
+            // Expecting new 
+            equal(resources[0], "abcdef-opened");
+            equal(resources[1].value, "abcdef-opened");
+        })
+    ]).then(function () {
+        start();
+    });
+
+    stop();
+})
