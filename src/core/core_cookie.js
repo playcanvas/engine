@@ -27,11 +27,12 @@ pc.cookie = function () {
         },
 
         get: function (name) {
-            var cookies = document.cookie.split(";");
+            var cookie, cookies = document.cookie.split(";");
             var i, len = cookies.length;
 
             for(i = 0; i < len; i++) {
-                if (pc.string.startsWith(cookie[i], name)) {
+                cookie = cookies[i].trim()
+                if (pc.string.startsWith(cookie, name)) {
                     return cookie.split('=')[1];
                 }
             }
