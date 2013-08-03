@@ -383,7 +383,8 @@ pc.extend(pc.resources, function () {
         _findExistingRequest: function (request) {
             var existing = this._requests[request.canonical];
             if (existing) {
-                if (existing.result || request.result) {
+                // Don't return existing request if requests are for different resource types or if either has a result object.
+                if ((existing.type !== request.type) || existing.result || request.result) {
                     return request;
                 } else {
                     return existing;
