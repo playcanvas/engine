@@ -107,21 +107,21 @@ pc.extend(pc.anim, function () {
 
                 // If there's only a single key, just copy the key to the interpolated key...
                 if (keys.length === 1) {
-                    pc.math.quat.copy(keys[0]._quat, interpKey._quat);
-                    pc.math.vec3.copy(keys[0]._pos, interpKey._pos);
-                    pc.math.vec3.copy(keys[0]._scale, interpKey._scale);
+                    pc.math.vec3.copy(keys[0].position, interpKey._pos);
+                    pc.math.quat.copy(keys[0].rotation, interpKey._quat);
+                    pc.math.vec3.copy(keys[0].scale, interpKey._scale);
                 } else {
                     // Otherwise, find the keyframe pair for this node
                     for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1; currKeyIndex++) {
                         k1 = keys[currKeyIndex];
                         k2 = keys[currKeyIndex + 1];
 
-                        if ((k1._time <= this._time) && (k2._time >= this._time)) {
-                            alpha = (this._time - k1._time) / (k2._time - k1._time);
+                        if ((k1.time <= this._time) && (k2.time >= this._time)) {
+                            alpha = (this._time - k1.time) / (k2.time - k1.time);
 
-                            qslerp(k1._quat, k2._quat, alpha, interpKey._quat);
-                            vlerp(k1._pos, k2._pos, alpha, interpKey._pos);
-                            vlerp(k1._scale, k2._scale, alpha, interpKey._scale);
+                            vlerp(k1.position, k2.position, alpha, interpKey._pos);
+                            qslerp(k1.rotation, k2.rotation, alpha, interpKey._quat);
+                            vlerp(k1.scale, k2.scale, alpha, interpKey._scale);
                             interpKey._written = true;
 
                             this._currKeyIndices[nodeName] = currKeyIndex;

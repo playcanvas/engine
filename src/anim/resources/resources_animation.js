@@ -43,19 +43,17 @@ pc.extend(pc.resources, function () {
             node._name = n.name;
 
             for (var j = 0; j < n.keys.length; j++) {
-                var key = new pc.anim.Key();
-
                 var k = n.keys[j];
 
                 var t = k.time;
                 var p = k.pos;
                 var r = k.rot;
                 var s = k.scale;
+                var pos = pc.math.vec3.create(p[0], p[1], p[2]);
+                var rot = pc.math.quat.fromEulerXYZ(r[0], r[1], r[2]);
+                var scl = pc.math.vec3.create(s[0], s[1], s[2]);
 
-                key._pos   = pc.math.vec3.create(p[0], p[1], p[2]);
-                key._quat  = pc.math.quat.fromEulerXYZ(r[0], r[1], r[2]);
-                key._scale = pc.math.vec3.create(s[0], s[1], s[2]);
-                key._time  = t;
+                var key = new pc.anim.Key(t, pos, rot, scl);
 
                 node._keys.push(key);
             }
@@ -84,19 +82,17 @@ pc.extend(pc.resources, function () {
             var defScl = n.defaults.s;
 
             for (var j = 0; j < n.keys.length; j++) {
-                var key = new pc.anim.Key();
-
                 var k = n.keys[j];
 
                 var t = k.t;
                 var p = defPos ? defPos : k.p;
                 var r = defRot ? defRot : k.r;
                 var s = defScl ? defScl : k.s;
+                var pos = pc.math.vec3.create(p[0], p[1], p[2]);
+                var rot = pc.math.quat.fromEulerXYZ(r[0], r[1], r[2]);
+                var scl = pc.math.vec3.create(s[0], s[1], s[2]);
 
-                key._pos   = pc.math.vec3.create(p[0], p[1], p[2]);
-                key._quat  = pc.math.quat.fromEulerXYZ(r[0], r[1], r[2]);
-                key._scale = pc.math.vec3.create(s[0], s[1], s[2]);
-                key._time  = t;
+                var key = new pc.anim.Key(t, pos, rot, scl);
 
                 node._keys.push(key);
             }
