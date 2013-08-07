@@ -346,16 +346,17 @@ pc.extend(pc.fw, function () {
         * @name pc.fw.RigidBodyComponent#setLinearFactor
         * @description Apply a scaling factor to linear motion in each axis. 
         * Use this to limit motion in one or more axes
-        * @param {Number} x The factor to scale x-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged
-        * @param {Number} y The factor to scale y-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged
-        * @param {Number} z The factor to scale z-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged
+        * @param {Number} x The factor to scale x-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
+        * @param {Number} y The factor to scale y-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
+        * @param {Number} z The factor to scale z-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
         * @example
         * // Restrict motion to the vertical y-axis
         * entity.rigidbody.setLinearFactor(0, 1, 0);
         */
         setLinearFactor: function (x, y, z) {
             if (this.body) {
-                this.body.setLinearFactor(x, y, z);
+                ammoVec1.setValue(x, y, z);
+                this.body.setLinearFactor(ammoVec1);
             }
         },
 
@@ -363,14 +364,25 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.RigidBodyComponent#setAngularFactor
         * @description Apply a scaling factor to angular motion.
-        * @param {Number} f The factor to scale by, 0 means no angular motion, 1 means angular motion is unchanged
+        * @param {Number} x The factor to scale x-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
+        * @param {Number} y The factor to scale y-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
+        * @param {Number} z The factor to scale z-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
         * @example
         * // Prevent an body from rotating
         * entity.rigidbody.setAngularFactor(0);
         */
-        setAngularFactor: function (a) {
+        setAngularFactor: function () {
             if (this.body) {
-                this.body.setAngularFactor(a);
+                switch (arguments.length) {
+                    case 1:
+                        ammoVec1.setValue(arguments[0], arguments[0], arguments[0]);
+                        this.body.setAngularFactor(ammoVec1);
+                        break;
+                    case 3:
+                        ammoVec1.setValue(arguments[0], arguments[1], arguments[2]);
+                        this.body.setAngularFactor(ammoVec1);
+                        break;
+                }
             }
         },
 
