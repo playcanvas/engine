@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.111.5
+--------
+* [FIX] Lighting is now correct for non-uniform scaled objects.
+
+--------
 v0.111.4
 --------
 * [FIX] Handle the case where a single material is referenced by a skinned and an unskinned mesh.

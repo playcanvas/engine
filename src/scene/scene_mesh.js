@@ -46,6 +46,7 @@ pc.extend(pc.scene, function () {
 
         // World space AABB
         this.aabb = new pc.shape.Aabb();
+        this.normalMatrix = pc.math.mat3.create();
     };
 
     MeshInstance.prototype = {

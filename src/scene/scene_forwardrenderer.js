@@ -180,6 +180,7 @@ pc.extend(pc.scene, function () {
         this.farClipId = scope.resolve('camera_far');
 
         this.modelMatrixId = scope.resolve('matrix_model');
+        this.normalMatrixId = scope.resolve('matrix_normal');
         this.poseMatrixId = scope.resolve('matrix_pose[0]');
 
         // Shadows
@@ -567,7 +568,14 @@ pc.extend(pc.scene, function () {
                     mesh = meshInstance.mesh;
                     material = meshInstance.material;
 
-                    this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                    var modelMatrix = meshInstance.node.worldTransform;
+                    var normalMatrix = meshInstance.normalMatrix;
+
+                    pc.math.mat4.invertTo3x3(modelMatrix, normalMatrix);
+                    pc.math.mat3.transpose(normalMatrix, normalMatrix);
+
+                    this.modelMatrixId.setValue(modelMatrix);
+                    this.normalMatrixId.setValue(normalMatrix);
                     if (meshInstance.skinInstance) {
                         this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
                     }

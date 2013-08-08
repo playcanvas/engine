@@ -82,6 +82,25 @@ pc.math.mat3 = function () {
             r[2] = z;
 
             return r;
+        },
+
+        transpose: function (m, r) {
+            if (typeof r === 'undefined') {
+                r = pc.math.mat3.create();
+            }
+
+            if (m === r) {
+                var tmp;
+                tmp = m[1]; m[1] = m[3]; m[3] = tmp;
+                tmp = m[2]; m[2] = m[6]; m[6] = tmp;
+                tmp = m[5]; m[5] = m[7]; m[7] = tmp;
+            } else {
+                r[0] = m[0]; r[1] = m[3]; r[2] = m[6];
+                r[3] = m[1]; r[4] = m[4]; r[5] = m[7];
+                r[6] = m[2]; r[7] = m[5]; r[8] = m[8];
+            }
+            
+            return r;
         }
     };
 } ();
@@ -753,6 +772,42 @@ pc.math.mat4 = function () {
             return r;
         },
         
+        invertTo3x3: function (m, r) {
+            if (typeof r === 'undefined') {
+                r = pc.math.mat3.create();
+            }
+
+            var a11 =  m[10] * m[5] - m[6] * m[9];
+            var a21 = -m[10] * m[1] + m[2] * m[9];
+            var a31 =  m[6]  * m[1] - m[2] * m[5];
+            var a12 = -m[10] * m[4] + m[6] * m[8];
+            var a22 =  m[10] * m[0] - m[2] * m[8];
+            var a32 = -m[6]  * m[0] + m[2] * m[4];
+            var a13 =  m[9]  * m[4] - m[5] * m[8];
+            var a23 = -m[9]  * m[0] + m[1] * m[8];
+            var a33 =  m[5]  * m[0] - m[1] * m[4];
+
+            var det =  m[0] * a11 + m[1] * a12 + m[2] * a13;
+            if (det == 0) { // no inverse
+                console.warn("pc.math.mat4.invertTo3x3: Matrix not invertible");
+                return r;
+            }
+
+            var idet = 1.0 / det;
+
+            r[0] = idet * a11;
+            r[1] = idet * a21;
+            r[2] = idet * a31;
+            r[3] = idet * a12;
+            r[4] = idet * a22;
+            r[5] = idet * a32;
+            r[6] = idet * a13;
+            r[7] = idet * a23;
+            r[8] = idet * a33;
+
+            return r;
+        },
+
         /**
          * @function
          * @name pc.math.mat4.getTranslation

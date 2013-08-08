@@ -153,6 +153,9 @@ pc.gfx.programlib.phong = {
         // VERTEX SHADER INPUTS: UNIFORMS
         code += "uniform mat4 matrix_viewProjection;\n";
         code += "uniform mat4 matrix_model;\n";
+        if (lighting) {
+            code += "uniform mat3 matrix_normal;\n";
+        }
         if (options.skin) {
             var numBones = device.getBoneLimit();
             code += "uniform mat4 matrix_pose[" + numBones + "];\n";
@@ -263,9 +266,9 @@ pc.gfx.programlib.phong = {
         // Prepare attribute values into the right formats for the vertex shader
         code += "    vec4 position = vec4(vertex_position, 1.0);\n";
         if (lighting || options.cubeMap || options.sphereMap) {
-            code += "    vec4 normal   = vec4(vertex_normal, 0.0);\n";
+            code += "    vec3 normal = vertex_normal;\n";
             if (options.normalMap && useTangents) {
-                code += "    vec4 tangent  = vec4(vertex_tangent.xyz, 0.0);\n";
+                code += "    vec3 tangent = vertex_tangent.xyz;\n";
             }
         }
         code += "\n";
@@ -280,35 +283,35 @@ pc.gfx.programlib.phong = {
             code += "    positionW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * position;\n\n";
 
             if (lighting || options.cubeMap || options.sphereMap) {
-                code += "    vec4 normalW;\n";
-                code += "    normalW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * normal;\n";
-                code += "    normalW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * normal;\n";
-                code += "    normalW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * normal;\n";
-                code += "    normalW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * normal;\n\n";
+                code += "    vec3 normalW;\n";
+                code += "    normalW  = vertex_boneWeights[0] * mat3(matrix_pose[int(vertex_boneIndices[0])]) * normal;\n";
+                code += "    normalW += vertex_boneWeights[1] * mat3(matrix_pose[int(vertex_boneIndices[1])]) * normal;\n";
+                code += "    normalW += vertex_boneWeights[2] * mat3(matrix_pose[int(vertex_boneIndices[2])]) * normal;\n";
+                code += "    normalW += vertex_boneWeights[3] * mat3(matrix_pose[int(vertex_boneIndices[3])]) * normal;\n\n";
 
                 if (options.normalMap && useTangents) {
-                    code += "    vec4 tangentW;\n";
-                    code += "    tangentW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * tangent;\n\n";
+                    code += "    vec3 tangentW;\n";
+                    code += "    tangentW  = vertex_boneWeights[0] * mat3(matrix_pose[int(vertex_boneIndices[0])]) * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[1] * mat3(matrix_pose[int(vertex_boneIndices[1])]) * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[2] * mat3(matrix_pose[int(vertex_boneIndices[2])]) * tangent;\n";
+                    code += "    tangentW += vertex_boneWeights[3] * mat3(matrix_pose[int(vertex_boneIndices[3])]) * tangent;\n\n";
                 }
             }
         } else {
             code += "    vec4 positionW = matrix_model * position;\n";
             if (lighting || options.cubeMap || options.sphereMap) {
-                code += "    vec4 normalW   = matrix_model * normal;\n";
+                code += "    vec3 normalW = matrix_normal * normal;\n";
                 if (options.normalMap && useTangents) {
-                    code += "    vec4 tangentW = matrix_model * tangent;\n";
+                    code += "    vec3 tangentW = matrix_normal * tangent;\n";
                 }
             }
             code += "\n";
         }
 
         if (lighting || options.cubeMap || options.sphereMap) {
-            code += "    normalW.xyz = normalize(normalW.xyz);\n";
+            code += "    normalW = normalize(normalW);\n";
             if (options.normalMap && useTangents) {
-                code += "    tangentW.xyz  = normalize(tangentW.xyz);\n";
+                code += "    tangentW  = normalize(tangentW);\n";
             }
             code += "\n";
         }
@@ -320,7 +323,7 @@ pc.gfx.programlib.phong = {
         if (lighting) {
             if (options.normalMap && useTangents) {
                 // Calculate the tangent space basis vectors
-                code += "    vec3 binormalW = cross(normalW.xyz, tangentW.xyz) * vertex_tangent.w;\n";
+                code += "    vec3 binormalW = cross(normalW, tangentW) * vertex_tangent.w;\n";
                 code += "    mat3 tbnMatrix = mat3(tangentW.x, binormalW.x, normalW.x,\n";
                 code += "                          tangentW.y, binormalW.y, normalW.y,\n";
                 code += "                          tangentW.z, binormalW.z, normalW.z);\n";
@@ -338,7 +341,7 @@ pc.gfx.programlib.phong = {
                     }
                 }
             } else {
-                code += "    vNormalW = normalW.xyz;\n";
+                code += "    vNormalW = normalW;\n";
                 code += "    vViewDirW = view_position - positionW.xyz;\n";
 
                 for (i = 0; i < totalLights; i++) {
