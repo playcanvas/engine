@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.112.0
+--------
+* [FIX] Update setLinearFactor and setAngularFactor to work correctly
+
+--------
 v0.111.5
 --------
 * [FIX] Lighting is now correct for non-uniform scaled objects.
