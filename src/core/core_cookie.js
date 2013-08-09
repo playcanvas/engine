@@ -1,3 +1,4 @@
+// DEPRECATED - see common.js in Designer.
 pc.cookie = function () {
     return {
         set: function (name, value, options) {
