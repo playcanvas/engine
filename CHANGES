@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.113.0
+--------
+* Added pc.resources.JsonResourceHandler for loading assets of type 'json'.
+
+--------
 v0.112.0
 --------
 * [FIX] Update setLinearFactor and setAngularFactor to work correctly
