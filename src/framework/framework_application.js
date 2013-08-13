@@ -65,6 +65,7 @@ pc.extend(pc.fw, function () {
         // Enable new texture bank feature to cache textures
         var textureCache = new pc.resources.TextureCache(loader);
         
+        loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.context.assets));
