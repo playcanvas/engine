@@ -293,20 +293,20 @@ pc.extend(pc.fw, function () {
             // Check for collisions and fire callbacks
             if (this.hasEvent('contact')) {
                 var dispatcher = this.dynamicsWorld.getDispatcher();
-                var manifold;
-                var e0, e1; // Entities in collision
-                var contactPoint;
                 var numManifolds = dispatcher.getNumManifolds();
-                var numContacts;
                 var i, j;
                 for (i = 0; i < numManifolds; i++) {
-                    manifold = dispatcher.getManifoldByIndexInternal(i);
-                    e0 = Ammo.wrapPointer(manifold.getBody0(), Ammo.btRigidBody).entity;
-                    e1 = Ammo.wrapPointer(manifold.getBody1(), Ammo.btRigidBody).entity;
+                    var manifold = dispatcher.getManifoldByIndexInternal(i);
+                    var body0 = manifold.getBody0();
+                    var body1 = manifold.getBody1();
+                    var wb0 = btRigidBody.prototype['upcast'](body0);
+                    var wb1 = btRigidBody.prototype['upcast'](body1);
+                    var e0 = wb0.entity;
+                    var e1 = wb1.entity;
 
-                    numContacts = manifold.getNumContacts();
+                    var numContacts = manifold.getNumContacts();
                     for (j = 0; j < numContacts; j++) {
-                        contactPoint = manifold.getContactPoint(j);
+                        var contactPoint = manifold.getContactPoint(j);
                         this.fire('contact', new ContactResult(e0, e1, contactPoint));
                     }
                 }                

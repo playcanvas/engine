@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.114.0
+--------
+* Update Ammo (Physics Engine) to be based on Bullet 2.8.1
+* Allocate less when loading animations
+
+--------
 v0.113.0
 --------
 * Added pc.resources.JsonResourceHandler for loading assets of type 'json'.

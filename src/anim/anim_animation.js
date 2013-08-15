@@ -1,7 +1,8 @@
-pc.anim.Key = function Key() {
-    this._quat = pc.math.quat.create(0, 0, 0, 0);
-    this._pos  = pc.math.vec3.create(0, 0, 0);
-    this._time = 0;
+pc.anim.Key = function Key(time, position, rotation, scale) {
+    this.time = time;
+    this.position = position;
+    this.rotation = rotation;
+    this.scale = scale;
 };
 
 pc.anim.Node = function Node() {
