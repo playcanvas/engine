@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.114.1
+--------
+* [FIX] Update raycasting to the latest Ammo API.
+
+--------
 v0.114.0
 --------
 * Update Ammo (Physics Engine) to be based on Bullet 2.8.1
