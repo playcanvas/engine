@@ -205,12 +205,49 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
+         * @name pc.fw.RigidBodyComponent#applyTorque
+         * @description Apply torque (rotational force) to the body.
+         * @param {pc.math.vec3} force The torque to apply, in world space.
+         */
+        /**
+         * @function
+         * @name pc.fw.RigidBodyComponent#applyTorque^2
+         * @description Apply torque (rotational force) to the body.
+         * @param {Number} x The x component of the torque to apply, in world space.
+         * @param {Number} y The y component of the torque to apply, in world space.
+         * @param {Number} z The z component of the torque to apply, in world space.
+         */
+        applyTorque: function () {
+            var x, y, z;
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+                default:
+                    console.error('ERROR: applyTorque: function takes 1 or 3 arguments');
+                    return;
+            }
+            var body = this.body;
+            if (body) {
+                ammoVec1.setValue(x, y, z);
+                body.applyTorque(ammoVec1);
+            }
+        },
+
+        /**
+         * @function
          * @name pc.fw.RigidBodyComponent#applyImpulse
          * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
          * @param {pc.math.vec3} impulse The impulse to apply, in world space.
          * @param {pc.math.vec3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
          */
-
         /**
          * @function
          * @name pc.fw.RigidBodyComponent#applyImpulse^2
@@ -262,6 +299,44 @@ pc.extend(pc.fw, function () {
                 } else {
                     body.applyImpulse(ammoVec1, ammoOrigin);
                 }
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.fw.RigidBodyComponent#applyTorqueImpulse
+         * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
+         * @param {pc.math.vec3} torqueImpulse The torque impulse to apply, in world space.
+         */
+        /**
+         * @function
+         * @name pc.fw.RigidBodyComponent#applyTorqueImpulse^2
+         * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
+         * @param {Number} x The x component of the torque impulse to apply, in world space.
+         * @param {Number} y The y component of the torque impulse to apply, in world space.
+         * @param {Number} z The z component of the torque impulse to apply, in world space.
+        */
+        applyTorqueImpulse: function () {
+            var x, y, z;
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+                default:
+                    console.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
+                    return;
+            }
+            var body = this.body;
+            if (body) {
+                ammoVec1.setValue(x, y, z);
+                body.applyTorqueImpulse(ammoVec1);                    
             }
         },
 
