@@ -451,12 +451,14 @@ pc.math.vec3 = function () {
          * @description Returns the result of a cross product operation performed on the two specified 3-dimensional vectors.
          * @param {Array} v0 The first 3-dimensional vector operand of the cross product.
          * @param {Array} v1 The second 3-dimensional vector operand of the cross product.
+         * @param {Array} result The 3-dimensional vector orthogonal to both v0 and v1.
          * @returns {Array} The 3-dimensional vector orthogonal to both v0 and v1.
          * @example
          * var v1 = pc.math.vec3.create(5, 10, 20);
          * var v2 = pc.math.vec3.create(10, 20, 40);
-         * var crossProd = pc.math.vec3.cross(v1, v2);
-         * console.log("The result of the dot product is: " + crossProd[0] + ", " + crossProd[1] + ", " + crossProd[2]);
+         * var result = pc.math.vec3.create();
+         * pc.math.vec3.cross(v1, v2, result);
+         * console.log("The result of the dot product is: " + result[0] + ", " + result[1] + ", " + result[2]);
          * @author Will Eastcott
          */
         cross: function (v0, v1, r) {
