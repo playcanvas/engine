@@ -8,8 +8,14 @@ pc.extend(pc.fw, function () {
     */
     var RigidBodyComponentData = function () {
         this.mass = 1;
+        this.linearDamping = 0;
+        this.angularDamping = 0;
+        this.linearFactor = [1, 1, 1];
+        this.angularFactor = [1, 1, 1];
+
         this.friction = 0.5;
         this.restitution = 0;
+
         this.bodyType = pc.fw.RIGIDBODY_TYPE_STATIC;
 
         // Non-serialized properties

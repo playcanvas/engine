@@ -14,6 +14,10 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} entity The Entity this Component is attached to
      * @extends pc.fw.Component
      * @property {Number} mass The mass of the body. This is only relevant for {@link pc.fw.RIGIDBODY_TYPE_DYNAMIC} bodies, other types have infinite mass.
+     * @property {Number} linearDamping Controls the rate at which a body loses linear velocity over time.
+     * @property {Number} angularDamping Controls the rate at which a body loses angular velocity over time.
+     * @property {pc.math.vec3} linearFactor Scaling factor for linear movement of the body in each axis.
+     * @property {pc.math.vec3} angularFactor Scaling factor for angular movement of the body in each axis.
      * @property {Number} friction The friction value used when contacts occur between two bodies. A higher value indicates more friction.
      * @property {Number} restitution The amount of energy lost when two objects collide, this determines the bounciness of the object. 
      * A value of 0 means that no energy is lost in the collision, a value of 1 means that all energy is lost. 
@@ -30,10 +34,12 @@ pc.extend(pc.fw, function () {
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
-            ammoOrigin = new Ammo.btVector3(0,0,0);
+            ammoOrigin = new Ammo.btVector3(0, 0, 0);
         }
 
         this.on('set_mass', this.onSetMass, this);
+        this.on('set_linearDamping', this.onSetLinearDamping, this);
+        this.on('set_angularDamping', this.onSetAngularDamping, this);
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
         this.on('set_bodyType', this.onSetBodyType, this);
@@ -417,6 +423,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.fw.RigidBodyComponent#setLinearFactor
         * @description Apply a scaling factor to linear motion in each axis. 
@@ -436,6 +443,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.fw.RigidBodyComponent#setAngularFactor
         * @description Apply a scaling factor to angular motion.
@@ -595,6 +603,36 @@ pc.extend(pc.fw, function () {
 
                 this.system.addBody(body);
             }
+        },
+
+        onSetLinearDamping: function (name, oldValue, newValue) {
+            var body = this.data.body;
+            if (body) {
+                body.setDamping(newValue, this.data.angularDamping);
+            }                
+        },
+
+        onSetAngularDamping: function (name, oldValue, newValue) {
+            var body = this.data.body;
+            if (body) {
+                body.setDamping(this.data.linearDamping, newValue);
+            }                
+        },
+
+        onSetLinearFactor: function (name, oldValue, newValue) {
+            var body = this.data.body;
+            if (body) {
+                ammoVec1.setValue(newValue[0], newValue[1], newValue[2]);
+                body.setLinearFactor(ammoVec1);
+            }                
+        },
+
+        onSetAngularFactor: function (name, oldValue, newValue) {
+            var body = this.data.body;
+            if (body) {
+                ammoVec1.setValue(newValue[0], newValue[1], newValue[2]);
+                body.setAngularFactor(ammoVec1);
+            }                
         },
 
         onSetFriction: function (name, oldValue, newValue) {
