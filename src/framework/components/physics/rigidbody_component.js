@@ -40,6 +40,8 @@ pc.extend(pc.fw, function () {
         this.on('set_mass', this.onSetMass, this);
         this.on('set_linearDamping', this.onSetLinearDamping, this);
         this.on('set_angularDamping', this.onSetAngularDamping, this);
+        this.on('set_linearFactor', this.onSetLinearFactor, this);
+        this.on('set_angularFactor', this.onSetAngularFactor, this);
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
         this.on('set_bodyType', this.onSetBodyType, this);
