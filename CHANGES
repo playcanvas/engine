@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.115.1
+--------
+* [FIX] Previous change broke kinematic objects
+
+--------
 v0.115.0
 --------
 * Changed setLinearVelocity and setAngularVelocity methods to linearVelocity and angularVelocity properties
