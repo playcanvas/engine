@@ -157,8 +157,18 @@ pc.extend(pc.fw, function () {
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
                 var body = new Ammo.btRigidBody(bodyInfo);
+
                 body.setRestitution(this.restitution);
                 body.setFriction(this.friction);
+                body.setDamping(this.linearDamping, this.angularDamping);
+
+                var v;
+                v = this.linearFactor;
+                ammoVec1.setValue(v[0], v[1], v[2]);
+                body.setLinearFactor(ammoVec1);
+                v = this.angularFactor;
+                ammoVec1.setValue(v[0], v[1], v[2]);
+                body.setAngularFactor(ammoVec1);
 
                 if (this.isKinematic()) {
                     body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_KINEMATIC_OBJECT);
