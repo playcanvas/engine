@@ -592,7 +592,7 @@ pc.extend(pc.fw, function () {
          */
         updateKinematic: function (dt) {
             pc.math.vec3.scale(this._linearVelocity, dt, this._displacement);
-            this.entity.translate(this.displacement);
+            this.entity.translate(this._displacement);
 
             pc.math.vec3.scale(this._angularVelocity, dt, this._displacement);
             this.entity.rotate(this._displacement[0], this._displacement[1], this._displacement[2]);
