@@ -79,6 +79,46 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1
         }, {
+            name: "linearDamping",
+            displayName: "Linear Damping",
+            description: "The linear damping applied to the body",
+            type: "number",
+            options: {
+                min: 0,
+                step: 1
+            },
+            defaultValue: 0
+        }, {
+            name: "angularDamping",
+            displayName: "Angular Damping",
+            description: "The angular damping applied to the body",
+            type: "number",
+            options: {
+                min: 0,
+                step: 1
+            },
+            defaultValue: 0
+        }, {
+            name: "linearFactor",
+            displayName: "Linear Factor",
+            description: "The linear factor applied to the linear motion of the body, used to contrain linear movement in each axis",
+            type: "vector",
+            options: {
+                min: 0,
+                step: 0.1
+            },
+            defaultValue: [1, 1, 1]
+        }, {
+            name: "angularFactor",
+            displayName: "Angular Factor",
+            description: "The angular factor applied to the angular motion of the body, used to contrain angular movement in each axis",
+            type: "vector",
+            options: {
+                min: 0,
+                step: 0.1
+            },
+            defaultValue: [1, 1, 1]
+        }, {
             name: "friction",
             displayName: "Friction",
             description: "The friction when the body slides along another body",
@@ -146,15 +186,13 @@ pc.extend(pc.fw, function () {
         }
 
         this.on('remove', this.onRemove, this);
-
-        
     };
     RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.fw.ComponentSystem);
     
     pc.extend(RigidBodyComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
-            properties = ['friction', 'mass', 'restitution', 'bodyType'];
+            properties = ['mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'bodyType'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.createBody();

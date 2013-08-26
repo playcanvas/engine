@@ -14,6 +14,12 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} entity The Entity this Component is attached to
      * @extends pc.fw.Component
      * @property {Number} mass The mass of the body. This is only relevant for {@link pc.fw.RIGIDBODY_TYPE_DYNAMIC} bodies, other types have infinite mass.
+     * @property {pc.math.vec3} linearVelocity Defines the speed of the body in a given direction.
+     * @property {pc.math.vec3} angularVelocity Defines the rotational speed of the body around each world axis.
+     * @property {Number} linearDamping Controls the rate at which a body loses linear velocity over time.
+     * @property {Number} angularDamping Controls the rate at which a body loses angular velocity over time.
+     * @property {pc.math.vec3} linearFactor Scaling factor for linear movement of the body in each axis.
+     * @property {pc.math.vec3} angularFactor Scaling factor for angular movement of the body in each axis.
      * @property {Number} friction The friction value used when contacts occur between two bodies. A higher value indicates more friction.
      * @property {Number} restitution The amount of energy lost when two objects collide, this determines the bounciness of the object. 
      * A value of 0 means that no energy is lost in the collision, a value of 1 means that all energy is lost. 
@@ -30,10 +36,14 @@ pc.extend(pc.fw, function () {
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion();
-            ammoOrigin = new Ammo.btVector3(0,0,0);
+            ammoOrigin = new Ammo.btVector3(0, 0, 0);
         }
 
         this.on('set_mass', this.onSetMass, this);
+        this.on('set_linearDamping', this.onSetLinearDamping, this);
+        this.on('set_angularDamping', this.onSetAngularDamping, this);
+        this.on('set_linearFactor', this.onSetLinearFactor, this);
+        this.on('set_angularFactor', this.onSetAngularFactor, this);
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
         this.on('set_bodyType', this.onSetBodyType, this);
@@ -43,12 +53,61 @@ pc.extend(pc.fw, function () {
         entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
 
         // For kinematic
-        this.displacement = pc.math.vec3.create();
-        this.linearVelocity = pc.math.vec3.create();
-        this.angularVelocity = pc.math.vec3.create();
-
+        this._displacement = pc.math.vec3.create(0, 0, 0);
+        this._linearVelocity = pc.math.vec3.create(0, 0, 0);
+        this._angularVelocity = pc.math.vec3.create(0, 0, 0);
     };
     RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.fw.Component);
+
+    Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
+        get: function() {
+            if (!this.isKinematic()) {
+                if (this.body) {
+                    var vel = this.body.getLinearVelocity();
+                    pc.math.vec3.set(this._linearVelocity, vel.x(), vel.y(), vel.z());
+                    return this._linearVelocity;
+                }
+            } else {
+                return this._linearVelocity;
+            }
+        },
+        set: function(lv) {
+            if (!this.isKinematic()) {
+                var body = this.body;
+                if (body) {
+                    ammoVec1.setValue(lv[0], lv[1], lv[2]);
+                    body.setLinearVelocity(ammoVec1);
+                }                
+            } else {
+                pc.math.vec3.copy(this._linearVelocity, lv);
+            }
+        },
+    });
+
+    Object.defineProperty(RigidBodyComponent.prototype, "angularVelocity", {
+        get: function() {
+            if (!this.isKinematic()) {
+                if (this.body) {
+                    var vel = this.body.getAngularVelocity();
+                    pc.math.vec3.set(this._angularVelocity, vel.x(), vel.y(), vel.z());
+                    return this._angularVelocity;
+                }
+            } else {
+                return this._angularVelocity;
+            }
+        },
+        set: function(av) {
+            if (!this.isKinematic()) {
+                var body = this.body;
+                if (body) {
+                    ammoVec1.setValue(av[0], av[1], av[2]);
+                    body.setAngularVelocity(ammoVec1);
+                }
+            } else {
+                pc.math.vec3.copy(this._angularVelocity, av);
+            }
+        },
+    });
 
     pc.extend(RigidBodyComponent.prototype, {
         /**
@@ -98,8 +157,18 @@ pc.extend(pc.fw, function () {
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
                 var body = new Ammo.btRigidBody(bodyInfo);
+
                 body.setRestitution(this.restitution);
                 body.setFriction(this.friction);
+                body.setDamping(this.linearDamping, this.angularDamping);
+
+                var v;
+                v = this.linearFactor;
+                ammoVec1.setValue(v[0], v[1], v[2]);
+                body.setLinearFactor(ammoVec1);
+                v = this.angularFactor;
+                ammoVec1.setValue(v[0], v[1], v[2]);
+                body.setAngularFactor(ammoVec1);
 
                 if (this.isKinematic()) {
                     body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_KINEMATIC_OBJECT);
@@ -205,12 +274,49 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
+         * @name pc.fw.RigidBodyComponent#applyTorque
+         * @description Apply torque (rotational force) to the body.
+         * @param {pc.math.vec3} force The torque to apply, in world space.
+         */
+        /**
+         * @function
+         * @name pc.fw.RigidBodyComponent#applyTorque^2
+         * @description Apply torque (rotational force) to the body.
+         * @param {Number} x The x component of the torque to apply, in world space.
+         * @param {Number} y The y component of the torque to apply, in world space.
+         * @param {Number} z The z component of the torque to apply, in world space.
+         */
+        applyTorque: function () {
+            var x, y, z;
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+                default:
+                    console.error('ERROR: applyTorque: function takes 1 or 3 arguments');
+                    return;
+            }
+            var body = this.body;
+            if (body) {
+                ammoVec1.setValue(x, y, z);
+                body.applyTorque(ammoVec1);
+            }
+        },
+
+        /**
+         * @function
          * @name pc.fw.RigidBodyComponent#applyImpulse
          * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
          * @param {pc.math.vec3} impulse The impulse to apply, in world space.
          * @param {pc.math.vec3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
          */
-
         /**
          * @function
          * @name pc.fw.RigidBodyComponent#applyImpulse^2
@@ -266,42 +372,69 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-        * @function
-        * @name pc.fw.RigidBodyComponent#getLinearVelocity
-        * @description Return the current linear velocity of the rigid body
-        * @returns {pc.math.vec3} The linear velocity
+         * @function
+         * @name pc.fw.RigidBodyComponent#applyTorqueImpulse
+         * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
+         * @param {pc.math.vec3} torqueImpulse The torque impulse to apply, in world space.
+         */
+        /**
+         * @function
+         * @name pc.fw.RigidBodyComponent#applyTorqueImpulse^2
+         * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
+         * @param {Number} x The x component of the torque impulse to apply, in world space.
+         * @param {Number} y The y component of the torque impulse to apply, in world space.
+         * @param {Number} z The z component of the torque impulse to apply, in world space.
         */
+        applyTorqueImpulse: function () {
+            var x, y, z;
+            switch (arguments.length) {
+                case 1:
+                    x = arguments[0][0];
+                    y = arguments[0][1];
+                    z = arguments[0][2];
+                    break;
+                case 3:
+                    x = arguments[0];
+                    y = arguments[1];
+                    z = arguments[2];
+                    break;
+                default:
+                    console.error('ERROR: applyTorqueImpulse: function takes 1 or 3 arguments');
+                    return;
+            }
+            var body = this.body;
+            if (body) {
+                ammoVec1.setValue(x, y, z);
+                body.applyTorqueImpulse(ammoVec1);                    
+            }
+        },
+
+        /**
+         * @private
+         * @function
+         * @name pc.fw.RigidBodyComponent#getLinearVelocity
+         * @description Return the current linear velocity of the rigid body
+         * @returns {pc.math.vec3} The linear velocity
+         */
         getLinearVelocity: function () {
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    var vel = this.body.getLinearVelocity();
-                    pc.math.vec3.set(this.linearVelocity, vel.x(), vel.y(), vel.z());
-                    return this.linearVelocity;
-                }
-            } else {
-                return this.linearVelocity;
-            }
+            console.warn("WARNING: getLinearVelocity: Function is deprecated. Query linearVelocity property instead.");
+            return this.linearVelocity;
         },
 
         /**
-        * @function
-        * @name pc.fw.RigidBodyComponent#getAngularVelocity
-        * @description Return the current angular velocity of the rigid body
-        * @returns {pc.math.vec3} The angular velocity
-        */
+         * @private
+         * @function
+         * @name pc.fw.RigidBodyComponent#getAngularVelocity
+         * @description Return the current angular velocity of the rigid body
+         * @returns {pc.math.vec3} The angular velocity
+         */
         getAngularVelocity: function () {
-            if (!this.isKinematic()) {
-                if (this.body) {
-                    var vel = this.body.getAngularVelocity();
-                    pc.math.vec3.set(this.angularVelocity, vel.x(), vel.y(), vel.z());
-                    return this.angularVelocity;
-                }
-            } else {
-                return this.angularVelocity;
-            }
+            console.warn("WARNING: getAngularVelocity: Function is deprecated. Query angularVelocity property instead.");
+            return this.angularVelocity;
         },
 
         /**
+         * @private
          * @function
          * @name pc.fw.RigidBodyComponent#setLinearVelocity
          * @description Set the linear velocity of the body.
@@ -310,18 +443,12 @@ pc.extend(pc.fw, function () {
          * @param {Number} z The z value of the velocity
          */
         setLinearVelocity: function (x, y, z) {
-            if (!this.isKinematic()) {
-                var body = this.body;
-                if (body) {
-                    ammoVec1.setValue(x, y, z);
-                    body.setLinearVelocity(ammoVec1);
-                }                
-            } else {
-                pc.math.vec3.set(this.linearVelocity, x, y, z);
-            }
+            console.warn("WARNING: setLinearVelocity: Function is deprecated. Set linearVelocity property instead.");
+            this.linearVelocity = pc.math.vec3.create(x, y, z);
         },
 
         /**
+         * @private
          * @function
          * @name pc.fw.RigidBodyComponent#setAngularVelocity
          * @description Set the angular velocity of the body
@@ -330,120 +457,93 @@ pc.extend(pc.fw, function () {
          * @param {Number} z The z value of the angular velocity
          */
         setAngularVelocity: function (x, y, z) {
-            if (!this.isKinematic()) {
-                var body = this.body;
-                if (body) {
-                    ammoVec1.setValue(x, y, z);
-                    body.setAngularVelocity(ammoVec1);
-                }
-            } else {
-                pc.math.vec3.set(this.angularVelocity, x, y, z);
-            }
+            console.warn("WARNING: setAngularVelocity: Function is deprecated. Set angularVelocity property instead.");
+            this.angularVelocity = pc.math.vec3.create(x, y, z);
         },
 
         /**
-        * @function
-        * @name pc.fw.RigidBodyComponent#setLinearFactor
-        * @description Apply a scaling factor to linear motion in each axis. 
-        * Use this to limit motion in one or more axes
-        * @param {Number} x The factor to scale x-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
-        * @param {Number} y The factor to scale y-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
-        * @param {Number} z The factor to scale z-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
-        * @example
-        * // Restrict motion to the vertical y-axis
-        * entity.rigidbody.setLinearFactor(0, 1, 0);
-        */
+         * @private
+         * @function
+         * @name pc.fw.RigidBodyComponent#setLinearFactor
+         * @description Apply a scaling factor to linear motion in each axis. 
+         * Use this to limit motion in one or more axes
+         * @param {Number} x The factor to scale x-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
+         * @param {Number} y The factor to scale y-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
+         * @param {Number} z The factor to scale z-axis motion by. 0 means no linear motion, 1 means linear motion is unchanged.
+         * @example
+         * // Restrict motion to the vertical y-axis
+         * entity.rigidbody.setLinearFactor(0, 1, 0);
+         */
         setLinearFactor: function (x, y, z) {
-            if (this.body) {
-                ammoVec1.setValue(x, y, z);
-                this.body.setLinearFactor(ammoVec1);
-            }
+            console.warn("WARNING: setLinearFactor: Function is deprecated. Set linearFactor property instead.");
+            this.linearFactor = pc.math.vec3.create(x, y, z);
         },
 
         /**
-        * @function
-        * @name pc.fw.RigidBodyComponent#setAngularFactor
-        * @description Apply a scaling factor to angular motion.
-        * @param {Number} x The factor to scale x-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
-        * @param {Number} y The factor to scale y-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
-        * @param {Number} z The factor to scale z-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
-        * @example
-        * // Prevent an body from rotating
-        * entity.rigidbody.setAngularFactor(0);
-        */
+         * @private
+         * @function
+         * @name pc.fw.RigidBodyComponent#setAngularFactor
+         * @description Apply a scaling factor to angular motion.
+         * @param {Number} x The factor to scale x-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
+         * @param {Number} y The factor to scale y-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
+         * @param {Number} z The factor to scale z-axis angular motion by. 0 means no angular motion, 1 means angular motion is unchanged.
+         * @example
+         * // Prevent an body from rotating
+         * entity.rigidbody.setAngularFactor(0);
+         */
         setAngularFactor: function () {
-            if (this.body) {
-                switch (arguments.length) {
-                    case 1:
-                        ammoVec1.setValue(arguments[0], arguments[0], arguments[0]);
-                        this.body.setAngularFactor(ammoVec1);
-                        break;
-                    case 3:
-                        ammoVec1.setValue(arguments[0], arguments[1], arguments[2]);
-                        this.body.setAngularFactor(ammoVec1);
-                        break;
-                }
+            console.warn("WARNING: setAngularFactor: Function is deprecated. Set linearFactor property instead.");
+            switch (arguments.length) {
+                case 1:
+                    this.angularFactor = pc.math.vec3.create(arguments[0], arguments[0], arguments[0]);
+                    break;
+                case 3:
+                    this.angularFactor = pc.math.vec3.create(arguments[0], arguments[1], arguments[2]);
+                    break;
+                default:
+                    console.error('ERROR: setAngularFactor: function takes 1 or 3 arguments');
+                    return;
             }
         },
 
-        // /**
-        // * @private
-        // * @name pc.fw.RigidBodyComponent#setLinearDamping
-        // * @description Set the linear damping value of the body. 
-        // * Damping parameters should be between 0 and 1.
-        // * @param {Number} damping The damping value
-        // */
-        // setLinearDamping: function (damping) {
-        //     var body = this.body;
-        //     if (body) {
-        //         body.setDamping(damping, 0);
-        //     }
-        // },
-
-        // setAngularDamping: function (damping) {
-        //     if (this.body) {
-        //         this.body.setDamping(0, damping);
-        //     }
-        // },
-
         /**
-        * @function
-        * @name pc.fw.RigidBodyComponent#isStatic
-        * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC}
-        * @returns {Boolean} True if static
-        */
+         * @function
+         * @name pc.fw.RigidBodyComponent#isStatic
+         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC}
+         * @returns {Boolean} True if static
+         */
         isStatic: function () {
             return (this.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC);
         },
 
         /**
-        * @function
-        * @name pc.fw.RigidBodyComponent#isStaticOrKinematic
-        * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC} or {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
-        * @returns {Boolean} True if static or kinematic
-        */
+         * @function
+         * @name pc.fw.RigidBodyComponent#isStaticOrKinematic
+         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC} or {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
+         * @returns {Boolean} True if static or kinematic
+         */
         isStaticOrKinematic: function () {
             return (this.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC || this.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
         },
 
         /**
-        * @function
-        * @name pc.fw.RigidBodyComponent#isKinematic
-        * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
-        * @returns {Boolean} True if kinematic
-        */
+         * @function
+         * @name pc.fw.RigidBodyComponent#isKinematic
+         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
+         * @returns {Boolean} True if kinematic
+         */
         isKinematic: function () {
             return (this.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
         },
 
 
         /**
-        * @function
-        * @name pc.fw.RigidBodyComponent#syncEntityToBody
-        * @description Set the rigid body transform to to be the same as the Entity transform.
-        * This must be called after any Entity transformation functions (e.g. {@link pc.fw.Entity#setPosition}) are called
-        * in order to update the rigid body to match the Entity.
-        */
+         * @function
+         * @name pc.fw.RigidBodyComponent#syncEntityToBody
+         * @description Set the rigid body transform to to be the same as the Entity transform.
+         * This must be called after any Entity transformation functions (e.g. {@link pc.fw.Entity#setPosition}) are called
+         * in order to update the rigid body to match the Entity.
+         */
         syncEntityToBody: function () {
             var body = this.body;
             if (body) {
@@ -461,12 +561,12 @@ pc.extend(pc.fw, function () {
         },
 
         /** 
-        * @private
-        * @function
-        * @name pc.fwRigidBodyComponent#syncBodyToEntity
-        * @description Update the Entity transform from the rigid body.
-        * This is called internally after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
-        */
+         * @private
+         * @function
+         * @name pc.fwRigidBodyComponent#syncBodyToEntity
+         * @description Update the Entity transform from the rigid body.
+         * This is called internally after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
+         */
         syncBodyToEntity: function () {
             var body = this.body;
             if (body.isActive() && body.getMotionState()) {
@@ -484,18 +584,18 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.fw.RigidBodyComponent#updateKinematic
-        * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
-        * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
-        */
+         * @private
+         * @function
+         * @name pc.fw.RigidBodyComponent#updateKinematic
+         * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
+         * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
+         */
         updateKinematic: function (dt) {
-            pc.math.vec3.scale(this.linearVelocity, dt, this.displacement);
+            pc.math.vec3.scale(this._linearVelocity, dt, this._displacement);
             this.entity.translate(this.displacement);
 
-            pc.math.vec3.scale(this.angularVelocity, dt, this.displacement);
-            this.entity.rotate(this.displacement[0], this.displacement[1], this.displacement[2]);
+            pc.math.vec3.scale(this._angularVelocity, dt, this._displacement);
+            this.entity.rotate(this._displacement[0], this._displacement[1], this._displacement[2]);
             if (this.body.getMotionState()) {
                 var pos = this.entity.getPosition();
                 var rot = this.entity.getRotation();
@@ -520,6 +620,36 @@ pc.extend(pc.fw, function () {
 
                 this.system.addBody(body);
             }
+        },
+
+        onSetLinearDamping: function (name, oldValue, newValue) {
+            var body = this.data.body;
+            if (body) {
+                body.setDamping(newValue, this.data.angularDamping);
+            }                
+        },
+
+        onSetAngularDamping: function (name, oldValue, newValue) {
+            var body = this.data.body;
+            if (body) {
+                body.setDamping(this.data.linearDamping, newValue);
+            }                
+        },
+
+        onSetLinearFactor: function (name, oldValue, newValue) {
+            var body = this.data.body;
+            if (body) {
+                ammoVec1.setValue(newValue[0], newValue[1], newValue[2]);
+                body.setLinearFactor(ammoVec1);
+            }                
+        },
+
+        onSetAngularFactor: function (name, oldValue, newValue) {
+            var body = this.data.body;
+            if (body) {
+                ammoVec1.setValue(newValue[0], newValue[1], newValue[2]);
+                body.setAngularFactor(ammoVec1);
+            }                
         },
 
         onSetFriction: function (name, oldValue, newValue) {
@@ -550,13 +680,14 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-        * Handle an update over livelink from the tools updating the Entities transform
-        */
+         * Handle an update over livelink from the tools updating the Entities transform
+         */
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
             this.syncEntityToBody();
+
             // Reset velocities
-            this.setLinearVelocity(0,0,0);
-            this.setAngularVelocity(0,0,0);    
+            this.linearVelocity = pc.math.vec3.zero;
+            this.angularVelocity = pc.math.vec3.zero;
         }
     });
 
