@@ -3,6 +3,20 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.115.1
+--------
+* [FIX] Previous change broke kinematic objects
+
+--------
+v0.115.0
+--------
+* Changed setLinearVelocity and setAngularVelocity methods to linearVelocity and angularVelocity properties
+* Add applyTorque and applyTorqueImpulse to Rigidbody Component 
+* Changed setLinearFactor and setAngularFactor methods to linearFactor and angularFactor properties
+* Add linearDamping and angularDamping properties to Rigidbody Component
+
+
+--------
 v0.114.1
 --------
 * [FIX] Update raycasting to the latest Ammo API.
