@@ -40,43 +40,46 @@ pc.extend(pc.fw, function () {
     pc.extend(CollisionCapsuleComponent.prototype, {
 
         onSetAxis: function (name, oldValue, newValue) {
-            if (this.entity.rigidbody) {
-                var axis = newValue;
-                var radius = this.data.radius;
-                var height = Math.max(this.data.height - 2 * radius, 0);
+            var axis = newValue;
+            var radius = this.data.radius;
+            var height = Math.max(this.data.height - 2 * radius, 0);
 
-                this.data.shape = createCapsuleShape(axis, radius, height);
-                if (this.data.model) {
-                    this.updateDebugShape(axis, radius, height);
-                }
+            this.data.shape = createCapsuleShape(axis, radius, height);
+            if (this.data.model) {
+                this.updateDebugShape(axis, radius, height);
+            }
+
+            if (this.entity.rigidbody) {
                 this.entity.rigidbody.createBody();
             }
         },
 
         onSetHeight: function (name, oldValue, newValue) {
-            if (this.entity.rigidbody) {
-                var axis = this.data.axis;
-                var radius = this.data.radius;
-                var height = Math.max(newValue - 2 * radius, 0);
+            var axis = this.data.axis;
+            var radius = this.data.radius;
+            var height = Math.max(newValue - 2 * radius, 0);
 
-                this.data.shape = createCapsuleShape(axis, radius, height);
-                if (this.data.model) {
-                    this.updateDebugShape(axis, radius, height);
-                }
+            this.data.shape = createCapsuleShape(axis, radius, height);
+            if (this.data.model) {
+                this.updateDebugShape(axis, radius, height);
+            }
+
+            if (this.entity.rigidbody) {
                 this.entity.rigidbody.createBody();
             }
         },
 
         onSetRadius: function (name, oldValue, newValue) {
-            if (this.entity.rigidbody) {
-                var axis = this.data.axis;
-                var radius = newValue;
-                var height = Math.max(this.data.height - 2 * radius, 0);
+            var axis = this.data.axis;
+            var radius = newValue;
+            var height = Math.max(this.data.height - 2 * radius, 0);
 
-                this.data.shape = createCapsuleShape(axis, radius, height);
-                if (this.data.model) {
-                    this.updateDebugShape(axis, radius, height);
-                }
+            this.data.shape = createCapsuleShape(axis, radius, height);
+            if (this.data.model) {
+                this.updateDebugShape(axis, radius, height);
+            }
+
+            if (this.entity.rigidbody) {
                 this.entity.rigidbody.createBody();
             }
         },
