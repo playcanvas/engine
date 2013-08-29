@@ -1,6 +1,10 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+--------
+v0.116.0
+--------
+* Added pc.input.Keyboard.wasReleased method
 
 --------
 v0.115.1
