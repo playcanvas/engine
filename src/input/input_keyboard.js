@@ -251,6 +251,20 @@ pc.extend(pc.input, function(){
         return (!!(this._keymap[id]) && !!!(this._lastmap[id]));
     };
 
+    /**
+     * @function
+     * @name pc.input.Keyboard#wasReleased
+     * @description Returns true if the key was released since the last update.
+     * @param {pc.input.KEY} key The keyCode of the key to test.
+     * @return {Boolean} true if the key was pressed
+     */
+    Keyboard.prototype.wasReleased = function (key) {
+        var keyCode = toKeyCode(key);
+        var id = this.toKeyIdentifier(keyCode);
+        
+        return (!!!(this._keymap[id]) && !!(this._lastmap[id]));
+    };
+
     return {
         Keyboard: Keyboard,
         /**

@@ -145,6 +145,13 @@ test("wasPressed", function () {
   equal(k.wasPressed(pc.input.KEY_A), false);
 });
 
+test("wasReleased", function () {
+  pressAndRelease(pc.input.KEY_A);
+  equal(k.wasReleased(pc.input.KEY_A), true);
+  k.update();
+  equal(k.wasReleased(pc.input.KEY_A), false);
+});
+
 // test("toKeyIdentifier: output is uppercase", function () {
 //     var k = new pc.input.Keyboard(document.body);
 //     var id = k.toKeyIdentifier(pc.input.KEY_N);
