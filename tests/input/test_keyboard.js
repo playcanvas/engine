@@ -45,6 +45,12 @@ function pressAndHold(keyCode) {
   press(keyCode);
 }
 
+function release(keyCode) {
+  simulate(document.body, 'keyup', {
+    keyCode: keyCode
+  });
+}
+
 test("Object Exists", function () {
     ok(pc.input.Keyboard);
 });
@@ -143,6 +149,14 @@ test("wasPressed", function () {
   equal(k.wasPressed(pc.input.KEY_A), true);
   k.update();
   equal(k.wasPressed(pc.input.KEY_A), false);
+});
+
+test("wasReleased", function () {
+  press(pc.input.KEY_A);
+  equal(k.wasReleased(pc.input.KEY_A), false);
+  k.update();
+  release(pc.input.KEY_A);
+  equal(k.wasReleased(pc.input.KEY_A), true);
 });
 
 // test("toKeyIdentifier: output is uppercase", function () {
