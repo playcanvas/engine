@@ -15,6 +15,9 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.PickComponentData;
 
         this.schema = [{
+            name: "pc.fw.PickComponent",
+            type: "componentType"
+        }, {
             name: 'layer',
             exposed: false
         }, {

@@ -14,6 +14,9 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.AnimationComponentData;
         
         this.schema = [{
+            name: "pc.fw.AnimationComponent",
+            type: "componentType"
+        }, {
             name: "assets",
             displayName: "Asset",
             description: "Animation Asset",

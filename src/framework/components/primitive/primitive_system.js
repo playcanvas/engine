@@ -14,6 +14,9 @@
         this.DataType = pc.fw.PrimitiveComponentData;
 
         this.schema = [{
+            name: "pc.fw.PrimitiveComponent",
+            type: "componentType"
+        }, {
             name: "type",
             displayName: "Type",
             description: "Type of primitive",

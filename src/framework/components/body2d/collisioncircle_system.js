@@ -38,6 +38,9 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CollisionCircleComponentData;
 
         this.schema = [{
+            name: "pc.fw.CollisionCircleComponent",
+            type: "componentType"
+        },{
             name: "density",
             displayName: "Density",
             description: "The density of the body, this determine the mass",

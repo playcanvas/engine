@@ -14,6 +14,9 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CollisionBoxComponentData;
 
         this.schema = [{
+            name: "pc.fw.CollisionBoxComponent",
+            type: "componentType"
+        }, {
             name: "halfExtents",
             displayName: "Half Extents",
             description: "The half-extents of the box",

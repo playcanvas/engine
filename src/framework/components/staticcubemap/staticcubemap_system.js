@@ -12,6 +12,9 @@ pc.extend(pc.fw, function () {
         context.systems.add(this.id, this);
     
         this.schema = [{
+            name: "pc.fw.StaticCubeMapComponent",
+            type: "componentType"
+        }, {
          name: "posx",
          displayName: "POSX",
          description: "URL of the positive X face of cubemap",
