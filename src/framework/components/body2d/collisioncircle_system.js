@@ -36,7 +36,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CollisionCircleComponent;
         this.DataType = pc.fw.CollisionCircleComponentData;
-        this.description = 'pc.fw.CollisionCircleComponent';
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.CollisionCircleComponent' );
 
         this.schema = [{
             name: "density",

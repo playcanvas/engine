@@ -12,7 +12,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.BallSocketJointComponent;
         this.DataType = pc.fw.BallSocketJointComponentData;
-        this.description = 'pc.fw.BallSocketJointComponent';
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.BallSocketJointComponent' );
 
         this.schema = [{
             name: "pivot",

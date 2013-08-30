@@ -12,7 +12,7 @@
 
         this.ComponentType = pc.fw.PrimitiveComponent;
         this.DataType = pc.fw.PrimitiveComponentData;
-        this.description = 'pc.fw.PrimitiveComponent';
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.PrimitiveComponent' );
 
         this.schema = [{
             name: "type",

@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.SkyboxComponent;
         this.DataType = pc.fw.SkyboxComponentData;
-        this.description = 'pc.fw.SkyboxComponent';
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.SkyboxComponent' );
 
         this.schema = [{
              name: "posx",

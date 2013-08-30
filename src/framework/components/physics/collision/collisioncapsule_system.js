@@ -12,7 +12,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CollisionCapsuleComponent;
         this.DataType = pc.fw.CollisionCapsuleComponentData;
-        this.description = 'pc.fw.CollisionCapsuleComponent';
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.CollisionCapsuleComponent' );
 
         this.schema = [{
             name: "axis",

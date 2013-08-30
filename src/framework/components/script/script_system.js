@@ -12,7 +12,7 @@ pc.extend(pc.fw, function () {
         
         this.ComponentType = pc.fw.ScriptComponent;
         this.DataType = pc.fw.ScriptComponentData;
-        this.description = 'pc.fw.ScriptComponent';
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.ScriptComponent' );
 
         this.schema = [{
             name: "urls",

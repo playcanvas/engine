@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
         this.context = context;
         this.dataStore = {};
         this.schema = [];
+        this.apiDocsBaseUrl = "http://developer.playcanvas.com/engine/api/stable/symbols";
 
         pc.extend(this, pc.events);
     };
