@@ -12,11 +12,9 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CollisionSphereComponent;
         this.DataType = pc.fw.CollisionSphereComponentData;
+        this.description = 'pc.fw.CollisionSphereComponent';
 
         this.schema = [{
-            name: "pc.fw.CollisionSphereComponent",
-            type: "componentType"
-        }, {
             name: "radius",
             displayName: "Radius",
             description: "The radius of the collision sphere",

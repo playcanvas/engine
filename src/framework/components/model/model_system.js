@@ -12,11 +12,9 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.ModelComponent;
         this.DataType = pc.fw.ModelComponentData;
+        this.description = 'pc.fw.ModelComponent';
 
         this.schema = [{
-            name: "pc.fw.ModelComponent",
-            type: "componentType"
-        },{
             name: "asset",
             displayName: "Asset",
             description: "Model Asset to render",

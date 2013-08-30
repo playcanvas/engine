@@ -12,11 +12,9 @@ pc.extend(pc.fw, function () {
     
         this.ComponentType = pc.fw.AudioSourceComponent;
         this.DataType = pc.fw.AudioSourceComponentData;
+        this.description = 'pc.fw.AudioSourceComponent';
 
         this.schema = [{
-            name: "pc.fw.AudioSourceComponent",
-            type: "componentType"
-        },{
             name: "assets",
             displayName: "Assets",
             description: "Audio assets",

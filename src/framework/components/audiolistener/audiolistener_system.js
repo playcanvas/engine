@@ -11,12 +11,9 @@ pc.extend(pc.fw, function () {
     
         this.ComponentType = pc.fw.AudioListenerComponent;
         this.DataType = pc.fw.AudioListenerComponentData;
+        this.description = 'pc.fw.AudioListenerComponent';
         
-        this.schema = [{
-            name: "pc.fw.AudioListenerComponent",
-            type: "componentType"
-        }];
-        
+        this.schema = [];
         this.exposeProperties();
         
         this.manager = manager;

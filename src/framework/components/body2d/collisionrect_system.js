@@ -35,6 +35,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CollisionRectComponent;
         this.DataType = pc.fw.CollisionRectComponentData;
+        this.description = 'pc.fw.CollisionRectComponent';
 
         this.schema = [{
             name: "density",

@@ -12,11 +12,9 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CollisionCapsuleComponent;
         this.DataType = pc.fw.CollisionCapsuleComponentData;
+        this.description = 'pc.fw.CollisionCapsuleComponent';
 
         this.schema = [{
-            name: "pc.fw.CollisionCapsuleComponent",
-            type: "componentType"
-        }, {
             name: "axis",
             displayName: "Axis",
             description: "Major axis of capsule",

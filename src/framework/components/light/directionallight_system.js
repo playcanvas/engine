@@ -12,11 +12,9 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.DirectionalLightComponent;
         this.DataType = pc.fw.DirectionalLightComponentData;
+        this.description = 'pc.fw.DirectionalLightComponent';
 
         this.schema = [{
-            name: "pc.fw.DirectionalLightComponent",
-            type: "componentType"
-        },{
             name: "enable",
             displayName: "Enable",
             description: "Enable or disable the light",

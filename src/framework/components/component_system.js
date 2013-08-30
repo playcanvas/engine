@@ -151,7 +151,7 @@ pc.extend(pc.fw, function () {
         * @description Expose properties into the Tools, set 'exposed: false' in to prevent properties appearing in the tools
         */
         exposeProperties: function () {
-            editor.link.addComponentType(this.id);
+            editor.link.addComponentType(this);
                 
             this.schema.forEach(function (prop) {
                 if (prop.exposed !== false) {

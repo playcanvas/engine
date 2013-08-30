@@ -5,11 +5,9 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CubeMapComponent;
         this.DataType = pc.fw.CubeMapComponentData;
+        this.description = 'pc.fw.CubeMapComponent';
 
         this.schema = [{
-            name: "pc.fw.CubeMapComponent",
-            type: "componentType"
-        },{
             name: 'cubemap',
             exposed: false
         }, {

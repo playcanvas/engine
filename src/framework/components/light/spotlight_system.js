@@ -12,11 +12,9 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.SpotLightComponent;
         this.DataType = pc.fw.SpotLightComponentData;
+        this.description = 'pc.fw.SpotLightComponent';
 
         this.schema = [{
-            name: "pc.fw.SpotLightComponent",
-            type: "componentType"
-        },{
             name: "enable",
             displayName: "Enable",
             description: "Enable or disable the light",

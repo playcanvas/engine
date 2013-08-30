@@ -42,11 +42,9 @@ pc.extend(pc.fw, function () {
         
         this.ComponentType = pc.fw.Body2dComponent;
         this.DataType = pc.fw.Body2dComponentData;
+        this.description = 'pc.fw.Body2dComponent';
 
         this.schema = [{
-            name: "pc.fw.Body2dComponent",
-            type: "componentType"
-        },{
             name: "static",
             displayName: "Static",
             description: "Static bodies are immovable and do not collide with other static bodies.",

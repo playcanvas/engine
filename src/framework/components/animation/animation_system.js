@@ -12,11 +12,9 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.AnimationComponent;
         this.DataType = pc.fw.AnimationComponentData;
+        this.description = 'pc.fw.AnimationComponent';
         
         this.schema = [{
-            name: "pc.fw.AnimationComponent",
-            type: "componentType"
-        }, {
             name: "assets",
             displayName: "Asset",
             description: "Animation Asset",
