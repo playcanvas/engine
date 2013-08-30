@@ -12,6 +12,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.PointLightComponent;
         this.DataType = pc.fw.PointLightComponentData;
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.PointLightComponent' );
 
         this.schema = [{
             name: "enable",

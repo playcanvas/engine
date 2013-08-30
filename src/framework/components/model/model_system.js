@@ -12,6 +12,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.ModelComponent;
         this.DataType = pc.fw.ModelComponentData;
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.ModelComponent' );
 
         this.schema = [{
             name: "asset",

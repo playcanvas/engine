@@ -13,6 +13,7 @@ pc.extend(pc.fw, function () {
         
         this.ComponentType = pc.fw.CameraComponent;
         this.DataType = pc.fw.CameraComponentData;
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.CameraComponent' );
 
         this.schema = [{
             name: "clearColor",

@@ -12,6 +12,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CollisionBoxComponent;
         this.DataType = pc.fw.CollisionBoxComponentData;
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.CollisionBoxComponent' );
 
         this.schema = [{
             name: "halfExtents",

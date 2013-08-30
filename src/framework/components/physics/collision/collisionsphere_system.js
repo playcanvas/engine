@@ -12,6 +12,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CollisionSphereComponent;
         this.DataType = pc.fw.CollisionSphereComponentData;
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.CollisionSphereComponent' );
 
         this.schema = [{
             name: "radius",

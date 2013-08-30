@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
         this.context = context;
         this.dataStore = {};
         this.schema = [];
+        this.apiDocsBaseUrl = "http://developer.playcanvas.com/engine/api/stable/symbols";
 
         pc.extend(this, pc.events);
     };
@@ -151,7 +152,7 @@ pc.extend(pc.fw, function () {
         * @description Expose properties into the Tools, set 'exposed: false' in to prevent properties appearing in the tools
         */
         exposeProperties: function () {
-            editor.link.addComponentType(this.id);
+            editor.link.addComponentType(this);
                 
             this.schema.forEach(function (prop) {
                 if (prop.exposed !== false) {
