@@ -15,9 +15,6 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.SkyboxComponentData;
 
         this.schema = [{
-            name: "pc.fw.SkyboxComponent",
-            type: "componentType"
-        }, {
              name: "posx",
              displayName: "POSX",
              description: "URL of the positive X face of skybox cubemap",

@@ -14,9 +14,6 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.PointLightComponentData;
 
         this.schema = [{
-            name: "pc.fw.PointLightComponent",
-            type: "componentType"
-        },{
             name: "enable",
             displayName: "Enable",
             description: "Enable or disable the light",

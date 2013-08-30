@@ -69,9 +69,6 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.RigidBodyComponentData;
 
         this.schema = [{
-            name: "pc.fw.RigidBodyComponent",
-            type: "componentType"
-        }, {
             name: "mass",
             displayName: "Mass",
             description: "The mass of the body",

@@ -15,9 +15,6 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CameraComponentData;
 
         this.schema = [{
-            name: "pc.fw.CameraComponent",
-            type: "componentType"
-        },{
             name: "clearColor",
             displayName: "Clear Color",
             description: "Clear Color",

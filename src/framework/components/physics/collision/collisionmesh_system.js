@@ -14,9 +14,6 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CollisionMeshComponentData;
 
         this.schema = [{
-            name: "pc.fw.CollisionMeshComponent",
-            type: "componentType"
-        }, {
             name: "asset",
             displayName: "Asset",
             description: "Collision mesh asset",

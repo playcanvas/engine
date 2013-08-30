@@ -14,9 +14,6 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.BallSocketJointComponentData;
 
         this.schema = [{
-            name: "pc.fw.BallSocketJointComponent",
-            type: "componentType"
-        }, {
             name: "pivot",
             displayName: "Pivot",
             description: "Local space pivot",

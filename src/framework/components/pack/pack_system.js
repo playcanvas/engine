@@ -14,10 +14,7 @@ pc.extend(pc.fw, function () {
         this.ComponentType = pc.fw.PackComponent;
         this.DataType = pc.fw.PackComponentData;
 
-        this.schema = [{
-            name: "pc.fw.PackComponent",
-            type: "componentType"
-        }];
+        this.schema = [];
     };
     PackComponentSystem = pc.inherits(PackComponentSystem, pc.fw.ComponentSystem);
 

@@ -14,9 +14,6 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.ScriptComponentData;
 
         this.schema = [{
-            name: "pc.fw.ScriptComponent",
-            type: "componentType"
-        }, {
             name: "urls",
             displayName: "URLs",
             description: "Attach scripts to this Entity",
