@@ -4,15 +4,20 @@ pc.extend(editor, function () {
         this.added = {}; // dictionary of added variables, deprecated...
         this.scripts =  {}; // dictionary of exposed script variables, not used
         this.systems = []; // list of registered system names
+        this.systemDescriptions = []; // list of registed system descriptions - 1:1 mapping to systems array
     };
 
     /** 
      * Expose a Component
-     * @param {Object} name
+     * @param {Object} componentSystem
      */
-    LinkInterface.prototype.addComponentType = function(name) {
+    LinkInterface.prototype.addComponentType = function(componentSystem) {
+        var name = componentSystem.id;
+        var description = componentSystem.description;
+
         if (this.systems.indexOf(name) < 0) {
             this.systems.push(name);
+            this.systemDescriptions.push(description);
         }
 
         if (!this.exposed[name]) {
