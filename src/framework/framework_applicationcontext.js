@@ -39,6 +39,7 @@ pc.extend(pc.fw, function() {
         * context.assets.load(asset).then(function (models) {
         *     var playerModel = models[0];
         * )});
+        */
         this.assets = new pc.fw.AssetRegistry(this.loader, prefix);
         
         /**
