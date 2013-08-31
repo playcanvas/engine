@@ -4,22 +4,17 @@ pc.extend(pc.input, function () {
      * @name pc.input.Controller
      * @class A general input handler which handles both mouse and keyboard input assigned to named actions.
      * This allows you to define input handlers separately to defining keyboard/mouse configurations
-     * @example
-     * <code>
-     * <pre>
-     * var c = new pc.input.Controller()
-     * c.attach(document);
-     * 
-     * // Register the "fire" action and assign it to both the Enter key and the Spacebar.
-     * c.registerKey("fire", [pc.input.KEY_ENTER, pc.input.KEY_SPACE]);
-     * </pre>
-     * </code>
      * @constructor Create a new instance of a Controller
      * @param {DOMElement} [element] DOMElement to attach Controller to
      * @param {Object} [options] Optional arguments
      * @param {pc.input.Keyboard} [options.keyboard] A Keyboard object to use.
      * @param {pc.input.Mouse} [options.mouse] A Mouse object to use.
      * @param {pc.input.Gamepads} [options.gamepads] A Gamepads object to use.
+     * @example
+     * var c = new pc.input.Controller(document)
+     * 
+     * // Register the "fire" action and assign it to both the Enter key and the Spacebar.
+     * c.registerKeys("fire", [pc.input.KEY_ENTER, pc.input.KEY_SPACE]);
      */
     var Controller = function (element, options) {
         options = options || {};
