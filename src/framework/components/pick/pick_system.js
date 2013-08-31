@@ -13,6 +13,7 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.PickComponent;
         this.DataType = pc.fw.PickComponentData;
+        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.PickComponent' );
 
         this.schema = [{
             name: 'layer',
