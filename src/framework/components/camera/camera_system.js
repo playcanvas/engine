@@ -9,6 +9,7 @@ pc.extend(pc.fw, function () {
      */
     var CameraComponentSystem = function (context) {
         this.id = 'camera';
+        this.description = "Renders the scene from the location of the entity.";
         context.systems.add(this.id, this);
         
         this.ComponentType = pc.fw.CameraComponent;

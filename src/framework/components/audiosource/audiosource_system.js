@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var AudioSourceComponentSystem = function (context, manager) {
         this.id = "audiosource";
+        this.description = "Specifies audio assets that can be played at the position of the entity.";
         context.systems.add(this.id, this);
     
         this.ComponentType = pc.fw.AudioSourceComponent;

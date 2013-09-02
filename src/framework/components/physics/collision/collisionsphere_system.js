@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var CollisionSphereComponentSystem = function CollisionSphereComponentSystem (context) {
         this.id = "collisionsphere";
+        this.description = "Specifies a sphere-shaped collision volume.";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.CollisionSphereComponent;

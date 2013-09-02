@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var SpotLightComponentSystem = function (context) {
         this.id = "spotlight";
+        this.description = "Enables the entity to emit light from a spotlight cone.";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.SpotLightComponent;

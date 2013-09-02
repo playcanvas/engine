@@ -12,9 +12,20 @@ pc.extend(editor, function () {
      */
     LinkInterface.prototype.addComponentType = function(componentSystem) {
         var name = componentSystem.id;
+        var i;
+        var systems = this.systems;
+        var length = systems.length;
+        var exists = false;
 
-        if (this.systems.indexOf(name) < 0) {
-            this.systems.push(name);
+        for( i=0; i<length; i++ ) {
+            if( systems[i].name === name ) {
+                exists = true;
+                break;
+            }
+        }
+
+        if (!exists) {
+            this.systems.push({"name" : name, "description" : componentSystem.description});
         }
 
         if (!this.exposed[name]) {

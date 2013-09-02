@@ -8,6 +8,7 @@
      */
     var PrimitiveComponentSystem = function PrimitiveComponentSystem(context) {
         this.id = 'primitive';
+        this.description = "Renders a 3D graphics primitive as the location of the entity.";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.PrimitiveComponent;
