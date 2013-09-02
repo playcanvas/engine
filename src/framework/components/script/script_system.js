@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var ScriptComponentSystem = function ScriptComponentSystem(context) {
         this.id = 'script';
+        this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         context.systems.add(this.id, this);
         
         this.ComponentType = pc.fw.ScriptComponent;

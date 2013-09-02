@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var ModelComponentSystem = function ModelComponentSystem (context) {
         this.id = 'model';
+        this.description = "Renders a 3D model at the location of the Entity.";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.ModelComponent;

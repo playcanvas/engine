@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
     */
     var AudioListenerComponentSystem = function (context, manager) {
         this.id = "audiolistener";
+        this.description = "Specifies the location of the listener for 3D audio playback.";
         context.systems.add(this.id, this);
     
         this.ComponentType = pc.fw.AudioListenerComponent;

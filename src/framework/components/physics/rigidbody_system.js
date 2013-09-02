@@ -63,6 +63,7 @@ pc.extend(pc.fw, function () {
      */
     var RigidBodyComponentSystem = function RigidBodyComponentSystem (context) {
         this.id = 'rigidbody';
+        this.description = "Adds the entity to the scene's physical simulation.";
         context.systems.add(this.id, this);
         
         this.ComponentType = pc.fw.RigidBodyComponent;

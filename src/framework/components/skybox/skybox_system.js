@@ -9,6 +9,7 @@ pc.extend(pc.fw, function () {
      */
     var SkyboxComponentSystem = function SkyboxComponentSystem (context) {
         this.id = 'skybox';
+        this.description = "Renders a skybox in the scene.";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.SkyboxComponent;
