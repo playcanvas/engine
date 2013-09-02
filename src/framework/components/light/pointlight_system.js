@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var PointLightComponentSystem = function (context) {
         this.id = 'pointlight';
-        this.description = "Enables the entity to emit light from its position.";
+        this.description = "Enables the Entity to emit light from its position.";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.PointLightComponent;

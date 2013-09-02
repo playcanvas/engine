@@ -8,7 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var DirectionalLightComponentSystem = function (context) {
         this.id = 'directionallight';
-        this.description = "Enables the entity to emit directional light."
+        this.description = "Enables the Entity to emit directional light."
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.DirectionalLightComponent;
