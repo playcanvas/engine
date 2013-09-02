@@ -1,4 +1,8 @@
 pc.extend(pc.fw, function () {
+    /*
+    * @name pc.fw.AssetRegistry
+    * @description Container for all all assets that are available to this application
+    */
     var AssetRegistry = function (loader, prefix) {
         if (!loader) {
             throw new Error("Must provide a ResourceLoader instance for AssetRegistry");

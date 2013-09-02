@@ -2,9 +2,16 @@
 PlayCanvas Runtime Changes 
 --------------------------
 --------
+v0.117.0
+--------
+* [FIX] Docs for pc.input.Controller
+* [FIX] Docs for pc.fw.ApplicationContext
+
+--------
 v0.116.0
 --------
-* Added pc.input.Keyboard.wasReleased method
+* Added pc.input.Keyboard#wasReleased()
+* [FIX] Capsule rendering in Designer
 
 --------
 v0.115.1

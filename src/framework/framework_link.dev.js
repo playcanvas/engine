@@ -8,9 +8,11 @@ pc.extend(editor, function () {
 
     /** 
      * Expose a Component
-     * @param {Object} name
+     * @param {Object} componentSystem
      */
-    LinkInterface.prototype.addComponentType = function(name) {
+    LinkInterface.prototype.addComponentType = function(componentSystem) {
+        var name = componentSystem.id;
+
         if (this.systems.indexOf(name) < 0) {
             this.systems.push(name);
         }
