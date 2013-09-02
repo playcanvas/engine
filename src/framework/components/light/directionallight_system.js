@@ -12,7 +12,6 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.DirectionalLightComponent;
         this.DataType = pc.fw.DirectionalLightComponentData;
-        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.DirectionalLightComponent' );
 
         this.schema = [{
             name: "enable",

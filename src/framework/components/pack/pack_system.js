@@ -13,7 +13,6 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.PackComponent;
         this.DataType = pc.fw.PackComponentData;
-        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.PackComponent' );
 
         this.schema = [];
     };

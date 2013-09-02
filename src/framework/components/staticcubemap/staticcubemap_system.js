@@ -9,7 +9,6 @@ pc.extend(pc.fw, function () {
      */
     var StaticCubeMapComponentSystem = function StaticCubeMapComponentSystem (context) {
         this.id = "staticcubemap"
-        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.StaticCubeMapComponent' );
         context.systems.add(this.id, this);
     
         this.schema = [{

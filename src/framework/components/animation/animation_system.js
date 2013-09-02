@@ -12,7 +12,6 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.AnimationComponent;
         this.DataType = pc.fw.AnimationComponentData;
-        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.AnimationComponent' );
         
         this.schema = [{
             name: "assets",

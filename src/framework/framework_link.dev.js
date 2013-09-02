@@ -4,7 +4,6 @@ pc.extend(editor, function () {
         this.added = {}; // dictionary of added variables, deprecated...
         this.scripts =  {}; // dictionary of exposed script variables, not used
         this.systems = []; // list of registered system names
-        this.systemApiUrls = []; // list of registed system descriptions - 1:1 mapping to systems array
     };
 
     /** 
@@ -13,11 +12,9 @@ pc.extend(editor, function () {
      */
     LinkInterface.prototype.addComponentType = function(componentSystem) {
         var name = componentSystem.id;
-        var apiUrl = componentSystem.apiDocsUrl;
 
         if (this.systems.indexOf(name) < 0) {
             this.systems.push(name);
-            this.systemApiUrls.push(apiUrl);
         }
 
         if (!this.exposed[name]) {

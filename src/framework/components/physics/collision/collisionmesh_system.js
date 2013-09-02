@@ -12,7 +12,6 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.CollisionMeshComponent;
         this.DataType = pc.fw.CollisionMeshComponentData;
-        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.CollisionMeshComponent' );
 
         this.schema = [{
             name: "asset",

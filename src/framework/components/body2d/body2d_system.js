@@ -42,7 +42,6 @@ pc.extend(pc.fw, function () {
         
         this.ComponentType = pc.fw.Body2dComponent;
         this.DataType = pc.fw.Body2dComponentData;
-        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.Body2dComponent' );
 
         this.schema = [{
             name: "static",

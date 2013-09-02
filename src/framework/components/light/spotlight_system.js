@@ -12,7 +12,6 @@ pc.extend(pc.fw, function () {
 
         this.ComponentType = pc.fw.SpotLightComponent;
         this.DataType = pc.fw.SpotLightComponentData;
-        this.apiDocsUrl = pc.string.format( "{0}/{1}.html", this.apiDocsBaseUrl, 'pc.fw.SpotLightComponent' );
 
         this.schema = [{
             name: "enable",
