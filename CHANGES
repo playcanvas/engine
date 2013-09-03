@@ -1,6 +1,12 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+
+--------
+v0.118.0
+--------
+* Added component system descriptions
+
 --------
 v0.117.0
 --------

@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var CollisionMeshComponentSystem = function CollisionMeshComponentSystem (context) {
         this.id = "collisionmesh";
+        this.description = "Specifies a collision shape based on the triangle mesh of a model asset.";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.CollisionMeshComponent;

@@ -8,6 +8,7 @@ pc.extend(pc.fw, function () {
      */
     var CollisionBoxComponentSystem = function CollisionBoxComponentSystem (context) {
         this.id = "collisionbox";
+        this.description = "Specifies a box-shaped collision volume.";
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.CollisionBoxComponent;

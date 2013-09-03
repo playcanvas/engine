@@ -8,11 +8,13 @@ pc.extend(pc.fw, function () {
      */
     var AnimationComponentSystem = function AnimationComponentSystem (context) {
         this.id = 'animation';
+        this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
+
         context.systems.add(this.id, this);
 
         this.ComponentType = pc.fw.AnimationComponent;
         this.DataType = pc.fw.AnimationComponentData;
-        
+
         this.schema = [{
             name: "assets",
             displayName: "Asset",
