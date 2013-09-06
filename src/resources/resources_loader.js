@@ -1,4 +1,4 @@
-pc.extend(pc.resources, function () {
+    pc.extend(pc.resources, function () {
     /**
     * @name pc.resources.ResourceLoader
     * @constructor Create a new instance of a ResourceLoader
@@ -32,6 +32,8 @@ pc.extend(pc.resources, function () {
         this._loaded = 0;
 
         this._sequence = 0; // counter for tracking requests uniquely
+
+        this.noCaching = false; // set this to true to perform cache busting on resources
 
         pc.extend(this, pc.events);
     };
@@ -109,10 +111,10 @@ pc.extend(pc.resources, function () {
 
                 var requested = [];
                 var promises = [];
+
                 for (i = 0, n = requests.length; i < n; i++) {
                     // Use an existing request if there is a valid one in progress
                     var request = self._findExistingRequest(requests[i]);
-
                     // If we are using an existing request, we need to copy over result and data fields.
                     // TODO: What happens if the existing request has a data field!
                     if (request !== requests[i]) {
@@ -371,6 +373,10 @@ pc.extend(pc.resources, function () {
                 request.canonical = this._canonicals[hash];
             } else {
                 request.canonical = request.identifier;
+                if( this.noCaching === true ) {
+                    // append timestamp to avoid caching the resource
+                    request.canonical += "?ts=" + (new Date().getTime()); 
+                }
             }
         },
 
@@ -406,13 +412,14 @@ pc.extend(pc.resources, function () {
      */
     var ResourceRequest = function ResourceRequest(identifier, data, result) {
         this.id = null;               // Sequence ID, given to the request when it is made
-        this.identifier = identifier; // The identifier for this resource
         this.canonical = identifier;  // The canonical identifier using the file hash (if available) to match identical resources
         this.alternatives = [];       // Alternative identifiers to the canonical
         this.promises = [];           // List of promises that will be honoured when the request is complete. The first promise in the list is the primary one.
         this.children = [];           // Any child requests which were made while this request was being processed
         this.data = data;             // Additional data that the resource handler might need once it has loaded
         this.result = result;         // The result object can be supplied and used by a handler, instead of creating a new resource
+        this.identifier = identifier  // The identifier for this resource
+
     };
 
     /**

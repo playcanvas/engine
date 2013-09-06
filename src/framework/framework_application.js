@@ -53,6 +53,7 @@ pc.extend(pc.fw, function () {
         
         // Create resource loader
         var loader = new pc.resources.ResourceLoader();
+        loader.noCaching = options.noCaching;
             
         // Display shows debug loading information. Only really fit for debug display at the moment.
         if (options.displayLoader) {
