@@ -32,7 +32,12 @@ pc.extend(pc.resources, function () {
         options.timeout = options.timeout || 60000; // default 10 second timeout
 
         var promise = new RSVP.Promise(function (resolve, reject) {
-            var url = new pc.URI(request.canonical);
+            var processedUrl = request.canonical;
+            if( !options.cache ) {
+                processedUrl = this._appendTimestampToUrl(processedUrl);
+            }
+
+            var url = new pc.URI(processedUrl);
             url.path = pc.path.join(this._prefix, url.path);
             url = url.toString();
             
@@ -72,6 +77,26 @@ pc.extend(pc.resources, function () {
     ScriptResourceHandler.prototype.open = function (data, request, options) {
         return data;
     };
+
+    /**
+    * @private
+    * Adds a timestamp to the specified URL to prevent it from being cached.
+    * @url The url to append the timestamp to 
+    * @returns The new url
+    */
+    ScriptResourceHandler.prototype._appendTimestampToUrl = function( url ) {
+        timestamp = pc.time.now();
+
+        uri = new pc.URI(url);
+        if (!uri.query) {
+            uri.query = "ts=" + timestamp;
+        }
+        else {
+            uri.query = uri.query + "&ts=" + timestamp;
+        }
+        url = uri.toString(); 
+        return url;
+    }
     
     /**
      * @private

@@ -33,7 +33,7 @@
 
         this._sequence = 0; // counter for tracking requests uniquely
 
-        this.noCaching = false; // set this to true to perform cache busting on resources
+        this.cache = true; // set this to false to perform cache busting on resources
 
         pc.extend(this, pc.events);
     };
@@ -99,6 +99,8 @@
             
             var self = this;
             var parent = options.parent;
+
+            options.cache = self.cache;
 
             var promise = new RSVP.Promise(function (resolve, reject) {
                 var i, n;
@@ -373,10 +375,6 @@
                 request.canonical = this._canonicals[hash];
             } else {
                 request.canonical = request.identifier;
-                if( this.noCaching === true ) {
-                    // append timestamp to avoid caching the resource
-                    request.canonical += "?ts=" + (new Date().getTime()); 
-                }
             }
         },
 
@@ -398,7 +396,7 @@
             } else {
                 return request;
             }
-        }
+        },
     };
 
 
