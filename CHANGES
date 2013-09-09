@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.119.0
+--------
+* No longer caching scripts when running from the designer 
+
+--------
 v0.118.0
 --------
 * Added component system descriptions
