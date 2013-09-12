@@ -1,7 +1,7 @@
 pc.extend(pc.input, function () {
     /**
     * @name pc.input.GamePads
-    * @class Input handler for access GamePad input
+    * @class Input handler for accessing GamePad input
     */ 
     var GamePads = function () {
         this.gamepadsSupported = !!navigator.webkitGetGamepads;
@@ -118,8 +118,8 @@ pc.extend(pc.input, function () {
         * @description Poll for the latest data from the gamepad API.
         * @returns {Array} An array of gamepads and mappings for the model of gamepad that is attached
         * @example
-        *   var gamepad = new pc.input.GamePad();
-        *   var pads = gamepad.poll();
+        *   var gamepads = new pc.input.GamePads();
+        *   var pads = gamepads.poll();
         *   // pads[0] = { map: <map>, pad: <pad> }
         */
         poll: function () {
