@@ -1,4 +1,7 @@
 pc.extend(pc.fw, function () {
+    var REMOTE_CAMERA_NEAR_CLIP = 0.5;
+    var REMOTE_CAMERA_FAR_CLIP = 2;
+
     /**
      * @name pc.fw.CameraComponentSystem
      * @class Used to add and remove {@link pc.fw.CameraComponent}s from Entities.
@@ -139,7 +142,7 @@ pc.extend(pc.fw, function () {
             }
             
             
-            if (this.context.designer && !component.entity.hasLabel("pc:designer")) {
+            if (this.context.designer && this.displayInTools(component.entity)) {
                 var material = new pc.scene.BasicMaterial();
                 material.color = pc.math.vec4.create(1, 1, 0, 1);
                 material.update();
@@ -215,7 +218,7 @@ pc.extend(pc.fw, function () {
                 this.current = null;
             }
 
-            if (this.context.designer && !entity.hasLabel("pc:designer")) {
+            if (this.context.designer && this.displayInTools(entity)) {
                 if (this.context.scene.containsModel(data.model)) {
                     this.context.scene.removeModel(data.model);
                 }
@@ -232,21 +235,21 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
                     var data = components[id].data;
 
-                    if (!entity.hasLabel("pc:designer")) {
-                        this.updateGfx(entity.camera);
+                    if (this.displayInTools(entity)) {
+                        this._updateGfx(entity.camera);
                     }
                 }
             }
         },
 
-        updateGfx: function (component) {
+        _updateGfx: function (component) {
             if (component.model && component.model.meshInstances.length) {
                 var vertexBuffer = component.model.meshInstances[0].mesh.vertexBuffer;
 
                 // Retrieve the characteristics of the camera frustum
                 var aspectRatio = component.camera.getAspectRatio();
-                var nearClip    = component.nearClip;
-                var farClip     = component.farClip;
+                var nearClip    = this.isToolsCamera(component.entity) ? REMOTE_CAMERA_NEAR_CLIP : component.nearClip; // Remote User cameras don't display full extents
+                var farClip     = this.isToolsCamera(component.entity) ? REMOTE_CAMERA_FAR_CLIP : component.farClip; // Remote User cameras don't display full extents
                 var fov         = component.fov * Math.PI / 180.0;
                 var projection  = component.projection;
 
@@ -290,7 +293,15 @@ pc.extend(pc.fw, function () {
                 positions[23] = -farClip;                
                 vertexBuffer.unlock();
             }
-        }
+        },
+
+        isToolsCamera: function (entity) {
+            return entity.hasLabel("pc:designer");
+        },
+
+        displayInTools: function (entity) {
+            return (!this.isToolsCamera(entity) || (entity.getName() === "Perspective"));
+        } 
     });
 
     return {
