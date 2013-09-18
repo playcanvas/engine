@@ -30,7 +30,8 @@ pc.extend(pc.resources, function () {
     ScriptResourceHandler.prototype.load = function (request, options) {
         options = options || {};
         options.timeout = options.timeout || 60000; // default 10 second timeout
-
+        options.cache = true;
+        
         var promise = new RSVP.Promise(function (resolve, reject) {
             var processedUrl = request.canonical;
             if( !options.cache ) {
