@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.119.1
+--------
+* [FIX] Force cache-busting off on resources to fix script debugging
+
+--------
 v0.119.0
 --------
 * No longer caching scripts when running from the designer 
