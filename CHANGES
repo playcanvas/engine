@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.120.0
+--------
+* Support for displaying remote cameras in designer
+
+--------
 v0.119.1
 --------
 * [FIX] Force cache-busting off on resources to fix script debugging
