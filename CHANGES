@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.120.1
+--------
+* Added docs for pc.scene.Mesh and pc.scene.MeshInstance.
+
+--------
 v0.120.0
 --------
 * Support for displaying remote cameras in designer
