@@ -13,6 +13,10 @@ pc.extend(pc.scene, function () {
                ((materialId & 0x1ffffff) << 0);
     }
 
+    /**
+     * @name pc.scene.Mesh
+     * @class A graphical primitive.
+     */
     var Mesh = function () {
         this.vertexBuffer = null;
         this.indexBuffer = [ null ];
@@ -27,6 +31,14 @@ pc.extend(pc.scene, function () {
         this.aabb = null;
     };
 
+    /**
+     * @name pc.scene.MeshInstance
+     * @class A instance of a pc.scene.Mesh. A single mesh can be referenced by many instances
+     * that can have different transforms and materials.
+     * @param {pc.scene.GraphNode} node The graph node defining the transform for this instance.
+     * @param {pc.scene.Mesh} mesh The graphics mesh being instanced.
+     * @param {pc.scene.Material} material The material used to render this instance.
+     */
     var MeshInstance = function (node, mesh, material) {
         this.node = node;           // The node that defines the transform of the mesh instance
         this.mesh = mesh;           // The mesh that this instance renders
