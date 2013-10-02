@@ -73,7 +73,7 @@ pc.extend(pc.posteffect, function () {
         // Pixel shader extracts the brighter areas of an image.
         // This is the first step in applying a bloom postprocess.
         var bloomExtractFrag = [
-            "precision mediump float;",
+            "precision " + graphicsDevice.precision + " float;",
             "",
             "varying vec2 vUv0;",
             "",
@@ -94,7 +94,7 @@ pc.extend(pc.posteffect, function () {
         // This is used twice by the bloom postprocess, first to
         // blur horizontally, and then again to blur vertically.
         var gaussianBlurFrag = [
-            "precision mediump float;",
+            "precision " + graphicsDevice.precision + " float;",
             "",
             "#define SAMPLE_COUNT " + SAMPLE_COUNT,
             "",
@@ -121,7 +121,7 @@ pc.extend(pc.posteffect, function () {
         // scene, using tweakable intensity levels and saturation.
         // This is the final step in applying a bloom postprocess.
         var bloomCombineFrag = [
-            "precision mediump float;",
+            "precision " + graphicsDevice.precision + " float;",
             "",
             "varying vec2 vUv0;",
             "",

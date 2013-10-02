@@ -21,7 +21,7 @@ pc.extend(pc.posteffect, function () {
         ].join("\n");
 
         var luminosityFrag = [
-            "precision mediump float;",
+            "precision " + graphicsDevice.precision + " float;",
             "",
             "uniform sampler2D uColorBuffer;",
             "uniform float uDarkness;",

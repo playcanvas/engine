@@ -72,6 +72,7 @@ pc.extend(pc.fw, function () {
             }
         },
         set: function(lv) {
+            this.activate();
             if (!this.isKinematic()) {
                 var body = this.body;
                 if (body) {
@@ -97,6 +98,7 @@ pc.extend(pc.fw, function () {
             }
         },
         set: function(av) {
+            this.activate();
             if (!this.isKinematic()) {
                 var body = this.body;
                 if (body) {
@@ -261,6 +263,7 @@ pc.extend(pc.fw, function () {
             }
             var body = this.body;
             if (body) {
+                body.activate();
                 ammoVec1.setValue(x, y, z);
                 if (typeof(px) !== 'undefined') {
                     ammoVec2.setValue(px, py, pz);
@@ -305,6 +308,7 @@ pc.extend(pc.fw, function () {
             }
             var body = this.body;
             if (body) {
+                body.activate();
                 ammoVec1.setValue(x, y, z);
                 body.applyTorque(ammoVec1);
             }
@@ -361,6 +365,7 @@ pc.extend(pc.fw, function () {
             }
             var body = this.body;
             if (body) {
+                body.activate();
                 ammoVec1.setValue(x, y, z);
                 if (typeof(px) !== 'undefined') {
                     ammoVec2.setValue(px, py, pz);
@@ -404,6 +409,7 @@ pc.extend(pc.fw, function () {
             }
             var body = this.body;
             if (body) {
+                body.activate();
                 ammoVec1.setValue(x, y, z);
                 body.applyTorqueImpulse(ammoVec1);                    
             }

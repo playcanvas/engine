@@ -56,7 +56,7 @@ pc.gfx.programlib = {
                 break;
 
             case 'fs_precision':
-                code += 'precision mediump float;\n\n';
+                code += 'precision ' + device.precision + ' float;\n\n';
                 break;
 
             case 'fs_depth_encode_rgba':
