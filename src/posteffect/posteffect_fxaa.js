@@ -18,7 +18,7 @@ pc.extend(pc.posteffect, function () {
         ].join("\n");
 
         var fxaaFrag = [
-            "precision mediump float;",
+            "precision " + graphicsDevice.precision + " float;",
             "",
             "uniform sampler2D uColorBuffer;",
             "uniform vec2 uResolution;",

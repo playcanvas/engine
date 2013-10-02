@@ -19,7 +19,7 @@ pc.extend(pc.posteffect, function () {
                 "}"
             ].join("\n"),
             fshader: [
-                "precision mediump float;",
+                "precision " + graphicsDevice.precision + " float;",
                 "",
                 "varying vec2 vUv0;",
                 "",
