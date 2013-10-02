@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.120.2
+--------
+* [FIX] Check the precision capabilities of the GPU and generate shaders accordingly.
+* Now calling activate internally in rigid body methods that apply forces etc.
+
+--------
 v0.120.1
 --------
 * Added docs for pc.scene.Mesh and pc.scene.MeshInstance.
