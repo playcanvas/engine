@@ -234,8 +234,18 @@ pc.extend(pc.fw, function () {
         * @param {Number} y The y-component of the gravity vector
         * @param {Number} z The z-component of the gravity vector
         */
-        setGravity: function (x, y, z) {
-            this._ammoGravity.setValue(x, y, z);
+        /**
+        * @function
+        * @name pc.fw.RigidBodyComponentSystem#setGravity^2
+        * @description Set the gravity vector for the 3D physics world
+        * @param {pc.math.vec3} gravity The gravity vector to use for the 3D physics world.
+        */
+        setGravity: function () {
+            if (arguments.length === 3) {
+                this._ammoGravity.setValue(arguments[0], arguments[1], arguments[2]);
+            } else {
+                this._ammoGravity.setValue(arguments[0][0], arguments[0][1], arguments[0][2])
+            }
             this.dynamicsWorld.setGravity(this._ammoGravity);
         },
 
