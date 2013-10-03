@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.121.0
+--------
+* Support for PackSettings livelink messages
+
+--------
 v0.120.2
 --------
 * [FIX] Check the precision capabilities of the GPU and generate shaders accordingly.
