@@ -601,6 +601,9 @@ pc.extend(pc.fw, function () {
                     this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
                     break;
 
+                case pc.fw.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
+                    this._linkUpdatePackSettings(msg.content.settings);
+                    break;
             }
         },
 
@@ -705,6 +708,14 @@ pc.extend(pc.fw, function () {
             if (asset) {
                 asset[attribute] = value;
                 asset.fire('change', asset, attribute, value);
+            }
+        },
+
+        _linkUpdatePackSettings: function (settings) {
+            this.context.scene.setGlobalAmbient(settings.render.global_ambient);
+
+            if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
+                this.context.systems.rigidbody.setGravity(settings.physics.gravity);
             }
         }
     };
