@@ -1,6 +1,10 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+--------
+v0.122.0
+--------
+* [FIX] Loading pack settings at startup
 
 --------
 v0.121.0

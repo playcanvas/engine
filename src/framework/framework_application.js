@@ -166,6 +166,13 @@ pc.extend(pc.fw, function () {
                     var pack = resources[0];
                     this.context.root.addChild(pack.hierarchy);
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
+                    
+                    // Initialise pack settings
+                    this.context.scene.setGlobalAmbient(pack.settings.render.global_ambient);
+                    if (this.context.systems.rigidbody) {
+                        this.context.systems.rigidbody.setGravity(pack.settings.physics.gravity);
+                    }
+
                     success(pack);
                     this.context.loader.off('progress', progress);
                 }.bind(this), function (msg) {
@@ -573,6 +580,18 @@ pc.extend(pc.fw, function () {
                     if(entity) {
                         logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid())); 
                         entity.destroy();
+                    }
+                    break;
+                case pc.fw.LiveLinkMessageType.OPEN_PACK:
+                    var pack = this.context.loader.open(pc.resources.PackRequest, msg.content.pack);
+
+                    // Get the root entity back from the fake pack
+                    var entity = pack.hierarchy;
+                    if (entity.__parent) {
+                        parent = this.context.root.findByGuid(entity.__parent);
+                        parent.addChild(entity);
+                    } else {
+                        this.context.root.addChild(entity);
                     }
                     break;
                 case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
