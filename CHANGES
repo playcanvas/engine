@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.122.1
+--------
+* [FIX] If Ammo not loaded
+
+--------
+v0.122.0
+--------
+* [FIX] Loading pack settings at startup
+
+--------
 v0.121.0
 --------
 * Support for PackSettings livelink messages
