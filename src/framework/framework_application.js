@@ -169,7 +169,7 @@ pc.extend(pc.fw, function () {
                     
                     // Initialise pack settings
                     this.context.scene.setGlobalAmbient(pack.settings.render.global_ambient);
-                    if (this.context.systems.rigidbody) {
+                    if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
                         this.context.systems.rigidbody.setGravity(pack.settings.physics.gravity);
                     }
 
