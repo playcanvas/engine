@@ -1,6 +1,7 @@
 pc.extend(pc.fw, function () {
-    var Pack = function (hierarchy) {
-        this.hierarchy = hierarchy;
+    var Pack = function (data) {
+        this.hierarchy = data.hierarchy;
+        this.settings = data.settings;
     };
 
     Pack.prototype = {
