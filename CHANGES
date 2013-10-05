@@ -3,6 +3,26 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.122.2
+--------
+* [FIX] Gizmo no longer broken - take a copy of Pack data before opening
+
+--------
+v0.122.1
+--------
+* [FIX] If Ammo not loaded
+
+--------
+v0.122.0
+--------
+* [FIX] Loading pack settings at startup
+
+--------
+v0.121.0
+--------
+* Support for PackSettings livelink messages
+
+--------
 v0.120.2
 --------
 * [FIX] Check the precision capabilities of the GPU and generate shaders accordingly.

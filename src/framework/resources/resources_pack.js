@@ -41,8 +41,9 @@ pc.extend(pc.resources, function () {
     };
     
     PackResourceHandler.prototype.openPack = function (data, request) {
-        var pack = data.hierarchy;
-        return new pc.fw.Pack(this.openEntity(pack, request));
+        var d = pc.extend({}, data);
+        d.hierarchy = this.openEntity(d.hierarchy, request);
+        return new pc.fw.Pack(d);
     };
 
     PackResourceHandler.prototype.openEntity = function (data, request) {
