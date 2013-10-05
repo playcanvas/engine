@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.122.2
+--------
+* [FIX] Gizmo no longer broken - take a copy of Pack data before opening
+
+--------
 v0.122.1
 --------
 * [FIX] If Ammo not loaded
