@@ -34,6 +34,8 @@ pc.extend(pc.fw, function () {
         this.on('set_axis', this.onSetAxis, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_radius', this.onSetRadius, this);
+        if( !entity.rigidbody )
+            entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
     };
     CollisionCapsuleComponent = pc.inherits(CollisionCapsuleComponent, pc.fw.Component);
     
@@ -49,9 +51,7 @@ pc.extend(pc.fw, function () {
                 this.updateDebugShape(axis, radius, height);
             }
 
-            if (this.entity.rigidbody) {
-                this.entity.rigidbody.createBody();
-            }
+            this.resetPhysics();
         },
 
         onSetHeight: function (name, oldValue, newValue) {
@@ -64,9 +64,7 @@ pc.extend(pc.fw, function () {
                 this.updateDebugShape(axis, radius, height);
             }
 
-            if (this.entity.rigidbody) {
-                this.entity.rigidbody.createBody();
-            }
+            this.resetPhysics()
         },
 
         onSetRadius: function (name, oldValue, newValue) {
@@ -79,8 +77,14 @@ pc.extend(pc.fw, function () {
                 this.updateDebugShape(axis, radius, height);
             }
 
+            this.resetPhysics()
+        },
+
+        resetPhysics: function () {
             if (this.entity.rigidbody) {
                 this.entity.rigidbody.createBody();
+            } else if (this.entity.trigger) {
+                this.entity.trigger.initialize( this.data );
             }
         },
 
@@ -166,6 +170,17 @@ pc.extend(pc.fw, function () {
             }
 
             vertexBuffer.unlock();
+        },
+
+        /**
+         * Handle an update over livelink from the tools updating the Entities transform
+         */
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            if (this.entity.trigger) {
+                this.entity.trigger.syncEntityToBody();
+            } else {
+                 this.entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+            }
         }
     });
 

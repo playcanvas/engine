@@ -11,6 +11,8 @@ pc.extend(pc.fw, function () {
      */
     var CollisionBoxComponent = function CollisionBoxComponent (system, entity) {
         this.on('set_halfExtents', this.onSetHalfExtents, this);
+        if( !entity.rigidbody )
+            entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
     };
     CollisionBoxComponent = pc.inherits(CollisionBoxComponent, pc.fw.Component);
     
@@ -20,6 +22,9 @@ pc.extend(pc.fw, function () {
             if (this.entity.rigidbody) {
                 this.data.shape = this.createShape(this.data.halfExtents[0], this.data.halfExtents[1], this.data.halfExtents[2]);
                 this.entity.rigidbody.createBody();
+            } else if (this.entity.trigger) {
+                this.data.shape = this.createShape(this.data.halfExtents[0], this.data.halfExtents[1], this.data.halfExtents[2]);
+                this.entity.trigger.initialize( this.data );
             }
         },
 
@@ -28,6 +33,17 @@ pc.extend(pc.fw, function () {
                 return new Ammo.btBoxShape(new Ammo.btVector3(x, y, z));    
             } else {
                 return undefined;
+            }
+        },
+
+        /**
+         * Handle an update over livelink from the tools updating the Entities transform
+         */
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            if (this.entity.trigger) {
+                this.entity.trigger.syncEntityToBody();
+            } else {
+                 this.entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
             }
         }
     });

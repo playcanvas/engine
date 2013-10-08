@@ -388,6 +388,7 @@ pc.extend(pc.fw, function () {
         // Collision flags from AmmoJS
         RIGIDBODY_CF_STATIC_OBJECT: 1,
         RIGIDBODY_CF_KINEMATIC_OBJECT: 2,
+        RIGIDBODY_CF_NORESPONSE_OBJECT: 4,
 
         // Activation states from AmmoJS
         RIGIDBODY_ACTIVE_TAG: 1,

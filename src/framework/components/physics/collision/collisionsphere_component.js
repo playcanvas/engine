@@ -11,18 +11,33 @@ pc.extend(pc.fw, function () {
      */
     var CollisionSphereComponent = function CollisionSphereComponent (system, entity) {
         this.on('set_radius', this.onSetRadius, this);
+        if( !entity.rigidbody )
+            entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
     };
     CollisionSphereComponent = pc.inherits(CollisionSphereComponent, pc.fw.Component);
     
     pc.extend(CollisionSphereComponent.prototype, {
 
         onSetRadius: function (name, oldValue, newValue) {
-            if (this.entity.rigidbody) {
-                if (typeof(Ammo) !== 'undefined') {
-                    this.data.shape = new Ammo.btSphereShape(newValue);    
-                }
+            if (typeof(Ammo) !== 'undefined') {
+                this.data.shape = new Ammo.btSphereShape(newValue);    
+            }
                 
+            if (this.entity.rigidbody) {                            
                 this.entity.rigidbody.createBody();
+            } else if (this.entity.trigger) {
+                this.entity.trigger.initialize( this.data );
+            }
+        },
+
+        /**
+         * Handle an update over livelink from the tools updating the Entities transform
+         */
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            if (this.entity.trigger) {
+                this.entity.trigger.syncEntityToBody();
+            } else {
+                 this.entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
             }
         }
     });
