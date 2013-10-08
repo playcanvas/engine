@@ -11,8 +11,11 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var CollisionMeshComponent = function CollisionMeshComponent (system, entity) {
+        entity.collider = this;
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_model", this.onSetModel, this);
+        if( !entity.rigidbody )
+            entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
     };
     CollisionMeshComponent = pc.inherits(CollisionMeshComponent, pc.fw.Component);
     
@@ -38,7 +41,13 @@ pc.extend(pc.fw, function () {
 
                 if (this.entity.rigidbody) {
                     this.entity.rigidbody.createBody();
+                } else {
+                    if( !this.entity.trigger ) {
+                        this.entity.trigger = new pc.fw.Trigger(this.system.context, this, this.data);
+                    }
+                    this.entity.trigger.initialize( this.data );
                 }
+
             }.bind(this));
         },
 
@@ -120,6 +129,17 @@ pc.extend(pc.fw, function () {
                 return shape;
             } else {
                 return undefined;
+            }
+        },
+
+        /**
+         * Handle an update over livelink from the tools updating the Entities transform
+         */
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            if (this.entity.trigger) {
+                this.entity.trigger.syncEntityToBody();
+            } else {
+                 this.entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
             }
         }
     });

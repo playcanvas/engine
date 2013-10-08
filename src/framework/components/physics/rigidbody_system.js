@@ -45,6 +45,35 @@ pc.extend(pc.fw, function () {
         this.normal = new pc.math.vec3.create(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
     };
 
+    /**
+    * @name pc.fw.ColliderContactResult
+    * @class Object holding the result of a contact between a rigid body and a collider
+    * @constructor Create a new ColliderContactResult
+    * @property {pc.fw.Entity} other The entity that was involved in the contact with this collider    
+    * @property {pc.math.vec3} localPoint The point on the collider where the contact occured, relative to the collider
+    * @property {pc.math.vec3} localPointOther The point on the other entity where the contact occured, relative to the other entity
+    * @property {pc.math.vec3} point The point on the collider where the contact occured, in world space
+    * @property {pc.math.vec3} pointOther The point on the other entity where the contact occured, in world space
+    * @property {pc.math.vec3} normal The normal vector of the contact on the other entity, in world space
+    */
+    var ColliderContactResult = function(other, contactPoint, reverseEntities) {
+        this.other = other;
+        if( reverseEntities ) {
+            this.localPointOther = new pc.math.vec3.create(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
+            this.localPoint = new pc.math.vec3.create(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
+            this.pointOther = new pc.math.vec3.create(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
+            this.point = new pc.math.vec3.create(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
+            this.normal = new pc.math.vec3.create(-contactPoint.get_m_normalWorldOnB().x(), -contactPoint.get_m_normalWorldOnB().y(), -contactPoint.get_m_normalWorldOnB().z());
+
+        } else {
+            this.localPoint = new pc.math.vec3.create(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
+            this.localPointOther = new pc.math.vec3.create(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
+            this.point = new pc.math.vec3.create(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
+            this.pointOther = new pc.math.vec3.create(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
+            this.normal = new pc.math.vec3.create(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
+        }
+    }
+
     // Events Documentation   
     /**
     * @event
@@ -342,26 +371,33 @@ pc.extend(pc.fw, function () {
             }
 
             // Check for collisions and fire callbacks
-            if (this.hasEvent('contact')) {
-                var dispatcher = this.dynamicsWorld.getDispatcher();
-                var numManifolds = dispatcher.getNumManifolds();
-                var i, j;
-                for (i = 0; i < numManifolds; i++) {
-                    var manifold = dispatcher.getManifoldByIndexInternal(i);
-                    var body0 = manifold.getBody0();
-                    var body1 = manifold.getBody1();
-                    var wb0 = btRigidBody.prototype['upcast'](body0);
-                    var wb1 = btRigidBody.prototype['upcast'](body1);
-                    var e0 = wb0.entity;
-                    var e1 = wb1.entity;
+            var dispatcher = this.dynamicsWorld.getDispatcher();
+            var numManifolds = dispatcher.getNumManifolds();
+            var i, j;
+            var contactEvent = 'contact';
+            for (i = 0; i < numManifolds; i++) {
+                var manifold = dispatcher.getManifoldByIndexInternal(i);
+                var body0 = manifold.getBody0();
+                var body1 = manifold.getBody1();
+                var wb0 = btRigidBody.prototype['upcast'](body0);
+                var wb1 = btRigidBody.prototype['upcast'](body1);
+                var e0 = wb0.entity;
+                var e1 = wb1.entity;
 
-                    var numContacts = manifold.getNumContacts();
-                    for (j = 0; j < numContacts; j++) {
-                        var contactPoint = manifold.getContactPoint(j);
-                        this.fire('contact', new ContactResult(e0, e1, contactPoint));
+                var numContacts = manifold.getNumContacts();
+                for (j = 0; j < numContacts; j++) {
+                    var contactPoint = manifold.getContactPoint(j);
+                    if( this.hasEvent(contactEvent) ) {
+                        this.fire(contactEvent, new ContactResult(e0, e1, contactPoint));
                     }
-                }                
-            }
+                    if( e0.collider.hasEvent(contactEvent) ) {
+                        e0.collider.fire(contactEvent, new ColliderContactResult(e1, contactPoint));
+                    }
+                    if( e1.collider.hasEvent(contactEvent) ) {
+                        e1.collider.fire(contactEvent, new ColliderContactResult(e0, contactPoint, true));
+                    }
+                }
+            }                
         }
     });
 

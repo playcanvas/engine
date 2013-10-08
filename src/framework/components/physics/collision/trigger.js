@@ -52,7 +52,6 @@ pc.extend(pc.fw, function () {
                 body.setAngularFactor(ammoVec1);
 
                 body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_NORESPONSE_OBJECT);
-                body.setActivationState(pc.fw.RIGIDBODY_DISABLE_DEACTIVATION);
                 body.entity = entity;
 
                 this.context.systems.rigidbody.addBody(body);

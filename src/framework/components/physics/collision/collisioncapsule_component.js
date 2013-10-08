@@ -31,6 +31,7 @@ pc.extend(pc.fw, function () {
      * @property {Number} radius The radius of the capsule. Defaults to 0.5.
      */
     var CollisionCapsuleComponent = function CollisionCapsuleComponent(system, entity) {
+        entity.collider = this;
         this.on('set_axis', this.onSetAxis, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_radius', this.onSetRadius, this);

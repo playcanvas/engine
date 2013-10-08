@@ -10,6 +10,7 @@ pc.extend(pc.fw, function () {
      * @property {Number} radius The radius of the sphere
      */
     var CollisionSphereComponent = function CollisionSphereComponent (system, entity) {
+        entity.collider = this;
         this.on('set_radius', this.onSetRadius, this);
         if( !entity.rigidbody )
             entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
@@ -22,7 +23,7 @@ pc.extend(pc.fw, function () {
             if (typeof(Ammo) !== 'undefined') {
                 this.data.shape = new Ammo.btSphereShape(newValue);    
             }
-                
+
             if (this.entity.rigidbody) {                            
                 this.entity.rigidbody.createBody();
             } else if (this.entity.trigger) {
