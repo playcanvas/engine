@@ -9,6 +9,8 @@ pc.extend(pc.fw, function () {
 
     var ammoRayStart, ammoRayEnd;
 
+    var contacts = {};
+
     /**
     * @name pc.fw.RaycastResult
     * @class Object holding the result of a successful raycast hit
@@ -375,6 +377,24 @@ pc.extend(pc.fw, function () {
             var numManifolds = dispatcher.getNumManifolds();
             var i, j;
             var contactEvent = 'contact';
+            var triggerEnterEvent = 'onTriggerEnter';
+            var triggerExitEvent = 'onTriggerExit';
+            var frameContacts = {};
+
+            // stores a contact between the entity and other in the contacts map
+            var storeContact = function (entity, other) {                
+                var guid = entity.getGuid();
+                contacts[guid] = contacts[guid] || {others: [], entity: entity};
+                // if this is the first contact between the two entities fire event
+                if( contacts[guid].others.indexOf(other) < 0 ) {
+                    contacts[guid].others.push(other);
+                    entity.collider.fire(triggerEnterEvent, other);
+                }
+                
+                frameContacts[guid] = frameContacts[guid] || {others: [], entity: entity};
+                frameContacts[guid].others.push(other);
+            };
+
             for (i = 0; i < numManifolds; i++) {
                 var manifold = dispatcher.getManifoldByIndexInternal(i);
                 var body0 = manifold.getBody0();
@@ -385,19 +405,55 @@ pc.extend(pc.fw, function () {
                 var e1 = wb1.entity;
 
                 var numContacts = manifold.getNumContacts();
-                for (j = 0; j < numContacts; j++) {
-                    var contactPoint = manifold.getContactPoint(j);
-                    if( this.hasEvent(contactEvent) ) {
-                        this.fire(contactEvent, new ContactResult(e0, e1, contactPoint));
+                if( numContacts > 0 ) {
+
+                    // store contacts to internal structure to keep track
+                    // of new contacts and contacts that no longer exist
+                    if( e0.collider && e0.collider.hasEvent(triggerEnterEvent) ) {
+                        storeContact(e0, e1);
                     }
-                    if( e0.collider.hasEvent(contactEvent) ) {
-                        e0.collider.fire(contactEvent, new ColliderContactResult(e1, contactPoint));
+
+                    if( e1.collider && e1.collider.hasEvent(triggerEnterEvent) ) {
+                        storeContact(e1, e0);
+                    };
+                    
+                    for (j = 0; j < numContacts; j++) {
+                        var contactPoint = manifold.getContactPoint(j);
+                        if( this.hasEvent(contactEvent) ) {
+                            this.fire(contactEvent, new ContactResult(e0, e1, contactPoint));
+                        }
+                        if( e0.collider.hasEvent(contactEvent) ) {
+                            e0.collider.fire(contactEvent, new ColliderContactResult(e1, contactPoint));
+                        }
+                        if( e1.collider.hasEvent(contactEvent) ) {
+                            e1.collider.fire(contactEvent, new ColliderContactResult(e0, contactPoint, true));
+                        }
                     }
-                    if( e1.collider.hasEvent(contactEvent) ) {
-                        e1.collider.fire(contactEvent, new ColliderContactResult(e0, contactPoint, true));
-                    }
+
                 }
             }                
+
+            // fire events on entities that exited triggers
+            for( var guid in contacts ) {
+                if( contacts.hasOwnProperty(guid) ) {
+                    var entity = contacts[guid].entity;
+                    var others = contacts[guid].others;
+                    var length = others.length;
+                    var i=length;
+                    while(i--) {
+                        var other = others[i];
+                        // if the contact does not exist in the current frame contacts then fire event
+                        if( !frameContacts[guid] || frameContacts[guid].others.indexOf(other) < 0 ) {
+                            others.splice(i, 1);
+                            entity.collider.fire(triggerExitEvent, other);
+                        }
+                    }  
+
+                    if( others.length === 0 ) {
+                        delete contacts[guid];
+                    }          
+                }
+            }          
         }
     });
 
