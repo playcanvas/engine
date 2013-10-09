@@ -1,7 +1,11 @@
 pc.extend(pc.scene, function () {
 
     function sortDrawCalls(drawCallA, drawCallB) {
-        return drawCallB.key - drawCallA.key;
+        if (drawCallA.distSqr && drawCallB.distSqr) {
+            return drawCallB.distSqr - drawCallA.distSqr;
+        } else {
+            return drawCallB.key - drawCallA.key;
+        }
     }
 
     // Global shadowmap resources
@@ -374,6 +378,26 @@ pc.extend(pc.scene, function () {
                 }
             }
 
+            // Calculate the distance of transparent meshes from the camera
+            var camPos = camera.getPosition();
+            for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
+                drawCall = drawCalls[i];
+                if (!drawCall.command) {
+                    meshInstance = drawCall;
+
+                    if (meshInstance.material.blendType === pc.scene.BLEND_NORMAL) {
+                        meshInstance.syncAabb();
+                        var meshPos = meshInstance.aabb.center;
+                        var tempx = meshPos[0] - camPos[0];
+                        var tempy = meshPos[1] - camPos[1];
+                        var tempz = meshPos[2] - camPos[2];
+                        meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
+                    } else if (typeof meshInstance.distSqr !== 'undefined') {
+                        delete meshInstance.distSqr;
+                    }
+                }
+            }
+
             // Sort meshes into the correct render order
             drawCalls.sort(sortDrawCalls);
 
@@ -602,31 +626,6 @@ pc.extend(pc.scene, function () {
 
             device.clearLocalState();
         }
-
-    /*
-            var camMat = camera.getWorldTransform();
-
-            // Sort alpha meshes back to front
-            var sortBackToFront = function (meshA, meshB) {
-                var posA = meshA.getAabb().center;
-                var posB = meshB.getAabb().center;
-                var cmx = camMat[12];
-                var cmy = camMat[13];
-                var cmz = camMat[14];
-                var tempx = posA[0] - cmx;
-                var tempy = posA[1] - cmy;
-                var tempz = posA[2] - cmz;
-                var distSqrA = tempx * tempx + tempy * tempy + tempz * tempz;
-                tempx = posB[0] - cmx;
-                tempy = posB[1] - cmy;
-                tempz = posB[2] - cmz;
-                var distSqrB = tempx * tempx + tempy * tempy + tempz * tempz;
-
-                return distSqrA < distSqrB;
-            }
-            alphaMeshes.sort(sortBackToFront);
-            opaqueMeshes.sort(sortBackToFront);
-    */
     });
 
     return {
