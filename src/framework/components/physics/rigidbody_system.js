@@ -377,12 +377,20 @@ pc.extend(pc.fw, function () {
             var numManifolds = dispatcher.getNumManifolds();
             var i, j;
             var contactEvent = 'contact';
-            var triggerEnterEvent = 'onTriggerEnter';
-            var triggerExitEvent = 'onTriggerExit';
+            var triggerEnterEvent = 'triggerenter';
+            var triggerExitEvent = 'triggerleave';
             var frameContacts = {};
 
             // stores a contact between the entity and other in the contacts map
-            var storeContact = function (entity, other) {                
+            var storeContact = function (entity, other) {   
+
+                if( !other.rigidbody ||
+                    !entity.trigger || 
+                    !entity.collider.hasEvent(triggerEnterEvent) ) {
+
+                    return;
+                }
+
                 var guid = entity.getGuid();
                 contacts[guid] = contacts[guid] || {others: [], entity: entity};
                 // if this is the first contact between the two entities fire event
@@ -409,14 +417,9 @@ pc.extend(pc.fw, function () {
 
                     // store contacts to internal structure to keep track
                     // of new contacts and contacts that no longer exist
-                    if( e0.collider && e0.collider.hasEvent(triggerEnterEvent) ) {
-                        storeContact(e0, e1);
-                    }
-
-                    if( e1.collider && e1.collider.hasEvent(triggerEnterEvent) ) {
-                        storeContact(e1, e0);
-                    };
-                    
+                    storeContact(e0, e1);
+                    storeContact(e1, e0);
+                   
                     for (j = 0; j < numContacts; j++) {
                         var contactPoint = manifold.getContactPoint(j);
                         if( this.hasEvent(contactEvent) ) {

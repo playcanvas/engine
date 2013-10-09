@@ -4,12 +4,37 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CollisionMeshComponent
      * @constructor Create a new CollisionMeshComponent
      * @class A box-shaped collision volume. use this in conjunction with a RigidBodyComponent to make a Box that can be simulated using the physics engine.
+     * <p>This volume will act as a trigger if there is no RigidBodyComponent attached. A trigger is a volume that raises events when other rigid bodies enter it.</p>
      * @param {pc.fw.CollisionMeshComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @property {String} asset The GUID of the asset for the model
      * @property {pc.scene.Model} model The model that is added to the scene graph.
      * @extends pc.fw.Component
      */
+
+
+     // Events Documentation   
+    /**
+     * @event
+     * @name pc.fw.CollisionMeshComponent#contact
+     * @description Fired when a contact occurs between this collider and a rigid body
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionMeshComponent#triggerenter
+     * @description Fired when a rigid body enters this collider
+     * @param {pc.fw.Entity} other The entity that entered this collider
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionMeshComponent#triggerleave
+     * @description Fired when a rigid body has stopped touching this collider
+     * @param {pc.fw.Entity} other The entity that stopped touching this collider
+    */
+    
     var CollisionMeshComponent = function CollisionMeshComponent (system, entity) {
         entity.collider = this;
         this.on("set_asset", this.onSetAsset, this);

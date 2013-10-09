@@ -4,11 +4,36 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CollisionSphereComponent
      * @constructor Create a new CollisionSphereComponent
      * @class A sphere-shaped collision volume. Use in conjunction with {@link pc.fw.RigidBodyComponent} to create a sphere that can be simulated using the physics engine.
+     * <p>This volume will act as a trigger if there is no RigidBodyComponent attached. A trigger is a volume that raises events when other rigid bodies enter it.</p>
      * @param {pc.fw.CollisionSphereComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @extends pc.fw.Component
      * @property {Number} radius The radius of the sphere
      */
+
+
+     // Events Documentation   
+    /**
+     * @event
+     * @name pc.fw.CollisionSphereComponent#contact
+     * @description Fired when a contact occurs between this collider and a rigid body
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionSphereComponent#triggerenter
+     * @description Fired when a rigid body enters this collider
+     * @param {pc.fw.Entity} other The entity that entered this collider
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionSphereComponent#triggerleave
+     * @description Fired when a rigid body has stopped touching this collider
+     * @param {pc.fw.Entity} other The entity that stopped touching this collider
+    */
+    
     var CollisionSphereComponent = function CollisionSphereComponent (system, entity) {
         entity.collider = this;
         this.on('set_radius', this.onSetRadius, this);

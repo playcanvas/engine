@@ -4,11 +4,35 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CollisionBoxComponent
      * @constructor Create a new CollisionBoxComponent
      * @class A box-shaped collision volume. use this in conjunction with a RigidBodyComponent to make a Box that can be simulated using the physics engine.
+     * <p>This volume will act as a trigger if there is no RigidBodyComponent attached. A trigger is a volume that raises events when other rigid bodies enter it.</p>
      * @param {pc.fw.CollisionBoxComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
-     * @property {pc.math.vec3} halfExtents The half-extents of the box in the x, y and z axes.
+     * @property {pc.math.vec3} halfExtents The half-extents of the box in the x, y and z axes. 
      * @extends pc.fw.Component
      */
+
+    // Events Documentation   
+    /**
+     * @event
+     * @name pc.fw.CollisionBoxComponent#contact
+     * @description Fired when a contact occurs between this collider and a rigid body
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionBoxComponent#triggerenter
+     * @description Fired when a rigid body enters this collider
+     * @param {pc.fw.Entity} other The entity that entered this collider
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionBoxComponent#triggerleave
+     * @description Fired when a rigid body has stopped touching this collider
+     * @param {pc.fw.Entity} other The entity that stopped touching this collider
+    */
+
     var CollisionBoxComponent = function CollisionBoxComponent (system, entity) {
         entity.collider = this;
         this.on('set_halfExtents', this.onSetHalfExtents, this);

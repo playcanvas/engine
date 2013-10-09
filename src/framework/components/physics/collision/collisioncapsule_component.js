@@ -23,6 +23,7 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CollisionCapsuleComponent
      * @constructor Create a new CollisionCapsuleComponent
      * @class A capsule-shaped collision volume. Use in conjunction with {@link pc.fw.RigidBodyComponent} to create a capsule that can be simulated using the physics engine.
+     * <p>This volume will act as a trigger if there is no RigidBodyComponent attached. A trigger is a volume that raises events when other rigid bodies enter it.</p>
      * @param {pc.fw.CollisionCapsuleComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @extends pc.fw.Component
@@ -30,6 +31,29 @@ pc.extend(pc.fw, function () {
      * @property {Number} height The total height of the capsule from tip to tip. Defaults to 2.
      * @property {Number} radius The radius of the capsule. Defaults to 0.5.
      */
+
+     // Events Documentation   
+    /**
+     * @event
+     * @name pc.fw.CollisionCapsuleComponent#contact
+     * @description Fired when a contact occurs between this collider and a rigid body
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionCapsuleComponent#triggerenter
+     * @description Fired when a rigid body enters this collider
+     * @param {pc.fw.Entity} other The entity that entered this collider
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionCapsuleComponent#triggerleave
+     * @description Fired when a rigid body has stopped touching this collider
+     * @param {pc.fw.Entity} other The entity that stopped touching this collider
+    */
+    
     var CollisionCapsuleComponent = function CollisionCapsuleComponent(system, entity) {
         entity.collider = this;
         this.on('set_axis', this.onSetAxis, this);

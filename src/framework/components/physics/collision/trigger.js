@@ -2,6 +2,15 @@ pc.extend(pc.fw, function () {
 
     var ammoVec1, ammoQuat;
     
+    /**
+    * @private
+    * @name pc.fw.Trigger
+    * @description Creates a trigger object used to create internal physics objects that interact with 
+    * rigid bodies and trigger collision events with no collision response
+    * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application
+    * @param {pc.fw.Component} component The component for which the trigger will be created
+    * @param {pc.fw.ComponentData} data The data for the component
+    */
     var Trigger = function Trigger (context, component, data) {
         this.entity = component.entity;
         this.component = component;
