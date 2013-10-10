@@ -96,6 +96,10 @@ pc.extend(pc.fw, function () {
             if (entity.rigidbody && entity.rigidbody.body) {
                 this.context.systems.rigidbody.removeBody(entity.rigidbody.body);
             }
+
+            if (entity.trigger) {
+                entity.trigger.destroy();
+            }
 /*
             if (this.context.scene.containsModel(data.model)) {
                 this.context.root.removeChild(data.model.graph);
