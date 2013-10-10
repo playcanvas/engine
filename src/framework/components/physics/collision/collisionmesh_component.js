@@ -4,15 +4,44 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CollisionMeshComponent
      * @constructor Create a new CollisionMeshComponent
      * @class A box-shaped collision volume. use this in conjunction with a RigidBodyComponent to make a Box that can be simulated using the physics engine.
+     * <p>This volume will act as a trigger if there is no RigidBodyComponent attached. A trigger is a volume that raises events when other rigid bodies enter it.</p>
      * @param {pc.fw.CollisionMeshComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @property {String} asset The GUID of the asset for the model
      * @property {pc.scene.Model} model The model that is added to the scene graph.
      * @extends pc.fw.Component
      */
+
+
+     // Events Documentation   
+    /**
+     * @event
+     * @name pc.fw.CollisionMeshComponent#contact
+     * @description The {@link pc.fw.EVENT_CONTACT} event is fired when a contact occurs between this collider and another one
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionMeshComponent#collisionstart
+     * @description The {@link pc.fw.EVENT_COLLISIONSTART} event is fired when another collider enters this collider
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionMeshComponent#collisionend
+     * @description The {@link pc.fw.EVENT_COLLISIONEND} event is fired when a collider has stopped touching this collider
+     * @param {pc.fw.Entity} other The entity that stopped touching this collider
+    */
+    
     var CollisionMeshComponent = function CollisionMeshComponent (system, entity) {
+        entity.collider = this;
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_model", this.onSetModel, this);
+        if (!entity.rigidbody) {
+            entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+        }
     };
     CollisionMeshComponent = pc.inherits(CollisionMeshComponent, pc.fw.Component);
     
@@ -38,7 +67,13 @@ pc.extend(pc.fw, function () {
 
                 if (this.entity.rigidbody) {
                     this.entity.rigidbody.createBody();
+                } else {
+                    if (!this.entity.trigger) {
+                        this.entity.trigger = new pc.fw.Trigger(this.system.context, this, this.data);
+                    }
+                    this.entity.trigger.initialize(this.data);
                 }
+
             }.bind(this));
         },
 
@@ -120,6 +155,17 @@ pc.extend(pc.fw, function () {
                 return shape;
             } else {
                 return undefined;
+            }
+        },
+
+        /**
+         * Handle an update over livelink from the tools updating the Entities transform
+         */
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            if (this.entity.trigger) {
+                this.entity.trigger.syncEntityToBody();
+            } else {
+                 this.entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
             }
         }
     });

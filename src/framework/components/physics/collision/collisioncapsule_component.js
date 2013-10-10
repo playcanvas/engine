@@ -23,6 +23,7 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CollisionCapsuleComponent
      * @constructor Create a new CollisionCapsuleComponent
      * @class A capsule-shaped collision volume. Use in conjunction with {@link pc.fw.RigidBodyComponent} to create a capsule that can be simulated using the physics engine.
+     * <p>This volume will act as a trigger if there is no RigidBodyComponent attached. A trigger is a volume that raises events when other rigid bodies enter it.</p>
      * @param {pc.fw.CollisionCapsuleComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @extends pc.fw.Component
@@ -30,10 +31,37 @@ pc.extend(pc.fw, function () {
      * @property {Number} height The total height of the capsule from tip to tip. Defaults to 2.
      * @property {Number} radius The radius of the capsule. Defaults to 0.5.
      */
+
+     // Events Documentation   
+    /**
+     * @event
+     * @name pc.fw.CollisionCapsuleComponent#contact
+     * @description The {@link pc.fw.EVENT_CONTACT} event is fired when a contact occurs between this collider and another one
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionCapsuleComponent#collisionstart
+     * @description The {@link pc.fw.EVENT_COLLISIONSTART} event is fired when another collider enters this collider
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionCapsuleComponent#collisionend
+     * @description The {@link pc.fw.EVENT_COLLISIONEND} event is fired when a collider has stopped touching this collider
+     * @param {pc.fw.Entity} other The entity that stopped touching this collider
+    */
+    
     var CollisionCapsuleComponent = function CollisionCapsuleComponent(system, entity) {
+        entity.collider = this;
         this.on('set_axis', this.onSetAxis, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_radius', this.onSetRadius, this);
+        if (!entity.rigidbody) {
+            entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+        }
     };
     CollisionCapsuleComponent = pc.inherits(CollisionCapsuleComponent, pc.fw.Component);
     
@@ -49,9 +77,7 @@ pc.extend(pc.fw, function () {
                 this.updateDebugShape(axis, radius, height);
             }
 
-            if (this.entity.rigidbody) {
-                this.entity.rigidbody.createBody();
-            }
+            this.resetPhysics();
         },
 
         onSetHeight: function (name, oldValue, newValue) {
@@ -64,9 +90,7 @@ pc.extend(pc.fw, function () {
                 this.updateDebugShape(axis, radius, height);
             }
 
-            if (this.entity.rigidbody) {
-                this.entity.rigidbody.createBody();
-            }
+            this.resetPhysics()
         },
 
         onSetRadius: function (name, oldValue, newValue) {
@@ -79,8 +103,14 @@ pc.extend(pc.fw, function () {
                 this.updateDebugShape(axis, radius, height);
             }
 
+            this.resetPhysics()
+        },
+
+        resetPhysics: function () {
             if (this.entity.rigidbody) {
                 this.entity.rigidbody.createBody();
+            } else if (this.entity.trigger) {
+                this.entity.trigger.initialize(this.data);
             }
         },
 
@@ -166,6 +196,17 @@ pc.extend(pc.fw, function () {
             }
 
             vertexBuffer.unlock();
+        },
+
+        /**
+         * Handle an update over livelink from the tools updating the Entities transform
+         */
+        onLiveLinkUpdateTransform: function (position, rotation, scale) {
+            if (this.entity.trigger) {
+                this.entity.trigger.syncEntityToBody();
+            } else {
+                 this.entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+            }
         }
     });
 

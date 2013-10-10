@@ -177,6 +177,7 @@
 ../src/framework/components/physics/rigidbody_system.js
 ../src/framework/components/physics/rigidbody_component.js
 ../src/framework/components/physics/rigidbody_data.js
+../src/framework/components/physics/collision/trigger.js
 ../src/framework/components/physics/collision/collisionbox_system.js
 ../src/framework/components/physics/collision/collisionbox_component.js
 ../src/framework/components/physics/collision/collisionbox_data.js
