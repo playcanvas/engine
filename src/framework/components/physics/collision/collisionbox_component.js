@@ -15,21 +15,21 @@ pc.extend(pc.fw, function () {
     /**
      * @event
      * @name pc.fw.CollisionBoxComponent#contact
-     * @description Fired when a contact occurs between this collider and another one
+     * @description The {@link pc.fw.EVENT_CONTACT} event is fired when a contact occurs between this collider and another one
      * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
     */
 
     /**
      * @event
      * @name pc.fw.CollisionBoxComponent#collisionstart
-     * @description Fired when another collider enters this collider
+     * @description The {@link pc.fw.EVENT_COLLISIONSTART} event is fired when another collider enters this collider
      * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
     */
 
     /**
      * @event
      * @name pc.fw.CollisionBoxComponent#collisionend
-     * @description Fired when a collider has stopped touching this collider
+     * @description The {@link pc.fw.EVENT_COLLISIONEND} event is fired when a collider has stopped touching this collider
      * @param {pc.fw.Entity} other The entity that stopped touching this collider
     */
 
