@@ -30,9 +30,9 @@ pc.extend(pc.fw, function () {
     };
 
     /**
-    * @name pc.fw.ContactResult
+    * @name pc.fw.SingleContactResult
     * @class Object holding the result of a contact between two rigid bodies
-    * @constructor Create a new ContactResult
+    * @constructor Create a new SingleContactResult
     * @param {pc.fw.Entity} a The first entity involved in the contact
     * @param {pc.fw.Entity} b The second entity involved in the contact
     * @param {pc.fw.ContactPoint} contactPoint The contact point between the two entities
@@ -44,7 +44,7 @@ pc.extend(pc.fw, function () {
     * @property {pc.math.vec3} pointB The point on Entity B where the contact occured, in world space
     * @property {pc.math.vec3} normal The normal vector of the contact on Entity B, in world space
     */
-    var ContactResult = function (a, b, contactPoint) {
+    var SingleContactResult = function (a, b, contactPoint) {
         this.a = a;
         this.b = b;
         this.localPointA = contactPoint.localPoint;
@@ -78,15 +78,15 @@ pc.extend(pc.fw, function () {
     }
 
     /**
-    * @name pc.fw.ColliderContactResult
+    * @name pc.fw.ContactResult
     * @class Object holding the result of a contact between a rigid body and a collider
-    * @constructor Create a new ColliderContactResult
+    * @constructor Create a new ContactResult
     * @param {pc.fw.Entity} other The entity that was involved in the contact with this collider    
-* @param {pc.fw.ContactPoint[]} contacts An array of ContactPoints with the other rigid body
+    * @param {pc.fw.ContactPoint[]} contacts An array of ContactPoints with the other rigid body
     * @property {pc.fw.Entity} other The entity that was involved in the contact with this collider    
     * @property {pc.fw.ContactPoint[]} contacts An array of ContactPoints with the other rigid body
     */
-    var ColliderContactResult = function(other, contacts) {
+    var ContactResult = function(other, contacts) {
         this.other = other;
         this.contacts = contacts;
     }
@@ -96,7 +96,7 @@ pc.extend(pc.fw, function () {
     * @event
     * @name pc.fw.RigidBodyComponentSystem#contact
     * @description Fired when a contact occurs between two rigid bodies
-    * @param {pc.fw.ContactResult} result Details of the contact between the two bodies
+    * @param {pc.fw.SingleContactResult} result Details of the contact between the two bodies
     */
 
     /**
@@ -367,7 +367,7 @@ pc.extend(pc.fw, function () {
         * @param {pc.fw.ContactPoint[]} contactPoints An array of contacts points between the two entities
         */
         _handleEntityCollision: function (entity, other, contactPoints) {
-            var result = new ColliderContactResult(other, contactPoints);
+            var result = new ContactResult(other, contactPoints);
             if (entity.collider.hasEvent(pc.fw.EVENT_CONTACT)) {
                 entity.collider.fire(pc.fw.EVENT_CONTACT, result);
             }
@@ -515,7 +515,7 @@ pc.extend(pc.fw, function () {
                             var contactPoint = manifold.getContactPoint(j);
                             var e0ContactPoint = hasContactEvt || e0Contacts ? this._createContactPointFromAmmo(contactPoint) : null;
                             if (hasContactEvt) {
-                                this.fire(pc.fw.EVENT_CONTACT, new ContactResult(e0, e1, e0ContactPoint));
+                                this.fire(pc.fw.EVENT_CONTACT, new SingleContactResult(e0, e1, e0ContactPoint));
                             }
 
                             if (e0Contacts) {
@@ -576,18 +576,21 @@ pc.extend(pc.fw, function () {
 
 
         /**
+        * @private
         * @enum pc.fw.EVENT
         * @name pc.fw.EVENT_CONTACT
         * @description Event fired when two Entities are touching each other
         */
         EVENT_CONTACT: 'contact',
         /**
+        * @private
         * @enum pc.fw.EVENT
         * @name pc.fw.EVENT_COLLISIONSTART
         * @description Event fired when two Entities start touching each other
         */
         EVENT_COLLISIONSTART: 'collisionstart',
         /**
+        * @private
         * @enum pc.fw.EVENT
         * @name pc.fw.EVENT_COLLISIONEND
         * @description Event fired when two Entities stop touching each other

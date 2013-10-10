@@ -23,7 +23,6 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CollisionCapsuleComponent
      * @constructor Create a new CollisionCapsuleComponent
      * @class A capsule-shaped collision volume. Use in conjunction with {@link pc.fw.RigidBodyComponent} to create a capsule that can be simulated using the physics engine.
-     * <p>This volume will act as a trigger if there is no RigidBodyComponent attached. A trigger is a volume that raises events when other rigid bodies enter it.</p>
      * @param {pc.fw.CollisionCapsuleComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @extends pc.fw.Component
@@ -34,20 +33,23 @@ pc.extend(pc.fw, function () {
 
      // Events Documentation   
     /**
+     * @private
      * @event
      * @name pc.fw.CollisionCapsuleComponent#contact
      * @description The {@link pc.fw.EVENT_CONTACT} event is fired when a contact occurs between this collider and another one
-     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+     * @param {pc.fw.ContactResult} result Details of the contact between the two bodies
     */
 
     /**
+     * @private
      * @event
      * @name pc.fw.CollisionCapsuleComponent#collisionstart
      * @description The {@link pc.fw.EVENT_COLLISIONSTART} event is fired when another collider enters this collider
-     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
+     * @param {pc.fw.ContactResult} result Details of the contact between the two bodies
     */
 
     /**
+     * @private
      * @event
      * @name pc.fw.CollisionCapsuleComponent#collisionend
      * @description The {@link pc.fw.EVENT_COLLISIONEND} event is fired when a collider has stopped touching this collider
