@@ -119,16 +119,6 @@ pc.extend(pc.scene, function () {
                 } else {
                     this[param.name] = null;
                 }
-
-                // special case
-                if (param.name === 'opacityMap') {
-                    if (param.data) {
-                        this.blendType = pc.scene.BLEND_NORMAL;    
-                    } else {
-                        this.blendType = pc.scene.BLEND_NONE;
-                    }
-                    
-                }
             } else if (param.type === "texture") {
                 if (param.data) {
                     if (param.data instanceof pc.gfx.Texture) {
@@ -139,18 +129,16 @@ pc.extend(pc.scene, function () {
                 } else {
                     this[param.name] = null;
                 }
-                
             } else if (param.type === "float") {
                 this[param.name] = param.data;
-                // special case
-                if (param.name === 'opacity') {
-                    if (this.opacity && this.opacity < 1) {
-                        this.blendType = pc.scene.BLEND_NORMAL;
-                    } else {
-                        this.blendType = pc.scene.BLEND_NONE;
-                    }
-                }
             }
+        }
+
+        // Set an appropriate blend mode based on opacity of material
+        if (this.opacityMap || this.opacity < 1) {
+            this.blendType = pc.scene.BLEND_NORMAL;
+        } else {
+            this.blendType = pc.scene.BLEND_NONE;
         }
 
         this.update();
