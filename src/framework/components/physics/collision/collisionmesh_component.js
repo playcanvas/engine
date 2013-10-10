@@ -71,7 +71,7 @@ pc.extend(pc.fw, function () {
                     if (!this.entity.trigger) {
                         this.entity.trigger = new pc.fw.Trigger(this.system.context, this, this.data);
                     }
-                    this.entity.trigger.initialize( this.data );
+                    this.entity.trigger.initialize(this.data);
                 }
 
             }.bind(this));

@@ -21,7 +21,7 @@ pc.extend(pc.fw, function () {
             ammoQuat = new Ammo.btQuaternion(); 
         }
 
-        this.initialize( data );
+        this.initialize(data);
     };
 
     Trigger.prototype =  {

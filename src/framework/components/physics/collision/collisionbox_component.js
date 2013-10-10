@@ -50,7 +50,7 @@ pc.extend(pc.fw, function () {
                 this.entity.rigidbody.createBody();
             } else if (this.entity.trigger) {
                 this.data.shape = this.createShape(this.data.halfExtents[0], this.data.halfExtents[1], this.data.halfExtents[2]);
-                this.entity.trigger.initialize( this.data );
+                this.entity.trigger.initialize(this.data);
             }
         },
 

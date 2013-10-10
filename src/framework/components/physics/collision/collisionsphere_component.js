@@ -53,7 +53,7 @@ pc.extend(pc.fw, function () {
             if (this.entity.rigidbody) {                            
                 this.entity.rigidbody.createBody();
             } else if (this.entity.trigger) {
-                this.entity.trigger.initialize( this.data );
+                this.entity.trigger.initialize(this.data);
             }
         },
 
