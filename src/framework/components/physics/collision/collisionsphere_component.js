@@ -37,8 +37,9 @@ pc.extend(pc.fw, function () {
     var CollisionSphereComponent = function CollisionSphereComponent (system, entity) {
         entity.collider = this;
         this.on('set_radius', this.onSetRadius, this);
-        if( !entity.rigidbody )
+        if( !entity.rigidbody ) {
             entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+        }
     };
     CollisionSphereComponent = pc.inherits(CollisionSphereComponent, pc.fw.Component);
     

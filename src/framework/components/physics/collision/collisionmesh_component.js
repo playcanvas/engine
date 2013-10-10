@@ -39,8 +39,9 @@ pc.extend(pc.fw, function () {
         entity.collider = this;
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_model", this.onSetModel, this);
-        if( !entity.rigidbody )
+        if( !entity.rigidbody ) {
             entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+        }
     };
     CollisionMeshComponent = pc.inherits(CollisionMeshComponent, pc.fw.Component);
     

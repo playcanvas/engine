@@ -59,8 +59,9 @@ pc.extend(pc.fw, function () {
         this.on('set_axis', this.onSetAxis, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_radius', this.onSetRadius, this);
-        if( !entity.rigidbody )
+        if( !entity.rigidbody ) {
             entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+        }
     };
     CollisionCapsuleComponent = pc.inherits(CollisionCapsuleComponent, pc.fw.Component);
     
