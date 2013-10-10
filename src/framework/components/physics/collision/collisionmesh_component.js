@@ -17,21 +17,21 @@ pc.extend(pc.fw, function () {
     /**
      * @event
      * @name pc.fw.CollisionMeshComponent#contact
-     * @description Fired when a contact occurs between this collider and a rigid body
+     * @description Fired when a contact occurs between this collider and another one
      * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
     */
 
     /**
      * @event
-     * @name pc.fw.CollisionMeshComponent#triggerenter
-     * @description Fired when a rigid body enters this collider
-     * @param {pc.fw.Entity} other The entity that entered this collider
+     * @name pc.fw.CollisionMeshComponent#collisionstart
+     * @description Fired when another collider enters this collider
+     * @param {pc.fw.ColliderContactResult} result Details of the contact between the two bodies
     */
 
     /**
      * @event
-     * @name pc.fw.CollisionMeshComponent#triggerleave
-     * @description Fired when a rigid body has stopped touching this collider
+     * @name pc.fw.CollisionMeshComponent#collisionend
+     * @description Fired when a collider has stopped touching this collider
      * @param {pc.fw.Entity} other The entity that stopped touching this collider
     */
     
