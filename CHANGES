@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.122.3
+--------
+* Render transparent meshes back to front order
+* Change OPEN_ENTITY livelink message to match new Designer format
+
+--------
 v0.122.2
 --------
 * [FIX] Gizmo no longer broken - take a copy of Pack data before opening
