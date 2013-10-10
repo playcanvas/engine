@@ -9,7 +9,10 @@ pc.extend(pc.fw, function () {
 
     var ammoRayStart, ammoRayEnd;
 
-    var contacts = {};
+    var collisions = {};
+    var contactEvent = 'contact';
+    var collisionStartEvent = 'collisionstart';
+    var collisionEndEvent = 'collisionend';
 
     /**
     * @name pc.fw.RaycastResult
@@ -48,18 +51,16 @@ pc.extend(pc.fw, function () {
     };
 
     /**
-    * @name pc.fw.ColliderContactResult
+    * @name pc.fw.ContactPoint
     * @class Object holding the result of a contact between a rigid body and a collider
-    * @constructor Create a new ColliderContactResult
-    * @property {pc.fw.Entity} other The entity that was involved in the contact with this collider    
+    * @constructor Create a new ContactPoint
     * @property {pc.math.vec3} localPoint The point on the collider where the contact occured, relative to the collider
     * @property {pc.math.vec3} localPointOther The point on the other entity where the contact occured, relative to the other entity
     * @property {pc.math.vec3} point The point on the collider where the contact occured, in world space
     * @property {pc.math.vec3} pointOther The point on the other entity where the contact occured, in world space
     * @property {pc.math.vec3} normal The normal vector of the contact on the other entity, in world space
     */
-    var ColliderContactResult = function(other, contactPoint, reverseEntities) {
-        this.other = other;
+    var ContactPoint = function (contactPoint, reverseEntities) {
         if( reverseEntities ) {
             this.localPointOther = new pc.math.vec3.create(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
             this.localPoint = new pc.math.vec3.create(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
@@ -74,6 +75,20 @@ pc.extend(pc.fw, function () {
             this.pointOther = new pc.math.vec3.create(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
             this.normal = new pc.math.vec3.create(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
         }
+    }
+
+    /**
+    * @name pc.fw.ColliderContactResult
+    * @class Object holding the result of a contact between a rigid body and a collider
+    * @constructor Create a new ColliderContactResult
+    * @property {pc.fw.Entity} other The entity that was involved in the contact with this collider    
+    * @property {pc.fw.ContactPoint}[] contacts An array of ContactPoints with the other rigid body
+    */
+    var ColliderContactResult = function(other, contactPoints, reverseEntities) {
+        this.other = other;
+        this.contacts = contactPoints.map( function(contact) {
+            return new ContactPoint(contact, reverseEntities);
+        });
     }
 
     // Events Documentation   
@@ -376,33 +391,69 @@ pc.extend(pc.fw, function () {
             var dispatcher = this.dynamicsWorld.getDispatcher();
             var numManifolds = dispatcher.getNumManifolds();
             var i, j;
-            var contactEvent = 'contact';
-            var triggerEnterEvent = 'triggerenter';
-            var triggerExitEvent = 'triggerleave';
-            var frameContacts = {};
+            var frameCollisions = {};
 
-            // stores a contact between the entity and other in the contacts map
-            var storeContact = function (entity, other) {   
-
-                if( !other.rigidbody ||
-                    !entity.trigger || 
-                    !entity.collider.hasEvent(triggerEnterEvent) ) {
-
-                    return;
-                }
-
+            // stores a collision between the entity and other in the contacts map
+            // and returns true if it is a new collision
+            var storeCollision = function (entity, other) {   
+                var isNewCollision = false;
                 var guid = entity.getGuid();
-                contacts[guid] = contacts[guid] || {others: [], entity: entity};
-                // if this is the first contact between the two entities fire event
-                if( contacts[guid].others.indexOf(other) < 0 ) {
-                    contacts[guid].others.push(other);
-                    entity.collider.fire(triggerEnterEvent, other);
+
+                collisions[guid] = collisions[guid] || {others: [], entity: entity};
+
+                if( collisions[guid].others.indexOf(other) < 0 ) {
+                    collisions[guid].others.push(other);
+                    isNewCollision = true;
                 }
                 
-                frameContacts[guid] = frameContacts[guid] || {others: [], entity: entity};
-                frameContacts[guid].others.push(other);
+                frameCollisions[guid] = frameCollisions[guid] || {others: [], entity: entity};
+                frameCollisions[guid].others.push(other);
+                
+                return isNewCollision;
             };
 
+            var handleEntityCollision = function (entity, other, contactPoints) {
+                var result;
+
+                // fire contact event
+                if (entity.collider.hasEvent(contactEvent)) {
+                    result = new ColliderContactResult(other, contactPoints.contacts, contactPoints.reverse );
+                    entity.collider.fire(contactEvent, result);
+                }
+
+                // store contact and if it's a new one fire collisionstart event
+                if (entity.collider.hasEvent(collisionStartEvent)) {
+                    if (storeCollision(entity, other)) {
+                        result = result || new ColliderContactResult(other, contactPoints.contacts, contactPoints.reverse );
+                        entity.collider.fire(collisionStartEvent, result);
+                    }
+                }
+            };
+
+            var cleanOldCollisions = function () {
+                for( var guid in collisions ) {
+                    if( collisions.hasOwnProperty(guid) ) {
+                        var entity = collisions[guid].entity;
+                        var others = collisions[guid].others;
+                        var length = others.length;
+                        var i=length;
+                        while(i--) {
+                            var other = others[i];
+                            // if the contact does not exist in the current frame collisions then fire event
+                            if( !frameCollisions[guid] || frameCollisions[guid].others.indexOf(other) < 0 ) {
+                                others.splice(i, 1);
+                                entity.collider.fire(collisionEndEvent, other);
+                            }
+                        }  
+
+                        if( others.length === 0 ) {
+                            delete collisions[guid];
+                        }          
+                    }
+                } 
+            };
+
+            // loop through the all contacts and fire events
             for (i = 0; i < numManifolds; i++) {
                 var manifold = dispatcher.getManifoldByIndexInternal(i);
                 var body0 = manifold.getBody0();
@@ -413,50 +464,29 @@ pc.extend(pc.fw, function () {
                 var e1 = wb1.entity;
 
                 var numContacts = manifold.getNumContacts();
-                if( numContacts > 0 ) {
+                if( numContacts > 0 ) {                   
+                    var contactPoints = { 
+                        contacts: []
+                    };
 
-                    // store contacts to internal structure to keep track
-                    // of new contacts and contacts that no longer exist
-                    storeContact(e0, e1);
-                    storeContact(e1, e0);
-                   
                     for (j = 0; j < numContacts; j++) {
                         var contactPoint = manifold.getContactPoint(j);
+                        contactPoints.contacts.push(contactPoint);                    
+
                         if( this.hasEvent(contactEvent) ) {
                             this.fire(contactEvent, new ContactResult(e0, e1, contactPoint));
                         }
-                        if( e0.collider.hasEvent(contactEvent) ) {
-                            e0.collider.fire(contactEvent, new ColliderContactResult(e1, contactPoint));
-                        }
-                        if( e1.collider.hasEvent(contactEvent) ) {
-                            e1.collider.fire(contactEvent, new ColliderContactResult(e0, contactPoint, true));
-                        }
                     }
 
+                    handleEntityCollision(e0, e1, contactPoints);
+
+                    contactPoints.reverse = true;
+                    handleEntityCollision(e1, e0, contactPoints);
                 }
             }                
 
-            // fire events on entities that exited triggers
-            for( var guid in contacts ) {
-                if( contacts.hasOwnProperty(guid) ) {
-                    var entity = contacts[guid].entity;
-                    var others = contacts[guid].others;
-                    var length = others.length;
-                    var i=length;
-                    while(i--) {
-                        var other = others[i];
-                        // if the contact does not exist in the current frame contacts then fire event
-                        if( !frameContacts[guid] || frameContacts[guid].others.indexOf(other) < 0 ) {
-                            others.splice(i, 1);
-                            entity.collider.fire(triggerExitEvent, other);
-                        }
-                    }  
-
-                    if( others.length === 0 ) {
-                        delete contacts[guid];
-                    }          
-                }
-            }          
+            // check for collisions that no longer exist and fire events
+            cleanOldCollisions();         
         }
     });
 
