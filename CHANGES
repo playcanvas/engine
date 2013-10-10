@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.123.0
+--------
+* Added collision triggers when an entity only has a collision component and not a rigid body
+
+--------
 v0.122.3
 --------
 * Render transparent meshes back to front order
