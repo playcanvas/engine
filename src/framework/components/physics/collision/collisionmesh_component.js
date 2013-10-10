@@ -39,7 +39,7 @@ pc.extend(pc.fw, function () {
         entity.collider = this;
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_model", this.onSetModel, this);
-        if( !entity.rigidbody ) {
+        if (!entity.rigidbody) {
             entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
         }
     };
@@ -68,7 +68,7 @@ pc.extend(pc.fw, function () {
                 if (this.entity.rigidbody) {
                     this.entity.rigidbody.createBody();
                 } else {
-                    if( !this.entity.trigger ) {
+                    if (!this.entity.trigger) {
                         this.entity.trigger = new pc.fw.Trigger(this.system.context, this, this.data);
                     }
                     this.entity.trigger.initialize( this.data );
