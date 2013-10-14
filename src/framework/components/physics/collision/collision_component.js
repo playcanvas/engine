@@ -18,30 +18,29 @@ pc.extend(pc.fw, function () {
     pc.extend(CollisionComponent.prototype, {
 
         onSetType: function (name, oldValue, newValue) {
-            this.system.recreateDebugShapes(this, oldValue);
+            this.system.changeShape(this, oldValue, newValue);
         },
 
         onSetHalfExtents: function (name, oldValue, newValue) {
-            this.system.refreshPhysicsShapes(this);
+            this.system.refreshPhysicalShapes(this);
         },
 
         onSetRadius: function (name, oldValue, newValue) {
-            this.system.refreshPhysicsShapes(this);
+            this.system.refreshPhysicalShapes(this);
         },
 
         onSetHeight: function (name, oldValue, newValue) {
-            this.system.refreshPhysicsShapes(this);
+            this.system.refreshPhysicalShapes(this);
         },
 
         onSetAxis: function (name, oldValue, newValue) {
-            this.system.refreshPhysicsShapes(this);
+            this.system.refreshPhysicalShapes(this);
         },
  
         /**
          * Handle an update over livelink from the tools updating the Entities transform
          */
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            console.log("helloooo");
             if (this.entity.trigger) {
                 this.entity.trigger.syncEntityToBody();
             } else {

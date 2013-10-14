@@ -170,11 +170,20 @@ pc.extend(pc.fw, function () {
         },
 
         updateDebugShapes: function () {
+            var id, entity, data, impl;
             var components = this.store;
-            for (var id in components) {
-                var entity = components[id].entity;
-                var data = components[id].data;
-                var impl = this._getImplementation(entity);
+            var context = this.context;
+
+            for (id in components) {
+                entity = components[id].entity;
+                data = components[id].data;
+                impl = this._getImplementation(entity);
+
+                if (!context.scene.containsModel(data.model)) {
+                    context.scene.addModel(data.model);
+                    context.root.addChild(data.model.graph);
+                }
+
                 if (typeof impl !== 'undefined') {
                     impl.updateDebugShape(entity, data);
                 }
@@ -195,13 +204,13 @@ pc.extend(pc.fw, function () {
             this.debugRender = value;
         },
 
-        recreateDebugShapes: function (component, previousType) {
-             this.implementations[previousType].remove( component.entity, component.data);
-             this.implementations[component.data.type].initialize(component, component.data);
+        changeShape: function (component, previousShape, newShape) {
+             this.implementations[previousShape].remove( component.entity, component.data);
+             this._createImplementation(newShape).initialize(component, component.data);
         },
 
-        refreshPhysicsShapes: function (component) {
-            this.implementations[component.data.type].refreshPhysicsShapes(component); 
+        refreshPhysicalShapes: function (component) {
+            this.implementations[component.data.type].refreshPhysicalShapes(component); 
         }
     });
 
@@ -210,13 +219,12 @@ pc.extend(pc.fw, function () {
     */
     CollisionSystemImpl = function (system) {
         this.system = system;
-        console.log('called base class');
     };
 
     CollisionSystemImpl.prototype = {
         initialize: function (component, data) {
             this.createDebugShape(data);
-            data.shape = this.createShape(data);
+            data.shape = this.createPhysicalShape(data);
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
@@ -231,14 +239,15 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        refreshPhysicsShapes: function (component) {
+        refreshPhysicalShapes: function (component) {
             var entity = component.entity;
             var data = component.data;
 
-            data.shape = this.createShape(data);
             if (entity.rigidbody) {
+                data.shape = this.createPhysicalShape(data);
                 component.rigidbody.createBody();
             } else if (entity.trigger) {
+                data.shape = this.createPhysicalShape(data);
                 entity.trigger.initialize(data);
             }
         },
@@ -247,7 +256,7 @@ pc.extend(pc.fw, function () {
             return undefined;
         },
 
-        createShape: function (data) {
+        createPhysicalShape: function (data) {
             return undefined;
         },
 
@@ -279,9 +288,7 @@ pc.extend(pc.fw, function () {
     /**
     /* Box Collision System
     */
-    CollisionBoxSystemImpl = function (system) {
-        console.log('created collision box implementation');
-    };
+    CollisionBoxSystemImpl = function (system) {};
 
     CollisionBoxSystemImpl = pc.inherits(CollisionBoxSystemImpl, CollisionSystemImpl);
 
@@ -331,7 +338,7 @@ pc.extend(pc.fw, function () {
 
         },
 
-        createShape: function (data) {
+        createPhysicalShape: function (data) {
             if (typeof(Ammo) !== 'undefined') {
                 return new Ammo.btBoxShape( 
                     new Ammo.btVector3( 
@@ -343,18 +350,11 @@ pc.extend(pc.fw, function () {
         },
 
         updateDebugShape : function (entity, data) {
-            var context = this.system.context;
             var x = data.halfExtents[0];
             var y = data.halfExtents[1];
             var z = data.halfExtents[2];
-            var model = data.model;
 
-            if (!context.scene.containsModel(data.model)) {
-                context.scene.addModel(data.model);
-                context.root.addChild(data.model.graph);
-            }
-
-            var root = model.graph;
+            var root = data.model.graph;
             root.setPosition(entity.getPosition());
             root.setRotation(entity.getRotation());
             root.setLocalScale(x / 0.5, y / 0.5, z / 0.5);
@@ -373,9 +373,8 @@ pc.extend(pc.fw, function () {
     /* Sphere Collision System
     */
     
-    CollisionSphereSystemImpl = function (system) {
-        console.log('created collision sphere implementation');
-    };
+    CollisionSphereSystemImpl = function (system) {};
+
     CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
 
     CollisionSphereSystemImpl.prototype = pc.extend(CollisionSphereSystemImpl.prototype, {
@@ -431,7 +430,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        createShape: function (data) {
+        createPhysicalShape: function (data) {
             if (typeof(Ammo) !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);   
             } else {
@@ -440,16 +439,8 @@ pc.extend(pc.fw, function () {
         },
 
         updateDebugShape: function (entity, data) {
-            var context = this.system.context;
             var r = data.radius;
-            var model = data.model;
-
-            if (!context.scene.containsModel(data.model)) {
-                context.scene.addModel(data.model);
-                context.root.addChild(data.model.graph);
-            }
-
-            var root = model.graph;
+            var root = data.model.graph;
             root.setPosition(entity.getPosition());
             root.setRotation(entity.getRotation());
             root.setLocalScale(r / 0.5, r / 0.5, r / 0.5);
@@ -460,30 +451,11 @@ pc.extend(pc.fw, function () {
     /* Capsule Collision System
     */
     
-    CollisionCapsuleSystemImpl = function (system) {
-        console.log('created collision capsule implementation');
-    };
+    CollisionCapsuleSystemImpl = function (system) {};
+
     CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
 
     CollisionCapsuleSystemImpl.prototype = pc.extend(CollisionCapsuleSystemImpl.prototype, {
-        initialize: function (component, data) {
-            this.createDebugShape(data);
-            data.shape = this.createShape(data);
-
-            data.model = new pc.scene.Model();
-            data.model.graph = new pc.scene.GraphNode();
-            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ]; 
-
-            if (component.entity.rigidbody) {
-                component.entity.rigidbody.createBody();
-            } else {
-                if (typeof(Ammo) !== 'undefined') {
-                    component.entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
-                }
-            }
-        },
-      
-
         createDebugShape: function (data) {            
             if (!this.mesh) {
                 var gd = this.system.context.graphicsDevice;
@@ -599,7 +571,7 @@ pc.extend(pc.fw, function () {
             vertexBuffer.unlock();
         },
 
-        createShape: function (data) {
+        createPhysicalShape: function (data) {
             var shape = null;
             var axis = (typeof data.axis !== 'undefined') ? data.axis : 1;
             var radius = data.radius || 0.5;
@@ -622,26 +594,18 @@ pc.extend(pc.fw, function () {
         },
 
         updateDebugShape: function (entity, data) {
-            var context = this.system.context;
-            var model = data.model;
-            var root = model.graph;
-
-            if (!context.scene.containsModel(model)) {
-                context.scene.addModel(model);
-                context.root.addChild(root);
-            }
-
+            var root = data.model.graph;
             root.setPosition(entity.getPosition());
             root.setRotation(entity.getRotation());
             root.setLocalScale(1, 1, 1);
         },
 
-        refreshPhysicsShapes: function (component) {
+        refreshPhysicalShapes: function (component) {
             var model = component.data.model;
             if (model) {
                 var vertexBuffer = model.meshInstances[0].mesh.vertexBuffer; 
                 this.updateCapsuleShape(component.data, vertexBuffer);
-                CollisionCapsuleSystemImpl._super.refreshPhysicsShapes.call(this, component);
+                CollisionCapsuleSystemImpl._super.refreshPhysicalShapes.call(this, component);
             }
         },
     });
@@ -650,9 +614,8 @@ pc.extend(pc.fw, function () {
     /* Mesh Collision System
     */
     
-    CollisionMeshSystemImpl = function (system) {
-        console.log("created collision mesh implementation");
-    };
+    CollisionMeshSystemImpl = function (system) {};
+
     CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
 
     CollisionMeshSystemImpl.prototype = pc.extend(CollisionMeshSystemImpl.prototype, {
