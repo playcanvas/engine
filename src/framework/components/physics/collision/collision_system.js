@@ -98,6 +98,7 @@ pc.extend(pc.fw, function () {
         }];
 
         this.exposeProperties();
+        this.implementations = {};
         this.debugRender = false;
 
         this.on('remove', this.onRemove, this);
@@ -111,41 +112,55 @@ pc.extend(pc.fw, function () {
     CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
 
-            this.implementation = this._createImplementation(data.type);
-            this.implementation.preInit(component, data, properties);
+            if (!data.type) {
+                data.type = component.data.type;
+            }
+
+            component.data.type = data.type;
+
+            var impl = this._createImplementation(data.type);
+            impl.initialize(component, data);
 
             properties = ['halfExtents', 'radius', 'axis', 'height', 'shape', 'model'];
             CollisionComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-
-            this.implementation.postInit(component, data, properties);
         },
 
         _createImplementation: function (type) {
-            switch (type) {
-                case 'Box':
-                    return new CollisionBoxSystemImpl(this);
-                case 'Sphere':
-                    return new CollisionSphereSystemImpl(this);
-                case 'Capsule':
-                    return new CollisionCapsuleSystemImpl(this);
-                case 'Mesh':
-                    return new CollisionMeshSystemImpl(this);
-                default:
-                    throw "Invalid collision system type: " + type;
+            if (typeof this.implementations[type] === 'undefined') {
+                var impl;
+                switch (type) {
+                    case 'Box':
+                        impl = new CollisionBoxSystemImpl(this);
+                        break;
+                    case 'Sphere':
+                        impl = new CollisionSphereSystemImpl(this);
+                        break;
+                    case 'Capsule':
+                        impl = new CollisionCapsuleSystemImpl(this);
+                        break;
+                    case 'Mesh':
+                        impl = new CollisionMeshSystemImpl(this);
+                        break;
+                    default:
+                        throw "Invalid collision system type: " + type;
+                        break;
+                }
+                this.implementations[type] = impl;
             }
+
+            return this.implementations[type];
+        },
+
+        _getImplementation: function (entity) {
+            return this.implementations[entity.collider.data.type];
         },
 
         cloneComponent: function (entity, clone) {
-            if (this.implementation ) {
-                return this.implementation.clone(entity, clone);
-            }
+            return this._getImplementation(entity).clone(entity, clone);
         },
         
         onRemove: function (entity, data) {
-            if (this.implementation) {
-                this.implementation.remove(entity, data);
-            }
-            
+            this.implementations[data.type].remove(entity, data);
         },
 
         onUpdate: function (dt) {
@@ -155,8 +170,14 @@ pc.extend(pc.fw, function () {
         },
 
         updateDebugShapes: function () {
-            if (this.implementation) {
-                this.implementation.updateDebugShapes();
+            var components = this.store;
+            for (var id in components) {
+                var entity = components[id].entity;
+                var data = components[id].data;
+                var impl = this._getImplementation(entity);
+                if (typeof impl !== 'undefined') {
+                    impl.updateDebugShape(entity, data);
+                }
             }
         },
 
@@ -173,69 +194,34 @@ pc.extend(pc.fw, function () {
         setDebugRender: function (value) {
             this.debugRender = value;
         },
+
+        recreateDebugShapes: function (component, previousType) {
+             this.implementations[previousType].remove( component.entity, component.data);
+             this.implementations[component.data.type].initialize(component, component.data);
+        },
+
+        refreshPhysicsShapes: function (component) {
+            this.implementations[component.data.type].refreshPhysicsShapes(component); 
+        }
     });
 
-    /**
-    /* Box Collision System
+    /** 
+    * Collision system implementations
     */
-
-    CollisionBoxSystemImpl = function (system) {
+    CollisionSystemImpl = function (system) {
         this.system = system;
-    }
+        console.log('called base class');
+    };
 
-    CollisionBoxSystemImpl.prototype = pc.extend(CollisionBoxSystemImpl.prototype, {
-        preInit: function (component, data, properties) {
-            this._createDebugShape();
-
-            if (typeof(Ammo) !== 'undefined') {
-                data.shape = new Ammo.btBoxShape(new Ammo.btVector3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]));
-            }
+    CollisionSystemImpl.prototype = {
+        initialize: function (component, data) {
+            this.createDebugShape(data);
+            data.shape = this.createShape(data);
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
-            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.system.mesh, this.system.material) ];
-        },
+            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ]; 
 
-        _createDebugShape: function () {
-            var gd = this.system.context.graphicsDevice;
-
-            var format = new pc.gfx.VertexFormat(gd, [
-                { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-            ]);
-
-            var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 8);
-            var positions = new Float32Array(vertexBuffer.lock());
-            positions.set([
-                -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5,
-                -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5
-            ]);
-            vertexBuffer.unlock();
-
-            var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 24);
-            var indices = new Uint8Array(indexBuffer.lock());
-            indices.set([
-                0,1,1,2,2,3,3,0,
-                4,5,5,6,6,7,7,4,
-                0,4,1,5,2,6,3,7
-            ]);
-            indexBuffer.unlock();
-
-            var mesh = new pc.scene.Mesh();
-            mesh.vertexBuffer = vertexBuffer;
-            mesh.indexBuffer[0] = indexBuffer;
-            mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
-            mesh.primitive[0].base = 0;
-            mesh.primitive[0].count = indexBuffer.getNumIndices();
-            mesh.primitive[0].indexed = true;
-            this.system.mesh = mesh;
-
-            var material = new pc.scene.BasicMaterial();
-            material.color = pc.math.vec4.create(0, 0, 1, 1);
-            material.update()
-            this.system.material = material;
-        },
-
-        postInit: function (component, data, properties) {
             if (component.entity.rigidbody) {
                 component.entity.rigidbody.createBody();
             } else {
@@ -245,28 +231,28 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        updateDebugShapes: function () {
-            var components = this.system.store;
-            var context = this.system.context;
-            for (var id in components) {
-                var entity = components[id].entity;
-                var data = components[id].data;
+        refreshPhysicsShapes: function (component) {
+            var entity = component.entity;
+            var data = component.data;
 
-                var x = data.halfExtents[0];
-                var y = data.halfExtents[1];
-                var z = data.halfExtents[2];
-                var model = data.model;
-
-                if (!context.scene.containsModel(data.model)) {
-                    context.scene.addModel(data.model);
-                    context.root.addChild(data.model.graph);
-                }
-
-                var root = model.graph;
-                root.setPosition(entity.getPosition());
-                root.setRotation(entity.getRotation());
-                root.setLocalScale(x / 0.5, y / 0.5, z / 0.5);
+            data.shape = this.createShape(data);
+            if (entity.rigidbody) {
+                component.rigidbody.createBody();
+            } else if (entity.trigger) {
+                entity.trigger.initialize(data);
             }
+        },
+
+        createDebugShape: function (data) {
+            return undefined;
+        },
+
+        createShape: function (data) {
+            return undefined;
+        },
+
+        updateDebugShape : function (entity, data) {
+
         },
 
         remove: function (entity, data) {
@@ -283,7 +269,96 @@ pc.extend(pc.fw, function () {
                 context.root.removeChild(data.model.graph);
                 context.scene.removeModel(data.model);
             }
-        }, 
+        },
+
+        clone: function (entity, clone) {
+            CollisionComponentSystem._super.clone.call(this.system, entity, clone);
+        }
+    };
+
+    /**
+    /* Box Collision System
+    */
+    CollisionBoxSystemImpl = function (system) {
+        console.log('created collision box implementation');
+    };
+
+    CollisionBoxSystemImpl = pc.inherits(CollisionBoxSystemImpl, CollisionSystemImpl);
+
+    CollisionBoxSystemImpl.prototype = pc.extend(CollisionBoxSystemImpl.prototype, {
+
+        createDebugShape: function (data) {
+            if (!this.mesh) {
+                var gd = this.system.context.graphicsDevice;
+
+                var format = new pc.gfx.VertexFormat(gd, [
+                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                ]);
+
+                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 8);
+                var positions = new Float32Array(vertexBuffer.lock());
+                positions.set([
+                    -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5,
+                    -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5
+                ]);
+                vertexBuffer.unlock();
+
+                var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 24);
+                var indices = new Uint8Array(indexBuffer.lock());
+                indices.set([
+                    0,1,1,2,2,3,3,0,
+                    4,5,5,6,6,7,7,4,
+                    0,4,1,5,2,6,3,7
+                ]);
+                indexBuffer.unlock();
+
+                var mesh = new pc.scene.Mesh();
+                mesh.vertexBuffer = vertexBuffer;
+                mesh.indexBuffer[0] = indexBuffer;
+                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].base = 0;
+                mesh.primitive[0].count = indexBuffer.getNumIndices();
+                mesh.primitive[0].indexed = true;
+                this.mesh = mesh;
+            }
+
+            if (!this.material) {
+                var material = new pc.scene.BasicMaterial();
+                material.color = pc.math.vec4.create(0, 0, 1, 1);
+                material.update()
+                this.material = material;
+            }
+
+        },
+
+        createShape: function (data) {
+            if (typeof(Ammo) !== 'undefined') {
+                return new Ammo.btBoxShape( 
+                    new Ammo.btVector3( 
+                        data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]
+                    ));    
+            } else {
+                return undefined;
+            }
+        },
+
+        updateDebugShape : function (entity, data) {
+            var context = this.system.context;
+            var x = data.halfExtents[0];
+            var y = data.halfExtents[1];
+            var z = data.halfExtents[2];
+            var model = data.model;
+
+            if (!context.scene.containsModel(data.model)) {
+                context.scene.addModel(data.model);
+                context.root.addChild(data.model.graph);
+            }
+
+            var root = model.graph;
+            root.setPosition(entity.getPosition());
+            root.setRotation(entity.getRotation());
+            root.setLocalScale(x / 0.5, y / 0.5, z / 0.5);
+        },
 
         clone: function (entity, clone) {
             var src = this.system.dataStore[entity.getGuid()];
@@ -299,121 +374,85 @@ pc.extend(pc.fw, function () {
     */
     
     CollisionSphereSystemImpl = function (system) {
-        this.system = system;
-    }
+        console.log('created collision sphere implementation');
+    };
+    CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
 
     CollisionSphereSystemImpl.prototype = pc.extend(CollisionSphereSystemImpl.prototype, {
-        preInit: function (component, data, properties) {
-            this._createDebugShape();
+        createDebugShape: function (data) {
+            if (!this.mesh) {
+                var context = this.system.context;
+                var gd = context.graphicsDevice;
 
+                // Create the graphical resources required to render a camera frustum
+                var format = new pc.gfx.VertexFormat(gd, [
+                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                ]);
+
+                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 41);
+                var positions = new Float32Array(vertexBuffer.lock());
+
+                var i;
+                var r = 0.5;
+                var numVerts = vertexBuffer.getNumVertices();
+                for (i = 0; i < numVerts-1; i++) {
+                    var theta = 2 * Math.PI * (i / (numVerts-2));
+                    var x = r * Math.cos(theta);
+                    var z = r * Math.sin(theta);
+                    positions[(i)*3+0] = x;
+                    positions[(i)*3+1] = 0;
+                    positions[(i)*3+2] = z;
+                }
+                vertexBuffer.unlock();
+
+                var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 80);
+                var inds = new Uint8Array(indexBuffer.lock());
+                for (i = 0; i < 40; i++) {
+                    inds[i * 2 + 0] = i;
+                    inds[i * 2 + 1] = i + 1;
+                }
+                indexBuffer.unlock();
+
+                var mesh = new pc.scene.Mesh();
+                mesh.vertexBuffer = vertexBuffer;
+                mesh.indexBuffer[0] = indexBuffer;
+                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].base = 0;
+                mesh.primitive[0].count = indexBuffer.getNumIndices();
+                mesh.primitive[0].indexed = true;
+                this.mesh = mesh;
+            }
+            
+            if (!this.material) {
+                var material = new pc.scene.BasicMaterial();
+                material.color = pc.math.vec4.create(0, 0, 1, 1);
+                material.update();
+                this.material = material;
+            }
+        },
+
+        createShape: function (data) {
             if (typeof(Ammo) !== 'undefined') {
-                data.shape = new Ammo.btSphereShape(data.radius);    
-            }
-
-            data.model = new pc.scene.Model();
-            data.model.graph = new pc.scene.GraphNode();
-            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.system.mesh, this.system.material) ]; 
-        },
-
-        _createDebugShape: function () {
-            var context = this.system.context;
-            var gd = context.graphicsDevice;
-
-            // Create the graphical resources required to render a camera frustum
-            var format = new pc.gfx.VertexFormat(gd, [
-                { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-            ]);
-
-            var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 41);
-            var positions = new Float32Array(vertexBuffer.lock());
-
-            var i;
-            var r = 0.5;
-            var numVerts = vertexBuffer.getNumVertices();
-            for (i = 0; i < numVerts-1; i++) {
-                var theta = 2 * Math.PI * (i / (numVerts-2));
-                var x = r * Math.cos(theta);
-                var z = r * Math.sin(theta);
-                positions[(i)*3+0] = x;
-                positions[(i)*3+1] = 0;
-                positions[(i)*3+2] = z;
-            }
-            vertexBuffer.unlock();
-
-            var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 80);
-            var inds = new Uint8Array(indexBuffer.lock());
-            for (i = 0; i < 40; i++) {
-                inds[i * 2 + 0] = i;
-                inds[i * 2 + 1] = i + 1;
-            }
-            indexBuffer.unlock();
-
-            var mesh = new pc.scene.Mesh();
-            mesh.vertexBuffer = vertexBuffer;
-            mesh.indexBuffer[0] = indexBuffer;
-            mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
-            mesh.primitive[0].base = 0;
-            mesh.primitive[0].count = indexBuffer.getNumIndices();
-            mesh.primitive[0].indexed = true;
-            this.system.mesh = mesh;
-
-            var material = new pc.scene.BasicMaterial();
-            material.color = pc.math.vec4.create(0, 0, 1, 1);
-            material.update();
-            this.system.material = material;
-        },
-
-        updateDebugShapes: function () {
-            var components = this.system.store;
-            var context = this.system.context;
-
-            for (var id in components) {
-                var entity = components[id].entity;
-                var data = components[id].data;
-
-                var r = data.radius;
-                var model = data.model;
-
-                if (!context.scene.containsModel(data.model)) {
-                    context.scene.addModel(data.model);
-                    context.root.addChild(data.model.graph);
-                }
-
-                var root = model.graph;
-                root.setPosition(entity.getPosition());
-                root.setRotation(entity.getRotation());
-                root.setLocalScale(r / 0.5, r / 0.5, r / 0.5);
-            }
-        },
-
-        postInit: function (component, data, properties) {
-           if (component.entity.rigidbody) {
-                component.entity.rigidbody.createBody();
+                return new Ammo.btSphereShape(data.radius);   
             } else {
-                if (typeof(Ammo) !== 'undefined') {
-                    component.entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
-                }
-            } 
+                return undefined;
+            }
         },
 
-        remove: function (entity, data) {
+        updateDebugShape: function (entity, data) {
             var context = this.system.context;
-            if (entity.rigidbody && entity.rigidbody.body) {
-                context.systems.rigidbody.removeBody(entity.rigidbody.body);
+            var r = data.radius;
+            var model = data.model;
+
+            if (!context.scene.containsModel(data.model)) {
+                context.scene.addModel(data.model);
+                context.root.addChild(data.model.graph);
             }
 
-            if (entity.trigger) {
-                entity.trigger.destroy();
-            }
-
-            if (context.scene.containsModel(data.model)) {
-                context.root.removeChild(data.model.graph);
-                context.scene.removeModel(data.model);
-            }
-        }, 
-
-        clone: function (entity, clone) {
-            CollisionComponentSystem._super.clone.call(this.system, entity, clone);
+            var root = model.graph;
+            root.setPosition(entity.getPosition());
+            root.setRotation(entity.getRotation());
+            root.setLocalScale(r / 0.5, r / 0.5, r / 0.5);
         }
     });
 
@@ -422,62 +461,63 @@ pc.extend(pc.fw, function () {
     */
     
     CollisionCapsuleSystemImpl = function (system) {
-        this.system = system;
-    }
+        console.log('created collision capsule implementation');
+    };
+    CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
 
     CollisionCapsuleSystemImpl.prototype = pc.extend(CollisionCapsuleSystemImpl.prototype, {
-        preInit: function (component, data, properties) {
-            var axis = data.axis || 1;
-            var radius = data.radius || 0.5;
-            var height = Math.max((data.height || 2) - 2 * radius, 0);
-
-            this._createDebugShape(component, data, axis, radius, height);
-
-            if (typeof(Ammo) !== 'undefined') {
-                switch (axis) {
-                    case 0:
-                        data.shape = new Ammo.btCapsuleShapeX(radius, height);
-                        break;
-                    case 1:
-                        data.shape = new Ammo.btCapsuleShape(radius, height);
-                        break;
-                    case 2:
-                        data.shape = new Ammo.btCapsuleShapeZ(radius, height);
-                        break;
-                }
-            }
-        },
-
-        _createDebugShape: function (component, data, axis, radius, height) {
-            var gd = this.system.context.graphicsDevice;
-
-            // Create the graphical resources required to render a capsule shape
-            var format = new pc.gfx.VertexFormat(gd, [
-                { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-            ]);
-
-            var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 328, pc.gfx.BUFFER_DYNAMIC);
-
-            var mesh = new pc.scene.Mesh();
-            mesh.vertexBuffer = vertexBuffer;
-            mesh.indexBuffer[0] = this.system.indexBuffer;
-            mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
-            mesh.primitive[0].base = 0;
-            mesh.primitive[0].count = vertexBuffer.getNumVertices();
-            mesh.primitive[0].indexed = false;
-            this.system.mesh = mesh;
-
-            var material = new pc.scene.BasicMaterial();
-            material.color = pc.math.vec4.create(0, 0, 1, 1);
-            material.update();
-            this.system.material = material;
+        initialize: function (component, data) {
+            this.createDebugShape(data);
+            data.shape = this.createShape(data);
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
-            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, mesh, this.system.material) ];
+            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ]; 
 
-            var model = data.model;
-            var vertexBuffer = model.meshInstances[0].mesh.vertexBuffer;
+            if (component.entity.rigidbody) {
+                component.entity.rigidbody.createBody();
+            } else {
+                if (typeof(Ammo) !== 'undefined') {
+                    component.entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                }
+            }
+        },
+      
+
+        createDebugShape: function (data) {            
+            if (!this.mesh) {
+                var gd = this.system.context.graphicsDevice;
+
+                // Create the graphical resources required to render a capsule shape
+                var format = new pc.gfx.VertexFormat(gd, [
+                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                ]);
+
+                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 328, pc.gfx.BUFFER_DYNAMIC);
+                this.updateCapsuleShape(data, vertexBuffer);
+
+                var mesh = new pc.scene.Mesh();
+                mesh.vertexBuffer = vertexBuffer;
+                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].base = 0;
+                mesh.primitive[0].count = vertexBuffer.getNumVertices();
+                mesh.primitive[0].indexed = false;
+                
+                this.mesh = mesh;
+            }
+            
+            if (!this.material) {
+                var material = new pc.scene.BasicMaterial();
+                material.color = pc.math.vec4.create(0, 0, 1, 1);
+                material.update();
+                this.material = material;    
+            }
+        },
+
+        updateCapsuleShape: function(data, vertexBuffer) {
+            var axis = (typeof data.axis !== 'undefined') ? data.axis : 1;
+            var radius = data.radius || 0.5;
+            var height = Math.max((data.height || 2) - 2 * radius, 0);
 
             var positions = new Float32Array(vertexBuffer.lock());
 
@@ -559,56 +599,51 @@ pc.extend(pc.fw, function () {
             vertexBuffer.unlock();
         },
 
-        postInit: function (component, data, properties) {
-            if (component.entity.rigidbody) {
-                component.entity.rigidbody.createBody();
-            } else {
-                if (typeof(Ammo) !== 'undefined') {
-                    component.entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+        createShape: function (data) {
+            var shape = null;
+            var axis = (typeof data.axis !== 'undefined') ? data.axis : 1;
+            var radius = data.radius || 0.5;
+            var height = Math.max((data.height || 2) - 2 * radius, 0);
+
+            if (typeof(Ammo) !== 'undefined') {
+                switch (axis) {
+                    case 0:
+                        shape = new Ammo.btCapsuleShapeX(radius, height);
+                        break;
+                    case 1:
+                        shape = new Ammo.btCapsuleShape(radius, height);
+                        break;
+                    case 2:
+                        shape = new Ammo.btCapsuleShapeZ(radius, height);
+                        break;
                 }
             }
+            return shape;
         },
 
-        updateDebugShapes: function () {
-            var components = this.system.store;
+        updateDebugShape: function (entity, data) {
             var context = this.system.context;
-            for (var id in components) {
-                var entity = components[id].entity;
-                var data = components[id].data;
+            var model = data.model;
+            var root = model.graph;
 
-                var model = data.model;
-                var root = model.graph;
-
-                if (!context.scene.containsModel(model)) {
-                    context.scene.addModel(model);
-                    context.root.addChild(root);
-                }
-
-                root.setPosition(entity.getPosition());
-                root.setRotation(entity.getRotation());
-                root.setLocalScale(1, 1, 1);
+            if (!context.scene.containsModel(model)) {
+                context.scene.addModel(model);
+                context.root.addChild(root);
             }
+
+            root.setPosition(entity.getPosition());
+            root.setRotation(entity.getRotation());
+            root.setLocalScale(1, 1, 1);
         },
 
-        remove: function (entity, data) {
-            var context = this.system.context;
-            if (entity.rigidbody && entity.rigidbody.body) {
-                context.systems.rigidbody.removeBody(entity.rigidbody.body);
+        refreshPhysicsShapes: function (component) {
+            var model = component.data.model;
+            if (model) {
+                var vertexBuffer = model.meshInstances[0].mesh.vertexBuffer; 
+                this.updateCapsuleShape(component.data, vertexBuffer);
+                CollisionCapsuleSystemImpl._super.refreshPhysicsShapes.call(this, component);
             }
-
-            if (entity.trigger) {
-                entity.trigger.destroy();
-            }
-
-            if (context.scene.containsModel(data.model)) {
-                context.root.removeChild(data.model.graph);
-                context.scene.removeModel(data.model);
-            }
-        }, 
-
-        clone: function (entity, clone) {
-            CollisionComponentSystem._super.clone.call(this.system, entity, clone);
-        }
+        },
     });
 
     /**
@@ -616,15 +651,12 @@ pc.extend(pc.fw, function () {
     */
     
     CollisionMeshSystemImpl = function (system) {
-        this.system = system;
-    }
+        console.log("created collision mesh implementation");
+    };
+    CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
 
     CollisionMeshSystemImpl.prototype = pc.extend(CollisionMeshSystemImpl.prototype, {
-        preInit: function (component, data, properties) {
-        },
-
-        postInit: function (component, data, properties) {
-        }
+        
     });
 
     return {
