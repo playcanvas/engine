@@ -245,7 +245,7 @@ pc.extend(pc.fw, function () {
 
             if (entity.rigidbody) {
                 data.shape = this.createPhysicalShape(data);
-                component.rigidbody.createBody();
+                entity.rigidbody.createBody();
             } else if (entity.trigger) {
                 data.shape = this.createPhysicalShape(data);
                 entity.trigger.initialize(data);
