@@ -132,10 +132,12 @@ pc.extend(pc.fw, function () {
             component.data.type = data.type;
 
             var impl = this._createImplementation(data.type);
-            impl.initialize(component, data);
+            impl.beforeInitialize(component, data);
 
             properties = ['halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset'];
-            CollisionComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+            CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
+
+            impl.afterInitialize(component, data);
         },
 
         /**
@@ -233,12 +235,12 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * Destroys the previous collision type and created a new one
+        * Destroys the previous collision type and creates a new one
         * based on the new type provided
         */
         changeType: function (component, previousType, newType) {
              this.implementations[previousType].remove( component.entity, component.data);
-             this._createImplementation(newType).initialize(component, component.data);
+             this._createImplementation(newType).reset(component, component.data);
         },
 
         /**
@@ -261,24 +263,34 @@ pc.extend(pc.fw, function () {
 
     CollisionSystemImpl.prototype = {
         /**
-        * @private
-        * Initializes debug shapes and rigid bodies / triggers
+        * @private 
+        * Called before the call to system.super.initializeComponentData is made
         */
-        initialize: function (component, data) {
+        beforeInitialize: function (component, data) {
             this.createDebugShape(data);
             data.shape = this.createPhysicalShape(data);
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
             data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ]; 
+        },
 
-            if (component.entity.rigidbody) {
-                component.entity.rigidbody.createBody();
-            } else {
-                if (typeof(Ammo) !== 'undefined') {
-                    component.entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
-                }
-            }
+        /** 
+        * @private
+        * Called after the call to system.super.initializeComponentData is made
+        */
+        afterInitialize: function (component, data) {
+            this.refreshPhysicalShapes(component);
+        },
+
+        /**
+        * @private
+        * Called when a collision component changes type in order to 
+        * recreate debug and physical shapes
+        */
+        reset: function (component, data) {
+            this.beforeInitialize(component, data);
+            this.afterInitialize(component, data);
         },
 
         /**
@@ -289,12 +301,16 @@ pc.extend(pc.fw, function () {
             var entity = component.entity;
             var data = component.data;
 
-            if (entity.rigidbody) {
+            if (typeof(Ammo) !== 'undefined') {
                 data.shape = this.createPhysicalShape(data);
-                entity.rigidbody.createBody();
-            } else if (entity.trigger) {
-                data.shape = this.createPhysicalShape(data);
-                entity.trigger.initialize(data);
+                if (entity.rigidbody) {
+                    entity.rigidbody.createBody();
+                } else {
+                    if (!entity.trigger) {
+                        entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                    }
+                    entity.trigger.initialize(data);
+                }
             }
         },
 
@@ -690,9 +706,7 @@ pc.extend(pc.fw, function () {
     CollisionMeshSystemImpl.prototype = pc.extend(CollisionMeshSystemImpl.prototype, {
         // override for the mesh implementation because the asset model needs
         // special handling
-        initialize: function (component, data) {
-            this.refreshPhysicalShapes(component);
-        },
+        beforeInitialize: function (component, data) {},
 
         createPhysicalShape: function (data) {
             if (typeof(Ammo) !== 'undefined' && data.model) {
