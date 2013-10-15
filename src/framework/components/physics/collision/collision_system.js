@@ -718,10 +718,10 @@ pc.extend(pc.fw, function () {
         refreshPhysicalShapes: function (component) {
             var data = component.data;
 
-            if (!component.loadedModelAsset && data.asset) {
+            if (data.asset) {
                 this.loadModelAsset(component);
             } else {
-                component.loadedModelAsset = null;
+                data.model = null;
                 this.doRefreshPhysicalShape(component);
             }
         },
@@ -729,6 +729,7 @@ pc.extend(pc.fw, function () {
         loadModelAsset: function(component) {
             var guid = component.data.asset;
             var entity = component.entity;
+            var data = component.data;
 
             var options = {
                 parent: entity.getRequest()
@@ -742,7 +743,7 @@ pc.extend(pc.fw, function () {
 
             this.system.context.assets.load(asset, [], options).then(function (resources) {
                 var model = resources[0];
-                component.loadedModelAsset = model;
+                data.model = model;
                 console.log("loaded model");
                 this.doRefreshPhysicalShape(component);
 
@@ -752,8 +753,6 @@ pc.extend(pc.fw, function () {
         doRefreshPhysicalShape: function (component) {
             var entity = component.entity;
             var data = component.data;
-
-            data.model = component.loadedModelAsset;
 
             if (data.model) {
                 data.shape = this.createPhysicalShape(data);
@@ -777,9 +776,9 @@ pc.extend(pc.fw, function () {
 
         clone: function (entity, clone) {
             var component = this.system.addComponent(clone, {});
-            if (entity.loadedModel) {
-                clone.collision.data.asset = entity.loadedModel.asset;
-                clone.collision.loadedModel = entity.loadedModel.clone();
+            if (entity.model) {
+                clone.collision.data.asset = entity.model.asset;
+                clone.collision.model = entity.model.clone();
             }
         }
         
