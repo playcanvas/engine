@@ -138,6 +138,11 @@ pc.extend(pc.fw, function () {
             CollisionComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
+        /**
+        * @private
+        * Creates an implementation based on the collision type and caches it 
+        * in an internal implementations structure, before returning it.
+        */
         _createImplementation: function (type) {
             if (typeof this.implementations[type] === 'undefined') {
                 var impl;
@@ -164,6 +169,10 @@ pc.extend(pc.fw, function () {
             return this.implementations[type];
         },
 
+        /**
+        * @private
+        * Gets an existing implementation for the specified entity
+        */
         _getImplementation: function (entity) {
             return this.implementations[entity.collider.data.type];
         },
@@ -222,11 +231,20 @@ pc.extend(pc.fw, function () {
             this.debugRender = value;
         },
 
-        changeShape: function (component, previousShape, newShape) {
-             this.implementations[previousShape].remove( component.entity, component.data);
-             this._createImplementation(newShape).initialize(component, component.data);
+        /**
+        * @private
+        * Destroys the previous collision type and created a new one
+        * based on the new type provided
+        */
+        changeType: function (component, previousType, newType) {
+             this.implementations[previousType].remove( component.entity, component.data);
+             this._createImplementation(newType).initialize(component, component.data);
         },
 
+        /**
+        * @private
+        * Recreates rigid bodies or triggers for the specified component
+        */
         refreshPhysicalShapes: function (component) {
             this.implementations[component.data.type].refreshPhysicalShapes(component); 
         }
@@ -237,10 +255,15 @@ pc.extend(pc.fw, function () {
     */
     CollisionSystemImpl = function (system) {
         this.system = system;
-        this.hasDebugShape = true;
+        // set this to false if you don't want to create a debug shape
+        this.hasDebugShape = true; 
     };
 
     CollisionSystemImpl.prototype = {
+        /**
+        * @private
+        * Initializes debug shapes and rigid bodies / triggers
+        */
         initialize: function (component, data) {
             this.createDebugShape(data);
             data.shape = this.createPhysicalShape(data);
@@ -258,6 +281,10 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        /**
+        * @private
+        * Re-creates rigid bodies / triggers
+        */
         refreshPhysicalShapes: function (component) {
             var entity = component.entity;
             var data = component.data;
@@ -266,23 +293,40 @@ pc.extend(pc.fw, function () {
                 data.shape = this.createPhysicalShape(data);
                 entity.rigidbody.createBody();
             } else if (entity.trigger) {
-                console.log("settings data.shape for trigger: " + entity.name);
                 data.shape = this.createPhysicalShape(data);
                 entity.trigger.initialize(data);
             }
         },
 
+        /**
+        * @private
+        * Optionally creates a debug shape for a collision
+        */
         createDebugShape: function (data) {
             return undefined;
         },
 
+        /** 
+        * @private
+        * Creates a physical shape for the collision. This consists
+        * of the actual shape that will be used for the rigid bodies / triggers of 
+        * the collision.
+        */
         createPhysicalShape: function (data) {
             return undefined;
         },
 
+        /** 
+        * @private
+        * Updates the transform of the debug shape if one exists
+        */
         updateDebugShape: function (entity, data) { 
         },
 
+        /**
+        * @private
+        * Called when the collision is removed 
+        */
         remove: function (entity, data) {
             var context = this.system.context;
             if (entity.rigidbody && entity.rigidbody.body) {
@@ -299,6 +343,10 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        /**
+        * @private
+        * Called when the collision is cloned to another entity
+        */
         clone: function (entity, clone) {
             CollisionComponentSystem._super.clone.call(this.system, entity, clone);
         }
@@ -640,15 +688,15 @@ pc.extend(pc.fw, function () {
     CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
 
     CollisionMeshSystemImpl.prototype = pc.extend(CollisionMeshSystemImpl.prototype, {
+        // override for the mesh implementation because the asset model needs
+        // special handling
         initialize: function (component, data) {
             this.refreshPhysicalShapes(component);
         },
 
         createPhysicalShape: function (data) {
             if (typeof(Ammo) !== 'undefined' && data.model) {
-                console.log("creatin model physcial shape");
                 var model = data.model;
-
                 var shape = new Ammo.btCompoundShape();
 
                 var i, j;
@@ -744,7 +792,6 @@ pc.extend(pc.fw, function () {
             this.system.context.assets.load(asset, [], options).then(function (resources) {
                 var model = resources[0];
                 data.model = model;
-                console.log("loaded model");
                 this.doRefreshPhysicalShape(component);
 
             }.bind(this));
@@ -762,11 +809,9 @@ pc.extend(pc.fw, function () {
                 } else {
                     if (!entity.trigger) {
                         entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
-                        console.log("creating modeltrigger");
                     }
 
                     entity.trigger.initialize(data);
-                    console.log("initialize modeltrigger");
                 } 
             } else {
                 this.remove(entity, data);

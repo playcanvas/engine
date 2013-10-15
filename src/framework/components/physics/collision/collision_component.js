@@ -20,7 +20,7 @@ pc.extend(pc.fw, function () {
 
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
-                this.system.changeShape(this, oldValue, newValue);
+                this.system.changeType(this, oldValue, newValue);
             }
         },
 
