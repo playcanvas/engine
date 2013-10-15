@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
         this.on('set_radius', this.onSetRadius, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
+        this.on("set_asset", this.onSetAsset, this);
 
         if (!entity.rigidbody) {
             entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
@@ -18,23 +19,39 @@ pc.extend(pc.fw, function () {
     pc.extend(CollisionComponent.prototype, {
 
         onSetType: function (name, oldValue, newValue) {
-            this.system.changeShape(this, oldValue, newValue);
+            if (oldValue !== newValue) {
+                this.system.changeShape(this, oldValue, newValue);
+            }
         },
 
         onSetHalfExtents: function (name, oldValue, newValue) {
-            this.system.refreshPhysicalShapes(this);
+            if (this.data.type === 'Box') {
+                this.system.refreshPhysicalShapes(this);
+            }
         },
 
         onSetRadius: function (name, oldValue, newValue) {
-            this.system.refreshPhysicalShapes(this);
+            if (this.data.type === 'Sphere' || this.data.type === 'Capsule') {
+                this.system.refreshPhysicalShapes(this);
+            }
         },
 
         onSetHeight: function (name, oldValue, newValue) {
-            this.system.refreshPhysicalShapes(this);
+            if (this.data.type === 'Capsule') {
+                this.system.refreshPhysicalShapes(this);
+            }
         },
 
         onSetAxis: function (name, oldValue, newValue) {
-            this.system.refreshPhysicalShapes(this);
+            if (this.data.type === 'Capsule') {
+                this.system.refreshPhysicalShapes(this);
+            }
+        },
+
+        onSetAsset: function (name, oldValue, newValue) {
+            if (this.data.type === 'Mesh') {
+                this.system.refreshPhysicalShapes(this);
+            }
         },
  
         /**

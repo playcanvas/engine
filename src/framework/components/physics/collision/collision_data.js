@@ -5,6 +5,7 @@ pc.extend(pc.fw, function () {
         this.radius = 0.5;
         this.axis = 1;
         this.height = 2;
+        this.asset = null;
 
         // Non-serialized properties
         this.shape = null;

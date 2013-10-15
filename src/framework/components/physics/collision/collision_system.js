@@ -90,6 +90,19 @@ pc.extend(pc.fw, function () {
                 type: "Capsule"
             }
         }, {
+            name: "asset",
+            displayName: "Asset",
+            description: "Collision mesh asset",
+            type: "asset",
+            options: {
+                max: 1,
+                type: 'model'
+            },
+            defaultValue: null,
+            filter: {
+                type: "Mesh"
+            }
+        }, {
             name: "shape",
             exposed: false
         }, {
@@ -121,7 +134,7 @@ pc.extend(pc.fw, function () {
             var impl = this._createImplementation(data.type);
             impl.initialize(component, data);
 
-            properties = ['halfExtents', 'radius', 'axis', 'height', 'shape', 'model'];
+            properties = ['halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset'];
             CollisionComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -179,14 +192,19 @@ pc.extend(pc.fw, function () {
                 data = components[id].data;
                 impl = this._getImplementation(entity);
 
-                if (!context.scene.containsModel(data.model)) {
-                    context.scene.addModel(data.model);
-                    context.root.addChild(data.model.graph);
-                }
-
                 if (typeof impl !== 'undefined') {
-                    impl.updateDebugShape(entity, data);
-                }
+                    if (impl.hasDebugShape) {
+
+                        if (data.model) {
+                            if (!context.scene.containsModel(data.model)) {
+                                context.scene.addModel(data.model);
+                                context.root.addChild(data.model.graph);
+                            }
+                        }
+
+                        impl.updateDebugShape(entity, data);
+                    }
+                }                            
             }
         },
 
@@ -219,6 +237,7 @@ pc.extend(pc.fw, function () {
     */
     CollisionSystemImpl = function (system) {
         this.system = system;
+        this.hasDebugShape = true;
     };
 
     CollisionSystemImpl.prototype = {
@@ -247,6 +266,7 @@ pc.extend(pc.fw, function () {
                 data.shape = this.createPhysicalShape(data);
                 entity.rigidbody.createBody();
             } else if (entity.trigger) {
+                console.log("settings data.shape for trigger: " + entity.name);
                 data.shape = this.createPhysicalShape(data);
                 entity.trigger.initialize(data);
             }
@@ -260,8 +280,7 @@ pc.extend(pc.fw, function () {
             return undefined;
         },
 
-        updateDebugShape : function (entity, data) {
-
+        updateDebugShape: function (entity, data) { 
         },
 
         remove: function (entity, data) {
@@ -614,11 +633,155 @@ pc.extend(pc.fw, function () {
     /* Mesh Collision System
     */
     
-    CollisionMeshSystemImpl = function (system) {};
+    CollisionMeshSystemImpl = function (system) {
+        this.hasDebugShape = false;
+    };
 
     CollisionMeshSystemImpl = pc.inherits(CollisionMeshSystemImpl, CollisionSystemImpl);
 
     CollisionMeshSystemImpl.prototype = pc.extend(CollisionMeshSystemImpl.prototype, {
+        initialize: function (component, data) {
+            this.refreshPhysicalShapes(component);
+        },
+
+        createPhysicalShape: function (data) {
+            if (typeof(Ammo) !== 'undefined' && data.model) {
+                console.log("creatin model physcial shape");
+                var model = data.model;
+
+                var shape = new Ammo.btCompoundShape();
+
+                var i, j;
+                for (i = 0; i < model.meshInstances.length; i++) {
+                    var meshInstance = model.meshInstances[i];
+                    var mesh = meshInstance.mesh;
+                    var ib = mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID];
+                    var vb = mesh.vertexBuffer;
+
+                    var format = vb.getFormat();
+                    var stride = format.size / 4;
+                    var positions;
+                    for (j = 0; j < format.elements.length; j++) {
+                        var element = format.elements[j];
+                        if (element.name === pc.gfx.SEMANTIC_POSITION) {
+                            positions = new Float32Array(vb.lock(), element.offset);
+                        }
+                    }
+
+                    var indices = new Uint16Array(ib.lock());
+                    var numTriangles = mesh.primitive[0].count / 3;
+
+                    var v1 = new Ammo.btVector3();
+                    var v2 = new Ammo.btVector3();
+                    var v3 = new Ammo.btVector3();
+                    var i1, i2, i3;
+
+                    var base = mesh.primitive[0].base;
+                    var triMesh = new Ammo.btTriangleMesh();
+                    for (j = 0; j < numTriangles; j++) {
+                        i1 = indices[base+j*3] * stride;
+                        i2 = indices[base+j*3+1] * stride;
+                        i3 = indices[base+j*3+2] * stride;
+                        v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
+                        v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
+                        v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
+                        triMesh.addTriangle(v1, v2, v3, true);
+                    }
+
+                    var useQuantizedAabbCompression = true;
+                    var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+
+                    var wtm = meshInstance.node.getWorldTransform();
+                    var scl = pc.math.mat4.getScale(wtm);
+                    triMeshShape.setLocalScaling(new Ammo.btVector3(scl[0], scl[1], scl[2]));
+
+                    var position = meshInstance.node.getPosition();
+                    var rotation = meshInstance.node.getRotation();
+
+                    var transform = new Ammo.btTransform();
+                    transform.setIdentity();
+                    transform.getOrigin().setValue(position[0], position[1], position[2]);
+
+                    var ammoQuat = new Ammo.btQuaternion();
+                    ammoQuat.setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
+                    transform.setRotation(ammoQuat);
+
+                    shape.addChildShape(transform, triMeshShape);
+                }
+
+                return shape;
+            } else {
+                return undefined;
+            }
+        },
+
+        refreshPhysicalShapes: function (component) {
+            var data = component.data;
+
+            if (!component.loadedModelAsset && data.asset) {
+                this.loadModelAsset(component);
+            } else {
+                component.loadedModelAsset = null;
+                this.doRefreshPhysicalShape(component);
+            }
+        },
+
+        loadModelAsset: function(component) {
+            var guid = component.data.asset;
+            var entity = component.entity;
+
+            var options = {
+                parent: entity.getRequest()
+            };
+
+            var asset = this.system.context.assets.getAsset(guid);
+            if (!asset) {
+                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
+                return;
+            }
+
+            this.system.context.assets.load(asset, [], options).then(function (resources) {
+                var model = resources[0];
+                component.loadedModelAsset = model;
+                console.log("loaded model");
+                this.doRefreshPhysicalShape(component);
+
+            }.bind(this));
+        },
+
+        doRefreshPhysicalShape: function (component) {
+            var entity = component.entity;
+            var data = component.data;
+
+            data.model = component.loadedModelAsset;
+
+            if (data.model) {
+                data.shape = this.createPhysicalShape(data);
+
+                if (entity.rigidbody) {
+                    entity.rigidbody.createBody();
+                } else {
+                    if (!entity.trigger) {
+                        entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                        console.log("creating modeltrigger");
+                    }
+
+                    entity.trigger.initialize(data);
+                    console.log("initialize modeltrigger");
+                } 
+            } else {
+                this.remove(entity, data);
+            }
+             
+        },
+
+        clone: function (entity, clone) {
+            var component = this.system.addComponent(clone, {});
+            if (entity.loadedModel) {
+                clone.collision.data.asset = entity.loadedModel.asset;
+                clone.collision.loadedModel = entity.loadedModel.clone();
+            }
+        }
         
     });
 

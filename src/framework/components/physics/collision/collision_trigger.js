@@ -70,8 +70,9 @@ pc.extend(pc.fw, function () {
         },
 
         destroy: function () {
-            this.context.systems.rigidbody.removeBody(this.body);
-            Ammo.destroy(this.body);
+            if (this.body) {
+                this.context.systems.rigidbody.removeBody(this.body);
+            }
         },
 
         syncEntityToBody: function () {
