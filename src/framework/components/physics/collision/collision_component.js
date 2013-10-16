@@ -25,31 +25,31 @@ pc.extend(pc.fw, function () {
         },
 
         onSetHalfExtents: function (name, oldValue, newValue) {
-            if (this.data.type === 'Box') {
+            if (this.data.type === 'box') {
                 this.system.refreshPhysicalShapes(this);
             }
         },
 
         onSetRadius: function (name, oldValue, newValue) {
-            if (this.data.type === 'Sphere' || this.data.type === 'Capsule') {
+            if (this.data.type === 'sphere' || this.data.type === 'capsule') {
                 this.system.refreshPhysicalShapes(this);
             }
         },
 
         onSetHeight: function (name, oldValue, newValue) {
-            if (this.data.type === 'Capsule') {
+            if (this.data.type === 'capsule') {
                 this.system.refreshPhysicalShapes(this);
             }
         },
 
         onSetAxis: function (name, oldValue, newValue) {
-            if (this.data.type === 'Capsule') {
+            if (this.data.type === 'capsule') {
                 this.system.refreshPhysicalShapes(this);
             }
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            if (this.data.type === 'Mesh') {
+            if (this.data.type === 'mesh') {
                 this.system.refreshPhysicalShapes(this);
             }
         },

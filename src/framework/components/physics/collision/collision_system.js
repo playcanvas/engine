@@ -15,20 +15,20 @@ pc.extend(pc.fw, function () {
             type: "enumeration",
             options: {
                 enumerations: [{
-                    name: 'Box',
-                    value: 'Box'
+                    name: 'box',
+                    value: 'box'
                 }, {
-                    name: 'Sphere',
-                    value: 'Sphere'
+                    name: 'sphere',
+                    value: 'sphere'
                 }, {
-                    name: 'Capsule',
-                    value: 'Capsule'
+                    name: 'capsule',
+                    value: 'capsule'
                 }, {
-                    name: 'Mesh',
-                    value: 'Mesh'
+                    name: 'mesh',
+                    value: 'mesh'
                 }]
             },
-            defaultValue: "Box"
+            defaultValue: "box"
         },{
             name: "halfExtents",
             displayName: "Half Extents",
@@ -40,7 +40,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: [0.5, 0.5, 0.5],
             filter: {
-                type: "Box"
+                type: "box"
             }
         }, {
             name: "radius",
@@ -53,7 +53,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0.5,
             filter: {
-                type: ["Sphere", "Capsule"]
+                type: ["sphere", "capsule"]
             }
         }, {
             name: "axis",
@@ -74,7 +74,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1,
             filter: {
-                type: "Capsule"
+                type: "capsule"
             }
         }, {
             name: "height",
@@ -87,7 +87,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 2,
             filter: {
-                type: "Capsule"
+                type: "capsule"
             }
         }, {
             name: "asset",
@@ -100,7 +100,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: null,
             filter: {
-                type: "Mesh"
+                type: "mesh"
             }
         }, {
             name: "shape",
@@ -149,16 +149,16 @@ pc.extend(pc.fw, function () {
             if (typeof this.implementations[type] === 'undefined') {
                 var impl;
                 switch (type) {
-                    case 'Box':
+                    case 'box':
                         impl = new CollisionBoxSystemImpl(this);
                         break;
-                    case 'Sphere':
+                    case 'sphere':
                         impl = new CollisionSphereSystemImpl(this);
                         break;
-                    case 'Capsule':
+                    case 'capsule':
                         impl = new CollisionCapsuleSystemImpl(this);
                         break;
-                    case 'Mesh':
+                    case 'mesh':
                         impl = new CollisionMeshSystemImpl(this);
                         break;
                     default:
