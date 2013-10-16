@@ -1,6 +1,6 @@
 pc.extend(pc.fw, function () {
     var CollisionComponentData = function () {
-        this.type = 'Box';
+        this.type = 'box';
         this.halfExtents = [0.5, 0.5, 0.5];
         this.radius = 0.5;
         this.axis = 1;
