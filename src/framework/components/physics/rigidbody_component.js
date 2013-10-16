@@ -122,7 +122,9 @@ pc.extend(pc.fw, function () {
             var entity = this.entity;
             var shape;
 
-            if (entity.collisionbox) {
+            if (entity.collision) {
+                shape = entity.collision.shape;
+            } else if (entity.collisionbox) {
                 shape = entity.collisionbox.shape;
             } else if (entity.collisioncapsule) {
                 shape = entity.collisioncapsule.shape;

@@ -12,6 +12,7 @@
 ../src/core/core_cookie.js
 ../src/core/core_debug.js
 ../src/core/core_requestanimationframe.js
+../src/core/core_objectpool.js
 ../src/events/events_events.js
 ../src/core/core_dom.js
 ../src/math/math_math.js
@@ -178,6 +179,9 @@
 ../src/framework/components/physics/rigidbody_component.js
 ../src/framework/components/physics/rigidbody_data.js
 ../src/framework/components/physics/collision/collision_trigger.js
+../src/framework/components/physics/collision/collision_system.js
+../src/framework/components/physics/collision/collision_component.js
+../src/framework/components/physics/collision/collision_data.js
 ../src/framework/components/physics/collision/collisionbox_system.js
 ../src/framework/components/physics/collision/collisionbox_component.js
 ../src/framework/components/physics/collision/collisionbox_data.js

@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.124.0
+--------
+* Added collision component which has the functionality of all the other collision components.
+
+--------
 v0.123.1
 --------
 * [FIX] Opacity of zero now works. Setting an opacity map now sets the correct blend mode on the material.
