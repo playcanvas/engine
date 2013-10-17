@@ -502,6 +502,13 @@ pc.extend(pc.fw, function () {
                 var wb1 = btRigidBody.prototype['upcast'](body1);
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;
+
+                // dont fire events between static rigid bodies
+                if (e0.rigidbody.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC &&
+                    e1.rigidbody.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC ) {
+                    continue;
+                }
+                
                 var e0HasCollisionEvents = e0.collider.hasEvent(pc.fw.EVENT_CONTACT) || e0.collider.hasEvent(pc.fw.EVENT_COLLISIONSTART);
                 var e1HasCollisionEvents = e1.collider.hasEvent(pc.fw.EVENT_CONTACT) || e1.collider.hasEvent(pc.fw.EVENT_COLLISIONSTART);
 
