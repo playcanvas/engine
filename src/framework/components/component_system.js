@@ -104,6 +104,8 @@ pc.extend(pc.fw, function () {
         */
         removeComponent: function (entity) {
             var record = this.dataStore[entity.getGuid()];
+            var component = entity.c[this.id];
+            this.fire('beforeremove', entity, component);
             delete this.dataStore[entity.getGuid()];
             delete entity[this.id];
             delete entity.c[this.id];
