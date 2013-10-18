@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @name pc.fw.CollisionMeshComponentSystem
      * @constructor Create a new CollisionMeshComponentSystem
      * @class Manages creation of CollisionMeshComponents
@@ -108,6 +109,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.fw.CollisionMeshComponentSystem#setDebugRender
         * @description Display collision shape outlines

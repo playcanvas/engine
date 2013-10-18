@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @component
      * @name pc.fw.CollisionSphereComponent
      * @constructor Create a new CollisionSphereComponent
@@ -7,7 +8,6 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.CollisionSphereComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @extends pc.fw.Component
-     * @property {Number} radius The radius of the sphere
      */
 
 

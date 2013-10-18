@@ -1,13 +1,12 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @component
      * @name pc.fw.CollisionMeshComponent
      * @constructor Create a new CollisionMeshComponent
      * @class A box-shaped collision volume. use this in conjunction with a RigidBodyComponent to make a Box that can be simulated using the physics engine.
      * @param {pc.fw.CollisionMeshComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
-     * @property {String} asset The GUID of the asset for the model
-     * @property {pc.scene.Model} model The model that is added to the scene graph.
      * @extends pc.fw.Component
      */
 
