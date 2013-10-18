@@ -183,7 +183,7 @@ pc.extend(pc.fw, function () {
         * Gets an existing implementation for the specified entity
         */
         _getImplementation: function (entity) {
-            return this.implementations[entity.collider.data.type];
+            return this.implementations[entity.collision.data.type];
         },
 
         cloneComponent: function (entity, clone) {

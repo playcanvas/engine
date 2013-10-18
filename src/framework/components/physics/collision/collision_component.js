@@ -46,8 +46,6 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that stopped touching this collision volume.
     */
     var CollisionComponent = function CollisionComponent (system, entity) {
-        entity.collider = this;
-
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);

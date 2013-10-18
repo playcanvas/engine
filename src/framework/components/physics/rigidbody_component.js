@@ -125,16 +125,8 @@ pc.extend(pc.fw, function () {
 
             if (entity.collision) {
                 shape = entity.collision.shape;
-            } else if (entity.collisionbox) {
-                shape = entity.collisionbox.shape;
-            } else if (entity.collisioncapsule) {
-                shape = entity.collisioncapsule.shape;
-            } else if (entity.collisionsphere) {
-                shape = entity.collisionsphere.shape;
-            } else if (entity.collisionmesh) {
-                shape = entity.collisionmesh.shape;
-            }
-
+            } 
+            
             if (shape) {
                 if (this.body) {
                     this.system.removeBody(this.body);
