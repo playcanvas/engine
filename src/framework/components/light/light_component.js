@@ -16,6 +16,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var LightComponent = function LightComponent(system, entity) {
+        this.on("set_type", this.onSetType, this);
         this.on("set_color", this.onSetColor, this);
         this.on("set_enable", this.onSetEnable, this);
         this.on("set_intensity", this.onSetIntensity, this);
@@ -29,6 +30,16 @@ pc.extend(pc.fw, function () {
     LightComponent = pc.inherits(LightComponent, pc.fw.Component);
 
     pc.extend(LightComponent.prototype, {
+        onSetType: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                this.system.changeType(this, oldValue, newValue);
+
+                // re-enable the light because it is disabled by default
+                var light = this.data.model.lights[0];
+                light.setEnabled(this.data.enable);
+            }
+        },
+
         onSetCastShadows: function (name, oldValue, newValue) {
             var light = this.data.model.lights[0];
             light.setCastShadows(newValue);
@@ -55,18 +66,24 @@ pc.extend(pc.fw, function () {
         },
 
         onSetAttenuationEnd: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setAttenuationEnd(newValue);
+            if (this.data.type === 'point' || this.data.point === 'spot') {
+                var light = this.data.model.lights[0];
+                light.setAttenuationEnd(newValue);
+            }
         }, 
 
         onSetInnerConeAngle: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setInnerConeAngle(newValue);
+            if (this.data.type === 'spot') {
+                var light = this.data.model.lights[0];
+                light.setInnerConeAngle(newValue);
+            }
         },
 
         onSetOuterConeAngle: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setOuterConeAngle(newValue);
+            if (this.data.type === 'spot') {
+                var light = this.data.model.lights[0];
+                light.setOuterConeAngle(newValue);
+            }
         }
     });
 
