@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.125.1
+--------
+* [BREAKING] Remove all old collision* components
+
+--------
 v0.125.0
 --------
 * [FIX] Designer crash when removing a rigidbody component and trying to move the Entity
