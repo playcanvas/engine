@@ -85,6 +85,7 @@ pc.extend(pc.fw, function () {
         var camerasys = new pc.fw.CameraComponentSystem(this.context);
         var cubemapsys = new pc.fw.CubeMapComponentSystem(this.context);
         var staticcubemapsys = new pc.fw.StaticCubeMapComponentSystem(this.context);
+        var lightsys = new pc.fw.LightComponentSystem(this.context);
         var dlightsys = new pc.fw.DirectionalLightComponentSystem(this.context);
         var plightsys = new pc.fw.PointLightComponentSystem(this.context);
         var slightsys = new pc.fw.SpotLightComponentSystem(this.context);
