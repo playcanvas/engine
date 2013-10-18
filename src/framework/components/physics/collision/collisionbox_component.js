@@ -36,7 +36,6 @@ pc.extend(pc.fw, function () {
     */
 
     var CollisionBoxComponent = function CollisionBoxComponent (system, entity) {
-        entity.collider = this;
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         if (!entity.rigidbody) {
             entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);

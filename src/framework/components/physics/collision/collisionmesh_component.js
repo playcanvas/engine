@@ -38,7 +38,6 @@ pc.extend(pc.fw, function () {
     */
     
     var CollisionMeshComponent = function CollisionMeshComponent (system, entity) {
-        entity.collider = this;
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_model", this.onSetModel, this);
         if (!entity.rigidbody) {
