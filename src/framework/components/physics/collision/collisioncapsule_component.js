@@ -19,6 +19,7 @@ pc.extend(pc.fw, function () {
     }
 
     /**
+     * @private
      * @component
      * @name pc.fw.CollisionCapsuleComponent
      * @constructor Create a new CollisionCapsuleComponent
@@ -26,9 +27,6 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.CollisionCapsuleComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @extends pc.fw.Component
-     * @property {Number} axis The local space axis with which the capsule's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
-     * @property {Number} height The total height of the capsule from tip to tip. Defaults to 2.
-     * @property {Number} radius The radius of the capsule. Defaults to 0.5.
      */
 
      // Events Documentation   

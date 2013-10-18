@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @name pc.fw.CollisionBoxComponentSystem
      * @constructor Create a new CollisionBoxComponentSystem
      * @class Manages creation of CollisionBoxComponents
@@ -127,6 +128,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.fw.CollisionBoxComponentSystem#setDebugRender
         * @description Display collision shape outlines
