@@ -537,10 +537,6 @@ pc.extend(pc.fw, function () {
         */
         onLibrariesLoaded: function () {
             // Create systems that may require external libraries
-            var body2dsys = new pc.fw.Body2dComponentSystem(this.context);    
-            var collisionrectsys = new pc.fw.CollisionRectComponentSystem(this.context);
-            var collisioncirclesys = new pc.fw.CollisionCircleComponentSystem(this.context);
-
             var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
             var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
             var collisionboxsys = new pc.fw.CollisionBoxComponentSystem(this.context);

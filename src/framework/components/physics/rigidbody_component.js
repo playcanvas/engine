@@ -51,6 +51,7 @@ pc.extend(pc.fw, function () {
         this.on('set_body', this.onSetBody, this);
 
         entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+        this.system.on('beforeremove', this.onBeforeRemove, this);
 
         // For kinematic
         this._displacement = pc.math.vec3.create(0, 0, 0);
@@ -696,7 +697,15 @@ pc.extend(pc.fw, function () {
             // Reset velocities
             this.linearVelocity = pc.math.vec3.zero;
             this.angularVelocity = pc.math.vec3.zero;
+        },
+
+        onBeforeRemove: function(entity, component) {
+            if (this === component) {
+                entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+                this.system.off('beforeremove', this.onBeforeRemove, this);
+            }
         }
+
     });
 
     return {

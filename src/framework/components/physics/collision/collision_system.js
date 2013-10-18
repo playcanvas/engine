@@ -15,16 +15,16 @@ pc.extend(pc.fw, function () {
             type: "enumeration",
             options: {
                 enumerations: [{
-                    name: 'box',
+                    name: 'Box',
                     value: 'box'
                 }, {
-                    name: 'sphere',
+                    name: 'Sphere',
                     value: 'sphere'
                 }, {
-                    name: 'capsule',
+                    name: 'Capsule',
                     value: 'capsule'
                 }, {
-                    name: 'mesh',
+                    name: 'Mesh',
                     value: 'mesh'
                 }]
             },
