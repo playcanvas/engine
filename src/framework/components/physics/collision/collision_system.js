@@ -1,6 +1,13 @@
 pc.extend(pc.fw, function () {
-   
-    var CollisionComponentSystem = function CollisionComponentSystem (context) {
+       
+    /**
+     * @name pc.fw.CollisionComponentSystem
+     * @constructor Creates a new CollisionComponentSystem.
+     * @class Manages creation of {@link pc.fw.CollisionComponent}s.
+     * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application.
+     * @extends pc.fw.ComponentSystem
+     */    
+     var CollisionComponentSystem = function CollisionComponentSystem (context) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
         context.systems.add(this.id, this);
