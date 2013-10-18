@@ -588,21 +588,18 @@ pc.extend(pc.fw, function () {
 
 
         /**
-        * @private
         * @enum pc.fw.EVENT
         * @name pc.fw.EVENT_CONTACT
         * @description Event fired when two Entities are touching each other
         */
         EVENT_CONTACT: 'contact',
         /**
-        * @private
         * @enum pc.fw.EVENT
         * @name pc.fw.EVENT_COLLISIONSTART
         * @description Event fired when two Entities start touching each other
         */
         EVENT_COLLISIONSTART: 'collisionstart',
         /**
-        * @private
         * @enum pc.fw.EVENT
         * @name pc.fw.EVENT_COLLISIONEND
         * @description Event fired when two Entities stop touching each other

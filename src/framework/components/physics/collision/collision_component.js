@@ -26,7 +26,6 @@ pc.extend(pc.fw, function () {
 
     // Events Documentation   
     /**
-     * @private
      * @event
      * @name pc.fw.CollisionComponent#contact
      * @description The {@link pc.fw.EVENT_CONTACT} event is fired when a contact occurs between this collision volume and a {@link pc.fw.RigidBodyComponent}.
@@ -34,7 +33,6 @@ pc.extend(pc.fw, function () {
     */
 
     /**
-     * @private
      * @event
      * @name pc.fw.CollisionComponent#collisionstart
      * @description The {@link pc.fw.EVENT_COLLISIONSTART} event is fired when another {@link pc.fw.RigidBodyComponent} enters this collision volume.
@@ -42,7 +40,6 @@ pc.extend(pc.fw, function () {
     */
 
     /**
-     * @private
      * @event
      * @name pc.fw.CollisionComponent#collisionend
      * @description The {@link pc.fw.EVENT_COLLISIONEND} event is fired when a {@link pc.fw.RigidBodyComponent} has stopped touching this collision volume.
