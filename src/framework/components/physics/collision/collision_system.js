@@ -141,7 +141,7 @@ pc.extend(pc.fw, function () {
             var impl = this._createImplementation(data.type);
             impl.beforeInitialize(component, data);
 
-            properties = ['halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset'];
+            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset'];
             CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
 
             impl.afterInitialize(component, data);
@@ -183,7 +183,7 @@ pc.extend(pc.fw, function () {
         * Gets an existing implementation for the specified entity
         */
         _getImplementation: function (entity) {
-            return this.implementations[entity.collider.data.type];
+            return this.implementations[entity.collision.data.type];
         },
 
         cloneComponent: function (entity, clone) {

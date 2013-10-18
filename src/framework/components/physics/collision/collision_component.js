@@ -15,6 +15,7 @@ pc.extend(pc.fw, function () {
      * <li><strong>capsulse</strong>: A capsule-shaped collision volume.</li>
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
      * </ul>
+     * @property {String} type The type of the collision volume.
      * @property {pc.math.vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
      * @property {pc.math.vec3} radius The radius of the sphere or capsule-shaped collision volumes. Defaults to 0.5
      * @property {Number} axis The local space axis with which the capsule-shaped collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
@@ -26,7 +27,6 @@ pc.extend(pc.fw, function () {
 
     // Events Documentation   
     /**
-     * @private
      * @event
      * @name pc.fw.CollisionComponent#contact
      * @description The {@link pc.fw.EVENT_CONTACT} event is fired when a contact occurs between this collision volume and a {@link pc.fw.RigidBodyComponent}.
@@ -34,7 +34,6 @@ pc.extend(pc.fw, function () {
     */
 
     /**
-     * @private
      * @event
      * @name pc.fw.CollisionComponent#collisionstart
      * @description The {@link pc.fw.EVENT_COLLISIONSTART} event is fired when another {@link pc.fw.RigidBodyComponent} enters this collision volume.
@@ -42,15 +41,12 @@ pc.extend(pc.fw, function () {
     */
 
     /**
-     * @private
      * @event
      * @name pc.fw.CollisionComponent#collisionend
      * @description The {@link pc.fw.EVENT_COLLISIONEND} event is fired when a {@link pc.fw.RigidBodyComponent} has stopped touching this collision volume.
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that stopped touching this collision volume.
     */
     var CollisionComponent = function CollisionComponent (system, entity) {
-        entity.collider = this;
-
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);

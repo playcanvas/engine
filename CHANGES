@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.125.2
+--------
+* [FIX] Added collision component 'type' in its properties
+
+--------
 v0.125.1
 --------
 * [BREAKING] Remove all old collision* components
