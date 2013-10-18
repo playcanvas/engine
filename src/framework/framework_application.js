@@ -539,10 +539,6 @@ pc.extend(pc.fw, function () {
             // Create systems that may require external libraries
             var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
             var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
-            var collisionboxsys = new pc.fw.CollisionBoxComponentSystem(this.context);
-            var collisioncapsulesys = new pc.fw.CollisionCapsuleComponentSystem(this.context);
-            var collisionmeshsys = new pc.fw.CollisionMeshComponentSystem(this.context);
-            var collisionspheresys = new pc.fw.CollisionSphereComponentSystem(this.context);
             var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
         },
 
