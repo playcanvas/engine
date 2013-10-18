@@ -503,9 +503,14 @@ pc.extend(pc.fw, function () {
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;
 
+                // dont fire events between triggers
+                if (!e0.rigidbody && !e1.rigidbody) {
+                    continue;
+                }
+
                 // dont fire events between static rigid bodies
-                if (e0.rigidbody.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC &&
-                    e1.rigidbody.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC ) {
+                if (e0.rigidbody && e0.rigidbody.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC &&
+                    e1.rigidbody && e1.rigidbody.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC ) {
                     continue;
                 }
                 
