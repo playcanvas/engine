@@ -60,7 +60,10 @@ pc.extend(pc.fw, function () {
             displayName: "Cast Shadows",
             description: "Cast shadows from this light",
             type: "boolean",
-            defaultValue: false
+            defaultValue: false,
+            filter: {
+                type: ['directional', 'spot']
+            }
         }, {
             name: "shadowResolution",
             displayName: "Shadow Resolution",
@@ -81,7 +84,10 @@ pc.extend(pc.fw, function () {
                     value: 2048
                 }]
             },
-            defaultValue: 1024
+            defaultValue: 1024,
+            filter: {
+                type: ['directional', 'spot']
+            }
         }, {
             name: "range",
             displayName: "Range",
