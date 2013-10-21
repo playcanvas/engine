@@ -16,7 +16,7 @@ pc.extend(pc.fw, function () {
     var EVENT_COLLISION_START = 'collisionstart';
     var EVENT_COLLISION_END = 'collisionend';
     var EVENT_TRIGGER_ENTER = 'triggerenter';
-    var EVENT_TRIGGER_EXIT = 'triggerexit';
+    var EVENT_TRIGGER_LEAVE = 'triggerleave';
 
     /**
     * @name pc.fw.RaycastResult
@@ -455,8 +455,8 @@ pc.extend(pc.fw, function () {
                                 entity.collision.fire(EVENT_COLLISION_END, other);
                             }
 
-                            if (entity.collision.hasEvent(EVENT_TRIGGER_EXIT) && !entity.rigidbody) {
-                                entity.collision.fire(EVENT_TRIGGER_EXIT, other);
+                            if (entity.collision.hasEvent(EVENT_TRIGGER_LEAVE) && !entity.rigidbody) {
+                                entity.collision.fire(EVENT_TRIGGER_LEAVE, other);
                             }
                         }
                     }  
@@ -478,7 +478,7 @@ pc.extend(pc.fw, function () {
             return  collision.hasEvent(EVENT_CONTACT) ||
                     collision.hasEvent(EVENT_COLLISION_START) ||
                     collision.hasEvent(EVENT_COLLISION_END) ||
-                    !entity.rigidbody && (collision.hasEvent(EVENT_TRIGGER_ENTER) || collision.hasEvent(EVENT_TRIGGER_EXIT));
+                    !entity.rigidbody && (collision.hasEvent(EVENT_TRIGGER_ENTER) || collision.hasEvent(EVENT_TRIGGER_LEAVE));
         },
 
         /**

@@ -57,8 +57,8 @@ pc.extend(pc.fw, function () {
 
     /**
      * @event
-     * @name pc.fw.CollisionComponent#triggerexit
-     * @description The 'triggerexit' event is fired when a {@link pc.fw.RigidBodyComponent} exits this collision volume and this volume does not have
+     * @name pc.fw.CollisionComponent#triggerleave
+     * @description The 'triggerleave' event is fired when a {@link pc.fw.RigidBodyComponent} exits this collision volume and this volume does not have
      * a {@link pc.fw.RigidBodyComponent} attached.
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that exited this collision volume.
     */
