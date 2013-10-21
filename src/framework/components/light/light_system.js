@@ -83,8 +83,8 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1024
         }, {
-            name: "attenuationEnd",
-            displayName: "Radius",
+            name: "range",
+            displayName: "Range",
             description: "The distance from the light where its contribution falls to zero",
             type: "number",
             defaultValue: 10,
@@ -144,7 +144,7 @@ pc.extend(pc.fw, function () {
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'model', 'enable', 'color', 'intensity', 'attenuationEnd', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
+            properties = ['type', 'model', 'enable', 'color', 'intensity', 'range', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -210,7 +210,6 @@ pc.extend(pc.fw, function () {
         }, 
 
         _createLightNode: function (data) {
-            console.log("creating light node");
             var node = new pc.scene.LightNode();
             node.setName(data.type + "light");
             node.setType(this._getLightType());
@@ -242,7 +241,6 @@ pc.extend(pc.fw, function () {
 
             context.scene.addModel(model);
             component.entity.addChild(node);
-            console.log("added light node");
 
             data = data || {};
             data.model = model;
@@ -264,7 +262,6 @@ pc.extend(pc.fw, function () {
             entity.removeChild(data.model.graph);
             context.scene.removeModel(data.model);
             delete data.model;
-            console.log("removed light node");
         },
 
         toolsUpdate: function (data) {
@@ -424,7 +421,7 @@ pc.extend(pc.fw, function () {
             var vertexBuffer = meshInstance.mesh.vertexBuffer;
 
             var oca = Math.PI * data.outerConeAngle / 180;
-            var ae = data.attenuationEnd;
+            var ae = data.range;
             var y = -ae * Math.cos(oca);
             var r = ae * Math.sin(oca);
 

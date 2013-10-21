@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
         this.intensity = 1;
         this.castShadows = false;
         this.shadowResolution = 1024;
-        this.attenuationEnd = 10;
+        this.range = 10;
         this.innerConeAngle = 40;
         this.outerConeAngle = 45;
 
