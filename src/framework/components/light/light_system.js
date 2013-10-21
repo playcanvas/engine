@@ -234,10 +234,8 @@ pc.extend(pc.fw, function () {
             model.lights = [ node ];
 
             if (context.designer) {
-                if (!this.mesh) {
-                    this.mesh = this._createDebugMesh();
-                }
-
+                this.mesh = this._createDebugMesh();
+                
                 if (!this.material) {
                     this.material = this._createDebugMaterial();
                 }
@@ -287,6 +285,10 @@ pc.extend(pc.fw, function () {
         },
 
         _createDebugMesh: function () {
+            if (this.mesh) {
+                return this.mesh;
+            }
+
             var context = this.system.context;
             var format = new pc.gfx.VertexFormat(context.graphicsDevice, [
                 { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
@@ -352,6 +354,10 @@ pc.extend(pc.fw, function () {
         },
 
         _createDebugMesh: function () {
+            if (this.mesh) {
+                return this.mesh;
+            }
+
             var context = this.system.context;
             return pc.scene.procedural.createSphere(context.graphicsDevice, {
                 radius: 0.1
@@ -381,23 +387,27 @@ pc.extend(pc.fw, function () {
 
         _createDebugMesh: function () {
             var context = this.system.context;
-            var indexBuffer = new pc.gfx.IndexBuffer(context.graphicsDevice, pc.gfx.INDEXFORMAT_UINT8, 88);
-            var inds = new Uint8Array(indexBuffer.lock());
-            // Spot cone side lines
-            inds[0] = 0;
-            inds[1] = 1;
-            inds[2] = 0;
-            inds[3] = 11;
-            inds[4] = 0;
-            inds[5] = 21;
-            inds[6] = 0;
-            inds[7] = 31;
-            // Spot cone circle - 40 segments
-            for (var i = 0; i < 40; i++) {
-                inds[8 + i * 2 + 0] = i + 1;
-                inds[8 + i * 2 + 1] = i + 2;
+            var indexBuffer = this.indexBuffer;
+            if (!indexBuffer) {
+                var indexBuffer = new pc.gfx.IndexBuffer(context.graphicsDevice, pc.gfx.INDEXFORMAT_UINT8, 88);
+                var inds = new Uint8Array(indexBuffer.lock());
+                // Spot cone side lines
+                inds[0] = 0;
+                inds[1] = 1;
+                inds[2] = 0;
+                inds[3] = 11;
+                inds[4] = 0;
+                inds[5] = 21;
+                inds[6] = 0;
+                inds[7] = 31;
+                // Spot cone circle - 40 segments
+                for (var i = 0; i < 40; i++) {
+                    inds[8 + i * 2 + 0] = i + 1;
+                    inds[8 + i * 2 + 1] = i + 2;
+                }
+                indexBuffer.unlock(); 
+                this.indexBuffer = indexBuffer;   
             }
-            indexBuffer.unlock();
 
             var vertexFormat = new pc.gfx.VertexFormat(context.graphicsDevice, [
                 { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
