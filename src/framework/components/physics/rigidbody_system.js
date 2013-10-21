@@ -124,7 +124,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 1
             },
-            defaultValue: 1
+            defaultValue: 1,
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "linearDamping",
             displayName: "Linear Damping",
@@ -134,7 +137,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 1
             },
-            defaultValue: 0
+            defaultValue: 0,
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "angularDamping",
             displayName: "Angular Damping",
@@ -144,7 +150,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 1
             },
-            defaultValue: 0
+            defaultValue: 0,
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "linearFactor",
             displayName: "Linear Factor",
@@ -154,7 +163,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 0.1
             },
-            defaultValue: [1, 1, 1]
+            defaultValue: [1, 1, 1],
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "angularFactor",
             displayName: "Angular Factor",
@@ -164,7 +176,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 0.1
             },
-            defaultValue: [1, 1, 1]
+            defaultValue: [1, 1, 1],
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "friction",
             displayName: "Friction",
