@@ -25,6 +25,13 @@ pc.extend(pc.fw, function () {
     var FLAG_TRIGGER_LEAVE = 16;
     var FLAG_GLOBAL_CONTACT = 32;
 
+    // holds all possible collision events in a table that has this form:
+    //                         STATIC_RIGID_BODY | NON_STATIC_RIGID_BODY | TRIGGER
+    // ------------------------------------------------------------------------------
+    // STATIC_RIGID_BODY     |     flags         |        flags          |   flags
+    // NON_STATIC_RIGID_BODY |     flags         |        flags          |   flags
+    // TRIGGER               |     flags         |        flags          |   flags
+    // ------------------------------------------------------------------------------
     var collision_table = [
         [0, FLAG_GLOBAL_CONTACT | FLAG_CONTACT | FLAG_COLLISION_START | FLAG_COLLISION_END, 0],
         [FLAG_GLOBAL_CONTACT | FLAG_CONTACT | FLAG_COLLISION_START | FLAG_COLLISION_END, FLAG_GLOBAL_CONTACT | FLAG_CONTACT | FLAG_COLLISION_START | FLAG_COLLISION_END, FLAG_TRIGGER_ENTER | FLAG_TRIGGER_LEAVE],
