@@ -12,6 +12,12 @@ pc.extend(pc.fw, function () {
     var collisions = {};
     var frameCollisions = {};
 
+    var EVENT_CONTACT = 'contact';
+    var EVENT_COLLISION_START = 'collisionstart';
+    var EVENT_COLLISION_END = 'collisionend';
+    var EVENT_TRIGGER_ENTER = 'triggerenter';
+    var EVENT_TRIGGER_EXIT = 'triggerexit';
+
     /**
     * @name pc.fw.RaycastResult
     * @class Object holding the result of a successful raycast hit
@@ -382,14 +388,27 @@ pc.extend(pc.fw, function () {
         * @param {pc.fw.ContactPoint[]} contactPoints An array of contacts points between the two entities
         */
         _handleEntityCollision: function (entity, other, contactPoints) {
-            var result = new ContactResult(other, contactPoints);
-            if (entity.collision.hasEvent(pc.fw.EVENT_CONTACT)) {
-                entity.collision.fire(pc.fw.EVENT_CONTACT, result);
+            var result;
+            var collision = entity.collision;
+            var hasContactEvt = collision.hasEvent(EVENT_CONTACT);
+            var hasCollisionStartEvt = collision.hasEvent(EVENT_COLLISION_START);
+            var hasTriggerEnterEvt = collision.hasEvent(EVENT_TRIGGER_ENTER);
+
+            if (hasContactEvt) {
+                result = new ContactResult(other, contactPoints);
+                collision.fire(EVENT_CONTACT, result);
             }
 
-            if (entity.collision.hasEvent(pc.fw.EVENT_COLLISIONSTART)) {
+            if (hasCollisionStartEvt || hasTriggerEnterEvt) {
                 if (this._storeCollision(entity, other)) {
-                    entity.collision.fire(pc.fw.EVENT_COLLISIONSTART, result);
+                    if (hasCollisionStartEvt) {
+                        result = result || new ContactResult(other, contactPoints);
+                        collision.fire(EVENT_COLLISION_START, result);
+                    } 
+
+                    if (hasTriggerEnterEvt) {
+                        collision.fire(EVENT_TRIGGER_ENTER, other);
+                    }
                 }
             }
         },
@@ -431,8 +450,13 @@ pc.extend(pc.fw, function () {
                         // if the contact does not exist in the current frame collisions then fire event
                         if (!frameCollisions[guid] || frameCollisions[guid].others.indexOf(other) < 0) {
                             others.splice(i, 1);
-                            if (entity.collision.hasEvent(pc.fw.EVENT_COLLISIONEND)) {
-                                entity.collision.fire(pc.fw.EVENT_COLLISIONEND, other);
+
+                            if (entity.collision.hasEvent(EVENT_COLLISION_END)) {
+                                entity.collision.fire(EVENT_COLLISION_END, other);
+                            }
+
+                            if (entity.collision.hasEvent(EVENT_TRIGGER_EXIT)) {
+                                entity.collision.fire(EVENT_TRIGGER_EXIT, other);
                             }
                         }
                     }  
@@ -442,6 +466,19 @@ pc.extend(pc.fw, function () {
                     }          
                 }
             } 
+        },
+
+        /**
+        * @private
+        * @name pc.fw.RigidBodyComponentSystem#_hasCollisionEvents
+        * @description Returns true if the specified collision component has any collision event listeners
+        */
+        _hasCollisionEvents: function(collision) {
+            return  collision.hasEvent(EVENT_CONTACT) ||
+                    collision.hasEvent(EVENT_COLLISION_START) ||
+                    collision.hasEvent(EVENT_COLLISION_END) ||
+                    collision.hasEvent(EVENT_TRIGGER_ENTER) ||
+                    collision.hasEvent(EVENT_TRIGGER_EXIT);
         },
 
         /**
@@ -504,7 +541,7 @@ pc.extend(pc.fw, function () {
             var dispatcher = this.dynamicsWorld.getDispatcher();
             var numManifolds = dispatcher.getNumManifolds();
             var i, j;
-            var hasContactEvt = this.hasEvent(pc.fw.EVENT_CONTACT);
+            var hasContactEvt = this.hasEvent(EVENT_CONTACT);
             
             frameCollisions = {};
 
@@ -529,8 +566,8 @@ pc.extend(pc.fw, function () {
                     continue;
                 }
                 
-                var e0HasCollisionEvents = e0.collision.hasEvent(pc.fw.EVENT_CONTACT) || e0.collision.hasEvent(pc.fw.EVENT_COLLISIONSTART);
-                var e1HasCollisionEvents = e1.collision.hasEvent(pc.fw.EVENT_CONTACT) || e1.collision.hasEvent(pc.fw.EVENT_COLLISIONSTART);
+                var e0HasCollisionEvents = this._hasCollisionEvents(e0.collision);
+                var e1HasCollisionEvents = this._hasCollisionEvents(e1.collision);
 
                 // do some early checks for optimization
                 if (hasContactEvt || e0HasCollisionEvents || e1HasCollisionEvents) {
@@ -542,7 +579,7 @@ pc.extend(pc.fw, function () {
                             var contactPoint = manifold.getContactPoint(j);
                             var e0ContactPoint = hasContactEvt || e0Contacts ? this._createContactPointFromAmmo(contactPoint) : null;
                             if (hasContactEvt) {
-                                this.fire(pc.fw.EVENT_CONTACT, new SingleContactResult(e0, e1, e0ContactPoint));
+                                this.fire(EVENT_CONTACT, new SingleContactResult(e0, e1, e0ContactPoint));
                             }
 
                             if (e0Contacts) {
@@ -600,27 +637,7 @@ pc.extend(pc.fw, function () {
         RIGIDBODY_WANTS_DEACTIVATION: 3,
         RIGIDBODY_DISABLE_DEACTIVATION: 4,
         RIGIDBODY_DISABLE_SIMULATION: 5,
-
-
-        /**
-        * @enum pc.fw.EVENT
-        * @name pc.fw.EVENT_CONTACT
-        * @description Event fired when two Entities are touching each other
-        */
-        EVENT_CONTACT: 'contact',
-        /**
-        * @enum pc.fw.EVENT
-        * @name pc.fw.EVENT_COLLISIONSTART
-        * @description Event fired when two Entities start touching each other
-        */
-        EVENT_COLLISIONSTART: 'collisionstart',
-        /**
-        * @enum pc.fw.EVENT
-        * @name pc.fw.EVENT_COLLISIONEND
-        * @description Event fired when two Entities stop touching each other
-        */
-        EVENT_COLLISIONEND: 'collisionend',
-
+ 
         RigidBodyComponentSystem: RigidBodyComponentSystem
     };
 }());

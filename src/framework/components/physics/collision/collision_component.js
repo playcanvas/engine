@@ -29,22 +29,36 @@ pc.extend(pc.fw, function () {
     /**
      * @event
      * @name pc.fw.CollisionComponent#contact
-     * @description The {@link pc.fw.EVENT_CONTACT} event is fired when a contact occurs between this collision volume and a {@link pc.fw.RigidBodyComponent}.
+     * @description The 'contact' event is fired when a contact occurs between this collision volume and a {@link pc.fw.RigidBodyComponent}.
      * @param {pc.fw.ContactResult} result Details of the contact between the two Entities.
     */
 
     /**
      * @event
      * @name pc.fw.CollisionComponent#collisionstart
-     * @description The {@link pc.fw.EVENT_COLLISIONSTART} event is fired when another {@link pc.fw.RigidBodyComponent} enters this collision volume.
+     * @description The 'collisionstart' event is fired when another {@link pc.fw.RigidBodyComponent} enters this collision volume.
      * @param {pc.fw.ContactResult} result Details of the contact between the two Entities.
     */
 
     /**
      * @event
      * @name pc.fw.CollisionComponent#collisionend
-     * @description The {@link pc.fw.EVENT_COLLISIONEND} event is fired when a {@link pc.fw.RigidBodyComponent} has stopped touching this collision volume.
+     * @description The 'collisionend' event is fired when a {@link pc.fw.RigidBodyComponent} has stopped touching this collision volume.
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that stopped touching this collision volume.
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionComponent#triggerenter
+     * @description The 'triggerenter' event is fired when a {@link pc.fw.RigidBodyComponent} enters this collision volume.
+     * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that entered this collision volume.
+    */
+
+    /**
+     * @event
+     * @name pc.fw.CollisionComponent#triggerexit
+     * @description The 'triggerexit' event is fired when a {@link pc.fw.RigidBodyComponent} exits this collision volume.
+     * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that exited this collision volume.
     */
     var CollisionComponent = function CollisionComponent (system, entity) {
         this.on('set_type', this.onSetType, this);
