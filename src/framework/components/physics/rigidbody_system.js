@@ -392,7 +392,7 @@ pc.extend(pc.fw, function () {
             var collision = entity.collision;
             var hasContactEvt = collision.hasEvent(EVENT_CONTACT);
             var hasCollisionStartEvt = collision.hasEvent(EVENT_COLLISION_START);
-            var hasTriggerEnterEvt = collision.hasEvent(EVENT_TRIGGER_ENTER);
+            var hasTriggerEnterEvt = collision.hasEvent(EVENT_TRIGGER_ENTER) && !entity.rigidbody;
 
             if (hasContactEvt) {
                 result = new ContactResult(other, contactPoints);
@@ -455,7 +455,7 @@ pc.extend(pc.fw, function () {
                                 entity.collision.fire(EVENT_COLLISION_END, other);
                             }
 
-                            if (entity.collision.hasEvent(EVENT_TRIGGER_EXIT)) {
+                            if (entity.collision.hasEvent(EVENT_TRIGGER_EXIT) && !entity.rigidbody) {
                                 entity.collision.fire(EVENT_TRIGGER_EXIT, other);
                             }
                         }
@@ -473,12 +473,12 @@ pc.extend(pc.fw, function () {
         * @name pc.fw.RigidBodyComponentSystem#_hasCollisionEvents
         * @description Returns true if the specified collision component has any collision event listeners
         */
-        _hasCollisionEvents: function(collision) {
+        _hasCollisionEvents: function(entity) {
+            var collision = entity.collision;
             return  collision.hasEvent(EVENT_CONTACT) ||
                     collision.hasEvent(EVENT_COLLISION_START) ||
                     collision.hasEvent(EVENT_COLLISION_END) ||
-                    collision.hasEvent(EVENT_TRIGGER_ENTER) ||
-                    collision.hasEvent(EVENT_TRIGGER_EXIT);
+                    !entity.rigidbody && (collision.hasEvent(EVENT_TRIGGER_ENTER) || collision.hasEvent(EVENT_TRIGGER_EXIT));
         },
 
         /**
@@ -566,8 +566,8 @@ pc.extend(pc.fw, function () {
                     continue;
                 }
                 
-                var e0HasCollisionEvents = this._hasCollisionEvents(e0.collision);
-                var e1HasCollisionEvents = this._hasCollisionEvents(e1.collision);
+                var e0HasCollisionEvents = this._hasCollisionEvents(e0);
+                var e1HasCollisionEvents = this._hasCollisionEvents(e1);
 
                 // do some early checks for optimization
                 if (hasContactEvt || e0HasCollisionEvents || e1HasCollisionEvents) {
