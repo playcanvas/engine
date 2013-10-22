@@ -1,6 +1,12 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+--------
+v0.126.0
+--------
+* Added light component that combines all other lights into one. (private for now)
+* Now filtering rigid body properties that are irrelevant to static rigid bodies
+* Added triggerenter and triggerleave events and now only firing contact, collisionstart, collisionend events between rigid bodies
 
 --------
 v0.125.2
