@@ -11,6 +11,8 @@ pc.extend(pc.fw, function () {
 
     var collisions = {};
     var frameCollisions = {};
+    var contacts0 = [];
+    var contacts1 = [];
 
     var EVENT_CONTACT = 'contact';
     var EVENT_COLLISION_START = 'collisionstart';
@@ -458,6 +460,7 @@ pc.extend(pc.fw, function () {
             for (var guid in collisions) {
                 if (collisions.hasOwnProperty(guid)) {
                     var entity = collisions[guid].entity;
+                    var entityCollision = entity.collision;
                     var others = collisions[guid].others;
                     var length = others.length;
                     var i=length;
@@ -470,11 +473,11 @@ pc.extend(pc.fw, function () {
                             var flags = this._getCollisionFlags(entity, other);
 
                             if (flags & FLAG_COLLISION_END) {
-                                entity.collision.fire(EVENT_COLLISION_END, other);
+                                entityCollision.fire(EVENT_COLLISION_END, other);
                             }
 
                             if (flags & FLAG_TRIGGER_LEAVE) {
-                                entity.collision.fire(EVENT_TRIGGER_LEAVE, other);
+                                entityCollision.fire(EVENT_TRIGGER_LEAVE, other);
                             }
                         }
                     }  
@@ -486,21 +489,21 @@ pc.extend(pc.fw, function () {
             } 
         },
 
-        _isNonStaticRigidBody: function(entity) {
-            return entity.rigidbody && entity.rigidbody.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
-        },
-
-        _isTrigger: function(entity) {
-            return !entity.rigidbody && entity.collision;
-        },
-
         _getCollisionFlags: function (entity, other) {
-            var collision = entity.collision;
-            var entityIsTrigger = this._isTrigger(entity);
-            var otherIsTrigger = this._isTrigger(other);
-            var entityIsNonStaticRb = this._isNonStaticRigidBody(entity);
-            var otherIsNonStaticRb = this._isNonStaticRigidBody(other);
-            
+            var entityRb = entity.rigidbody;
+            var otherRb = other.rigidbody;
+
+            var entityIsTrigger = !entityRb;
+            var otherIsTrigger = !otherRb;
+
+            // early exit check
+            if (entityIsTrigger && otherIsTrigger) {
+                return 0;
+            }
+
+            var entityIsNonStaticRb = entityRb && entityRb.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
+            var otherIsNonStaticRb = otherRb && otherRb.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
+           
             // find flags cell in collision table
             var row = 0;
             var col = 0;
@@ -519,29 +522,33 @@ pc.extend(pc.fw, function () {
 
             var flags = collision_table[row][col];
 
-            // turn off flags that do not correspond to event listeners
-            if (!this.hasEvent(EVENT_CONTACT)) {
-                flags = flags & (~FLAG_GLOBAL_CONTACT);
-            }
+            if (flags) {
+                var collision = entity.collision;            
+                
+                // turn off flags that do not correspond to event listeners
+                if (!this.hasEvent(EVENT_CONTACT)) {
+                    flags = flags & (~FLAG_GLOBAL_CONTACT);
+                }
 
-            if (!collision.hasEvent(EVENT_CONTACT)) {
-                flags = flags & (~FLAG_CONTACT);
-            }
+                if (!collision.hasEvent(EVENT_CONTACT)) {
+                    flags = flags & (~FLAG_CONTACT);
+                }
 
-            if (!collision.hasEvent(EVENT_COLLISION_START)) {
-                flags = flags & (~FLAG_COLLISION_START);
-            }
+                if (!collision.hasEvent(EVENT_COLLISION_START)) {
+                    flags = flags & (~FLAG_COLLISION_START);
+                }
 
-            if (!collision.hasEvent(EVENT_COLLISION_END)) {
-                flags = flags & (~FLAG_COLLISION_END);
-            }
+                if (!collision.hasEvent(EVENT_COLLISION_END)) {
+                    flags = flags & (~FLAG_COLLISION_END);
+                }
 
-            if (!collision.hasEvent(EVENT_TRIGGER_ENTER)) {
-                flags = flags & (~FLAG_TRIGGER_ENTER);
-            }
+                if (!collision.hasEvent(EVENT_TRIGGER_ENTER)) {
+                    flags = flags & (~FLAG_TRIGGER_ENTER);
+                }
 
-            if (!collision.hasEvent(EVENT_TRIGGER_LEAVE)) {
-                flags = flags & (~FLAG_TRIGGER_LEAVE);
+                if (!collision.hasEvent(EVENT_TRIGGER_LEAVE)) {
+                    flags = flags & (~FLAG_TRIGGER_LEAVE);
+                }
             }
 
             return flags;
@@ -628,16 +635,11 @@ pc.extend(pc.fw, function () {
                     var numContacts = manifold.getNumContacts();
 
                     if (numContacts > 0) {                   
-                        var contacts0, contacts1;
                         var cachedContactPoint, cachedContactResult;
-
-                        if (collisionFlags0 & FLAG_COLLISION_START || collisionFlags0 & FLAG_CONTACT) {
-                            contacts0 = [];
-                        }
-
-                        if (collisionFlags1 & FLAG_COLLISION_START || collisionFlags1 & FLAG_CONTACT) {
-                            contacts1 = [];
-                        }
+                        var useContacts0 = collisionFlags0 & FLAG_COLLISION_START || collisionFlags0 & FLAG_CONTACT;
+                        var useContacts1 = collisionFlags1 & FLAG_COLLISION_START || collisionFlags1 & FLAG_CONTACT;
+                        contacts0.length = 0;
+                        contacts1.length = 0;
 
                         for (j = 0; j < numContacts; j++) {
                             var contactPoint = manifold.getContactPoint(j);
@@ -647,12 +649,12 @@ pc.extend(pc.fw, function () {
                                 this.fire(EVENT_CONTACT, new SingleContactResult(e0, e1, cachedContactPoint));
                             }
 
-                            if (contacts0) {
+                            if (useContacts0) {
                                 cachedContactPoint = cachedContactPoint || this._createContactPointFromAmmo(contactPoint);
                                 contacts0.push(cachedContactPoint);
                             }
 
-                            if (contacts1) {
+                            if (useContacts1) {
                                 contacts1.push(this._createReverseContactPointFromAmmo(contactPoint));
                             }
                         }
