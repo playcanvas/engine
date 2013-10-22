@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
 /**
+     * @private
      * @name pc.fw.LightComponentSystem
      * @constructor Create a new LightComponentSystem.
      * @class A Light Component is used to dynamically light the scene.
