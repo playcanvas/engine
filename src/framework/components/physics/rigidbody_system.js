@@ -11,6 +11,34 @@ pc.extend(pc.fw, function () {
 
     var collisions = {};
     var frameCollisions = {};
+    var contacts0 = [];
+    var contacts1 = [];
+
+    var EVENT_CONTACT = 'contact';
+    var EVENT_COLLISION_START = 'collisionstart';
+    var EVENT_COLLISION_END = 'collisionend';
+    var EVENT_TRIGGER_ENTER = 'triggerenter';
+    var EVENT_TRIGGER_LEAVE = 'triggerleave';
+
+    var FLAG_CONTACT = 1;
+    var FLAG_COLLISION_START = 2;
+    var FLAG_COLLISION_END = 4;
+    var FLAG_TRIGGER_ENTER = 8;
+    var FLAG_TRIGGER_LEAVE = 16;
+    var FLAG_GLOBAL_CONTACT = 32;
+
+    // holds all possible collision events in a table that has this form:
+    //                         STATIC_RIGID_BODY | NON_STATIC_RIGID_BODY | TRIGGER
+    // ------------------------------------------------------------------------------
+    // STATIC_RIGID_BODY     |     flags         |        flags          |   flags
+    // NON_STATIC_RIGID_BODY |     flags         |        flags          |   flags
+    // TRIGGER               |     flags         |        flags          |   flags
+    // ------------------------------------------------------------------------------
+    var collision_table = [
+        [0, FLAG_GLOBAL_CONTACT | FLAG_CONTACT | FLAG_COLLISION_START | FLAG_COLLISION_END, 0],
+        [FLAG_GLOBAL_CONTACT | FLAG_CONTACT | FLAG_COLLISION_START | FLAG_COLLISION_END, FLAG_GLOBAL_CONTACT | FLAG_CONTACT | FLAG_COLLISION_START | FLAG_COLLISION_END, FLAG_TRIGGER_ENTER | FLAG_TRIGGER_LEAVE],
+        [0, FLAG_TRIGGER_ENTER | FLAG_TRIGGER_LEAVE, 0]
+    ];
 
     /**
     * @name pc.fw.RaycastResult
@@ -124,7 +152,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 1
             },
-            defaultValue: 1
+            defaultValue: 1,
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "linearDamping",
             displayName: "Linear Damping",
@@ -134,7 +165,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 1
             },
-            defaultValue: 0
+            defaultValue: 0,
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "angularDamping",
             displayName: "Angular Damping",
@@ -144,7 +178,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 1
             },
-            defaultValue: 0
+            defaultValue: 0,
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "linearFactor",
             displayName: "Linear Factor",
@@ -154,7 +191,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 0.1
             },
-            defaultValue: [1, 1, 1]
+            defaultValue: [1, 1, 1],
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "angularFactor",
             displayName: "Angular Factor",
@@ -164,7 +204,10 @@ pc.extend(pc.fw, function () {
                 min: 0,
                 step: 0.1
             },
-            defaultValue: [1, 1, 1]
+            defaultValue: [1, 1, 1],
+            filter: {
+                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+            }
         }, {
             name: "friction",
             displayName: "Friction",
@@ -366,15 +409,24 @@ pc.extend(pc.fw, function () {
         * @param {pc.fw.Entity} other The entity that collides with the first entity
         * @param {pc.fw.ContactPoint[]} contactPoints An array of contacts points between the two entities
         */
-        _handleEntityCollision: function (entity, other, contactPoints) {
-            var result = new ContactResult(other, contactPoints);
-            if (entity.collision.hasEvent(pc.fw.EVENT_CONTACT)) {
-                entity.collision.fire(pc.fw.EVENT_CONTACT, result);
+        _handleEntityCollision: function (entity, other, contactPoints, collisionFlags) {
+            var result;
+
+            if (collisionFlags & FLAG_CONTACT) {
+                result = new ContactResult(other, contactPoints);
+                entity.collision.fire(EVENT_CONTACT, result);
             }
 
-            if (entity.collision.hasEvent(pc.fw.EVENT_COLLISIONSTART)) {
+            if (collisionFlags & FLAG_COLLISION_START || collisionFlags & FLAG_TRIGGER_ENTER ) {
                 if (this._storeCollision(entity, other)) {
-                    entity.collision.fire(pc.fw.EVENT_COLLISIONSTART, result);
+                    if (collisionFlags & FLAG_COLLISION_START) {
+                        result = result || new ContactResult(other, contactPoints);
+                        entity.collision.fire(EVENT_COLLISION_START, result);
+                    }
+
+                    if (collisionFlags & FLAG_TRIGGER_ENTER) {
+                        entity.collision.fire(EVENT_TRIGGER_ENTER, other);
+                    }
                 }
             }
         },
@@ -408,6 +460,7 @@ pc.extend(pc.fw, function () {
             for (var guid in collisions) {
                 if (collisions.hasOwnProperty(guid)) {
                     var entity = collisions[guid].entity;
+                    var entityCollision = entity.collision;
                     var others = collisions[guid].others;
                     var length = others.length;
                     var i=length;
@@ -416,8 +469,15 @@ pc.extend(pc.fw, function () {
                         // if the contact does not exist in the current frame collisions then fire event
                         if (!frameCollisions[guid] || frameCollisions[guid].others.indexOf(other) < 0) {
                             others.splice(i, 1);
-                            if (entity.collision.hasEvent(pc.fw.EVENT_COLLISIONEND)) {
-                                entity.collision.fire(pc.fw.EVENT_COLLISIONEND, other);
+
+                            var flags = this._getCollisionFlags(entity, other);
+
+                            if (flags & FLAG_COLLISION_END) {
+                                entityCollision.fire(EVENT_COLLISION_END, other);
+                            }
+
+                            if (flags & FLAG_TRIGGER_LEAVE) {
+                                entityCollision.fire(EVENT_TRIGGER_LEAVE, other);
                             }
                         }
                     }  
@@ -427,6 +487,72 @@ pc.extend(pc.fw, function () {
                     }          
                 }
             } 
+        },
+
+        _getCollisionFlags: function (entity, other) {
+            var entityRb = entity.rigidbody;
+            var otherRb = other.rigidbody;
+
+            var entityIsTrigger = !entityRb;
+            var otherIsTrigger = !otherRb;
+
+            // early exit check
+            if (entityIsTrigger && otherIsTrigger) {
+                return 0;
+            }
+
+            var store = this.store;
+            var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
+            var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
+           
+            // find flags cell in collision table
+            var row = 0;
+            var col = 0;
+
+            if (entityIsNonStaticRb) {
+                row = 1;
+            } else if (entityIsTrigger) {
+                row = 2;
+            }
+
+            if (otherIsNonStaticRb) {
+                col = 1;
+            } else if (otherIsTrigger) {
+                col = 2;
+            }
+
+            var flags = collision_table[row][col];
+
+            if (flags) {
+                var collision = entity.collision;            
+
+                // turn off flags that do not correspond to event listeners
+                if (!this.hasEvent(EVENT_CONTACT)) {
+                    flags = flags & (~FLAG_GLOBAL_CONTACT);
+                }
+
+                if (!collision.hasEvent(EVENT_CONTACT)) {
+                    flags = flags & (~FLAG_CONTACT);
+                }
+
+                if (!collision.hasEvent(EVENT_COLLISION_START)) {
+                    flags = flags & (~FLAG_COLLISION_START);
+                }
+
+                if (!collision.hasEvent(EVENT_COLLISION_END)) {
+                    flags = flags & (~FLAG_COLLISION_END);
+                }
+
+                if (!collision.hasEvent(EVENT_TRIGGER_ENTER)) {
+                    flags = flags & (~FLAG_TRIGGER_ENTER);
+                }
+
+                if (!collision.hasEvent(EVENT_TRIGGER_LEAVE)) {
+                    flags = flags & (~FLAG_TRIGGER_LEAVE);
+                }
+            }
+
+            return flags;
         },
 
         /**
@@ -474,12 +600,12 @@ pc.extend(pc.fw, function () {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
-                    if (componentData.body && componentData.body.isActive()) {
+                    if (componentData.body && componentData.body.isActive() ) {
                         if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
                         } else if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
                             entity.rigidbody.updateKinematic(dt);
-                        }
+                        } 
                     }
 
                 }
@@ -489,7 +615,6 @@ pc.extend(pc.fw, function () {
             var dispatcher = this.dynamicsWorld.getDispatcher();
             var numManifolds = dispatcher.getNumManifolds();
             var i, j;
-            var hasContactEvt = this.hasEvent(pc.fw.EVENT_CONTACT);
             
             frameCollisions = {};
 
@@ -503,48 +628,40 @@ pc.extend(pc.fw, function () {
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;
 
-                // dont fire events between triggers
-                if (!e0.rigidbody && !e1.rigidbody) {
-                    continue;
-                }
-
-                // dont fire events between static rigid bodies
-                if (e0.rigidbody && e0.rigidbody.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC &&
-                    e1.rigidbody && e1.rigidbody.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC ) {
-                    continue;
-                }
-                
-                var e0HasCollisionEvents = e0.collision.hasEvent(pc.fw.EVENT_CONTACT) || e0.collision.hasEvent(pc.fw.EVENT_COLLISIONSTART);
-                var e1HasCollisionEvents = e1.collision.hasEvent(pc.fw.EVENT_CONTACT) || e1.collision.hasEvent(pc.fw.EVENT_COLLISIONSTART);
+                var collisionFlags0 = this._getCollisionFlags(e0, e1);
+                var collisionFlags1 = this._getCollisionFlags(e1, e0);
 
                 // do some early checks for optimization
-                if (hasContactEvt || e0HasCollisionEvents || e1HasCollisionEvents) {
+                if (collisionFlags0 || collisionFlags1) {
                     var numContacts = manifold.getNumContacts();
+
                     if (numContacts > 0) {                   
-                        var e0Contacts = e0HasCollisionEvents ? [] : null;
-                        var e1Contacts = e1HasCollisionEvents ? [] : null;
+                        var cachedContactPoint, cachedContactResult;
+                        var useContacts0 = collisionFlags0 & FLAG_COLLISION_START || collisionFlags0 & FLAG_CONTACT;
+                        var useContacts1 = collisionFlags1 & FLAG_COLLISION_START || collisionFlags1 & FLAG_CONTACT;
+                        contacts0.length = 0;
+                        contacts1.length = 0;
+
                         for (j = 0; j < numContacts; j++) {
                             var contactPoint = manifold.getContactPoint(j);
-                            var e0ContactPoint = hasContactEvt || e0Contacts ? this._createContactPointFromAmmo(contactPoint) : null;
-                            if (hasContactEvt) {
-                                this.fire(pc.fw.EVENT_CONTACT, new SingleContactResult(e0, e1, e0ContactPoint));
+
+                            if (collisionFlags0 & FLAG_GLOBAL_CONTACT) {
+                                cachedContactPoint = this._createContactPointFromAmmo(contactPoint);
+                                this.fire(EVENT_CONTACT, new SingleContactResult(e0, e1, cachedContactPoint));
                             }
 
-                            if (e0Contacts) {
-                                e0Contacts.push(e0ContactPoint);
+                            if (useContacts0) {
+                                cachedContactPoint = cachedContactPoint || this._createContactPointFromAmmo(contactPoint);
+                                contacts0.push(cachedContactPoint);
                             }
 
-                            if (e1Contacts) {
-                                e1Contacts.push(this._createReverseContactPointFromAmmo(contactPoint));
+                            if (useContacts1) {
+                                contacts1.push(this._createReverseContactPointFromAmmo(contactPoint));
                             }
                         }
 
-
-                        if (e0Contacts)
-                            this._handleEntityCollision(e0, e1, e0Contacts);
-
-                        if (e1Contacts)
-                            this._handleEntityCollision(e1, e0, e1Contacts);
+                        this._handleEntityCollision(e0, e1, contacts0, collisionFlags0);                        
+                        this._handleEntityCollision(e1, e0, contacts1, collisionFlags1);
                     }
                 }
             }                
@@ -585,27 +702,7 @@ pc.extend(pc.fw, function () {
         RIGIDBODY_WANTS_DEACTIVATION: 3,
         RIGIDBODY_DISABLE_DEACTIVATION: 4,
         RIGIDBODY_DISABLE_SIMULATION: 5,
-
-
-        /**
-        * @enum pc.fw.EVENT
-        * @name pc.fw.EVENT_CONTACT
-        * @description Event fired when two Entities are touching each other
-        */
-        EVENT_CONTACT: 'contact',
-        /**
-        * @enum pc.fw.EVENT
-        * @name pc.fw.EVENT_COLLISIONSTART
-        * @description Event fired when two Entities start touching each other
-        */
-        EVENT_COLLISIONSTART: 'collisionstart',
-        /**
-        * @enum pc.fw.EVENT
-        * @name pc.fw.EVENT_COLLISIONEND
-        * @description Event fired when two Entities stop touching each other
-        */
-        EVENT_COLLISIONEND: 'collisionend',
-
+ 
         RigidBodyComponentSystem: RigidBodyComponentSystem
     };
 }());

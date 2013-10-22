@@ -137,6 +137,9 @@
 ../src/framework/components/staticcubemap/staticcubemap_system.js
 ../src/framework/components/staticcubemap/staticcubemap_component.js
 ../src/framework/components/staticcubemap/staticcubemap_data.js
+../src/framework/components/light/light_system.js
+../src/framework/components/light/light_component.js
+../src/framework/components/light/light_data.js
 ../src/framework/components/light/directionallight_system.js
 ../src/framework/components/light/directionallight_component.js
 ../src/framework/components/light/directionallight_data.js
