@@ -501,8 +501,9 @@ pc.extend(pc.fw, function () {
                 return 0;
             }
 
-            var entityIsNonStaticRb = entityRb && entityRb.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
-            var otherIsNonStaticRb = otherRb && otherRb.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
+            var store = this.store;
+            var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
+            var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
            
             // find flags cell in collision table
             var row = 0;
@@ -524,7 +525,7 @@ pc.extend(pc.fw, function () {
 
             if (flags) {
                 var collision = entity.collision;            
-                
+
                 // turn off flags that do not correspond to event listeners
                 if (!this.hasEvent(EVENT_CONTACT)) {
                     flags = flags & (~FLAG_GLOBAL_CONTACT);
@@ -599,12 +600,12 @@ pc.extend(pc.fw, function () {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
-                    if (componentData.body && componentData.body.isActive()) {
+                    if (componentData.body && componentData.body.isActive() ) {
                         if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
                         } else if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
                             entity.rigidbody.updateKinematic(dt);
-                        }
+                        } 
                     }
 
                 }
