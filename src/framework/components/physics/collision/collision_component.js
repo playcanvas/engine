@@ -6,6 +6,47 @@ pc.extend(pc.fw, function () {
      * @class A collision volume. use this in conjunction with a {@link pc.fw.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
      * <p>If the {@link pc.fw.Entity} does not have a {@link pc.fw.RigidBodyComponent} then this collision volume will act as a trigger volume. Trigger volumes fire collision events on
      * other non-static entities that have a {@link pc.fw.RigidBodyComponent} attached.</p>
+     * <p>The following table shows all the events that can be fired between two Entities:
+     * <table class="table table-striped table-condensed">
+     *  <tr><td></td><td><strong>Rigid Body (Static)</strong></td><td><strong>Rigid Body (Dynamic or Kinematic)</strong></td><td><strong>Trigger Volume</strong></td></tr>
+     *  <tr>
+     *       <td><strong>Rigid Body (Static)</strong></td>
+     *       <td>-</td>
+     *       <td><ul class="list-group">
+     *           <li class="list-group-item">contact</li>
+     *           <li class="list-group-item">collisionstart</li>
+     *           <li class="list-group-item">collisionend</li>
+     *       </td>
+     *       <td>-</td>
+     *   </tr>
+     *  <tr>
+     *       <td><strong>Rigid Body (Dynamic or Kinematic)</strong></td>
+     *       <td><ul class="list-group">
+     *           <li class="list-group-item">contact</li>
+     *           <li class="list-group-item">collisionstart</li>
+     *           <li class="list-group-item">collisionend</li>
+     *       </td>
+     *       <td><ul class="list-group">
+     *           <li class="list-group-item">contact</li>
+     *           <li class="list-group-item">collisionstart</li>
+     *           <li class="list-group-item">collisionend</li>
+     *       </td>
+     *       <td><ul class="list-group">
+     *           <li class="list-group-item">triggerenter</li>
+     *           <li class="list-group-item">triggerleave</li>
+     *       </td>
+     *   </tr>     
+     *  <tr>
+     *       <td><strong>Trigger Volume</strong></td>
+     *       <td>-</td>
+     *       <td><ul class="list-group">
+     *           <li class="list-group-item">triggerenter</li>
+     *           <li class="list-group-item">triggerleave</li>
+     *       </td>
+     *       <td>-</td>
+     *   </tr>   
+     * </table>
+     * </p>
      * @param {pc.fw.CollisionComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
@@ -14,7 +55,7 @@ pc.extend(pc.fw, function () {
      * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
      * <li><strong>capsulse</strong>: A capsule-shaped collision volume.</li>
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
-     * </ul>
+     * </ul>     
      * @property {String} type The type of the collision volume.
      * @property {pc.math.vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
      * @property {pc.math.vec3} radius The radius of the sphere or capsule-shaped collision volumes. Defaults to 0.5
@@ -29,28 +70,28 @@ pc.extend(pc.fw, function () {
     /**
      * @event
      * @name pc.fw.CollisionComponent#contact
-     * @description The 'contact' event is fired when a contact occurs between this collision volume and a {@link pc.fw.RigidBodyComponent}.
-     * @param {pc.fw.ContactResult} result Details of the contact between the two Entities.
+     * @description The 'contact' event is fired when a contact occurs between two rigid bodies
+     * @param {pc.fw.ContactResult} result Details of the contact between the two rigid bodies.
     */
 
     /**
      * @event
      * @name pc.fw.CollisionComponent#collisionstart
-     * @description The 'collisionstart' event is fired when another {@link pc.fw.RigidBodyComponent} enters this collision volume.
+     * @description The 'collisionstart' event is fired when two rigid bodies start touching.
      * @param {pc.fw.ContactResult} result Details of the contact between the two Entities.
     */
 
     /**
      * @event
      * @name pc.fw.CollisionComponent#collisionend
-     * @description The 'collisionend' event is fired when a {@link pc.fw.RigidBodyComponent} has stopped touching this collision volume.
+     * @description The 'collisionend' event is fired two rigid-bodies stop touching.
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that stopped touching this collision volume.
     */
 
     /**
      * @event
      * @name pc.fw.CollisionComponent#triggerenter
-     * @description The 'triggerenter' event is fired when a {@link pc.fw.RigidBodyComponent} enters this collision volume and this volume does not have
+     * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
      * a {@link pc.fw.RigidBodyComponent} attached.
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that entered this collision volume.
     */
@@ -58,7 +99,7 @@ pc.extend(pc.fw, function () {
     /**
      * @event
      * @name pc.fw.CollisionComponent#triggerleave
-     * @description The 'triggerleave' event is fired when a {@link pc.fw.RigidBodyComponent} exits this collision volume and this volume does not have
+     * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
      * a {@link pc.fw.RigidBodyComponent} attached.
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that exited this collision volume.
     */
