@@ -860,12 +860,11 @@ pc.extend(pc.fw, function () {
 
         updateTransform: function(component, position, rotation, scale) {
             if (component.shape) {
+                // if the scale changed then recreate the shape
                 var previousScale = component.shape.getLocalScaling();                
                 if (scale[0] != previousScale.x() ||
                     scale[1] != previousScale.y() ||
                     scale[2] != previousScale.z() ) {
-
-                    console.log("scale");
                     this.doRecreatePhysicalShape(component);
                 }
             }
@@ -873,10 +872,6 @@ pc.extend(pc.fw, function () {
             CollisionMeshSystemImpl._super.updateTransform.call(this, component, position, rotation, scale);
         },
 
-        approximately: function(a, b, epsilon) {
-            return Math.abs(a-b) < epsilon;
-        },
-               
         clone: function (entity, clone) {
             var component = this.system.addComponent(clone, {});
             if (entity.model) {
