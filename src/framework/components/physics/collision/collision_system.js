@@ -787,7 +787,8 @@ pc.extend(pc.fw, function () {
                     shape.addChildShape(transform, triMeshShape);
                 }
 
-                var scale = entity.getLocalScale();
+                var entityTransform = entity.getWorldTransform();
+                var scale = pc.math.mat4.getScale(entityTransform);
                 var vec = new Ammo.btVector3();
                 vec.setValue(scale[0], scale[1], scale[2]);
                 shape.setLocalScaling(vec);
@@ -860,11 +861,14 @@ pc.extend(pc.fw, function () {
 
         updateTransform: function(component, position, rotation, scale) {
             if (component.shape) {
+                var entityTransform = component.entity.getWorldTransform();
+                var worldScale = pc.math.mat4.getScale(entityTransform);
+
                 // if the scale changed then recreate the shape
                 var previousScale = component.shape.getLocalScaling();                
-                if (scale[0] != previousScale.x() ||
-                    scale[1] != previousScale.y() ||
-                    scale[2] != previousScale.z() ) {
+                if (worldScale[0] != previousScale.x() ||
+                    worldScale[1] != previousScale.y() ||
+                    worldScale[2] != previousScale.z() ) {
                     this.doRecreatePhysicalShape(component);
                 }
             }
