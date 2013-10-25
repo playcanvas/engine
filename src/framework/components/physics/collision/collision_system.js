@@ -371,7 +371,7 @@ pc.extend(pc.fw, function () {
         * Called when the collision is cloned to another entity
         */
         clone: function (entity, clone) {
-            CollisionComponentSystem._super.clone.call(this.system, entity, clone);
+            CollisionComponentSystem._super.cloneComponent.call(this.system, entity, clone);
         }
     };
 
