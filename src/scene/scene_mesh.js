@@ -28,7 +28,7 @@ pc.extend(pc.scene, function () {
         this.skin = null;
 
         // AABB for object space mesh vertices
-        this.aabb = null;
+        this.aabb = new pc.shape.Aabb();
     };
 
     /**
