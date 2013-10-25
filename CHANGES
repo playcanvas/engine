@@ -1,6 +1,12 @@
 --------------------------
 PlayCanvas Runtime Changes 
 --------------------------
+
+--------
+v0.126.2
+--------
+* [FIX] Alpha sorting now uses the bounding box so create a default one.
+
 --------
 v0.126.1
 --------
