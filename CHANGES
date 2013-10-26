@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.126.4
+--------
+* [FIX] Error when rigid body entities are null.
+
+--------
 v0.126.3
 --------
 * [FIX] Error when cloning collision components.
