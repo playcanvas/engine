@@ -628,6 +628,11 @@ pc.extend(pc.fw, function () {
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;
 
+                // check if entity is null - TODO: investigate when this happens
+                if (!e0 || !e1) {
+                    continue;
+                }
+
                 var collisionFlags0 = this._getCollisionFlags(e0, e1);
                 var collisionFlags1 = this._getCollisionFlags(e1, e0);
 
