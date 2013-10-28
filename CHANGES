@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.126.4
+--------
+* [FIX] Error when rigid body entities are null.
+
+--------
+v0.126.3
+--------
+* [FIX] Error when cloning collision components.
+
+--------
 v0.126.2
 --------
 * [FIX] Alpha sorting now uses the bounding box so create a default one.
