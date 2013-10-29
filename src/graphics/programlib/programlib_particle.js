@@ -1,6 +1,7 @@
 pc.gfx.programlib.particle = {
     generateKey: function (device, options) {
         var key = "particle";
+        if (options.billboard) key += '_bbrd';
         return key;
     },
 
@@ -16,6 +17,9 @@ pc.gfx.programlib.particle = {
             particle_spinStartSpinSpeed: pc.gfx.SEMANTIC_ATTR4,
             particle_colorMult: pc.gfx.SEMANTIC_ATTR5
         }
+        if (!options.billboard) {
+            attributes.particle_orientation = pc.gfx.SEMANTIC_ATTR6;
+        }
 
         ////////////////////////////
         // GENERATE VERTEX SHADER //
@@ -30,6 +34,9 @@ pc.gfx.programlib.particle = {
         code += "attribute vec4 particle_accelerationEndSize;\n";  // acceleration.xyz, endSize
         code += "attribute vec4 particle_spinStartSpinSpeed;\n";   // spinStart.x, spinSpeed.y
         code += "attribute vec4 particle_colorMult;\n";            // multiplies color and ramp textures
+        if (!options.billboard) {
+            code += "attribute vec4 particle_orientation;\n";      // orientation quaternion
+        }
 
         // VERTEX SHADER INPUTS: UNIFORMS
         code += "uniform mat4 matrix_viewProjection;\n";
@@ -69,21 +76,45 @@ pc.gfx.programlib.particle = {
         code += "    float u = uOffset + (uv.x + 0.5) * (1.0 / particle_numFrames);\n";
         code += "    vUv0 = vec2(u, uv.y + 0.5);\n";
         code += "    vColor = particle_colorMult;\n";
-        code += "    vec3 basisX = matrix_viewInverse[0].xyz;\n";
-        code += "    vec3 basisZ = matrix_viewInverse[1].xyz;\n";
-        code += "    float size = mix(startSize, endSize, percentLife);\n";
-        code += "    size = (percentLife < 0.0 || percentLife > 1.0) ? 0.0 : size;\n";
-        code += "    float s = sin(spinStart + spinSpeed * localTime);\n";
-        code += "    float c = cos(spinStart + spinSpeed * localTime);\n";
-        code += "    vec2 rotatedPoint = vec2(uv.x * c + uv.y * s, \n";
-        code += "                             -uv.x * s + uv.y * c);\n";
-        code += "    vec3 localPosition = vec3(basisX * rotatedPoint.x +\n";
-        code += "                              basisZ * rotatedPoint.y) * size +\n";
-        code += "                              velocity * localTime +\n";
-        code += "                              acceleration * localTime * localTime + \n";
-        code += "                              position;\n";
-        code += "    vAge = percentLife;\n";
-        code += "    gl_Position = matrix_viewProjection * vec4(localPosition + matrix_model[3].xyz, 1.0);\n";
+        if (options.billboard) {
+            code += "    vec3 basisX = matrix_viewInverse[0].xyz;\n";
+            code += "    vec3 basisZ = matrix_viewInverse[1].xyz;\n";
+            code += "    float size = mix(startSize, endSize, percentLife);\n";
+            code += "    size = (percentLife < 0.0 || percentLife > 1.0) ? 0.0 : size;\n";
+            code += "    float s = sin(spinStart + spinSpeed * localTime);\n";
+            code += "    float c = cos(spinStart + spinSpeed * localTime);\n";
+            code += "    vec2 rotatedPoint = vec2(uv.x * c + uv.y * s, \n";
+            code += "                             -uv.x * s + uv.y * c);\n";
+            code += "    vec3 localPosition = vec3(basisX * rotatedPoint.x +\n";
+            code += "                              basisZ * rotatedPoint.y) * size +\n";
+            code += "                              velocity * localTime +\n";
+            code += "                              acceleration * localTime * localTime + \n";
+            code += "                              position;\n";
+            code += "    vAge = percentLife;\n";
+            code += "    gl_Position = matrix_viewProjection * vec4(localPosition + matrix_model[3].xyz, 1.0);\n";
+        } else {
+            code += "    float size = mix(startSize, endSize, percentLife);\n";
+            code += "    size = (percentLife < 0.0 || percentLife > 1.0) ? 0.0 : size;\n";
+            code += "    float s = sin(spinStart + spinSpeed * localTime);\n";
+            code += "    float c = cos(spinStart + spinSpeed * localTime);\n";
+            code += "\n";
+            code += "    vec4 rotatedPoint = vec4((uv.x * c + uv.y * s) * size, 0.0, (uv.x * s - uv.y * c) * size, 1.0);\n";
+            code += "    vec3 center = velocity * localTime + acceleration * localTime * localTime + position;\n";
+            code += "\n";
+            code += "    vec4 q2 = particle_orientation + particle_orientation;\n";
+            code += "    vec4 qx = particle_orientation.xxxw * q2.xyzx;\n";
+            code += "    vec4 qy = particle_orientation.xyyw * q2.xyzy;\n";
+            code += "    vec4 qz = particle_orientation.xxzw * q2.xxzz;\n";
+            code += "\n";
+            code += "    mat4 localMatrix =\n";
+            code += "         mat4((1.0 - qy.y) - qz.z, qx.y + qz.w, qx.z - qy.w, 0,\n";
+            code += "              qx.y - qz.w, (1.0 - qx.x) - qz.z, qy.z + qx.w, 0,\n";
+            code += "              qx.z + qy.w, qy.z - qx.w, (1.0 - qx.x) - qy.y, 0,\n";
+            code += "              center.x, center.y, center.z, 1);\n";
+            code += "    rotatedPoint = localMatrix * rotatedPoint;\n";
+            code += "    vAge = percentLife;\n";
+            code += "    gl_Position = matrix_viewProjection * vec4(rotatedPoint.xyz + matrix_model[3].xyz, 1.0);\n";
+        }
         code += "}";
         
         var vshader = code;
