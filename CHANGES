@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.126.5
+--------
+* Changed trigger documentation. 
+* Added particle system support - only static emitters are supported for now.
+
+--------
 v0.126.4
 --------
 * [FIX] Error when rigid body entities are null.

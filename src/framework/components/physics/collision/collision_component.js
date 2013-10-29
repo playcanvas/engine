@@ -4,8 +4,8 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.CollisionComponent
      * @constructor Create a new CollisionComponent
      * @class A collision volume. use this in conjunction with a {@link pc.fw.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
-     * <p>If the {@link pc.fw.Entity} does not have a {@link pc.fw.RigidBodyComponent} then this collision volume will act as a trigger volume. Trigger volumes fire collision events on
-     * other non-static entities that have a {@link pc.fw.RigidBodyComponent} attached.</p>
+     * <p>If the {@link pc.fw.Entity} does not have a {@link pc.fw.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic 
+     * or kinematic body enters or leaves an entity with a trigger volume, both entities will receive trigger events.
      * <p>The following table shows all the events that can be fired between two Entities:
      * <table class="table table-striped table-condensed">
      *  <tr><td></td><td><strong>Rigid Body (Static)</strong></td><td><strong>Rigid Body (Dynamic or Kinematic)</strong></td><td><strong>Trigger Volume</strong></td></tr>
