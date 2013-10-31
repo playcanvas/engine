@@ -220,3 +220,74 @@ test("addComponent, removeComponent, addComponent", function () {
     stop();
 });
 
+
+test("Scripts Initialize called in correct order", function () {
+    window.script = {};
+    window.script.order = [];
+    window.script.a = false;
+    window.script.b = false;
+
+    var e1 = new pc.fw.Entity();
+    var e2 = new pc.fw.Entity();
+
+    // e1.setRequest({});
+    // e2.setRequest({});
+
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e1, {
+        urls: ['scripts/a.js', 'scripts/b.js']
+    });
+
+    sc.addComponent(e2, {
+        urls: ['scripts/b.js', 'scripts/a.js']
+    });
+
+    setTimeout(function () {
+        //sc.onInitialize(e1);
+
+        equal(window.script.order[0], "a");
+        equal(window.script.order[1], "a");
+        equal(window.script.order[2], "b");
+        equal(window.script.order[3], "b");
+        delete window.script;
+        start();
+    }, 1000);
+    
+    stop();
+});
+
+
+test("Scripts Update in correct order", function () {
+    window.script = {};
+    window.script.order = [];
+    window.script.a = false;
+    window.script.b = false;
+
+    var e1 = new pc.fw.Entity();
+    var e2 = new pc.fw.Entity();
+
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e1, {
+        urls: ['scripts/a.js', 'scripts/b.js']
+    });
+
+    sc.addComponent(e2, {
+        urls: ['scripts/b.js', 'scripts/a.js']
+    });
+
+    setTimeout(function () {
+        sc.onUpdate(1/60);    
+
+        equal(window.script.order[0], "a");
+        equal(window.script.order[1], "a");
+        equal(window.script.order[2], "b");
+        equal(window.script.order[3], "b");
+        delete window.script;
+        start();
+    }, 1000);
+    
+    stop();
+});
+

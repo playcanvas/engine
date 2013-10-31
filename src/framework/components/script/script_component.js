@@ -46,15 +46,15 @@ pc.extend(pc.fw, function () {
 
             if (!this.system._inTools || this.runInTools) {
                 // Load and register new scripts and instances
-                urls.forEach(function (url, index, arr) {
-                    var url = urls[index].trim();
-                    var options = {
-                        parent: this.entity.getRequest()
-                    };
-                    var promise = this.system.context.loader.request(new pc.resources.ScriptRequest(url), options); 
-                    promise.then(function (resources) {
-                        var ScriptType = resources[0];
-
+                var requests = urls.map(function (url) {
+                    return new pc.resources.ScriptRequest(url);
+                });
+                var options = {
+                    parent: this.entity.getRequest()
+                };
+                var promise = this.system.context.loader.request(requests, options); 
+                promise.then(function (resources) {
+                    resources.forEach(function (ScriptType, index) {
                         // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
                         // Make sure that script component hasn't been removed since we started loading
                         if (ScriptType && this.entity.script) {
@@ -62,23 +62,55 @@ pc.extend(pc.fw, function () {
                             // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
                             if (!this.entity.script.instances[ScriptType._pcScriptName]) { 
                                 var instance = new ScriptType(this.entity);
-                                this.system._preRegisterInstance(this.entity, url, ScriptType._pcScriptName, instance);
-                                
-                                // If there is no request batch, then this is not part of a load request and so we need 
-                                // to register the instances immediately to call the initialize function
-                                if (!options.parent) {
-                                    this.system.onInitialize(this.entity);
-                                }
+                                this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
                             }
-                            
                         }
-                    }.bind(this)).then(null, function (error) {
-                        // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
-                        setTimeout(function () {
-                            throw error;
-                        })
-                    });
-                }, this);            
+                    }, this);
+                    // If there is no request batch, then this is not part of a load request and so we need 
+                    // to register the instances immediately to call the initialize function
+                    if (!options.parent) {
+                        this.system.onInitialize(this.entity);
+                    }
+                }.bind(this)).then(null, function (error) {
+                    // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
+                    setTimeout(function () {
+                        throw error;
+                    })
+                });
+
+                // urls.forEach(function (url, index, arr) {
+                //     var url = urls[index].trim();
+                //     var options = {
+                //         parent: this.entity.getRequest()
+                //     };
+                //     var promise = this.system.context.loader.request(new pc.resources.ScriptRequest(url), options); 
+                //     promise.then(function (resources) {
+                //         var ScriptType = resources[0];
+
+                //         // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
+                //         // Make sure that script component hasn't been removed since we started loading
+                //         if (ScriptType && this.entity.script) {
+                //             // Make sure that we haven't already instaciated another identical script while loading
+                //             // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
+                //             if (!this.entity.script.instances[ScriptType._pcScriptName]) { 
+                //                 var instance = new ScriptType(this.entity);
+                //                 this.system._preRegisterInstance(this.entity, url, ScriptType._pcScriptName, instance);
+                                
+                //                 // If there is no request batch, then this is not part of a load request and so we need 
+                //                 // to register the instances immediately to call the initialize function
+                //                 if (!options.parent) {
+                //                     this.system.onInitialize(this.entity);
+                //                 }
+                //             }
+                            
+                //         }
+                //     }.bind(this)).then(null, function (error) {
+                //         // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
+                //         setTimeout(function () {
+                //             throw error;
+                //         })
+                //     });
+                // }, this);            
             }
         }
     });
