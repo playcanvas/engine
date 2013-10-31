@@ -182,6 +182,15 @@ pc.extend(pc.fw, function () {
            this.implementations[data.type].remove(entity, data);
         },
 
+        cloneComponent: function (entity, clone) {
+            var data = {};
+            if (entity.model) {
+                data.model = entity.model.clone();
+            }
+
+            this.addComponent(clone, data);
+        },
+
         toolsUpdate: function (fn) {
             var components = this.store;
             for (var id in components) {
