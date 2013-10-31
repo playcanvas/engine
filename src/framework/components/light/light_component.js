@@ -1,6 +1,5 @@
 pc.extend(pc.fw, function () {
     /**
-     * @private
      * @component
      * @name pc.fw.LightComponent
      * @class The Light Component enables the Entity to light the scene. The light can be one of the 
@@ -13,6 +12,20 @@ pc.extend(pc.fw, function () {
      * @constructor Creates a new LightComponent.
      * @param {pc.fw.DirectionalLightComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
+     * @property {String} type The type of light.
+     * <ul>
+     * <li><strong>directional</strong>: A light that is infinitely far away and lights the entire scene from one direction.</li>
+     * <li><strong>point</strong>: A light that illuminates in all directions from a point.</li>
+     * <li><strong>spot</strong>: A light that illuminates a cone.</li>
+     * </ul>
+     * @property {pc.fw.Color} color The Color of the light
+     * @property {Boolean} enable Enable or disable the light
+     * @property {Number} intensity The brightness of the light.
+     * @property {Boolean} castShadows If enabled the light will cast shadows. (Not availablle for point lights)
+     * @property {Number} shadowResolution The size of the texture used for the shadow map, 256, 512, 1024, 2048. (Not available for point lights)
+     * @property {Number} range The range of the light. (Not available for directional lights)
+     * @property {Numebr} innerConeAngle The angle at which the spotlight cone starts to fade off. (Only avaiable for spotlights)
+     * @property {Number} outerConeAngle The angle at which the spotlight cone has faded to nothing. (Only avaiable for spotlights)
      * @extends pc.fw.Component
      */
     var LightComponent = function LightComponent(system, entity) {
