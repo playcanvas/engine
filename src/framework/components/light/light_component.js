@@ -41,14 +41,14 @@ pc.extend(pc.fw, function () {
         },
 
         refreshProperties: function() {
-            this.onSetCastShadows(this.name, this.castShadows, this.castShadows);
-            this.onSetColor(this.name, this.color, this.color);
-            this.onSetEnable(this.name, this.enable, this.enable);
-            this.onSetIntensity(this.name, this.intensity, this.intensity);
-            this.onSetShadowResolution(this.name, this.shadowResolution, this.shadowResolution);
-            this.onSetRange(this.name, this.range, this.range);
-            this.onSetInnerConeAngle(this.name, this.innerConeAngle, this.innerConeAngle);
-            this.onSetOuterConeAngle(this.name, this.outerConeAngle, this.outerConeAngle);
+            this.onSetCastShadows("castShadows", this.castShadows, this.castShadows);
+            this.onSetColor("color", this.color, this.color);
+            this.onSetEnable("enable", this.enable, this.enable);
+            this.onSetIntensity("intensity", this.intensity, this.intensity);
+            this.onSetShadowResolution("shadowResolution", this.shadowResolution, this.shadowResolution);
+            this.onSetRange("range", this.range, this.range);
+            this.onSetInnerConeAngle("innerConeAngle", this.innerConeAngle, this.innerConeAngle);
+            this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
@@ -81,7 +81,7 @@ pc.extend(pc.fw, function () {
         },
 
         onSetRange: function (name, oldValue, newValue) {
-            if (this.data.type === 'point' || this.data.point === 'spot') {
+            if (this.data.type === 'point' || this.data.type === 'spot') {
                 var light = this.data.model.lights[0];
                 light.setAttenuationEnd(newValue);
             }

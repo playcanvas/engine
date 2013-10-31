@@ -120,17 +120,25 @@ pc.extend(pc.scene, function () {
         this.rampMap = _createTexture(graphicsDevice, 2, 1, [255,255,255,255,255,255,255,0]);
 
         var programLib = this.graphicsDevice.getProgramLibrary();
-        var program = programLib.getProgram("particle");
+        var program = programLib.getProgram("particle", {
+            billboard: this.billboard
+        });
 
         // Create the particle vertex format
-        var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, [
+        var elements = [
             { semantic: pc.gfx.SEMANTIC_ATTR0, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR1, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR2, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR3, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR4, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR5, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-        ]);
+        ];
+        if (!options.billboard) {
+            elements.push(
+                { semantic: pc.gfx.SEMANTIC_ATTR6, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+            );
+        }
+        var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
 
         var vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, 4 * this.numParticles);
 
@@ -150,6 +158,7 @@ pc.extend(pc.scene, function () {
             var spinSpeed = this.spinSpeed + plusMinus(this.spinSpeedRange);
             var startSize = this.startSize + plusMinus(this.startSizeRange);
             var endSize = this.endSize + plusMinus(this.endSizeRange);
+            var orientation = this.orientation;
 
             for (var corner = 0; corner < 4; corner++) {
                 var e = iterator.element;
@@ -159,6 +168,9 @@ pc.extend(pc.scene, function () {
                 e[pc.gfx.SEMANTIC_ATTR3].set(acceleration[0], acceleration[1], acceleration[2], endSize);
                 e[pc.gfx.SEMANTIC_ATTR4].set(spinStart, spinSpeed, 0.0, 0.0);
                 e[pc.gfx.SEMANTIC_ATTR5].set(1, 1, 1, 1);
+                if (!options.billboard) {
+                    e[pc.gfx.SEMANTIC_ATTR6].set(orientation[0], orientation[1], orientation[2], orientation[3]);
+                }
                 iterator.next();
             }
         }
