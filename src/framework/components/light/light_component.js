@@ -9,8 +9,8 @@ pc.extend(pc.fw, function () {
      * <li><strong>point</strong>: A point light.</li>
      * <li><strong>spot</strong>: A spot light.</li>
      * </ul>
-     * @constructor Creates a new LightComponent.
-     * @param {pc.fw.DirectionalLightComponentSystem} system The ComponentSystem that created this Component
+     * @constructor Creates a new LightComponent. The constructor is for internal use only. To create a new Component use {@link pc.fw.LightComponentSystem#addComponent}.
+     * @param {pc.fw.LightComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of light.
      * <ul>
@@ -24,7 +24,7 @@ pc.extend(pc.fw, function () {
      * @property {Boolean} castShadows If enabled the light will cast shadows. (Not availablle for point lights)
      * @property {Number} shadowResolution The size of the texture used for the shadow map, 256, 512, 1024, 2048. (Not available for point lights)
      * @property {Number} range The range of the light. (Not available for directional lights)
-     * @property {Numebr} innerConeAngle The angle at which the spotlight cone starts to fade off. (Only avaiable for spotlights)
+     * @property {Number} innerConeAngle The angle at which the spotlight cone starts to fade off. (Only avaiable for spotlights)
      * @property {Number} outerConeAngle The angle at which the spotlight cone has faded to nothing. (Only avaiable for spotlights)
      * @extends pc.fw.Component
      */

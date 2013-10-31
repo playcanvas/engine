@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.127.2
+--------
+* Fix docs for light component
+
+--------
 v0.127.1
 --------
 * Add documentation for light component
