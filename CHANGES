@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.126.6
+--------
+* [FIX] Light cloning issue
+* [FIX] Issue when setting range on spotlights
+* Added support for non-billboarded particles
+
+--------
 v0.126.5
 --------
 * Changed trigger documentation. 
