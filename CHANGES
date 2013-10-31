@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.127.0
+--------
+* [BREAKING] Remove all directionallight, pointlight, spotlight components. Replaced with light component
+
+--------
 v0.126.6
 --------
 * [FIX] Light cloning issue

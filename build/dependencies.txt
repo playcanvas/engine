@@ -142,15 +142,6 @@
 ../src/framework/components/light/light_system.js
 ../src/framework/components/light/light_component.js
 ../src/framework/components/light/light_data.js
-../src/framework/components/light/directionallight_system.js
-../src/framework/components/light/directionallight_component.js
-../src/framework/components/light/directionallight_data.js
-../src/framework/components/light/pointlight_system.js
-../src/framework/components/light/pointlight_component.js
-../src/framework/components/light/pointlight_data.js
-../src/framework/components/light/spotlight_system.js
-../src/framework/components/light/spotlight_component.js
-../src/framework/components/light/spotlight_data.js
 ../src/framework/components/script/script_system.js
 ../src/framework/components/script/script_component.js
 ../src/framework/components/script/script_data.js
