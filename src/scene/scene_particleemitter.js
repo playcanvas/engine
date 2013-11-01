@@ -1,11 +1,5 @@
 pc.extend(pc.scene, function () {
 
-    var start = new Date();
-
-    var getTime = function () {
-        return (new Date().getTime() - start.getTime()) / 1000.0;
-    };
-
     var particleVerts = [
         [-0.5, -0.5],
         [ 0.5, -0.5],
@@ -47,94 +41,106 @@ pc.extend(pc.scene, function () {
         return texture;
     };
 
-    var ParticleEmitter = function ParticleEmitter(graphicsDevice, numParticles) {
+    var ParticleEmitter = function ParticleEmitter(graphicsDevice, options) {
+//        options = pc.extend(defaults, options);
+
         this.graphicsDevice = graphicsDevice;
 
         // The number of particles to emit.
-        this.numParticles = 1;
+        this.numParticles = typeof options.numParticles !== 'undefined' ? options.numParticles : 1;
         // The number of frames in the particle texture.
-        this.numFrames = 1;
-        // The frame duration at which to animate the particle texture in seconds per
-        // frame.
-        this.frameDuration = 1;
+        this.numFrames = typeof options.numFrames !== 'undefined' ? options.numFrames : 1;
+        // The frame duration at which to animate the particle texture in seconds per frame.
+        this.frameDuration = typeof options.frameDuration !== 'undefined' ? options.frameDuration : 1;
         // The initial frame to display for a particular particle.
-        this.frameStart = 0;
+        this.frameStart = typeof options.frameStart !== 'undefined' ? options.frameStart : 0;
         // The frame start range.
-        this.frameStartRange = 0;
+        this.frameStartRange = typeof options.frameStartRange !== 'undefined' ? options.frameStartRange : 0;
         // The life time of the entire particle system.
         // To make a particle system be continuous set this to match the lifeTime.
-        this.timeRange = 99999999;
+        this.timeRange = typeof options.timeRange !== 'undefined' ? options.timeRange : 99999999;
         // The startTime of a particle.
-        this.startTime = null;
+        this.startTime = typeof options.startTime !== 'undefined' ? options.startTime : null;
         // The lifeTime of a particle.
-        this.lifeTime = 1;
+        this.lifeTime = typeof options.lifeTime !== 'undefined' ? options.lifeTime : 1;
         // The lifeTime range.
-        this.lifeTimeRange = 0;
+        this.lifeTimeRange = typeof options.lifeTimeRange !== 'undefined' ? options.lifeTimeRange : 0;
         // The starting size of a particle.
-        this.startSize = 1;
+        this.startSize = typeof options.startSize !== 'undefined' ? options.startSize : 1;
         // The starting size range.
-        this.startSizeRange = 0;
+        this.startSizeRange = typeof options.startSizeRange !== 'undefined' ? options.startSizeRange : 0;
         // The ending size of a particle.
-        this.endSize = 1;
+        this.endSize = typeof options.endSize !== 'undefined' ? options.endSize : 1;
         // The ending size range.
-        this.endSizeRange = 0;
+        this.endSizeRange = typeof options.endSizeRange !== 'undefined' ? options.endSizeRange : 0;
         // The starting position of a particle in local space.
-        this.position = [0, 0, 0];
+        this.position = typeof options.position !== 'undefined' ? options.position : [0, 0, 0];
         // The starting position range.
-        this.positionRange = [0, 0, 0];
+        this.positionRange = typeof options.positionRange !== 'undefined' ? options.positionRange : [0, 0, 0];
         // The velocity of a paritcle in local space.
-        this.velocity = [0, 0, 0];
+        this.velocity = typeof options.velocity !== 'undefined' ? options.velocity : [0, 0, 0];
         // The velocity range.
-        this.velocityRange = [0, 0, 0];
+        this.velocityRange = typeof options.velocityRange !== 'undefined' ? options.velocityRange : [0, 0, 0];
         // The acceleration of a particle in local space.
-        this.acceleration = [0, 0, 0];
+        this.acceleration = typeof options.acceleration !== 'undefined' ? options.acceleration : [0, 0, 0];
         // The accleration range.
-        this.accelerationRange = [0, 0, 0];
+        this.accelerationRange = typeof options.accelerationRange !== 'undefined' ? options.accelerationRange : [0, 0, 0];
         // The starting spin value for a particle in radians.
-        this.spinStart = 0;
+        this.spinStart = typeof options.spinStart !== 'undefined' ? options.spinStart : 0;
         // The spin start range.
-        this.spinStartRange = 0;
+        this.spinStartRange = typeof options.spinStartRange !== 'undefined' ? options.spinStartRange : 0;
         // The spin speed of a particle in radians.
-        this.spinSpeed = 0;
+        this.spinSpeed = typeof options.spinSpeed !== 'undefined' ? options.spinSpeed : 0;
         // The spin speed range.
-        this.spinSpeedRange = 0;
+        this.spinSpeedRange = typeof options.spinSpeedRange !== 'undefined' ? options.spinSpeedRange : 0;
         // The color multiplier of a particle.
-        this.colorMult = [1, 1, 1, 1];
+        this.colorMult = typeof options.colorMult !== 'undefined' ? options.colorMult : [1, 1, 1, 1];
         // The color multiplier range.
-        this.colorMultRange = [0, 0, 0, 0];
+        this.colorMultRange = typeof options.colorMultRange !== 'undefined' ? options.colorMultRange : [0, 0, 0, 0];
         // The velocity of all paritcles in world space.
-        this.worldVelocity = [0, 0, 0];
+        this.worldVelocity = typeof options.worldVelocity !== 'undefined' ? options.worldVelocity : [0, 0, 0];
         // The acceleration of all paritcles in world space.
-        this.worldAcceleration = [0, 0, 0];
+        this.worldAcceleration = typeof options.worldAcceleration !== 'undefined' ? options.worldAcceleration : [0, 0, 0];
         // Whether these particles are oriented in 2d or 3d. true = 2d, false = 3d.
-        this.billboard = true;
+        this.billboard = typeof options.billboard !== 'undefined' ? options.billboard : true;
         // The orientation of a particle. This is only used if billboard is false.
-        this.orientation = [0, 0, 0, 1];
+        this.orientation = typeof options.orientation !== 'undefined' ? options.orientation : [0, 0, 0, 1];
 
-        this.numParticles = 20;
-        this.lifeTime = 2;
-        this.timeRange = 2;
-        this.startSize = 50;
-        this.endSize = 90;
-        this.velocity = [0, 60, 0];
-        this.velocityRange = [15, 15, 15];
-        this.worldAcceleration = [0, -20, 0];
-        this.spinSpeedRange = 4;
-        
-        var programLib = graphicsDevice.getProgramLibrary();
-        var program = programLib.getProgram("particle");
+        // Create default maps
+        var pixels = [];
+        var vals = [0, 0.2, 0.7, 1.0, 1.0, 0.7, 0.2, 0.0];
+        for (var y = 0; y < 8; y++) {
+            for (var x = 0; x < 8; x++) {
+                var pixelComponent = vals[x] * vals[y] * 255.0;
+                pixels.push(pixelComponent, pixelComponent, pixelComponent, pixelComponent);
+            }
+        }
+
+        this.colorMap = _createTexture(graphicsDevice, 8, 8, pixels);
+        this.rampMap = _createTexture(graphicsDevice, 2, 1, [255,255,255,255,255,255,255,0]);
+
+        var programLib = this.graphicsDevice.getProgramLibrary();
+        var program = programLib.getProgram("particle", {
+            billboard: this.billboard
+        });
 
         // Create the particle vertex format
-        var particleFormat = new pc.gfx.VertexFormat(graphicsDevice, [
+        var elements = [
             { semantic: pc.gfx.SEMANTIC_ATTR0, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR1, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR2, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR3, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR4, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
             { semantic: pc.gfx.SEMANTIC_ATTR5, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-        ]);
+        ];
+        if (!options.billboard) {
+            elements.push(
+                { semantic: pc.gfx.SEMANTIC_ATTR6, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+            );
+        }
+        var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(graphicsDevice, particleFormat, 4 * this.numParticles);
+        var vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, 4 * this.numParticles);
 
         var position = pc.math.vec3.create();
         var velocity = pc.math.vec3.create();
@@ -152,6 +158,7 @@ pc.extend(pc.scene, function () {
             var spinSpeed = this.spinSpeed + plusMinus(this.spinSpeedRange);
             var startSize = this.startSize + plusMinus(this.startSizeRange);
             var endSize = this.endSize + plusMinus(this.endSizeRange);
+            var orientation = this.orientation;
 
             for (var corner = 0; corner < 4; corner++) {
                 var e = iterator.element;
@@ -161,13 +168,16 @@ pc.extend(pc.scene, function () {
                 e[pc.gfx.SEMANTIC_ATTR3].set(acceleration[0], acceleration[1], acceleration[2], endSize);
                 e[pc.gfx.SEMANTIC_ATTR4].set(spinStart, spinSpeed, 0.0, 0.0);
                 e[pc.gfx.SEMANTIC_ATTR5].set(1, 1, 1, 1);
+                if (!options.billboard) {
+                    e[pc.gfx.SEMANTIC_ATTR6].set(orientation[0], orientation[1], orientation[2], orientation[3]);
+                }
                 iterator.next();
             }
         }
         iterator.end();
 
         // Create a index buffer
-        var indexBuffer = new pc.gfx.IndexBuffer(graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, 6 * this.numParticles);
+        var indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, 6 * this.numParticles);
 
         // Fill the index buffer
         var dst = 0;
@@ -191,18 +201,6 @@ pc.extend(pc.scene, function () {
         mesh.primitive[0].count = indexBuffer.getNumIndices();
         mesh.primitive[0].indexed = true;
 
-        var pixels = [];
-        var vals = [0, 0.2, 0.7, 1.0, 1.0, 0.7, 0.2, 0.0];
-        for (var y = 0; y < 8; y++) {
-            for (var x = 0; x < 8; x++) {
-                var pixelComponent = vals[x] * vals[y] * 255.0;
-                pixels.push(pixelComponent, pixelComponent, pixelComponent, pixelComponent);
-            }
-        }
-
-        this.colorMap = _createTexture(graphicsDevice, 8, 8, pixels);
-        this.rampMap = _createTexture(graphicsDevice, 2, 1, [255,255,255,255,255,255,255,0]);
-
         var material = new pc.scene.Material();
         material.setProgram(program);
         material.setParameter('particle_worldVelocity', this.worldVelocity);
@@ -221,19 +219,29 @@ pc.extend(pc.scene, function () {
         });
 
         this.meshInstance = new pc.scene.MeshInstance(null, mesh, material);
+        this.meshInstance.layer = pc.scene.LAYER_FX;
+        this.meshInstance.updateKey();
+        
+        this.time = 0;
     };
 
     ParticleEmitter.prototype = {
-        update: function () {
-            this.meshInstance.material.setParameter('particle_time', getTime());
+        addTime: function (delta) {
+            this.time += delta;
+            this.meshInstance.material.setParameter('particle_time', this.time);
         },
 
         setColorRamp: function (pixels) {
             for (var i = 0; i < pixels.length; i++) {
                 pixels[i] = Math.floor(pixels[i] * 255);
             }
-            this.rampMap = _createTexture(this.graphicsDevice, this.pixels.length / 4, 1, pixels);
+            this.rampMap = _createTexture(this.graphicsDevice, pixels.length / 4, 1, pixels);
             this.meshInstance.material.setParameter('texture_rampMap', this.rampMap);
+        },
+
+        setColorMap: function (colorMap) {
+            this.colorMap = colorMap;
+            this.meshInstance.material.setParameter('texture_colorMap', this.colorMap);
         }
     };
 

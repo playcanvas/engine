@@ -21,7 +21,7 @@ test("new", function () {
 });
 
 test("createComponent, light node created", function () {
-    var lc = new pc.fw.DirectionalLightComponentSystem(context);
+    var lc = new pc.fw.LightComponentSystem(context);
     var entity = new pc.fw.Entity();
     var data = lc.createComponent(entity);
     
@@ -30,7 +30,7 @@ test("createComponent, light node created", function () {
     
 })
 test("delete, light node deleted", function () {
-    var lc = new pc.fw.DirectionalLightComponentSystem(context);
+    var lc = new pc.fw.LightComponentSystem(context);
     var entity = new pc.fw.Entity();
     var data = lc.createComponent(entity);
 

@@ -3,6 +3,61 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.127.2
+--------
+* Fix docs for light component
+
+--------
+v0.127.1
+--------
+* Add documentation for light component
+
+--------
+v0.127.0
+--------
+* [BREAKING] Remove all directionallight, pointlight, spotlight components. Replaced with light component
+
+--------
+v0.126.6
+--------
+* [FIX] Light cloning issue
+* [FIX] Issue when setting range on spotlights
+* Added support for non-billboarded particles
+
+--------
+v0.126.5
+--------
+* Changed trigger documentation. 
+* Added particle system support - only static emitters are supported for now.
+
+--------
+v0.126.4
+--------
+* [FIX] Error when rigid body entities are null.
+
+--------
+v0.126.3
+--------
+* [FIX] Error when cloning collision components.
+
+--------
+v0.126.2
+--------
+* [FIX] Alpha sorting now uses the bounding box so create a default one.
+
+--------
+v0.126.1
+--------
+* Updated collision event documentation
+
+--------
+v0.126.0
+--------
+* Added light component that combines all other lights into one. (private for now)
+* Now filtering rigid body properties that are irrelevant to static rigid bodies
+* Added triggerenter and triggerleave events and now only firing contact, collisionstart, collisionend events between rigid bodies
+
+--------
 v0.125.2
 --------
 * [FIX] Added collision component 'type' in its properties
