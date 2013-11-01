@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.127.3
+--------
+* [FIX] Issues with collision mesh scaling
+
+--------
 v0.127.2
 --------
 * Fix docs for light component
