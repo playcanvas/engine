@@ -51,6 +51,10 @@ pc.extend(editor, function () {
             details.array = true;
         }
 
+        if (details.type === 'script_attributes') {
+            details.array = true;
+        }
+        
         if (details.type === 'rgb' || 
             details.type === 'rgba') {
             // indicate that this is an array type (and therefore is a reference type and needs copying)
