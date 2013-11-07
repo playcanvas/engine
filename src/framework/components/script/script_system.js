@@ -231,7 +231,7 @@ pc.extend(pc.fw, function () {
                     for (instanceName in entity.script.instances) {
                         instance = entity.script.instances[instanceName];
 
-                        if (entity.script.attributes) {// temp
+                        if (entity.script.attributes) {
                             this._createAccessors(entity, instance);
                         }
 
@@ -278,18 +278,20 @@ pc.extend(pc.fw, function () {
 
             var index = entity.script.urls.indexOf(url);
             var attributes = entity.script.attributes[index];
-            attributes.forEach(function (attribute, index) {
-                Object.defineProperty(instance.instance, attribute.name, {
-                    get: function () {
-                        return attribute.value;
-                    },
-                    set: function (value) {
-                        var oldValue = attribute.value;
-                        attribute.value = value;
-                        //instance.instance.fire("set", attribute.name, oldValue, value);
-                    }
-                });
-            }, this);
+            if (attributes.name && attributes.values) {
+                attributes.values.forEach(function (attribute, index) {
+                    Object.defineProperty(instance.instance, attribute.name, {
+                        get: function () {
+                            return attribute.value;
+                        },
+                        set: function (value) {
+                            var oldValue = attribute.value;
+                            attribute.value = value;
+                            //instance.instance.fire("set", attribute.name, oldValue, value);
+                        }
+                    });
+                }, this);
+            }
         }
 
     });

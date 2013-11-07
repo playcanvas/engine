@@ -49,7 +49,10 @@ pc.script = (function () {
          *  return Scriptable;
          * }
          */
-        create: function (name, callback) {
+        create: function (name, attributes, callback) {
+            if (typeof(callback) === 'undefined') {
+                callback = attributes;
+            }
             //_loader.add(name, callback);
             this.fire("created", name, callback);
         },
