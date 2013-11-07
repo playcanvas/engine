@@ -75,6 +75,13 @@ pc.extend(pc.fw, function() {
         this.mouse = options.mouse;
 
         /**
+         * @name pc.fw.ApplicationContext#touch
+         * @description Input handler for touch events if available
+         * @type pc.input.TouchDevice
+         */
+        this.touch = options.touch;
+
+        /**
         * @name pc.fw.ApplicationContext#gamepads
         * @description Input handler for gamepads if available
         * @type pc.input.GamePads
