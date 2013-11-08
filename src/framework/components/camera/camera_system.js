@@ -48,13 +48,19 @@ pc.extend(pc.fw, function () {
             options: {
                 min: 0,
                 max: 90
-            }            
+            },
+            filter: {
+                projection: 0
+            }
         }, {
             name: "orthoHeight",
             displayName: "Ortho Height",
             description: "View window half extent of camera in Y axis",
             type: "number",
-            defaultValue: 100
+            defaultValue: 100,
+            filter: {
+                projection: 1
+            }
         }, {
             name: "nearClip",
             displayName: "Near Clip",
