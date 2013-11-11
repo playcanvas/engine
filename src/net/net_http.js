@@ -7,6 +7,7 @@ pc.extend(pc.net, function () {
     };
     
     /**
+     * @private
      * @enum {String}
      * @name pc.net.http.ContentType
      * @description An enum of the most common content types 
@@ -46,7 +47,9 @@ pc.extend(pc.net, function () {
         binaryExtensions: Http.binaryExtensions,
         
         /**
-         * Perform an HTTP GET request to the given url.
+         * @function
+         * @name pc.net.http.get
+         * @description Perform an HTTP GET request to the given url.
          * @param {String} url
          * @param {Function} success Callback passed response text.
          * @param {Object} [options] Additional options
@@ -70,7 +73,9 @@ pc.extend(pc.net, function () {
         },
 
         /**
-         * Perform an HTTP POST request to the given url
+         * @function
+         * @name pc.net.http.post
+         * @description Perform an HTTP POST request to the given url
          * @param {String} url
          * @param {Function} success - callback passed response text.
          * @param {Object | FormData | Document} data Data to send to the server.
@@ -88,7 +93,9 @@ pc.extend(pc.net, function () {
         },
 
         /**
-         * Perform an HTTP PUT request to the given url
+         * @function
+         * @name pc.net.http.put
+         * @description Perform an HTTP PUT request to the given url
          * @param {String} url
          * @param {Function} success callback passed response text
          * @param {Object | FormData | Document} data Data to send to the server.
@@ -106,7 +113,9 @@ pc.extend(pc.net, function () {
         },
         
         /**
-         * Perform an HTTP DELETE request to the given url
+         * @function
+         * @name pc.net.http.del
+         * @description Perform an HTTP DELETE request to the given url
          * @param {Object} url
          * @param {Object} success
          * @param {Object} options
