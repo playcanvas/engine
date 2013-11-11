@@ -1,17 +1,19 @@
 pc.extend(pc.fw, function () {
     /**
      * @name pc.fw.Entity
-     * @class The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
+     * @class <p>The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
      * it from other Entities, and associates it with tool-time data on the server.
      * An object in your game consists of an {@link pc.fw.Entity}, and a set of {@link pc.fw.Component}s which are 
-     * managed by their respective {@link pc.fw.ComponentSystem}s.
+     * managed by their respective {@link pc.fw.ComponentSystem}s.</p>
+     * <p>
      * The Entity uniquely identifies the object and also provides a transform for position and orientation 
      * which it inherits from {@link pc.scene.GraphNode} so can be added into the scene graph.
      * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to 
      * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`) 
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.fw.ApplicationContext}.
+     * </p>
      *
-     * Every object created in the PlayCanvas Designer is an Entity.
+     * <p>Every object created in the PlayCanvas Designer is an Entity.</p>
      *
      * @example
      * var entity = new pc.fw.Entity();
@@ -26,6 +28,20 @@ pc.extend(pc.fw, function () {
      * 
      * // Add the Entity into the scene graph
      * context.root.addChild(entity);
+     *
+     * // Move the entity
+     * entity.translate(10, 0, 0);
+     *
+     * // Or translate it by setting it's position directly
+     * var p = entity.getPosition();
+     * entity.setPosition(p[0] + 10, p[1], p[2]);
+     *
+     * // Change the entity's rotation in local space
+     * var e = entity.getLocalEulerAngles
+     * entity.setLocalEulerAngles(e[0], e[1] + 90, e[2]);
+     * 
+     * // Or use rotateLocal
+     * entity.rotateLocal(0, 90, 0);
      *
      * @extends pc.scene.GraphNode
      */
@@ -116,6 +132,7 @@ pc.extend(pc.fw, function () {
     };
 
     /**
+     * @private
      * @function
      * @name pc.fw.Entity#reparent
      * @description Remove Entity from current parent and add as child to new parent
@@ -135,6 +152,9 @@ pc.extend(pc.fw, function () {
     * @function
     * @name pc.fw.Entity#destroy
     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
+    * @example
+    * var firstChild = this.entity.getChildren()[0];
+    * firstChild.destroy(); // delete child, all components and remove from hierarchy
     */
     Entity.prototype.destroy = function () {
         var parent = this.getParent();
