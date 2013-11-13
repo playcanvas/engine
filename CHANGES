@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.128.1
+--------
+* [FIX] Touch co-ordinates now match MouseEvent co-ordinates. i.e. top-left to bottom-right and match the CSS size of the element
+* More docs to Entity and pc.net.http
+
+--------
 v0.128.0
 --------
 * Added context.touch if the browser has touch controls enabled
