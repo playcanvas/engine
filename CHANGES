@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.128.2
+--------
+* [FIX] Setting linear and angular velocity values on a kinematic rigidbody works again
+* [FIX] Moving a trigger (collision component) works
+
+--------
 v0.128.1
 --------
 * [FIX] Touch co-ordinates now match MouseEvent co-ordinates. i.e. top-left to bottom-right and match the CSS size of the element

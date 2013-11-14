@@ -81,7 +81,7 @@ pc.extend(pc.fw, function () {
                     body.setLinearVelocity(ammoVec1);
                 }                
             } else {
-                pc.math.vec3.copy(this._linearVelocity, lv);
+                pc.math.vec3.copy(lv, this._linearVelocity);
             }
         },
     });
@@ -107,7 +107,7 @@ pc.extend(pc.fw, function () {
                     body.setAngularVelocity(ammoVec1);
                 }
             } else {
-                pc.math.vec3.copy(this._angularVelocity, av);
+                pc.math.vec3.copy(av, this._angularVelocity);
             }
         },
     });
