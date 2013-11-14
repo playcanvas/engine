@@ -234,7 +234,13 @@ pc.extend(pc.fw, function () {
         },
 
         onToolsUpdate: function (dt) {
-            this.updateDebugShapes();
+            var id, entity;
+            var components = this.store;
+            
+            for (id in components) {
+                entity = components[id].entity;
+                this.updateDebugShape(entity, components[id].data, this._getImplementation(entity));
+            }
         },
 
         /**
