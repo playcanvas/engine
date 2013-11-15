@@ -590,8 +590,8 @@ pc.extend(pc.scene, function () {
             switch (scene.fog) {
                 case pc.scene.FOG_LINEAR:
                     scope.resolve("fog_color").setValue(scene.fogColor);
-                    scope.resolve("fog_near").setValue(scene.fogNear);
-                    scope.resolve("fog_far").setValue(scene.fogFar);
+                    scope.resolve("fog_start").setValue(scene.fogStart);
+                    scope.resolve("fog_end").setValue(scene.fogEnd);
                     break;
                 case pc.scene.FOG_EXP2:
                     scope.resolve("fog_color").setValue(scene.fogColor);
