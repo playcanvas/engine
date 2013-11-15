@@ -1,5 +1,10 @@
 pc.extend(pc.scene, function () {
 
+    var position = pc.math.vec3.create();
+    var velocity = pc.math.vec3.create();
+    var acceleration = pc.math.vec3.create();
+    var colorMult = pc.math.vec4.create();
+
     var particleVerts = [
         [-0.5, -0.5],
         [ 0.5, -0.5],
@@ -42,8 +47,6 @@ pc.extend(pc.scene, function () {
     };
 
     var ParticleEmitter = function ParticleEmitter(graphicsDevice, options) {
-//        options = pc.extend(defaults, options);
-
         this.graphicsDevice = graphicsDevice;
 
         // The number of particles to emit.
@@ -106,6 +109,12 @@ pc.extend(pc.scene, function () {
         // The orientation of a particle. This is only used if billboard is false.
         this.orientation = typeof options.orientation !== 'undefined' ? options.orientation : [0, 0, 0, 1];
 
+        this.dynamic = typeof options.dynamic !== 'undefined' ? options.dynamic : false;
+
+        // Just for dynamic systems
+        this.birthIndex = 0;
+        this.maxParticles = 1000;
+
         // Create default maps
         var pixels = [];
         var vals = [0, 0.2, 0.7, 1.0, 1.0, 0.7, 0.2, 0.0];
@@ -117,91 +126,25 @@ pc.extend(pc.scene, function () {
         }
 
         this.colorMap = _createTexture(graphicsDevice, 8, 8, pixels);
+        this.opacityMap = _createTexture(graphicsDevice, 1, 1, [255,255,255,255]);
         this.rampMap = _createTexture(graphicsDevice, 2, 1, [255,255,255,255,255,255,255,0]);
 
+        this.allocate(this.numParticles);
+        this.generate(0, this.numParticles);
+
+        var mesh = new pc.scene.Mesh();
+        mesh.vertexBuffer = this.vertexBuffer;
+        mesh.indexBuffer[0] = this.indexBuffer;
+        mesh.primitive[0].type = pc.gfx.PRIMITIVE_TRIANGLES;
+        mesh.primitive[0].base = 0;
+        mesh.primitive[0].count = this.indexBuffer.getNumIndices();
+        mesh.primitive[0].indexed = true;
+
+        var material = new pc.scene.Material();
         var programLib = this.graphicsDevice.getProgramLibrary();
         var program = programLib.getProgram("particle", {
             billboard: this.billboard
         });
-
-        // Create the particle vertex format
-        var elements = [
-            { semantic: pc.gfx.SEMANTIC_ATTR0, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
-            { semantic: pc.gfx.SEMANTIC_ATTR1, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
-            { semantic: pc.gfx.SEMANTIC_ATTR2, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
-            { semantic: pc.gfx.SEMANTIC_ATTR3, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
-            { semantic: pc.gfx.SEMANTIC_ATTR4, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
-            { semantic: pc.gfx.SEMANTIC_ATTR5, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-        ];
-        if (!options.billboard) {
-            elements.push(
-                { semantic: pc.gfx.SEMANTIC_ATTR6, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
-            );
-        }
-        var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
-
-        var vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, 4 * this.numParticles);
-
-        var position = pc.math.vec3.create();
-        var velocity = pc.math.vec3.create();
-        var acceleration = pc.math.vec3.create();
-
-        var iterator = new pc.gfx.VertexIterator(vertexBuffer);
-        for (var p = 0; p < this.numParticles; p++) {
-            var lifeTime = this.lifeTime;
-            var startTime = (p * lifeTime / this.numParticles);
-            var frameStart = this.frameStart + plusMinus(this.frameStartRange);
-            pc.math.vec3.add(this.position, plusMinusVector(this.positionRange), position);
-            pc.math.vec3.add(this.velocity, plusMinusVector(this.velocityRange), velocity);
-            pc.math.vec3.add(this.acceleration, plusMinusVector(this.accelerationRange), acceleration);
-            var spinStart = this.spinStart + plusMinus(this.spinStartRange);
-            var spinSpeed = this.spinSpeed + plusMinus(this.spinSpeedRange);
-            var startSize = this.startSize + plusMinus(this.startSizeRange);
-            var endSize = this.endSize + plusMinus(this.endSizeRange);
-            var orientation = this.orientation;
-
-            for (var corner = 0; corner < 4; corner++) {
-                var e = iterator.element;
-                e[pc.gfx.SEMANTIC_ATTR0].set(particleVerts[corner][0], particleVerts[corner][1], lifeTime, frameStart);
-                e[pc.gfx.SEMANTIC_ATTR1].set(position[0], position[1], position[2], startTime);
-                e[pc.gfx.SEMANTIC_ATTR2].set(velocity[0], velocity[1], velocity[2], startSize);
-                e[pc.gfx.SEMANTIC_ATTR3].set(acceleration[0], acceleration[1], acceleration[2], endSize);
-                e[pc.gfx.SEMANTIC_ATTR4].set(spinStart, spinSpeed, 0.0, 0.0);
-                e[pc.gfx.SEMANTIC_ATTR5].set(1, 1, 1, 1);
-                if (!options.billboard) {
-                    e[pc.gfx.SEMANTIC_ATTR6].set(orientation[0], orientation[1], orientation[2], orientation[3]);
-                }
-                iterator.next();
-            }
-        }
-        iterator.end();
-
-        // Create a index buffer
-        var indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, 6 * this.numParticles);
-
-        // Fill the index buffer
-        var dst = 0;
-        var indices = new Uint16Array(indexBuffer.lock());
-        for (var i = 0; i < this.numParticles; i++) {
-            var baseIndex = i * 4;
-            indices[dst++] = baseIndex;
-            indices[dst++] = baseIndex + 1;
-            indices[dst++] = baseIndex + 2;
-            indices[dst++] = baseIndex;
-            indices[dst++] = baseIndex + 2;
-            indices[dst++] = baseIndex + 3;
-        }
-        indexBuffer.unlock();
-
-        var mesh = new pc.scene.Mesh();
-        mesh.vertexBuffer = vertexBuffer;
-        mesh.indexBuffer[0] = indexBuffer;
-        mesh.primitive[0].type = pc.gfx.PRIMITIVE_TRIANGLES;
-        mesh.primitive[0].base = 0;
-        mesh.primitive[0].count = indexBuffer.getNumIndices();
-        mesh.primitive[0].indexed = true;
-
-        var material = new pc.scene.Material();
         material.setProgram(program);
         material.setParameter('particle_worldVelocity', this.worldVelocity);
         material.setParameter('particle_worldAcceleration', this.worldAcceleration);
@@ -210,13 +153,13 @@ pc.extend(pc.scene, function () {
         material.setParameter('particle_timeRange', this.timeRange);
         material.setParameter('particle_timeOffset', 0);
         material.setParameter('texture_colorMap', this.colorMap);
+        material.setParameter('texture_opacityMap', this.opacityMap);
         material.setParameter('texture_rampMap', this.rampMap);
-        material.setState({
-            cull: false,
-            blend: true,
-            blendModes: { srcBlend: pc.gfx.BLENDMODE_SRC_ALPHA, dstBlend: pc.gfx.BLENDMODE_ONE },
-            depthWrite: false
-        });
+        material.cullMode = pc.gfx.CULLMODE_NONE;
+        material.blend = true;
+        material.blendSrc = pc.gfx.BLENDMODE_SRC_ALPHA;
+        material.blendDst = pc.gfx.BLENDMODE_ONE;
+        material.depthWrite = false;
 
         this.meshInstance = new pc.scene.MeshInstance(null, mesh, material);
         this.meshInstance.layer = pc.scene.LAYER_FX;
@@ -226,9 +169,122 @@ pc.extend(pc.scene, function () {
     };
 
     ParticleEmitter.prototype = {
+        allocate: function (numParticles) {
+            if ((this.vertexBuffer === undefined) || (this.vertexBuffer.getNumVertices() !== numParticles * 4)) {
+                // Create the particle vertex format
+                var elements = [
+                    { semantic: pc.gfx.SEMANTIC_ATTR0, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+                    { semantic: pc.gfx.SEMANTIC_ATTR1, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+                    { semantic: pc.gfx.SEMANTIC_ATTR2, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+                    { semantic: pc.gfx.SEMANTIC_ATTR3, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+                    { semantic: pc.gfx.SEMANTIC_ATTR4, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
+                    { semantic: pc.gfx.SEMANTIC_ATTR5, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                ];
+                if (!this.billboard) {
+                    elements.push(
+                        { semantic: pc.gfx.SEMANTIC_ATTR6, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                    );
+                }
+                var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
+
+                this.vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, 4 * numParticles, pc.gfx.BUFFER_DYNAMIC);
+
+                // Create a index buffer
+                this.indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, 6 * numParticles);
+
+                // Fill the index buffer
+                var dst = 0;
+                var indices = new Uint16Array(this.indexBuffer.lock());
+                for (var i = 0; i < numParticles; i++) {
+                    var baseIndex = i * 4;
+                    indices[dst++] = baseIndex;
+                    indices[dst++] = baseIndex + 1;
+                    indices[dst++] = baseIndex + 2;
+                    indices[dst++] = baseIndex;
+                    indices[dst++] = baseIndex + 2;
+                    indices[dst++] = baseIndex + 3;
+                }
+                this.indexBuffer.unlock();
+            }
+        },
+
+        generate: function (base, count) {
+            var data = new Float32Array(this.vertexBuffer.lock());
+            var vsize = this.billboard ? 6 * 4 : 7 * 4;
+
+            for (var p = base; p < count; p++) {
+                var lifeTime = this.lifeTime;
+                var startTime = (p * lifeTime / count);
+                var frameStart = this.frameStart + plusMinus(this.frameStartRange);
+                pc.math.vec3.add(this.position, plusMinusVector(this.positionRange), position);
+                pc.math.vec3.add(this.velocity, plusMinusVector(this.velocityRange), velocity);
+                pc.math.vec3.add(this.acceleration, plusMinusVector(this.accelerationRange), acceleration);
+                pc.math.vec4.add(this.colorMult, plusMinusVector(this.colorMultRange), colorMult);
+                var spinStart = this.spinStart + plusMinus(this.spinStartRange);
+                var spinSpeed = this.spinSpeed + plusMinus(this.spinSpeedRange);
+                var startSize = this.startSize + plusMinus(this.startSizeRange);
+                var endSize = this.endSize + plusMinus(this.endSizeRange);
+                var orientation = this.orientation;
+
+                for (var corner = 0; corner < 4; corner++) {
+                    var i = (p * 4 + corner) * vsize;
+
+                    // ATTR0
+                    data[i + 0]  = particleVerts[corner][0];
+                    data[i + 1]  = particleVerts[corner][1];
+                    data[i + 2]  = lifeTime;
+                    data[i + 3]  = frameStart;
+
+                    // ATTR1
+                    data[i + 4]  = position[0];
+                    data[i + 5]  = position[1];
+                    data[i + 6]  = position[2];
+                    data[i + 7]  = startTime;
+
+                    // ATTR2
+                    data[i + 8]  = velocity[0];
+                    data[i + 9]  = velocity[1];
+                    data[i + 10] = velocity[2];
+                    data[i + 11] = startSize;
+
+                    // ATTR3
+                    data[i + 12] = acceleration[0];
+                    data[i + 13] = acceleration[1];
+                    data[i + 14] = acceleration[2];
+                    data[i + 15] = endSize;
+
+                    // ATTR4
+                    data[i + 16] = spinStart;
+                    data[i + 17] = spinSpeed;
+                    data[i + 18] = 0;
+                    data[i + 19] = 0;
+
+                    // ATTR5
+                    data[i + 20] = colorMult[0];
+                    data[i + 21] = colorMult[1];
+                    data[i + 22] = colorMult[2];
+                    data[i + 23] = colorMult[3];
+
+                    if (!this.billboard) {
+                        // ATTR6
+                        data[i + 24] = orientation[0];
+                        data[i + 25] = orientation[1];
+                        data[i + 26] = orientation[2];
+                        data[i + 27] = orientation[3];
+                    }
+                }
+            }
+            this.vertexBuffer.unlock();
+        },
+
         addTime: function (delta) {
             this.time += delta;
             this.meshInstance.material.setParameter('particle_time', this.time);
+
+            if (this.dynamic) {
+                this.generate(this.birthIndex + this.numParticles, this.numParticles)
+                this.birthIndex += this.numParticles;
+            }
         },
 
         setColorRamp: function (pixels) {
@@ -242,6 +298,11 @@ pc.extend(pc.scene, function () {
         setColorMap: function (colorMap) {
             this.colorMap = colorMap;
             this.meshInstance.material.setParameter('texture_colorMap', this.colorMap);
+        },
+
+        setOpacityMap: function (opacityMap) {
+            this.opacityMap = opacityMap;
+            this.meshInstance.material.setParameter('texture_opacityMap', this.opacityMap);
         }
     };
 

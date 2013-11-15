@@ -1,36 +1,3 @@
-// DEPRECATED! See pc.gfx.PRIMITIVE_
-pc.gfx.PrimType = {
-    POINTS: 0,
-    LINES: 1,
-    LINE_STRIP: 2,
-    TRIANGLES: 3,
-    TRIANGLE_STRIP: 4
-};
-
-// DEPRECATED! See pc.gfx.BLENDMODE_
-pc.gfx.BlendMode = {
-    ZERO: 0,
-    ONE: 1,
-    SRC_COLOR: 2,
-    ONE_MINUS_SRC_COLOR: 3,
-    DST_COLOR: 4,
-    ONE_MINUS_DST_COLOR: 5,
-    SRC_ALPHA: 6,
-    SRC_ALPHA_SATURATE: 7,
-    ONE_MINUS_SRC_ALPHA: 8,
-    DST_ALPHA: 9,
-    ONE_MINUS_DST_ALPHA: 10
-};
-
-pc.gfx.DepthFunc = {
-    LEQUAL: 0
-};
-
-pc.gfx.FrontFace = {
-    CW: 0,
-    CCW: 1
-};
-
 pc.gfx.precalculatedTangents = true;
 
 pc.extend(pc.gfx, function () {
@@ -157,52 +124,54 @@ pc.extend(pc.gfx, function () {
             flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_COLOR 
         };
 
-        this.lookupPrim = [
+        this.glPrimitive = [
             gl.POINTS, 
             gl.LINES, 
             gl.LINE_STRIP, 
             gl.TRIANGLES, 
             gl.TRIANGLE_STRIP 
         ];
-        this.lookupClear = [
+
+        this.glBlendEquation = [
+            gl.FUNC_ADD,
+            gl.FUNC_SUBTRACT,
+            gl.FUNC_REVERSE_SUBTRACT
+        ];
+
+        this.glBlendFunction = [
+            gl.ZERO,
+            gl.ONE,
+            gl.SRC_COLOR,
+            gl.ONE_MINUS_SRC_COLOR,
+            gl.DST_COLOR,
+            gl.ONE_MINUS_DST_COLOR,
+            gl.SRC_ALPHA,
+            gl.SRC_ALPHA_SATURATE,
+            gl.ONE_MINUS_SRC_ALPHA,
+            gl.DST_ALPHA,
+            gl.ONE_MINUS_DST_ALPHA
+        ];
+
+        this.glClearFlag = [
             0,
             gl.COLOR_BUFFER_BIT,
             gl.DEPTH_BUFFER_BIT,
-            gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT,
+            gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
             gl.STENCIL_BUFFER_BIT,
-            gl.STENCIL_BUFFER_BIT|gl.COLOR_BUFFER_BIT,
-            gl.STENCIL_BUFFER_BIT|gl.DEPTH_BUFFER_BIT,
-            gl.STENCIL_BUFFER_BIT|gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT
+            gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
+            gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
         ];
 
-        this.lookup = {
-            blendMode: [
-                gl.ZERO,
-                gl.ONE,
-                gl.SRC_COLOR,
-                gl.ONE_MINUS_SRC_COLOR,
-                gl.DST_COLOR,
-                gl.ONE_MINUS_DST_COLOR,
-                gl.SRC_ALPHA,
-                gl.SRC_ALPHA_SATURATE,
-                gl.ONE_MINUS_SRC_ALPHA,
-                gl.DST_ALPHA,
-                gl.ONE_MINUS_DST_ALPHA
-            ],
-            elementType: [
-                gl.BYTE,
-                gl.UNSIGNED_BYTE,
-                gl.SHORT,
-                gl.UNSIGNED_SHORT,
-                gl.INT,
-                gl.UNSIGNED_INT,
-                gl.FLOAT
-            ],
-            frontFace: [
-                gl.CW,
-                gl.CCW
-            ]
-        };
+        this.glType = [
+            gl.BYTE,
+            gl.UNSIGNED_BYTE,
+            gl.SHORT,
+            gl.UNSIGNED_SHORT,
+            gl.INT,
+            gl.UNSIGNED_INT,
+            gl.FLOAT
+        ];
 
         // Initialize extensions
         this.extTextureFloat = gl.getExtension("OES_texture_float");
@@ -257,154 +226,48 @@ pc.extend(pc.gfx, function () {
         this.scope = new pc.gfx.ScopeSpace("Device");
 
         // Define the uniform commit functions
-        var self = this;
         this.commitFunction = {};
-        this.commitFunction[pc.gfx.ShaderInputType.BOOL ] = function (locationId, value) { self.gl.uniform1i(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.INT  ] = function (locationId, value) { self.gl.uniform1i(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.BOOL ] = function (locationId, value) { gl.uniform1i(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.INT  ] = function (locationId, value) { gl.uniform1i(locationId, value); };
         this.commitFunction[pc.gfx.ShaderInputType.FLOAT] = function (locationId, value) { 
             if (typeof value == "number") 
-                self.gl.uniform1f(locationId, value);
+                gl.uniform1f(locationId, value);
             else
-                self.gl.uniform1fv(locationId, value); 
+                gl.uniform1fv(locationId, value); 
             };
-        this.commitFunction[pc.gfx.ShaderInputType.VEC2 ] = function (locationId, value) { self.gl.uniform2fv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.VEC3 ] = function (locationId, value) { self.gl.uniform3fv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.VEC4 ] = function (locationId, value) { self.gl.uniform4fv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.IVEC2] = function (locationId, value) { self.gl.uniform2iv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.BVEC2] = function (locationId, value) { self.gl.uniform2iv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.IVEC3] = function (locationId, value) { self.gl.uniform3iv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.BVEC3] = function (locationId, value) { self.gl.uniform3iv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.IVEC4] = function (locationId, value) { self.gl.uniform4iv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.BVEC4] = function (locationId, value) { self.gl.uniform4iv(locationId, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT2 ] = function (locationId, value) { self.gl.uniformMatrix2fv(locationId, false, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT3 ] = function (locationId, value) { self.gl.uniformMatrix3fv(locationId, false, value); };
-        this.commitFunction[pc.gfx.ShaderInputType.MAT4 ] = function (locationId, value) { self.gl.uniformMatrix4fv(locationId, false, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.VEC2 ] = function (locationId, value) { gl.uniform2fv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.VEC3 ] = function (locationId, value) { gl.uniform3fv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.VEC4 ] = function (locationId, value) { gl.uniform4fv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.IVEC2] = function (locationId, value) { gl.uniform2iv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.BVEC2] = function (locationId, value) { gl.uniform2iv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.IVEC3] = function (locationId, value) { gl.uniform3iv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.BVEC3] = function (locationId, value) { gl.uniform3iv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.IVEC4] = function (locationId, value) { gl.uniform4iv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.BVEC4] = function (locationId, value) { gl.uniform4iv(locationId, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT2 ] = function (locationId, value) { gl.uniformMatrix2fv(locationId, false, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT3 ] = function (locationId, value) { gl.uniformMatrix3fv(locationId, false, value); };
+        this.commitFunction[pc.gfx.ShaderInputType.MAT4 ] = function (locationId, value) { gl.uniformMatrix4fv(locationId, false, value); };
 
-        // Set the default render state
-        gl.enable(gl.DEPTH_TEST);
-        gl.depthMask(true);
-        gl.depthFunc(gl.LEQUAL);
-        gl.depthRange(0.0, 1.0);
-
-        gl.enable(gl.CULL_FACE);
-        gl.cullFace(gl.BACK);
-        gl.frontFace(gl.CCW);
-
-        gl.disable(gl.BLEND);
-        gl.blendFunc(gl.ONE, gl.ZERO);
+        // Set the initial render state
+        this.setBlending(false);
+        this.setBlendFunction(pc.gfx.BLENDMODE_ONE, pc.gfx.BLENDMODE_ZERO);
+        this.setBlendEquation(pc.gfx.BLENDEQUATION_ADD);
+        this.setColorWrite(true, true, true, true);
+        this.setCullMode(pc.gfx.CULLMODE_BACK);
+        this.setDepthTest(true);
+        this.setDepthWrite(true);
 
         gl.enable(gl.SCISSOR_TEST);
 
-        this.scope.resolve("fog_color").setValue([0.0, 0.0, 0.0]);
-        this.scope.resolve("fog_density").setValue(0.0);
+/*
         this.scope.resolve("alpha_ref").setValue(0.0);
 
-        // Set up render state
-        var _getStartupState = function () {
-            return {
                 alphaTest: false,
                 alphaRef: 0.0,
-                blend: false,
-                blendModes: { srcBlend: pc.gfx.BLENDMODE_ONE, dstBlend: pc.gfx.BLENDMODE_ZERO },
-                colorWrite: { red: true, green: true, blue: true, alpha: true },
-                cull: true,
-                depthTest: true,
-                depthWrite: true,
-                depthFunc: pc.gfx.DepthFunc.LEQUAL,
                 fog: false,
                 fogColor: [0, 0, 0],
                 fogDensity: 0.0,
-                frontFace: pc.gfx.FrontFace.CCW
-            };
-        };
-        this._globalState = _getStartupState();
-        this._currentState = _getStartupState();
-        this._localState = {};
-
-        this._stateFuncs = {};
-        this._stateFuncs.alphaTest = function (value) {
-            self._currentState.alphaTest = value;
-        };
-        this._stateFuncs.alphaRef = function (value) {
-            self.scope.resolve("alpha_ref").setValue(value);
-            self._currentState.alphaRef = value;
-        };
-        this._stateFuncs.blend = function (value) {
-            if (self._currentState.blend !== value) {
-                if (value) {
-                    self.gl.enable(gl.BLEND);
-                } else {
-                    self.gl.disable(gl.BLEND);
-                }
-                self._currentState.blend = value;
-            }
-        };
-        this._stateFuncs.blendModes = function (value) {
-            if ((self._currentState.blendModes.srcBlend !== value.srcBlend) ||
-                (self._currentState.blendModes.dstBlend !== value.dstBlend)) {
-                self.gl.blendFunc(self.lookup.blendMode[value.srcBlend], self.lookup.blendMode[value.dstBlend]);
-                self._currentState.blendModes.srcBlend = value.srcBlend;
-                self._currentState.blendModes.dstBlend = value.dstBlend;
-            }
-        };
-        this._stateFuncs.colorWrite = function (value) {
-            if ((self._currentState.colorWrite.red !== value.red) ||
-                (self._currentState.colorWrite.green !== value.green) || 
-                (self._currentState.colorWrite.blue !== value.blue) || 
-                (self._currentState.colorWrite.alpha !== value.alpha)) {
-                self.gl.colorMask(value.red, value.green, value.blue, value.alpha);
-                self._currentState.colorWrite.red = value.red;
-                self._currentState.colorWrite.green = value.green;
-                self._currentState.colorWrite.blue = value.blue;
-                self._currentState.colorWrite.alpha = value.alpha;
-            }
-        };
-        this._stateFuncs.cull = function (value) {
-            if (self._currentState.cull !== value) {
-                if (value) {
-                    self.gl.enable(gl.CULL_FACE);
-                } else {
-                    self.gl.disable(gl.CULL_FACE);
-                }
-                self._currentState.cull = value;
-            }
-        };
-        this._stateFuncs.depthTest = function (value) {
-            if (self._currentState.depthTest !== value) {
-                if (value) {
-                    self.gl.enable(gl.DEPTH_TEST);
-                } else {
-                    self.gl.disable(gl.DEPTH_TEST);
-                }
-                self._currentState.depthTest = value;
-            }
-        };
-        this._stateFuncs.depthWrite = function (value) { 
-            if (self._currentState.depthWrite !== value) {
-                self.gl.depthMask(value);
-                self._currentState.depthWrite = value;
-            }
-        };
-        this._stateFuncs.fog = function (value) {
-            self._currentState.fog = value;
-        };
-        this._stateFuncs.fogColor = function (value) {
-            self.scope.resolve("fog_color").setValue(value);
-            self._currentState.fogColor = value;
-        };
-        this._stateFuncs.fogDensity = function (value) {
-            if (self._currentState.fogDensity !== value) {
-                self.scope.resolve("fog_density").setValue(value);
-                self._currentState.fogDensity = value;
-            }
-        };
-        this._stateFuncs.frontFace = function (value) {
-            if (self._currentState.frontFace !== value) {
-                self.gl.frontFace(self.lookup.frontFace[value]);
-                self._currentState.frontFace = value;
-            }
-        };
-
+*/
         this.programLib = new pc.gfx.ProgramLibrary(this);
         for (var generator in pc.gfx.programlib) {
             this.programLib.register(generator, pc.gfx.programlib[generator]);
@@ -589,7 +452,7 @@ pc.extend(pc.gfx, function () {
                         }
                         gl.vertexAttribPointer(attribute.locationId, 
                                                element.numComponents, 
-                                               this.lookup.elementType[element.dataType], 
+                                               this.glType[element.dataType], 
                                                element.normalize,
                                                element.stride,
                                                element.offset);
@@ -630,7 +493,6 @@ pc.extend(pc.gfx, function () {
                     uniformVersion.globalId = programVersion.globalId;
                     uniformVersion.revision = programVersion.revision;
 
-
                     // Call the function to commit the uniform value
                     this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
 
@@ -640,12 +502,12 @@ pc.extend(pc.gfx, function () {
             }
 
             if (primitive.indexed) {
-                gl.drawElements(this.lookupPrim[primitive.type],
+                gl.drawElements(this.glPrimitive[primitive.type],
                                 primitive.count,
                                 this.indexBuffer.glFormat,
                                 primitive.base * 2);
             } else {
-                gl.drawArrays(this.lookupPrim[primitive.type],
+                gl.drawArrays(this.glPrimitive[primitive.type],
                               primitive.base,
                               primitive.count);
             }
@@ -682,7 +544,7 @@ pc.extend(pc.gfx, function () {
             options = options || defaultOptions;
 
             var flags = options.flags || defaultOptions.flags;
-            var glFlags = this.lookupClear[flags];
+            var glFlags = this.glClearFlag[flags];
 
             // Set the clear color
             var gl = this.gl;
@@ -703,72 +565,6 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#getGlobalState
-         * @author Will Eastcott
-         */
-        getGlobalState: function (state) {
-            return this._globalState;
-        },
-
-        /**
-         * @function
-         * @name pc.gfx.Device#updateGlobalState
-         * @author Will Eastcott
-         */
-        updateGlobalState: function (delta) {
-            for (var key in delta) {
-                if (this._localState[key] === undefined) {
-                    this._stateFuncs[key](delta[key]);
-                }
-                this._globalState[key] = delta[key];
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.gfx.Device#getLocalState
-         * @author Will Eastcott
-         */
-        getLocalState: function (state) {
-            return this._localState;
-        },
-
-        /**
-         * @function
-         * @name pc.gfx.Device#updateLocalState
-         * @author Will Eastcott
-         */
-        updateLocalState: function (localState) {
-            for (var key in localState) {
-                this._stateFuncs[key](localState[key]);
-                this._localState[key] = localState[key];
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.gfx.Device#clearLocalState
-         * @author Will Eastcott
-         */
-        clearLocalState: function () {
-            for (var key in this._localState) {
-                // Reset to global state
-                this._stateFuncs[key](this._globalState[key]);
-                delete this._localState[key];
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.gfx.Device#getCurrentState
-         * @author Will Eastcott
-         */
-        getCurrentState: function () {
-            return this._currentState;
-        },
-
-        /**
-         * @function
          * @name pc.gfx.Device#setRenderTarget
          * @author Will Eastcott
          */
@@ -785,7 +581,20 @@ pc.extend(pc.gfx, function () {
             return this.renderTarget;
         },
 
+        /**
+         * @function
+         * @name pc.gfx.Device#getDepthTest
+         * @author Will Eastcott
+         */
+        getDepthTest: function () {
+            return this.depthTest;
+        },
 
+        /**
+         * @function
+         * @name pc.gfx.Device#setDepthTest
+         * @author Will Eastcott
+         */
         setDepthTest: function (depthTest) {
             if (this.depthTest !== depthTest) {
                 var gl = this.gl;
@@ -798,6 +607,20 @@ pc.extend(pc.gfx, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.gfx.Device#getDepthWrite
+         * @author Will Eastcott
+         */
+        getDepthWrite: function () {
+            return this.depthWrite;
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setDepthWrite
+         * @author Will Eastcott
+         */
         setDepthWrite: function (writeDepth) {
             if (this.writeDepth !== writeDepth) {
                 this.gl.depthMask(writeDepth);
@@ -805,6 +628,11 @@ pc.extend(pc.gfx, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.gfx.Device#setColorWrite
+         * @author Will Eastcott
+         */
         setColorWrite: function (writeRed, writeGreen, writeBlue, writeAlpha) {
             if ((this.writeRed !== writeRed) ||
                 (this.writeGreen !== writeGreen) ||
@@ -818,22 +646,79 @@ pc.extend(pc.gfx, function () {
             }
         },
 
-        setFaceCulling: function (cullMode) {
+        /**
+         * @function
+         * @name pc.gfx.Device#getBlending
+         * @author Will Eastcott
+         */
+        getBlending: function () {
+            return this.blending;
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setBlending
+         * @author Will Eastcott
+         */
+        setBlending: function (blending) {
+            if (this.blending !== blending) {
+                var gl = this.gl;
+                if (blending) {
+                    gl.enable(gl.BLEND);
+                } else {
+                    gl.disable(gl.BLEND);
+                }
+                this.blending = blending;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setBlendFunction
+         * @author Will Eastcott
+         */
+        setBlendFunction: function (blendSrc, blendDst) {
+            if ((this.blendSrc !== blendSrc) && (this.blendDst !== blendDst)) {
+                this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
+                this.blendSrc = blendSrc;
+                this.blendDst = blendDst;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setBlendEquation
+         * @author Will Eastcott
+         */
+        setBlendEquation: function (blendEq) {
+            if (this.blendEq !== blendEq) {
+                var gl = this.gl;
+                gl.blendEquation(this.glBlendEquation[blendEq]);
+                this.blendEq !== blendEq;
+            }
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Device#setCullMode
+         * @author Will Eastcott
+         */
+        setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {
                 var gl = this.gl;
                 switch (cullMode) {
-                    case pc.gfx.CULLFACE_NONE:
+                    case pc.gfx.CULLMODE_NONE:
                         gl.disable(gl.CULL_FACE);
                         break;
-                    case pc.gfx.CULLFACE_FRONT:
+                    case pc.gfx.CULLMODE_FRONT:
                         gl.enable(gl.CULL_FACE);
                         gl.cullMode(gl.FRONT);
                         break;
-                    case pc.gfx.CULLFACE_BACK:
+                    case pc.gfx.CULLMODE_BACK:
                         gl.enable(gl.CULL_FACE);
                         gl.cullMode(gl.BACK);
                         break;
-                    case pc.gfx.CULLFACE_FRONTANDBACK:
+                    case pc.gfx.CULLMODE_FRONTANDBACK:
                         gl.enable(gl.CULL_FACE);
                         gl.cullMode(gl.FRONT_AND_BACK);
                         break;
@@ -842,6 +727,11 @@ pc.extend(pc.gfx, function () {
             }
         },
 
+        /**
+         * @function
+         * @name pc.gfx.Device#setFrontFace
+         * @author Will Eastcott
+         */
         setFrontFace: function (winding) {
             if (this.frontFace !== winding) {
                 var gl = this.gl;

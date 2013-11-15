@@ -298,7 +298,7 @@ pc.extend(pc.fw, function () {
     DirectionalLightImplementation = pc.inherits(DirectionalLightImplementation, LightComponentImplementation);
     DirectionalLightImplementation.prototype = pc.extend(DirectionalLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LightType.DIRECTIONAL;
+            return pc.scene.LIGHTTYPE_DIRECTIONAL;
         },
 
         _createDebugMesh: function () {
@@ -367,7 +367,7 @@ pc.extend(pc.fw, function () {
     PointLightImplementation = pc.inherits(PointLightImplementation, LightComponentImplementation);
     PointLightImplementation.prototype = pc.extend(PointLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LightType.POINT;
+            return pc.scene.LIGHTTYPE_POINT;
         },
 
         _createDebugMesh: function () {
@@ -399,7 +399,7 @@ pc.extend(pc.fw, function () {
     SpotLightImplementation = pc.inherits(SpotLightImplementation, LightComponentImplementation);
     SpotLightImplementation.prototype = pc.extend(SpotLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LightType.SPOT;
+            return pc.scene.LIGHTTYPE_SPOT;
         },
 
         _createDebugMesh: function () {
