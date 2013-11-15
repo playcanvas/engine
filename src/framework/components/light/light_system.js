@@ -1,6 +1,5 @@
 pc.extend(pc.fw, function () {
 /**
-     * @private
      * @name pc.fw.LightComponentSystem
      * @constructor Create a new LightComponentSystem.
      * @class A Light Component is used to dynamically light the scene.
@@ -182,6 +181,23 @@ pc.extend(pc.fw, function () {
            this.implementations[data.type].remove(entity, data);
         },
 
+        cloneComponent: function (entity, clone) {
+            // create new data block for clone
+            var data = {
+                type: entity.light.type,
+                enable: entity.light.enable,
+                color: new pc.Color(entity.light.color),
+                intensity: entity.light.intensity,
+                range: entity.light.range,
+                innerConeAngle: entity.light.innerConeAngle,
+                outerConeAngle: entity.light.outerConeAngle,
+                castShadows: entity.light.castShadows,
+                shadowResolution: entity.light.shadowResolution
+            };
+
+            this.addComponent(clone, data);
+        },
+
         toolsUpdate: function (fn) {
             var components = this.store;
             for (var id in components) {
@@ -206,11 +222,11 @@ pc.extend(pc.fw, function () {
     * Light implementations
     */
 
-    LightComponentSystemImplementation = function (system) {
+    LightComponentImplementation = function (system) {
         this.system = system;
     };
 
-    LightComponentSystemImplementation.prototype = {
+    LightComponentImplementation.prototype = {
         initialize: function (component, data) {
             var node = this._createLightNode(data);
             this._createDebugShape(component, data, node);
@@ -279,7 +295,7 @@ pc.extend(pc.fw, function () {
     */
 
     DirectionalLightImplementation = function (system) {};
-    DirectionalLightImplementation = pc.inherits(DirectionalLightImplementation, LightComponentSystemImplementation);
+    DirectionalLightImplementation = pc.inherits(DirectionalLightImplementation, LightComponentImplementation);
     DirectionalLightImplementation.prototype = pc.extend(DirectionalLightImplementation.prototype, {
         _getLightType: function() {
             return pc.scene.LIGHTTYPE_DIRECTIONAL;
@@ -348,7 +364,7 @@ pc.extend(pc.fw, function () {
     */
 
     PointLightImplementation = function (system) {};
-    PointLightImplementation = pc.inherits(PointLightImplementation, LightComponentSystemImplementation);
+    PointLightImplementation = pc.inherits(PointLightImplementation, LightComponentImplementation);
     PointLightImplementation.prototype = pc.extend(PointLightImplementation.prototype, {
         _getLightType: function() {
             return pc.scene.LIGHTTYPE_POINT;
@@ -380,7 +396,7 @@ pc.extend(pc.fw, function () {
     */
 
     SpotLightImplementation = function (system) {};
-    SpotLightImplementation = pc.inherits(SpotLightImplementation, LightComponentSystemImplementation);
+    SpotLightImplementation = pc.inherits(SpotLightImplementation, LightComponentImplementation);
     SpotLightImplementation.prototype = pc.extend(SpotLightImplementation.prototype, {
         _getLightType: function() {
             return pc.scene.LIGHTTYPE_SPOT;

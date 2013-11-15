@@ -3,6 +3,51 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.128.2
+--------
+* [FIX] Setting linear and angular velocity values on a kinematic rigidbody works again
+* [FIX] Moving a trigger (collision component) works
+
+--------
+v0.128.1
+--------
+* [FIX] Touch co-ordinates now match MouseEvent co-ordinates. i.e. top-left to bottom-right and match the CSS size of the element
+* More docs to Entity and pc.net.http
+
+--------
+v0.128.0
+--------
+* Added context.touch if the browser has touch controls enabled
+* Filtering camera fov and orthoHeight based on projection value
+
+--------
+v0.127.3
+--------
+* [FIX] Issues with collision mesh scaling
+
+--------
+v0.127.2
+--------
+* Fix docs for light component
+
+--------
+v0.127.1
+--------
+* Add documentation for light component
+
+--------
+v0.127.0
+--------
+* [BREAKING] Remove all directionallight, pointlight, spotlight components. Replaced with light component
+
+--------
+v0.126.6
+--------
+* [FIX] Light cloning issue
+* [FIX] Issue when setting range on spotlights
+* Added support for non-billboarded particles
+
+--------
 v0.126.5
 --------
 * Changed trigger documentation. 

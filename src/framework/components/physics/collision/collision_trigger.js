@@ -65,7 +65,6 @@ pc.extend(pc.fw, function () {
 
                 this.context.systems.rigidbody.addBody(body);
                 this.body = body;                
-                body.activate();
             } 
         },
 
@@ -86,8 +85,6 @@ pc.extend(pc.fw, function () {
 
                 ammoQuat.setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
                 transform.setRotation(ammoQuat);
-
-                body.activate();
             }
         },
     };

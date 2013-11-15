@@ -195,39 +195,52 @@ pc.extend(pc.fw, function () {
         },
 
         onUpdate: function (dt) {
-            if (this.debugRender) {
-                this.updateDebugShapes();
+            var id, entity;
+            var components = this.store;
+            
+            for (id in components) {
+                entity = components[id].entity;
+                
+                if (!entity.rigidbody) {
+                    entity.trigger.syncEntityToBody();
+                }
+                
+                if (this.debugRender) {
+                    this.updateDebugShape(entity, components[id].data, this._getImplementation(entity));
+                }
+            }
+
+        },
+
+        updateDebugShape: function (entity, data, impl) {
+            var context = this.context;
+
+            if (typeof impl !== 'undefined') {
+                if (impl.hasDebugShape) {
+                    if (data.model) {
+                        if (!context.scene.containsModel(data.model)) {
+                            context.scene.addModel(data.model);
+                            context.root.addChild(data.model.graph);
+                        }
+                    }
+
+                    impl.updateDebugShape(entity, data);
+                } 
             }
         },
 
-        updateDebugShapes: function () {
-            var id, entity, data, impl;
-            var components = this.store;
-            var context = this.context;
-
-            for (id in components) {
-                entity = components[id].entity;
-                data = components[id].data;
-                impl = this._getImplementation(entity);
-
-                if (typeof impl !== 'undefined') {
-                    if (impl.hasDebugShape) {
-
-                        if (data.model) {
-                            if (!context.scene.containsModel(data.model)) {
-                                context.scene.addModel(data.model);
-                                context.root.addChild(data.model.graph);
-                            }
-                        }
-
-                        impl.updateDebugShape(entity, data);
-                    }
-                }                            
-            }
+        onTransformChanged: function(component, position, rotation, scale) {
+            this.implementations[component.data.type].updateTransform(component, position, rotation, scale);
         },
 
         onToolsUpdate: function (dt) {
-            this.updateDebugShapes();
+            var id, entity;
+            var components = this.store;
+            
+            for (id in components) {
+                entity = components[id].entity;
+                this.updateDebugShape(entity, components[id].data, this._getImplementation(entity));
+            }
         },
 
         /**
@@ -254,8 +267,8 @@ pc.extend(pc.fw, function () {
         * @private
         * Recreates rigid bodies or triggers for the specified component
         */
-        refreshPhysicalShapes: function (component) {
-            this.implementations[component.data.type].refreshPhysicalShapes(component); 
+        recreatePhysicalShapes: function (component) {
+            this.implementations[component.data.type].recreatePhysicalShapes(component); 
         }
     });
 
@@ -275,7 +288,7 @@ pc.extend(pc.fw, function () {
         */
         beforeInitialize: function (component, data) {
             this.createDebugShape(data);
-            data.shape = this.createPhysicalShape(data);
+            data.shape = this.createPhysicalShape(component.entity, data);
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
@@ -287,7 +300,7 @@ pc.extend(pc.fw, function () {
         * Called after the call to system.super.initializeComponentData is made
         */
         afterInitialize: function (component, data) {
-            this.refreshPhysicalShapes(component);
+            this.recreatePhysicalShapes(component);
         },
 
         /**
@@ -304,12 +317,12 @@ pc.extend(pc.fw, function () {
         * @private
         * Re-creates rigid bodies / triggers
         */
-        refreshPhysicalShapes: function (component) {
+        recreatePhysicalShapes: function (component) {
             var entity = component.entity;
             var data = component.data;
 
             if (typeof(Ammo) !== 'undefined') {
-                data.shape = this.createPhysicalShape(data);
+                data.shape = this.createPhysicalShape(component.entity, data);
                 if (entity.rigidbody) {
                     entity.rigidbody.createBody();
                 } else {
@@ -335,7 +348,7 @@ pc.extend(pc.fw, function () {
         * of the actual shape that will be used for the rigid bodies / triggers of 
         * the collision.
         */
-        createPhysicalShape: function (data) {
+        createPhysicalShape: function (entity, data) {
             return undefined;
         },
 
@@ -344,6 +357,12 @@ pc.extend(pc.fw, function () {
         * Updates the transform of the debug shape if one exists
         */
         updateDebugShape: function (entity, data) { 
+        },
+
+        updateTransform: function(component, position, rotation, scale) {
+            if (component.entity.trigger) {
+                component.entity.trigger.syncEntityToBody();
+            }
         },
 
         /**
@@ -428,7 +447,7 @@ pc.extend(pc.fw, function () {
 
         },
 
-        createPhysicalShape: function (data) {
+        createPhysicalShape: function (entity, data) {
             if (typeof(Ammo) !== 'undefined') {
                 return new Ammo.btBoxShape( 
                     new Ammo.btVector3( 
@@ -520,7 +539,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        createPhysicalShape: function (data) {
+        createPhysicalShape: function (entity, data) {
             if (typeof(Ammo) !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);   
             } else {
@@ -661,7 +680,7 @@ pc.extend(pc.fw, function () {
             vertexBuffer.unlock();
         },
 
-        createPhysicalShape: function (data) {
+        createPhysicalShape: function (entity, data) {
             var shape = null;
             var axis = (typeof data.axis !== 'undefined') ? data.axis : 1;
             var radius = data.radius || 0.5;
@@ -690,12 +709,12 @@ pc.extend(pc.fw, function () {
             root.setLocalScale(1, 1, 1);
         },
 
-        refreshPhysicalShapes: function (component) {
+        recreatePhysicalShapes: function (component) {
             var model = component.data.model;
             if (model) {
                 var vertexBuffer = model.meshInstances[0].mesh.vertexBuffer; 
                 this.updateCapsuleShape(component.data, vertexBuffer);
-                CollisionCapsuleSystemImpl._super.refreshPhysicalShapes.call(this, component);
+                CollisionCapsuleSystemImpl._super.recreatePhysicalShapes.call(this, component);
             }
         },
     });
@@ -715,7 +734,7 @@ pc.extend(pc.fw, function () {
         // special handling
         beforeInitialize: function (component, data) {},
 
-        createPhysicalShape: function (data) {
+        createPhysicalShape: function (entity, data) {
             if (typeof(Ammo) !== 'undefined' && data.model) {
                 var model = data.model;
                 var shape = new Ammo.btCompoundShape();
@@ -778,20 +797,26 @@ pc.extend(pc.fw, function () {
                     shape.addChildShape(transform, triMeshShape);
                 }
 
+                var entityTransform = entity.getWorldTransform();
+                var scale = pc.math.mat4.getScale(entityTransform);
+                var vec = new Ammo.btVector3();
+                vec.setValue(scale[0], scale[1], scale[2]);
+                shape.setLocalScaling(vec);
+
                 return shape;
             } else {
                 return undefined;
             }
         },
 
-        refreshPhysicalShapes: function (component) {
+        recreatePhysicalShapes: function (component) {
             var data = component.data;
 
             if (data.asset) {
                 this.loadModelAsset(component);
             } else {
                 data.model = null;
-                this.doRefreshPhysicalShape(component);
+                this.doRecreatePhysicalShape(component);
             }
         },
 
@@ -813,17 +838,21 @@ pc.extend(pc.fw, function () {
             this.system.context.assets.load(asset, [], options).then(function (resources) {
                 var model = resources[0];
                 data.model = model;
-                this.doRefreshPhysicalShape(component);
+                this.doRecreatePhysicalShape(component);
 
             }.bind(this));
         },
 
-        doRefreshPhysicalShape: function (component) {
+        doRecreatePhysicalShape: function (component) {
             var entity = component.entity;
             var data = component.data;
 
             if (data.model) {
-                data.shape = this.createPhysicalShape(data);
+                if (data.shape) {
+                   Ammo.destroy(data.shape);
+                }
+
+                data.shape = this.createPhysicalShape(entity, data);                
 
                 if (entity.rigidbody) {
                     entity.rigidbody.createBody();
@@ -838,6 +867,23 @@ pc.extend(pc.fw, function () {
                 this.remove(entity, data);
             }
              
+        },
+
+        updateTransform: function(component, position, rotation, scale) {
+            if (component.shape) {
+                var entityTransform = component.entity.getWorldTransform();
+                var worldScale = pc.math.mat4.getScale(entityTransform);
+
+                // if the scale changed then recreate the shape
+                var previousScale = component.shape.getLocalScaling();                
+                if (worldScale[0] != previousScale.x() ||
+                    worldScale[1] != previousScale.y() ||
+                    worldScale[2] != previousScale.z() ) {
+                    this.doRecreatePhysicalShape(component);
+                }
+            }
+
+            CollisionMeshSystemImpl._super.updateTransform.call(this, component, position, rotation, scale);
         },
 
         clone: function (entity, clone) {
