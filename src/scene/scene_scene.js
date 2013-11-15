@@ -17,9 +17,9 @@ pc.scene = {
     LAYER_FX: 2,
     LAYER_WORLD: 3,
 
-    FOG_NONE: 0,
-    FOG_LINEAR: 1,
-    FOG_EXP2: 2
+    FOG_NONE: 'none',
+    FOG_LINEAR: 'linear',
+    FOG_EXP2: 'exp2'
 };
 
 pc.extend(pc.scene, function () {
@@ -34,8 +34,8 @@ pc.extend(pc.scene, function () {
 
         this.fog = pc.scene.FOG_NONE;
         this.fogColor = new pc.Color(0, 0, 0);
-        this.fogNear = 1;
-        this.fogFar = 1000;
+        this.fogStart = 1;
+        this.fogEnd = 1000;
         this.fogDensity = 0;
 
         // Models

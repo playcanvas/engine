@@ -258,7 +258,7 @@ pc.extend(pc.scene, function () {
 
         var options = {
             alphaTest: this.alphaTest,
-            fog: this.scene.fog !== pc.scene.FOG_NONE,
+            fog: this.scene.fog,
             skin: false,
             numDirs: numDirs,
             numSDirs: numSDirs,
