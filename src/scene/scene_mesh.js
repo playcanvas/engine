@@ -39,7 +39,7 @@ pc.extend(pc.scene, function () {
      * @param {pc.scene.Mesh} mesh The graphics mesh being instanced.
      * @param {pc.scene.Material} material The material used to render this instance.
      */
-    var MeshInstance = function (node, mesh, material) {
+    var MeshInstance = function MeshInstance(node, mesh, material) {
         this.node = node;           // The node that defines the transform of the mesh instance
         this.mesh = mesh;           // The mesh that this instance renders
         this.material = material;   // The material with which to render this instance
@@ -66,14 +66,16 @@ pc.extend(pc.scene, function () {
             return this._material;
         },
         set: function (material) {
-            this._material = material;
-
             // Remove the material's reference to this mesh instance
-            var meshInstances = this._material.meshInstances;
-            var index = meshInstances.indexOf(model);
-            if (index !== -1) {
-                meshInstances.splice(index, 1);
+            if (this._material) {
+                var meshInstances = this._material.meshInstances;
+                var index = meshInstances.indexOf(this);
+                if (index !== -1) {
+                    meshInstances.splice(index, 1);
+                }
             }
+
+            this._material = material;
 
             // Record that the material is referenced by this mesh instance
             this._material.meshInstances.push(this);
@@ -92,7 +94,7 @@ pc.extend(pc.scene, function () {
         }
     });
 
-    MeshInstance.prototype = {
+    pc.extend(MeshInstance.prototype, {
         syncAabb: function () {
             this.aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
         },
@@ -101,7 +103,7 @@ pc.extend(pc.scene, function () {
             var material = this.material;
             this.key = getKey(this.layer, material.blendType, false, material.id);
         }
-    };
+    });
 
     var Command = function (layer, blendType, command) {
         this.key = getKey(layer, blendType, true, 0);

@@ -134,13 +134,6 @@ pc.extend(pc.scene, function () {
             }
         }
 
-        // Set an appropriate blend mode based on opacity of material
-        if (this.opacityMap || this.opacity < 1) {
-            this.blendType = pc.scene.BLEND_NORMAL;
-        } else {
-            this.blendType = pc.scene.BLEND_NONE;
-        }
-
         this.update();
     };
 
@@ -259,7 +252,7 @@ pc.extend(pc.scene, function () {
         var options = {
             alphaTest: this.alphaTest,
             fog: this.scene.fog,
-            skin: false,
+            skin: !!this.meshInstances[0].skinInstance,
             numDirs: numDirs,
             numSDirs: numSDirs,
             numPnts: numPnts,
