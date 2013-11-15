@@ -276,8 +276,8 @@ pc.extend(pc.scene, function () {
             var point, spot;
             var localLights = scene._localLights;
 
-            var pnts = localLights[pc.scene.LightType.POINT-1];
-            var spts = localLights[pc.scene.LightType.SPOT-1];
+            var pnts = localLights[pc.scene.LIGHTTYPE_POINT-1];
+            var spts = localLights[pc.scene.LIGHTTYPE_SPOT-1];
 
             var numDirs = scene._globalLights.length;
             var numPnts = pnts.length;
@@ -337,12 +337,17 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         render: function (scene, camera) {
-            pc.scene.Scene.current = scene;
-
-            // Fish out all the uniforms we need to render the scene
             var device = this.device;
             var scope = device.scope;
 
+            if (scene.updateShaders) {
+                scene._updateShaders(device);
+                scene.updateShaders = false;
+            }
+
+            pc.scene.Scene.current = scene;
+
+            // Fish out all the uniforms we need to render the scene
             var lights = scene._lights;
             var models = scene._models;
             var drawCalls = scene.drawCalls;
@@ -366,14 +371,14 @@ pc.extend(pc.scene, function () {
             for (i = 0; i < lights.length; i++) {
                 var light = lights[i];
                 if (light.getEnabled()) {
-                    if (light.getType() === pc.scene.LightType.DIRECTIONAL) {
+                    if (light.getType() === pc.scene.LIGHTTYPE_DIRECTIONAL) {
                         if (light.getCastShadows()) {
                             scene._globalLights.push(light);
                         } else {
                             scene._globalLights.unshift(light);
                         }
                     } else {
-                        scene._localLights[light.getType() === pc.scene.LightType.POINT ? 0 : 1].push(light);
+                        scene._localLights[light.getType() === pc.scene.LIGHTTYPE_POINT ? 0 : 1].push(light);
                     }
                 }
             }
@@ -407,7 +412,8 @@ pc.extend(pc.scene, function () {
 
                 this.setCamera(camera);
 
-                device.updateLocalState(this._shadowState);
+                var oldBlending = device.getBlending();
+                device.setBlending(false);
 
                 for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                     drawCall = drawCalls[i];
@@ -432,10 +438,9 @@ pc.extend(pc.scene, function () {
                         }
                     }
 
-                    device.clearLocalState();
-
                     camera.setRenderTarget(oldTarget);
                 }
+                device.setBlending(oldBlending);
             }
 
             // Render all shadowmaps
@@ -444,14 +449,14 @@ pc.extend(pc.scene, function () {
                 var type = light.getType();
 
                 // Point light shadow casting currently unsupported
-                if (type === pc.scene.LightType.POINT) {
+                if (type === pc.scene.LIGHTTYPE_POINT) {
                     continue;
                 }
 
                 if (light.getCastShadows() && light.getEnabled()) {
                     var shadowCam = getShadowCamera(device, light);
 
-                    if (type === pc.scene.LightType.DIRECTIONAL) {
+                    if (type === pc.scene.LIGHTTYPE_DIRECTIONAL) {
                         // 1. Starting at the centroid of the view frustum, back up in the opposite
                         // direction of the light by a certain amount. This will be our temporary 
                         // working position.
@@ -519,7 +524,7 @@ pc.extend(pc.scene, function () {
                         shadowCam.setFarClip((maxz - minz) * 1.5);
                         shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
                         shadowCam.setOrthoHeight((maxy - miny) * 0.5);
-                    } else if (type === pc.scene.LightType.SPOT) {
+                    } else if (type === pc.scene.LIGHTTYPE_SPOT) {
                         shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
@@ -539,11 +544,11 @@ pc.extend(pc.scene, function () {
 
                     this.setCamera(shadowCam);
 
+                    var oldBlending = device.getBlending();
+                    device.setBlending(false);
                     if (device.extDepthTexture) {
-                        device.gl.colorMask(false, false, false, false);
+                        device.setColorWrite(false, false, false, false);
                     }
-
-                    device.updateLocalState(this._shadowState);
 
                     for (j = 0, numInstances = shadowCasters.length; j < numInstances; j++) {
                         meshInstance = shadowCasters[j];
@@ -568,18 +573,31 @@ pc.extend(pc.scene, function () {
                         device.draw(mesh.primitive[style]);
                     }
 
-                    device.clearLocalState();
-
+                    device.setBlending(oldBlending);
                     if (device.extDepthTexture) {
-                        device.gl.colorMask(true, true, true, true);
+                        device.setColorWrite(true, true, true, true);
                     }
                 }
             }
 
             this.setCamera(camera);
 
+            // Set up lights
             this.dispatchGlobalLights(scene);
             this.dispatchLocalLights(scene);
+
+            // Set up fog
+            switch (scene.fog) {
+                case pc.scene.FOG_LINEAR:
+                    scope.resolve("fog_color").setValue(scene.fogColor);
+                    scope.resolve("fog_near").setValue(scene.fogNear);
+                    scope.resolve("fog_far").setValue(scene.fogFar);
+                    break;
+                case pc.scene.FOG_EXP2:
+                    scope.resolve("fog_color").setValue(scene.fogColor);
+                    scope.resolve("fog_density").setValue(scene.fogDensity);
+                    break;
+            }
 
             for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                 drawCall = drawCalls[i];
@@ -605,17 +623,30 @@ pc.extend(pc.scene, function () {
                     }
 
                     if (material !== prevMaterial) {
-                        device.setShader(material.getProgram(device, mesh));
-                        material.setParameters(device);
-                        device.clearLocalState();
-                        device.updateLocalState(material.getState());
-                    } else if (meshInstance.skinInstance !== prevMeshInstance.skinInstance) {
-                        device.setShader(material.getProgram(device, mesh));
+                        if (!material.shader) {
+                            material.updateShader(device);
+                        }
+                        device.setShader(material.shader);
+
+                        var parameters = material.parameters;
+                        for (var paramName in parameters) {
+                            var parameter = parameters[paramName];
+                            if (!parameter.scopeId) {
+                                parameter.scopeId = device.scope.resolve(paramName);
+                            }
+                            parameter.scopeId.setValue(parameter.data);
+                        }
+
+                        device.setBlending(material.blending);
+                        device.setBlendFunction(material.blendSrc, material.blendDst);
+                        device.setBlendEquation(material.blendEquation);
+                        device.setCullMode(material.cullMode);
+                        device.setDepthWrite(material.depthWrite);
+                        device.setDepthTest(material.depthTest);
                     }
 
-                    style = meshInstance.renderStyle;
-
                     device.setVertexBuffer(mesh.vertexBuffer, 0);
+                    style = meshInstance.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
                     device.draw(mesh.primitive[style]);
 
@@ -623,8 +654,6 @@ pc.extend(pc.scene, function () {
                     prevMeshInstance = meshInstance;
                 }
             }
-
-            device.clearLocalState();
         }
     });
 

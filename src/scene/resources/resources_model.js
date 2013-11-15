@@ -19,9 +19,9 @@ pc.extend(pc.resources, function () {
     };
 
     var jsonToLightType = {
-        "directional": pc.scene.LightType.DIRECTIONAL,
-        "point":       pc.scene.LightType.POINT,
-        "spot":        pc.scene.LightType.SPOT
+        "directional": pc.scene.LIGHTTYPE_DIRECTIONAL,
+        "point":       pc.scene.LIGHTTYPE_POINT,
+        "spot":        pc.scene.LIGHTTYPE_SPOT
     };
     
     var jsonToAddressMode = {

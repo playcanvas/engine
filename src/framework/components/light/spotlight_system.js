@@ -136,7 +136,7 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             var node = new pc.scene.LightNode();
             node.setName('spotlight');
-            node.setType(pc.scene.LightType.SPOT);
+            node.setType(pc.scene.LIGHTTYPE_SPOT);
 
             var model = new pc.scene.Model();
             model.graph = node;

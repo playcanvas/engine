@@ -61,6 +61,37 @@ pc.extend(pc.scene, function () {
         this.normalMatrix = pc.math.mat3.create();
     };
 
+    Object.defineProperty(MeshInstance.prototype, 'material', {
+        get: function () {
+            return this._material;
+        },
+        set: function (material) {
+            this._material = material;
+
+            // Remove the material's reference to this mesh instance
+            var meshInstances = this._material.meshInstances;
+            var index = meshInstances.indexOf(model);
+            if (index !== -1) {
+                meshInstances.splice(index, 1);
+            }
+
+            // Record that the material is referenced by this mesh instance
+            this._material.meshInstances.push(this);
+
+            this.updateKey();
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'layer', {
+        get: function () {
+            return this._layer;
+        },
+        set: function (layer) {
+            this._layer = layer;
+            this.updateKey();
+        }
+    });
+
     MeshInstance.prototype = {
         syncAabb: function () {
             this.aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);

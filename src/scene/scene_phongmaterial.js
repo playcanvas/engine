@@ -222,84 +222,72 @@ pc.extend(pc.scene, function () {
         if (this.lightMap) {
             this.setParameter('texture_lightMap', this.lightMap);
         }
+
+        this.shader = null;
     };
 
-    PhongMaterial.prototype.getProgram = function (device, mesh) {
-        var scene = pc.scene.Scene.current;
-        var i;
+    PhongMaterial.prototype.updateShader = function (device) {
+        var lights = this.scene._lights;
+
         var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
         var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
-        if (scene) {
-            for (i = 0; i < scene._globalLights.length; i++) {
-                if (scene._globalLights[i].getCastShadows()) {
-                    numSDirs++;
-                } else {
-                    numDirs++;
-                }
-            }
-            for (i = 0; i < scene._localLights[0].length; i++) {
-                if (scene._localLights[0][i].getCastShadows()) {
-                    numSPnts++;
-                } else {
-                    numPnts++;
-                }
-            }
-            for (i = 0; i < scene._localLights[1].length; i++) {
-                if (scene._localLights[1][i].getCastShadows()) {
-                    numSSpts++;
-                } else {
-                    numSpts++;
+        for (var i = 0; i < lights.length; i++) {
+            var light = lights[i];
+            if (light.getEnabled()) {
+                switch (light.getType()) {
+                    case pc.scene.LIGHTTYPE_DIRECTIONAL:
+                        if (light.getCastShadows()) {
+                            numSDirs++;
+                        } else {
+                            numDirs++;
+                        }
+                        break;
+                    case pc.scene.LIGHTTYPE_POINT:
+                        numPnts++;
+                        break;
+                    case pc.scene.LIGHTTYPE_SPOT:
+                        if (light.getCastShadows()) {
+                            numSSpts++;
+                        } else {
+                            numSpts++;
+                        }
+                        break;
                 }
             }
         }
-        var skinned = (mesh.skin !== null);
-        var currState = device.getCurrentState();
-        var key = '';
-        if (skinned) key += 'skin_';
-        if (currState.fog) key += 'fog_';
-        if (currState.alphaTest) key += 'atst_';
-        key += numDirs + 'dir_' + numPnts + 'pnt_' + numSpts + 'spt' + numSDirs + 'sdir_' + numSPnts + 'spnt_' + numSSpts + 'sspt';
 
-        var program = this._programs[key];
-        if (program) {
-            return program;
-        }
-
-        var parameters = this.getParameters();
         var options = {
-            alphaTest: currState.alphaTest,
-            fog:       currState.fog,
-            skin:      skinned,
-            numDirs:   numDirs,
-            numSDirs:  numSDirs,
-            numPnts:   numPnts,
-            numSPnts:  numSPnts,
-            numSpts:   numSpts,
-            numSSpts:  numSSpts,
-            diffuseMap:                 (parameters.texture_diffuseMap !== undefined),
-            diffuseMapTransform:        (parameters.texture_diffuseMapTransform !== undefined),
-            specularMap:                (parameters.texture_specularMap !== undefined),
-            specularMapTransform:       (parameters.texture_specularMapTransform !== undefined),
-            specularFactorMap:          (parameters.texture_specularFactorMap !== undefined),
-            specularFactorMapTransform: (parameters.texture_specularFactorMapTransform !== undefined),
-            glossMap:                   (parameters.texture_glossMap !== undefined),
-            glossMapTransform:          (parameters.texture_glossMapTransform !== undefined),
-            emissiveMap:                (parameters.texture_emissiveMap !== undefined),
-            emissiveMapTransform:       (parameters.texture_emissiveMapTransform !== undefined),
-            opacityMap:                 (parameters.texture_opacityMap !== undefined),
-            opacityMapTransform:        (parameters.texture_opacityMapTransform !== undefined),
-            normalMap:                  (parameters.texture_normalMap !== undefined),
-            normalMapTransform:         (parameters.texture_normalMapTransform !== undefined),
-            heightMap:                  (parameters.texture_heightMap !== undefined),
-            heightMapTransform:         (parameters.texture_heightMapTransform !== undefined),
-            sphereMap:                  (parameters.texture_sphereMap !== undefined),
-            cubeMap:                    (parameters.texture_cubeMap !== undefined),
-            lightMap:                   (parameters.texture_lightMap !== undefined)
+            alphaTest: this.alphaTest,
+            fog: this.scene.fog !== pc.scene.FOG_NONE,
+            skin: false,
+            numDirs: numDirs,
+            numSDirs: numSDirs,
+            numPnts: numPnts,
+            numSPnts: numSPnts,
+            numSpts: numSpts,
+            numSSpts: numSSpts,
+            diffuseMap: !!this.diffuseMap,
+            diffuseMapTransform: !!this.diffuseMapTransform,
+            specularMap: !!this.specularMap,
+            specularMapTransform: !!this.specularMapTransform,
+            specularFactorMap: !!this.specularFactorMap,
+            specularFactorMapTransform: !!this.specularFactorMapTransform,
+            glossMap: !!this.glossMap,
+            glossMapTransform: !!this.glossMapTransform,
+            emissiveMap: !!this.emissiveMap,
+            emissiveMapTransform: !!this.emissiveMapTransform,
+            opacityMap: !!this.opacityMap,
+            opacityMapTransform: !!this.opacityMapTransform,
+            normalMap: !!this.normalMap,
+            normalMapTransform: !!this.normalMapTransform,
+            heightMap: !!this.heightMap,
+            heightMapTransform: !!this.heightMapTransform,
+            sphereMap: !!this.sphereMap,
+            cubeMap: !!this.cubeMap,
+            lightMap: !!this.lightMap
         };
         var library = device.getProgramLibrary();
-        program = library.getProgram('phong', options);
-        this._programs[key] = program;
-        return program;
+        this.shader = library.getProgram('phong', options);
     };
 
     return {

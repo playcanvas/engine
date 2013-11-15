@@ -130,7 +130,7 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             var node = new pc.scene.LightNode();
             node.setName('directionallight');
-            node.setType(pc.scene.LightType.DIRECTIONAL);
+            node.setType(pc.scene.LIGHTTYPE_DIRECTIONAL);
 
             var model = new pc.scene.Model();
             model.graph = node;

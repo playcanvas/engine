@@ -34,24 +34,13 @@ pc.extend(pc.scene, function () {
         }
     };
 
-    BasicMaterial.prototype.getProgram = function (device, mesh) {
-//        var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';
-        var key = 'static';
-
-        var program = this._programs[key];
-        if (program) {
-            return program;
-        }
-
-//        var skinned = mesh.getGeometry().isSkinned();
+    BasicMaterial.prototype.updateShader = function (device) {
         var skinned = false;
         var options = {
             skin: skinned
         };
         var library = device.getProgramLibrary();
-        program = library.getProgram('basic', options);
-        this._programs[key] = program;
-        return program;
+        this.shader = library.getProgram('basic', options);
     };
     
     return {

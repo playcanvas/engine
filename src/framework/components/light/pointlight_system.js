@@ -70,7 +70,7 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             var node = new pc.scene.LightNode();
             node.setName('pointlight');
-            node.setType(pc.scene.LightType.POINT);
+            node.setType(pc.scene.LIGHTTYPE_POINT);
 
             var model = new pc.scene.Model();
             model.graph = node;
