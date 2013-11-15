@@ -267,6 +267,7 @@ pc.extend(pc.fw, function () {
         },
 
         _createAccessors: function (entity, instance) {
+            var self = this;
             var i;
             var len = entity.script.scripts.length;
             var url = instance.url;
@@ -277,6 +278,8 @@ pc.extend(pc.fw, function () {
                     var attributes = script.attributes;
                     if (script.name && attributes) {
                         attributes.forEach(function (attribute, index) {
+                            self._convertAttributeValue(attribute);
+
                             Object.defineProperty(instance.instance, attribute.name, {
                                 get: function () {
                                     return attribute.value;
@@ -284,12 +287,21 @@ pc.extend(pc.fw, function () {
                                 set: function (value) {
                                     var oldValue = attribute.value;
                                     attribute.value = value;
+                                    _convertAttributeValue(attribute);
                                     //instance.instance.fire("set", attribute.name, oldValue, value);
                                 }
                             });
                         }, this);
                     }
                     break;
+                }
+            }
+        },
+
+        _convertAttributeValue: function (attribute) {
+            if (attribute.type === 'rgb' || attribute.type === 'rgba') {
+                if (pc.type(attribute.value) === 'array') {
+                    attribute.value = new pc.Color(attribute.value);
                 }
             }
         }
