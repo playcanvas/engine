@@ -15,16 +15,10 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.ScriptComponentData;
 
         this.schema = [{
-            name: "urls",
+            name: "scripts",
             displayName: "URLs",
             description: "Attach scripts to this Entity",
-            type: "script_urls",
-            defaultValue: []
-        }, {
-            name: "attributes",
-            displayName: "Attributes",
-            description: "Custom attributes for this script instance",
-            type: "script_attributes",
+            type: "script",
             defaultValue: []
         }, {
             name: 'instances',
@@ -49,7 +43,7 @@ pc.extend(pc.fw, function () {
 
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['runInTools', 'urls', 'attributes'];
+            properties = ['runInTools', 'scripts'];
 
             ScriptComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -59,7 +53,7 @@ pc.extend(pc.fw, function () {
             var src = this.dataStore[entity.getGuid()];
             var data = {
                 runInTools: src.data.runInTools,
-                urls: pc.extend([], src.data.urls)
+                scripts: pc.extend([], src.data.scripts)
             };
             return this.addComponent(clone, data);
         },
@@ -231,7 +225,7 @@ pc.extend(pc.fw, function () {
                     for (instanceName in entity.script.instances) {
                         instance = entity.script.instances[instanceName];
 
-                        if (entity.script.attributes) {
+                        if (entity.script.scripts) {
                             this._createAccessors(entity, instance);
                         }
 
@@ -274,23 +268,29 @@ pc.extend(pc.fw, function () {
 
         _createAccessors: function (entity, instance) {
             var i;
+            var len = entity.script.scripts.length;
             var url = instance.url;
 
-            var index = entity.script.urls.indexOf(url);
-            var attributes = entity.script.attributes[index];
-            if (attributes.name && attributes.values) {
-                attributes.values.forEach(function (attribute, index) {
-                    Object.defineProperty(instance.instance, attribute.name, {
-                        get: function () {
-                            return attribute.value;
-                        },
-                        set: function (value) {
-                            var oldValue = attribute.value;
-                            attribute.value = value;
-                            //instance.instance.fire("set", attribute.name, oldValue, value);
-                        }
-                    });
-                }, this);
+            for (i=0; i<len; i++) {
+                var script = entity.script.scripts[i];
+                if (script.url === url) {
+                    var attributes = script.attributes;
+                    if (script.name && attributes) {
+                        attributes.forEach(function (attribute, index) {
+                            Object.defineProperty(instance.instance, attribute.name, {
+                                get: function () {
+                                    return attribute.value;
+                                },
+                                set: function (value) {
+                                    var oldValue = attribute.value;
+                                    attribute.value = value;
+                                    //instance.instance.fire("set", attribute.name, oldValue, value);
+                                }
+                            });
+                        }, this);
+                    }
+                    break;
+                }
             }
         }
 

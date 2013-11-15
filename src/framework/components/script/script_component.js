@@ -10,7 +10,7 @@ pc.extend(pc.fw, function () {
     * @property {String[]} urls The URLs of all scripts to load
     */
     var ScriptComponent = function ScriptComponent(system, entity) {
-        this.on("set_urls", this.onSetUrls, this);
+        this.on("set_scripts", this.onSetScripts, this);
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.fw.Component);
 
@@ -41,8 +41,11 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetUrls: function(name, oldValue, newValue) {
-            var urls = newValue;
+        onSetScripts: function(name, oldValue, newValue) {
+            var scripts = newValue;
+            var urls = scripts.map(function (s) {
+                return s.url;
+            });
 
             if (!this.system._inTools || this.runInTools) {
                 // Load and register new scripts and instances
