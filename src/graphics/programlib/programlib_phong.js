@@ -13,7 +13,6 @@ pc.gfx.programlib.phong = {
                 key += "_foge";
                 break;
         }
-        if (options.alphaTest)           key += "_atst";
         if (options.numDirs > 0)         key += "_" + options.numDirs + "dir";
         if (options.numPnts > 0)         key += "_" + options.numPnts + "pnt";
         if (options.numSpts > 0)         key += "_" + options.numSpts + "spt";
@@ -556,9 +555,7 @@ pc.gfx.programlib.phong = {
                 code += getSnippet(device, 'fs_fog_exp2_decl');
                 break;
         }
-        if (options.alphaTest) {
-            code += getSnippet(device, 'fs_alpha_test_decl');
-        }
+        code += getSnippet(device, 'fs_alpha_test_decl');
 
         if (options.normalMap) {
             code += getSnippet(device, 'fs_normal_map_funcs');
@@ -813,10 +810,6 @@ pc.gfx.programlib.phong = {
         }
         code += "\n";
 
-        if (options.alphaTest) {
-            code += getSnippet(device, 'fs_alpha_test');
-        }
-
         if (lighting || options.lightMap) {
             code += "    vec3 diffuseContrib = vec3(0.0);\n";
         }
@@ -924,6 +917,8 @@ pc.gfx.programlib.phong = {
         }
         code += "    gl_FragColor.rgb += emissive;\n";
         code += "    gl_FragColor.a    = opacity;\n\n";
+
+        code += getSnippet(device, 'fs_alpha_test');
 
         // Make sure all components are between 0 and 1
         code += getSnippet(device, 'fs_clamp');

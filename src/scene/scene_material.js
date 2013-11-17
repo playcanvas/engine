@@ -13,8 +13,7 @@ pc.extend(pc.scene, function () {
         this.parameters = {};
 
         // Render states
-        this.alphaTest = false;
-        this.alphaRef = 1;
+        this.alphaTest = 0;
 
         this.blend = false;
         this.blendSrc = pc.gfx.BLENDMODE_ONE;

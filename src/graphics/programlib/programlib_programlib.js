@@ -23,10 +23,7 @@ pc.gfx.programlib = {
                 break;
 
             case 'fs_alpha_test':
-                code += '    if (gl_FragColor.a <= alpha_ref)\n';
-                code += '    {\n';
-                code += '        discard;\n';
-                code += '    }\n\n';
+                code += '    if (gl_FragColor.a < alpha_ref) discard;\n\n';
                 break;
 
             case 'fs_clamp':

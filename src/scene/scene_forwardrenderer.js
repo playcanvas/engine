@@ -192,6 +192,8 @@ pc.extend(pc.scene, function () {
         this.normalMatrixId = scope.resolve('matrix_normal');
         this.poseMatrixId = scope.resolve('matrix_pose[0]');
 
+        this.alphaTestId = scope.resolve('alpha_ref');
+
         // Shadows
         this._shadowAabb = new pc.shape.Aabb();
         this._sceneAabb = new pc.shape.Aabb();
@@ -645,6 +647,8 @@ pc.extend(pc.scene, function () {
                             }
                             parameter.scopeId.setValue(parameter.data);
                         }
+
+                        this.alphaTestId.setValue(material.alphaTest);
 
                         device.setBlending(material.blend);
                         device.setBlendFunction(material.blendSrc, material.blendDst);

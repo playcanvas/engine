@@ -250,7 +250,6 @@ pc.extend(pc.scene, function () {
         }
 
         var options = {
-            alphaTest: this.alphaTest,
             fog: this.scene.fog,
             skin: !!this.meshInstances[0].skinInstance,
             numDirs: numDirs,
