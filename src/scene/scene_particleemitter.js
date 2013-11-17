@@ -155,7 +155,7 @@ pc.extend(pc.scene, function () {
         material.setParameter('texture_colorMap', this.colorMap);
         material.setParameter('texture_opacityMap', this.opacityMap);
         material.setParameter('texture_rampMap', this.rampMap);
-        material.cullMode = pc.gfx.CULLMODE_NONE;
+        material.cullMode = pc.gfx.CULLFACE_NONE;
         material.blend = true;
         material.blendSrc = pc.gfx.BLENDMODE_SRC_ALPHA;
         material.blendDst = pc.gfx.BLENDMODE_ONE;

@@ -111,7 +111,7 @@ pc.extend(pc.fw, function () {
         var material = new pc.scene.Material();
         material.setShader(shader);
         material.setParameter("texture_cubeMap", texture);
-        material.cull = pc.gfx.CULLMODE_NONE;
+        material.cull = pc.gfx.CULLFACE_NONE;
 
         var node = new pc.scene.GraphNode();
         var mesh = pc.scene.procedural.createBox(gd);

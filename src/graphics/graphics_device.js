@@ -253,7 +253,7 @@ pc.extend(pc.gfx, function () {
         this.setBlendFunction(pc.gfx.BLENDMODE_ONE, pc.gfx.BLENDMODE_ZERO);
         this.setBlendEquation(pc.gfx.BLENDEQUATION_ADD);
         this.setColorWrite(true, true, true, true);
-        this.setCullMode(pc.gfx.CULLMODE_BACK);
+        this.setCullMode(pc.gfx.CULLFACE_BACK);
         this.setDepthTest(true);
         this.setDepthWrite(true);
 
@@ -707,20 +707,20 @@ pc.extend(pc.gfx, function () {
             if (this.cullMode !== cullMode) {
                 var gl = this.gl;
                 switch (cullMode) {
-                    case pc.gfx.CULLMODE_NONE:
+                    case pc.gfx.CULLFACE_NONE:
                         gl.disable(gl.CULL_FACE);
                         break;
-                    case pc.gfx.CULLMODE_FRONT:
+                    case pc.gfx.CULLFACE_FRONT:
                         gl.enable(gl.CULL_FACE);
-                        gl.cullMode(gl.FRONT);
+                        gl.cullFace(gl.FRONT);
                         break;
-                    case pc.gfx.CULLMODE_BACK:
+                    case pc.gfx.CULLFACE_BACK:
                         gl.enable(gl.CULL_FACE);
-                        gl.cullMode(gl.BACK);
+                        gl.cullFace(gl.BACK);
                         break;
-                    case pc.gfx.CULLMODE_FRONTANDBACK:
+                    case pc.gfx.CULLFACE_FRONTANDBACK:
                         gl.enable(gl.CULL_FACE);
-                        gl.cullMode(gl.FRONT_AND_BACK);
+                        gl.cullFace(gl.FRONT_AND_BACK);
                         break;
                 }
                 this.cullMode = cullMode;
