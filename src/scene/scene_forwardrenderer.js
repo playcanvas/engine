@@ -637,7 +637,7 @@ pc.extend(pc.scene, function () {
                             parameter.scopeId.setValue(parameter.data);
                         }
 
-                        device.setBlending(material.blending);
+                        device.setBlending(material.blend);
                         device.setBlendFunction(material.blendSrc, material.blendDst);
                         device.setBlendEquation(material.blendEquation);
                         device.setCullMode(material.cullMode);
