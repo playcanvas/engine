@@ -183,6 +183,11 @@ pc.extend(pc.scene, function () {
         this.nearClipId = scope.resolve('camera_near');
         this.farClipId = scope.resolve('camera_far');
 
+        this.fogColorId = scope.resolve('fog_color');
+        this.fogStartId = scope.resolve('fog_start');
+        this.fogEndId = scope.resolve('fog_end');
+        this.fogDensityId = scope.resolve('fog_density');
+
         this.modelMatrixId = scope.resolve('matrix_model');
         this.normalMatrixId = scope.resolve('matrix_normal');
         this.poseMatrixId = scope.resolve('matrix_pose[0]');
@@ -193,6 +198,8 @@ pc.extend(pc.scene, function () {
         this._shadowState = {
             blend: false
         };
+
+        this.fogColor = pc.math.vec3.create(0, 0, 0);
     }
 
     pc.extend(ForwardRenderer.prototype, {
@@ -580,23 +587,25 @@ pc.extend(pc.scene, function () {
                 }
             }
 
+            // Set up the camera
             this.setCamera(camera);
 
-            // Set up lights
+            // Set up the lights
             this.dispatchGlobalLights(scene);
             this.dispatchLocalLights(scene);
 
-            // Set up fog
-            switch (scene.fog) {
-                case pc.scene.FOG_LINEAR:
-                    scope.resolve("fog_color").setValue(scene.fogColor);
-                    scope.resolve("fog_start").setValue(scene.fogStart);
-                    scope.resolve("fog_end").setValue(scene.fogEnd);
-                    break;
-                case pc.scene.FOG_EXP2:
-                    scope.resolve("fog_color").setValue(scene.fogColor);
-                    scope.resolve("fog_density").setValue(scene.fogDensity);
-                    break;
+            // Set up the fog
+            if (scene.fog !== pc.scene.FOG_NONE) {
+                this.fogColor[0] = scene.fogColor.r;
+                this.fogColor[1] = scene.fogColor.g;
+                this.fogColor[2] = scene.fogColor.b;
+                this.fogColorId.setValue(this.fogColor);
+                if (scene.fog === pc.scene.FOG_LINEAR) {
+                    this.fogStartId.setValue(scene.fogStart);
+                    this.fogEndId.setValue(scene.fogEnd);
+                } else if (scene.fog === pc.scene.FOG_EXP2) {
+                    this.fogDensityId.setValue(scene.fogDensity);
+                }
             }
 
             for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
@@ -640,7 +649,8 @@ pc.extend(pc.scene, function () {
                         device.setBlending(material.blend);
                         device.setBlendFunction(material.blendSrc, material.blendDst);
                         device.setBlendEquation(material.blendEquation);
-                        device.setCullMode(material.cullMode);
+                        device.setColorWrite(material.redWrite, material.greenWrite, material.blueWrite, material.alphaWrite);
+                        device.setCullMode(material.cull);
                         device.setDepthWrite(material.depthWrite);
                         device.setDepthTest(material.depthTest);
                     }

@@ -15,13 +15,21 @@ pc.extend(pc.scene, function () {
         // Render states
         this.alphaTest = false;
         this.alphaRef = 1;
+
         this.blend = false;
         this.blendSrc = pc.gfx.BLENDMODE_ONE;
         this.blendDst = pc.gfx.BLENDMODE_ZERO;
         this.blendEq = pc.gfx.BLENDEQUATION_ADD;
+
         this.cull = pc.gfx.CULLFACE_BACK;
+
         this.depthTest = true;
         this.depthWrite = true;
+
+        this.redWrite = true;
+        this.greenWrite = true;
+        this.blueWrite = true;
+        this.alphaWrite = true;
 
         this.scene = null;       // If the material is used in a scene, this is it
         this.meshInstances = []; // The mesh instances referencing this material
