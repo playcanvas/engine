@@ -292,7 +292,10 @@ pc.extend(pc.fw, function () {
                                     attribute.value = value;
                                     _convertAttributeValue(attribute);
                                     //instance.instance.fire("set", attribute.name, oldValue, value);
-                                }
+                                },
+                                // allow the propery to be redefined in case we have updated attributes
+                                // from the designer
+                                configurable : true
                             });
                         }, this);
                     }

@@ -66,6 +66,9 @@ pc.extend(pc.fw, function () {
                             if (!this.entity.script.instances[ScriptType._pcScriptName]) { 
                                 var instance = new ScriptType(this.entity);
                                 this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
+                            } else {
+                                // the instance already exists so update its script attribute values
+                               this.system._createAccessors(this.entity, this.entity.script.instances[ScriptType._pcScriptName]); 
                             }
                         }
                     }, this);
