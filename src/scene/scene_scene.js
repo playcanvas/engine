@@ -26,7 +26,17 @@ pc.extend(pc.scene, function () {
 
     /**
      * @name pc.scene.Scene
-     * @class A scene.
+     * @class A scene is a container for models, lights and cameras. Scenes are rendered via a renderer.
+     * PlayCanvas currently only supports a single renderer: the forward renderer (pc.scene.ForwardRenderer).
+     * @constructor Creates a new scene.
+     * @property {String} fog The type of fog used by the scene (see pc.scene.FOG_).
+     * @property {pc.Color} fogColor The color of the fog, in enabled.
+     * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
+     * only valid if the fog property is set to pc.scene.FOG_LINEAR.
+     * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This 
+     * property is only valid if the fog property is set to pc.scene.FOG_LINEAR.
+     * @property {Number} fogDensity The density of the fog. This property is only valid if the fog property
+     * is set to pc.scene.FOG_EXP2.
      */
     var Scene = function Scene() {
         this.drawCalls = [];     // All mesh instances and commands
@@ -86,6 +96,12 @@ pc.extend(pc.scene, function () {
         return this._models;
     };
 
+    /**
+     * @function
+     * @name pc.scene.Scene#addModel
+     * @description Adds the specified model to the scene.
+     * @author Will Eastcott
+     */
     Scene.prototype.addModel = function (model) {
         var i;
 
@@ -122,6 +138,12 @@ pc.extend(pc.scene, function () {
         }
     };
 
+    /**
+     * @function
+     * @name pc.scene.Scene#removeModel
+     * @description Removes the specified model from the scene.
+     * @author Will Eastcott
+     */
     Scene.prototype.removeModel = function (model) {
         var i;
 

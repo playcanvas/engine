@@ -142,10 +142,10 @@ pc.extend(pc.scene, function () {
 
         var material = new pc.scene.Material();
         var programLib = this.graphicsDevice.getProgramLibrary();
-        var program = programLib.getProgram("particle", {
+        var shader = programLib.getProgram("particle", {
             billboard: this.billboard
         });
-        material.setProgram(program);
+        material.setShader(shader);
         material.setParameter('particle_worldVelocity', this.worldVelocity);
         material.setParameter('particle_worldAcceleration', this.worldAcceleration);
         material.setParameter('particle_numFrames', this.numFrames);

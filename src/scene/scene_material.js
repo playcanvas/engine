@@ -191,7 +191,7 @@ pc.extend(pc.scene, function () {
      * @function
      * @name pc.scene.Material#getShader
      * @description Retrieves the shader assigned to the specified material.
-     * @returns {pc.gfx.Program} The shader assigned to the material.
+     * @returns {pc.gfx.Shader} The shader assigned to the material.
      * @author Will Eastcott
      */
     Material.prototype.getShader = function () {
@@ -202,7 +202,7 @@ pc.extend(pc.scene, function () {
      * @function
      * @name pc.scene.Material#setShader
      * @description Assigns a shader to the specified material.
-     * @param {pc.gfx.Program} shader The shader to assign to the material.
+     * @param {pc.gfx.Shader} shader The shader to assign to the material.
      * @author Will Eastcott
      */
     Material.prototype.setShader = function (shader) {
