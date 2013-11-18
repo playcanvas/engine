@@ -1,7 +1,7 @@
 pc.extend(pc, function () {
     /**
-     * @namespace
      * @name pc.log
+     * @namespace Logging to console
      * @description Provides logging services for PlayCanvas apps.
      */
     var log = {
