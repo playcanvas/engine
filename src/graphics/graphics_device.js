@@ -259,15 +259,6 @@ pc.extend(pc.gfx, function () {
 
         gl.enable(gl.SCISSOR_TEST);
 
-/*
-        this.scope.resolve("alpha_ref").setValue(0.0);
-
-                alphaTest: false,
-                alphaRef: 0.0,
-                fog: false,
-                fogColor: [0, 0, 0],
-                fogDensity: 0.0,
-*/
         this.programLib = new pc.gfx.ProgramLibrary(this);
         for (var generator in pc.gfx.programlib) {
             this.programLib.register(generator, pc.gfx.programlib[generator]);
@@ -291,7 +282,7 @@ pc.extend(pc.gfx, function () {
         }
 
         pc.extend(this, pc.events);
-        
+
         this.boundBuffer = null;
 
         this.textureUnits = [];
@@ -486,18 +477,18 @@ pc.extend(pc.gfx, function () {
 
                 // Check the value is valid
                 if (uniformVersion.globalId !== programVersion.globalId || uniformVersion.revision !== programVersion.revision) {
-//                if (uniformVersion.notequals(programVersion)) {
-
-                    // Copy the version to track that its now up to date
-        //            uniformVersion.copy(programVersion);
                     uniformVersion.globalId = programVersion.globalId;
                     uniformVersion.revision = programVersion.revision;
 
                     // Call the function to commit the uniform value
                     this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
-
-//                    uniform.commitArgs[uniform.valueIndex] = uniform.scopeId.value;
-  //                  uniform.commitFunc.apply(gl, uniform.commitArgs);
+/*
+                    if (uniform.isMatrix) {
+                        uniform.commitFunc.call(gl, uniform.locationId, false, scopeId.value);
+                    } else {
+                        uniform.commitFunc.call(gl, uniform.locationId, scopeId.value);
+                    }
+*/
                 }
             }
 
