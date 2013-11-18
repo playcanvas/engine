@@ -1,16 +1,3 @@
-/**
- * Constants for light type.
- * @enum {number}
- */
-pc.scene.LightType = {
-    /** Directional (global) light source. */
-    DIRECTIONAL: 0,
-    /** Point (local) light source. */
-    POINT: 1,
-    /** Spot (local) light source. */
-    SPOT: 2
-};
-
 pc.extend(pc.scene, function () {
 
     /**
@@ -19,7 +6,7 @@ pc.extend(pc.scene, function () {
      */
     var LightNode = function LightNode() {
         // LightNode properties (defaults)
-        this._type = pc.scene.LightType.DIRECTIONAL;
+        this._type = pc.scene.LIGHTTYPE_DIRECTIONAL;
         this._color = pc.math.vec3.create(0.8, 0.8, 0.8);
         this._intensity = 1;
         this._castShadows = false;
@@ -332,6 +319,25 @@ pc.extend(pc.scene, function () {
     };
 
     return {
+        /**
+         * @enum pc.gfx.LIGHTTYPE
+         * @name pc.gfx.LIGHTTYPE_DIRECTIONAL
+         * @description Directional (global) light source.
+         */
+        LIGHTTYPE_DIRECTIONAL: 0,
+        /**
+         * @enum pc.gfx.LIGHTTYPE
+         * @name pc.gfx.LIGHTTYPE_POINT
+         * @description Point (local) light source.
+         */
+        LIGHTTYPE_POINT: 1,
+        /**
+         * @enum pc.gfx.LIGHTTYPE
+         * @name pc.gfx.LIGHTTYPE_SPOT
+         * @description Spot (local) light source.
+         */
+        LIGHTTYPE_SPOT: 2,
+
         LightNode: LightNode
     }; 
 }());

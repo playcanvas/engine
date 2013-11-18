@@ -91,6 +91,25 @@ pc.gfx = {
     BLENDMODE_ONE_MINUS_DST_ALPHA: 10,
 
     /**
+     * @enum pc.gfx.BLENDEQUATION
+     * @name pc.gfx.BLENDEQUATION_ADD
+     * @description Add the results of the source and destination fragment multiplies.
+     */
+    BLENDEQUATION_ADD: 0,
+    /**
+     * @enum pc.gfx.BLENDEQUATION
+     * @name pc.gfx.BLENDEQUATION_SUBTRACT
+     * @description Subtract the results of the source and destination fragment multiplies.
+     */
+    BLENDEQUATION_SUBTRACT: 1,
+    /**
+     * @enum pc.gfx.BLENDEQUATION
+     * @name pc.gfx.BLENDEQUATION_REVERSE_SUBTRACT
+     * @description Reverse and subtract the results of the source and destination fragment multiplies.
+     */
+    BLENDEQUATION_REVERSE_SUBTRACT: 2,
+
+    /**
      * @enum pc.gfx.BUFFER
      * @name pc.gfx.BUFFER_STATIC
      * @description The data store contents will be modified once and used many times.
