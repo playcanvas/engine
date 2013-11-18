@@ -80,6 +80,9 @@ pc.extend(pc.fw, function () {
                     if(data.instances[name].instance.destroy) {
                         data.instances[name].instance.destroy();
                     }
+
+                    delete data.instances[name];
+                    delete entity[name];
                 }
             }
         },
