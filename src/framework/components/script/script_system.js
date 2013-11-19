@@ -82,7 +82,6 @@ pc.extend(pc.fw, function () {
                     }
 
                     delete data.instances[name];
-                    delete entity[name];
                 }
             }
         },
@@ -232,11 +231,11 @@ pc.extend(pc.fw, function () {
                             this._createAccessors(entity, instance);
                         }
 
-                        // Attach instance to entity like a component
-                        if (entity[instanceName]) {
-                            throw Error(pc.string.format("Script with name '{0}' is already attached to Entity", instanceName));
+                        // Make instance accessible from the script component of the Entity
+                        if (entity.script[instanceName]) {
+                            throw Error(pc.string.format("Script with name '{0}' is already attached to Script Component", instanceName));
                         } else {
-                            entity[instanceName] = instance.instance;
+                            entity.script[instanceName] = instance.instance;
                         }
 
                         // Attach events for update, fixedUpdate and postUpdate methods in script instance
