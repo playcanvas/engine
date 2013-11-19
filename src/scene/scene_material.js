@@ -6,62 +6,90 @@ pc.extend(pc.scene, function () {
      * @class A material.
      */
     var Material = function Material() {
-        this.name = null;
+        this.name = "Untitled";
         this.id = id++;
+        this.shader = null;
 
-        this._parameters       = {};
-        this._state            = {};
-        this._program          = null; // Set if the material has a vanilla program attached
-        this._programs         = {};   // Set from a program generator
-        
-        this.blendType = pc.scene.BLEND_NONE;
+        this.parameters = {};
+
+        // Render states
+        this.alphaTest = 0;
+
+        this.blend = false;
+        this.blendSrc = pc.gfx.BLENDMODE_ONE;
+        this.blendDst = pc.gfx.BLENDMODE_ZERO;
+        this.blendEq = pc.gfx.BLENDEQUATION_ADD;
+
+        this.cull = pc.gfx.CULLFACE_BACK;
+
+        this.depthTest = true;
+        this.depthWrite = true;
+
+        this.redWrite = true;
+        this.greenWrite = true;
+        this.blueWrite = true;
+        this.alphaWrite = true;
+
+        this.scene = null;       // If the material is used in a scene, this is it
+        this.meshInstances = []; // The mesh instances referencing this material
     };
 
     Object.defineProperty(Material.prototype, 'blendType', {
         get: function () {
-            if (this._state.blendModes) {
-                if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_ONE) && 
-                    (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ZERO)) {
-                    return pc.scene.BLEND_NONE;
-                } else if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_SRC_ALPHA) && 
-                           (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA)) {
-                    return pc.scene.BLEND_NORMAL;
-                } else if ((this._state.blendModes.srcBlend === pc.gfx.BLENDMODE_ONE) && 
-                           (this._state.blendModes.dstBlend === pc.gfx.BLENDMODE_ONE)) {
-                    return pc.scene.BLEND_ADDITIVE;
-                } else {
-                    return pc.scene.BLEND_NORMAL;
-                }
-            } else {
+            if ((!this.blend) &&
+                (this.blendSrc === pc.gfx.BLENDMODE_ONE) && 
+                (this.blendDst === pc.gfx.BLENDMODE_ZERO) &&
+                (this.blendEq === pc.gfx.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_NONE;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.gfx.BLENDMODE_SRC_ALPHA) && 
+                       (this.blendDst === pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
+                       (this.blendEq === pc.gfx.BLENDEQUATION_ADD)) {
+                return pc.scene.BLEND_NORMAL;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.gfx.BLENDMODE_ONE) && 
+                       (this.blendDst === pc.gfx.BLENDMODE_ONE) &&
+                       (this.blendEq === pc.gfx.BLENDEQUATION_ADD)) {
+                return pc.scene.BLEND_ADDITIVE;
+            } else {
+                return pc.scene.BLEND_NORMAL;
             }
         },
         set: function (type) {
             switch (type) {
                 case pc.scene.BLEND_NONE:
-                    this._state.blend = false;
-                    this._state.blendModes = {
-                        srcBlend: pc.gfx.BLENDMODE_ONE, 
-                        dstBlend: pc.gfx.BLENDMODE_ZERO
-                    };
+                    this.blend = false;
+                    this.blendSrc = pc.gfx.BLENDMODE_ONE;
+                    this.blendDst = pc.gfx.BLENDMODE_ZERO;
+                    this.blendEq = pc.gfx.BLENDEQUATION_ADD;
                     break;
                 case pc.scene.BLEND_NORMAL:
-                    this._state.blend = true;
-                    this._state.blendModes = {
-                        srcBlend: pc.gfx.BLENDMODE_SRC_ALPHA,
-                        dstBlend: pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA
-                    };
+                    this.blend = true;
+                    this.blendSrc = pc.gfx.BLENDMODE_SRC_ALPHA;
+                    this.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+                    this.blendEq = pc.gfx.BLENDEQUATION_ADD;
                     break;
                 case pc.scene.BLEND_ADDITIVE:
-                    this._state.blend = true;
-                    this._state.blendModes = {
-                        srcBlend: pc.gfx.BLENDMODE_ONE, 
-                        dstBlend: pc.gfx.BLENDMODE_ONE 
-                    };
+                    this.blend = true;
+                    this.blendSrc = pc.gfx.BLENDMODE_ONE;
+                    this.blendDst = pc.gfx.BLENDMODE_ONE;
+                    this.blendEq = pc.gfx.BLENDEQUATION_ADD;
                     break;
             }
+            this._updateMeshInstanceKeys();
         }
     });
+
+    Material.prototype._updateMeshInstanceKeys = function () {
+        var i, meshInstances = this.meshInstances;
+        for (var i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].updateKey();
+        }
+    };
+
+    Material.prototype.updateShader = function (device) {
+        // For vanilla materials, the shader can only be set by the user
+    }
 
     /**
      * @function
@@ -90,15 +118,11 @@ pc.extend(pc.scene, function () {
 
     // Parameter management
     Material.prototype.clearParameters = function () {
-        this._parameters = {};
-        
-        // If programs for this material are being procedurally generated, then
-        // discard whatever has already been cached
-        this._programs = {};
+        this.parameters = {};
     };
 
     Material.prototype.getParameters = function () {
-        return this._parameters;
+        return this.parameters;
     };
 
     /**
@@ -110,7 +134,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     Material.prototype.getParameter = function (name) {
-        return this._parameters[name];
+        return this.parameters[name];
     };
 
     /**
@@ -122,18 +146,14 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     Material.prototype.setParameter = function (name, data) {
-        var param = this._parameters[name];
+        var param = this.parameters[name];
         if (param) {
-            param._data = data;
+            param.data = data;
         } else {
-            this._parameters[name] = {
-                _scopeId : null,
-                _data    : data
+            this.parameters[name] = {
+                scopeId: null,
+                data: data
             };
-
-            // If programs for this material are being procedurally generated, then
-            // discard whatever has already been cached
-            this._programs = {};
         }
     };
 
@@ -145,12 +165,8 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     Material.prototype.deleteParameter = function (name) {
-        if (this._parameters[name]) {
-            delete this._parameters[name];
-
-            // If programs for this material are being procedurally generated, then
-            // discard whatever has already been cached
-            this._programs = {};
+        if (this.parameters[name]) {
+            delete this.parameters[name];
         }
     };
 
@@ -160,63 +176,37 @@ pc.extend(pc.scene, function () {
      * @description Pushes all material parameters into scope.
      * @author Will Eastcott
      */
-    Material.prototype.setParameters = function (device) {    
+    Material.prototype.setParameters = function () {    
         // Push each shader parameter into scope
-        for (var paramName in this._parameters) {
-            var parameter = this._parameters[paramName];
-            if (!parameter._scopeId) {
-                parameter._scopeId = device.scope.resolve(paramName);
+        for (var paramName in this.parameters) {
+            var parameter = this.parameters[paramName];
+            if (!parameter.scopeId) {
+                parameter.scopeId = device.scope.resolve(paramName);
             }
-            parameter._scopeId.setValue(parameter._data);
+            parameter.scopeId.setValue(parameter.data);
         }
     };
 
     /**
      * @function
-     * @name pc.scene.Material#getProgram
-     * @description Retrieves the program assigned to the specified material.
-     * @returns {pc.gfx.Program} The program assigned to the material.
+     * @name pc.scene.Material#getShader
+     * @description Retrieves the shader assigned to the specified material.
+     * @returns {pc.gfx.Shader} The shader assigned to the material.
      * @author Will Eastcott
      */
-    Material.prototype.getProgram = function (device, mesh) {
-        return this._program;
+    Material.prototype.getShader = function () {
+        return this.shader;
     };
 
     /**
      * @function
-     * @name pc.scene.Material#setProgram
-     * @description Assigns a program to the specified material.
-     * @param {pc.gfx.Program} program The program to assign to the material.
+     * @name pc.scene.Material#setShader
+     * @description Assigns a shader to the specified material.
+     * @param {pc.gfx.Shader} shader The shader to assign to the material.
      * @author Will Eastcott
      */
-    Material.prototype.setProgram = function (program) {
-        this._program = program;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.Material#getState
-     * @description Retrieves the block of render state set on the specified material. When the
-     * material is used to render a pc.scene.SubMesh, the render state will be set as local state. 
-     * When the submesh has been rendered, the local state will be cleared.
-     * @returns {Object} The render state assigned to the material.
-     * @author Will Eastcott
-     */
-    Material.prototype.getState = function () {
-        return this._state;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.Material#setState
-     * @description Assigns a block of render state to the specified material. When the material
-     * is used to render a pc.scene.SubMesh, the render state will be set as local state. When
-     * the submesh has been rendered, the local state will be cleared.
-     * @param {Object} state The render state to assign to the material.
-     * @author Will Eastcott
-     */
-    Material.prototype.setState = function (state) {
-        this._state = state;
+    Material.prototype.setShader = function (shader) {
+        this.shader = shader;
     };
 
     Material.prototype.update = function () {

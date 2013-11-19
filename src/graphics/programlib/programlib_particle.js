@@ -131,12 +131,15 @@ pc.gfx.programlib.particle = {
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
         code += "uniform sampler2D texture_colorMap;\n";
+        code += "uniform sampler2D texture_opacityMap;\n";
         code += "uniform sampler2D texture_rampMap;\n\n";
 
         code += "void main(void)\n";
         code += "{\n";
         code += "    vec4 colorMult = texture2D(texture_rampMap, vec2(vAge, 0.5)) * vColor;\n";
-        code += "    gl_FragColor = texture2D(texture_colorMap, vUv0) * colorMult;\n";
+        code += "    vec3 rgb = texture2D(texture_colorMap, vUv0).rgb;\n";
+        code += "    float a = texture2D(texture_opacityMap, vUv0).r;\n";
+        code += "    gl_FragColor = vec4(rgb, a) * colorMult;\n";
         code += "}";
 
         var fshader = code;

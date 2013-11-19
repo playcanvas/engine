@@ -2,8 +2,17 @@ pc.gfx.programlib.phong = {
     generateKey: function (device, options) {
         var key = "phong";
         if (options.skin)                key += "_skin";
-        if (options.fog)                 key += "_fog";
-        if (options.alphaTest)           key += "_atst";
+        switch (options.fog) {
+            case 'none':
+                key += "_fogn";
+                break;
+            case 'linear':
+                key += "_fogl";
+                break;
+            case 'exp2':
+                key += "_foge";
+                break;
+        }
         if (options.numDirs > 0)         key += "_" + options.numDirs + "dir";
         if (options.numPnts > 0)         key += "_" + options.numPnts + "pnt";
         if (options.numSpts > 0)         key += "_" + options.numSpts + "spt";
@@ -538,12 +547,15 @@ pc.gfx.programlib.phong = {
                 code += "uniform sampler2D light" + i + "_shadowMap;\n";
             }
         }
-        if (options.fog) {
-            code += getSnippet(device, 'fs_fog_decl');
+        switch (options.fog) {
+            case 'linear':
+                code += getSnippet(device, 'fs_fog_linear_decl');
+                break;
+            case 'exp2':
+                code += getSnippet(device, 'fs_fog_exp2_decl');
+                break;
         }
-        if (options.alphaTest) {
-            code += getSnippet(device, 'fs_alpha_test_decl');
-        }
+        code += getSnippet(device, 'fs_alpha_test_decl');
 
         if (options.normalMap) {
             code += getSnippet(device, 'fs_normal_map_funcs');
@@ -798,10 +810,6 @@ pc.gfx.programlib.phong = {
         }
         code += "\n";
 
-        if (options.alphaTest) {
-            code += getSnippet(device, 'fs_alpha_test');
-        }
-
         if (lighting || options.lightMap) {
             code += "    vec3 diffuseContrib = vec3(0.0);\n";
         }
@@ -910,12 +918,19 @@ pc.gfx.programlib.phong = {
         code += "    gl_FragColor.rgb += emissive;\n";
         code += "    gl_FragColor.a    = opacity;\n\n";
 
+        code += getSnippet(device, 'fs_alpha_test');
+
         // Make sure all components are between 0 and 1
         code += getSnippet(device, 'fs_clamp');
 
         // Fog
-        if (options.fog) {
-            code += getSnippet(device, 'fs_fog');
+        switch (options.fog) {
+            case 'linear':
+                code += getSnippet(device, 'fs_fog_linear');
+                break;
+            case 'exp2':
+                code += getSnippet(device, 'fs_fog_exp2');
+                break;
         }
 
         code += getSnippet(device, 'common_main_end');

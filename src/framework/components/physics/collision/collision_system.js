@@ -195,33 +195,37 @@ pc.extend(pc.fw, function () {
         },
 
         onUpdate: function (dt) {
-            if (this.debugRender) {
-                this.updateDebugShapes();            
-            }
-        },
-
-        updateDebugShapes: function () {
-            var id, entity, data, impl;
+            var id, entity;
             var components = this.store;
-            var context = this.context;
-
+            
             for (id in components) {
                 entity = components[id].entity;
-                data = components[id].data;
-                impl = this._getImplementation(entity);
+                
+                if (!entity.rigidbody) {
+                    entity.trigger.syncEntityToBody();
+                }
+                
+                if (this.debugRender) {
+                    this.updateDebugShape(entity, components[id].data, this._getImplementation(entity));
+                }
+            }
 
-                if (typeof impl !== 'undefined') {
-                    if (impl.hasDebugShape) {
-                        if (data.model) {
-                            if (!context.scene.containsModel(data.model)) {
-                                context.scene.addModel(data.model);
-                                context.root.addChild(data.model.graph);
-                            }
+        },
+
+        updateDebugShape: function (entity, data, impl) {
+            var context = this.context;
+
+            if (typeof impl !== 'undefined') {
+                if (impl.hasDebugShape) {
+                    if (data.model) {
+                        if (!context.scene.containsModel(data.model)) {
+                            context.scene.addModel(data.model);
+                            context.root.addChild(data.model.graph);
                         }
+                    }
 
-                        impl.updateDebugShape(entity, data);
-                    } 
-                }                            
+                    impl.updateDebugShape(entity, data);
+                } 
             }
         },
 
@@ -230,7 +234,13 @@ pc.extend(pc.fw, function () {
         },
 
         onToolsUpdate: function (dt) {
-            this.updateDebugShapes();
+            var id, entity;
+            var components = this.store;
+            
+            for (id in components) {
+                entity = components[id].entity;
+                this.updateDebugShape(entity, components[id].data, this._getImplementation(entity));
+            }
         },
 
         /**

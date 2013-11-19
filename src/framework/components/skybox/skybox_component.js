@@ -106,14 +106,12 @@ pc.extend(pc.fw, function () {
         });
 
         var library = gd.getProgramLibrary();
-        var program = library.getProgram('skybox');
+        var shader = library.getProgram('skybox');
 
         var material = new pc.scene.Material();
-        material.setState({
-            cull: false
-        });
-        material.setProgram(program);
+        material.setShader(shader);
         material.setParameter("texture_cubeMap", texture);
+        material.cull = pc.gfx.CULLFACE_NONE;
 
         var node = new pc.scene.GraphNode();
         var mesh = pc.scene.procedural.createBox(gd);

@@ -196,13 +196,6 @@ pc.extend(pc.input, function () {
                 target = target.parentNode;
             }
             var currentElement = target;
-            var scaleX = 1;
-            var scaleY = 1;
-
-            if (typeof(currentElement.width) === 'number' && typeof(currentElement.height) === 'number') {
-                scaleX = currentElement.width / currentElement.offsetWidth;
-                scaleY = currentElement.height / currentElement.offsetHeight;
-            }
             
             do {
                 totalOffsetX += currentElement.offsetLeft - currentElement.scrollLeft;
@@ -210,12 +203,9 @@ pc.extend(pc.input, function () {
                 currentElement = currentElement.offsetParent;
             } while (currentElement);
         
-            canvasX = touch.pageX - totalOffsetX;
-            canvasY = target.offsetHeight - (touch.pageY - totalOffsetY);
-
             return {
-                x: canvasX * scaleX, 
-                y: canvasY * scaleY
+                x: touch.pageX - totalOffsetX,
+                y: touch.pageY - totalOffsetY
             };
         },
 
