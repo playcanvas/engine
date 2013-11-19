@@ -190,6 +190,6 @@
 ../src/framework/livelink/livelink_update_asset_message.js
 ../src/framework/livelink/livelink_update_pack_settings.js
 ../src/framework/entity/entity_entity.js
-../src/framework/asset/asset_asset.js
-../src/framework/asset/asset_assetregistry.js
+../src/asset/asset_asset.js
+../src/asset/asset_registry.js
 ../contrib/rsvp-461e814fd8.min.js

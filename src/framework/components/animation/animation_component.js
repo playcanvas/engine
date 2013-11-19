@@ -102,7 +102,7 @@ pc.extend(pc.fw, function () {
             };
 
             var assets = guids.map(function (guid) {
-                return this.system.context.assets.getAsset(guid);
+                return this.system.context.assets.getAssetByResourceId(guid);
             }, this);
 
             var names = [];

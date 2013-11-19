@@ -1,7 +1,11 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc.asset, function () {
     /*
-    * @name pc.fw.AssetRegistry
-    * @description Container for all all assets that are available to this application
+    * @name pc.asset.AssetRegistry
+    * @class Container for all assets that are available to this application
+    * @constructor Create an instance of an AssetRegistry. 
+    * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'context.assets'.
+    * @param {pc.resources.ResourceLoader} loader The ResourceLoader used to to load the asset files.
+    * @param {String} prefix The prefix added to file urls before the loader tries to fetch them
     */
     var AssetRegistry = function (loader, prefix) {
         if (!loader) {
@@ -18,11 +22,12 @@ pc.extend(pc.fw, function () {
     AssetRegistry.prototype = {
         update: function (toc) {
             for (var resourceId in toc.assets) {
-                var asset = this.getAsset(resourceId);
+                var asset = this.getAssetByResourceId(resourceId);
 
                 if (!asset) {
                     // Create assets for every entry in TOC and add to AssetCache
-                    asset = new pc.fw.Asset(resourceId, toc.assets[resourceId], this._prefix);
+                    var assetData = toc.assets[resourceId];
+                    asset = new pc.asset.Asset(resourceId, assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
                     this.addAsset(resourceId, asset);
 
                     // Register hashes with the resource loader
@@ -39,16 +44,20 @@ pc.extend(pc.fw, function () {
 
         all: function () {
             return Object.keys(this._cache).map(function (resourceId) {
-                return this.getAsset(resourceId);
+                return this.getAssetByResourceId(resourceId);
             }, this);
         },
 
         addAsset: function (resourceId, asset) {
             this._cache[resourceId] = asset;
-            this._names[asset.name] = resourceId;
+            this._names[asset.name] = resourceId; // note, this overwrites any previous asset with same name
         },
 
-        getAsset: function (resourceId) {
+        getAsset: function (name) {
+            return this.getAssetByName(name);
+        },
+
+        getAssetByResourceId: function (resourceId) {
             return this._cache[resourceId];
         },
 
@@ -58,7 +67,7 @@ pc.extend(pc.fw, function () {
                 return this._cache[id];
             } else {
                 return null;
-            }            
+            }
         },
 
         load: function (assets, results, options) {
@@ -75,11 +84,17 @@ pc.extend(pc.fw, function () {
             var requests = []
 
             assets.forEach(function (asset, index) {
+                var existing = this.getAsset(asset.resourceId);
+                if (!existing) {
+                    // If the asset isn't in the registry then add it.
+                    this.addAsset(asset.resourceId, asset);
+                }
+
                 switch(asset.type) {
-                    case pc.fw.ASSET_TYPE_MODEL:
+                    case pc.asset.ASSET_TYPE_MODEL:
                         requests.push(this._createModelRequest(asset));
                         break;
-                    case pc.fw.ASSET_TYPE_TEXTURE:
+                    case pc.asset.ASSET_TYPE_TEXTURE:
                         requests.push(this._createTextureRequest(asset, results[index]));
                         break;
                     default: {

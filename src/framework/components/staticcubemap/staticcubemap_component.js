@@ -26,7 +26,7 @@ pc.extend(pc.fw, function () {
                 this.cubemap = null;
 
                 if (guid) {
-                    assets[index] = this.system.context.assets.getAsset(guid);
+                    assets[index] = this.system.context.assets.getAssetByResourceId(guid);
                     
                     this.assets = assets;
 

@@ -361,7 +361,7 @@ pc.extend(pc.resources, function () {
     };
 
     ModelResourceHandler.prototype._loadTextureV2 = function(textureId) {
-        var asset = this._assets.getAsset(textureId);
+        var asset = this._assets.getAssetByResourceId(textureId);
         if (!asset) {
             return null;
         }
@@ -408,7 +408,7 @@ pc.extend(pc.resources, function () {
     ModelResourceHandler.prototype._loadMaterialV2 = function(materialId) {
         var material = new pc.scene.PhongMaterial();
         
-        var asset = this._assets.getAsset(materialId);
+        var asset = this._assets.getAssetByResourceId(materialId);
         if (asset) {
             var materialData = asset.data;
             this._updatePhongMaterial(material, asset.data);
