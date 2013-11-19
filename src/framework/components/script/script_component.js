@@ -41,13 +41,35 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetScripts: function(name, oldValue, newValue) {
-            var scripts = newValue;
-            var urls = scripts.map(function (s) {
-                return s.url;
-            });
-
+        onSetScripts: function(name, oldValue, newValue) {            
             if (!this.system._inTools || this.runInTools) {
+                var onlyUpdateAttributes = true;
+                if (oldValue.length !== newValue.length) {
+                    onlyUpdateAttributes = false;
+                } else {
+                    var i; len = newValue.length;
+                    for (i=0; i<len; i++) {
+                        if (oldValue[i].url !== newValue[i].url) {
+                            onlyUpdateAttributes = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (onlyUpdateAttributes) {
+                    for (var key in this.instances) {
+                        if (this.instances.hasOwnProperty(key)) {
+                            this.system._createAccessors(this.entity, this.instances[key]);
+                        }
+                    }
+                    return;
+                }
+
+                var scripts = newValue;
+                var urls = scripts.map(function (s) {
+                    return s.url;
+                });
+
                 // Load and register new scripts and instances
                 var requests = urls.map(function (url) {
                     return new pc.resources.ScriptRequest(url);
@@ -66,9 +88,6 @@ pc.extend(pc.fw, function () {
                             if (!this.entity.script.instances[ScriptType._pcScriptName]) { 
                                 var instance = new ScriptType(this.entity);
                                 this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
-                            } else {
-                                // the instance already exists so update its script attribute values
-                               this.system._createAccessors(this.entity, this.entity.script.instances[ScriptType._pcScriptName]); 
                             }
                         }
                     }, this);
