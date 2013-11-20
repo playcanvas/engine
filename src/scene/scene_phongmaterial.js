@@ -64,6 +64,8 @@ pc.extend(pc.scene, function () {
         this.specular = pc.math.vec3.create(0, 0, 0);
         this.specularMap = null;
         this.specularMapTransform = null;
+        this.specularFactorMap = null;
+        this.specularFactorMapTransform = null;
         this.shininess = 25;
         this.glossMap = null;
         this.glossMapTransform = null;
@@ -134,6 +136,13 @@ pc.extend(pc.scene, function () {
             }
         }
 
+        // Set an appropriate blend mode based on opacity of material
+        if (this.opacityMap || this.opacity < 1) {
+            this.blendType = pc.scene.BLEND_NORMAL;
+        } else {
+            this.blendType = pc.scene.BLEND_NONE;
+        }
+
         this.update();
     };
 
@@ -158,6 +167,13 @@ pc.extend(pc.scene, function () {
             }
         } else {
             this.setParameter('material_specular', this.specular);
+        }
+
+        if (this.specularFactorMap) {
+            this.setParameter('texture_specularFactorMap', this.specularFactorMap);
+            if (this.specularFactorMapTransform) {
+                this.setParameter('texture_specularFactorMapTransform', this.specularFactorMapTransform);
+            }
         }
 
         if (this.glossMap) {
