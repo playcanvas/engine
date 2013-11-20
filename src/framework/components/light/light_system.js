@@ -182,10 +182,18 @@ pc.extend(pc.fw, function () {
         },
 
         cloneComponent: function (entity, clone) {
-            var data = {};
-            if (entity.model) {
-                data.model = entity.model.clone();
-            }
+            // create new data block for clone
+            var data = {
+                type: entity.light.type,
+                enable: entity.light.enable,
+                color: new pc.Color(entity.light.color),
+                intensity: entity.light.intensity,
+                range: entity.light.range,
+                innerConeAngle: entity.light.innerConeAngle,
+                outerConeAngle: entity.light.outerConeAngle,
+                castShadows: entity.light.castShadows,
+                shadowResolution: entity.light.shadowResolution
+            };
 
             this.addComponent(clone, data);
         },
@@ -214,11 +222,11 @@ pc.extend(pc.fw, function () {
     * Light implementations
     */
 
-    LightComponentSystemImplementation = function (system) {
+    LightComponentImplementation = function (system) {
         this.system = system;
     };
 
-    LightComponentSystemImplementation.prototype = {
+    LightComponentImplementation.prototype = {
         initialize: function (component, data) {
             var node = this._createLightNode(data);
             this._createDebugShape(component, data, node);
@@ -287,10 +295,10 @@ pc.extend(pc.fw, function () {
     */
 
     DirectionalLightImplementation = function (system) {};
-    DirectionalLightImplementation = pc.inherits(DirectionalLightImplementation, LightComponentSystemImplementation);
+    DirectionalLightImplementation = pc.inherits(DirectionalLightImplementation, LightComponentImplementation);
     DirectionalLightImplementation.prototype = pc.extend(DirectionalLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LightType.DIRECTIONAL;
+            return pc.scene.LIGHTTYPE_DIRECTIONAL;
         },
 
         _createDebugMesh: function () {
@@ -356,10 +364,10 @@ pc.extend(pc.fw, function () {
     */
 
     PointLightImplementation = function (system) {};
-    PointLightImplementation = pc.inherits(PointLightImplementation, LightComponentSystemImplementation);
+    PointLightImplementation = pc.inherits(PointLightImplementation, LightComponentImplementation);
     PointLightImplementation.prototype = pc.extend(PointLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LightType.POINT;
+            return pc.scene.LIGHTTYPE_POINT;
         },
 
         _createDebugMesh: function () {
@@ -388,10 +396,10 @@ pc.extend(pc.fw, function () {
     */
 
     SpotLightImplementation = function (system) {};
-    SpotLightImplementation = pc.inherits(SpotLightImplementation, LightComponentSystemImplementation);
+    SpotLightImplementation = pc.inherits(SpotLightImplementation, LightComponentImplementation);
     SpotLightImplementation.prototype = pc.extend(SpotLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LightType.SPOT;
+            return pc.scene.LIGHTTYPE_SPOT;
         },
 
         _createDebugMesh: function () {

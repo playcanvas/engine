@@ -15,18 +15,38 @@ pc.scene = {
     LAYER_HUD: 0,
     LAYER_GIZMO: 1,
     LAYER_FX: 2,
-    LAYER_WORLD: 3
+    LAYER_WORLD: 3,
+
+    FOG_NONE: 'none',
+    FOG_LINEAR: 'linear',
+    FOG_EXP2: 'exp2'
 };
 
 pc.extend(pc.scene, function () {
 
     /**
      * @name pc.scene.Scene
-     * @class A scene.
+     * @class A scene is a container for models, lights and cameras. Scenes are rendered via a renderer.
+     * PlayCanvas currently only supports a single renderer: the forward renderer (pc.scene.ForwardRenderer).
+     * @constructor Creates a new scene.
+     * @property {String} fog The type of fog used by the scene (see pc.scene.FOG_).
+     * @property {pc.Color} fogColor The color of the fog, in enabled.
+     * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
+     * only valid if the fog property is set to pc.scene.FOG_LINEAR.
+     * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This 
+     * property is only valid if the fog property is set to pc.scene.FOG_LINEAR.
+     * @property {Number} fogDensity The density of the fog. This property is only valid if the fog property
+     * is set to pc.scene.FOG_EXP2.
      */
     var Scene = function Scene() {
         this.drawCalls = [];     // All mesh instances and commands
         this.shadowCasters = []; // All mesh instances that cast shadows
+
+        this.fog = pc.scene.FOG_NONE;
+        this.fogColor = new pc.Color(0, 0, 0);
+        this.fogStart = 1;
+        this.fogEnd = 1000;
+        this.fogDensity = 0;
 
         // Models
         this._models = [];
@@ -36,12 +56,52 @@ pc.extend(pc.scene, function () {
         this._globalAmbient = pc.math.vec3.create(0, 0, 0);
         this._globalLights = []; // All currently enabled directionals
         this._localLights = [[], []]; // All currently enabled points and spots
+
+        this.updateShaders = true;
+    };
+
+    Object.defineProperty(Scene.prototype, 'fog', {
+        get: function () {
+            return this._fog;
+        },
+        set: function (type) {
+            if (type !== this._fog) {
+                this._fog = type;
+                this.updateShaders = true;
+            }
+        }
+    });
+
+    // Shaders have to be updated if:
+    // - the fog mode changes
+    // - lights are added or removed
+    Scene.prototype._updateShaders = function (device) {
+        var i;
+        var materials = [];
+        var drawCalls = this.drawCalls;
+        for (i = 0; i < drawCalls.length; i++) {
+            var drawCall = drawCalls[i];
+            if (drawCall.material !== undefined) {
+                if (materials.indexOf(drawCall.material) === -1) {
+                    materials.push(drawCall.material);
+                }
+            }
+        }
+        for (i = 0; i < materials.length; i++) {
+            materials[i].updateShader(device);
+        }
     };
 
     Scene.prototype.getModels = function () {
         return this._models;
     };
 
+    /**
+     * @function
+     * @name pc.scene.Scene#addModel
+     * @description Adds the specified model to the scene.
+     * @author Will Eastcott
+     */
     Scene.prototype.addModel = function (model) {
         var i;
 
@@ -49,6 +109,11 @@ pc.extend(pc.scene, function () {
         var index = this._models.indexOf(model);
         if (index === -1) {
             this._models.push(model);
+
+            var materials = model.getMaterials();
+            for (i = 0; i < materials.length; i++) {
+                materials[i].scene = this;
+            }
 
             // Insert the model's mesh instances into lists ready for rendering
             var meshInstance;
@@ -73,6 +138,12 @@ pc.extend(pc.scene, function () {
         }
     };
 
+    /**
+     * @function
+     * @name pc.scene.Scene#removeModel
+     * @description Removes the specified model from the scene.
+     * @author Will Eastcott
+     */
     Scene.prototype.removeModel = function (model) {
         var i;
 
@@ -80,6 +151,11 @@ pc.extend(pc.scene, function () {
         var index = this._models.indexOf(model);
         if (index !== -1) {
             this._models.splice(index, 1);
+
+            var materials = model.getMaterials();
+            for (i = 0; i < materials.length; i++) {
+                materials[i].scene = null;
+            }
 
             // Remove the model's mesh instances from render queues
             var meshInstance;
@@ -112,12 +188,14 @@ pc.extend(pc.scene, function () {
 
     Scene.prototype.addLight = function (light) {
         this._lights.push(light);
+        this.updateShaders = true;
     };
 
     Scene.prototype.removeLight = function (light) {
         var index = this._lights.indexOf(light);
         if (index !== -1) {
             this._lights.splice(index, 1);
+            this.updateShaders = true;
         }
     };
 

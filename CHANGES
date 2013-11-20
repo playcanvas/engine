@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.129.0
+--------
+* [FIX] Cloning Entities with light components works
+* Added render states to materials
+* [FIX] Trigger volumes no longer deactivate after a period of in-activity
+* [FIX] Fixed crash in Designer when collision component is removed
+
+--------
 v0.128.2
 --------
 * [FIX] Setting linear and angular velocity values on a kinematic rigidbody works again

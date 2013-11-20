@@ -2,8 +2,17 @@ pc.gfx.programlib.phong = {
     generateKey: function (device, options) {
         var key = "phong";
         if (options.skin)                key += "_skin";
-        if (options.fog)                 key += "_fog";
-        if (options.alphaTest)           key += "_atst";
+        switch (options.fog) {
+            case 'none':
+                key += "_fogn";
+                break;
+            case 'linear':
+                key += "_fogl";
+                break;
+            case 'exp2':
+                key += "_foge";
+                break;
+        }
         if (options.numDirs > 0)         key += "_" + options.numDirs + "dir";
         if (options.numPnts > 0)         key += "_" + options.numPnts + "pnt";
         if (options.numSpts > 0)         key += "_" + options.numSpts + "spt";
@@ -266,9 +275,9 @@ pc.gfx.programlib.phong = {
         // Prepare attribute values into the right formats for the vertex shader
         code += "    vec4 position = vec4(vertex_position, 1.0);\n";
         if (lighting || options.cubeMap || options.sphereMap) {
-            code += "    vec3 normal = vertex_normal;\n";
+            code += "    vec4 normal = vec4(vertex_normal, 0.0);\n";
             if (options.normalMap && useTangents) {
-                code += "    vec3 tangent = vertex_tangent.xyz;\n";
+                code += "    vec4 tangent = vec4(vertex_tangent.xyz, 0.0);\n";
             }
         }
         code += "\n";
@@ -276,33 +285,25 @@ pc.gfx.programlib.phong = {
         // Skinning is performed in world space
         if (options.skin) {
             // Skin the necessary vertex attributes
-            code += "    vec4 positionW;\n";
-            code += "    positionW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * position;\n";
-            code += "    positionW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * position;\n";
-            code += "    positionW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * position;\n";
-            code += "    positionW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * position;\n\n";
+            code += "    mat4 model = vertex_boneWeights.x * matrix_pose[int(vertex_boneIndices.x)] +\n";
+            code += "                 vertex_boneWeights.y * matrix_pose[int(vertex_boneIndices.y)] +\n";
+            code += "                 vertex_boneWeights.z * matrix_pose[int(vertex_boneIndices.z)] +\n";
+            code += "                 vertex_boneWeights.w * matrix_pose[int(vertex_boneIndices.w)];\n";
+            code += "    vec4 positionW = model * position;\n";
 
             if (lighting || options.cubeMap || options.sphereMap) {
-                code += "    vec3 normalW;\n";
-                code += "    normalW  = vertex_boneWeights[0] * mat3(matrix_pose[int(vertex_boneIndices[0])]) * normal;\n";
-                code += "    normalW += vertex_boneWeights[1] * mat3(matrix_pose[int(vertex_boneIndices[1])]) * normal;\n";
-                code += "    normalW += vertex_boneWeights[2] * mat3(matrix_pose[int(vertex_boneIndices[2])]) * normal;\n";
-                code += "    normalW += vertex_boneWeights[3] * mat3(matrix_pose[int(vertex_boneIndices[3])]) * normal;\n\n";
+                code += "    vec3 normalW = (model * normal).xyz;\n";
 
                 if (options.normalMap && useTangents) {
-                    code += "    vec3 tangentW;\n";
-                    code += "    tangentW  = vertex_boneWeights[0] * mat3(matrix_pose[int(vertex_boneIndices[0])]) * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[1] * mat3(matrix_pose[int(vertex_boneIndices[1])]) * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[2] * mat3(matrix_pose[int(vertex_boneIndices[2])]) * tangent;\n";
-                    code += "    tangentW += vertex_boneWeights[3] * mat3(matrix_pose[int(vertex_boneIndices[3])]) * tangent;\n\n";
+                    code += "    vec3 tangentW = (model * tangent).xyz;\n";
                 }
             }
         } else {
             code += "    vec4 positionW = matrix_model * position;\n";
             if (lighting || options.cubeMap || options.sphereMap) {
-                code += "    vec3 normalW = matrix_normal * normal;\n";
+                code += "    vec3 normalW = matrix_normal * normal.xyz;\n";
                 if (options.normalMap && useTangents) {
-                    code += "    vec3 tangentW = matrix_normal * tangent;\n";
+                    code += "    vec3 tangentW = matrix_normal * tangent.xyz;\n";
                 }
             }
             code += "\n";
@@ -538,12 +539,15 @@ pc.gfx.programlib.phong = {
                 code += "uniform sampler2D light" + i + "_shadowMap;\n";
             }
         }
-        if (options.fog) {
-            code += getSnippet(device, 'fs_fog_decl');
+        switch (options.fog) {
+            case 'linear':
+                code += getSnippet(device, 'fs_fog_linear_decl');
+                break;
+            case 'exp2':
+                code += getSnippet(device, 'fs_fog_exp2_decl');
+                break;
         }
-        if (options.alphaTest) {
-            code += getSnippet(device, 'fs_alpha_test_decl');
-        }
+        code += getSnippet(device, 'fs_alpha_test_decl');
 
         if (options.normalMap) {
             code += getSnippet(device, 'fs_normal_map_funcs');
@@ -798,10 +802,6 @@ pc.gfx.programlib.phong = {
         }
         code += "\n";
 
-        if (options.alphaTest) {
-            code += getSnippet(device, 'fs_alpha_test');
-        }
-
         if (lighting || options.lightMap) {
             code += "    vec3 diffuseContrib = vec3(0.0);\n";
         }
@@ -910,12 +910,19 @@ pc.gfx.programlib.phong = {
         code += "    gl_FragColor.rgb += emissive;\n";
         code += "    gl_FragColor.a    = opacity;\n\n";
 
+        code += getSnippet(device, 'fs_alpha_test');
+
         // Make sure all components are between 0 and 1
         code += getSnippet(device, 'fs_clamp');
 
         // Fog
-        if (options.fog) {
-            code += getSnippet(device, 'fs_fog');
+        switch (options.fog) {
+            case 'linear':
+                code += getSnippet(device, 'fs_fog_linear');
+                break;
+            case 'exp2':
+                code += getSnippet(device, 'fs_fog_exp2');
+                break;
         }
 
         code += getSnippet(device, 'common_main_end');
