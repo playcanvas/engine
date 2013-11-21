@@ -33,6 +33,8 @@ pc.extend(pc.scene, function () {
         this._shadowWidth = 1024;
         this._shadowHeight = 1024;
         this._shadowBias = -0.0005;
+
+        this._scene = null;
     };
     LightNode = pc.inherits(LightNode, pc.scene.GraphNode);
 
@@ -262,7 +264,12 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     LightNode.prototype.setEnabled = function (enable) {
-        this._enabled = enable;
+        if (this._enabled !== enable) {
+            this._enabled = enable;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
+        }
     };
 
     /**

@@ -19,6 +19,7 @@ pc.scene = {
 
     FOG_NONE: 'none',
     FOG_LINEAR: 'linear',
+    FOG_EXP: 'exp',
     FOG_EXP2: 'exp2'
 };
 
@@ -187,14 +188,23 @@ pc.extend(pc.scene, function () {
     };
 
     Scene.prototype.addLight = function (light) {
-        this._lights.push(light);
-        this.updateShaders = true;
+        var index = this._lights.indexOf(light);
+        if (index !== -1) {
+            console.warn("pc.scene.Scene#addLight: light is already in the scene");
+        } else {
+            this._lights.push(light);
+            light._scene = this;
+            this.updateShaders = true;
+        }
     };
 
     Scene.prototype.removeLight = function (light) {
         var index = this._lights.indexOf(light);
-        if (index !== -1) {
+        if (index === -1) {
+            console.warn("pc.scene.Scene#removeLight: light is not in the scene");
+        } else {
             this._lights.splice(index, 1);
+            light._scene = null;
             this.updateShaders = true;
         }
     };
