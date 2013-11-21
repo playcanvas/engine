@@ -111,6 +111,7 @@ pc.extend(pc.fw, function () {
         this.on("set_asset", this.onSetAsset, this);
 
         entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+        system.on('beforeremove', this.onBeforeRemove, this);
     };
     CollisionComponent = pc.inherits(CollisionComponent, pc.fw.Component);
     
@@ -157,6 +158,13 @@ pc.extend(pc.fw, function () {
          */
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
             this.system.onTransformChanged(this, position, rotation, scale);
+        },
+
+        onBeforeRemove: function(entity, component) {
+            if (this === component) {
+                entity.off('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
+                this.system.off('beforeremove', this.onBeforeRemove, this);
+            }
         }
     });
 
