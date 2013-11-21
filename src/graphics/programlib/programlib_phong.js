@@ -543,6 +543,9 @@ pc.gfx.programlib.phong = {
             case 'linear':
                 code += getSnippet(device, 'fs_fog_linear_decl');
                 break;
+            case 'exp':
+                code += getSnippet(device, 'fs_fog_exp_decl');
+                break;
             case 'exp2':
                 code += getSnippet(device, 'fs_fog_exp2_decl');
                 break;
@@ -919,6 +922,9 @@ pc.gfx.programlib.phong = {
         switch (options.fog) {
             case 'linear':
                 code += getSnippet(device, 'fs_fog_linear');
+                break;
+            case 'exp':
+                code += getSnippet(device, 'fs_fog_exp');
                 break;
             case 'exp2':
                 code += getSnippet(device, 'fs_fog_exp2');

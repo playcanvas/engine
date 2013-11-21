@@ -605,7 +605,7 @@ pc.extend(pc.scene, function () {
                 if (scene.fog === pc.scene.FOG_LINEAR) {
                     this.fogStartId.setValue(scene.fogStart);
                     this.fogEndId.setValue(scene.fogEnd);
-                } else if (scene.fog === pc.scene.FOG_EXP2) {
+                } else {
                     this.fogDensityId.setValue(scene.fogDensity);
                 }
             }

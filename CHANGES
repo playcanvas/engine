@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.129.1
+--------
+* Removed setFrontFace function.
+* Added EXP fog and fixed the equation for determining EXP2 fog factor.
+* [FIX] Light enabling/disabling works in Designer again.
+
+--------
 v0.129.0
 --------
 * [FIX] Cloning Entities with light components works
