@@ -18,26 +18,26 @@ pc.scene = {
     LAYER_WORLD: 3,
 
     /**
-     * @enum pc.gfx.FOG
-     * @name pc.gfx.FOG_NONE
+     * @enum pc.scene.FOG
+     * @name pc.scene.FOG_NONE
      * @description No fog is applied to the scene.
      */
     FOG_NONE: 'none',
     /**
-     * @enum pc.gfx.FOG
-     * @name pc.gfx.FOG_LINEAR
+     * @enum pc.scene.FOG
+     * @name pc.scene.FOG_LINEAR
      * @description Fog rises linearly from zero to 1 between a start and end depth.
      */
     FOG_LINEAR: 'linear',
     /**
-     * @enum pc.gfx.FOG
-     * @name pc.gfx.FOG_EXP
+     * @enum pc.scene.FOG
+     * @name pc.scene.FOG_EXP
      * @description Fog rises according to an exponential curve controlled by a density value.
      */
     FOG_EXP: 'exp',
     /**
-     * @enum pc.gfx.FOG
-     * @name pc.gfx.FOG_EXP2
+     * @enum pc.scene.FOG
+     * @name pc.scene.FOG_EXP2
      * @description Fog rises according to an exponential curve controlled by a density value.
      */
     FOG_EXP2: 'exp2'

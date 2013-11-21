@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.129.2
+--------
+* [FIX] Depth write state caching.
+* [FIX] Blend function caching now works properly.
+
+--------
 v0.129.1
 --------
 * Removed setFrontFace function.
