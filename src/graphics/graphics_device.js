@@ -648,9 +648,9 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         setDepthWrite: function (writeDepth) {
-            if (this.writeDepth !== writeDepth) {
+            if (this.depthWrite !== writeDepth) {
                 this.gl.depthMask(writeDepth);
-                this.writeDepth = writeDepth;
+                this.depthWrite = writeDepth;
             }
         },
 
