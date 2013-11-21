@@ -714,7 +714,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         setBlendFunction: function (blendSrc, blendDst) {
-            if ((this.blendSrc !== blendSrc) && (this.blendDst !== blendDst)) {
+            if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
                 this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
                 this.blendSrc = blendSrc;
                 this.blendDst = blendDst;
