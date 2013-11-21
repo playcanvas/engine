@@ -254,19 +254,6 @@ pc.gfx = {
     FILTER_LINEAR_MIPMAP_LINEAR: 5,
 
     /**
-     * @enum pc.gfx.FRONTFACE
-     * @name pc.gfx.FRONTFACE_CW
-     * @description Front facing polygons have a clockwise vertex winding.
-     */
-    FRONTFACE_CW: 0,
-    /**
-     * @enum pc.gfx.FRONTFACE
-     * @name pc.gfx.FRONTFACE_CCW
-     * @description Front facing polygons have an counter-clockwise vertex winding.
-     */
-    FRONTFACE_CCW: 1,
-
-    /**
      * @enum pc.gfx.INDEXFORMAT
      * @name pc.gfx.INDEXFORMAT_UINT8
      * @description 8-bit unsigned vertex indices.
