@@ -289,7 +289,7 @@ pc.extend(pc.fw, function () {
                                 set: function (value) {
                                     var oldValue = attribute.value;
                                     attribute.value = value;
-                                    _convertAttributeValue(attribute);
+                                    self._convertAttributeValue(attribute);
                                     //instance.instance.fire("set", attribute.name, oldValue, value);
                                 },
                                 // allow the propery to be redefined in case we have updated attributes
