@@ -726,11 +726,11 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.Device#setBlendEquation
          * @author Will Eastcott
          */
-        setBlendEquation: function (blendEq) {
-            if (this.blendEq !== blendEq) {
+        setBlendEquation: function (blendEquation) {
+            if (this.blendEquation !== blendEquation) {
                 var gl = this.gl;
-                gl.blendEquation(this.glBlendEquation[blendEq]);
-                this.blendEq !== blendEq;
+                gl.blendEquation(this.glBlendEquation[blendEquation]);
+                this.blendEquation = blendEquation;
             }
         },
 

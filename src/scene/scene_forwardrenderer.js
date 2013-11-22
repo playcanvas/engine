@@ -130,7 +130,7 @@ pc.extend(pc.scene, function () {
         } else {
             shadowBuffer = shadowCam.getRenderTarget();
             if ((shadowBuffer.width !== light._shadowWidth) || (shadowBuffer.height !== light._shadowHeight)) {
-                shadowBuffer = createShadowMap(device, this._shadowWidth, this._shadowHeight);
+                shadowBuffer = createShadowMap(device, light._shadowWidth, light._shadowHeight);
                 shadowCam.setRenderTarget(shadowBuffer);
             }
         }
@@ -553,8 +553,12 @@ pc.extend(pc.scene, function () {
 
                     this.setCamera(shadowCam);
 
-                    var oldBlending = device.getBlending();
                     device.setBlending(false);
+                    device.setColorWrite(true, true, true, true);
+                    device.setCullMode(pc.gfx.CULLFACE_BACK);
+                    device.setDepthWrite(true);
+                    device.setDepthTest(true);
+
                     if (device.extDepthTexture) {
                         device.setColorWrite(false, false, false, false);
                     }
@@ -579,12 +583,8 @@ pc.extend(pc.scene, function () {
 
                         device.setVertexBuffer(mesh.vertexBuffer, 0);
                         device.setIndexBuffer(mesh.indexBuffer[style]);
-                        device.draw(mesh.primitive[style]);
-                    }
 
-                    device.setBlending(oldBlending);
-                    if (device.extDepthTexture) {
-                        device.setColorWrite(true, true, true, true);
+                        device.draw(mesh.primitive[style]);
                     }
                 }
             }
