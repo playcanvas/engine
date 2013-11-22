@@ -1,7 +1,7 @@
 pc.extend(pc.fw, function () {
     var ScriptComponentData = function () {
         // serialized
-        this.urls = [];
+        this.scripts = [];
 
         // not serialized
         this.instances = {};

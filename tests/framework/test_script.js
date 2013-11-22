@@ -41,7 +41,7 @@ test("addComponent: no data", function () {
         
         var c = sc.addComponent(e);
         ok(c);
-        equal(c.urls.length, 0);
+        equal(c.scripts.length, 0);
         
     });    
 });
@@ -51,7 +51,7 @@ asyncTest("send() - send a message, check its return value", function () {
 
     var e = new pc.fw.Entity();
     var c = sc.addComponent(e);
-    e.script.urls = ['script.js'];
+    e.script.scripts = [{ url: 'script.js'}];
     var count = 0;
     setTimeout(function () {
         var r = e.script.send("test_script", "sum", 1, 2);    
@@ -69,7 +69,7 @@ asyncTest("broadcast() - send many messages, test they were received", function 
     for(i = 0; i < length; ++i) {
         entities[i] = new pc.fw.Entity();
         comps[i] = sc.addComponent(entities[i]);
-        entities[i].script.urls = ['script.js'];
+        entities[i].script.scripts = [{url: 'script.js'}];
     }
 
     var count = 0;
@@ -91,7 +91,9 @@ asyncTest("update event registered", function () {
     var sc = new pc.fw.ScriptComponentSystem(context);
 
     sc.addComponent(e, {
-        urls: ['script.js']
+        scripts: [{
+            url: 'script.js'
+        }]
     });
 
     setTimeout(function () {
@@ -109,7 +111,9 @@ asyncTest("update event unregistered on remove", function () {
 
     var sc = new pc.fw.ScriptComponentSystem(context);
     sc.addComponent(e, {
-        urls: ['script.js']
+        scripts: [{
+            url: 'script.js'
+        }]
     });
 
     setTimeout(function () {
@@ -131,14 +135,18 @@ asyncTest("Correct event is unregistered with multiple instances.", function () 
     var e1 = new pc.fw.Entity();
     e1.setName('e1');
     sc.addComponent(e1, {
-        urls: ['script.js']
+        scripts: [{
+            url: 'script.js'
+        }]
     });
     context.root.addChild(e1);
 
     var e2 = new pc.fw.Entity();
     e2.setName('e2');
     sc.addComponent(e2, {
-        urls: ['script.js']
+        scripts: [{
+            url: 'script.js'
+        }]
     });
     context.root.addChild(e2);
     
@@ -159,7 +167,9 @@ asyncTest("update event called with correct this", 1, function () {
     var sc = new pc.fw.ScriptComponentSystem(context);
 
     sc.addComponent(e, {
-        urls: ['script.js']
+        scripts: [{
+            url: 'script.js'
+        }]
     });
 
     setTimeout(function () {
@@ -177,7 +187,9 @@ test("addComponent, removeComponent", function () {
     var sc = new pc.fw.ScriptComponentSystem(context);
 
     sc.addComponent(e, {
-        urls: ['script.js']
+        scripts: [{
+            url: 'script.js'
+        }]
     });
 
     sc.removeComponent(e);
@@ -197,18 +209,24 @@ test("addComponent, removeComponent, addComponent", function () {
     var sc = new pc.fw.ScriptComponentSystem(context);
 
     sc.addComponent(e, {
-        urls: ['script.js']
+        scripts: [{
+            url: 'script.js'
+        }]
     });
 
     setTimeout(function () {
 
         sc.removeComponent(e);
         sc.addComponent(e, {
-            urls: ['script.js']
+            scripts: [{
+                url: 'script.js'
+            }]
         });
         sc.removeComponent(e);
         sc.addComponent(e, {
-            urls: ['script.js']
+            scripts: [{
+                url: 'script.js'
+            }]
         });
 
         setTimeout(function () {
@@ -220,3 +238,91 @@ test("addComponent, removeComponent, addComponent", function () {
     stop();
 });
 
+
+/*
+test("Scripts Initialize called in correct order", function () {
+    window.script = {};
+    window.script.order = [];
+    window.script.a = false;
+    window.script.b = false;
+
+    var e1 = new pc.fw.Entity();
+    var e2 = new pc.fw.Entity();
+
+    // e1.setRequest({});
+    // e2.setRequest({});
+
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e1, {
+        scripts: [{
+            url: 'scripts/a.js'
+        }, {
+            url: 'scripts/b.js'
+        }]
+    });
+
+    sc.addComponent(e2, {
+        scripts: [{
+            url: 'scripts/b.js'
+        }, {
+            url: 'scripts/a.js'
+        }]
+    });
+
+    setTimeout(function () {
+        //sc.onInitialize(e1);
+
+        equal(window.script.order[0], "a");
+        equal(window.script.order[1], "a");
+        equal(window.script.order[2], "b");
+        equal(window.script.order[3], "b");
+        delete window.script;
+        start();
+    }, 1000);
+    
+    stop();
+});
+
+
+test("Scripts Update in correct order", function () {
+    window.script = {};
+    window.script.order = [];
+    window.script.a = false;
+    window.script.b = false;
+
+    var e1 = new pc.fw.Entity();
+    var e2 = new pc.fw.Entity();
+
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e1, {
+        scripts: [{
+            url: 'scripts/a.js'
+        }, {
+            url: 'scripts/b.js'
+        }]
+    });
+
+    sc.addComponent(e2, {
+        scripts: [{
+            url: 'scripts/b.js'
+        }, {
+            url: 'scripts/a.js'
+        }]
+    });
+
+    setTimeout(function () {
+        sc.onUpdate(1/60);    
+
+        equal(window.script.order[0], "a");
+        equal(window.script.order[1], "a");
+        equal(window.script.order[2], "b");
+        equal(window.script.order[3], "b");
+        delete window.script;
+        start();
+    }, 1000);
+    
+    stop();
+});
+*/
