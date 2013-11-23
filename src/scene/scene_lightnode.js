@@ -7,7 +7,7 @@ pc.extend(pc.scene, function () {
     var LightNode = function LightNode() {
         // LightNode properties (defaults)
         this._type = pc.scene.LIGHTTYPE_DIRECTIONAL;
-        this._color = pc.math.vec3.create(0.8, 0.8, 0.8);
+        this._color = new pc.Color(0.8, 0.8, 0.8);
         this._intensity = 1;
         this._castShadows = false;
         this._enabled = false;
@@ -22,16 +22,15 @@ pc.extend(pc.scene, function () {
 
         // Cache of light property data in a format more friendly for shader uniforms
         this._finalColor = pc.math.vec3.create(0.8, 0.8, 0.8);
-        this._position = [];
-        this._direction = [];
+        this._position = pc.math.vec3.create(0, 0, 0);
+        this._direction = pc.math.vec3.create(0, 0, 0);
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
         // Shadow mapping resources
         this._shadowCamera = null;
         this._shadowMatrix = pc.math.mat4.create();
-        this._shadowWidth = 1024;
-        this._shadowHeight = 1024;
+        this._shadowResolution = 1024;
         this._shadowBias = -0.0005;
 
         this._scene = null;
@@ -64,6 +63,10 @@ pc.extend(pc.scene, function () {
         // Spot properties
         clone.setInnerConeAngle(this.getInnerConeAngle());
         clone.setOuterConeAngle(this.getOuterConeAngle());
+
+        // Shadow properties
+        clone.setShadowBias(this.getShadowBias());
+        clone.setShadowResolution(this.getShadowResolution());
     };
 
     /**
@@ -120,7 +123,7 @@ pc.extend(pc.scene, function () {
      * @description Queries the diffuse color of the light. The PlayCanvas 'phong' shader uses this
      * value by multiplying it by the diffuse color of a mesh's material and adding it to
      * the total light contribution.
-     * @returns {Array} The diffuse color of the light, represented by a 3 dimensional array (RGB components ranging 0..1).
+     * @returns {pc.Color} The diffuse color of the light (RGB components ranging 0..1).
      * @author Will Eastcott
      */
     LightNode.prototype.getColor = function () {
@@ -175,6 +178,30 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.LightNode#getShadowBias
+     * @description Queries the shadow mapping depth bias for this light. Note
+     * that this function is only valid for directional lights and spotlights.
+     * @returns {Number} The shadow mapping depth bias.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.getShadowBias = function () {
+        return this._shadowBias;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.LightNode#getShadowResolution
+     * @description Queries the shadow map pixel resolution for this light. Note
+     * that this function is only valid for directional lights and spotlights.
+     * @returns {Number} The shadow map resolution.
+     * @author Will Eastcott
+     */
+    LightNode.prototype.getShadowResolution = function () {
+        return this._shadowResolution;
+    };
+
+    /**
+     * @function
      * @name pc.scene.LightNode#getType
      * @description Queries the type of the light. The light can be a directional light,
      * a point light or a spotlight.
@@ -209,15 +236,6 @@ pc.extend(pc.scene, function () {
         this._attenuationStart = radius;
     };
 
-    LightNode.prototype.setShadowBias = function (bias) {
-        this._shadowBias = bias;
-    };
-
-    LightNode.prototype.setShadowResolution = function (width, height) {
-        this._shadowWidth = width;
-        this._shadowHeight = height;
-    };
-
     /**
      * @function
      * @name pc.scene.LightNode#setCastShadows
@@ -234,7 +252,7 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.LightNode#setColor
      * @description Sets the RGB color of the light. RGB components should be
      * specified in the range 0 to 1.
-     * @param {Array} color The RGB color of the light.
+     * @param {pc.Color} color The RGB color of the light.
      * @author Will Eastcott
      */
     /**
@@ -248,12 +266,22 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     LightNode.prototype.setColor = function () {
+        var r, g, b;
         if (arguments.length === 1) {
-            pc.math.vec3.set(this._color, arguments[0][0], arguments[0][1], arguments[0][2]); 
+            r = arguments[0].r;
+            g = arguments[0].g;
+            b = arguments[0].b;
         } else if (arguments.length === 3) {
-            pc.math.vec3.set(this._color, arguments[0], arguments[1], arguments[2]); 
+            r = arguments[0];
+            g = arguments[1];
+            b = arguments[2];
         }
-        pc.math.vec3.scale(this._color, this._intensity, this._finalColor);
+
+        this._color.set(r, g, b);
+
+        // Update final color
+        var i = this._intensity;
+        pc.math.vec3.set(this._finalColor, r * i, g * i, b * i);
     };
 
     /**
@@ -297,7 +325,14 @@ pc.extend(pc.scene, function () {
      */
     LightNode.prototype.setIntensity = function (intensity) {
         this._intensity = intensity;
-        pc.math.vec3.scale(this._color, intensity, this._finalColor);
+
+        // Update final color
+        var c = this._color;
+        var r = c.r;
+        var g = c.g;
+        var b = c.b;
+        var i = this._intensity;
+        pc.math.vec3.set(this._finalColor, r * i, g * i, b * i);
     };
 
     /**
@@ -316,9 +351,34 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
+     * @name pc.scene.LightNode#setShadowBias
+     * @description Sets the depth bias for tuning the appearance of the shadow
+     * mapping generated by this light.
+     * @param {Number} bias The shadow mapping depth bias (defaults to -0.0005)
+     * @author Will Eastcott
+     */
+    LightNode.prototype.setShadowBias = function (bias) {
+        this._shadowBias = bias;
+    };
+
+    /**
+     * @function
+     * @name pc.scene.LightNode#setShadowResolution
+     * @description Sets the pixel width and height of the shadow map associated with this
+     * light.
+     * @param {Number} resolution The pixel width and height of the shadow map
+     * @author Will Eastcott
+     */
+    LightNode.prototype.setShadowResolution = function (resolution) {
+        this._shadowResolution = resolution;
+    };
+
+    /**
+     * @function
      * @name pc.scene.LightNode#setType
-     * @description
-     * @param {pc.scene.LightType} type
+     * @description Sets the type of the light. Avialable lights types are directional,
+     * point and spot.
+     * @param {Number} type The light type (see pc.scene.LIGHTTYPE).
      * @author Will Eastcott
      */
     LightNode.prototype.setType = function (type) {

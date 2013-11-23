@@ -15,7 +15,7 @@ pc.extend(pc, (function () {
     * @param {pc.Color|pc.math.vec4|pc.math.vec3|String} color An existing color value. String value should be in the form "#FFFFFF"
     */
     var Color = function (r, g, b, a) {
-        this.c = [r,g,b,a];
+        this.c = [r, g, b, a];
 
         if (arguments.length >= 3) {
             this.set(r, g, b, a);
