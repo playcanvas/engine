@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.131.1
+--------
+* [FIX] Allow PlayCanvas to run in IE11 by avoiding UNSIGNED_BYTE data with vertexAttribPointer if it's not supported.
+
+--------
 v0.131.0
 --------
 * Integrated fog settings with the Designer
