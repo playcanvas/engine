@@ -38,30 +38,30 @@ pc.gfx.programlib = {
                 code += '    gl_FragColor = uColor;\n';
                 break;
 
+
             case 'fs_fog_linear_decl':
+            case 'fs_fog_exp_decl':
+            case 'fs_fog_exp2_decl':
                 code += 'uniform vec3 fog_color;\n';
-                code += 'uniform float fog_start;\n';
-                code += 'uniform float fog_end;\n\n';
+                if (id === 'fs_fog_linear_decl') {
+                    code += 'uniform float fog_start;\n';
+                    code += 'uniform float fog_end;\n\n';
+                } else {
+                    code += 'uniform float fog_density;\n\n';
+                }
                 break;
 
             case 'fs_fog_linear':
-                // Calculate fog (equivalent to glFogi(GL_FOG_MODE, GL_EXP2);
-                code += '    float depth = gl_FragCoord.z / gl_FragCoord.w;\n';
-                code += '    float fogFactor = (fog_end - depth) / (fog_end - fog_start);\n';
-                code += '    fogFactor = clamp(fogFactor, 0.0, 1.0);\n';
-                code += '    gl_FragColor.rgb = mix(fog_color, gl_FragColor.rgb, fogFactor);\n';
-                break;
-
-            case 'fs_fog_exp2_decl':
-                code += 'uniform vec3 fog_color;\n';
-                code += 'uniform float fog_density;\n\n';
-                break;
-
+            case 'fs_fog_exp':
             case 'fs_fog_exp2':
-                // Calculate fog (equivalent to glFogi(GL_FOG_MODE, GL_EXP2);
-                code += '    const float LOG2 = 1.442695;\n';
                 code += '    float depth = gl_FragCoord.z / gl_FragCoord.w;\n';
-                code += '    float fogFactor = exp2(-fog_density * fog_density * depth * depth * LOG2);\n';
+                if (id === 'fs_fog_linear') {
+                    code += '    float fogFactor = (fog_end - depth) / (fog_end - fog_start);\n';
+                } else if (id === 'fs_fog_exp') {
+                    code += '    float fogFactor = exp(-depth * fog_density);\n';
+                } else {
+                    code += '    float fogFactor = exp(-depth * depth * fog_density * fog_density);\n';
+                }
                 code += '    fogFactor = clamp(fogFactor, 0.0, 1.0);\n';
                 code += '    gl_FragColor.rgb = mix(fog_color, gl_FragColor.rgb, fogFactor);\n';
                 break;

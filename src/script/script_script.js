@@ -50,8 +50,55 @@ pc.script = (function () {
          * }
          */
         create: function (name, callback) {
+            if (typeof(callback) === 'undefined') {
+                callback = attributes;
+            }
             //_loader.add(name, callback);
             this.fire("created", name, callback);
+        },
+
+        /**
+        * @function
+        * @name pc.script.attribute
+        * @description Creates a script attribute for the current script. The script attribute can be accessed
+        * inside the script instance like so 'this.attributeName' or outside a script instance like so 'entity.script.attributeName'.
+        * Script attributes can be edited from the Attribute Editor of the designer like normal Components.
+        * @param {string} name The name of the attribute
+        * @param {string} type The type of the attribute. Can be one of the following: 'number', 'string', 'boolean', 'asset', 'rgb', 'rgba', 'vector', 'enumeration'
+        * @param {Object} defaultValue The default value of the attribute
+        * @param {Object} options Optional parameters for the attribute. Valid values are:
+        * <ul>
+        *   <li>{Number} min: The minimum value of the attribute</li>
+        *   <li>{Number} max: The maximum value of the attribute</li>
+        *   <li>{Number} step: The step that will be used when changing the attribute value in the designer</li>
+        *   <li>{Array} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
+        * </ul> 
+        * @example
+        * pc.script.attribute('speed', 'number', 5);
+        * pc.script.attribute('message', 'string', "My message");
+        * pc.script.attribute('enemyPosition', 'vector', [1,0,0]);
+        * pc.script.attribute('spellType', 'enumeration', 0, {
+        *
+        * pc.script.create( function (context) {
+        *     enumerations: [{
+        *        name: "Fire",
+        *        value: 0
+        *     }, {
+        *        name: "Ice",
+        *        value: 1
+        *     }]
+        *  });
+        *
+        *  var Scriptable = function (entity) {
+        *      // store entity
+        *      this.entity = entity;              
+        *  };
+        *  
+        *  return Scriptable;
+        * }
+        */
+        attribute: function (name, type, defaultValue, options) {
+            // only works when parsing the script...
         },
         
         /**

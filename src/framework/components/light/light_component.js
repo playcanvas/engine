@@ -73,7 +73,7 @@ pc.extend(pc.fw, function () {
 
         onSetColor: function (name, oldValue, newValue) {
             var light = this.data.model.lights[0];
-            light.setColor(newValue.c);
+            light.setColor(newValue);
         },
 
         onSetEnable: function (name, oldValue, newValue) {
@@ -89,7 +89,7 @@ pc.extend(pc.fw, function () {
         onSetShadowResolution: function (name, oldValue, newValue) {
             if (this.data.type === 'directional' || this.data.type === 'spot') {
                 var light = this.data.model.lights[0];
-                light.setShadowResolution(newValue, newValue);
+                light.setShadowResolution(newValue);
             }
         },
 

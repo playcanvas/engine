@@ -17,8 +17,29 @@ pc.scene = {
     LAYER_FX: 2,
     LAYER_WORLD: 3,
 
+    /**
+     * @enum pc.scene.FOG
+     * @name pc.scene.FOG_NONE
+     * @description No fog is applied to the scene.
+     */
     FOG_NONE: 'none',
+    /**
+     * @enum pc.scene.FOG
+     * @name pc.scene.FOG_LINEAR
+     * @description Fog rises linearly from zero to 1 between a start and end depth.
+     */
     FOG_LINEAR: 'linear',
+    /**
+     * @enum pc.scene.FOG
+     * @name pc.scene.FOG_EXP
+     * @description Fog rises according to an exponential curve controlled by a density value.
+     */
+    FOG_EXP: 'exp',
+    /**
+     * @enum pc.scene.FOG
+     * @name pc.scene.FOG_EXP2
+     * @description Fog rises according to an exponential curve controlled by a density value.
+     */
     FOG_EXP2: 'exp2'
 };
 
@@ -36,7 +57,7 @@ pc.extend(pc.scene, function () {
      * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This 
      * property is only valid if the fog property is set to pc.scene.FOG_LINEAR.
      * @property {Number} fogDensity The density of the fog. This property is only valid if the fog property
-     * is set to pc.scene.FOG_EXP2.
+     * is set to pc.scene.FOG_EXP or pc.scene.FOG_EXP2.
      */
     var Scene = function Scene() {
         this.drawCalls = [];     // All mesh instances and commands
@@ -187,14 +208,23 @@ pc.extend(pc.scene, function () {
     };
 
     Scene.prototype.addLight = function (light) {
-        this._lights.push(light);
-        this.updateShaders = true;
+        var index = this._lights.indexOf(light);
+        if (index !== -1) {
+            console.warn("pc.scene.Scene#addLight: light is already in the scene");
+        } else {
+            this._lights.push(light);
+            light._scene = this;
+            this.updateShaders = true;
+        }
     };
 
     Scene.prototype.removeLight = function (light) {
         var index = this._lights.indexOf(light);
-        if (index !== -1) {
+        if (index === -1) {
+            console.warn("pc.scene.Scene#removeLight: light is not in the scene");
+        } else {
             this._lights.splice(index, 1);
+            light._scene = null;
             this.updateShaders = true;
         }
     };

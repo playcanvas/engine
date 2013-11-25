@@ -3,6 +3,53 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.131.1
+--------
+* [FIX] Allow PlayCanvas to run in IE11 by avoiding UNSIGNED_BYTE data with vertexAttribPointer if it's not supported.
+
+--------
+v0.131.0
+--------
+* Integrated fog settings with the Designer
+
+--------
+v0.130.3
+--------
+* Updated script component docs
+
+--------
+v0.130.2
+--------
+* Updated script component docs
+
+--------
+v0.130.1
+--------
+* Updated script related documentation
+
+--------
+v0.130.0
+--------
+* Added script attributes support
+* LightNode#setColor now takes a pc.Color instead of a pc.math.vec3
+* Changed camera and light node code to be in object notation
+* [FIX] Changing shadow resolution in Designer works again
+* [FIX] Reflection map handled correctly in PhongMaterial
+
+--------
+v0.129.2
+--------
+* [FIX] Depth write state caching.
+* [FIX] Blend function caching now works properly.
+
+--------
+v0.129.1
+--------
+* Removed setFrontFace function.
+* Added EXP fog and fixed the equation for determining EXP2 fog factor.
+* [FIX] Light enabling/disabling works in Designer again.
+
+--------
 v0.129.0
 --------
 * [FIX] Cloning Entities with light components works

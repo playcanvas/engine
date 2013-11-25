@@ -15,10 +15,10 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.ScriptComponentData;
 
         this.schema = [{
-            name: "urls",
+            name: "scripts",
             displayName: "URLs",
             description: "Attach scripts to this Entity",
-            type: "script_urls",
+            type: "script",
             defaultValue: []
         }, {
             name: 'instances',
@@ -43,7 +43,8 @@ pc.extend(pc.fw, function () {
 
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['runInTools', 'urls'];
+            properties = ['runInTools', 'scripts'];
+
             ScriptComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -52,7 +53,7 @@ pc.extend(pc.fw, function () {
             var src = this.dataStore[entity.getGuid()];
             var data = {
                 runInTools: src.data.runInTools,
-                urls: pc.extend([], src.data.urls)
+                scripts: pc.extend([], src.data.scripts)
             };
             return this.addComponent(clone, data);
         },
@@ -79,6 +80,8 @@ pc.extend(pc.fw, function () {
                     if(data.instances[name].instance.destroy) {
                         data.instances[name].instance.destroy();
                     }
+
+                    delete data.instances[name];
                 }
             }
         },
@@ -224,6 +227,17 @@ pc.extend(pc.fw, function () {
                     for (instanceName in entity.script.instances) {
                         instance = entity.script.instances[instanceName];
 
+                        if (entity.script.scripts) {
+                            this._createAccessors(entity, instance);
+                        }
+
+                        // Make instance accessible from the script component of the Entity
+                        if (entity.script[instanceName]) {
+                            throw Error(pc.string.format("Script with name '{0}' is already attached to Script Component", instanceName));
+                        } else {
+                            entity.script[instanceName] = instance.instance;
+                        }
+
                         // Attach events for update, fixedUpdate and postUpdate methods in script instance
                         if (instance.instance.update) {
                             this.on('update', instance.instance.update, instance.instance);
@@ -252,7 +266,51 @@ pc.extend(pc.fw, function () {
                     this._registerInstances(children[i]);    
                 }
             }    
+        },
+
+        _createAccessors: function (entity, instance) {
+            var self = this;
+            var i;
+            var len = entity.script.scripts.length;
+            var url = instance.url;
+
+            for (i=0; i<len; i++) {
+                var script = entity.script.scripts[i];
+                if (script.url === url) {
+                    var attributes = script.attributes;
+                    if (script.name && attributes) {
+                        attributes.forEach(function (attribute, index) {
+                            self._convertAttributeValue(attribute);
+
+                            Object.defineProperty(instance.instance, attribute.name, {
+                                get: function () {
+                                    return attribute.value;
+                                },
+                                set: function (value) {
+                                    var oldValue = attribute.value;
+                                    attribute.value = value;
+                                    self._convertAttributeValue(attribute);
+                                    //instance.instance.fire("set", attribute.name, oldValue, value);
+                                },
+                                // allow the propery to be redefined in case we have updated attributes
+                                // from the designer
+                                configurable : true
+                            });
+                        }, this);
+                    }
+                    break;
+                }
+            }
+        },
+
+        _convertAttributeValue: function (attribute) {
+            if (attribute.type === 'rgb' || attribute.type === 'rgba') {
+                if (pc.type(attribute.value) === 'array') {
+                    attribute.value = new pc.Color(attribute.value);
+                }
+            }
         }
+
     });
 
     return {

@@ -290,8 +290,8 @@ pc.extend(pc.scene, function () {
             normalMapTransform: !!this.normalMapTransform,
             heightMap: !!this.heightMap,
             heightMapTransform: !!this.heightMapTransform,
-            sphereMap: !!this.sphereMap,
-            cubeMap: !!this.cubeMap,
+            sphereMap: (!!this.reflectionMap) && !this.reflectionMap._cubemap,
+            cubeMap: (!!this.reflectionMap) && this.reflectionMap._cubemap,
             lightMap: !!this.lightMap
         };
         var library = device.getProgramLibrary();

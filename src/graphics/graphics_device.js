@@ -290,6 +290,16 @@ pc.extend(pc.gfx, function () {
         this.attributesInvalidated = true;
 
         this.enabledAttributes = {};
+
+        // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
+        var bufferId = gl.createBuffer();
+        var storage = new ArrayBuffer(16);
+        gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+        gl.bufferData(gl.ARRAY_BUFFER, storage, gl.STATIC_DRAW);
+        gl.getError(); // Clear error flag
+        gl.vertexAttribPointer(0, 4, gl.UNSIGNED_BYTE, false, 4, 0);
+        this.supportsUnsignedByte = (gl.getError() === 0);
+        gl.deleteBuffer(bufferId);
     };
 
     Device.prototype = {
@@ -557,6 +567,16 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#setRenderTarget
+         * @description Sets the specified render target on the device. If null
+         * is passed as a parameter, the back buffer becomes the current target
+         * for all rendering operations.
+         * @param {pc.gfx.RenderTarget} The render target to activate.
+         * @example
+         * // Set a render target to receive all rendering output
+         * device.setRenderTarget(renderTarget);
+         *
+         * // Set the back buffer to receive all rendering output
+         * device.setRenderTarget(null);
          * @author Will Eastcott
          */
         setRenderTarget: function (renderTarget) {
@@ -566,6 +586,11 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#getRenderTarget
+         * @description Queries the currently set render target on the device.
+         * @returns {pc.gfx.RenderTarget} The current render target.
+         * @example
+         * // Get the current render target
+         * var renderTarget = device.getRenderTarget();
          * @author Will Eastcott
          */
         getRenderTarget: function () {
@@ -575,6 +600,11 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#getDepthTest
+         * @description Queries whether depth testing is enabled.
+         * @returns {Boolean} true if depth testing is enabled and false otherwise.
+         * @example
+         * var depthTest = device.getDepthTest();
+         * console.log('Depth testing is ' + depthTest ? 'enabled' : 'disabled');
          * @author Will Eastcott
          */
         getDepthTest: function () {
@@ -584,6 +614,11 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#setDepthTest
+         * @description Enables or disables depth testing of fragments. Once this state
+         * is set, it persists until it is changed. By default, depth testing is enabled.
+         * @param {Boolean} depthTest true to enable depth testing and false otherwise.
+         * @example
+         * device.setDepthTest(true);
          * @author Will Eastcott
          */
         setDepthTest: function (depthTest) {
@@ -601,6 +636,11 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#getDepthWrite
+         * @description Queries whether writes to the depth buffer are enabled.
+         * @returns {Boolean} true if depth writing is enabled and false otherwise.
+         * @example
+         * var depthWrite = device.getDepthWrite();
+         * console.log('Depth writing is ' + depthWrite ? 'enabled' : 'disabled');
          * @author Will Eastcott
          */
         getDepthWrite: function () {
@@ -610,18 +650,33 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#setDepthWrite
+         * @description Enables or disables writes to the depth buffer. Once this state
+         * is set, it persists until it is changed. By default, depth writes are enabled.
+         * @param {Boolean} writeDepth true to enable depth writing and false otherwise.
+         * @example
+         * device.setDepthWrite(true);
          * @author Will Eastcott
          */
         setDepthWrite: function (writeDepth) {
-            if (this.writeDepth !== writeDepth) {
+            if (this.depthWrite !== writeDepth) {
                 this.gl.depthMask(writeDepth);
-                this.writeDepth = writeDepth;
+                this.depthWrite = writeDepth;
             }
         },
 
         /**
          * @function
          * @name pc.gfx.Device#setColorWrite
+         * @description Enables or disables writes to the color buffer. Once this state
+         * is set, it persists until it is changed. By default, color writes are enabled
+         * for all color channels.
+         * @param {Boolean} writeRed true to enable writing  of the red channel and false otherwise.
+         * @param {Boolean} writeGreen true to enable writing  of the green channel and false otherwise.
+         * @param {Boolean} writeBlue true to enable writing  of the blue channel and false otherwise.
+         * @param {Boolean} writeAlpha true to enable writing  of the alpha channel and false otherwise.
+         * @example
+         * // Just write alpha into the frame buffer
+         * device.setColorWrite(false, false, false, true);
          * @author Will Eastcott
          */
         setColorWrite: function (writeRed, writeGreen, writeBlue, writeAlpha) {
@@ -669,7 +724,7 @@ pc.extend(pc.gfx, function () {
          * @author Will Eastcott
          */
         setBlendFunction: function (blendSrc, blendDst) {
-            if ((this.blendSrc !== blendSrc) && (this.blendDst !== blendDst)) {
+            if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
                 this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
                 this.blendSrc = blendSrc;
                 this.blendDst = blendDst;
@@ -681,11 +736,11 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.Device#setBlendEquation
          * @author Will Eastcott
          */
-        setBlendEquation: function (blendEq) {
-            if (this.blendEq !== blendEq) {
+        setBlendEquation: function (blendEquation) {
+            if (this.blendEquation !== blendEquation) {
                 var gl = this.gl;
-                gl.blendEquation(this.glBlendEquation[blendEq]);
-                this.blendEq !== blendEq;
+                gl.blendEquation(this.glBlendEquation[blendEquation]);
+                this.blendEquation = blendEquation;
             }
         },
 
@@ -715,19 +770,6 @@ pc.extend(pc.gfx, function () {
                         break;
                 }
                 this.cullMode = cullMode;
-            }
-        },
-
-        /**
-         * @function
-         * @name pc.gfx.Device#setFrontFace
-         * @author Will Eastcott
-         */
-        setFrontFace: function (winding) {
-            if (this.frontFace !== winding) {
-                var gl = this.gl;
-                gl.frontFace((winding === pc.gfx.FRONTFACE_CW) ? gl.CW : gl.CCW);
-                this.frontFace = winding;
             }
         },
 

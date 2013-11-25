@@ -18,7 +18,7 @@ pc.extend(pc.scene, function () {
         this.blend = false;
         this.blendSrc = pc.gfx.BLENDMODE_ONE;
         this.blendDst = pc.gfx.BLENDMODE_ZERO;
-        this.blendEq = pc.gfx.BLENDEQUATION_ADD;
+        this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
 
         this.cull = pc.gfx.CULLFACE_BACK;
 
@@ -39,17 +39,17 @@ pc.extend(pc.scene, function () {
             if ((!this.blend) &&
                 (this.blendSrc === pc.gfx.BLENDMODE_ONE) && 
                 (this.blendDst === pc.gfx.BLENDMODE_ZERO) &&
-                (this.blendEq === pc.gfx.BLENDEQUATION_ADD)) {
+                (this.blendEquation === pc.gfx.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_NONE;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.gfx.BLENDMODE_SRC_ALPHA) && 
                        (this.blendDst === pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
-                       (this.blendEq === pc.gfx.BLENDEQUATION_ADD)) {
+                       (this.blendEquation === pc.gfx.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_NORMAL;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.gfx.BLENDMODE_ONE) && 
                        (this.blendDst === pc.gfx.BLENDMODE_ONE) &&
-                       (this.blendEq === pc.gfx.BLENDEQUATION_ADD)) {
+                       (this.blendEquation === pc.gfx.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_ADDITIVE;
             } else {
                 return pc.scene.BLEND_NORMAL;
@@ -61,19 +61,19 @@ pc.extend(pc.scene, function () {
                     this.blend = false;
                     this.blendSrc = pc.gfx.BLENDMODE_ONE;
                     this.blendDst = pc.gfx.BLENDMODE_ZERO;
-                    this.blendEq = pc.gfx.BLENDEQUATION_ADD;
+                    this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
                     break;
                 case pc.scene.BLEND_NORMAL:
                     this.blend = true;
                     this.blendSrc = pc.gfx.BLENDMODE_SRC_ALPHA;
                     this.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
-                    this.blendEq = pc.gfx.BLENDEQUATION_ADD;
+                    this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
                     break;
                 case pc.scene.BLEND_ADDITIVE:
                     this.blend = true;
                     this.blendSrc = pc.gfx.BLENDMODE_ONE;
                     this.blendDst = pc.gfx.BLENDMODE_ONE;
-                    this.blendEq = pc.gfx.BLENDEQUATION_ADD;
+                    this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
                     break;
             }
             this._updateMeshInstanceKeys();
