@@ -124,13 +124,13 @@ pc.extend(pc.scene, function () {
 
         if (shadowCam === null) {
             shadowCam = createShadowCamera(device);
-            shadowBuffer = createShadowMap(device, light._shadowWidth, light._shadowHeight);
+            shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
             shadowCam.setRenderTarget(shadowBuffer);
             light._shadowCamera = shadowCam;
         } else {
             shadowBuffer = shadowCam.getRenderTarget();
-            if ((shadowBuffer.width !== light._shadowWidth) || (shadowBuffer.height !== light._shadowHeight)) {
-                shadowBuffer = createShadowMap(device, this._shadowWidth, this._shadowHeight);
+            if ((shadowBuffer.width !== light._shadowResolution) || (shadowBuffer.height !== light._shadowResolution)) {
+                shadowBuffer = createShadowMap(device, light._shadowResolution, light._shadowResolution);
                 shadowCam.setRenderTarget(shadowBuffer);
             }
         }
@@ -275,7 +275,7 @@ pc.extend(pc.scene, function () {
                             directional._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
-                    scope.resolve(light + "_shadowParams").setValue([directional._shadowWidth, directional._shadowHeight, directional._shadowBias]);
+                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._shadowResolution, directional._shadowBias]);
                 }
             }
         },
@@ -332,7 +332,7 @@ pc.extend(pc.scene, function () {
                             spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
-                    scope.resolve(light + "_shadowParams").setValue([spot._shadowWidth, spot._shadowHeight, spot._shadowBias]);
+                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._shadowResolution, spot._shadowBias]);
                 }
             }
         },
@@ -553,8 +553,12 @@ pc.extend(pc.scene, function () {
 
                     this.setCamera(shadowCam);
 
-                    var oldBlending = device.getBlending();
                     device.setBlending(false);
+                    device.setColorWrite(true, true, true, true);
+                    device.setCullMode(pc.gfx.CULLFACE_BACK);
+                    device.setDepthWrite(true);
+                    device.setDepthTest(true);
+
                     if (device.extDepthTexture) {
                         device.setColorWrite(false, false, false, false);
                     }
@@ -579,12 +583,8 @@ pc.extend(pc.scene, function () {
 
                         device.setVertexBuffer(mesh.vertexBuffer, 0);
                         device.setIndexBuffer(mesh.indexBuffer[style]);
-                        device.draw(mesh.primitive[style]);
-                    }
 
-                    device.setBlending(oldBlending);
-                    if (device.extDepthTexture) {
-                        device.setColorWrite(true, true, true, true);
+                        device.draw(mesh.primitive[style]);
                     }
                 }
             }

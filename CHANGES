@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.130.0
+--------
+* Added script attributes support
+* LightNode#setColor now takes a pc.Color instead of a pc.math.vec3
+* Changed camera and light node code to be in object notation
+* [FIX] Changing shadow resolution in Designer works again
+* [FIX] Reflection map handled correctly in PhongMaterial
+
+--------
 v0.129.2
 --------
 * [FIX] Depth write state caching.
