@@ -290,6 +290,16 @@ pc.extend(pc.gfx, function () {
         this.attributesInvalidated = true;
 
         this.enabledAttributes = {};
+
+        // Handle IE11's inability to take UNSIGNED_BYTE as a param for vertexAttribPointer
+        var bufferId = gl.createBuffer();
+        var storage = new ArrayBuffer(16);
+        gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+        gl.bufferData(gl.ARRAY_BUFFER, storage, gl.STATIC_DRAW);
+        gl.getError(); // Clear error flag
+        gl.vertexAttribPointer(0, 4, gl.UNSIGNED_BYTE, false, 4, 0);
+        this.supportsUnsignedByte = (gl.getError() === 0);
+        gl.deleteBuffer(bufferId);
     };
 
     Device.prototype = {
