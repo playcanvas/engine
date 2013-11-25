@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.131.0
+--------
+* Integrated fog settings with the Designer
+
+--------
 v0.130.3
 --------
 * Updated script component docs
