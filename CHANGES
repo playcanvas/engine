@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.130.2
+--------
+* Updated script component docs
+
+--------
 v0.130.1
 --------
 * Updated script related documentation
