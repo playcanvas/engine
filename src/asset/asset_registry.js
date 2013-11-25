@@ -1,5 +1,5 @@
 pc.extend(pc.asset, function () {
-    /*
+    /**
     * @name pc.asset.AssetRegistry
     * @class Container for all assets that are available to this application
     * @constructor Create an instance of an AssetRegistry. 
@@ -27,8 +27,9 @@ pc.extend(pc.asset, function () {
                 if (!asset) {
                     // Create assets for every entry in TOC and add to AssetCache
                     var assetData = toc.assets[resourceId];
-                    asset = new pc.asset.Asset(resourceId, assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
-                    this.addAsset(resourceId, asset);
+                    asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
+                    asset.resourceId = resourceId; // override default resourceId
+                    this.addAsset(asset);
 
                     // Register hashes with the resource loader
                     if (asset.file) {
@@ -42,26 +43,37 @@ pc.extend(pc.asset, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.asset.AssetRegistry#all
+        * @description Return a list of all assets in the registry
+        * @returns [pc.asset.Asset] List of all assets in the registry
+        */
         all: function () {
             return Object.keys(this._cache).map(function (resourceId) {
                 return this.getAssetByResourceId(resourceId);
             }, this);
         },
 
-        addAsset: function (resourceId, asset) {
-            this._cache[resourceId] = asset;
-            this._names[asset.name] = resourceId; // note, this overwrites any previous asset with same name
+        /**
+        * @function
+        * @name pc.asset.AssetRegistry#addAsset
+        * @description Add a new 
+        * @param {pc.asset.Asset} asset The asset to add to the registry
+        */
+        addAsset: function (asset) {
+            this._cache[asset.resourceId] = asset;
+            this._names[asset.name] = asset.resourceId; // note, this overwrites any previous asset with same name
         },
 
+        /**
+        * @function
+        * @name pc.asset.AssetRegistry#getAsset
+        * @description Return the {@link pc.asset.Asset} object in the AssetRegistry with the name provided.
+        * @param {String} name The name of the Asset to return
+        * @returns {pc.asset.Asset} The named Asset or null if no Asset is found.
+        */
         getAsset: function (name) {
-            return this.getAssetByName(name);
-        },
-
-        getAssetByResourceId: function (resourceId) {
-            return this._cache[resourceId];
-        },
-
-        getAssetByName: function (name) {
             var id = this._names[name];
             if (id && this._cache[id]) {
                 return this._cache[id];
@@ -70,6 +82,42 @@ pc.extend(pc.asset, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.asset.AssetRegistry#getAssetByResourceId
+        * @description Return the {@link pc.asset.Asset} object in the AssetRegistry with the resourceId provided
+        * @param {String} resourceId The resourceId of the Asset to return
+        * @returns {pc.asset.Asset} The Asset or null if no Asset is found.
+        */
+        getAssetByResourceId: function (resourceId) {
+            return this._cache[resourceId];
+        },
+
+        /**
+        * @private
+        */
+        getAssetByName: function (name) {
+            console.warn("WARNING: setLinearVelocity: Function is deprecated. Set linearVelocity property instead.");
+            return this.getAsset(name);
+        },
+
+        /**
+        * @function
+        * @name pc.asset.AssetRegistry#load
+        * @description Load the resources for a set of assets and return a promise the resources that they load.
+        * If the asset type doesn't have file (e.g. Material Asset) then a resource is not returned (the resource list is shorter)
+        * NOTE: Usually you won't have to call load() directly as Assets will be loaded as part of the Pack loading process. This is only
+        * required if you are loading assets manually without using the PlayCanvas tools.
+        * @param {[pc.fw.Asset]} assets The list of assets to load
+        * @param {[Object]} [results] List of results for the resources to be stored in. This is usually not required
+        * @param {Object} [options] Options to pass on to the loader
+        * @returns {Promise} A Promise to the resources
+        * @example
+        * var asset = new pc.asset.Asset("My Texture", "texture", {
+        *   filename: "mytexture.jpg",
+        *   url: "/example/mytexture.jpg"
+        * });
+        */
         load: function (assets, results, options) {
             if (!assets.length) {
                 assets = [assets];
@@ -87,7 +135,7 @@ pc.extend(pc.asset, function () {
                 var existing = this.getAsset(asset.resourceId);
                 if (!existing) {
                     // If the asset isn't in the registry then add it.
-                    this.addAsset(asset.resourceId, asset);
+                    this.addAsset(asset);
                 }
 
                 switch(asset.type) {
@@ -98,10 +146,7 @@ pc.extend(pc.asset, function () {
                         requests.push(this._createTextureRequest(asset, results[index]));
                         break;
                     default: {
-                        var request = this._createAssetRequest(asset);
-                        if (request) {
-                            requests.push(request);
-                        }
+                        requests.push(this._createAssetRequest(asset));
                         break;
                     }
                 }
@@ -109,12 +154,34 @@ pc.extend(pc.asset, function () {
             }, this);
 
             // request all assets
-            return this.loader.request(requests, options).then(null, function (error) {
+            return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(null, function (error) {
                 // Ensure exceptions while loading are thrown and not swallowed by promises
                 setTimeout(function () {
                     throw error;
                 }, 0)
             });
+
+            // TODO: release this
+            // request all assets, also attach loaded resources onto asset
+            // return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
+            //     var promise = new RSVP.Promise(function (resolve, reject) {
+            //         var index = 0;
+            //         requests.forEach(function (r, i) {
+            //             if (r) {
+            //                 assets[i].resource = resources[index++];
+            //             } else {
+            //                 assets[i].resource = null;
+            //             }
+            //         });
+            //         resolve(resources);
+            //     });
+            //     return promise;
+            // }, function (error) {
+            //     // Ensure exceptions while loading are thrown and not swallowed by promises
+            //     setTimeout(function () {
+            //         throw error;
+            //     }, 0)
+            // });
         },
 
         _createAssetRequest: function (asset, result) {
