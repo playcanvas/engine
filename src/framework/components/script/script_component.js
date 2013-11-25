@@ -7,7 +7,8 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
-    * @property {String[]} urls The URLs of all scripts to load
+    * @property {Object[]} scripts An array of all the scripts to load. Each script object has this format:
+    * {url: 'url.js', name: 'url', 'attributes': [attribute1, attribute2, ...]}
     */
     var ScriptComponent = function ScriptComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);

@@ -74,11 +74,12 @@ pc.script = (function () {
         *   <li>{Array} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
         * </ul> 
         * @example
+        * pc.script.attribute('speed', 'number', 5);
+        * pc.script.attribute('message', 'string', "My message");
+        * pc.script.attribute('enemyPosition', 'vector', [1,0,0]);
+        * pc.script.attribute('spellType', 'enumeration', 0, {
+        *
         * pc.script.create( function (context) {
-        *  pc.script.attribute('speed', 'number', 5);
-        *  pc.script.attribute('message', 'string', "My message");
-        *  pc.script.attribute('enemyPosition', 'vector', [1,0,0]);
-        *  pc.script.attribute('spellType', 'enumeration', 0, {
         *     enumerations: [{
         *        name: "Fire",
         *        value: 0
