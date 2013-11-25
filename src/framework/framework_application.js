@@ -171,6 +171,12 @@ pc.extend(pc.fw, function () {
                         this.context.systems.rigidbody.setGravity(pack.settings.physics.gravity);
                     }
 
+                    this.context.scene.fog = pack.settings.render.fog;
+                    this.context.scene.fogColor = new pc.Color(pack.settings.render.fog_color);
+                    this.context.scene.fogStart = pack.settings.render.fog_start;
+                    this.context.scene.fogEnd = pack.settings.render.fog_end;
+                    this.context.scene.fogDensity = pack.settings.render.fog_density;
+
                     success(pack);
                     this.context.loader.off('progress', progress);
                 }.bind(this), function (msg) {
@@ -727,6 +733,12 @@ pc.extend(pc.fw, function () {
             if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
                 this.context.systems.rigidbody.setGravity(settings.physics.gravity);
             }
+
+            this.context.scene.fog = settings.render.fog;
+            this.context.scene.fogStart = settings.render.fog_start;
+            this.context.scene.fogEnd = settings.render.fog_end;
+            this.context.scene.fogColor = new pc.Color(settings.render.fog_color);
+            this.context.scene.fogDensity = settings.render.fog_density;
         }
     };
 
