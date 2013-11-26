@@ -133,7 +133,7 @@ pc.extend(pc.asset, function () {
         * @private
         */
         getAssetByName: function (name) {
-            console.warn("WARNING: getAssetByName: Function is deprecated. Use getAssets() or find() instead.");
+            console.warn("WARNING: getAssetByName: Function is deprecated. Use find() or findAll() instead.");
             return this.find(name);
         },
 
