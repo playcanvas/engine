@@ -35,12 +35,12 @@ pc.extend(pc.fw, function() {
         * @description The registry of assets that are available to use.
         * @type pc.fw.AssetRegistry
         * @example
-        * var asset = context.assets.getAssetByName("player_model");
+        * var asset = context.assets.find("player_model", pc.asset.ASSET_MODEL);
         * context.assets.load(asset).then(function (models) {
         *     var playerModel = models[0];
         * )});
         */
-        this.assets = new pc.fw.AssetRegistry(this.loader, prefix);
+        this.assets = new pc.asset.AssetRegistry(this.loader, prefix);
         
         /**
          * @name pc.fw.ApplicationContext#systems

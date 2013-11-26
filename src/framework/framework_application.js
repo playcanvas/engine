@@ -720,7 +720,7 @@ pc.extend(pc.fw, function () {
         },
 
         _linkUpdateAsset: function (guid, attribute, value) {
-            var asset = this.context.assets.getAsset(guid);
+            var asset = this.context.assets.getAssetByResourceId(guid);
             if (asset) {
                 asset[attribute] = value;
                 asset.fire('change', asset, attribute, value);
