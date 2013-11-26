@@ -829,7 +829,7 @@ pc.extend(pc.fw, function () {
                 parent: entity.getRequest()
             };
 
-            var asset = this.system.context.assets.getAsset(guid);
+            var asset = this.system.context.assets.getAssetByResourceId(guid);
             if (!asset) {
                 logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
                 return;
