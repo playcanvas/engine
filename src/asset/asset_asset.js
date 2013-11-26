@@ -18,7 +18,7 @@ pc.extend(pc.asset, function () {
     * @param {Object} [data] JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
     * @param {String} [prefix] URL prefix to prepend to the file URL when return getFileUrl()
     * @example
-    * var asset = new pc.Asset("a texture", pc.asset.ASSET_TYPE_TEXTURE, {
+    * var asset = new pc.Asset("a texture", pc.asset.ASSET_TEXTURE, {
     *        filename: "texture.png",
     *        url: "http://example.com/my/assets/here/texture.png"
     *    });
@@ -50,8 +50,8 @@ pc.extend(pc.asset, function () {
         * @description Return the URL required to fetch the file for this asset.
         * @returns {String} The URL
         * @example
-        * var asset = context.assets.getAsset("My Image");
-        * var img = "<img src='" + asset.getFileUrl() + "'></img>";
+        * var assets = context.assets.find("My Image", pc.asset.ASSET_IMAGE);
+        * var img = "<img src='" + assets[0].getFileUrl() + "'></img>";
         */
         getFileUrl: function () {
             if (!this.file) {
@@ -70,13 +70,13 @@ pc.extend(pc.asset, function () {
 
     return {
         Asset: Asset,
-        ASSET_TYPE_ANIMATION: 'animation',
-        ASSET_TYPE_AUDIO: 'audio',
-        ASSET_TYPE_IMAGE: 'image',
-        ASSET_TYPE_JSON: 'json',
-        ASSET_TYPE_MODEL: 'model',
-        ASSET_TYPE_MATERIAL: 'material',
-        ASSET_TYPE_TEXT: 'text',
-        ASSET_TYPE_TEXTURE: 'texture'
+        ASSET_ANIMATION: 'animation',
+        ASSET_AUDIO: 'audio',
+        ASSET_IMAGE: 'image',
+        ASSET_JSON: 'json',
+        ASSET_MODEL: 'model',
+        ASSET_MATERIAL: 'material',
+        ASSET_TEXT: 'text',
+        ASSET_TEXTURE: 'texture'
     };
 }());

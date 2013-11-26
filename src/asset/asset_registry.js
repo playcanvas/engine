@@ -63,23 +63,59 @@ pc.extend(pc.asset, function () {
         */
         addAsset: function (asset) {
             this._cache[asset.resourceId] = asset;
-            this._names[asset.name] = asset.resourceId; // note, this overwrites any previous asset with same name
+            if (!this._names[asset.name]) {
+                this._names[asset.name] = [];
+            }
+            this._names[asset.name].push(asset.resourceId);
         },
 
         /**
+        * @private
         * @function
-        * @name pc.asset.AssetRegistry#getAsset
-        * @description Return the {@link pc.asset.Asset} object in the AssetRegistry with the name provided.
-        * @param {String} name The name of the Asset to return
-        * @returns {pc.asset.Asset} The named Asset or null if no Asset is found.
+        * @name pc.asset.AssetRegistry#findAll
+        * @description Return all Assets with the specified name and type found in the registry
+        * @param {String} name The name of the Assets to find
+        * @param {String} [type] The type of the Assets to find
+        * @returns {[pc.asset.Asset]} A list of all Assets found
+        * @example
+        * var assets = context.assets.findAll("myTextureAsset", pc.asset.ASSET_TEXTURE);
+        * console.log("Found " + assets.length + " assets called " + name);
         */
-        getAsset: function (name) {
-            var id = this._names[name];
-            if (id && this._cache[id]) {
-                return this._cache[id];
+        findAll: function (name, type) {
+            var self = this;
+            var ids = this._names[name];
+            var assets;
+            if (ids) {
+                assets = ids.map(function (id) {
+                    return self._cache[id];
+                });
+
+                if (type) {
+                    return assets.filter(function (asset) {
+                        return (asset.type === type);
+                    });
+                } else {
+                    return assets;
+                }
             } else {
-                return null;
+                return [];
             }
+        },
+
+        /**
+        * @private
+        * @function
+        * @name pc.asset.AssetRegistry#find
+        * @description Return the first Asset with the specified name and type found in the registry
+        * @param {String} name The name of the Asset to find
+        * @param {String} [type] The type of the Asset to find
+        * @returns {pc.asset.Asset} A single Asset or null if no Asset is found
+        * @example
+        * var asset = context.assets.find("myTextureAsset", pc.asset.ASSET_TEXTURE);
+        */
+        find: function (name, type) {
+            var asset = this.findAll(name, type);
+            return asset ? asset[0] : null;
         },
 
         /**
@@ -97,8 +133,8 @@ pc.extend(pc.asset, function () {
         * @private
         */
         getAssetByName: function (name) {
-            console.warn("WARNING: setLinearVelocity: Function is deprecated. Set linearVelocity property instead.");
-            return this.getAsset(name);
+            console.warn("WARNING: getAssetByName: Function is deprecated. Use getAssets() or find() instead.");
+            return this.find(name);
         },
 
         /**
@@ -132,17 +168,17 @@ pc.extend(pc.asset, function () {
             var requests = []
 
             assets.forEach(function (asset, index) {
-                var existing = this.getAsset(asset.resourceId);
+                var existing = this.getAssetByResourceId(asset.resourceId);
                 if (!existing) {
                     // If the asset isn't in the registry then add it.
                     this.addAsset(asset);
                 }
 
                 switch(asset.type) {
-                    case pc.asset.ASSET_TYPE_MODEL:
+                    case pc.asset.ASSET_MODEL:
                         requests.push(this._createModelRequest(asset));
                         break;
-                    case pc.asset.ASSET_TYPE_TEXTURE:
+                    case pc.asset.ASSET_TEXTURE:
                         requests.push(this._createTextureRequest(asset, results[index]));
                         break;
                     default: {
