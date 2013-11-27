@@ -235,8 +235,8 @@ pc.extend(pc.scene, function () {
         this.shader = null;
     };
 
-    PhongMaterial.prototype.updateShader = function (device) {
-        var lights = this.scene._lights;
+    PhongMaterial.prototype.updateShader = function (device, scene) {
+        var lights = scene._lights;
 
         var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
         var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
@@ -266,7 +266,7 @@ pc.extend(pc.scene, function () {
         }
 
         var options = {
-            fog: this.scene.fog,
+            fog: scene.fog,
             skin: !!this.meshInstances[0].skinInstance,
             numDirs: numDirs,
             numSDirs: numSDirs,
