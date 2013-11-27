@@ -44,7 +44,7 @@ pc.extend(pc.fw, function () {
                 parent: this.entity.getRequest()
             };
             
-            var asset = this.system.context.assets.getAsset(guid);
+            var asset = this.system.context.assets.getAssetByResourceId(guid);
             if (!asset) {
                 logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
                 return;
@@ -66,7 +66,7 @@ pc.extend(pc.fw, function () {
         onSetAsset: function (name, oldValue, newValue) {
             if (oldValue) {
                 // Remove old listener
-                var asset = this.system.context.assets.getAsset(oldValue);
+                var asset = this.system.context.assets.getAssetByResourceId(oldValue);
                 if (asset) {
                     asset.off('change', this.onAssetChange, this);    
                 }

@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.132.0
+--------
+* Moved Asset and AssetRegistry from pc.fw into pc.asset
+* Renamed getAsset() to getAssetByResourceId()
+* Added AssetRegistry.find() and AssetRegistry.findAll(), and deprecated getAssetByName
+
+--------
 v0.131.1
 --------
 * [FIX] Allow PlayCanvas to run in IE11 by avoiding UNSIGNED_BYTE data with vertexAttribPointer if it's not supported.
