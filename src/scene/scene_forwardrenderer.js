@@ -635,7 +635,7 @@ pc.extend(pc.scene, function () {
 
                     if (material !== prevMaterial) {
                         if (!material.shader) {
-                            material.updateShader(device);
+                            material.updateShader(device, scene);
                         }
                         device.setShader(material.shader);
 

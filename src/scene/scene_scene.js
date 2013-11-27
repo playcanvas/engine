@@ -109,7 +109,7 @@ pc.extend(pc.scene, function () {
             }
         }
         for (i = 0; i < materials.length; i++) {
-            materials[i].updateShader(device);
+            materials[i].updateShader(device, this);
         }
     };
 
