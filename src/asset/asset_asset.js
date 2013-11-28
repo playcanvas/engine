@@ -1,3 +1,7 @@
+/**
+* @name pc.asset
+* @namespace Contains classes related to Assets.
+*/
 pc.asset = {};
 pc.extend(pc.asset, function () {
     /**
