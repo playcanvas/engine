@@ -30,7 +30,6 @@ pc.extend(pc.scene, function () {
         this.blueWrite = true;
         this.alphaWrite = true;
 
-        this.scene = null;       // If the material is used in a scene, this is it
         this.meshInstances = []; // The mesh instances referencing this material
     };
 
@@ -87,7 +86,7 @@ pc.extend(pc.scene, function () {
         }
     };
 
-    Material.prototype.updateShader = function (device) {
+    Material.prototype.updateShader = function (device, scene) {
         // For vanilla materials, the shader can only be set by the user
     }
 
