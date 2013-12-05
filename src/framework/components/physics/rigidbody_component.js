@@ -24,7 +24,7 @@ pc.extend(pc.fw, function () {
      * @property {Number} restitution The amount of energy lost when two objects collide, this determines the bounciness of the object. 
      * A value of 0 means that no energy is lost in the collision, a value of 1 means that all energy is lost. 
      * So the higher the value the less bouncy the object is.
-     * @property {pc.fw.RIGIDBODY_TYPE} bodyType The type of RigidBody determines how it is simulated. 
+     * @property {pc.fw.RIGIDBODY_TYPE} type The type of RigidBody determines how it is simulated. 
      * Static objects have infinite mass and cannot move, 
      * Dynamic objects are simulated according to the forces applied to them, 
      * Kinematic objects have infinite mass and do not respond to forces, but can still be moved by setting their velocity or position.
@@ -46,7 +46,7 @@ pc.extend(pc.fw, function () {
         this.on('set_angularFactor', this.onSetAngularFactor, this);
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
-        this.on('set_bodyType', this.onSetBodyType, this);
+        this.on('set_type', this.onSetType, this);
 
         this.on('set_body', this.onSetBody, this);
 
@@ -59,6 +59,17 @@ pc.extend(pc.fw, function () {
         this._angularVelocity = pc.math.vec3.create(0, 0, 0);
     };
     RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.fw.Component);
+
+    Object.defineProperty(RigidBodyComponent.prototype, "bodyType", {
+        get: function() {
+            console.warn("WARNING: bodyType: Function is deprecated. Query type property instead.");
+            return this.type;
+        },
+        set: function(type) {
+            console.warn("WARNING: bodyType: Function is deprecated. Set type property instead.");
+            this.type = type;
+        },
+    });
 
     Object.defineProperty(RigidBodyComponent.prototype, "linearVelocity", {
         get: function() {
@@ -514,7 +525,7 @@ pc.extend(pc.fw, function () {
          * @returns {Boolean} True if static
          */
         isStatic: function () {
-            return (this.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC);
+            return (this.type === pc.fw.RIGIDBODY_TYPE_STATIC);
         },
 
         /**
@@ -524,7 +535,7 @@ pc.extend(pc.fw, function () {
          * @returns {Boolean} True if static or kinematic
          */
         isStaticOrKinematic: function () {
-            return (this.bodyType === pc.fw.RIGIDBODY_TYPE_STATIC || this.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
+            return (this.type === pc.fw.RIGIDBODY_TYPE_STATIC || this.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
         },
 
         /**
@@ -534,7 +545,7 @@ pc.extend(pc.fw, function () {
          * @returns {Boolean} True if kinematic
          */
         isKinematic: function () {
-            return (this.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
+            return (this.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
         },
 
 
@@ -667,7 +678,7 @@ pc.extend(pc.fw, function () {
             }                
         },
 
-        onSetBodyType: function (name, oldValue, newValue) {
+        onSetType: function (name, oldValue, newValue) {
             if (newValue !== oldValue) {
                 // Create a new body
                 this.createBody();

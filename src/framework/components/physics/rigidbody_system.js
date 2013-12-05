@@ -144,7 +144,7 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.RigidBodyComponentData;
 
         this.schema = [{
-            name: "bodyType",
+            name: "type",
             displayName: "Type",
             description: "The type of body determines how it moves and collides with other bodies. Dynamic is a normal body. Static will never move. Kinematic can be moved in code, but will not respond to collisions.",
             type: "enumeration",
@@ -172,7 +172,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1,
             filter: {
-                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
             }
         }, {
             name: "linearDamping",
@@ -185,7 +185,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0,
             filter: {
-                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
             }
         }, {
             name: "angularDamping",
@@ -198,7 +198,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0,
             filter: {
-                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
             }
         }, {
             name: "linearFactor",
@@ -211,7 +211,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: [1, 1, 1],
             filter: {
-                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
             }
         }, {
             name: "angularFactor",
@@ -224,7 +224,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: [1, 1, 1],
             filter: {
-                'bodyType': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
             }
         }, {
             name: "friction",
@@ -282,7 +282,7 @@ pc.extend(pc.fw, function () {
     pc.extend(RigidBodyComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
-            properties = ['mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'bodyType'];
+            properties = ['mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.createBody();
@@ -502,8 +502,8 @@ pc.extend(pc.fw, function () {
             }
 
             var store = this.store;
-            var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
-            var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.bodyType !== pc.fw.RIGIDBODY_TYPE_STATIC;
+            var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.type !== pc.fw.RIGIDBODY_TYPE_STATIC;
+            var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.type !== pc.fw.RIGIDBODY_TYPE_STATIC;
            
             // find flags cell in collision table
             var row = 0;
@@ -601,9 +601,9 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
                     if (componentData.body && componentData.body.isActive() ) {
-                        if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
+                        if (componentData.type === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
-                        } else if (componentData.bodyType === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
+                        } else if (componentData.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
                             entity.rigidbody.updateKinematic(dt);
                         } 
                     }

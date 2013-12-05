@@ -16,7 +16,7 @@ pc.extend(pc.fw, function () {
         this.friction = 0.5;
         this.restitution = 0;
 
-        this.bodyType = pc.fw.RIGIDBODY_TYPE_STATIC;
+        this.type = pc.fw.RIGIDBODY_TYPE_STATIC;
 
         // Non-serialized properties
         this.body = null;
