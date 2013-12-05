@@ -144,6 +144,24 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.RigidBodyComponentData;
 
         this.schema = [{
+            name: "bodyType",
+            displayName: "Type",
+            description: "The type of body determines how it moves and collides with other bodies. Dynamic is a normal body. Static will never move. Kinematic can be moved in code, but will not respond to collisions.",
+            type: "enumeration",
+            options: {
+                enumerations: [{
+                    name: 'Static',
+                    value: pc.fw.RIGIDBODY_TYPE_STATIC
+                }, {
+                    name: 'Dynamic',
+                    value: pc.fw.RIGIDBODY_TYPE_DYNAMIC
+                }, {
+                    name: 'Kinematic',
+                    value: pc.fw.RIGIDBODY_TYPE_KINEMATIC
+                }]
+            },
+            defaultValue: pc.fw.RIGIDBODY_TYPE_STATIC
+        }, {
             name: "mass",
             displayName: "Mass",
             description: "The mass of the body",
@@ -228,24 +246,6 @@ pc.extend(pc.fw, function () {
                 step: 0.01
             },
             defaultValue: 0
-        }, {
-            name: "bodyType",
-            displayName: "Body Type",
-            description: "The type of body determines how it moves and collides with other bodies. Dynamic is a normal body. Static will never move. Kinematic can be moved in code, but will not respond to collisions.",
-            type: "enumeration",
-            options: {
-                enumerations: [{
-                    name: 'Static',
-                    value: pc.fw.RIGIDBODY_TYPE_STATIC
-                }, {
-                    name: 'Dynamic',
-                    value: pc.fw.RIGIDBODY_TYPE_DYNAMIC
-                }, {
-                    name: 'Kinematic',
-                    value: pc.fw.RIGIDBODY_TYPE_KINEMATIC
-                }]
-            },
-            defaultValue: pc.fw.RIGIDBODY_TYPE_STATIC
         }, {
             name: "body",
             exposed: false
