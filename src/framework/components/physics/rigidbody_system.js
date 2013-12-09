@@ -282,6 +282,12 @@ pc.extend(pc.fw, function () {
     pc.extend(RigidBodyComponentSystem.prototype, {
 
         initializeComponentData: function (component, data, properties) {
+            // backwards compatibility
+            if (data.bodyType) {
+                data.type = data.bodyType;
+                console.warn("WARNING: rigidbody.bodyType: Property is deprecated. Use type instead.");
+            }
+
             properties = ['mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
