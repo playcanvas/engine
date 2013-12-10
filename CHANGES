@@ -3,9 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.133.0
+--------
+* Changed rigidbody.bodyType to rigidBody.type
+
+--------
 v0.132.1
 --------
-* [FIX] Material are no longer tied to a single scene (broke picking).
+* [FIX] Materials are no longer tied to a single scene (broke picking).
 
 --------
 v0.132.0
