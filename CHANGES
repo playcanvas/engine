@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.133.1
+--------
+* [FIX] Sphere maps now load into the engine correctly.
+
+--------
 v0.133.0
 --------
 * Changed rigidbody.bodyType to rigidBody.type
