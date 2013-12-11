@@ -48,8 +48,8 @@ pc.extend(pc.scene, function () {
      * @property {Number} bumpMapFactor The bumpiness of the material. This value scales the assinged bump map
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
      * the bump map and 1 results in a full contribution.
-     * @property {pc.gfx.Texture} reflectionMap The reflection map of the material. This can be a 2D texture, in
-     * which case the texture must be a sphere map.  Otherwise, the material will be cubemapped.
+     * @property {pc.gfx.Texture} sphereMap The spherical environment map of the material.
+     * @property {pc.gfx.Texture} cubeMap The cubic environment map of the material.
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and 
      * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
      * @property {pc.gfx.Texture} lightMap The light map of the material. This must be a 2D texture rather 
@@ -80,7 +80,8 @@ pc.extend(pc.scene, function () {
         this.heightMap = null;
         this.heightMapTransform = null;
         this.bumpMapFactor = 1;
-        this.reflectionMap = null;
+        this.cubeMap = null;
+        this.sphereMap = null;
         this.reflectivity = 1;
         this.lightMap = null;
 
@@ -219,12 +220,13 @@ pc.extend(pc.scene, function () {
             this.setParameter('material_bumpMapFactor', this.bumpMapFactor);
         }
 
-        if (this.reflectionMap) {
-            if (this.reflectionMap._cubemap) {
-                this.setParameter('texture_cubeMap', this.reflectionMap);
-            } else {
-                this.setParameter('texture_sphereMap', this.reflectionMap);
-            }
+        if (this.cubeMap) {
+            this.setParameter('texture_cubeMap', this.cubeMap);
+        }
+        if (this.sphereMap) {
+            this.setParameter('texture_sphereMap', this.sphereMap);
+        }
+        if (this.sphereMap || this.cubeMap) {
             this.setParameter('material_reflectionFactor', this.reflectivity);
         }
 
@@ -290,8 +292,8 @@ pc.extend(pc.scene, function () {
             normalMapTransform: !!this.normalMapTransform,
             heightMap: !!this.heightMap,
             heightMapTransform: !!this.heightMapTransform,
-            sphereMap: (!!this.reflectionMap) && !this.reflectionMap._cubemap,
-            cubeMap: (!!this.reflectionMap) && this.reflectionMap._cubemap,
+            sphereMap: !!this.sphereMap,
+            cubeMap: !!this.cubeMap,
             lightMap: !!this.lightMap
         };
         var library = device.getProgramLibrary();
