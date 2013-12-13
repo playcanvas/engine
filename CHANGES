@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.133.2
+--------
+* [FIX] More accurate reporting of delta time in the framework (fixes jittery physics).
+
+--------
 v0.133.1
 --------
 * [FIX] Sphere maps now load into the engine correctly.
