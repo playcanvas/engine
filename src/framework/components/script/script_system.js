@@ -226,6 +226,8 @@ pc.extend(pc.fw, function () {
 
                     for (instanceName in entity.script.instances) {
                         instance = entity.script.instances[instanceName];
+                        
+                        pc.extend(instance.instance, pc.events);
 
                         if (entity.script.scripts) {
                             this._createAccessors(entity, instance);
@@ -281,6 +283,7 @@ pc.extend(pc.fw, function () {
                     if (script.name && attributes) {
                         attributes.forEach(function (attribute, index) {
                             self._convertAttributeValue(attribute);
+                            instance.instance.fire("set", attribute.name, attribute.value);
 
                             Object.defineProperty(instance.instance, attribute.name, {
                                 get: function () {
@@ -290,7 +293,6 @@ pc.extend(pc.fw, function () {
                                     var oldValue = attribute.value;
                                     attribute.value = value;
                                     self._convertAttributeValue(attribute);
-                                    //instance.instance.fire("set", attribute.name, oldValue, value);
                                 },
                                 // allow the propery to be redefined in case we have updated attributes
                                 // from the designer
