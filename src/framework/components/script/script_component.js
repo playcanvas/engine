@@ -60,7 +60,7 @@ pc.extend(pc.fw, function () {
                 if (onlyUpdateAttributes) {
                     for (var key in this.instances) {
                         if (this.instances.hasOwnProperty(key)) {
-                            this.system._createAccessors(this.entity, this.instances[key]);
+                            this.system._updateAccessors(this.entity, this.instances[key]);
                         }
                     }
                     return;

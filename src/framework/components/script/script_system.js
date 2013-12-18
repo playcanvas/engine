@@ -281,37 +281,99 @@ pc.extend(pc.fw, function () {
                 if (script.url === url) {
                     var attributes = script.attributes;
                     if (script.name && attributes) {
-                        attributes.forEach(function (attribute, index) {
-                            self._convertAttributeValue(attribute);
+                        entity.script.data.attributes[script.name] = pc.extend([], attributes);
 
-                            // fire onAttributeChanged when a script attribute
-                            // changes from the designer
-                            var actualInstance = instance.instance;
-                            if (actualInstance.hasOwnProperty(attribute.name)) {
-                                var oldValue = actualInstance[attribute.name];
-                                if (oldValue !== attribute.value) {
-                                    if (actualInstance.onAttributeChanged) {
-                                        actualInstance.onAttributeChanged(attribute.name, oldValue, attribute.value);
+                        attributes.forEach(function (attribute, index) {
+                            self._createAccessor(attribute, instance);
+                        });
+                    }
+                    break;
+                }
+            }
+        },
+
+        _createAccessor: function (attribute, instance) {
+            var self = this;
+
+            self._convertAttributeValue(attribute);
+
+            Object.defineProperty(instance.instance, attribute.name, {
+                get: function () {
+                    return attribute.value;
+                },
+                set: function (value) {
+                    var oldValue = attribute.value;
+                    attribute.value = value;
+                    self._convertAttributeValue(attribute);
+                    instance.instance.fire("set", attribute.name, oldValue, attribute.value);
+                },
+                configurable: true
+            });
+        },
+
+        _updateAccessors: function (entity, instance) {
+            var self = this;
+            var i;
+            var len = entity.script.scripts.length;
+            var url = instance.url;
+            var scriptComponent, script, name, attributes;
+            var removedAttributes;
+            var previousAttributes;
+
+            var findItem = function (array, predicate) {
+                var j, count = array ? array.length : 0;
+                for (j=0; j<count; j++) {
+                    if (predicate(array[i])) {
+                        return true;
+                    }
+                }
+
+                return false;
+            };
+
+
+            for (i=0; i<len; i++) {
+                scriptComponent = entity.script;
+                script = scriptComponent.scripts[i];
+                if (script.url === url) {
+                    name = script.name;
+                    attributes = script.attributes;
+                    if (name) {
+                        if (attributes) {
+                            // create / update attribute accessors
+                            attributes.forEach(function (attribute, index) {
+                                self._createAccessor(attribute, instance);
+                            });
+                        } 
+
+                        // delete accessors for attributes that no longer exist
+                        // and fire onAttributeChange when an attribute value changed
+                        previousAttributes = scriptComponent.data.attributes[name];
+                        if (previousAttributes) {
+                            previousAttributes.forEach(function (oldAttribute) {
+                                var newAttribute = findItem(attributes, function (a) {
+                                    return a.name === oldAttribute.name;
+                                });
+
+                                if (!newAttribute) {
+                                    delete instance.instance[oldAttribute.name];
+                                } else {
+                                    if (oldAttribute.value !== newAttribute.value) {
+                                        if (instance.instance.onAttributeChanged) {
+                                            instance.instance.onAttributeChanged(oldAttribute.name, oldAttribute.value, newAttribute.value);
+                                        }
                                     }
                                 }
-                            }
+                            })
+                        }
 
-                            Object.defineProperty(instance.instance, attribute.name, {
-                                get: function () {
-                                    return attribute.value;
-                                },
-                                set: function (value) {
-                                    var oldValue = attribute.value;
-                                    attribute.value = value;
-                                    self._convertAttributeValue(attribute);
-                                    actualInstance.fire("set", attribute.name, oldValue, attribute.value);
-                                },
-                                // allow the propery to be redefined in case we have updated attributes
-                                // from the designer
-                                configurable : true
-                            });
-                        }, this);
+                        if (attributes) {
+                            scriptComponent.data.attributes[name] = pc.extend([], attributes);
+                        } else {
+                            delete scriptComponent.data.attributes[name];
+                        }
                     }
+
                     break;
                 }
             }
