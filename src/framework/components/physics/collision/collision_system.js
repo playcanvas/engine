@@ -831,15 +831,15 @@ pc.extend(pc.fw, function () {
             if (typeof(Ammo) !== 'undefined') {
                 switch (axis) {
                     case 0:
-                        halfExtents = new Ammo.btVector3(height, radius, radius);
+                        halfExtents = new Ammo.btVector3(height * 0.5, radius, radius);
                         shape = new Ammo.btCylinderShapeX(halfExtents);
                         break;
                     case 1:
-                        halfExtents = new Ammo.btVector3(radius, height, radius);
+                        halfExtents = new Ammo.btVector3(radius, height * 0.5, radius);
                         shape = new Ammo.btCylinderShape(halfExtents);
                         break;
                     case 2:
-                        halfExtents = new Ammo.btVector3(radius, radius, height);
+                        halfExtents = new Ammo.btVector3(radius, radius, height * 0.5);
                         shape = new Ammo.btCylinderShapeZ(halfExtents);
                         break;
                 }
