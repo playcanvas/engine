@@ -390,7 +390,23 @@ pc.extend(pc.fw, function () {
         * Called when the collision is cloned to another entity
         */
         clone: function (entity, clone) {
-            CollisionComponentSystem._super.cloneComponent.call(this.system, entity, clone);
+            var src = this.system.dataStore[entity.getGuid()];
+
+            var data = {
+                type: src.data.type,
+                halfExtents: pc.extend([], src.data.halfExtents),
+                radius: src.data.radius,
+                axis: src.data.axis,
+                height: src.data.height,
+                asset: src.data.asset,
+                model: src.data.model
+            };
+
+            //if (src.data.model) {
+            //    data.model = src.data.model.clone();
+            //}
+
+            return this.system.addComponent(clone, data);  
         }
     };
 
@@ -467,14 +483,6 @@ pc.extend(pc.fw, function () {
             root.setPosition(entity.getPosition());
             root.setRotation(entity.getRotation());
             root.setLocalScale(x / 0.5, y / 0.5, z / 0.5);
-        },
-
-        clone: function (entity, clone) {
-            var src = this.system.dataStore[entity.getGuid()];
-            var data = {
-                halfExtents: pc.extend([], src.data.halfExtents)
-            };
-            return this.system.addComponent(clone, data); 
         }
     });
 
@@ -884,14 +892,6 @@ pc.extend(pc.fw, function () {
             }
 
             CollisionMeshSystemImpl._super.updateTransform.call(this, component, position, rotation, scale);
-        },
-
-        clone: function (entity, clone) {
-            var component = this.system.addComponent(clone, {});
-            if (entity.model) {
-                clone.collision.data.asset = entity.model.asset;
-                clone.collision.model = entity.model.clone();
-            }
         }
         
     });
