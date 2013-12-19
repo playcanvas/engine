@@ -764,8 +764,10 @@ pc.extend(pc.fw, function () {
 
         document.addEventListener('webkitfullscreenchange', fullscreenchange, false);
         document.addEventListener('mozfullscreenchange', fullscreenchange, false);
+        document.addEventListener('MSFullscreenChange', fullscreenchange, false);
         document.addEventListener('webkitfullscreenerror', fullscreenerror, false);
         document.addEventListener('mozfullscreenerror', fullscreenerror, false);
+        document.addEventListener('MSFullscreenError', fullscreenerror, false);
 
         if (Element.prototype.mozRequestFullScreen) {
             // FF requires a new function for some reason
@@ -773,25 +775,36 @@ pc.extend(pc.fw, function () {
                 this.mozRequestFullScreen();
             };
         } else {
-            Element.prototype.requestFullscreen = Element.prototype.requestFullscreen || Element.prototype.webkitRequestFullscreen || function () {};    
+            Element.prototype.requestFullscreen = Element.prototype.requestFullscreen ||
+                                                  Element.prototype.webkitRequestFullscreen ||
+                                                  Element.prototype.msRequestFullscreen ||
+                                                  function () {};    
         }
-        document.exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen;
+        document.exitFullscreen = document.exitFullscreen ||
+                                  document.webkitExitFullscreen ||
+                                  document.mozCancelFullScreen ||
+                                  document.msExitFullscreen;
         if (!document.fullscreenElement) {
             Object.defineProperty(document, 'fullscreenElement', {
                 enumerable: true, 
                 configurable: false, 
                 get: function () {
-                    return document.webkitCurrentFullScreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+                    return document.webkitCurrentFullScreenElement ||
+                           document.webkitFullscreenElement ||
+                           document.mozFullScreenElement ||
+                           document.msFullscreenElement;
                 }
             });
         }
-        
+
         if (!document.fullscreenEnabled) {
             Object.defineProperty(document, 'fullscreenEnabled', {
                 enumerable: true,
                 configurable: false,
                 get: function () {
-                    return document.webkitFullscreenEnabled || document.mozFullScreenEnabled;
+                    return document.webkitFullscreenEnabled ||
+                           document.mozFullScreenEnabled ||
+                           document.msFullscreenEnabled;
                 }
             });
         }
@@ -810,7 +823,6 @@ pc.extend(pc.fw, function () {
         },
         Application: Application
     };
-    
 } ());
 
 
