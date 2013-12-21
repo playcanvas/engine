@@ -505,7 +505,7 @@ pc.extend(pc.fw, function () {
                     { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 120);
+                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 240);
                 var positions = new Float32Array(vertexBuffer.lock());
 
                 var i, x = 0;
