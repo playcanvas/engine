@@ -505,37 +505,49 @@ pc.extend(pc.fw, function () {
                     { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 41);
+                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 120);
                 var positions = new Float32Array(vertexBuffer.lock());
 
-                var i;
-                var r = 0.5;
-                var numVerts = vertexBuffer.getNumVertices();
-                for (i = 0; i < numVerts-1; i++) {
-                    var theta = 2 * Math.PI * (i / (numVerts-2));
-                    var x = r * Math.cos(theta);
-                    var z = r * Math.sin(theta);
-                    positions[(i)*3+0] = x;
-                    positions[(i)*3+1] = 0;
-                    positions[(i)*3+2] = z;
-                }
-                vertexBuffer.unlock();
+                var i, x = 0;
+                var theta;
+                for (var ring = 0; ring < 3; ring++) {
+                    var xo = 0;
+                    var yo = 1;
+                    var zo = 2;
+                    if (ring === 1) {
+                        xo = 1;
+                        yo = 0;
+                        zo = 2;
+                    } else if (ring === 2) {
+                        xo = 0;
+                        yo = 2;
+                        zo = 1;
+                    }
 
-                var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 80);
-                var inds = new Uint8Array(indexBuffer.lock());
-                for (i = 0; i < 40; i++) {
-                    inds[i * 2 + 0] = i;
-                    inds[i * 2 + 1] = i + 1;
+                    for (i = 0; i < 40; i++) {
+                        theta = 2 * Math.PI * (i / 40);
+                        positions[x+xo] = 0.5 * Math.cos(theta);
+                        positions[x+yo] = 0;
+                        positions[x+zo] = 0.5 * Math.sin(theta);
+                        x += 3;
+
+                        theta = 2 * Math.PI * ((i + 1) / 40);
+                        positions[x+xo] = 0.5 * Math.cos(theta);
+                        positions[x+yo] = 0;
+                        positions[x+zo] = 0.5 * Math.sin(theta);
+                        x += 3;
+                    }
                 }
-                indexBuffer.unlock();
+
+                vertexBuffer.unlock();
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
-                mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
-                mesh.primitive[0].count = indexBuffer.getNumIndices();
-                mesh.primitive[0].indexed = true;
+                mesh.primitive[0].count = vertexBuffer.getNumVertices();
+                mesh.primitive[0].indexed = false;
+                
                 this.mesh = mesh;
             }
             
