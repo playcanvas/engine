@@ -37,12 +37,6 @@ pc.gfx.programlib.phong = {
             key += "_spec"; // Specular color
         }
 
-        if (options.specularFactorMapTransform) {
-            key += "_spfx"; // Specular factor map with texture transform
-        } else if (options.specularFactorMap) {
-            key += "_spfm"; // Specular factor map
-        }
-
         if (options.glossMapTransform) {
             key += "_glox"; // Gloss map with texture transform
         } else if (options.glossMap) {
@@ -94,7 +88,6 @@ pc.gfx.programlib.phong = {
         var mapWithoutTransform =
            ((options.diffuseMap && !options.diffuseMapTransform) ||
             (options.specularMap && !options.specularMapTransform) ||
-            (options.specularFactorMap && !options.specularFactorMapTransform) ||
             (options.glossMap && !options.glossMapTransform) ||
             (options.emissiveMap && !options.emissiveMapTransform) ||
             (options.opacityMap && !options.opacityMapTransform) ||
@@ -114,7 +107,7 @@ pc.gfx.programlib.phong = {
                 attributes.vertex_tangent = pc.gfx.SEMANTIC_TANGENT;
             }
         }
-        if (options.diffuseMap || options.specularMap || options.specularFactorMap || options.glossMap ||
+        if (options.diffuseMap || options.specularMap || options.glossMap ||
             options.emissiveMap || options.normalMap || options.heightMap || options.opacityMap) {
             attributes.vertex_texCoord0 = pc.gfx.SEMANTIC_TEXCOORD0;
         }
@@ -143,7 +136,7 @@ pc.gfx.programlib.phong = {
                 code += "attribute vec4 vertex_tangent;\n";
             }
         }
-        if (options.diffuseMap || options.specularMap || options.specularFactorMap || options.glossMap ||
+        if (options.diffuseMap || options.specularMap || options.glossMap ||
             options.emissiveMap || options.normalMap || options.heightMap || options.opacityMap) {
             code += "attribute vec2 vertex_texCoord0;\n";
         }
@@ -203,9 +196,6 @@ pc.gfx.programlib.phong = {
         if (options.specularMap && options.specularMapTransform) {
             code += "uniform mat4 texture_specularMapTransform;\n";
         }
-        if (options.specularFactorMap && options.specularFactorMapTransform) {
-            code += "uniform mat4 texture_specularFactorMapTransform;\n";
-        }
         if (options.glossMap && options.glossMapTransform) {
             code += "uniform mat4 texture_glossMapTransform;\n";
         }
@@ -243,9 +233,6 @@ pc.gfx.programlib.phong = {
         if (lighting) {
             if (options.specularMap && options.specularMapTransform) {
                 code += "varying vec2 vUvSpecularMap;\n";
-            }
-            if (options.specularFactorMap && options.specularFactorMapTransform) {
-                code += "varying vec2 vUvSpecularFactorMap;\n";
             }
             if (options.glossMap && options.glossMapTransform) {
                 code += "varying vec2 vUvGlossMap;\n";
@@ -379,9 +366,6 @@ pc.gfx.programlib.phong = {
             if (options.specularMap & options.specularMapTransform) {
                 code += "    vUvSpecularMap = (texture_specularMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
             }
-            if (options.specularFactorMap && options.specularFactorMapTransform) {
-                code += "    vUvSpecularFactorMap = (texture_specularFactorMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
-            }
             if (options.glossMap & options.glossMapTransform) {
                 code += "    vUvGlossMap = (texture_glossMapTransform * vec4(vertex_texCoord0, 0, 1)).st;\n";
             }
@@ -444,9 +428,6 @@ pc.gfx.programlib.phong = {
             if (options.specularMap && options.specularMapTransform) {
                 code += "varying vec2 vUvSpecularMap;\n";
             }
-            if (options.specularFactorMap && options.specularFactorMapTransform) {
-                code += "varying vec2 vUvSpecularFactorMap;\n";
-            }
             if (options.glossMap && options.glossMapTransform) {
                 code += "varying vec2 vUvGlossMap;\n";
             }
@@ -481,9 +462,6 @@ pc.gfx.programlib.phong = {
                 code += "uniform sampler2D texture_specularMap;\n";
             } else {
                 code += "uniform vec3 material_specular;\n";
-            }
-            if (options.specularFactorMap) {
-                code += "uniform sampler2D texture_specularFactorMap;\n";
             }
             if (options.glossMap) {
                 code += "uniform sampler2D texture_glossMap;\n";
@@ -701,14 +679,6 @@ pc.gfx.programlib.phong = {
                 }
             }
 
-            if (options.specularFactorMap) {
-                if (options.specularFactorMapTransform) {
-                    code += "    vec2 uvSpecularFactorMap = vUvSpecularFactorMap;\n";
-                } else {
-                    code += "    vec2 uvSpecularFactorMap = vUv0;\n";
-                }
-            }
-
             if (options.glossMap) {
                 if (options.glossMapTransform) {
                     code += "    vec2 uvGlossMap = vUvGlossMap;\n";
@@ -782,9 +752,6 @@ pc.gfx.programlib.phong = {
                 code += "    vec3 specularColor = texture2D(texture_specularMap, uvSpecularMap).rgb;\n";
             } else {
                 code += "    vec3 specularColor = material_specular;\n";
-            }
-            if (options.specularFactorMap) {
-                code += "    specularColor *= texture2D(texture_specularFactorMap, uvSpecularFactorMap).rgb;\n";
             }
             // Hack: On Mac OS X, calling pow with zero for the exponent generates hideous artifacts so bias up a little
             if (options.glossMap) {

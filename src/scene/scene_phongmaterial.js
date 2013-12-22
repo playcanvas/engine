@@ -58,31 +58,37 @@ pc.extend(pc.scene, function () {
      */
     var PhongMaterial = function () {
         this.ambient = pc.math.vec3.create(0.7, 0.7, 0.7);
+
         this.diffuse = pc.math.vec3.create(0.7, 0.7, 0.7);
         this.diffuseMap = null;
         this.diffuseMapTransform = null;
+
         this.specular = pc.math.vec3.create(0, 0, 0);
         this.specularMap = null;
         this.specularMapTransform = null;
-        this.specularFactorMap = null;
-        this.specularFactorMapTransform = null;
+
         this.shininess = 25;
         this.glossMap = null;
         this.glossMapTransform = null;
+
         this.emissive = pc.math.vec3.create(0, 0, 0);
         this.emissiveMap = null;
         this.emissiveMapTransform = null;
+
         this.opacity = 1;
         this.opacityMap = null;
         this.opacityMapTransform = null;
+
         this.normalMap = null;
         this.normalMapTransform = null;
         this.heightMap = null;
         this.heightMapTransform = null;
         this.bumpMapFactor = 1;
+
         this.cubeMap = null;
         this.sphereMap = null;
         this.reflectivity = 1;
+
         this.lightMap = null;
 
         this.update();
@@ -168,13 +174,6 @@ pc.extend(pc.scene, function () {
             }
         } else {
             this.setParameter('material_specular', this.specular);
-        }
-
-        if (this.specularFactorMap) {
-            this.setParameter('texture_specularFactorMap', this.specularFactorMap);
-            if (this.specularFactorMapTransform) {
-                this.setParameter('texture_specularFactorMapTransform', this.specularFactorMapTransform);
-            }
         }
 
         if (this.glossMap) {
@@ -280,8 +279,6 @@ pc.extend(pc.scene, function () {
             diffuseMapTransform: !!this.diffuseMapTransform,
             specularMap: !!this.specularMap,
             specularMapTransform: !!this.specularMapTransform,
-            specularFactorMap: !!this.specularFactorMap,
-            specularFactorMapTransform: !!this.specularFactorMapTransform,
             glossMap: !!this.glossMap,
             glossMapTransform: !!this.glossMapTransform,
             emissiveMap: !!this.emissiveMap,
