@@ -22,6 +22,11 @@ pc.extend(pc.scene, function () {
      * of the material's specular map.
      * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128. 
      * A higher shininess value results in a more focussed specular highlight.
+     * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
+     * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
+     * shininess in preference to the 'shininess' property.
+     * @property {pc.math.mat4} glossMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * of the material's gloss map.
      * @property {pc.math.vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather 
