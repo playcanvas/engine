@@ -50,7 +50,7 @@ pc.extend(pc.scene, function () {
      * pixels are lower and lighter pixels are higher.
      * @property {pc.math.mat4} heightMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's height map.
-     * @property {Number} bumpMapFactor The bumpiness of the material. This value scales the assinged bump map
+     * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
      * the bump map and 1 results in a full contribution.
      * @property {pc.gfx.Texture} sphereMap The spherical environment map of the material.
@@ -88,7 +88,7 @@ pc.extend(pc.scene, function () {
         this.normalMapTransform = null;
         this.heightMap = null;
         this.heightMapTransform = null;
-        this.bumpMapFactor = 1;
+        this.bumpiness = 1;
 
         this.cubeMap = null;
         this.sphereMap = null;
@@ -101,206 +101,259 @@ pc.extend(pc.scene, function () {
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.scene.Material);
 
-    /**
-    * @private
-    * @name pc.scene.PhoneMaterial#init
-    * @description Update material data from a data block, as found on a material Asset.
-    * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
-    */
-    PhongMaterial.prototype.init = function (data) {
-        // Initialise material from data
-        this.name = data.name;
+    pc.extend(PhongMaterial.prototype, {
+        /**
+         * @function
+         * @name pc.scene.PhongMaterial#clone
+         * @description Duplicates a Phong material. All properties are duplicated except textures
+         * where only the references are copied.
+         * @returns {pc.scene.PhongMaterial} A cloned Phong material.
+         * @author Will Eastcott
+         */
+        clone: function () {
+            var clone = new pc.scene.PhongMaterial();
 
-        // Read each shader parameter
-        for (var i = 0; i < data.parameters.length; i++) {
-            var param = data.parameters[i];
+            Material.prototype._cloneInternal.call(this, clone);
 
-            function isMathType(type) {
-                if (type === 'vec2' ||
-                    type === 'vec3' ||
-                    type === 'vec4' ||
-                    type === 'mat3' ||
-                    type === 'mat4') {
-                    return true;
-                }
+            clone.ambient = pc.math.vec3.clone(this.ambient);
 
-                return false;
-            }
-            // Update material based on type
-            if (isMathType(param.type)) {
-                if (param.data) {
-                    this[param.name] = pc.math[param.type].clone(param.data);
-                } else {
-                    this[param.name] = null;
-                }
-            } else if (param.type === "texture") {
-                if (param.data) {
-                    if (param.data instanceof pc.gfx.Texture) {
-                        this[param.name] = param.data;
-                    } else {
-                        throw Error("PhongMaterial.init() expects textures to already be created");
+            clone.diffuse = pc.math.vec3.clone(this.diffuse);
+            clone.diffuseMap = this.diffuseMap;
+            clone.diffuseMapTransform = this.diffuseMapTransform ? pc.math.mat4.clone(this.diffuseMapTransform) : null;
+
+            clone.specular = pc.math.vec3.clone(this.specular);
+            clone.specularMap = this.specularMap;
+            clone.specularMapTransform = this.specularMapTransform ? pc.math.mat4.clone(this.specularMapTransform) : null;
+
+            clone.shininess = this.shininess;
+            clone.glossMap = this.glossMap;
+            clone.glossMapTransform = this.glossMapTransform ? pc.math.mat4.clone(this.glossMapTransform) : null;
+
+            clone.emissive = pc.math.vec3.clone(this.emissive);
+            clone.emissiveMap = this.emissiveMap;
+            clone.emissiveMapTransform = this.emissiveMapTransform ? pc.math.mat4.clone(this.emissiveMapTransform) : null;
+
+            clone.opacity = this.opacity;
+            clone.opacityMap = this.opacityMap;
+            clone.opacityMapTransform = this.opacityMapTransform ? pc.math.mat4.clone(this.opacityMapTransform) : null;
+
+            clone.normalMap = this.normalMap;
+            clone.normalMapTransform = this.normalMapTransform ? pc.math.mat4.clone(this.normalMapTransform) : null;
+            clone.heightMap = this.heightMap;
+            clone.heightMapTransform = this.heightMapTransform ? pc.math.mat4.clone(this.heightMapTransform) : null;
+            clone.bumpiness = this.bumpiness;
+
+            clone.cubeMap = this.cubeMap;
+            clone.sphereMap = this.sphereMap;
+            clone.reflectivity = this.reflectivity;
+
+            clone.lightMap = this.lightMap;
+
+            clone.update();
+            return clone;
+        },
+
+        /**
+        * @private
+        * @name pc.scene.PhoneMaterial#init
+        * @description Update material data from a data block, as found on a material Asset.
+        * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
+        */
+        init: function (data) {
+            // Initialise material from data
+            this.name = data.name;
+
+            // Read each shader parameter
+            for (var i = 0; i < data.parameters.length; i++) {
+                var param = data.parameters[i];
+
+                function isMathType(type) {
+                    if (type === 'vec2' ||
+                        type === 'vec3' ||
+                        type === 'vec4' ||
+                        type === 'mat3' ||
+                        type === 'mat4') {
+                        return true;
                     }
-                } else {
-                    this[param.name] = null;
+
+                    return false;
                 }
-            } else if (param.type === "float") {
-                this[param.name] = param.data;
-            }
-        }
-
-        // Set an appropriate blend mode based on opacity of material
-        if (this.opacityMap || this.opacity < 1) {
-            this.blendType = pc.scene.BLEND_NORMAL;
-        } else {
-            this.blendType = pc.scene.BLEND_NONE;
-        }
-
-        this.update();
-    };
-
-    PhongMaterial.prototype.update = function () {
-        this.clearParameters();
-
-        this.setParameter('material_ambient', this.ambient);
-
-        if (this.diffuseMap) {
-            this.setParameter('texture_diffuseMap', this.diffuseMap);
-            if (this.diffuseMapTransform) {
-                this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform);
-            }
-        } else {
-            this.setParameter('material_diffuse', this.diffuse);
-        }
-
-        if (this.specularMap) {
-            this.setParameter('texture_specularMap', this.specularMap);
-            if (this.specularMapTransform) {
-                this.setParameter('texture_specularMapTransform', this.specularMapTransform);
-            }
-        } else {
-            this.setParameter('material_specular', this.specular);
-        }
-
-        if (this.glossMap) {
-            this.setParameter('texture_glossMap', this.glossMap);
-            if (this.glossMapTransform) {
-                this.setParameter('texture_glossMapTransform', this.glossMapTransform);
-            }
-        } else {
-            this.setParameter('material_shininess', this.shininess);
-        }
-
-        if (this.emissiveMap) {
-            this.setParameter('texture_emissiveMap', this.emissiveMap);
-            if (this.emissiveMapTransform) {
-                this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform);
-            }
-        } else {
-            this.setParameter('material_emissive', this.emissive);
-        }
-
-        if (this.opacityMap) {
-            this.setParameter('texture_opacityMap', this.opacityMap);
-            if (this.opacityMapTransform) {
-                this.setParameter('texture_opacityMapTransform', this.opacityMapTransform);
-            }
-        } else {
-            this.setParameter('material_opacity', this.opacity);
-        }
-
-        if (this.normalMap) {
-            this.setParameter('texture_normalMap', this.normalMap);
-            if (this.normalMapTransform) {
-                this.setParameter('texture_normalMapTransform', this.normalMapTransform);
-            }
-        } 
-        if (this.heightMap) {
-            this.setParameter('texture_heightMap', this.heightMap);
-            if (this.heightMapTransform) {
-                this.setParameter('texture_heightMapTransform', this.heightMapTransform);
-            }
-        }
-        if (this.normalMap || this.heightMap) {
-            this.setParameter('material_bumpMapFactor', this.bumpMapFactor);
-        }
-
-        if (this.cubeMap) {
-            this.setParameter('texture_cubeMap', this.cubeMap);
-        }
-        if (this.sphereMap) {
-            this.setParameter('texture_sphereMap', this.sphereMap);
-        }
-        if (this.sphereMap || this.cubeMap) {
-            this.setParameter('material_reflectionFactor', this.reflectivity);
-        }
-
-        if (this.lightMap) {
-            this.setParameter('texture_lightMap', this.lightMap);
-        }
-
-        this.shader = null;
-    };
-
-    PhongMaterial.prototype.updateShader = function (device, scene) {
-        var lights = scene._lights;
-
-        var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
-        var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
-        for (var i = 0; i < lights.length; i++) {
-            var light = lights[i];
-            if (light.getEnabled()) {
-                switch (light.getType()) {
-                    case pc.scene.LIGHTTYPE_DIRECTIONAL:
-                        if (light.getCastShadows()) {
-                            numSDirs++;
+                // Update material based on type
+                if (isMathType(param.type)) {
+                    if (param.data) {
+                        this[param.name] = pc.math[param.type].clone(param.data);
+                    } else {
+                        this[param.name] = null;
+                    }
+                } else if (param.type === "texture") {
+                    if (param.data) {
+                        if (param.data instanceof pc.gfx.Texture) {
+                            this[param.name] = param.data;
                         } else {
-                            numDirs++;
+                            throw Error("PhongMaterial.init() expects textures to already be created");
                         }
-                        break;
-                    case pc.scene.LIGHTTYPE_POINT:
-                        numPnts++;
-                        break;
-                    case pc.scene.LIGHTTYPE_SPOT:
-                        if (light.getCastShadows()) {
-                            numSSpts++;
-                        } else {
-                            numSpts++;
-                        }
-                        break;
+                    } else {
+                        this[param.name] = null;
+                    }
+                } else if (param.type === "float") {
+                    this[param.name] = param.data;
                 }
             }
-        }
 
-        var options = {
-            fog: scene.fog,
-            skin: !!this.meshInstances[0].skinInstance,
-            numDirs: numDirs,
-            numSDirs: numSDirs,
-            numPnts: numPnts,
-            numSPnts: numSPnts,
-            numSpts: numSpts,
-            numSSpts: numSSpts,
-            diffuseMap: !!this.diffuseMap,
-            diffuseMapTransform: !!this.diffuseMapTransform,
-            specularMap: !!this.specularMap,
-            specularMapTransform: !!this.specularMapTransform,
-            glossMap: !!this.glossMap,
-            glossMapTransform: !!this.glossMapTransform,
-            emissiveMap: !!this.emissiveMap,
-            emissiveMapTransform: !!this.emissiveMapTransform,
-            opacityMap: !!this.opacityMap,
-            opacityMapTransform: !!this.opacityMapTransform,
-            normalMap: !!this.normalMap,
-            normalMapTransform: !!this.normalMapTransform,
-            heightMap: !!this.heightMap,
-            heightMapTransform: !!this.heightMapTransform,
-            sphereMap: !!this.sphereMap,
-            cubeMap: !!this.cubeMap,
-            lightMap: !!this.lightMap
-        };
-        var library = device.getProgramLibrary();
-        this.shader = library.getProgram('phong', options);
-    };
+            // Set an appropriate blend mode based on opacity of material
+            if (this.opacityMap || this.opacity < 1) {
+                this.blendType = pc.scene.BLEND_NORMAL;
+            } else {
+                this.blendType = pc.scene.BLEND_NONE;
+            }
+
+            this.update();
+        },
+
+        update: function () {
+            this.clearParameters();
+
+            this.setParameter('material_ambient', this.ambient);
+
+            if (this.diffuseMap) {
+                this.setParameter('texture_diffuseMap', this.diffuseMap);
+                if (this.diffuseMapTransform) {
+                    this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform);
+                }
+            } else {
+                this.setParameter('material_diffuse', this.diffuse);
+            }
+
+            if (this.specularMap) {
+                this.setParameter('texture_specularMap', this.specularMap);
+                if (this.specularMapTransform) {
+                    this.setParameter('texture_specularMapTransform', this.specularMapTransform);
+                }
+            } else {
+                this.setParameter('material_specular', this.specular);
+            }
+
+            if (this.glossMap) {
+                this.setParameter('texture_glossMap', this.glossMap);
+                if (this.glossMapTransform) {
+                    this.setParameter('texture_glossMapTransform', this.glossMapTransform);
+                }
+            } else {
+                this.setParameter('material_shininess', this.shininess);
+            }
+
+            if (this.emissiveMap) {
+                this.setParameter('texture_emissiveMap', this.emissiveMap);
+                if (this.emissiveMapTransform) {
+                    this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform);
+                }
+            } else {
+                this.setParameter('material_emissive', this.emissive);
+            }
+
+            if (this.opacityMap) {
+                this.setParameter('texture_opacityMap', this.opacityMap);
+                if (this.opacityMapTransform) {
+                    this.setParameter('texture_opacityMapTransform', this.opacityMapTransform);
+                }
+            } else {
+                this.setParameter('material_opacity', this.opacity);
+            }
+
+            if (this.normalMap) {
+                this.setParameter('texture_normalMap', this.normalMap);
+                if (this.normalMapTransform) {
+                    this.setParameter('texture_normalMapTransform', this.normalMapTransform);
+                }
+            } 
+            if (this.heightMap) {
+                this.setParameter('texture_heightMap', this.heightMap);
+                if (this.heightMapTransform) {
+                    this.setParameter('texture_heightMapTransform', this.heightMapTransform);
+                }
+            }
+            if (this.normalMap || this.heightMap) {
+                this.setParameter('material_bumpMapFactor', this.bumpiness);
+            }
+
+            if (this.cubeMap) {
+                this.setParameter('texture_cubeMap', this.cubeMap);
+            }
+            if (this.sphereMap) {
+                this.setParameter('texture_sphereMap', this.sphereMap);
+            }
+            if (this.sphereMap || this.cubeMap) {
+                this.setParameter('material_reflectionFactor', this.reflectivity);
+            }
+
+            if (this.lightMap) {
+                this.setParameter('texture_lightMap', this.lightMap);
+            }
+
+            this.shader = null;
+        },
+
+        updateShader: function (device, scene) {
+            var lights = scene._lights;
+
+            var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
+            var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
+            for (var i = 0; i < lights.length; i++) {
+                var light = lights[i];
+                if (light.getEnabled()) {
+                    switch (light.getType()) {
+                        case pc.scene.LIGHTTYPE_DIRECTIONAL:
+                            if (light.getCastShadows()) {
+                                numSDirs++;
+                            } else {
+                                numDirs++;
+                            }
+                            break;
+                        case pc.scene.LIGHTTYPE_POINT:
+                            numPnts++;
+                            break;
+                        case pc.scene.LIGHTTYPE_SPOT:
+                            if (light.getCastShadows()) {
+                                numSSpts++;
+                            } else {
+                                numSpts++;
+                            }
+                            break;
+                    }
+                }
+            }
+
+            var options = {
+                fog: scene.fog,
+                skin: !!this.meshInstances[0].skinInstance,
+                numDirs: numDirs,
+                numSDirs: numSDirs,
+                numPnts: numPnts,
+                numSPnts: numSPnts,
+                numSpts: numSpts,
+                numSSpts: numSSpts,
+                diffuseMap: !!this.diffuseMap,
+                diffuseMapTransform: !!this.diffuseMapTransform,
+                specularMap: !!this.specularMap,
+                specularMapTransform: !!this.specularMapTransform,
+                glossMap: !!this.glossMap,
+                glossMapTransform: !!this.glossMapTransform,
+                emissiveMap: !!this.emissiveMap,
+                emissiveMapTransform: !!this.emissiveMapTransform,
+                opacityMap: !!this.opacityMap,
+                opacityMapTransform: !!this.opacityMapTransform,
+                normalMap: !!this.normalMap,
+                normalMapTransform: !!this.normalMapTransform,
+                heightMap: !!this.heightMap,
+                heightMapTransform: !!this.heightMapTransform,
+                sphereMap: !!this.sphereMap,
+                cubeMap: !!this.cubeMap,
+                lightMap: !!this.lightMap
+            };
+            var library = device.getProgramLibrary();
+            this.shader = library.getProgram('phong', options);
+        }
+    });
 
     return {
         PhongMaterial: PhongMaterial

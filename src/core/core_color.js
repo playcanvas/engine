@@ -89,6 +89,16 @@ pc.extend(pc, (function () {
 
         /**
         * @function
+        * @name pc.Color#clone
+        * @description Returns a clone of the specified color.
+        * @returns {pc.Color} A duplicate color object
+        */
+        clone: function () {
+            return new pc.Color(this.r, this.g, this.b, this.a);
+        },
+
+        /**
+        * @function
         * @name pc.Color#set
         * @description Assign values to the color components, including alpha
         * @param {Number} r The value for red (0-1)
