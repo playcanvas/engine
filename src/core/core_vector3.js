@@ -5,6 +5,15 @@ pc.extend(pc, (function () {
     * @constructor Creates a new Vector3 object
     * @property {pc.Vector3} identity [Read only] The identity matrix.
     * @property {pc.Vector3} zero [Read only] A matrix with all elements set to zero.
+    * @property {Number} x The first element of the vector.
+    * @property {Number} y The second element of the vector.
+    * @property {Number} z The third element of the vector.
+    * @property {Number} r The first element of the vector.
+    * @property {Number} g The second element of the vector.
+    * @property {Number} b The third element of the vector.
+    * @property {Number} u The first element of the vector.
+    * @property {Number} v The second element of the vector.
+    * @property {Number} w The third element of the vector.
     */
     var Vector3 = function () {
         this.data = new Float32Array(3);
@@ -89,6 +98,22 @@ pc.extend(pc, (function () {
             }
         }();
     });
+
+    function (accessors) {
+        for (var i = 0; i < accessors.length; i++) {
+            var names = accessors[i];
+            for (var j = 0; j < names.length; j++) {
+                Object.defineProperty(Vector3.prototype, names[j], {
+                    get: function () {
+                        return this.data[i];
+                    },
+                    set: function (value) {
+                        this.data[i] = value;
+                    }
+                });
+            }
+        }
+    }(['x', 'u', 'r'], ['y', 'v', 'g'], ['z', 'w', 'b']);
 
     /**
      * @function
