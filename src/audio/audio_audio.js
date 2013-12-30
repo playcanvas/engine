@@ -70,7 +70,7 @@ pc.audio = function () {
         * @name pc.audio.AudioManager#playSound3d
         * @description Create a new pc.audio.Channel3d and begin playback of the sound at the position specified
         * @param {pc.audio.Sound} sound The Sound object to play.
-        * @param {pc.math.vec3} position The position of the sound in 3D space.
+        * @param {pc.Vector3} position The position of the sound in 3D space.
         * @param {Object} options
         * @param {Number} [options.volume] The volume to playback at, between 0 and 1.
         * @param {Boolean} [options.loop] Whether to loop the sound when it reaches the end.

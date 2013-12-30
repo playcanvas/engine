@@ -150,7 +150,7 @@ pc.extend(pc.fw, function () {
             
             if (this.context.designer && this.displayInTools(component.entity)) {
                 var material = new pc.scene.BasicMaterial();
-                material.color = pc.math.vec4.create(1, 1, 0, 1);
+                material.color = new pc.Color(1, 1, 0, 1);
                 material.update();
 
                 var indexBuffer = new pc.gfx.IndexBuffer(this.context.graphicsDevice, pc.gfx.INDEXFORMAT_UINT8, 24);
