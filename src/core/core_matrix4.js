@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+pc.extend(pc, function () {
     /**
     * @name pc.Matrix4
     * @class A 4x4 matrix.
@@ -22,7 +22,7 @@ pc.extend(pc, (function () {
             return function() {
                 return identity;
             }
-        }();
+        }()
     });
 
     Object.defineProperty(Matrix4, 'zero', {
@@ -31,7 +31,7 @@ pc.extend(pc, (function () {
             return function() {
                 return zero;
             }
-        }();
+        }()
     });
 
     /**
@@ -338,10 +338,14 @@ pc.extend(pc, (function () {
      *
      * @author Will Eastcott
      */
-    Matrix4.prototype.mulVector3: function (v, w) {
-        if (typeof r === 'undefined') {
-            r = pc.math.vec3.create();
+    Matrix4.mulVec3 = function (mtx, vec, w, res) {
+        if (typeof res === 'undefined') {
+            res = new pc.Vector3();
         }
+
+        var m = mtx.data;
+        var v = vec.data;
+        var r = res.data;
 
         var x, y, z;
         x =
@@ -362,349 +366,347 @@ pc.extend(pc, (function () {
         r[0] = x;
         r[1] = y;
         r[2] = z;
-        return r;
-    },
 
-        /**
-         * @function
-         * @name pc.math.mat4.makeLookAt
-         * @description Creates a viewing matrix derived from an eye point, a reference point indicating the center
-         * of the scene, and an up vector. The matrix maps the reference point to the negative z-axis and the eye
-         * point to the origin, so that when you use a typical projection matrix, the center of the scene maps to 
-         * the center of the viewport. Similarly, the direction described by the up vector projected onto the
-         * viewing plane is mapped to the positive y-axis so that it points upward in the viewport. The up vector
-         * must not be parallel to the line of sight from the eye to the reference point.
-         * @param {Float32Array} position 3-d vector holding view position.
-         * @param {Float32Array} target 3-d vector holding reference point.
-         * @param {Float32Array} up 3-d vector holding the up direction.
-         * @param {Float32Array} [r] 4x4 matrix to receive the calculated lookAt matrix.
-         * @returns {Float32Array} The calculated lookAt matrix.
-         * @example
-         * var position = pc.math.vec3.create(10, 10, 10);
-         * var target = pc.math.vec3.create(0, 0, 0);
-         * var up = pc.math.vec3.create(0, 1, 0);
-         * var lookAt = pc.math.mat4.makeLookAt(position, target, up);
-         * @author Will Eastcott
-         */
-        lookAt: function () {
-            var x = pc.Vector3();
-            var y = pc.Vector3();
-            var z = pc.Vector3();
+        return res;
+    };
 
-            return function (position, target, up) {
-                z.subtract(position, target).normalize();
-                y.copy(up).normalize();
-                x.cross(y, z).normalize();
-                y.cross(z, x);
+    /**
+     * @function
+     * @name pc.math.mat4.makeLookAt
+     * @description Creates a viewing matrix derived from an eye point, a reference point indicating the center
+     * of the scene, and an up vector. The matrix maps the reference point to the negative z-axis and the eye
+     * point to the origin, so that when you use a typical projection matrix, the center of the scene maps to 
+     * the center of the viewport. Similarly, the direction described by the up vector projected onto the
+     * viewing plane is mapped to the positive y-axis so that it points upward in the viewport. The up vector
+     * must not be parallel to the line of sight from the eye to the reference point.
+     * @param {Float32Array} position 3-d vector holding view position.
+     * @param {Float32Array} target 3-d vector holding reference point.
+     * @param {Float32Array} up 3-d vector holding the up direction.
+     * @param {Float32Array} [r] 4x4 matrix to receive the calculated lookAt matrix.
+     * @returns {Float32Array} The calculated lookAt matrix.
+     * @example
+     * var position = pc.math.vec3.create(10, 10, 10);
+     * var target = pc.math.vec3.create(0, 0, 0);
+     * var up = pc.math.vec3.create(0, 1, 0);
+     * var lookAt = pc.math.mat4.makeLookAt(position, target, up);
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.lookAt = function () {
+        var x = pc.Vector3();
+        var y = pc.Vector3();
+        var z = pc.Vector3();
 
-                var r = this.data;
-
-                r[0]  = x[0];
-                r[1]  = x[1];
-                r[2]  = x[2];
-                r[3]  = 0;
-                r[4]  = y[0];
-                r[5]  = y[1];
-                r[6]  = y[2];
-                r[7]  = 0;
-                r[8]  = z[0];
-                r[9]  = z[1];
-                r[10] = z[2];
-                r[11] = 0;
-                r[12] = position[0];
-                r[13] = position[1];
-                r[14] = position[2];
-                r[15] = 1;
-
-                return this;
-            };
-        }(),
-
-        /**
-         * @function
-         * @name pc.math.mat4.makeFrustum
-         * @description Generates a persective projection matrix. The function's parameters define
-         * the shape of a frustum.
-         * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
-         * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
-         * @param {Number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
-         * @param {Number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
-         * @param {Number} znear The near clip plane in eye coordinates.
-         * @param {Number} zfar The far clip plane in eye coordinates.
-         * @param {Array} r An optional 4x4 matrix to receive the generated perspective projection matrix.
-         * @returns {Array} The generated perspective projection matrix.
-         * @example
-         * // Create a 4x4 persepctive projection matrix
-         * var persp = pc.math.mat4.makeFrustum(-2, 2, -1, 1, 1, 1000);
-         * @author Will Eastcott
-         */
-        frustum: function (left, right, bottom, top, znear, zfar) {
-            var temp1 = 2.0 * znear;
-            var temp2 = right - left;
-            var temp3 = top - bottom;
-            var temp4 = zfar - znear;
+        return function (position, target, up) {
+            z.subtract(position, target).normalize();
+            y.copy(up).normalize();
+            x.cross(y, z).normalize();
+            y.cross(z, x);
 
             var r = this.data;
-            r[0] = temp1 / temp2;
-            r[1] = 0;
-            r[2] = 0;
-            r[3] = 0;
-            r[4] = 0;
-            r[5] = temp1 / temp3;
-            r[6] = 0;
-            r[7] = 0;
-            r[8] = (right+left) / temp2;
-            r[9] = (top+bottom) / temp3;
-            r[10] = (-zfar-znear) / temp4;
-            r[11] = -1.0;
-            r[12] = 0;
-            r[13] = 0;
-            r[14] = (-temp1 * zfar) / temp4;
-            r[15] = 0;
+
+            r[0]  = x[0];
+            r[1]  = x[1];
+            r[2]  = x[2];
+            r[3]  = 0;
+            r[4]  = y[0];
+            r[5]  = y[1];
+            r[6]  = y[2];
+            r[7]  = 0;
+            r[8]  = z[0];
+            r[9]  = z[1];
+            r[10] = z[2];
+            r[11] = 0;
+            r[12] = position[0];
+            r[13] = position[1];
+            r[14] = position[2];
+            r[15] = 1;
 
             return this;
-        },
+        };
+    }();
 
-        /**
-         * @function
-         * @name pc.Matrix4#perspective
-         * @description Generates a persective projection matrix. The function's parameters define
-         * the shape of a frustum.
-         * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space.
-         * @param {Number} aspect The aspect ratio of the frustum's projection plane (width / height).
-         * @param {Number} znear The near clip plane in eye coordinates.
-         * @param {Number} zfar The far clip plane in eye coordinates.
-         * @returns {pc.Matrix4} The generated perspective projection matrix (useful for chaining).
-         * @example
-         * // Create a 4x4 persepctive projection matrix
-         * var persp = pc.Matrix4().perspective(45.0, 16.0/9.0, 1.0, 1000.0);
-         * @author Will Eastcott
-         */
-        perspective: function (fovy, aspect, znear, zfar) {
-            var ymax = znear * Math.tan(fovy * Math.PI / 360.0);
-            var xmax = ymax * aspect;
+    /**
+     * @function
+     * @name pc.math.mat4.makeFrustum
+     * @description Generates a persective projection matrix. The function's parameters define
+     * the shape of a frustum.
+     * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
+     * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
+     * @param {Number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
+     * @param {Number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
+     * @param {Number} znear The near clip plane in eye coordinates.
+     * @param {Number} zfar The far clip plane in eye coordinates.
+     * @param {Array} r An optional 4x4 matrix to receive the generated perspective projection matrix.
+     * @returns {Array} The generated perspective projection matrix.
+     * @example
+     * // Create a 4x4 persepctive projection matrix
+     * var persp = pc.math.mat4.makeFrustum(-2, 2, -1, 1, 1, 1000);
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.frustum = function (left, right, bottom, top, znear, zfar) {
+        var temp1 = 2.0 * znear;
+        var temp2 = right - left;
+        var temp3 = top - bottom;
+        var temp4 = zfar - znear;
 
-            return this.frustum(-xmax, xmax, -ymax, ymax, znear, zfar);
-        },
+        var r = this.data;
+        r[0] = temp1 / temp2;
+        r[1] = 0;
+        r[2] = 0;
+        r[3] = 0;
+        r[4] = 0;
+        r[5] = temp1 / temp3;
+        r[6] = 0;
+        r[7] = 0;
+        r[8] = (right+left) / temp2;
+        r[9] = (top+bottom) / temp3;
+        r[10] = (-zfar-znear) / temp4;
+        r[11] = -1.0;
+        r[12] = 0;
+        r[13] = 0;
+        r[14] = (-temp1 * zfar) / temp4;
+        r[15] = 0;
+
+        return this;
+    };
+
+    /**
+     * @function
+     * @name pc.Matrix4#perspective
+     * @description Generates a persective projection matrix. The function's parameters define
+     * the shape of a frustum.
+     * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space.
+     * @param {Number} aspect The aspect ratio of the frustum's projection plane (width / height).
+     * @param {Number} znear The near clip plane in eye coordinates.
+     * @param {Number} zfar The far clip plane in eye coordinates.
+     * @returns {pc.Matrix4} The generated perspective projection matrix (useful for chaining).
+     * @example
+     * // Create a 4x4 persepctive projection matrix
+     * var persp = pc.Matrix4().perspective(45.0, 16.0/9.0, 1.0, 1000.0);
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.perspective = function (fovy, aspect, znear, zfar) {
+        var ymax = znear * Math.tan(fovy * Math.PI / 360.0);
+        var xmax = ymax * aspect;
+
+        return this.frustum(-xmax, xmax, -ymax, ymax, znear, zfar);
+    };
+    
+    /**
+     * @function
+     * @name pc.Matrix4#ortho
+     * @description Generates an orthographic projection matrix. The function's parameters define
+     * the shape of a cuboid-shaped frustum.
+     * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
+     * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
+     * @param {Number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
+     * @param {Number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
+     * @param {Number} znear The near clip plane in eye coordinates.
+     * @param {Number} zfar The far clip plane in eye coordinates.
+     * @returns {pc.Matrix4} The generated perspective orthographic matrix (useful for chaining).
+     * @example
+     * // Create a 4x4 orthographic projection matrix
+     * var ortho = pc.Matrix4().ortho(-2.0, 2.0, -2.0, 2.0, 1.0, 1000.0);
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.ortho = function (left, right, bottom, top, near, far) {
+        var r = this.data;
+
+        r[0] = 2 / (right - left);
+        r[1] = 0;
+        r[2] = 0;
+        r[3] = 0;
+        r[4] = 0;
+        r[5] = 2 / (top - bottom);
+        r[6] = 0;
+        r[7] = 0;
+        r[8] = 0;
+        r[9] = 0;
+        r[10] = -2 / (far - near);
+        r[11] = 0;
+        r[12] = -(right + left) / (right - left);
+        r[13] = -(top + bottom) / (top - bottom);
+        r[14] = -(far + near) / (far - near);
+        r[15] = 1;
         
-        /**
-         * @function
-         * @name pc.Matrix4#ortho
-         * @description Generates an orthographic projection matrix. The function's parameters define
-         * the shape of a cuboid-shaped frustum.
-         * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
-         * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
-         * @param {Number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
-         * @param {Number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
-         * @param {Number} znear The near clip plane in eye coordinates.
-         * @param {Number} zfar The far clip plane in eye coordinates.
-         * @returns {pc.Matrix4} The generated perspective orthographic matrix (useful for chaining).
-         * @example
-         * // Create a 4x4 orthographic projection matrix
-         * var ortho = pc.Matrix4().ortho(-2.0, 2.0, -2.0, 2.0, 1.0, 1000.0);
-         * @author Will Eastcott
-         */
-        ortho: function (left, right, bottom, top, near, far) {
-            var r = this.data;
-            r[0] = 2 / (right - left);
-            r[1] = 0;
-            r[2] = 0;
-            r[3] = 0;
-            r[4] = 0;
-            r[5] = 2 / (top - bottom);
-            r[6] = 0;
-            r[7] = 0;
-            r[8] = 0;
-            r[9] = 0;
-            r[10] = -2 / (far - near);
-            r[11] = 0;
-            r[12] = -(right + left) / (right - left);
-            r[13] = -(top + bottom) / (top - bottom);
-            r[14] = -(far + near) / (far - near);
-            r[15] = 1;
-            
-            return this;
-        },
+        return this;
+    };
 
-        /**
-         * @function
-         * @name pc.math.mat4.makeRotate
-         * @description Generates a rotation matrix.
-         * @param {Number} angle The angle of rotation in degrees.
-         * @param {Array} axis The normalized axis vector around which to rotate.
-         * @param {Array} r An optional 4x4 matrix to receive the generated rotation matrix.
-         * @returns {Array} The generated rotation matrix.
-         * @example
-         * var yaxis = pc.math.vec3.create(0, 1, 0);
-         *
-         * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rotation = pc.math.mat4.makeRotate(180, yaxis);
-         * @author Will Eastcott
-         */
-        makeRotate: function (angle, axis, r) {
-            if (typeof r === 'undefined') {
-                r = pc.math.mat4.create();
-            }
+    /**
+     * @function
+     * @name pc.math.mat4.makeRotate
+     * @description Generates a rotation matrix.
+     * @param {Number} angle The angle of rotation in degrees.
+     * @param {Array} axis The normalized axis vector around which to rotate.
+     * @param {Array} r An optional 4x4 matrix to receive the generated rotation matrix.
+     * @returns {Array} The generated rotation matrix.
+     * @example
+     * var yaxis = pc.math.vec3.create(0, 1, 0);
+     *
+     * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
+     * var rotation = pc.math.mat4.makeRotate(180, yaxis);
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.rotate = function (angle, axis) {
+        var m = this.data;
+        var x = axis[0], y = axis[1], z = axis[2];
+        var c = Math.cos(angle);
+        var s = Math.sin(angle);
+        var t = 1-c;
+        var tx = t * x;
+        var ty = t * y;
 
-            var x = axis[0], y = axis[1], z = axis[2];
-            angle *= pc.math.DEG_TO_RAD;
-            var c = Math.cos(angle);
-            var s = Math.sin(angle);
-            var t = 1-c;
-            var tx = t * x;
-            var ty = t * y;
+        m[0] = tx*x+c;
+        m[1] = tx*y+s*z;
+        m[2] = tx*z-s*y;
+        m[3] = 0;
+        m[4] = tx*y-s*z;
+        m[5] = ty*y+c;
+        m[6] = ty*z+s*x;
+        m[7] = 0;
+        m[8] = tx*z+s*y;
+        m[9] = ty*z-x*s;
+        m[10] = t*z*z+c;
+        m[11] = 0;
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = 0;
+        m[15] = 1;
 
-            r[0] = tx*x+c;
-            r[1] = tx*y+s*z;
-            r[2] = tx*z-s*y;
-            r[3] = 0;
-            r[4] = tx*y-s*z;
-            r[5] = ty*y+c;
-            r[6] = ty*z+s*x;
-            r[7] = 0;
-            r[8] = tx*z+s*y;
-            r[9] = ty*z-x*s;
-            r[10] = t*z*z+c;
-            r[11] = 0;
-            r[12] = 0;
-            r[13] = 0;
-            r[14] = 0;
-            r[15] = 1;
+        return this;
+    };
 
-            return r;
-        },
+    /**
+     * @function
+     * @name pc.math.mat4.makeTranslate
+     * @description Generates a translation matrix.
+     * @param {Number} x The x-component of the translation.
+     * @param {Number} y The y-component of the translation.
+     * @param {Number} z The z-component of the translation.
+     * @param {Array} r An optional 4x4 matrix to receive the generated translation matrix.
+     * @returns {Array} The generated translation matrix.
+     * @example
+     * // Create a 4x4 translation matrix
+     * var translation = pc.math.mat4.makeTranslate(10, 20, 30);
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.translate = function (tx, ty, tz) {
+        var m = this.data;
 
-        /**
-         * @function
-         * @name pc.math.mat4.makeTranslate
-         * @description Generates a translation matrix.
-         * @param {Number} x The x-component of the translation.
-         * @param {Number} y The y-component of the translation.
-         * @param {Number} z The z-component of the translation.
-         * @param {Array} r An optional 4x4 matrix to receive the generated translation matrix.
-         * @returns {Array} The generated translation matrix.
-         * @example
-         * // Create a 4x4 translation matrix
-         * var translation = pc.math.mat4.makeTranslate(10, 20, 30);
-         * @author Will Eastcott
-         */
-        translate: function (tx, ty, tz) {
-            if (typeof r === 'undefined') {
-                r = pc.math.mat4.create();
-            }
+        m[0] = 1;
+        m[1] = 0;
+        m[2] = 0;
+        m[3] = 0;
+        m[4] = 0;
+        m[5] = 1;
+        m[6] = 0;
+        m[7] = 0;
+        m[8] = 0;
+        m[9] = 0;
+        m[10] = 1;
+        m[11] = 0;
+        m[12] = tx;
+        m[13] = ty;
+        m[14] = tz;
+        m[15] = 1;
 
-            r[0] = 1;
-            r[1] = 0;
-            r[2] = 0;
-            r[3] = 0;
-            r[4] = 0;
-            r[5] = 1;
-            r[6] = 0;
-            r[7] = 0;
-            r[8] = 0;
-            r[9] = 0;
-            r[10] = 1;
-            r[11] = 0;
-            r[12] = x;
-            r[13] = y;
-            r[14] = z;
-            r[15] = 1;
+        return this;
+    };
 
-            return r;
-        },
+    /**
+     * @function
+     * @name pc.math.mat4.makeScale
+     * @description Generates a scale matrix.
+     * @param {Number} x The x-component of the scale.
+     * @param {Number} y The y-component of the scale.
+     * @param {Number} z The z-component of the scale.
+     * @param {Array} r An optional 4x4 matrix to receive the generated scale matrix.
+     * @returns {Array} The generated scale matrix.
+     * @example
+     * // Create a 4x4 scale matrix
+     * var scale = pc.math.mat4.makeScale(10, 10, 10);
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.scale = function (sx, sy, sz) {
+        var m = this.data;
 
-        /**
-         * @function
-         * @name pc.math.mat4.makeScale
-         * @description Generates a scale matrix.
-         * @param {Number} x The x-component of the scale.
-         * @param {Number} y The y-component of the scale.
-         * @param {Number} z The z-component of the scale.
-         * @param {Array} r An optional 4x4 matrix to receive the generated scale matrix.
-         * @returns {Array} The generated scale matrix.
-         * @example
-         * // Create a 4x4 scale matrix
-         * var scale = pc.math.mat4.makeScale(10, 10, 10);
-         * @author Will Eastcott
-         */
-        scale: function(sx, sy, sz) {
-            r[0] = sx;
-            r[1] = 0;
-            r[2] = 0;
-            r[3] = 0;
-            r[4] = 0;
-            r[5] = sy;
-            r[6] = 0;
-            r[7] = 0;
-            r[8] = 0;
-            r[9] = 0;
-            r[10] = sz;
-            r[11] = 0;
-            r[12] = 0;
-            r[13] = 0;
-            r[14] = 0;
-            r[15] = 1;
+        m[0] = sx;
+        m[1] = 0;
+        m[2] = 0;
+        m[3] = 0;
+        m[4] = 0;
+        m[5] = sy;
+        m[6] = 0;
+        m[7] = 0;
+        m[8] = 0;
+        m[9] = 0;
+        m[10] = sz;
+        m[11] = 0;
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = 0;
+        m[15] = 1;
 
-            return r;
-        },
+        return this;
+    };
 
-        /**
-         * @function
-         * @name pc.Matrix4#invert
-         * @description Generates the inverse of the specified 4x4 matrix.
-         * @returns {pc.Matrix4} The matrix being inverted.
-         * @example
-         * var yaxis = new pc.Vector3(0, 1, 0);
-         *
-         * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = new pc.Matrix4().rotate(180, yaxis);
-         *
-         * // Invert in place
-         * rot.invert();
-         * @author Will Eastcott
-         */
-        invert: function () {
-            var m = this.data;
+    /**
+     * @function
+     * @name pc.Matrix4#invert
+     * @description Generates the inverse of the specified 4x4 matrix.
+     * @returns {pc.Matrix4} The matrix being inverted.
+     * @example
+     * var yaxis = new pc.Vector3(0, 1, 0);
+     *
+     * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
+     * var rot = new pc.Matrix4().rotate(180, yaxis);
+     *
+     * // Invert in place
+     * rot.invert();
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.invert = function () {
+        var m = this.data;
 
-            var a00 = m[0],  a01 = m[1],  a02 = m[2],  a03 = m[3];
-            var a10 = m[4],  a11 = m[5],  a12 = m[6],  a13 = m[7];
-            var a20 = m[8],  a21 = m[9],  a22 = m[10], a23 = m[11];
-            var a30 = m[12], a31 = m[13], a32 = m[14], a33 = m[15];
+        var a00 = m[0],  a01 = m[1],  a02 = m[2],  a03 = m[3];
+        var a10 = m[4],  a11 = m[5],  a12 = m[6],  a13 = m[7];
+        var a20 = m[8],  a21 = m[9],  a22 = m[10], a23 = m[11];
+        var a30 = m[12], a31 = m[13], a32 = m[14], a33 = m[15];
 
-            var b00 = a00*a11 - a01*a10;
-            var b01 = a00*a12 - a02*a10;
-            var b02 = a00*a13 - a03*a10;
-            var b03 = a01*a12 - a02*a11;
-            var b04 = a01*a13 - a03*a11;
-            var b05 = a02*a13 - a03*a12;
-            var b06 = a20*a31 - a21*a30;
-            var b07 = a20*a32 - a22*a30;
-            var b08 = a20*a33 - a23*a30;
-            var b09 = a21*a32 - a22*a31;
-            var b10 = a21*a33 - a23*a31;
-            var b11 = a22*a33 - a23*a32;
+        var b00 = a00*a11 - a01*a10;
+        var b01 = a00*a12 - a02*a10;
+        var b02 = a00*a13 - a03*a10;
+        var b03 = a01*a12 - a02*a11;
+        var b04 = a01*a13 - a03*a11;
+        var b05 = a02*a13 - a03*a12;
+        var b06 = a20*a31 - a21*a30;
+        var b07 = a20*a32 - a22*a30;
+        var b08 = a20*a33 - a23*a30;
+        var b09 = a21*a32 - a22*a31;
+        var b10 = a21*a33 - a23*a31;
+        var b11 = a22*a33 - a23*a32;
 
-            var invDet = 1.0/(b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06);
+        var invDet = 1.0/(b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06);
 
-            m[0] = (a11*b11 - a12*b10 + a13*b09)*invDet;
-            m[1] = (-a01*b11 + a02*b10 - a03*b09)*invDet;
-            m[2] = (a31*b05 - a32*b04 + a33*b03)*invDet;
-            m[3] = (-a21*b05 + a22*b04 - a23*b03)*invDet;
-            m[4] = (-a10*b11 + a12*b08 - a13*b07)*invDet;
-            m[5] = (a00*b11 - a02*b08 + a03*b07)*invDet;
-            m[6] = (-a30*b05 + a32*b02 - a33*b01)*invDet;
-            m[7] = (a20*b05 - a22*b02 + a23*b01)*invDet;
-            m[8] = (a10*b10 - a11*b08 + a13*b06)*invDet;
-            m[9] = (-a00*b10 + a01*b08 - a03*b06)*invDet;
-            m[10] = (a30*b04 - a31*b02 + a33*b00)*invDet;
-            m[11] = (-a20*b04 + a21*b02 - a23*b00)*invDet;
-            m[12] = (-a10*b09 + a11*b07 - a12*b06)*invDet;
-            m[13] = (a00*b09 - a01*b07 + a02*b06)*invDet;
-            m[14] = (-a30*b03 + a31*b01 - a32*b00)*invDet;
-            m[15] = (a20*b03 - a21*b01 + a22*b00)*invDet;
+        m[0] = (a11*b11 - a12*b10 + a13*b09)*invDet;
+        m[1] = (-a01*b11 + a02*b10 - a03*b09)*invDet;
+        m[2] = (a31*b05 - a32*b04 + a33*b03)*invDet;
+        m[3] = (-a21*b05 + a22*b04 - a23*b03)*invDet;
+        m[4] = (-a10*b11 + a12*b08 - a13*b07)*invDet;
+        m[5] = (a00*b11 - a02*b08 + a03*b07)*invDet;
+        m[6] = (-a30*b05 + a32*b02 - a33*b01)*invDet;
+        m[7] = (a20*b05 - a22*b02 + a23*b01)*invDet;
+        m[8] = (a10*b10 - a11*b08 + a13*b06)*invDet;
+        m[9] = (-a00*b10 + a01*b08 - a03*b06)*invDet;
+        m[10] = (a30*b04 - a31*b02 + a33*b00)*invDet;
+        m[11] = (-a20*b04 + a21*b02 - a23*b00)*invDet;
+        m[12] = (-a10*b09 + a11*b07 - a12*b06)*invDet;
+        m[13] = (a00*b09 - a01*b07 + a02*b06)*invDet;
+        m[14] = (-a30*b03 + a31*b01 - a32*b00)*invDet;
+        m[15] = (a20*b03 - a21*b01 + a22*b00)*invDet;
 
-            return this;
-        },
+        return this;
+    };
 
     /**
      * @function
@@ -826,57 +828,66 @@ pc.extend(pc, (function () {
         return this;
     };
 
-        invertTo3x3: function () {
-            var m = this.data;
+    Matrix4.prototype.invertTo3x3 = function () {
+        var m = this.data;
 
-            var a11 =  m[10] * m[5] - m[6] * m[9];
-            var a21 = -m[10] * m[1] + m[2] * m[9];
-            var a31 =  m[6]  * m[1] - m[2] * m[5];
-            var a12 = -m[10] * m[4] + m[6] * m[8];
-            var a22 =  m[10] * m[0] - m[2] * m[8];
-            var a32 = -m[6]  * m[0] + m[2] * m[4];
-            var a13 =  m[9]  * m[4] - m[5] * m[8];
-            var a23 = -m[9]  * m[0] + m[1] * m[8];
-            var a33 =  m[5]  * m[0] - m[1] * m[4];
+        var a11 =  m[10] * m[5] - m[6] * m[9];
+        var a21 = -m[10] * m[1] + m[2] * m[9];
+        var a31 =  m[6]  * m[1] - m[2] * m[5];
+        var a12 = -m[10] * m[4] + m[6] * m[8];
+        var a22 =  m[10] * m[0] - m[2] * m[8];
+        var a32 = -m[6]  * m[0] + m[2] * m[4];
+        var a13 =  m[9]  * m[4] - m[5] * m[8];
+        var a23 = -m[9]  * m[0] + m[1] * m[8];
+        var a33 =  m[5]  * m[0] - m[1] * m[4];
 
-            var det =  m[0] * a11 + m[1] * a12 + m[2] * a13;
-            if (det == 0) { // no inverse
-                console.warn("pc.Matrix4#invertTo3x3: Matrix not invertible");
-                return r;
-            }
+        var det =  m[0] * a11 + m[1] * a12 + m[2] * a13;
+        if (det == 0) { // no inverse
+            console.warn("pc.Matrix4#invertTo3x3: Matrix not invertible");
+            return r;
+        }
 
-            var idet = 1.0 / det;
+        var idet = 1.0 / det;
 
-            r[0] = idet * a11;
-            r[1] = idet * a21;
-            r[2] = idet * a31;
-            r[3] = idet * a12;
-            r[4] = idet * a22;
-            r[5] = idet * a32;
-            r[6] = idet * a13;
-            r[7] = idet * a23;
-            r[8] = idet * a33;
+        r[0] = idet * a11;
+        r[1] = idet * a21;
+        r[2] = idet * a31;
+        r[3] = idet * a12;
+        r[4] = idet * a22;
+        r[5] = idet * a32;
+        r[6] = idet * a13;
+        r[7] = idet * a23;
+        r[8] = idet * a33;
 
-            return this;
-        },
+        return this;
+    };
 
-        /**
-         * @function
-         * @name pc.math.mat4.getTranslation
-         * @description Extracts the translation vector from the specified 4x4 matrix.
-         * @param {Array} m The source matrix to be queried.
-         * @returns {Array} The translation vector of the specified 4x4 matrix.
-         * @example
-         * // Create a 4x4 translation matrix
-         * var t = pc.math.mat4.makeTranslate(10, 20, 30);
-         *
-         * // Query the translation component
-         * var translation = pc.math.mat4.getTranslation(t);
-         * @author Will Eastcott
-         */
-        getTranslation: function () {
-            return this.translation;
-        },
+    /**
+     * @function
+     * @name pc.Vector3#getTranslation
+     * @description Extracts the transational component from the specified 4x4 matrix.
+     * @param {pc.Vector3} [t] The vector to receive the translation of the matrix.
+     * @returns {pc.Vector3} The translation of the specified 4x4 matrix.
+     * @example
+     * // Create a 4x4 matrix
+     * var m = new pc.Matrix4();
+     *
+     * // Query the z-axis component
+     * var t = new pc.Vector3();
+     * m.getTranslation(t);
+     * @author Will Eastcott
+     */
+    Matrix4.prototype.getTranslation = function (t) {
+        if (typeof t === 'undefined') {
+            t = new Vector3();
+        }
+
+        t.data[0] = this.data[12];
+        t.data[1] = this.data[13];
+        t.data[2] = this.data[14];
+
+        return t;
+    };
 
     /**
      * @function
@@ -1103,4 +1114,4 @@ pc.extend(pc, (function () {
     return {
         Matrix4: Matrix4
     };
-}();
+}());

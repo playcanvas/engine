@@ -49,9 +49,9 @@ pc.extend(pc.resources, function () {
                 var p = k.pos;
                 var r = k.rot;
                 var s = k.scale;
-                var pos = pc.math.vec3.create(p[0], p[1], p[2]);
-                var rot = pc.math.quat.fromEulerXYZ(r[0], r[1], r[2]);
-                var scl = pc.math.vec3.create(s[0], s[1], s[2]);
+                var pos = new pc.Vector3(p[0], p[1], p[2]);
+                var rot = new pc.Quaternion().fromEulerXYZ(r[0], r[1], r[2]);
+                var scl = new pc.Vector3(s[0], s[1], s[2]);
 
                 var key = new pc.anim.Key(t, pos, rot, scl);
 
@@ -88,9 +88,9 @@ pc.extend(pc.resources, function () {
                 var p = defPos ? defPos : k.p;
                 var r = defRot ? defRot : k.r;
                 var s = defScl ? defScl : k.s;
-                var pos = pc.math.vec3.create(p[0], p[1], p[2]);
-                var rot = pc.math.quat.fromEulerXYZ(r[0], r[1], r[2]);
-                var scl = pc.math.vec3.create(s[0], s[1], s[2]);
+                var pos = new pc.Vector3(p[0], p[1], p[2]);
+                var rot = new pc.Quaternion().fromEulerXYZ(r[0], r[1], r[2]);
+                var scl = new pc.Vector3(s[0], s[1], s[2]);
 
                 var key = new pc.anim.Key(t, pos, rot, scl);
 

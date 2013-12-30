@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+pc.extend(pc, function () {
     /**
     * @name pc.Quaternion
     * @class A quaternion.
@@ -38,12 +38,12 @@ pc.extend(pc, (function () {
         },
 
         equals: function (that) {
-            return (this.x === that.x) && (this.y === that.y) && (this.z) === that.z) && (this.w === that.w);
+            return ((this.x === that.x) && (this.y === that.y) && (this.z === that.z) && (this.w === that.w));
         },
 
         invert: function () {
             return this.conjugate().normalize();
-        }
+        },
 
         length: function () {
             var x = this.x;
@@ -99,7 +99,7 @@ pc.extend(pc, (function () {
             this.w = w;
 
             return this;
-        }
+        },
 
         setFromAxisAngle: function (axis, angle) {
             var a = axis.data;
@@ -255,4 +255,4 @@ pc.extend(pc, (function () {
     return {
         Quaternion: Quaternion
     };
-}()));
+}());

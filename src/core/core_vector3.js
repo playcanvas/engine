@@ -1,4 +1,4 @@
-pc.extend(pc, (function () {
+pc.extend(pc, function () {
     /**
     * @name pc.Vector3
     * @class A 3-dimensional vector.
@@ -33,7 +33,7 @@ pc.extend(pc, (function () {
             return function() {
                 return back;
             }
-        }();
+        }()
     });
 
     Object.defineProperty(Vector3, 'down', {
@@ -42,7 +42,7 @@ pc.extend(pc, (function () {
             return function() {
                 return down;
             }
-        }();
+        }()
     });
 
     Object.defineProperty(Vector3, 'forward', {
@@ -51,7 +51,7 @@ pc.extend(pc, (function () {
             return function() {
                 return forward;
             }
-        }();
+        }()
     });
 
     Object.defineProperty(Vector3, 'left', {
@@ -60,7 +60,7 @@ pc.extend(pc, (function () {
             return function() {
                 return left;
             }
-        }();
+        }()
     });
 
     Object.defineProperty(Vector3, 'one', {
@@ -69,7 +69,7 @@ pc.extend(pc, (function () {
             return function() {
                 return one;
             }
-        }();
+        }()
     });
 
     Object.defineProperty(Vector3, 'right', {
@@ -78,7 +78,7 @@ pc.extend(pc, (function () {
             return function() {
                 return right;
             }
-        }();
+        }()
     });
 
     Object.defineProperty(Vector3, 'up', {
@@ -87,7 +87,7 @@ pc.extend(pc, (function () {
             return function() {
                 return down;
             }
-        }();
+        }()
     });
 
     Object.defineProperty(Vector3, 'zero', {
@@ -96,10 +96,10 @@ pc.extend(pc, (function () {
             return function() {
                 return zero;
             }
-        }();
+        }()
     });
 
-    function (accessors) {
+    function defineAccessors(accessors) {
         for (var i = 0; i < accessors.length; i++) {
             var names = accessors[i];
             for (var j = 0; j < names.length; j++) {
@@ -433,7 +433,7 @@ pc.extend(pc, (function () {
     
     /**
      * @function
-     * @name pc.math.vec3.project
+     * @name pc.Vector3.project
      * @description Calculates the vector projection (also known as the vector resolute, or vector component)
      * of vector v0 in the direction of a vector v1.
      * @param {Array} v0 The 3-dimensional vector to be projected.
@@ -442,11 +442,11 @@ pc.extend(pc, (function () {
      * @returns {Array} The result of the projection (effectively a reference to the r parameter).
      * @example
      */
-    project: function (v0, v1, r) {
-        var sqr = pc.math.vec3.dot(v1, v1);
-        var dot = pc.math.vec3.dot(v0, v1);
-        
-        return pc.math.vec3.scale(v1, dot / sqr, r);
+    Vector3.project = function (v0, v1, r) {
+        var sqr = v1.lengthSqr();
+        var dot = v0.dot(v1);
+
+        return v1.scale(dot / sqr);
     };
 
     /**
@@ -549,4 +549,4 @@ pc.extend(pc, (function () {
     return {
         Vector3: Vector3
     };
-}();
+}());

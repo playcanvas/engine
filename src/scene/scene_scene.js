@@ -50,14 +50,15 @@ pc.extend(pc.scene, function () {
      * @class A scene is a container for models, lights and cameras. Scenes are rendered via a renderer.
      * PlayCanvas currently only supports a single renderer: the forward renderer (pc.scene.ForwardRenderer).
      * @constructor Creates a new scene.
+     * @property {pc.Color} ambientLight The color of the scene's ambient light.
      * @property {String} fog The type of fog used by the scene (see pc.scene.FOG_).
      * @property {pc.Color} fogColor The color of the fog, in enabled.
-     * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
-     * only valid if the fog property is set to pc.scene.FOG_LINEAR.
-     * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This 
-     * property is only valid if the fog property is set to pc.scene.FOG_LINEAR.
      * @property {Number} fogDensity The density of the fog. This property is only valid if the fog property
      * is set to pc.scene.FOG_EXP or pc.scene.FOG_EXP2.
+     * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This 
+     * property is only valid if the fog property is set to pc.scene.FOG_LINEAR.
+     * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
+     * only valid if the fog property is set to pc.scene.FOG_LINEAR.
      */
     var Scene = function Scene() {
         this.drawCalls = [];     // All mesh instances and commands
@@ -69,12 +70,13 @@ pc.extend(pc.scene, function () {
         this.fogEnd = 1000;
         this.fogDensity = 0;
 
+        this.ambientLight = new pc.Color(0, 0, 0);
+
         // Models
         this._models = [];
 
         // Lights
         this._lights = [];
-        this._globalAmbient = pc.math.vec3.create(0, 0, 0);
         this._globalLights = []; // All currently enabled directionals
         this._localLights = [[], []]; // All currently enabled points and spots
 
@@ -238,51 +240,6 @@ pc.extend(pc.scene, function () {
     Scene.prototype.update = function () {
         for (var i = 0, len = this._models.length; i < len; i++) {
             this._models[i].getGraph().syncHierarchy();
-        }
-    };
-
-
-    /**
-     * @function
-     * @name pc.scene.Scene#getGlobalAmbient
-     * @description Queries the current global ambient color. This color is uploaded to a
-     * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
-     * value by multiplying it by the material color of a mesh's material and adding it to
-     * the total light contribution.
-     * @returns {Array} The global ambient color represented by a 3 dimensional array (RGB components ranging 0..1).
-     * @author Will Eastcott
-     */
-    Scene.prototype.getGlobalAmbient = function () {
-        return this._globalAmbient;
-    };
-
-    /**
-     * @function
-     * @name pc.scene.Scene#setGlobalAmbient
-     * @description Sets the current global ambient color. This color is uploaded to a
-     * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
-     * value by multiplying it by the material color of a mesh's material and adding it to
-     * the total light contribution.
-     * @param {pc.math.vec3} ambient The global ambient color represented by a 3 dimensional array (RGB components ranging 0..1).
-     * @author Will Eastcott
-     */
-    /**
-     * @function
-     * @name pc.scene.Scene#setGlobalAmbient^2
-     * @description Sets the current global ambient color. This color is uploaded to a
-     * vector uniform called 'light_globalAmbient'. The PlayCanvas 'phong' shader uses this
-     * value by multiplying it by the material color of a mesh's material and adding it to
-     * the total light contribution.
-     * @param {Number} red The red component of the global ambient color (should be in range 0..1).
-     * @param {Number} green The green component of the global ambient color (should be in range 0..1).
-     * @param {Number} blue The blue component of the global ambient color (should be in range 0..1).
-     * @author Will Eastcott
-     */
-    Scene.prototype.setGlobalAmbient = function () {
-        if (arguments.length === 3) {
-            pc.math.vec3.set(this._globalAmbient, arguments[0], arguments[1], arguments[2]);
-        } else {
-            pc.math.vec3.copy(arguments[0], this._globalAmbient);
         }
     };
 

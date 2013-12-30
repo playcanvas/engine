@@ -15,17 +15,17 @@ pc.extend(pc.scene, function () {
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
     var camToLight = pc.math.mat4.makeRotate(-90, [1, 0, 0]);
-    var shadowCamWtm = pc.math.mat4.create();
-    var shadowCamView = pc.math.mat4.create();
-    var shadowCamViewProj = pc.math.mat4.create();
+    var shadowCamWtm = new pc.Matrix4();
+    var shadowCamView = new pc.Matrix4();
+    var shadowCamViewProj = new pc.Matrix4();
 
-    var viewMat = pc.math.mat4.create();
-    var viewProjMat = pc.math.mat4.create();
+    var viewMat = new pc.Matrix4();
+    var viewProjMat = new pc.Matrix4();
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (i = 0; i < 8; i++) {
-        frustumPoints.push(pc.math.vec3.create());
+        frustumPoints.push(new pc.Vector3());
     }
 
     function _calculateSceneAabb(scene) {
@@ -201,7 +201,7 @@ pc.extend(pc.scene, function () {
             blend: false
         };
 
-        this.fogColor = pc.math.vec3.create(0, 0, 0);
+        this.fogColor = new Float32Array(0, 0, 0);
     }
 
     pc.extend(ForwardRenderer.prototype, {
@@ -624,8 +624,8 @@ pc.extend(pc.scene, function () {
                     var modelMatrix = meshInstance.node.worldTransform;
                     var normalMatrix = meshInstance.normalMatrix;
 
-                    pc.math.mat4.invertTo3x3(modelMatrix, normalMatrix);
-                    pc.math.mat3.transpose(normalMatrix, normalMatrix);
+                    modelMatrix.invertTo3x3(normalMatrix);
+                    normalMatrix.transpose();
 
                     this.modelMatrixId.setValue(modelMatrix);
                     this.normalMatrixId.setValue(normalMatrix);

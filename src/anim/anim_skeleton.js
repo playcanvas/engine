@@ -5,9 +5,9 @@ pc.extend(pc.anim, function () {
         this._keyFrames = [];
 
         // Result of interpolation
-        this._quat  = pc.math.quat.create(0, 0, 0, 0);
-        this._pos   = pc.math.vec3.create(0, 0, 0);
-        this._scale = pc.math.vec3.create(0, 0, 0);
+        this._quat = new pc.Quaternion();
+        this._pos = new pc.Vector3();
+        this._scale = new pc.Vector3();
 
         // Optional destination for interpolated keyframe
         this._targetNode = null;
@@ -107,9 +107,9 @@ pc.extend(pc.anim, function () {
 
                 // If there's only a single key, just copy the key to the interpolated key...
                 if (keys.length === 1) {
-                    pc.math.vec3.copy(keys[0].position, interpKey._pos);
-                    pc.math.quat.copy(keys[0].rotation, interpKey._quat);
-                    pc.math.vec3.copy(keys[0].scale, interpKey._scale);
+                    interpKey._pos.copy(keys[0].position);
+                    interpKey._quat.copy(keys[0].rotation);
+                    interpKey._scale(keys[0].scale);
                 } else {
                     // Otherwise, find the keyframe pair for this node
                     for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1; currKeyIndex++) {
@@ -157,14 +157,14 @@ pc.extend(pc.anim, function () {
                 pc.math.vec3.lerp(key1._scale, key2._scale, alpha, dstKey._scale);
                 dstKey._written = true;
             } else if (key1._written) {
-                pc.math.quat.copy(key1._quat, dstKey._quat);
-                pc.math.vec3.copy(key1._pos, dstKey._pos);
-                pc.math.vec3.copy(key1._scale, dstKey._scale);
+                dstKey._quat.copy(key1._quat);
+                dstKey._pos.copy(key1._pos);
+                dstKey._scale.copy(key1._scale);
                 dstKey._written = true;
             } else if (key2._written) {
-                pc.math.quat.copy(key2._quat, dstKey._quat);
-                pc.math.vec3.copy(key2._pos, dstKey._pos);
-                pc.math.vec3.copy(key2._scale, dstKey._scale);
+                dstKey._quat.copy(key2._quat);
+                dstKey._pos.copy(key2._pos);
+                dstKey._scale.copy(key2._scale);
                 dstKey._written = true;
             }
         }
@@ -281,9 +281,9 @@ pc.extend(pc.anim, function () {
                 if (interpKey._written) {
                     var transform = interpKey.getTarget();
 
-                    pc.math.vec3.copy(interpKey._pos, transform.localPosition);
-                    pc.math.quat.copy(interpKey._quat, transform.localRotation);
-                    pc.math.vec3.copy(interpKey._scale, transform.localScale);
+                    transform.localPosition.copy(interpKey._pos);
+                    transform.localRotation.copy(interpKey._quat);
+                    transform.localScale.copy(interpKey._scale);
                     transform.dirtyLocal = true;
 
                     interpKey._written = false;

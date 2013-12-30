@@ -4,9 +4,6 @@ pc.scene.Projection = {
 };
 
 pc.extend(pc.scene, function () {
-    var v3 = pc.math.vec3;
-    var m4 = pc.math.mat4;
-
     /**
      * @name pc.scene.CameraNode
      * @class A camera.
@@ -20,9 +17,9 @@ pc.extend(pc.scene, function () {
         this._aspect = 16 / 9;
 
         this._projMatDirty = true;
-        this._projMat = m4.create();
-        this._viewMat = m4.create();
-        this._viewProjMat = m4.create();
+        this._projMat = new pc.Matrix4();
+        this._viewMat = new pc.Matrix4();
+        this._viewProjMat = new pc.Matrix4();
 
         this._rect = { 
             x: 0,
@@ -139,11 +136,13 @@ pc.extend(pc.scene, function () {
 
             var projMat = this.getProjectionMatrix();
             var wtm = this.getWorldTransform();
-            m4.invert(wtm, this._viewMat);
-            m4.multiply(projMat, this._viewMat, this._viewProjMat);
+
+            this._viewMat.copy(wtm).invert();
+            pc.Matrix4.mul(projMat, this._viewMat, this._viewProjMat);
+
             var invViewProjMat = m4.invert(this._viewProjMat);
 
-            var far = v3.create(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
+            var far = new pc.Vector3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
             var farW = m4.multiplyVec3(far, 1.0, invViewProjMat);
 
             var w = far[0] * invViewProjMat[3] +

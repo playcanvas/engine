@@ -21,15 +21,15 @@ pc.extend(pc.scene, function () {
         this._outerConeAngle = 45;
 
         // Cache of light property data in a format more friendly for shader uniforms
-        this._finalColor = pc.math.vec3.create(0.8, 0.8, 0.8);
-        this._position = pc.math.vec3.create(0, 0, 0);
-        this._direction = pc.math.vec3.create(0, 0, 0);
+        this._finalColor = new pc.Vector3(0.8, 0.8, 0.8);
+        this._position = new pc.Vector3(0, 0, 0);
+        this._direction = new pc.Vector3(0, 0, 0);
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
         // Shadow mapping resources
         this._shadowCamera = null;
-        this._shadowMatrix = pc.math.mat4.create();
+        this._shadowMatrix = new pc.Matrix4();
         this._shadowResolution = 1024;
         this._shadowBias = -0.0005;
 
@@ -54,7 +54,7 @@ pc.extend(pc.scene, function () {
 
             // Clone LightNode properties
             clone.setType(this.getType());
-            clone.setColor(pc.math.vec3.clone(this.getColor()));
+            clone.setColor(this.getColor());
             clone.setIntensity(this.getIntensity());
             clone.setCastShadows(this.getCastShadows());
             clone.setEnabled(this.getEnabled());
@@ -284,7 +284,7 @@ pc.extend(pc.scene, function () {
 
             // Update final color
             var i = this._intensity;
-            pc.math.vec3.set(this._finalColor, r * i, g * i, b * i);
+            this._finalColor.set(r * i, g * i, b * i);
         },
 
         /**
@@ -335,7 +335,7 @@ pc.extend(pc.scene, function () {
             var g = c.g;
             var b = c.b;
             var i = this._intensity;
-            pc.math.vec3.set(this._finalColor, r * i, g * i, b * i);
+            this._finalColor.set(r * i, g * i, b * i);
         },
 
         /**

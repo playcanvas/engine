@@ -55,9 +55,9 @@ pc.extend(pc.fw, function () {
      * <li><strong>sphere</strong>: A sphere-shaped collision volume.</li>
      * <li><strong>capsulse</strong>: A capsule-shaped collision volume.</li>
      * <li><strong>mesh</strong>: A collision volume that uses a model asset as its shape.</li>
-     * </ul>     
-     * @property {pc.math.vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
-     * @property {pc.math.vec3} radius The radius of the sphere or capsule-shaped collision volumes. Defaults to 0.5
+     * </ul>
+     * @property {pc.Vector3} halfExtents The half-extents of the box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5]
+     * @property {Number} radius The radius of the sphere or capsule-shaped collision volumes. Defaults to 0.5
      * @property {Number} axis The local space axis with which the capsule-shaped collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @property {Number} height The total height of the capsule-shaped collision volume from tip to tip. Defaults to 2.
      * @property {String} asset The GUID of the asset for the model of the mesh collision volume.

@@ -13,7 +13,7 @@ pc.shape = function () {
         /**
          * @name pc.shape.Shape#containsPoint
          * @description Check to see if the point is inside the shape
-         * @param {pc.math.vec3.Vector3} point The point to test
+         * @param {pc.Vector3} point The point to test
          * @returns {Boolean} True if the point is inside the shape
          * @function
          */

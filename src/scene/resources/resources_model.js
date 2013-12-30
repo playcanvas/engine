@@ -303,8 +303,8 @@ pc.extend(pc.resources, function () {
             var min = meshData.aabb.min;
             var max = meshData.aabb.max;
             var aabb = new pc.shape.Aabb(
-                pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+                new pc.Vector3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+                new pc.Vector3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
             );
 
             var indexed = (typeof meshData.indices !== 'undefined');
