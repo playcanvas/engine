@@ -1,10 +1,4 @@
 pc.extend(pc.scene, function () {
-
-    var tempVec = pc.math.vec3.create();
-    var tempQuatA = pc.math.quat.create();
-    var tempQuatB = pc.math.quat.create();
-    var syncList = [];
-
     /**
      * @name pc.scene.GraphNode
      * @class A hierarchical scene node.
@@ -14,7 +8,7 @@ pc.extend(pc.scene, function () {
      * @property {pc.Vector3} forwards Vector representing the negative Z direction of the node in world space (read only).
      */
     var GraphNode = function GraphNode(name) {
-        this._name = name || ""; // Non-unique human readable name
+        this.name = name || "Untitled"; // Non-unique human readable name
         this._labels = {};
 
         // Local-space properties of transform (only first 3 are settable by the user)
@@ -36,7 +30,7 @@ pc.extend(pc.scene, function () {
 
         this._right = new pc.Vector3();
         this._up = new pc.Vector3();
-        this._forwards = new pc.Vector3();
+        this._forward = new pc.Vector3();
 
         this._parent = null;
         this._children = [];
@@ -44,35 +38,26 @@ pc.extend(pc.scene, function () {
 
     Object.defineProperty(GraphNode.prototype, 'right', {
         get: function() {
-            this.getWorldTransform().getX(this._right);
-            this._right.normalize();
-
-            return this._right;
+            return this.getWorldTransform().getX(this._right).normalize();
         }
     });
 
     Object.defineProperty(GraphNode.prototype, 'up', {
         get: function() {
-            this.getWorldTransform().getY(this._up);
-            this._up.normalize();
-
-            return this._up;
+            return this.getWorldTransform().getY(this._up).normalize();
         }
     });
 
     Object.defineProperty(GraphNode.prototype, 'forwards', {
         get: function() {
-            this.getWorldTransform().getZ(this._forwards);
-            this._forwards.normalize().scale(-1);
-
-            return this._forwards;
+            return this.getWorldTransform().getZ(this._forward).normalize().negate();
         }
     });
 
     pc.extend(GraphNode.prototype, {
 
         _cloneInternal: function (clone) {
-            clone._name = this._name;
+            clone.name = this.name;
             clone._labels = pc.extend(this._lables, {});
 
             clone.localPosition.copy(this.localPosition);
@@ -177,7 +162,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          */
         findByName: function (name) {
-            if (this._name === name) return this;
+            if (this.name === name) return this;
 
             for (var i = 0; i < this._children.length; i++) {
                 var found = this._children[i].findByName(name);
@@ -317,7 +302,7 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          * @example
          * var scale = this.entity.getLocalScale();
-         * scale[1] = 100;
+         * scale.x = 100;
          * this.entity.setLocalScale(scale);
          */
         getLocalScale: function () {
@@ -333,7 +318,6 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          * @example
          * var transform = this.entity.getLocalTransform();
-         * var xAxis = pc.math.mat4.getX(transform);
          */
         getLocalTransform: function () {
             if (this.dirtyLocal) {
@@ -358,7 +342,7 @@ pc.extend(pc.scene, function () {
          * }
          */
         getName: function () {
-            return this._name;
+            return this.name;
         },
 
         /**
@@ -401,23 +385,30 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#getWorldTransform
          * @description Get the world transformation matrix for this graph node.
-         * @returns {pc.math.mat4} The node's world transformation matrix.
+         * @returns {pc.Matrix4} The node's world transformation matrix.
          * @author Will Eastcott
          * @example
          * var transform = this.entity.getWorldTransform();
          */
         getWorldTransform: function () {
-            var current = this;
-            syncList.length = 0;
-            while (current !== null) {
-                syncList.push(current);
-                current = current._parent;
+            var syncList = [];
+
+            return function () {
+                var current = this;
+                syncList.length = 0;
+
+                while (current !== null) {
+                    syncList.push(current);
+                    current = current._parent;
+                }
+
+                for (var i = syncList.length - 1; i >= 0; i--) {
+                    syncList[i].sync();
+                }
+
+                return this.worldTransform;
             }
-            for (var i = syncList.length - 1; i >= 0; i--) {
-                syncList[i].sync();
-            }
-            return this.worldTransform;
-        },
+        }(),
 
         /**
          * @function
@@ -543,7 +534,7 @@ pc.extend(pc.scene, function () {
          * this.entity.setName("My Entity");
          */
         setName: function (name) {
-            this._name = name;
+            this.name = name;
         },
 
         /**
@@ -568,28 +559,25 @@ pc.extend(pc.scene, function () {
          * this.entity.setPosition(0, 10, 0);
          */
         setPosition: function () {
-            var tempMat = new pc.Matrix4();
+            var position = new pc.Vector3();
+            var invParentWtm = new pc.Matrix4();
+
             return function () {
                 if (arguments.length === 1) {
-                    tempVec[0] = arguments[0][0];
-                    tempVec[1] = arguments[0][1];
-                    tempVec[2] = arguments[0][2];
+                    position.copy(arguments[0]);
                 } else {
-                    tempVec[0] = arguments[0];
-                    tempVec[1] = arguments[1];
-                    tempVec[2] = arguments[2];
+                    position.set(arguments[0], arguments[1], arguments[2]);
                 }
 
                 if (this._parent === null) {
-                    this.localPosition.copy(tempVec);
+                    this.localPosition.copy(position);
                 } else {
-                    var parentWtm = this._parent.getWorldTransform();
-                    pc.math.mat4.invert(parentWtm, tempMat);
-                    pc.math.mat4.multiplyVec3(tempVec, 1, tempMat, this.localPosition);
+                    invParentWtm.copy(this._parent.getWorldTransform()).invert();
+                    invParentWtm.transformPoint(position, this.localPosition);
                 }
                 this.dirtyLocal = true;
-            }();
-        },
+            };
+        }(),
 
         /**
          * @function
@@ -616,37 +604,36 @@ pc.extend(pc.scene, function () {
          * this.entity.setRotation(0, 0, 0, 1);
          */
         setRotation: function () {
-            if (arguments.length === 1) {
-                tempQuatA[0] = arguments[0][0];
-                tempQuatA[1] = arguments[0][1];
-                tempQuatA[2] = arguments[0][2];
-                tempQuatA[3] = arguments[0][3];
-            } else {
-                tempQuatA[0] = arguments[0];
-                tempQuatA[1] = arguments[1];
-                tempQuatA[2] = arguments[2];
-                tempQuatA[3] = arguments[3];
-            }
+            var rotation = new pc.Quaternion();
+            var invParentRot = new pc.Quaternion();
 
-            if (this._parent === null) {
-                this.localRotation.copy(tempQuatA);
-            } else {
-                var parentRot = this._parent.getRotation();
-                pc.math.quat.invert(parentRot, tempQuatB);
-                pc.math.quat.multiply(tempQuatB, tempQuatA, this.localRotation);
+            return function () {
+                if (arguments.length === 1) {
+                    rotation.copy(arguments[0]);
+                } else {
+                    rotation.set(arguments[0], arguments[1], arguments[2], arguments[3]);
+                }
+
+                if (this._parent === null) {
+                    this.localRotation.copy(rotation);
+                } else {
+                    var parentRot = this._parent.getRotation();
+                    invParentRot.copy(parentRot).invert();
+                    this.localRotation.copy(invParentRot).mul(rotation);
+                }
+                this.dirtyLocal = true;
             }
-            this.dirtyLocal = true;
-        },
+        }(),
 
         /**
          * @function
          * @name pc.scene.GraphNode#setEulerAngles
          * @description Sets the world space orientation of the specified graph node
          * using Euler angles. Angles are specified in degress in XYZ order.
-         * @param {pc.math.vec3} angles Euler angles in degrees (XYZ order).
+         * @param {pc.Vector3} angles Euler angles in degrees (XYZ order).
          * @author Will Eastcott
          * @example
-         * var angles = pc.math.vec3.create(0, 90, 0);
+         * var angles = new pc.Vector3(0, 90, 0);
          * this.entity.setEulerAngles(angles);
          */
         /**
@@ -662,25 +649,25 @@ pc.extend(pc.scene, function () {
          * this.entity.setEulerAngles(0, 90, 0);
          */
         setEulerAngles: function () {
-            if (arguments.length === 1) {
-                tempVec[0] = arguments[0][0];
-                tempVec[1] = arguments[0][1];
-                tempVec[2] = arguments[0][2];
-            } else {
-                tempVec[0] = arguments[0];
-                tempVec[1] = arguments[1];
-                tempVec[2] = arguments[2];
-            }
+            var eulers = new pc.Vector3();
 
-            pc.math.quat.fromEulerXYZ(tempVec[0], tempVec[1], tempVec[2], this.localRotation);
+            return function () {
+                if (arguments.length === 1) {
+                    eulers.copy(arguments[0]);
+                } else {
+                    eulers.set(arguments[0], arguments[1], arguments[2]);
+                }
 
-            if (this._parent !== null) {
-                var parentRot = this._parent.getRotation();
-                pc.math.quat.invert(parentRot, tempQuatA);
-                pc.math.quat.multiply(tempQuatA, this.localRotation, this.localRotation);
+                this.localRotation.setFromEulerXYZ(eulers);
+
+                if (this._parent !== null) {
+                    var parentRot = this._parent.getRotation();
+                    pc.math.quat.invert(parentRot, tempQuatA);
+                    pc.math.quat.multiply(tempQuatA, this.localRotation, this.localRotation);
+                }
+                this.dirtyLocal = true;
             }
-            this.dirtyLocal = true;
-        },
+        }(),
 
         /**
          * @function 
@@ -807,7 +794,7 @@ pc.extend(pc.scene, function () {
                 if (this._parent === null) { 
                     this.worldTransform.copy(this.localTransform);
                 } else {
-                    pc.Matrix4.mul(this._parent.worldTransform, this.localTransform, this.worldTransform);
+                    this.worldTransform.mul(this._parent.worldTransform, this.localTransform);
                 }
 
                 this.dirtyWorld = false;
@@ -872,18 +859,18 @@ pc.extend(pc.scene, function () {
             }
 
             var m = pc.math.mat4.makeLookAt(this.localPosition, target, up);
-            pc.math.quat.fromMat4(m, this.localRotation);
+            this.localRotation.setFromMatrix4(m);
             this.dirtyLocal = true;
-        },
+        }(),
 
         /**
          * @function
          * @name pc.scene.GraphNode#translate
          * @description Translates the graph node in world space by the specified translation vector.
-         * @param {pc.math.vec3} translation The world space translation vector to apply.
+         * @param {pc.Vector3} translation The world space translation vector to apply.
          * @author Will Eastcott
          * @example
-         * var t = pc.math.vec3.create(10, 0, 0);
+         * var t = new pc.Vector3(10, 0, 0);
          * this.entity.translate(t);
          */
         /**
@@ -898,32 +885,31 @@ pc.extend(pc.scene, function () {
          * this.entity.translate(10, 0, 0);
          */
         translate: function () {
-            var x = 0, y = 0, z = 0;
+            var translation = new pc.Vector3();
 
-            switch (arguments.length) {
-                case 1:
-                    x = arguments[0][0];
-                    y = arguments[0][1];
-                    z = arguments[0][2];
-                    break;
-                case 3:
-                    x = arguments[0];
-                    y = arguments[1];
-                    z = arguments[2];
-                    break;
+            return function () {
+                switch (arguments.length) {
+                    case 1:
+                        translation.copy(arguments[0]);
+                        break;
+                    case 3:
+                        translation.set(arguments[0], arguments[1], arguments[2]);
+                        break;
+                }
+
+                translation.add(this.getPosition());
+                this.setPosition(translation);
             }
-            var pos = this.getPosition();
-            this.setPosition(pos[0] + x, pos[1] + y, pos[2] + z);
-        },
+        }(),
 
         /**
          * @function
          * @name pc.scene.GraphNode#translateLocal
          * @description Translates the graph node in local space by the specified translation vector.
-         * @param {pc.math.vec3} translation The local space translation vector to apply.
+         * @param {pc.Vector3} translation The local space translation vector to apply.
          * @author Will Eastcott
          * @example
-         * var t = pc.math.vec3.create(10, 0, 0);
+         * var t = new pc.Vector3(10, 0, 0);
          * this.entity.translateLocal(t);
          */
         /**
@@ -938,34 +924,34 @@ pc.extend(pc.scene, function () {
          * this.entity.translateLocal(10, 0, 0);
          */
         translateLocal: function () {
-            switch (arguments.length) {
-                case 1:
-                    tempVec[0] = arguments[0][0];
-                    tempVec[1] = arguments[0][1];
-                    tempVec[2] = arguments[0][2];
-                    break;
-                case 3:
-                    tempVec[0] = arguments[0];
-                    tempVec[1] = arguments[1];
-                    tempVec[2] = arguments[2];
-                    break;
-            }
+            var translation = new pc.Vector3();
 
-            pc.math.quat.transformVector(this.getLocalRotation(), tempVec, tempVec);
-            pc.math.vec3.add(this.localPosition, tempVec, this.localPosition);
-            this.dirtyLocal = true;
-        },
+            return function () {
+                switch (arguments.length) {
+                    case 1:
+                        translation.copy(arguments[0]);
+                        break;
+                    case 3:
+                        translation.set(arguments[0], arguments[1], arguments[2]);
+                        break;
+                }
+
+                this.localRotation.transformVector(translation, translation);
+                this.localPosition.add(translation);
+                this.dirtyLocal = true;
+            }
+        }(),
 
         /**
          * @function
          * @name pc.scene.GraphNode#rotate
          * @description Rotates the graph node in world space by the specified Euler angles.
          * Eulers are specified in degrees in XYZ order.
-         * @param {pc.math.vec3} rot World space rotation (xyz) of graph node.
+         * @param {pc.Vector3} rot World space rotation (xyz) of graph node.
          * @author Will Eastcott
          * @example
-         * var r = pc.math.vec3.create(0, 90, 0);
-         * this.entity.rotate(t);
+         * var r = new pc.Vector3(0, 90, 0);
+         * this.entity.rotate(r);
          */
         /**
          * @function
@@ -980,31 +966,36 @@ pc.extend(pc.scene, function () {
          * this.entity.rotate(0, 90, 0);
          */
         rotate: function () {
-            var x, y, z;
-            if (arguments.length === 3) {
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-            } else {
-                x = arguments[0][0];
-                y = arguments[0][1];
-                z = arguments[0][2];
+            var eulers = new pc.Vector3();
+            var quaternion = new pc.Quaternion();
+            var invParentRot = new pc.Quaternion();
+
+            return function () {
+                switch (arguments.length) {
+                    case 1:
+                        eulers.copy(arguments[0]);
+                        break;
+                    case 3:
+                        eulers.set(arguments[0], arguments[1], arguments[2]);
+                        break;
+                }
+
+                quaternion.setFromEulerXYZ(eulers);
+
+                if (this._parent === null) {
+                    this.localRotation.mul(quaternion, this.localRotation);
+                } else {
+                    var rot = this.getRotation();
+                    var parentRot = this._parent.getRotation();
+
+                    invParentRot.copy(parentRot).invert();
+                    quaternion.mul(invParentRot, quaternion);
+                    this.localRotation.mul(quaternion, rot);
+                }
+
+                this.dirtyLocal = true;
             }
-
-            pc.math.quat.fromEulerXYZ(x, y, z, tempQuatA);
-
-            if (this._parent === null) {
-                pc.math.quat.multiply(tempQuatA, this.localRotation, this.localRotation);
-            } else {
-                var worldRot = this.getRotation();
-                var parentRot = this._parent.getRotation();
-
-                pc.math.quat.invert(parentRot, tempQuatB);
-                pc.math.quat.multiply(tempQuatB, tempQuatA, tempQuatA);
-                pc.math.quat.multiply(tempQuatA, worldRot, this.localRotation);
-            }
-            this.dirtyLocal = true;
-        },
+        }(),
 
         /**
          * @function
@@ -1030,21 +1021,24 @@ pc.extend(pc.scene, function () {
          * this.entity.rotateLocal(0, 90, 0);
          */
         rotateLocal: function () {
-            var x, y, z;
-            if (arguments.length === 3) {
-                x = arguments[0];
-                y = arguments[1];
-                z = arguments[2];
-            } else {
-                x = arguments[0][0];
-                y = arguments[0][1];
-                z = arguments[0][2];
-            }
+            var eulers = new pc.Vector3();
+            var quaternion = new pc.Quaternion();
 
-            tempQuatA.fromEulerXYZ(x, y, z);
-            pc.Quaternion.mul(this.localRotation, tempQuatA, this.localRotation);
-            this.dirtyLocal = true;
-        }
+            return function () {
+                switch (arguments.length) {
+                    case 1:
+                        eulers.copy(arguments[0]);
+                        break;
+                    case 3:
+                        eulers.set(arguments[0], arguments[1], arguments[2]);
+                        break;
+                }
+
+                quaternion.setFromEulerXYZ(eulers);
+                this.localRotation.mul(quaternion);
+                this.dirtyLocal = true;
+            }
+        }()
     });
 
     return {

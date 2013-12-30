@@ -77,17 +77,17 @@ pc.extend(pc.audio, function () {
         });        
     } else if (pc.audio.hasAudio()) {
         // temp vector storage
-        var offset = pc.math.vec3.create();
+        var offset = new pc.Vector3();
         var distance;
         
         // Fall off function which should be the same as the one in the Web Audio API, 
         // taken from OpenAL
         var fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor) {
             var min = 0;
-            
+
             offset = pc.math.vec3.subtract(posOne, posTwo, offset);
             distance = offset.length();
-            
+
             if (distance < refDistance) {
                 return 1;
             } else if (distance > maxDistance) {
