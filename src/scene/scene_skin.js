@@ -24,9 +24,7 @@ pc.extend(pc.scene, function () {
     SkinInstance.prototype = {
         updateMatrixPalette: function () {
             for (var i = this.bones.length - 1; i >= 0; i--) {
-                pc.Matrix4.mul(this.bones[i].worldTransform,
-                               this.skin.inverseBindPose[i],
-                               this.matrixPaletteEntryF32[i]);
+                this.matrixPaletteEntryF32[i].mul(this.bones[i].worldTransform, this.skin.inverseBindPose[i]);
             }
         }
     };

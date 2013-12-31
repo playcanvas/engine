@@ -235,7 +235,7 @@ pc.extend(pc.scene, function () {
          * this.entity.setEulerAngles(angles);
          */
         getEulerAngles: function () {
-            this.getWorldTransform().toEulerXYZ(this.eulerAngles);
+            this.getWorldTransform().toEulers(this.eulerAngles);
             return this.eulerAngles;
         },
 
@@ -377,7 +377,7 @@ pc.extend(pc.scene, function () {
          * this.entity.setRotation(rotation);
          */
         getRotation: function () {
-            this.rotation.fromMat4(this.getWorldTransform());
+            this.rotation.setFromMatrix4(this.getWorldTransform());
             return this.rotation;
         },
 
@@ -435,9 +435,9 @@ pc.extend(pc.scene, function () {
          */
         setLocalEulerAngles: function () {
             if (arguments.length === 1) {
-                this.localRotation.fromEulerXYZ(arguments[0][0], arguments[0][1], arguments[0][2]);
+                this.localRotation.setFromEulers(arguments[0]);
             } else {
-                this.localRotation.fromEulerXYZ(arguments[0], arguments[1], arguments[2]);
+                this.localRotation.setFromEulers(arguments[0], arguments[1], arguments[2]);
             }
             this.dirtyLocal = true;
         },
@@ -465,13 +465,9 @@ pc.extend(pc.scene, function () {
          */
         setLocalPosition: function () {
             if (arguments.length === 1) {
-                this.localPosition[0] = arguments[0][0];
-                this.localPosition[1] = arguments[0][1];
-                this.localPosition[2] = arguments[0][2];
+                this.localPosition.copy(arguments[0]);
             } else {
-                this.localPosition[0] = arguments[0];
-                this.localPosition[1] = arguments[1];
-                this.localPosition[2] = arguments[2];
+                this.localPosition.set(arguments[0], arguments[1], arguments[2]);
             }
             this.dirtyLocal = true;
         },
@@ -485,8 +481,25 @@ pc.extend(pc.scene, function () {
          * var q = pc.Quaternion();
          * this.entity.setLocalRotation(q);
          */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#setLocalRotation^2
+         * @description Sets the local space rotation of the specified graph node.
+         * @param {Number} x X component of local space quaternion rotation.
+         * @param {Number} y Y component of local space quaternion rotation.
+         * @param {Number} z Z component of local space quaternion rotation.
+         * @param {Number} w W component of local space quaternion rotation.
+         * @author Will Eastcott
+         * @example
+         * // Set to the identity quaternion
+         * this.entity.setLocalRotation(0, 0, 0, 1);
+         */
         setLocalRotation: function (q) {
-            this.localRotation.copy(q);
+            if (arguments.length === 1) {
+                this.localRotation.copy(arguments[0]);
+            } else {
+                this.localRotation.set(arguments[0], arguments[1], arguments[2], arguments[3]);
+            }
             this.dirtyLocal = true;
         },
 
@@ -513,13 +526,9 @@ pc.extend(pc.scene, function () {
          */
         setLocalScale: function () {
             if (arguments.length === 1) {
-                this.localScale[0] = arguments[0][0];
-                this.localScale[1] = arguments[0][1];
-                this.localScale[2] = arguments[0][2];
+                this.localScale.copy(arguments[0]);
             } else {
-                this.localScale[0] = arguments[0];
-                this.localScale[1] = arguments[1];
-                this.localScale[2] = arguments[2];
+                this.localScale.set(arguments[0], arguments[1], arguments[2]);
             }
             this.dirtyLocal = true;
         },
@@ -650,6 +659,7 @@ pc.extend(pc.scene, function () {
          */
         setEulerAngles: function () {
             var eulers = new pc.Vector3();
+            var invParentRot = new pc.Quaternion();
 
             return function () {
                 if (arguments.length === 1) {
@@ -658,12 +668,12 @@ pc.extend(pc.scene, function () {
                     eulers.set(arguments[0], arguments[1], arguments[2]);
                 }
 
-                this.localRotation.setFromEulerXYZ(eulers);
+                this.localRotation.setFromEulers(eulers);
 
                 if (this._parent !== null) {
                     var parentRot = this._parent.getRotation();
-                    pc.math.quat.invert(parentRot, tempQuatA);
-                    pc.math.quat.multiply(tempQuatA, this.localRotation, this.localRotation);
+                    invParentRot.copy(parentRot).invert();
+                    this.localRotation.mul(invParentRot, this.localRotation);
                 }
                 this.dirtyLocal = true;
             }
@@ -825,7 +835,7 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#lookAt
          * @description Reorients the graph node so that the negative z axis points towards the target.
          * @param {pc.Vector3} target The world space coordinate to 'look at'.
-         * @param {pc.Vector3} up The up vector for the look at transform. If left unspecified,
+         * @param {pc.Vector3} [up] The up vector for the look at transform. If left unspecified,
          * this is set to the world space y axis.
          * @author Will Eastcott
          * @example
@@ -837,30 +847,56 @@ pc.extend(pc.scene, function () {
          * // Specify position as elements
          * this.entity.lookAt(0, 0, 0);
          */
+        /**
+         * @function
+         * @name pc.scene.GraphNode#lookAt^2
+         * @description Reorients the graph node so that the negative z axis points towards the target.
+         * @param {Number} tx X-component of the world space coordinate to 'look at'.
+         * @param {Number} ty Y-component of the world space coordinate to 'look at'.
+         * @param {Number} tz Z-component of the world space coordinate to 'look at'.
+         * @param {Number} [ux] X-component of the up vector for the look at transform. If left unspecified,
+         * this is set to the world space y axis.
+         * @param {Number} [uy] X-component of the up vector for the look at transform. If left unspecified,
+         * this is set to the world space y axis.
+         * @param {Number} [uz] X-component of the up vector for the look at transform. If left unspecified,
+         * this is set to the world space y axis.
+         * @author Will Eastcott
+         * @example
+         * // Look at the world space origin, use default 'up' of [0,1,0]
+         * this.entity.lookAt(0, 0, 0);
+         * // Look at 10, 10, 10 with an inverted up value
+         * this.entity.lookAt(10, 10, 10, 0, -1, 0);
+         */
         lookAt: function () {
-            var target, up;
+            var matrix = new pc.Matrix4();
+            var target = new pc.Vector3();
+            var up = new pc.Vector3();
+            var rotation = new pc.Quaternion();
 
-            switch (arguments.length) {
-                case 1:
-                    target = arguments[0];
-                    up = pc.Vector3.up;
-                    break;
-                case 2:
-                    target = arguments[0];
-                    up = arguments[1];
-                    break;
-                case 3:
-                    target = tempVec;
-                    target[0] = arguments[0];
-                    target[1] = arguments[1];
-                    target[2] = arguments[2];
-                    up = pc.Vector3.up;
-                    break;
+            return function () {
+                switch (arguments.length) {
+                    case 1:
+                        target.copy(arguments[0]);
+                        up.copy(pc.Vector3.up);
+                        break;
+                    case 2:
+                        target.copy(arguments[0]);
+                        up.copy(arguments[1]);
+                        break;
+                    case 3:
+                        target.set(arguments[0], arguments[1], arguments[2]);
+                        up.copy(pc.Vector3.up);
+                        break;
+                    case 6:
+                        target.set(arguments[0], arguments[1], arguments[2]);
+                        up.set(arguments[3], arguments[4], arguments[5]);
+                        break;
+                }
+
+                matrix.lookAt(this.getPosition(), target, up);
+                rotation.setFromMatrix4(matrix);
+                this.setRotation(rotation);
             }
-
-            var m = pc.math.mat4.makeLookAt(this.localPosition, target, up);
-            this.localRotation.setFromMatrix4(m);
-            this.dirtyLocal = true;
         }(),
 
         /**
@@ -980,7 +1016,7 @@ pc.extend(pc.scene, function () {
                         break;
                 }
 
-                quaternion.setFromEulerXYZ(eulers);
+                quaternion.setFromEulers(eulers);
 
                 if (this._parent === null) {
                     this.localRotation.mul(quaternion, this.localRotation);
@@ -1034,7 +1070,7 @@ pc.extend(pc.scene, function () {
                         break;
                 }
 
-                quaternion.setFromEulerXYZ(eulers);
+                quaternion.setFromEulers(eulers);
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
             }
