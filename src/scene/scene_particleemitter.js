@@ -1,8 +1,8 @@
 pc.extend(pc.scene, function () {
 
-    var position = new pc.Vector3();
-    var velocity = new pc.Vector3();
-    var acceleration = new pc.Vector3();
+    var position = new pc.Vec3();
+    var velocity = new pc.Vec3();
+    var acceleration = new pc.Vec3();
     var colorMult = new pc.Vector4();
 
     var particleVerts = [
@@ -77,17 +77,17 @@ pc.extend(pc.scene, function () {
         // The ending size range.
         this.endSizeRange = typeof options.endSizeRange !== 'undefined' ? options.endSizeRange : 0;
         // The starting position of a particle in local space.
-        this.position = typeof options.position !== 'undefined' ? options.position : new pc.Vector3(0, 0, 0);
+        this.position = typeof options.position !== 'undefined' ? options.position : new pc.Vec3(0, 0, 0);
         // The starting position range.
-        this.positionRange = typeof options.positionRange !== 'undefined' ? options.positionRange : new pc.Vector3(0, 0, 0);
+        this.positionRange = typeof options.positionRange !== 'undefined' ? options.positionRange : new pc.Vec3(0, 0, 0);
         // The velocity of a paritcle in local space.
-        this.velocity = typeof options.velocity !== 'undefined' ? options.velocity : new pc.Vector3(0, 0, 0);
+        this.velocity = typeof options.velocity !== 'undefined' ? options.velocity : new pc.Vec3(0, 0, 0);
         // The velocity range.
-        this.velocityRange = typeof options.velocityRange !== 'undefined' ? options.velocityRange : new pc.Vector3(0, 0, 0);
+        this.velocityRange = typeof options.velocityRange !== 'undefined' ? options.velocityRange : new pc.Vec3(0, 0, 0);
         // The acceleration of a particle in local space.
-        this.acceleration = typeof options.acceleration !== 'undefined' ? options.acceleration : new pc.Vector3(0, 0, 0);
+        this.acceleration = typeof options.acceleration !== 'undefined' ? options.acceleration : new pc.Vec3(0, 0, 0);
         // The accleration range.
-        this.accelerationRange = typeof options.accelerationRange !== 'undefined' ? options.accelerationRange : new pc.Vector3(0, 0, 0);
+        this.accelerationRange = typeof options.accelerationRange !== 'undefined' ? options.accelerationRange : new pc.Vec3(0, 0, 0);
         // The starting spin value for a particle in radians.
         this.spinStart = typeof options.spinStart !== 'undefined' ? options.spinStart : 0;
         // The spin start range.
@@ -101,9 +101,9 @@ pc.extend(pc.scene, function () {
         // The color multiplier range.
         this.colorMultRange = typeof options.colorMultRange !== 'undefined' ? options.colorMultRange : new pc.Vector4(0, 0, 0, 0);
         // The velocity of all paritcles in world space.
-        this.worldVelocity = typeof options.worldVelocity !== 'undefined' ? options.worldVelocity : new pc.Vector3(0, 0, 0);
+        this.worldVelocity = typeof options.worldVelocity !== 'undefined' ? options.worldVelocity : new pc.Vec3(0, 0, 0);
         // The acceleration of all paritcles in world space.
-        this.worldAcceleration = typeof options.worldAcceleration !== 'undefined' ? options.worldAcceleration : new pc.Vector3(0, 0, 0);
+        this.worldAcceleration = typeof options.worldAcceleration !== 'undefined' ? options.worldAcceleration : new pc.Vec3(0, 0, 0);
         // Whether these particles are oriented in 2d or 3d. true = 2d, false = 3d.
         this.billboard = typeof options.billboard !== 'undefined' ? options.billboard : true;
         // The orientation of a particle. This is only used if billboard is false.

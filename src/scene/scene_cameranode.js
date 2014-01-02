@@ -81,7 +81,7 @@ pc.extend(pc.scene, function () {
         },
 
         getFrustumCentroid: function () {
-            var centroid = new pc.Vector3(0, 0, -(this._farClip + this._nearClip) * 0.5);
+            var centroid = new pc.Vec3(0, 0, -(this._farClip + this._nearClip) * 0.5);
             this.getWorldTransform().transformPoint(centroid, centroid);
             return centroid;
         },
@@ -126,8 +126,8 @@ pc.extend(pc.scene, function () {
          * @param {Number} z The distance from the camera in world space to create the new point.
          * @param {Number} cw The width of PlayCanvas' canvas element.
          * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.Vector3} [worldCoord] 3D vector to recieve world coordinate result.
-         * @returns {pc.Vector3} The world space coordinate.
+         * @param {pc.Vec3} [worldCoord] 3D vector to recieve world coordinate result.
+         * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {
             if (typeof worldCoord === 'undefined') {
@@ -142,7 +142,7 @@ pc.extend(pc.scene, function () {
 
             invViewProjMat.copy(this._viewProjMat).invert();
 
-            var far = new pc.Vector3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
+            var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
             var farW = m4.multiplyVec3(far, 1.0, invViewProjMat);
 
             var w = far[0] * invViewProjMat[3] +

@@ -322,7 +322,7 @@ pc.extend(pc, function () {
      */
     Matrix4.mulVec3 = function (mtx, vec, w, res) {
         if (typeof res === 'undefined') {
-            res = new pc.Vector3();
+            res = new pc.Vec3();
         }
 
         var m = mtx.data;
@@ -374,9 +374,9 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Matrix4.prototype.lookAt = function () {
-        var x = pc.Vector3();
-        var y = pc.Vector3();
-        var z = pc.Vector3();
+        var x = pc.Vec3();
+        var y = pc.Vec3();
+        var z = pc.Vec3();
 
         return function (position, target, up) {
             z.subtract(position, target).normalize();
@@ -638,7 +638,7 @@ pc.extend(pc, function () {
      * @description Generates the inverse of the specified 4x4 matrix.
      * @returns {pc.Matrix4} The matrix being inverted.
      * @example
-     * var yaxis = new pc.Vector3(0, 1, 0);
+     * var yaxis = new pc.Vec3(0, 1, 0);
      *
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
      * var rot = new pc.Matrix4().rotate(180, yaxis);
@@ -728,9 +728,9 @@ pc.extend(pc, function () {
      * @name pc.Matrix4#setTRS
      * @description Composes a 4x4 matrix from a translation, a quaternion rotation and
      * a scale.
-     * @param {pc.Vector3} t A 3-d vector translation.
+     * @param {pc.Vec3} t A 3-d vector translation.
      * @param {pc.Quaternion} r A quaternion rotation.
-     * @param {pc.Vector3} s A 3-d vector scale.
+     * @param {pc.Vec3} s A 3-d vector scale.
      * @returns The newly composed matrix (useful for chaining).
      * @example
      * var m = new pc.Matrix4();
@@ -846,22 +846,22 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Vector3#getTranslation
+     * @name pc.Vec3#getTranslation
      * @description Extracts the transational component from the specified 4x4 matrix.
-     * @param {pc.Vector3} [t] The vector to receive the translation of the matrix.
-     * @returns {pc.Vector3} The translation of the specified 4x4 matrix.
+     * @param {pc.Vec3} [t] The vector to receive the translation of the matrix.
+     * @returns {pc.Vec3} The translation of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
      * var m = new pc.Matrix4();
      *
      * // Query the z-axis component
-     * var t = new pc.Vector3();
+     * var t = new pc.Vec3();
      * m.getTranslation(t);
      * @author Will Eastcott
      */
     Matrix4.prototype.getTranslation = function (t) {
         if (typeof t === 'undefined') {
-            t = new Vector3();
+            t = new pc.Vec3();
         }
 
         t.data[0] = this.data[12];
@@ -873,22 +873,22 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Vector3#getX
+     * @name pc.Vec3#getX
      * @description Extracts the x-axis from the specified 4x4 matrix.
-     * @param {pc.Vector3} [x] The vector to receive the x axis of the matrix.
-     * @returns {pc.Vector3} The x-axis of the specified 4x4 matrix.
+     * @param {pc.Vec3} [x] The vector to receive the x axis of the matrix.
+     * @returns {pc.Vec3} The x-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
      * var m = new pc.Matrix4();
      *
      * // Query the z-axis component
-     * var x = new pc.Vector3();
+     * var x = new pc.Vec3();
      * m.getX(x);
      * @author Will Eastcott
      */
     Matrix4.prototype.getX = function (x) {
         if (typeof x === 'undefined') {
-            x = new Vector3();
+            x = new pc.Vec3();
         }
 
         x.data[0] = this.data[0];
@@ -900,22 +900,22 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Vector3#getY
+     * @name pc.Vec3#getY
      * @description Extracts the y-axis from the specified 4x4 matrix.
-     * @param {pc.Vector3} [y] The vector to receive the y axis of the matrix.
-     * @returns {pc.Vector3} The y-axis of the specified 4x4 matrix.
+     * @param {pc.Vec3} [y] The vector to receive the y axis of the matrix.
+     * @returns {pc.Vec3} The y-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
      * var m = new pc.Matrix4();
      *
      * // Query the z-axis component
-     * var y = new pc.Vector3();
+     * var y = new pc.Vec3();
      * m.getY(y);
      * @author Will Eastcott
      */
     Matrix4.prototype.getY = function (y) {
         if (typeof y === 'undefined') {
-            y = new Vector3();
+            y = new pc.Vec3();
         }
 
         y.data[0] = this.data[4];
@@ -927,22 +927,22 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Vector3#getZ
+     * @name pc.Vec3#getZ
      * @description Extracts the z-axis from the specified 4x4 matrix.
-     * @param {pc.Vector3} [z] The vector to receive the z axis of the matrix.
-     * @returns {pc.Vector3} The z-axis of the specified 4x4 matrix.
+     * @param {pc.Vec3} [z] The vector to receive the z axis of the matrix.
+     * @returns {pc.Vec3} The z-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
      * var m = new pc.Matrix4();
      *
      * // Query the z-axis component
-     * var z = new pc.Vector3();
+     * var z = new pc.Vec3();
      * m.getZ(z);
      * @author Will Eastcott
      */
     Matrix4.prototype.getZ = function (z) {
         if (typeof z === 'undefined') {
-            z = new Vector3();
+            z = new pc.Vec3();
         }
 
         z.data[0] = this.data[8];
@@ -967,13 +967,13 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Matrix4.prototype.getScale = function () {
-        var x = new pc.Vector3();
-        var y = new pc.Vector3();
-        var z = new pc.Vector3();
+        var x = new pc.Vec3();
+        var y = new pc.Vec3();
+        var z = new pc.Vec3();
 
         return function (scale) {
             if (typeof scale === 'undefined') {
-                scale = new Vector3();
+                scale = new pc.Vec3();
             }
 
             this.getX(x);

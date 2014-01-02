@@ -25,11 +25,11 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
     var vertexCount   = vertices.length / 3;
     var i1, i2, i3;
     var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
-    var sdir = new pc.Vector3(0, 0, 0);
-    var tdir = new pc.Vector3(0, 0, 0);
-    var v1   = new pc.Vector3(0, 0, 0);
-    var v2   = new pc.Vector3(0, 0, 0);
-    var v3   = new pc.Vector3(0, 0, 0);
+    var sdir = new pc.Vec3(0, 0, 0);
+    var tdir = new pc.Vec3(0, 0, 0);
+    var v1   = new pc.Vec3(0, 0, 0);
+    var v2   = new pc.Vec3(0, 0, 0);
+    var v3   = new pc.Vec3(0, 0, 0);
     var w1   = new pc.Vector2(0, 0);
     var w2   = new pc.Vector2(0, 0);
     var w3   = new pc.Vector2(0, 0);
@@ -93,10 +93,10 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
         tan2[i3 * 3 + 2] += tdir.z;
     }
 
-    t1 = new pc.Vector3(0, 0, 0);
-    t2 = new pc.Vector3(0, 0, 0);
-    var n    = new pc.Vector3(0, 0, 0);
-    var temp = new pc.Vector3(0, 0, 0);
+    t1 = new pc.Vec3(0, 0, 0);
+    t2 = new pc.Vec3(0, 0, 0);
+    var n    = new pc.Vec3(0, 0, 0);
+    var temp = new pc.Vec3(0, 0, 0);
 
     for (i = 0; i < vertexCount; i++) {
         n.set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
@@ -288,9 +288,9 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
     // Variable declarations
     var i, j;
     var x, y, z, u, v;
-    var pos = new pc.Vector3();
-    var bottomToTop = new pc.Vector3();
-    var norm = new pc.Vector3();
+    var pos = new pc.Vec3();
+    var bottomToTop = new pc.Vec3();
+    var norm = new pc.Vec3();
     var top, bottom, tangent;
     var positions = [];
     var normals = [];
@@ -309,12 +309,12 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
                 theta = (j / capSegments) * 2.0 * Math.PI - Math.PI;
                 sinTheta = Math.sin(theta);
                 cosTheta = Math.cos(theta);
-                bottom = new pc.Vector3(sinTheta * baseRadius, -height / 2.0, cosTheta * baseRadius);
-                top    = new pc.Vector3(sinTheta * peakRadius,  height / 2.0, cosTheta * peakRadius);
+                bottom = new pc.Vec3(sinTheta * baseRadius, -height / 2.0, cosTheta * baseRadius);
+                top    = new pc.Vec3(sinTheta * peakRadius,  height / 2.0, cosTheta * peakRadius);
                 pc.math.vec3.lerp(bottom, top, i / heightSegments, pos);
                 pc.math.vec3.subtract(top, bottom, bottomToTop);
                 pc.math.vec3.normalize(bottomToTop, bottomToTop);
-                tangent = new pc.Vector3(cosTheta, 0.0, -sinTheta);
+                tangent = new pc.Vec3(cosTheta, 0.0, -sinTheta);
                 pc.math.vec3.cross(tangent, bottomToTop, norm);
                 pc.math.vec3.normalize(norm, norm);
 
@@ -739,14 +739,14 @@ pc.scene.procedural.createBox = function (device, opts) {
     var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
 
     var corners = [
-        new pc.Vector3(-he[0], -he[1],  he[2]),
-        new pc.Vector3( he[0], -he[1],  he[2]),
-        new pc.Vector3( he[0],  he[1],  he[2]),
-        new pc.Vector3(-he[0],  he[1],  he[2]),
-        new pc.Vector3( he[0], -he[1], -he[2]),
-        new pc.Vector3(-he[0], -he[1], -he[2]),
-        new pc.Vector3(-he[0],  he[1], -he[2]),
-        new pc.Vector3( he[0],  he[1], -he[2])
+        new pc.Vec3(-he[0], -he[1],  he[2]),
+        new pc.Vec3( he[0], -he[1],  he[2]),
+        new pc.Vec3( he[0],  he[1],  he[2]),
+        new pc.Vec3(-he[0],  he[1],  he[2]),
+        new pc.Vec3( he[0], -he[1], -he[2]),
+        new pc.Vec3(-he[0], -he[1], -he[2]),
+        new pc.Vec3(-he[0],  he[1], -he[2]),
+        new pc.Vec3( he[0],  he[1], -he[2])
     ];
 
     var faceAxes = [
@@ -789,10 +789,10 @@ pc.scene.procedural.createBox = function (device, opts) {
         
         for (i = 0; i <= uSegments; i++) {
             for (j = 0; j <= vSegments; j++) {
-                var temp1 = new pc.Vector3();
-                var temp2 = new pc.Vector3();
-                var temp3 = new pc.Vector3();
-                var r = new pc.Vector3();
+                var temp1 = new pc.Vec3();
+                var temp2 = new pc.Vec3();
+                var temp3 = new pc.Vec3();
+                var r = new pc.Vec3();
                 pc.math.vec3.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][1]], i / uSegments, temp1); 
                 pc.math.vec3.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][2]], j / vSegments, temp2);
                 pc.math.vec3.subtract(temp2, corners[faceAxes[side][0]], temp3);

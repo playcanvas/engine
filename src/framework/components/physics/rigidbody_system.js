@@ -3,9 +3,9 @@ pc.extend(pc.fw, function () {
     var transform = new pc.Matrix4();
     var newWtm = new pc.Matrix4();
 
-    var position = new pc.Vector3();
-    var rotation = new pc.Vector3();
-    var scale = new pc.Vector3();
+    var position = new pc.Vec3();
+    var rotation = new pc.Vec3();
+    var scale = new pc.Vec3();
 
     var ammoRayStart, ammoRayEnd;
 
@@ -45,11 +45,11 @@ pc.extend(pc.fw, function () {
     * @class Object holding the result of a successful raycast hit
     * @constructor Create a new RaycastResul
     * @param {pc.fw.Entity} entity The entity that was hit
-    * @param {pc.Vector3} point The point at which the ray hit the entity in world space
-    * @param {pc.Vector3} normal The normal vector of the surface where the ray hit in world space.
+    * @param {pc.Vec3} point The point at which the ray hit the entity in world space
+    * @param {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
     * @property {pc.fw.Entity} entity The entity that was hit
-    * @property {pc.Vector3} point The point at which the ray hit the entity in world space
-    * @property {pc.Vector3} normal The normal vector of the surface where the ray hit in world space.
+    * @property {pc.Vec3} point The point at which the ray hit the entity in world space
+    * @property {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
     */
     var RaycastResult = function (entity, point, normal) {
         this.entity = entity;
@@ -66,11 +66,11 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.ContactPoint} contactPoint The contact point between the two entities
     * @property {pc.fw.Entity} a The first entity involved in the contact
     * @property {pc.fw.Entity} b The second entity involved in the contact
-    * @property {pc.Vector3} localPointA The point on Entity A where the contact occured, relative to A
-    * @property {pc.Vector3} localPointB The point on Entity B where the contact occured, relative to B
-    * @property {pc.Vector3} pointA The point on Entity A where the contact occured, in world space
-    * @property {pc.Vector3} pointB The point on Entity B where the contact occured, in world space
-    * @property {pc.Vector3} normal The normal vector of the contact on Entity B, in world space
+    * @property {pc.Vec3} localPointA The point on Entity A where the contact occured, relative to A
+    * @property {pc.Vec3} localPointB The point on Entity B where the contact occured, relative to B
+    * @property {pc.Vec3} pointA The point on Entity A where the contact occured, in world space
+    * @property {pc.Vec3} pointB The point on Entity B where the contact occured, in world space
+    * @property {pc.Vec3} normal The normal vector of the contact on Entity B, in world space
     */
     var SingleContactResult = function (a, b, contactPoint) {
         this.a = a;
@@ -86,16 +86,16 @@ pc.extend(pc.fw, function () {
     * @name pc.fw.ContactPoint
     * @class Object holding the result of a contact between two Entities.
     * @constructor Create a new ContactPoint
-    * @param {pc.Vector3} localPoint The point on the entity where the contact occured, relative to the entity
-    * @param {pc.Vector3} localPointOther The point on the other entity where the contact occured, relative to the other entity
-    * @param {pc.Vector3} point The point on the entity where the contact occured, in world space
-    * @param {pc.Vector3} pointOther The point on the other entity where the contact occured, in world space
-    * @param {pc.Vector3} normal The normal vector of the contact on the other entity, in world space
-    * @property {pc.Vector3} localPoint The point on the entity where the contact occured, relative to the entity
-    * @property {pc.Vector3} localPointOther The point on the other entity where the contact occured, relative to the other entity
-    * @property {pc.Vector3} point The point on the entity where the contact occured, in world space
-    * @property {pc.Vector3} pointOther The point on the other entity where the contact occured, in world space
-    * @property {pc.Vector3} normal The normal vector of the contact on the other entity, in world space
+    * @param {pc.Vec3} localPoint The point on the entity where the contact occured, relative to the entity
+    * @param {pc.Vec3} localPointOther The point on the other entity where the contact occured, relative to the other entity
+    * @param {pc.Vec3} point The point on the entity where the contact occured, in world space
+    * @param {pc.Vec3} pointOther The point on the other entity where the contact occured, in world space
+    * @param {pc.Vec3} normal The normal vector of the contact on the other entity, in world space
+    * @property {pc.Vec3} localPoint The point on the entity where the contact occured, relative to the entity
+    * @property {pc.Vec3} localPointOther The point on the other entity where the contact occured, relative to the other entity
+    * @property {pc.Vec3} point The point on the entity where the contact occured, in world space
+    * @property {pc.Vec3} pointOther The point on the other entity where the contact occured, in world space
+    * @property {pc.Vec3} normal The normal vector of the contact on the other entity, in world space
     */
     var ContactPoint = function (localPoint, localPointOther, point, pointOther, normal) {
         this.localPoint = localPoint;
@@ -333,7 +333,7 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.RigidBodyComponentSystem#setGravity^2
         * @description Set the gravity vector for the 3D physics world
-        * @param {pc.Vector3} gravity The gravity vector to use for the 3D physics world.
+        * @param {pc.Vec3} gravity The gravity vector to use for the 3D physics world.
         */
         setGravity: function () {
             if (arguments.length === 3) {
@@ -349,8 +349,8 @@ pc.extend(pc.fw, function () {
         * @name pc.fw.RigidBodyComponentSystem#raycastFirst
         * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end, 
         * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
-        * @param {pc.Vector3} start The world space point where the ray starts
-        * @param {pc.Vector3} end The world space point where the ray ends
+        * @param {pc.Vec3} start The world space point where the ray starts
+        * @param {pc.Vec3} end The world space point where the ray ends
         * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
         */
         raycastFirst: function (start, end, callback) {
@@ -369,8 +369,8 @@ pc.extend(pc.fw, function () {
                 if (body) {
                     callback(new RaycastResult(
                                     body.entity, 
-                                    new pc.Vector3(point.x(), point.y(), point.z()),
-                                    new pc.Vector3(normal.x(), normal.y(), normal.z())
+                                    new pc.Vec3(point.x(), point.y(), point.z()),
+                                    new pc.Vec3(normal.x(), normal.y(), normal.z())
                                 )
                             );
                 }
@@ -438,20 +438,20 @@ pc.extend(pc.fw, function () {
         },
 
         _createContactPointFromAmmo: function (contactPoint) {
-            var localPointA = new pc.Vector3(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
-            var localPointB = new pc.Vector3(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
-            var pointA = new pc.Vector3(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
-            var pointB = new pc.Vector3(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
-            var normal = new pc.Vector3(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
+            var localPointA = new pc.Vec3(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
+            var localPointB = new pc.Vec3(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
+            var pointA = new pc.Vec3(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
+            var pointB = new pc.Vec3(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
+            var normal = new pc.Vec3(contactPoint.get_m_normalWorldOnB().x(), contactPoint.get_m_normalWorldOnB().y(), contactPoint.get_m_normalWorldOnB().z());
             return new ContactPoint(localPointA, localPointB, pointA, pointB, normal);
         },
 
         _createReverseContactPointFromAmmo: function (contactPoint) {
-            var localPointA = new pc.Vector3(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
-            var localPointB = new pc.Vector3(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
-            var pointA = new pc.Vector3(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
-            var pointB = new pc.Vector3(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
-            var normal = new pc.Vector3(-contactPoint.get_m_normalWorldOnB().x(), -contactPoint.get_m_normalWorldOnB().y(), -contactPoint.get_m_normalWorldOnB().z());
+            var localPointA = new pc.Vec3(contactPoint.get_m_localPointA().x(), contactPoint.get_m_localPointA().y(), contactPoint.get_m_localPointA().z());
+            var localPointB = new pc.Vec3(contactPoint.get_m_localPointB().x(), contactPoint.get_m_localPointB().y(), contactPoint.get_m_localPointB().z());
+            var pointA = new pc.Vec3(contactPoint.getPositionWorldOnA().x(), contactPoint.getPositionWorldOnA().y(), contactPoint.getPositionWorldOnA().z());
+            var pointB = new pc.Vec3(contactPoint.getPositionWorldOnB().x(), contactPoint.getPositionWorldOnB().y(), contactPoint.getPositionWorldOnB().z());
+            var normal = new pc.Vec3(-contactPoint.get_m_normalWorldOnB().x(), -contactPoint.get_m_normalWorldOnB().y(), -contactPoint.get_m_normalWorldOnB().z());
             return new ContactPoint(localPointB, localPointA, pointB, pointA, normal);
         },
 
@@ -566,8 +566,8 @@ pc.extend(pc.fw, function () {
         * @name pc.fw.RigidBodyComponentSystem#raycast
         * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end, 
         * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
-        * @param {pc.Vector3} start The world space point where the ray starts
-        * @param {pc.Vector3} end The world space point where the ray ends
+        * @param {pc.Vec3} start The world space point where the ray starts
+        * @param {pc.Vec3} end The world space point where the ray ends
         * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
         */
         // raycast: function (start, end, callback) {
@@ -584,8 +584,8 @@ pc.extend(pc.fw, function () {
         //         if (body) {
         //             callback(new RaycastResult(
         //                             body.entity, 
-        //                             new pc.Vector3(point.x(), point.y(), point.z()),
-        //                             new pc.Vector3(normal.x(), normal.y(), normal.z())
+        //                             new pc.Vec3(point.x(), point.y(), point.z()),
+        //                             new pc.Vec3(normal.x(), normal.y(), normal.z())
         //                         )
         //                     );
         //         }

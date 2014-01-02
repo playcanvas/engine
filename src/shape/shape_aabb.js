@@ -6,12 +6,12 @@ pc.extend(pc.shape, function () {
      * @name pc.shape.Aabb
      * @constructor Create a new Axis-Aligned Bounding Box
      * @class Axis-Aligned Bounding Box
-     * @param {pc.Vector3} center - center of box
-     * @param {pc.Vector3} halfExtents - half the distance across the box in each axis
+     * @param {pc.Vec3} center - center of box
+     * @param {pc.Vec3} halfExtents - half the distance across the box in each axis
      */
     var Aabb = function Aabb(center, halfExtents) {
-        this.center = center || new pc.Vector3(0, 0, 0);
-        this.halfExtents = halfExtents || new pc.Vector3(0.5, 0.5, 0.5);
+        this.center = center || new pc.Vec3(0, 0, 0);
+        this.halfExtents = halfExtents || new pc.Vec3(0.5, 0.5, 0.5);
         this.type = pc.shape.Type.AABB;
     };
     Aabb = pc.inherits(Aabb, pc.shape.Shape);
@@ -62,10 +62,10 @@ pc.extend(pc.shape, function () {
      * @function
      * @name pc.shape.Aabb#getMin
      * @description Return the minimum corner of the AABB.
-     * @return {pc.Vector3} minimum corner
+     * @return {pc.Vec3} minimum corner
      */
     Aabb.prototype.getMin = function () {
-        var min = new pc.Vector3();
+        var min = new pc.Vec3();
         min.sub(this.center, this.halfExtents);
         return min;
     };
@@ -77,7 +77,7 @@ pc.extend(pc.shape, function () {
      * @return {pc.shape.vec3} maximum corner
      */
     Aabb.prototype.getMax = function () {
-        var max = new pc.Vector3();
+        var max = new pc.Vec3();
         max.add(this.center, this.halfExtents);
         return max;
     };
@@ -150,8 +150,8 @@ pc.extend(pc.shape, function () {
     };
 
     Aabb.prototype.compute = function (vertices) {
-        var min = new pc.Vector3(vertices[0], vertices[1], vertices[2]);
-        var max = new pc.Vector3(vertices[0], vertices[1], vertices[2]);
+        var min = new pc.Vec3(vertices[0], vertices[1], vertices[2]);
+        var max = new pc.Vec3(vertices[0], vertices[1], vertices[2]);
 
         var numVerts = vertices.length / 3;
         for (var i = 1; i < numVerts; i++) {

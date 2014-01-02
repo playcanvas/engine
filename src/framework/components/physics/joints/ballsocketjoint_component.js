@@ -7,8 +7,8 @@ pc.extend(pc.fw, function () {
      * match in world space. A chain of rigidbodies can be connected using this constraint. 
      * @param {pc.fw.BallSocketJointComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
-     * @property {pc.Vector3} pivot The position of the pivot in the local space of the entity.
-     * @property {pc.Vector3} position The world space position of the constraint.
+     * @property {pc.Vec3} pivot The position of the pivot in the local space of the entity.
+     * @property {pc.Vec3} position The world space position of the constraint.
      * @extends pc.fw.Component
      */
     var BallSocketJointComponent = function BallSocketJointComponent (system, entity) {

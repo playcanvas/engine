@@ -13,12 +13,12 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} entity The Entity this Component is attached to
      * @extends pc.fw.Component
      * @property {Number} mass The mass of the body. This is only relevant for {@link pc.fw.RIGIDBODY_TYPE_DYNAMIC} bodies, other types have infinite mass.
-     * @property {pc.Vector3} linearVelocity Defines the speed of the body in a given direction.
-     * @property {pc.Vector3} angularVelocity Defines the rotational speed of the body around each world axis.
+     * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
+     * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
      * @property {Number} linearDamping Controls the rate at which a body loses linear velocity over time.
      * @property {Number} angularDamping Controls the rate at which a body loses angular velocity over time.
-     * @property {pc.Vector3} linearFactor Scaling factor for linear movement of the body in each axis.
-     * @property {pc.Vector3} angularFactor Scaling factor for angular movement of the body in each axis.
+     * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis.
+     * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis.
      * @property {Number} friction The friction value used when contacts occur between two bodies. A higher value indicates more friction.
      * @property {Number} restitution The amount of energy lost when two objects collide, this determines the bounciness of the object. 
      * A value of 0 means that no energy is lost in the collision, a value of 1 means that all energy is lost. 
@@ -53,9 +53,9 @@ pc.extend(pc.fw, function () {
         this.system.on('beforeremove', this.onBeforeRemove, this);
 
         // For kinematic
-        this._displacement = new pc.Vector3(0, 0, 0);
-        this._linearVelocity = new pc.Vector3(0, 0, 0);
-        this._angularVelocity = new pc.Vector3(0, 0, 0);
+        this._displacement = new pc.Vec3(0, 0, 0);
+        this._linearVelocity = new pc.Vec3(0, 0, 0);
+        this._angularVelocity = new pc.Vec3(0, 0, 0);
     };
     RigidBodyComponent = pc.inherits(RigidBodyComponent, pc.fw.Component);
 
@@ -220,8 +220,8 @@ pc.extend(pc.fw, function () {
          * @function
          * @name pc.fw.RigidBodyComponent#applyForce
          * @description Apply an force to the body at a point
-         * @param {pc.Vector3} force The force to apply, in world space.
-         * @param {pc.Vector3} [relativePoint] The point at which to apply the force, in local space (relative to the entity).
+         * @param {pc.Vec3} force The force to apply, in world space.
+         * @param {pc.Vec3} [relativePoint] The point at which to apply the force, in local space (relative to the entity).
          */
         /**
          * @function
@@ -283,7 +283,7 @@ pc.extend(pc.fw, function () {
          * @function
          * @name pc.fw.RigidBodyComponent#applyTorque
          * @description Apply torque (rotational force) to the body.
-         * @param {pc.Vector3} force The torque to apply, in world space.
+         * @param {pc.Vec3} force The torque to apply, in world space.
          */
         /**
          * @function
@@ -322,8 +322,8 @@ pc.extend(pc.fw, function () {
          * @function
          * @name pc.fw.RigidBodyComponent#applyImpulse
          * @description Apply an impulse (instantaneous change of velocity) to the body at a point.
-         * @param {pc.Vector3} impulse The impulse to apply, in world space.
-         * @param {pc.Vector3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
+         * @param {pc.Vec3} impulse The impulse to apply, in world space.
+         * @param {pc.Vec3} [relativePoint] The point at which to apply the impulse, in local space (relative to the entity).
          */
         /**
          * @function
@@ -384,7 +384,7 @@ pc.extend(pc.fw, function () {
          * @function
          * @name pc.fw.RigidBodyComponent#applyTorqueImpulse
          * @description Apply a torque impulse (rotational force applied instantaneously) to the body.
-         * @param {pc.Vector3} torqueImpulse The torque impulse to apply, in world space.
+         * @param {pc.Vec3} torqueImpulse The torque impulse to apply, in world space.
          */
         /**
          * @function
@@ -595,8 +595,8 @@ pc.extend(pc.fw, function () {
             this.syncEntityToBody();
 
             // Reset velocities
-            this.linearVelocity = pc.Vector3.zero;
-            this.angularVelocity = pc.Vector3.zero;
+            this.linearVelocity = pc.Vec3.zero;
+            this.angularVelocity = pc.Vec3.zero;
         },
 
         onBeforeRemove: function(entity, component) {

@@ -6,8 +6,8 @@ pc.extend(pc.anim, function () {
 
         // Result of interpolation
         this._quat = new pc.Quaternion();
-        this._pos = new pc.Vector3();
-        this._scale = new pc.Vector3();
+        this._pos = new pc.Vec3();
+        this._scale = new pc.Vec3();
 
         // Optional destination for interpolated keyframe
         this._targetNode = null;

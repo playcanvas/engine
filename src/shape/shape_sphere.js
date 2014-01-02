@@ -6,11 +6,11 @@ pc.extend(pc.shape, function () {
      * Sphere shape
      * @constructor
      * @class Create a new Sphere shape
-     * @param {pc.Vector3} center The center of the sphere.
+     * @param {pc.Vec3} center The center of the sphere.
      * @param {Number} radius Radius of sphere
      */
     function Sphere(center, radius) {
-        this.center = (typeof center === 'undefined') ? pc.Vector3(0, 0, 0) : center;
+        this.center = (typeof center === 'undefined') ? pc.Vec3(0, 0, 0) : center;
         this.radius = (typeof radius === 'undefined') ? 1 : radius;
 
         this.type = pc.shape.Type.SPHERE;
@@ -19,10 +19,10 @@ pc.extend(pc.shape, function () {
 
     /**
      * Test whether point is inside sphere
-     * @param {pc.Vector3} point Point to test
+     * @param {pc.Vec3} point Point to test
      */
     Sphere.prototype.containsPoint = function (point) {
-        var offset = new pc.Vector3();
+        var offset = new pc.Vec3();
         offset.sub(point, this.center);
         var length = offset.length();
 
@@ -33,12 +33,12 @@ pc.extend(pc.shape, function () {
         var i;
         var numVerts = vertices.length / 3;
 
-        var vertex = new pc.Vector3(0, 0, 0);
+        var vertex = new pc.Vec3(0, 0, 0);
 
         // FIRST PASS:
         // Find the "average vertex", which is the sphere's center...
-        var avgVertex = new pc.Vector3(0, 0, 0);
-        var sum = new pc.Vector3(0, 0, 0);
+        var avgVertex = new pc.Vec3(0, 0, 0);
+        var sum = new pc.Vec3(0, 0, 0);
 
         for (i = 0; i < numVerts; i++) {
             vertex.set(vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
@@ -60,7 +60,7 @@ pc.extend(pc.shape, function () {
         // SECOND PASS:
         // Find the maximum (squared) distance of all vertices to the center...
         var maxDistSq = 0;
-        var centerToVert = new pc.Vector3(0, 0, 0);
+        var centerToVert = new pc.Vec3(0, 0, 0);
 
         for (i = 0; i < numVerts; i++) {
             vertex.set(vertices[i*3], vertices[i*3+1], vertices[i*3+2]);

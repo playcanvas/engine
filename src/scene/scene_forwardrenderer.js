@@ -14,7 +14,7 @@ pc.extend(pc.scene, function () {
     var scaleShift = new pc.Matrix4().copy(shift).mul(scale);
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-    var camToLight = new pc.Matrix4().rotate(-90, pc.Vector3.right);
+    var camToLight = new pc.Matrix4().rotate(-90, pc.Vec3.right);
     var shadowCamWtm = new pc.Matrix4();
     var shadowCamView = new pc.Matrix4();
     var shadowCamViewProj = new pc.Matrix4();
@@ -25,7 +25,7 @@ pc.extend(pc.scene, function () {
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (i = 0; i < 8; i++) {
-        frustumPoints.push(new pc.Vector3());
+        frustumPoints.push(new pc.Vec3());
     }
 
     function _calculateSceneAabb(scene) {
@@ -471,7 +471,7 @@ pc.extend(pc.scene, function () {
                         // working position.
                         var centroid = camera.getFrustumCentroid();
                         shadowCam.setPosition(centroid);
-                        var lightDir = new pc.Vector3();
+                        var lightDir = new pc.Vec3();
                         light.worldTransform.getY(lightDir);
                         shadowCam.translate(lightDir);
 

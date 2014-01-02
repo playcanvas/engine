@@ -3,24 +3,24 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.GraphNode
      * @class A hierarchical scene node.
      * @param {String} name Non-unique, human readable name.
-     * @property {pc.Vector3} right Vector representing the X direction of the node in world space (read only).
-     * @property {pc.Vector3} up Vector representing the Y direction of the node in world space (read only).
-     * @property {pc.Vector3} forwards Vector representing the negative Z direction of the node in world space (read only).
+     * @property {pc.Vec3} right Vector representing the X direction of the node in world space (read only).
+     * @property {pc.Vec3} up Vector representing the Y direction of the node in world space (read only).
+     * @property {pc.Vec3} forwards Vector representing the negative Z direction of the node in world space (read only).
      */
     var GraphNode = function GraphNode(name) {
         this.name = name || "Untitled"; // Non-unique human readable name
         this._labels = {};
 
         // Local-space properties of transform (only first 3 are settable by the user)
-        this.localPosition = new pc.Vector3(0, 0, 0);
+        this.localPosition = new pc.Vec3(0, 0, 0);
         this.localRotation = new pc.Quaternion(0, 0, 0, 1);
-        this.localScale = new pc.Vector3(1, 1, 1);
-        this.localEulerAngles = new pc.Vector3(0, 0, 0); // Only calculated on request
+        this.localScale = new pc.Vec3(1, 1, 1);
+        this.localEulerAngles = new pc.Vec3(0, 0, 0); // Only calculated on request
 
         // World-space properties of transform
-        this.position = new pc.Vector3(0, 0, 0);
+        this.position = new pc.Vec3(0, 0, 0);
         this.rotation = new pc.Quaternion(0, 0, 0, 1);
-        this.eulerAngles = new pc.Vector3(0, 0, 0);
+        this.eulerAngles = new pc.Vec3(0, 0, 0);
 
         this.localTransform = new pc.Matrix4();
         this.dirtyLocal = false;
@@ -28,9 +28,9 @@ pc.extend(pc.scene, function () {
         this.worldTransform = new pc.Matrix4();
         this.dirtyWorld = false;
 
-        this._right = new pc.Vector3();
-        this._up = new pc.Vector3();
-        this._forward = new pc.Vector3();
+        this._right = new pc.Vec3();
+        this._up = new pc.Vec3();
+        this._forward = new pc.Vec3();
 
         this._parent = null;
         this._children = [];
@@ -227,7 +227,7 @@ pc.extend(pc.scene, function () {
          * form. The order of the returned Euler angles is XYZ. The value returned by this function 
          * should be considered read-only. In order to set the world-space rotation of the graph 
          * node, use {@link pc.scene.GraphNode#setEulerAngles}.
-         * @returns {pc.Vector3} The world space rotation of the graph node in Euler angle form.
+         * @returns {pc.Vec3} The world space rotation of the graph node in Euler angle form.
          * @author Will Eastcott
          * @example
          * var angles = this.entity.getEulerAngles(); // [0,0,0]
@@ -246,7 +246,7 @@ pc.extend(pc.scene, function () {
          * is returned as eurler angles in a 3-dimensional vector where the order is XYZ. The 
          * returned vector should be considered read-only. To update the local rotation, use 
          * {@link pc.scene.GraphNode#setLocalEulerAngles}.
-         * @returns {pc.Vector3} The local space rotation of the graph node as euler angles in XYZ order.
+         * @returns {pc.Vec3} The local space rotation of the graph node as euler angles in XYZ order.
          * @author Will Eastcott
          * @example
          * var angles = this.entity.getLocalEulerAngles();
@@ -264,7 +264,7 @@ pc.extend(pc.scene, function () {
          * @description Get the position in local space for the specified GraphNode. The position
          * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
          * To update the local position, use {@link pc.scene.GraphNode#setLocalPosition}.
-         * @returns {pc.Vector3} The local space position of the graph node.
+         * @returns {pc.Vec3} The local space position of the graph node.
          * @author Will Eastcott
          * @example
          * var position = this.entity.getLocalPosition();
@@ -296,7 +296,7 @@ pc.extend(pc.scene, function () {
          * @description Get the scale in local space for the specified GraphNode. The scale
          * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
          * To update the local scale, use {@link pc.scene.GraphNode#setLocalScale}.
-         * @returns {pc.Vector3} The local space scale of the graph node.
+         * @returns {pc.Vec3} The local space scale of the graph node.
          * @author Will Eastcott
          * @example
          * var scale = this.entity.getLocalScale();
@@ -349,7 +349,7 @@ pc.extend(pc.scene, function () {
          * @description Get the world space position for the specified GraphNode. The
          * value returned by this function should be considered read-only. In order to set
          * the world-space position of the graph node, use {@link pc.scene.GraphNode#setPosition}.
-         * @returns {pc.Vector3} The world space position of the graph node.
+         * @returns {pc.Vec3} The world space position of the graph node.
          * @author Will Eastcott
          * @example 
          * var position = this.entity.getPosition();
@@ -411,10 +411,10 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#setLocalEulerAngles
          * @description Sets the local space rotation of the specified graph node using euler angles.
          * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
-         * @param {pc.Vector3} e vector containing euler angles in XYZ order.
+         * @param {pc.Vec3} e vector containing euler angles in XYZ order.
          * @author Will Eastcott
          * @example
-         * var angles = new pc.Vector3(0, 90, 0);
+         * var angles = new pc.Vec3(0, 90, 0);
          * this.entity.setLocalEulerAngles(angles); // Set rotation of 90 degress around y-axis.
          */
         /**
@@ -442,10 +442,10 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#setLocalPosition
          * @description Sets the local space position of the specified graph node.
-         * @param {pc.Vector3} pos position vector of graph node in local space.
+         * @param {pc.Vec3} pos position vector of graph node in local space.
          * @author Will Eastcott
          * @example
-         * var pos = new pc.Vector3(0, 10, 0);
+         * var pos = new pc.Vec3(0, 10, 0);
          * this.entity.setLocalPosition(pos)
          */
         /**
@@ -503,10 +503,10 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#setLocalScale
          * @description Sets the local space scale factor of the specified graph node.
-         * @param {pc.Vector3} scale xyz-scale of graph node in local space.
+         * @param {pc.Vec3} scale xyz-scale of graph node in local space.
          * @author Will Eastcott
          * @example
-         * var scale = new pc.Vector3(10, 10, 10);
+         * var scale = new pc.Vec3(10, 10, 10);
          * this.entity.setLocalScale(scale);
          */
         /**
@@ -546,10 +546,10 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#setPosition
          * @description Sets the world space position of the specified graph node.
-         * @param {pc.Vector3} position world space position (xyz) of graph node.
+         * @param {pc.Vec3} position world space position (xyz) of graph node.
          * @author Will Eastcott
          * @example
-         * var position = new pc.Vector3(0, 10, 0);
+         * var position = new pc.Vec3(0, 10, 0);
          * this.entity.setPosition(position);
          */
         /**
@@ -564,7 +564,7 @@ pc.extend(pc.scene, function () {
          * this.entity.setPosition(0, 10, 0);
          */
         setPosition: function () {
-            var position = new pc.Vector3();
+            var position = new pc.Vec3();
             var invParentWtm = new pc.Matrix4();
 
             return function () {
@@ -635,10 +635,10 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#setEulerAngles
          * @description Sets the world space orientation of the specified graph node
          * using Euler angles. Angles are specified in degress in XYZ order.
-         * @param {pc.Vector3} angles Euler angles in degrees (XYZ order).
+         * @param {pc.Vec3} angles Euler angles in degrees (XYZ order).
          * @author Will Eastcott
          * @example
-         * var angles = new pc.Vector3(0, 90, 0);
+         * var angles = new pc.Vec3(0, 90, 0);
          * this.entity.setEulerAngles(angles);
          */
         /**
@@ -654,7 +654,7 @@ pc.extend(pc.scene, function () {
          * this.entity.setEulerAngles(0, 90, 0);
          */
         setEulerAngles: function () {
-            var eulers = new pc.Vector3();
+            var eulers = new pc.Vec3();
             var invParentRot = new pc.Quaternion();
 
             return function () {
@@ -830,8 +830,8 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#lookAt
          * @description Reorients the graph node so that the negative z axis points towards the target.
-         * @param {pc.Vector3} target The world space coordinate to 'look at'.
-         * @param {pc.Vector3} [up] The up vector for the look at transform. If left unspecified,
+         * @param {pc.Vec3} target The world space coordinate to 'look at'.
+         * @param {pc.Vec3} [up] The up vector for the look at transform. If left unspecified,
          * this is set to the world space y axis.
          * @author Will Eastcott
          * @example
@@ -865,15 +865,15 @@ pc.extend(pc.scene, function () {
          */
         lookAt: function () {
             var matrix = new pc.Matrix4();
-            var target = new pc.Vector3();
-            var up = new pc.Vector3();
+            var target = new pc.Vec3();
+            var up = new pc.Vec3();
             var rotation = new pc.Quaternion();
 
             return function () {
                 switch (arguments.length) {
                     case 1:
                         target.copy(arguments[0]);
-                        up.copy(pc.Vector3.up);
+                        up.copy(pc.Vec3.up);
                         break;
                     case 2:
                         target.copy(arguments[0]);
@@ -881,7 +881,7 @@ pc.extend(pc.scene, function () {
                         break;
                     case 3:
                         target.set(arguments[0], arguments[1], arguments[2]);
-                        up.copy(pc.Vector3.up);
+                        up.copy(pc.Vec3.up);
                         break;
                     case 6:
                         target.set(arguments[0], arguments[1], arguments[2]);
@@ -899,10 +899,10 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#translate
          * @description Translates the graph node in world space by the specified translation vector.
-         * @param {pc.Vector3} translation The world space translation vector to apply.
+         * @param {pc.Vec3} translation The world space translation vector to apply.
          * @author Will Eastcott
          * @example
-         * var t = new pc.Vector3(10, 0, 0);
+         * var t = new pc.Vec3(10, 0, 0);
          * this.entity.translate(t);
          */
         /**
@@ -917,7 +917,7 @@ pc.extend(pc.scene, function () {
          * this.entity.translate(10, 0, 0);
          */
         translate: function () {
-            var translation = new pc.Vector3();
+            var translation = new pc.Vec3();
 
             return function () {
                 switch (arguments.length) {
@@ -938,10 +938,10 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#translateLocal
          * @description Translates the graph node in local space by the specified translation vector.
-         * @param {pc.Vector3} translation The local space translation vector to apply.
+         * @param {pc.Vec3} translation The local space translation vector to apply.
          * @author Will Eastcott
          * @example
-         * var t = new pc.Vector3(10, 0, 0);
+         * var t = new pc.Vec3(10, 0, 0);
          * this.entity.translateLocal(t);
          */
         /**
@@ -956,7 +956,7 @@ pc.extend(pc.scene, function () {
          * this.entity.translateLocal(10, 0, 0);
          */
         translateLocal: function () {
-            var translation = new pc.Vector3();
+            var translation = new pc.Vec3();
 
             return function () {
                 switch (arguments.length) {
@@ -979,10 +979,10 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#rotate
          * @description Rotates the graph node in world space by the specified Euler angles.
          * Eulers are specified in degrees in XYZ order.
-         * @param {pc.Vector3} rot World space rotation (xyz) of graph node.
+         * @param {pc.Vec3} rot World space rotation (xyz) of graph node.
          * @author Will Eastcott
          * @example
-         * var r = new pc.Vector3(0, 90, 0);
+         * var r = new pc.Vec3(0, 90, 0);
          * this.entity.rotate(r);
          */
         /**
@@ -998,7 +998,7 @@ pc.extend(pc.scene, function () {
          * this.entity.rotate(0, 90, 0);
          */
         rotate: function () {
-            var eulers = new pc.Vector3();
+            var eulers = new pc.Vec3();
             var quaternion = new pc.Quaternion();
             var invParentRot = new pc.Quaternion();
 
@@ -1034,10 +1034,10 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#rotateLocal
          * @description Rotates the graph node in local space by the specified Euler angles.
          * Eulers are specified in degrees in XYZ order.
-         * @param {pc.Vector3} rot Local space rotation (xyz) of graph node.
+         * @param {pc.Vec3} rot Local space rotation (xyz) of graph node.
          * @author Will Eastcott
          * @example
-         * var r = new pc.Vector3(0, 90, 0);
+         * var r = new pc.Vec3(0, 90, 0);
          * this.entity.rotateLocal(r);
          */
         /**
@@ -1053,7 +1053,7 @@ pc.extend(pc.scene, function () {
          * this.entity.rotateLocal(0, 90, 0);
          */
         rotateLocal: function () {
-            var eulers = new pc.Vector3();
+            var eulers = new pc.Vec3();
             var quaternion = new pc.Quaternion();
 
             return function () {

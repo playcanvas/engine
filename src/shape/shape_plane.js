@@ -7,8 +7,8 @@ pc.extend(pc.shape, function () {
      * @constructor
      */
     var Plane = function Plane (point, normal) {
-        this.normal = normal || new pc.Vector3(0, 0, 1);
-        this.point  = point  || new pc.Vector3(0, 0, 0);
+        this.normal = normal || new pc.Vec3(0, 0, 1);
+        this.point  = point  || new pc.Vec3(0, 0, 0);
         this.d      = -this.normal.dot(this.point);
         this.type = pc.shape.Type.PLANE;
     };
@@ -16,7 +16,7 @@ pc.extend(pc.shape, function () {
     
     /**
      * Tests whether a point is inside the plane.
-     * @param {pc.Vector3} point Point to test
+     * @param {pc.Vec3} point Point to test
      * @returns {Boolean} true if the point is inside the frustum, false otherwise
      */
     Plane.prototype.containsPoint = function (point) {
@@ -36,8 +36,8 @@ pc.extend(pc.shape, function () {
 
     Plane.prototype.intersectPosition = function (p0, p1) {
         var t = this.intersect(p0, p1);
-        var r = new pc.Vector3();
-        pc.Vector3.lerp(p0, p1, t, r);
+        var r = new pc.Vec3();
+        pc.Vec3.lerp(p0, p1, t, r);
         return r;
     };
 

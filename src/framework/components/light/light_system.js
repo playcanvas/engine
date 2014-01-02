@@ -327,8 +327,8 @@ pc.extend(pc.fw, function () {
             var rot = new pc.Matrix4().rotate(120, [0, 1, 0]);
             var i;
             for (i = 0; i < 16; i++) {
-                var pos = new pc.Vector3(vertexData[(i+8)*3], vertexData[(i+8)*3+1], vertexData[(i+8)*3+2]);
-                var posRot = pc.Matrix4.mulVector3(pos, 1.0, rot);
+                var pos = new pc.Vec3(vertexData[(i+8)*3], vertexData[(i+8)*3+1], vertexData[(i+8)*3+2]);
+                var posRot = rot.transformPoint(pos, pos);
                 vertexData[(i+16)*3]   = posRot[0];
                 vertexData[(i+16)*3+1] = posRot[1];
                 vertexData[(i+16)*3+2] = posRot[2];

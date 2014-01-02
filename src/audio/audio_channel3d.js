@@ -6,8 +6,8 @@ pc.extend(pc.audio, function () {
     
     if (pc.audio.hasAudioContext()) {
         Channel3d = function (manager, sound, options) {
-            this.position = new pc.Vector3();
-            this.velocity = new pc.Vector3();
+            this.position = new pc.Vec3();
+            this.velocity = new pc.Vec3();
             
             var context = manager.context;
             this.panner = context.createPanner();
@@ -77,7 +77,7 @@ pc.extend(pc.audio, function () {
         });        
     } else if (pc.audio.hasAudio()) {
         // temp vector storage
-        var offset = new pc.Vector3();
+        var offset = new pc.Vec3();
         var distance;
         
         // Fall off function which should be the same as the one in the Web Audio API, 
@@ -103,8 +103,8 @@ pc.extend(pc.audio, function () {
         };
 
         Channel3d = function (manager, sound) {
-            this.position = new pc.Vector3();
-            this.velocity = new pc.Vector3();
+            this.position = new pc.Vec3();
+            this.velocity = new pc.Vec3();
 
             this.maxDistance = MAX_DISTANCE;
             this.minDistance = 1;

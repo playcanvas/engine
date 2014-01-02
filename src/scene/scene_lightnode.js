@@ -21,9 +21,9 @@ pc.extend(pc.scene, function () {
         this._outerConeAngle = 45;
 
         // Cache of light property data in a format more friendly for shader uniforms
-        this._finalColor = new pc.Vector3(0.8, 0.8, 0.8);
-        this._position = new pc.Vector3(0, 0, 0);
-        this._direction = new pc.Vector3(0, 0, 0);
+        this._finalColor = new pc.Vec3(0.8, 0.8, 0.8);
+        this._position = new pc.Vec3(0, 0, 0);
+        this._direction = new pc.Vec3(0, 0, 0);
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
         this._outerConeAngleCos = Math.cos(this._outerConeAngle * Math.PI / 180);
 
