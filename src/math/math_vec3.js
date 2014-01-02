@@ -396,12 +396,12 @@ pc.extend(pc, function () {
          * @description Returns the specified 3-dimensional vector copied and converted to a unit vector.
          * @returns {pc.Vec3} The result of the normalization.
          * @example
-         * var a = new pc.Vec3(25, 0, 0);
-         * var r = new pc.Vec3();
+         * var v = new pc.Vec3(25, 0, 0);
          *
-         * pc.math.vec2.normalize(a, r);
-         * // Should output 1, 0, 0
-         * console.log("The result of the vector normalization is: " + r[0] + ", " + r[1] + ", " + r[2]);
+         * v.normalize();
+         *
+         * // Should output 1, 0, 0, 0
+         * console.log("The result of the vector normalization is: " + v.toString());
          * @author Will Eastcott
          */
         normalize: function () {

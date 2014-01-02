@@ -318,12 +318,12 @@ pc.extend(pc, function () {
          * @description Returns the specified 3-dimensional vector copied and converted to a unit vector.
          * @returns {pc.Vec4} The result of the normalization.
          * @example
-         * var a = new pc.Vec4(25, 0, 0);
-         * var r = new pc.Vec4();
+         * var v = new pc.Vec4(25, 0, 0, 0);
          *
-         * pc.math.vec2.normalize(a, r);
-         * // Should output 1, 0, 0
-         * console.log("The result of the vector normalization is: " + r[0] + ", " + r[1] + ", " + r[2]);
+         * v.normalize();
+         *
+         * // Should output 1, 0, 0, 0
+         * console.log("The result of the vector normalization is: " + v.toString());
          * @author Will Eastcott
          */
         normalize: function () {
@@ -469,13 +469,13 @@ pc.extend(pc, function () {
          * @description Converts the vector to string form.
          * @returns {String} The vector in string form.
          * @example
-         * var v = new pc.Vec4(20, 10, 5);
-         * // Should output '[20, 10, 5]'
+         * var v = new pc.Vec4(20, 10, 5, 0);
+         * // Should output '[20, 10, 5, 0]'
          * console.log(v.toString());
          * @author Will Eastcott
          */
         toString: function () {
-            return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + "]";
+            return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + ", " + this.data[3] + "]";
         }
     }
 
