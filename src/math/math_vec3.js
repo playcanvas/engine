@@ -3,23 +3,6 @@ pc.extend(pc, function () {
     * @name pc.Vec3
     * @class A 3-dimensional vector.
     * @constructor Creates a new Vec3 object
-    * @property {pc.Vec3} BACK [Read only] A constant vector set to [0, 0, 1].
-    * @property {pc.Vec3} DOWN [Read only] A constant vector set to [0, -1, 0].
-    * @property {pc.Vec3} FORWARD [Read only] A constant vector set to [0, 0, 1].
-    * @property {pc.Vec3} LEFT [Read only] A constant vector set to [-1, 0, 0].
-    * @property {pc.Vec3} ONE [Read only] A constant vector set to [1, 1, 1].
-    * @property {pc.Vec3} RIGHT [Read only] A constant vector set to [1, 0, 0].
-    * @property {pc.Vec3} UP [Read only] A constant vector set to [0, 1, 0].
-    * @property {pc.Vec3} ZERO [Read only] A constant vector set to [0, 0, 0].
-    * @property {Number} x The first element of the vector.
-    * @property {Number} y The second element of the vector.
-    * @property {Number} z The third element of the vector.
-    * @property {Number} r The first element of the vector.
-    * @property {Number} g The second element of the vector.
-    * @property {Number} b The third element of the vector.
-    * @property {Number} u The first element of the vector.
-    * @property {Number} v The second element of the vector.
-    * @property {Number} w The third element of the vector.
     */
     var Vec3 = function () {
         this.data = new Float32Array(3);
@@ -108,10 +91,10 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.Vector#copy
+         * @name pc.Vec3#copy
          * @description Copied the contents of a source 3-dimensional vector to a destination 3-dimensional vector.
-         * @param {Array} src A 3-dimensional vector to be copied.
-         * @param {Array} dst A 3-dimensional vector that will recieve a copy of the source vector.
+         * @param {pc.Vec3} rhs A vector to copy to the specified vector.
+         * @returns {pc.Vec3} Self for chaining.
          * @example
          * var src = new pc.Vec3(10, 20, 30);
          * var dst = new pc.Vec3();
@@ -175,6 +158,23 @@ pc.extend(pc, function () {
             var b = rhs.data;
 
             return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#equals
+         * @description Reports whether two vectors are equal.
+         * @returns {Booean} true if the vectors are equal and false otherwise.
+         * var a = new pc.Vec3(1, 2, 3);
+         * var b = new pc.Vec3(4, 5, 6);
+         * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));
+         * @author Will Eastcott
+         */
+        equals: function (rhs) {
+            var a = this.data;
+            var b = rhs.data;
+
+            return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
         },
 
         /**
@@ -464,6 +464,12 @@ pc.extend(pc, function () {
         }
     }
 
+    /**
+     * @field
+     * @type Number
+     * @name pc.Vec3#x
+     * @description The first element of the vector.
+     */
     Object.defineProperty(Vec3.prototype, 'x', {
         get: function () {
             return this.data[0];
@@ -473,6 +479,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @field
+     * @type Number
+     * @name pc.Vec3#y
+     * @description The second element of the vector.
+     */
     Object.defineProperty(Vec3.prototype, 'y', {
         get: function () {
             return this.data[1];
@@ -482,6 +494,12 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @field
+     * @type Number
+     * @name pc.Vec3#z
+     * @description The third element of the vector.
+     */
     Object.defineProperty(Vec3.prototype, 'z', {
         get: function () {
             return this.data[2];
@@ -491,6 +509,14 @@ pc.extend(pc, function () {
         }
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec3
+     * @name pc.Vec3.BACK
+     * @description A constant vector set to [0, 0, 1].
+     */
     Object.defineProperty(Vec3, 'BACK', {
         get: function () {
             var back = new Vec3(0, 0, 1);
@@ -500,6 +526,14 @@ pc.extend(pc, function () {
         }()
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec3
+     * @name pc.Vec3.DOWN
+     * @description A constant vector set to [0, -1, 0].
+     */
     Object.defineProperty(Vec3, 'DOWN', {
         get: function () {
             var down = new Vec3(0, -1, 0);
@@ -509,6 +543,14 @@ pc.extend(pc, function () {
         }()
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec3
+     * @name pc.Vec3.FORWARD
+     * @description A constant vector set to [0, 0, -1].
+     */
     Object.defineProperty(Vec3, 'FORWARD', {
         get: function () {
             var forward = new Vec3(0, 0, -1);
@@ -518,6 +560,14 @@ pc.extend(pc, function () {
         }()
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec3
+     * @name pc.Vec3.LEFT
+     * @description A constant vector set to [-1, 0, 0].
+     */
     Object.defineProperty(Vec3, 'LEFT', {
         get: function () {
             var left = new Vec3(-1, 0, 0);
@@ -527,6 +577,14 @@ pc.extend(pc, function () {
         }()
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec3
+     * @name pc.Vec3.ONE
+     * @description A constant vector set to [1, 1, 1].
+     */
     Object.defineProperty(Vec3, 'ONE', {
         get: function () {
             var one = new Vec3(1, 1, 1);
@@ -536,6 +594,14 @@ pc.extend(pc, function () {
         }()
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec3
+     * @name pc.Vec3.RIGHT
+     * @description A constant vector set to [1, 0, 0].
+     */
     Object.defineProperty(Vec3, 'RIGHT', {
         get: function () {
             var right = new Vec3(1, 0, 0);
@@ -545,6 +611,14 @@ pc.extend(pc, function () {
         }()
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec3
+     * @name pc.Vec3.UP
+     * @description A constant vector set to [0, 1, 0].
+     */
     Object.defineProperty(Vec3, 'UP', {
         get: function () {
             var down = new Vec3(0, 1, 0);
@@ -554,6 +628,14 @@ pc.extend(pc, function () {
         }()
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec3
+     * @name pc.Vec3.ZERO
+     * @description A constant vector set to [0, 0, 0].
+     */
     Object.defineProperty(Vec3, 'ZERO', {
         get: function () {
             var zero = new Vec3(0, 0, 0);

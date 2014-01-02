@@ -141,12 +141,13 @@ pc.extend(pc, function () {
      * @returns {Booean} true if the matrices are equal and false otherwise.
      * var a = new pc.Mat4().translate(10, 20, 30);
      * var b = new pc.Mat4();
-     * console.log("The two matrices are " + (a.equal(b) ? "equal" : "different"));
+     * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      * @author Will Eastcott
      */
     Mat4.prototype.equals = function (rhs) {
         var l = this.data;
         var r = rhs.data;
+
         return
            ((l[0] === r[0]) &&
             (l[1] === r[1]) &&

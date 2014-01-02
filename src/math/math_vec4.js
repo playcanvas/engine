@@ -105,7 +105,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.Vector#copy
+         * @name pc.Vec4#copy
          * @description Copied the contents of a source 4-dimensional vector to a destination 4-dimensional vector.
          * @param {Array} src A 4-dimensional vector to be copied.
          * @param {Array} dst A 4-dimensional vector that will recieve a copy of the source vector.
@@ -148,6 +148,23 @@ pc.extend(pc, function () {
             var b = rhs.data;
 
             return a[0]*b[0] + a[1]*b[1] + a[2]*b[2] + a[3]*b[3];
+        },
+
+        /**
+         * @function
+         * @name pc.Vec4#equals
+         * @description Reports whether two vectors are equal.
+         * @returns {Booean} true if the vectors are equal and false otherwise.
+         * var a = new pc.Vec4(1, 2, 3, 4);
+         * var b = new pc.Vec4(5, 6, 7, 8);
+         * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));
+         * @author Will Eastcott
+         */
+        equals: function (rhs) {
+            var a = this.data;
+            var b = rhs.data;
+
+            return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
         },
 
         /**
