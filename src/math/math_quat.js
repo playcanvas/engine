@@ -1,23 +1,35 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.Quaternion
+    * @name pc.Quat
     * @class A quaternion.
-    * @constructor Create a new Quaternion object
+    * @constructor Create a new Quat object
     * @param {Number} [x=0] The quaternion's x component
     * @param {Number} [y=0] The quaternion's y component
     * @param {Number} [z=0] The quaternion's z component
     * @param {Number} [w=1] The quaternion's w component
     */
-    var Quaternion = function (x, y, z, w) {
+    var Quat = function (x, y, z, w) {
         this.x = (typeof x === 'undefined') ? 0 : x;
         this.y = (typeof y === 'undefined') ? 0 : y;
         this.z = (typeof z === 'undefined') ? 0 : z;
         this.w = (typeof w === 'undefined') ? 1 : w;
     };
 
-    Quaternion.prototype = {
+    Quat.prototype = {
+        /**
+         * @function
+         * @name pc.Quat#clone
+         * @description Returns an identical copy of the specified quaternion.
+         * @returns {pc.Quat} A quaternion containing the result of the cloning.
+         * @example
+         * var q = new pc.Quat(-0.11, -0.15, -0.46, 0.87);
+         * var qclone = q.clone();
+         *
+         * console.log("The result of the cloning is: " + q.toString());
+         * @author Will Eastcott
+         */
         clone: function () {
-            return new pc.Quaternion(this.x, this.y, this.z, this.w);
+            return new pc.Quat(this.x, this.y, this.z, this.w);
         },
 
         conjugate: function () {
@@ -53,11 +65,7 @@ pc.extend(pc, function () {
             return Math.sqrt(x * x + y * y + z * z + w * w);
         },
 
-        mul: function (q1, q2) {
-            return this.copy(q1).mulSelf(q2);
-        },
-
-        mulSelf: function (rhs) {
+        mul: function (rhs) {
             var q1x = this.x;
             var q1y = this.y;
             var q1z = this.z;
@@ -74,6 +82,10 @@ pc.extend(pc, function () {
             this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
 
             return this;
+        },
+
+        mul2: function (lhs, rhs) {
+            return this.copy(lhs).mul(rhs);
         },
 
         normalize: function () {
@@ -109,9 +121,9 @@ pc.extend(pc, function () {
             var sa = Math.sin(angle);
             var ca = Math.cos(angle);
 
-            this.x = sa * a[0];
-            this.y = sa * a[1];
-            this.z = sa * a[2];
+            this.x = sa * a.x;
+            this.y = sa * a.y;
+            this.z = sa * a.z;
             this.w = ca;
 
             return this;
@@ -138,6 +150,8 @@ pc.extend(pc, function () {
         },
 
         setFromMat4: function (m) {
+            m = m.data;
+
             var m00 = m[0], m01 = m[1], m02 = m[2];
             var m10 = m[4], m11 = m[5], m12 = m[6];
             var m20 = m[8], m21 = m[9], m22 = m[10];
@@ -210,15 +224,15 @@ pc.extend(pc, function () {
             return this;
         },
 
-        slerpSelf: function (that, alpha) {
+        slerp: function (rhs, alpha) {
             var q1x = this.x;
             var q1y = this.y;
             var q1z = this.z;
             var q1w = this.w;
-            var q2x = that.x;
-            var q2y = that.y;
-            var q2z = that.z;
-            var q2w = that.w;
+            var q2x = rhs.x;
+            var q2y = rhs.y;
+            var q2z = rhs.z;
+            var q2w = rhs.w;
 
             var cosOmega = q1x * q2x + q1y * q2y + q1z * q2z + q1w * q2w;
 
@@ -247,12 +261,27 @@ pc.extend(pc, function () {
             return this;
         },
 
-        slerp: function (q1, q2, alpha) {
-            return this.copy(q1).slerpSelf(q2, alpha);
+        slerp2: function (lhs, rhs, alpha) {
+            return this.copy(lhs).slerp(rhs, alpha);
+        },
+
+        /**
+         * @function
+         * @name pc.Quat#toString
+         * @description Converts the quaternion to string form.
+         * @returns {String} The quaternion in string form.
+         * @example
+         * var v = new pc.Quat(0, 0, 0, 1);
+         * // Should output '[0, 0, 0, 1]'
+         * console.log(v.toString());
+         * @author Will Eastcott
+         */
+        toString: function () {
+            return "[" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + "]";
         }
     };
 
     return {
-        Quaternion: Quaternion
+        Quat: Quat
     };
 }());

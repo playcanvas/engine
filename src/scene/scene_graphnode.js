@@ -13,13 +13,13 @@ pc.extend(pc.scene, function () {
 
         // Local-space properties of transform (only first 3 are settable by the user)
         this.localPosition = new pc.Vec3(0, 0, 0);
-        this.localRotation = new pc.Quaternion(0, 0, 0, 1);
+        this.localRotation = new pc.Quat(0, 0, 0, 1);
         this.localScale = new pc.Vec3(1, 1, 1);
         this.localEulerAngles = new pc.Vec3(0, 0, 0); // Only calculated on request
 
         // World-space properties of transform
         this.position = new pc.Vec3(0, 0, 0);
-        this.rotation = new pc.Quaternion(0, 0, 0, 1);
+        this.rotation = new pc.Quat(0, 0, 0, 1);
         this.eulerAngles = new pc.Vec3(0, 0, 0);
 
         this.localTransform = new pc.Mat4();
@@ -281,7 +281,7 @@ pc.extend(pc.scene, function () {
          * @description Get the rotation in local space for the specified GraphNode. The rotation
          * is returned as a quaternion. The returned quaternion should be considered read-only.
          * To update the local rotation, use {@link pc.scene.GraphNode#setLocalRotation}.
-         * @returns {pc.Quaternion} The local space rotation of the graph node as a quaternion.
+         * @returns {pc.Quat} The local space rotation of the graph node as a quaternion.
          * @author Will Eastcott
          * @example
          * var rotation = this.entity.getLocalRotation();
@@ -367,7 +367,7 @@ pc.extend(pc.scene, function () {
          * @description Get the world space rotation for the specified GraphNode in quaternion
          * form. The value returned by this function should be considered read-only. In order 
          * to set the world-space rotation of the graph node, use {@link pc.scene.GraphNode#setRotation}.
-         * @returns {pc.Quaternion} The world space rotation of the graph node as a quaternion.
+         * @returns {pc.Quat} The world space rotation of the graph node as a quaternion.
          * @author Will Eastcott
          * @example
          * var rotation = this.entity.getRotation();
@@ -472,9 +472,9 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#setLocalRotation
          * @description Sets the local space rotation of the specified graph node.
-         * @param {pc.Quaternion} q quaternion representing rotation of graph node in local space.
+         * @param {pc.Quat} q quaternion representing rotation of graph node in local space.
          * @author Will Eastcott
-         * var q = pc.Quaternion();
+         * var q = pc.Quat();
          * this.entity.setLocalRotation(q);
          */
         /**
@@ -589,10 +589,10 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#setRotation
          * @description Sets the world space rotation of the specified graph node using
          * a quaternion.
-         * @param {pc.Quaternion} rot World space rotation (xyz) of graph node.
+         * @param {pc.Quat} rot World space rotation (xyz) of graph node.
          * @author Will Eastcott
          * @example
-         * var q = new pc.Quaternion();
+         * var q = new pc.Quat();
          * this.entity.setRotation(q);
          */
         /**
@@ -609,8 +609,8 @@ pc.extend(pc.scene, function () {
          * this.entity.setRotation(0, 0, 0, 1);
          */
         setRotation: function () {
-            var rotation = new pc.Quaternion();
-            var invParentRot = new pc.Quaternion();
+            var rotation = new pc.Quat();
+            var invParentRot = new pc.Quat();
 
             return function () {
                 if (arguments.length === 1) {
@@ -655,7 +655,7 @@ pc.extend(pc.scene, function () {
          */
         setEulerAngles: function () {
             var eulers = new pc.Vec3();
-            var invParentRot = new pc.Quaternion();
+            var invParentRot = new pc.Quat();
 
             return function () {
                 if (arguments.length === 1) {
@@ -867,7 +867,7 @@ pc.extend(pc.scene, function () {
             var matrix = new pc.Mat4();
             var target = new pc.Vec3();
             var up = new pc.Vec3();
-            var rotation = new pc.Quaternion();
+            var rotation = new pc.Quat();
 
             return function () {
                 switch (arguments.length) {
@@ -999,8 +999,8 @@ pc.extend(pc.scene, function () {
          */
         rotate: function () {
             var eulers = new pc.Vec3();
-            var quaternion = new pc.Quaternion();
-            var invParentRot = new pc.Quaternion();
+            var quaternion = new pc.Quat();
+            var invParentRot = new pc.Quat();
 
             return function () {
                 switch (arguments.length) {
@@ -1054,7 +1054,7 @@ pc.extend(pc.scene, function () {
          */
         rotateLocal: function () {
             var eulers = new pc.Vec3();
-            var quaternion = new pc.Quaternion();
+            var quaternion = new pc.Quat();
 
             return function () {
                 switch (arguments.length) {

@@ -18,10 +18,10 @@
 ../src/events/events_events.js
 ../src/core/core_dom.js
 ../src/math/math_math.js
-../src/math/math_mat4.js
-../src/math/math_quat.js
 ../src/math/math_vec3.js
 ../src/math/math_vec4.js
+../src/math/math_mat4.js
+../src/math/math_quat.js
 ../src/shape/shape_shape.js
 ../src/shape/shape_intersection.js
 ../src/shape/shape_aabb.js

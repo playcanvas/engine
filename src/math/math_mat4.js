@@ -374,9 +374,9 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Mat4.prototype.lookAt = function () {
-        var x = pc.Vec3();
-        var y = pc.Vec3();
-        var z = pc.Vec3();
+        var x = new pc.Vec3();
+        var y = new pc.Vec3();
+        var z = new pc.Vec3();
 
         return function (position, target, up) {
             z.subtract(position, target).normalize();
@@ -729,7 +729,7 @@ pc.extend(pc, function () {
      * @description Composes a 4x4 matrix from a translation, a quaternion rotation and
      * a scale.
      * @param {pc.Vec3} t A 3-d vector translation.
-     * @param {pc.Quaternion} r A quaternion rotation.
+     * @param {pc.Quat} r A quaternion rotation.
      * @param {pc.Vec3} s A 3-d vector scale.
      * @returns The newly composed matrix (useful for chaining).
      * @example
@@ -1093,7 +1093,7 @@ pc.extend(pc, function () {
         return t;
     };
 
-    Object.defineProperty(Mat4, 'identity', {
+    Object.defineProperty(Mat4, 'IDENTITY', {
         get: function () {
             var identity = new Mat4();
             return function() {
@@ -1102,7 +1102,7 @@ pc.extend(pc, function () {
         }()
     });
 
-    Object.defineProperty(Mat4, 'zero', {
+    Object.defineProperty(Mat4, 'ZERO', {
         get: function () {
             var zero = new Mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
             return function() {

@@ -50,7 +50,7 @@ pc.extend(pc.resources, function () {
                 var r = k.rot;
                 var s = k.scale;
                 var pos = new pc.Vec3(p[0], p[1], p[2]);
-                var rot = new pc.Quaternion().fromEulerXYZ(r[0], r[1], r[2]);
+                var rot = new pc.Quat().fromEulers(r[0], r[1], r[2]);
                 var scl = new pc.Vec3(s[0], s[1], s[2]);
 
                 var key = new pc.anim.Key(t, pos, rot, scl);
@@ -89,7 +89,7 @@ pc.extend(pc.resources, function () {
                 var r = defRot ? defRot : k.r;
                 var s = defScl ? defScl : k.s;
                 var pos = new pc.Vec3(p[0], p[1], p[2]);
-                var rot = new pc.Quaternion().fromEulerXYZ(r[0], r[1], r[2]);
+                var rot = new pc.Quat().fromEulers(r[0], r[1], r[2]);
                 var scl = new pc.Vec3(s[0], s[1], s[2]);
 
                 var key = new pc.anim.Key(t, pos, rot, scl);

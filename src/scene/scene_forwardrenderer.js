@@ -14,7 +14,7 @@ pc.extend(pc.scene, function () {
     var scaleShift = new pc.Mat4().copy(shift).mul(scale);
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-    var camToLight = new pc.Mat4().rotate(-90, pc.Vec3.right);
+    var camToLight = new pc.Mat4().rotate(-90, pc.Vec3.RIGHT);
     var shadowCamWtm = new pc.Mat4();
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();

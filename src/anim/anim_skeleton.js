@@ -5,7 +5,7 @@ pc.extend(pc.anim, function () {
         this._keyFrames = [];
 
         // Result of interpolation
-        this._quat = new pc.Quaternion();
+        this._quat = new pc.Quat();
         this._pos = new pc.Vec3();
         this._scale = new pc.Vec3();
 
