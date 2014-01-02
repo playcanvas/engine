@@ -430,19 +430,18 @@ pc.extend(pc, function () {
          * @description Scales each dimension of the specified 3-dimensional vector by the supplied
          * scalar value.
          * @param {Number} scalar The value by which each vector dimension is multiplied.
-         * @returns {Array} The result of the vector scale operation.
+         * @returns {pc.Vec3} Self for chaining.
          * @example
          * var v = new pc.Vec3(2, 4, 8);
-         * var r = new pc.Vec3();
          * 
          * // Multiply by 2
-         * pc.math.vec3.scale(v, 2, r);
+         * v.scale(2);
          * 
          * // Negate
-         * pc.math.vec3.scale(v, -1, r);
+         * v.scale(-1);
          * 
          * // Divide by 2
-         * pc.math.vec3.scale(v, 0.5, r);
+         * v.scale(0.5);
          * @author Will Eastcott
          */
         scale: function (scalar) {
