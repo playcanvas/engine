@@ -53,20 +53,20 @@ pc.extend(pc, function () {
             return Math.sqrt(x * x + y * y + z * z + w * w);
         },
 
-        multiplySelf: function (q1, q2) {
-            return this.copy(q1).multiplySelf(q2);
+        mul: function (q1, q2) {
+            return this.copy(q1).mulSelf(q2);
         },
 
-        multiplySelf: function (that) {
+        mulSelf: function (rhs) {
             var q1x = this.x;
             var q1y = this.y;
             var q1z = this.z;
             var q1w = this.w;
 
-            var q2x = that.x;
-            var q2y = that.y;
-            var q2z = that.z;
-            var q2w = that.w;
+            var q2x = rhs.x;
+            var q2y = rhs.y;
+            var q2z = rhs.z;
+            var q2w = rhs.w;
 
             this.x = q1w * q2x + q1x * q2w + q1y * q2z - q1z * q2y;
             this.y = q1w * q2y + q1y * q2w + q1z * q2x - q1x * q2z;
@@ -117,7 +117,7 @@ pc.extend(pc, function () {
             return this;
         },
 
-        setFromEulerXYZ: function (ex, ey, ez) {
+        setFromEulers: function (ex, ey, ez) {
             ex *= 0.5;
             ey *= 0.5;
             ez *= 0.5;

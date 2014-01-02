@@ -285,8 +285,6 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          * @example
          * var rotation = this.entity.getLocalRotation();
-         * pc.math.quat.fromAxisAngle(this.entity.up, 90, rotation);
-         * this.entity.setLocalRotation(rotation);
          */
         getLocalRotation: function () {
             return this.localRotation;
@@ -373,8 +371,6 @@ pc.extend(pc.scene, function () {
          * @author Will Eastcott
          * @example
          * var rotation = this.entity.getRotation();
-         * pc.math.quat.fromAxisAngle(this.entity.up, 90, rotation);
-         * this.entity.setRotation(rotation);
          */
         getRotation: function () {
             this.rotation.setFromMatrix4(this.getWorldTransform());
@@ -856,9 +852,9 @@ pc.extend(pc.scene, function () {
          * @param {Number} tz Z-component of the world space coordinate to 'look at'.
          * @param {Number} [ux] X-component of the up vector for the look at transform. If left unspecified,
          * this is set to the world space y axis.
-         * @param {Number} [uy] X-component of the up vector for the look at transform. If left unspecified,
+         * @param {Number} [uy] Y-component of the up vector for the look at transform. If left unspecified,
          * this is set to the world space y axis.
-         * @param {Number} [uz] X-component of the up vector for the look at transform. If left unspecified,
+         * @param {Number} [uz] Z-component of the up vector for the look at transform. If left unspecified,
          * this is set to the world space y axis.
          * @author Will Eastcott
          * @example

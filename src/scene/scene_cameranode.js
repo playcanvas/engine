@@ -81,8 +81,8 @@ pc.extend(pc.scene, function () {
         },
 
         getFrustumCentroid: function () {
-            var centroid = pc.math.vec3.create(0, 0, -(this._farClip + this._nearClip) * 0.5);
-            pc.math.mat4.multiplyVec3(centroid, 1, this.getWorldTransform(), centroid);
+            var centroid = new pc.Vector3(0, 0, -(this._farClip + this._nearClip) * 0.5);
+            this.getWorldTransform().transformPoint(centroid, centroid);
             return centroid;
         },
 
@@ -126,8 +126,8 @@ pc.extend(pc.scene, function () {
          * @param {Number} z The distance from the camera in world space to create the new point.
          * @param {Number} cw The width of PlayCanvas' canvas element.
          * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.math.vec3} [worldCoord] 3D vector to recieve world coordinate result.
-         * @returns {pc.math.vec3} The world space coordinate.
+         * @param {pc.Vector3} [worldCoord] 3D vector to recieve world coordinate result.
+         * @returns {pc.Vector3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {
             if (typeof worldCoord === 'undefined') {
@@ -138,9 +138,9 @@ pc.extend(pc.scene, function () {
             var wtm = this.getWorldTransform();
 
             this._viewMat.copy(wtm).invert();
-            pc.Matrix4.mul(projMat, this._viewMat, this._viewProjMat);
+            this._viewProjMat.mul(projMat, this._viewMat);
 
-            var invViewProjMat = m4.invert(this._viewProjMat);
+            invViewProjMat.copy(this._viewProjMat).invert();
 
             var far = new pc.Vector3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
             var farW = m4.multiplyVec3(far, 1.0, invViewProjMat);
@@ -150,13 +150,10 @@ pc.extend(pc.scene, function () {
                     far[2] * invViewProjMat[11] +
                     invViewProjMat[15];
 
-            v3.scale(farW, 1 / w, farW);
+            farW.scale(1 / w);
 
-            var eye = this.getPosition();
-            var t = z / this._farClip;
-            worldCoord[0] = eye[0] + t * (farW[0] - eye[0]);
-            worldCoord[1] = eye[1] + t * (farW[1] - eye[1]);
-            worldCoord[2] = eye[2] + t * (farW[2] - eye[2]);
+            var alpha = z / this._farClip;
+            worldCoord.lerp(this.getPosition(), farW, alpha);
 
             return worldCoord;
         },
@@ -257,17 +254,17 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.CameraNode#getProjectionMatrix
          * @description Retrieves the projection matrix for the specified camera.
-         * @returns {pc.math.mat4} The camera's projection matrix.
+         * @returns {pc.Matrix4} The camera's projection matrix.
          * @author Will Eastcott
          */
         getProjectionMatrix: function () {
             if (this._projMatDirty) {
                 if (this._projection === pc.scene.Projection.PERSPECTIVE) {
-                    m4.makePerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._projMat);
+                    this._projMat.perspective(this._fov, this._aspect, this._nearClip, this._farClip);
                 } else {
                     var y = this._orthoHeight;
                     var x = y * this._aspect;
-                    m4.makeOrtho(-x, x, -y, y, this._nearClip, this._farClip, this._projMat);
+                    this._projMat.ortho(-x, x, -y, y, this._nearClip, this._farClip);
                 }
 
                 this._projMatDirty = false;
