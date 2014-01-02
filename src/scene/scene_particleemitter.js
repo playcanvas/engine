@@ -3,7 +3,7 @@ pc.extend(pc.scene, function () {
     var position = new pc.Vec3();
     var velocity = new pc.Vec3();
     var acceleration = new pc.Vec3();
-    var colorMult = new pc.Vector4();
+    var colorMult = new pc.Vec4();
 
     var particleVerts = [
         [-0.5, -0.5],
@@ -97,9 +97,9 @@ pc.extend(pc.scene, function () {
         // The spin speed range.
         this.spinSpeedRange = typeof options.spinSpeedRange !== 'undefined' ? options.spinSpeedRange : 0;
         // The color multiplier of a particle.
-        this.colorMult = typeof options.colorMult !== 'undefined' ? options.colorMult : new pc.Vector4(1, 1, 1, 1);
+        this.colorMult = typeof options.colorMult !== 'undefined' ? options.colorMult : new pc.Vec4(1, 1, 1, 1);
         // The color multiplier range.
-        this.colorMultRange = typeof options.colorMultRange !== 'undefined' ? options.colorMultRange : new pc.Vector4(0, 0, 0, 0);
+        this.colorMultRange = typeof options.colorMultRange !== 'undefined' ? options.colorMultRange : new pc.Vec4(0, 0, 0, 0);
         // The velocity of all paritcles in world space.
         this.worldVelocity = typeof options.worldVelocity !== 'undefined' ? options.worldVelocity : new pc.Vec3(0, 0, 0);
         // The acceleration of all paritcles in world space.
@@ -107,7 +107,7 @@ pc.extend(pc.scene, function () {
         // Whether these particles are oriented in 2d or 3d. true = 2d, false = 3d.
         this.billboard = typeof options.billboard !== 'undefined' ? options.billboard : true;
         // The orientation of a particle. This is only used if billboard is false.
-        this.orientation = typeof options.orientation !== 'undefined' ? options.orientation : new pc.Vector4(0, 0, 0, 1);
+        this.orientation = typeof options.orientation !== 'undefined' ? options.orientation : new pc.Vec4(0, 0, 0, 1);
 
         this.dynamic = typeof options.dynamic !== 'undefined' ? options.dynamic : false;
 
