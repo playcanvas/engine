@@ -28,40 +28,6 @@ pc.extend(pc, function () {
         }
     };
 
-    Object.defineProperty(Vec4, 'ONE', {
-        get: function () {
-            var one = new Vec4(1, 1, 1, 1);
-            return function() {
-                return one;
-            }
-        }()
-    });
-
-    Object.defineProperty(Vec4, 'ZERO', {
-        get: function () {
-            var zero = new Vec4(0, 0, 0, 0);
-            return function() {
-                return zero;
-            }
-        }()
-    });
-
-    function defineAccessors(accessors) {
-        for (var i = 0; i < accessors.length; i++) {
-            var names = accessors[i];
-            for (var j = 0; j < names.length; j++) {
-                Object.defineProperty(Vec4.prototype, names[j], {
-                    get: function () {
-                        return this.data[i];
-                    },
-                    set: function (value) {
-                        this.data[i] = value;
-                    }
-                });
-            }
-        }
-    }([['x', 'r'], ['y', 'g'], ['z', 'b'], ['w', 'a']]);
-
     Vec4.prototype = {
         /**
          * @function
@@ -477,6 +443,60 @@ pc.extend(pc, function () {
             return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + ", " + this.data[3] + "]";
         }
     }
+
+    Object.defineProperty(Vec4.prototype, 'x', {
+        get: function () {
+            return this.data[0];
+        },
+        set: function (value) {
+            this.data[0] = value;
+        }
+    });
+
+    Object.defineProperty(Vec4.prototype, 'y', {
+        get: function () {
+            return this.data[1];
+        },
+        set: function (value) {
+            this.data[1] = value;
+        }
+    });
+
+    Object.defineProperty(Vec4.prototype, 'z', {
+        get: function () {
+            return this.data[2];
+        },
+        set: function (value) {
+            this.data[2] = value;
+        }
+    });
+
+    Object.defineProperty(Vec4.prototype, 'w', {
+        get: function () {
+            return this.data[3];
+        },
+        set: function (value) {
+            this.data[3] = value;
+        }
+    });
+
+    Object.defineProperty(Vec4, 'ONE', {
+        get: function () {
+            var one = new Vec4(1, 1, 1, 1);
+            return function() {
+                return one;
+            }
+        }()
+    });
+
+    Object.defineProperty(Vec4, 'ZERO', {
+        get: function () {
+            var zero = new Vec4(0, 0, 0, 0);
+            return function() {
+                return zero;
+            }
+        }()
+    });
 
     return {
         Vec4: Vec4

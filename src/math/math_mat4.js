@@ -30,7 +30,7 @@ pc.extend(pc, function () {
      * var b = pc.math.mat4.makeRotate(180, [0, 1, 0]);
      *
      * // Generate result into a new matrix and return it
-     * a.mul(b);
+     * a.add(b);
      * 
      * console.log("The result of the multiplication is: " a.toString());
      * @author Will Eastcott
@@ -213,14 +213,10 @@ pc.extend(pc, function () {
      * console.log("The result of the multiplication is: " a.toString());
      * @author Will Eastcott
      */
-    Mat4.mul = function (lhs, rhs, res) {
-        if (typeof res === 'undefined') {
-            res = new pc.Matrix();
-        }
-
+    Mat4.prototype.mul2 = function (lhs, rhs) {
         var a = lhs.data;
         var b = rhs.data;
-        var r = res.data;
+        var r = this.data;
 
         var a00 = a[0];
         var a01 = a[1];
@@ -275,7 +271,7 @@ pc.extend(pc, function () {
         r[14] = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
         r[15] = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
 
-        return res;
+        return this;
     };
 
     /**
@@ -297,8 +293,7 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Mat4.prototype.mul = function (rhs) {
-        Mat4.mul(this, rhs, this);
-        return this;
+        return this.mul2(this, rhs);
     };
 
     /**
@@ -531,7 +526,7 @@ pc.extend(pc, function () {
      */
     Mat4.prototype.rotate = function (angle, axis) {
         var m = this.data;
-        var x = axis[0], y = axis[1], z = axis[2];
+        var x = axis.x, y = axis.y, z = axis.z;
         var c = Math.cos(angle);
         var s = Math.sin(angle);
         var t = 1-c;

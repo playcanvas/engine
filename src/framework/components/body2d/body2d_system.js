@@ -1,11 +1,7 @@
 pc.extend(pc.fw, function () {
     // Shared math variable to avoid excessive allocation
-    var transform = pc.math.mat4.create();
-    var newWtm = pc.math.mat4.create();
-
-    var position = pc.math.vec3.create();
-    var rotation = pc.math.vec3.create();
-    var scale = pc.math.vec3.create();
+    var position = new pc.Vec3();
+    var rotation = new pc.Vec3();
 
     var pos2d;
 
@@ -61,8 +57,8 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this._rayStart = pc.math.vec3.create(); // for debugging raycasts
-        this._rayEnd = pc.math.vec3.create();   // for debugging raycasts
+        this._rayStart = new pc.Vec3(); // for debugging raycasts
+        this._rayEnd = new pc.Vec3();   // for debugging raycasts
 
         this.time = 0;
         this.step = 1/60;
@@ -97,11 +93,11 @@ pc.extend(pc.fw, function () {
             if (component.entity.collisionrect || component.entity.collisioncircle) {
                 var bodyDef = new b2BodyDef();
 
-                pc.math.vec3.copy(component.entity.getPosition(), position);
-                pc.math.vec3.copy(component.entity.getEulerAngles(), rotation);
+                position.copy(component.entity.getPosition());
+                rotation.copy(component.entity.getEulerAngles());
 
                 bodyDef.type = component.static ? b2Body.b2_staticBody : b2Body.b2_dynamicBody;
-                bodyDef.position.Set(position[this.xi], position[this.yi]);
+                bodyDef.position.Set(position.data[this.xi], position.data[this.yi]);
                 
                 var angle = component._eulersToAngle(rotation);
 
@@ -181,8 +177,8 @@ pc.extend(pc.fw, function () {
             this.to2d(start, s);
             this.to2d(end, e);
 
-            pc.math.vec3.copy(start, this._rayStart);
-            pc.math.vec3.copy(end, this._rayEnd);
+            this._rayStart.vec3.copy(start);
+            this._rayEnd.vec3.copy(end);
 
             this.b2World.RayCast(callback, s, e);
         },
@@ -191,8 +187,8 @@ pc.extend(pc.fw, function () {
         * @private
         * @name pc.fw.Body2dComponentSystem#raycastFirst
         * @description Raycast into the world (in 2D) and return the first Entity hit
-        * @param {pc.math.vec3} start The ray start position
-        * @param {pc.math.vec3} end The ray end position
+        * @param {pc.Vec3} start The ray start position
+        * @param {pc.Vec3} end The ray end position
         * @param {pc.fw.Entity} ignore An entity to ignore
         * @returns {pc.fw.Entity} The first Entity with a 2D collision shape hit by the ray.
         */

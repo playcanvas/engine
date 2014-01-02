@@ -11,12 +11,6 @@ pc.extend(pc.fw, function () {
         b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
     }
 
-    // Shared vectors to avoid excessive allocation
-    var position = pc.math.vec3.create();
-    var rotation = pc.math.vec3.create();
-    var scale = pc.math.vec3.create(1, 1, 1);
-    var transform = pc.math.mat4.create();
-
     /**
      * @private
      * @name pc.fw.CollisionCircleComponentSystem

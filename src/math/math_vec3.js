@@ -33,94 +33,6 @@ pc.extend(pc, function () {
         }
     };
 
-    Object.defineProperty(Vec3, 'BACK', {
-        get: function () {
-            var back = new Vec3(0, 0, 1);
-            return function() {
-                return back;
-            }
-        }()
-    });
-
-    Object.defineProperty(Vec3, 'DOWN', {
-        get: function () {
-            var down = new Vec3(0, -1, 0);
-            return function() {
-                return down;
-            }
-        }()
-    });
-
-    Object.defineProperty(Vec3, 'FORWARD', {
-        get: function () {
-            var forward = new Vec3(0, 0, -1);
-            return function() {
-                return forward;
-            }
-        }()
-    });
-
-    Object.defineProperty(Vec3, 'LEFT', {
-        get: function () {
-            var left = new Vec3(-1, 0, 0);
-            return function() {
-                return left;
-            }
-        }()
-    });
-
-    Object.defineProperty(Vec3, 'ONE', {
-        get: function () {
-            var one = new Vec3(1, 1, 1);
-            return function() {
-                return one;
-            }
-        }()
-    });
-
-    Object.defineProperty(Vec3, 'RIGHT', {
-        get: function () {
-            var right = new Vec3(1, 0, 0);
-            return function() {
-                return right;
-            }
-        }()
-    });
-
-    Object.defineProperty(Vec3, 'UP', {
-        get: function () {
-            var down = new Vec3(0, 1, 0);
-            return function() {
-                return down;
-            }
-        }()
-    });
-
-    Object.defineProperty(Vec3, 'ZERO', {
-        get: function () {
-            var zero = new Vec3(0, 0, 0);
-            return function() {
-                return zero;
-            }
-        }()
-    });
-
-    function defineAccessors(accessors) {
-        for (var i = 0; i < accessors.length; i++) {
-            var names = accessors[i];
-            for (var j = 0; j < names.length; j++) {
-                Object.defineProperty(Vec3.prototype, names[j], {
-                    get: function () {
-                        return this.data[i];
-                    },
-                    set: function (value) {
-                        this.data[i] = value;
-                    }
-                });
-            }
-        }
-    }([['x', 'u', 'r'], ['y', 'v', 'g'], ['z', 'w', 'b']]);
-
     Vec3.prototype = {
         /**
          * @function
@@ -551,6 +463,105 @@ pc.extend(pc, function () {
             return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + "]";
         }
     }
+
+    Object.defineProperty(Vec3.prototype, 'x', {
+        get: function () {
+            return this.data[0];
+        },
+        set: function (value) {
+            this.data[0] = value;
+        }
+    });
+
+    Object.defineProperty(Vec3.prototype, 'y', {
+        get: function () {
+            return this.data[1];
+        },
+        set: function (value) {
+            this.data[1] = value;
+        }
+    });
+
+    Object.defineProperty(Vec3.prototype, 'z', {
+        get: function () {
+            return this.data[2];
+        },
+        set: function (value) {
+            this.data[2] = value;
+        }
+    });
+
+    Object.defineProperty(Vec3, 'BACK', {
+        get: function () {
+            var back = new Vec3(0, 0, 1);
+            return function() {
+                return back;
+            }
+        }()
+    });
+
+    Object.defineProperty(Vec3, 'DOWN', {
+        get: function () {
+            var down = new Vec3(0, -1, 0);
+            return function() {
+                return down;
+            }
+        }()
+    });
+
+    Object.defineProperty(Vec3, 'FORWARD', {
+        get: function () {
+            var forward = new Vec3(0, 0, -1);
+            return function() {
+                return forward;
+            }
+        }()
+    });
+
+    Object.defineProperty(Vec3, 'LEFT', {
+        get: function () {
+            var left = new Vec3(-1, 0, 0);
+            return function() {
+                return left;
+            }
+        }()
+    });
+
+    Object.defineProperty(Vec3, 'ONE', {
+        get: function () {
+            var one = new Vec3(1, 1, 1);
+            return function() {
+                return one;
+            }
+        }()
+    });
+
+    Object.defineProperty(Vec3, 'RIGHT', {
+        get: function () {
+            var right = new Vec3(1, 0, 0);
+            return function() {
+                return right;
+            }
+        }()
+    });
+
+    Object.defineProperty(Vec3, 'UP', {
+        get: function () {
+            var down = new Vec3(0, 1, 0);
+            return function() {
+                return down;
+            }
+        }()
+    });
+
+    Object.defineProperty(Vec3, 'ZERO', {
+        get: function () {
+            var zero = new Vec3(0, 0, 0);
+            return function() {
+                return zero;
+            }
+        }()
+    });
 
     return {
         Vec3: Vec3
