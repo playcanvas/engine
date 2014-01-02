@@ -181,9 +181,11 @@ pc.extend(pc.gfx, function () {
             gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
         }
 
+        this.maxTextureMaxAnisotropy = 1;
         this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
         if (!this.extTextureFilterAnisotropic) {
             this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+            this.maxTextureMaxAnisotropy = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
         }
         this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
         if (this.extCompressedTextureS3TC) {
@@ -927,13 +929,7 @@ pc.extend(pc.gfx, function () {
 
     Object.defineProperty(Device.prototype, 'maxSupportedMaxAnisotropy', {
         get: function() {
-            var maxAnisotropy = 1;
-            var glExt = this.extTextureFilterAnisotropic;
-            if (glExt) {
-                var gl = this.gl;
-                maxAnisotropy = gl.getParameter(glExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
-            }
-            return maxAnisotropy;
+            return this.maxTextureMaxAnisotropy;
         }
     });
 

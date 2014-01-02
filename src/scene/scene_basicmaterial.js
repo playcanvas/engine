@@ -18,30 +18,44 @@ pc.extend(pc.scene, function () {
 
     BasicMaterial = pc.inherits(BasicMaterial, pc.scene.Material);
 
-    BasicMaterial.prototype.update = function () {
-        this.clearParameters();
+    pc.extend(BasicMaterial.prototype, {
+        /**
+         * @function
+         * @name pc.scene.BasicMaterial#clone
+         * @description Duplicates a Basic material. All properties are duplicated except textures
+         * where only the references are copied.
+         * @returns {pc.scene.BasicMaterial} A cloned Basic material.
+         * @author Will Eastcott
+         */
+        clone: function () {
+            var clone = new pc.scene.BasicMaterial();
 
-        this.setParameter('uColor', this.color);
-        if (this.colorMap) {
-            this.setParameter('texture_diffuseMap', this.colorMap);
-        }
+            Material.prototype._cloneInternal.call(this, clone);
 
-        this.transparent = (this.color[3] < 1);
-        if (this.colorMap) {
-            if (this.colorMap.format === pc.gfx.PIXELFORMAT_R8_G8_B8_A8) {
-                this.transparent = true;
+            clone.color = pc.math.vec4.clone(this.color);
+            clone.colorMap = this.colorMap;
+
+            clone.update();
+            return clone;
+        },
+
+        update: function () {
+            this.clearParameters();
+
+            this.setParameter('uColor', this.color);
+            if (this.colorMap) {
+                this.setParameter('texture_diffuseMap', this.colorMap);
             }
-        }
-    };
+        },
 
-    BasicMaterial.prototype.updateShader = function (device) {
-        var skinned = false;
-        var options = {
-            skin: skinned
-        };
-        var library = device.getProgramLibrary();
-        this.shader = library.getProgram('basic', options);
-    };
+        updateShader: function (device) {
+            var options = {
+                skin: !!this.meshInstances[0].skinInstance
+            };
+            var library = device.getProgramLibrary();
+            this.shader = library.getProgram('basic', options);
+        }
+    });
     
     return {
         BasicMaterial: BasicMaterial
