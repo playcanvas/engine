@@ -6,12 +6,12 @@ pc.extend(pc.shape, function () {
      * @name pc.shape.Aabb
      * @constructor Create a new Axis-Aligned Bounding Box
      * @class Axis-Aligned Bounding Box
-     * @param {pc.math.vec3} center - center of box
-     * @param {pc.math.vec3} halfExtents - half the distance across the box in each axis
+     * @param {pc.Vector3} center - center of box
+     * @param {pc.Vector3} halfExtents - half the distance across the box in each axis
      */
     var Aabb = function Aabb(center, halfExtents) {
-        this.center = center || pc.math.vec3.create(0, 0, 0);
-        this.halfExtents = halfExtents || pc.math.vec3.create(0.5, 0.5, 0.5);
+        this.center = center || new pc.Vector3(0, 0, 0);
+        this.halfExtents = halfExtents || new pc.Vector3(0.5, 0.5, 0.5);
         this.type = pc.shape.Type.AABB;
     };
     Aabb = pc.inherits(Aabb, pc.shape.Shape);
@@ -48,30 +48,25 @@ pc.extend(pc.shape, function () {
     };
 
     Aabb.prototype.copy = function (src) {
-        pc.math.vec3.copy(src.center, this.center);
-        pc.math.vec3.copy(src.halfExtents, this.halfExtents);
+        this.center.copy(src.center);
+        this.halfExtents.copy(src.halfExtents);
         this.type = src.type;
     };
 
     Aabb.prototype.setMinMax = function (min, max) {
-        this.center[0] = (min[0] + max[0]) * 0.5;
-        this.center[1] = (min[1] + max[1]) * 0.5;
-        this.center[2] = (min[2] + max[2]) * 0.5;
-
-        this.halfExtents[0] = (max[0] - min[0]) * 0.5;
-        this.halfExtents[1] = (max[1] - min[1]) * 0.5;
-        this.halfExtents[2] = (max[2] - min[2]) * 0.5;
+        this.center.add(max, min).scale(0.5);
+        this.halfExtents.sub(msx, min).scale(0.5);
     };
     
     /**
      * @function
      * @name pc.shape.Aabb#getMin
      * @description Return the minimum corner of the AABB.
-     * @return {pc.math.vec3} minimum corner
+     * @return {pc.Vector3} minimum corner
      */
     Aabb.prototype.getMin = function () {
-        var min = pc.math.vec3.create(0.0, 0.0, 0.0);
-        pc.math.vec3.subtract(this.center, this.halfExtents, min);
+        var min = new pc.Vector3();
+        min.sub(this.center, this.halfExtents);
         return min;
     };
     
@@ -82,8 +77,8 @@ pc.extend(pc.shape, function () {
      * @return {pc.shape.vec3} maximum corner
      */
     Aabb.prototype.getMax = function () {
-        var max = pc.math.vec3.create(0.0, 0.0, 0.0);
-        pc.math.vec3.add(this.center, this.halfExtents, max);
+        var max = new pc.Vector3();
+        max.add(this.center, this.halfExtents);
         return max;
     };
     
@@ -117,9 +112,10 @@ pc.extend(pc.shape, function () {
     Aabb.prototype.setFromTransformedAabb = function (aabb, m) {
         var bc = this.center;
         var br = this.halfExtents;
-        var ac = aabb.center;
-        var ar = aabb.halfExtents;
+        var ac = aabb.center.data;
+        var ar = aabb.halfExtents.data;
 
+        m = m.data;
         var mx0 = m[0];
         var mx1 = m[4];
         var mx2 = m[8];
@@ -140,18 +136,22 @@ pc.extend(pc.shape, function () {
         var mz1a = Math.abs(mz1);
         var mz2a = Math.abs(mz2);
 
-        bc[0] = m[12] + mx0 * ac[0] + mx1 * ac[1] + mx2 * ac[2];
-        bc[1] = m[13] + my0 * ac[0] + my1 * ac[1] + my2 * ac[2];
-        bc[2] = m[14] + mz0 * ac[0] + mz1 * ac[1] + mz2 * ac[2];
+        bc.set(
+            m[12] + mx0 * ac[0] + mx1 * ac[1] + mx2 * ac[2],
+            m[13] + my0 * ac[0] + my1 * ac[1] + my2 * ac[2],
+            m[14] + mz0 * ac[0] + mz1 * ac[1] + mz2 * ac[2]
+        );
 
-        br[0] = mx0a * ar[0] + mx1a * ar[1] + mx2a * ar[2];
-        br[1] = my0a * ar[0] + my1a * ar[1] + my2a * ar[2];
-        br[2] = mz0a * ar[0] + mz1a * ar[1] + mz2a * ar[2];
+        br.set(
+            mx0a * ar[0] + mx1a * ar[1] + mx2a * ar[2],
+            my0a * ar[0] + my1a * ar[1] + my2a * ar[2],
+            mz0a * ar[0] + mz1a * ar[1] + mz2a * ar[2]
+        );
     };
 
     Aabb.prototype.compute = function (vertices) {
-        var min = pc.math.vec3.create(vertices[0], vertices[1], vertices[2]);
-        var max = pc.math.vec3.create(vertices[0], vertices[1], vertices[2]);
+        var min = new pc.Vector3(vertices[0], vertices[1], vertices[2]);
+        var max = new pc.Vector3(vertices[0], vertices[1], vertices[2]);
 
         var numVerts = vertices.length / 3;
         for (var i = 1; i < numVerts; i++) {
@@ -169,5 +169,4 @@ pc.extend(pc.shape, function () {
     return {
         Aabb: Aabb
     };
-    
 }());

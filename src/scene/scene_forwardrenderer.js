@@ -9,12 +9,12 @@ pc.extend(pc.scene, function () {
     }
 
     // Global shadowmap resources
-    var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
-    var shift = pc.math.mat4.makeTranslate(0.5, 0.5, 0.5);
-    var scaleShift = pc.math.mat4.multiply(shift, scale);
+    var scale = new pc.Matrix4().scale(0.5, 0.5, 0.5);
+    var shift = new pc.Matrix4().translate(0.5, 0.5, 0.5);
+    var scaleShift = new pc.Matrix4().copy(shift).mul(scale);
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-    var camToLight = pc.math.mat4.makeRotate(-90, [1, 0, 0]);
+    var camToLight = new pc.Matrix4().rotate(-90, pc.Vector3.right);
     var shadowCamWtm = new pc.Matrix4();
     var shadowCamView = new pc.Matrix4();
     var shadowCamViewProj = new pc.Matrix4();
@@ -208,22 +208,22 @@ pc.extend(pc.scene, function () {
         setCamera: function (camera) {
             // Projection Matrix
             var projMat = camera.getProjectionMatrix();
-            this.projId.setValue(projMat);
+            this.projId.setValue(projMat.data);
 
             // ViewInverse Matrix
             var wtm = camera.getWorldTransform();
-            this.viewInvId.setValue(wtm);
+            this.viewInvId.setValue(wtm.data);
 
             // View Matrix
-            pc.math.mat4.invert(wtm, viewMat);
-            this.viewId.setValue(viewMat);
+            viewMat.copy(wtm).invert();
+            this.viewId.setValue(viewMat.data);
 
             // ViewProjection Matrix
-            pc.math.mat4.multiply(projMat, viewMat, viewProjMat);
-            this.viewProjId.setValue(viewProjMat);
+            viewProjMat.mul(projMat, viewMat);
+            this.viewProjId.setValue(viewProjMat.data);
 
             // View Position (world space)
-            this.viewPosId.setValue(camera.getPosition());
+            this.viewPosId.setValue(camera.getPosition().data);
 
             // Near and far clip values
             this.nearClipId.setValue(camera.getNearClip());
@@ -471,22 +471,24 @@ pc.extend(pc.scene, function () {
                         // working position.
                         var centroid = camera.getFrustumCentroid();
                         shadowCam.setPosition(centroid);
-                        var lightDir = pc.math.mat4.getY(light.worldTransform);
-                        shadowCam.translate(lightDir[0], lightDir[1], lightDir[2]);
+                        var lightDir = new pc.Vector3();
+                        light.worldTransform.getY(lightDir);
+                        shadowCam.translate(lightDir);
 
                         // 2. Come up with a LookAt matrix using the light direction, and the 
                         // temporary working position. This will be the view matrix that is used
                         // when generating the shadow map.
                         shadowCam.lookAt(centroid);
-                        pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
+                        shadowCamWtm.copy(shadowCam.getWorldTransform());
 
                         // 3. Transform the 8 corners of the frustum by the LookAt Matrix
                         _getFrustumPoints(camera, frustumPoints);
-                        var worldToShadowCam = pc.math.mat4.invert(shadowCamWtm);
+                        var worldToShadowCam = shadowCamWtm.invert();
                         var camToWorld = camera.worldTransform;
-                        var c2sc = pc.math.mat4.multiply(worldToShadowCam, camToWorld);
+                        var c2sc = new pc.Matrix();
+                        c2sc.mul(worldToShadowCam, camToWorld);
                         for (j = 0; j < 8; j++) {
-                            pc.math.mat4.multiplyVec3(frustumPoints[j], 1.0, c2sc, frustumPoints[j]);
+                            c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
                         }
 
                         // 4. Come up with a bounding box (in light-space) by calculating the min
@@ -499,12 +501,12 @@ pc.extend(pc.scene, function () {
                         var maxz = -1000000;
                         for (j = 0; j < 8; j++) {
                             var p = frustumPoints[j];
-                            if (p[0] < minx) minx = p[0];
-                            if (p[0] > maxx) maxx = p[0];
-                            if (p[1] < miny) miny = p[1];
-                            if (p[1] > maxy) maxy = p[1];
-                            if (p[2] < minz) minz = p[2];
-                            if (p[2] > maxz) maxz = p[2];
+                            if (p[0] < minx) minx = p.x;
+                            if (p[0] > maxx) maxx = p.x;
+                            if (p[1] < miny) miny = p.y;
+                            if (p[1] > maxy) maxy = p.y;
+                            if (p[2] < minz) minz = p.z;
+                            if (p[2] > maxz) maxz = p.z;
                         }
     /*
                         var worldUnitsPerTexelX = (maxx - minx) / light._shadowWidth;
@@ -526,7 +528,7 @@ pc.extend(pc.scene, function () {
     */
                         // 5. Use your min and max values to create an off-center orthographic projection.
                         shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
-                        pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
+                        shadowCamWtm.copy(shadowCam.getWorldTransform());
 
                         shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
                         shadowCam.setNearClip(0);
@@ -541,15 +543,15 @@ pc.extend(pc.scene, function () {
                         shadowCam.setFov(light.getOuterConeAngle() * 2);
 
                         var lightWtm = light.worldTransform;
-                        pc.math.mat4.multiply(lightWtm, camToLight, shadowCamWtm);
+                        shadowCamWtm.mul(lightWtm, camToLight);
                     }
 
-                    pc.math.mat4.invert(shadowCamWtm, shadowCamView);
-                    pc.math.mat4.multiply(shadowCam.getProjectionMatrix(), shadowCamView, shadowCamViewProj);
-                    pc.math.mat4.multiply(scaleShift, shadowCamViewProj, light._shadowMatrix);
+                    shadowCamView.copy(shadowCamWtm).invert();
+                    shadowCamViewProj.mul(shadowCam.getProjectionMatrix(), shadowCamView);
+                    light._shadowMatrix.mul(scaleShift, shadowCamViewProj);
 
                     // Point the camera along direction of light
-                    pc.math.mat4.copy(shadowCamWtm, shadowCam.worldTransform);
+                    shadowCam.worldTransform.copy(shadowCamWtm);
 
                     this.setCamera(shadowCam);
 

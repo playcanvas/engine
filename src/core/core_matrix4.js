@@ -16,24 +16,6 @@ pc.extend(pc, function () {
         }
     };
 
-    Object.defineProperty(Matrix4, 'identity', {
-        get: function () {
-            var identity = new pc.Matrix4();
-            return function() {
-                return identity;
-            }
-        }()
-    });
-
-    Object.defineProperty(Matrix4, 'zero', {
-        get: function () {
-            var zero = new pc.Matrix4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-            return function() {
-                return zero;
-            }
-        }()
-    });
-
     /**
      * @function
      * @name pc.Matrix4.add
@@ -985,9 +967,9 @@ pc.extend(pc, function () {
      * @author Will Eastcott
      */
     Matrix4.prototype.getScale = function () {
-        var x = new Vector3();
-        var y = new Vector3();
-        var z = new Vector3();
+        var x = new pc.Vector3();
+        var y = new pc.Vector3();
+        var z = new pc.Vector3();
 
         return function (scale) {
             if (typeof scale === 'undefined') {
@@ -1110,6 +1092,24 @@ pc.extend(pc, function () {
         t += "]";
         return t;
     };
+
+    Object.defineProperty(Matrix4, 'identity', {
+        get: function () {
+            var identity = new Matrix4();
+            return function() {
+                return identity;
+            }
+        }()
+    });
+
+    Object.defineProperty(Matrix4, 'zero', {
+        get: function () {
+            var zero = new Matrix4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            return function() {
+                return zero;
+            }
+        }()
+    });
 
     return {
         Matrix4: Matrix4
