@@ -324,7 +324,7 @@ pc.extend(pc.fw, function () {
                 0.25, -8, -2, 0, -10, -2,    // Arrowhead tip
                 0, -10, -2, -0.25, -8, -2    // Arrowhead tip
             ];
-            var rot = new pc.Matrix4().rotate(120, [0, 1, 0]);
+            var rot = new pc.Mat4().rotate(120, [0, 1, 0]);
             var i;
             for (i = 0; i < 16; i++) {
                 var pos = new pc.Vec3(vertexData[(i+8)*3], vertexData[(i+8)*3+1], vertexData[(i+8)*3+2]);

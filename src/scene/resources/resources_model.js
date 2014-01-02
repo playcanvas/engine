@@ -163,7 +163,7 @@ pc.extend(pc.resources, function () {
             var inverseBindMatrices = [];
             for (j = 0; j < skinData.inverseBindMatrices.length; j++) {
                 var ibm = skinData.inverseBindMatrices[j];
-                inverseBindMatrices[j] = new pc.Matrix4(ibm[0], ibm[1], ibm[2], ibm[3],
+                inverseBindMatrices[j] = new pc.Mat4(ibm[0], ibm[1], ibm[2], ibm[3],
                                                         ibm[4], ibm[5], ibm[6], ibm[7],
                                                         ibm[8], ibm[9], ibm[10], ibm[11],
                                                         ibm[12], ibm[13], ibm[14], ibm[15]);

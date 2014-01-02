@@ -11,44 +11,44 @@ pc.extend(pc.scene, function () {
      * @property {pc.gfx.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather 
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for diffuse
      * color in preference to the 'diffuse' property.
-     * @property {pc.Matrix4} diffuseMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} diffuseMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's diffuse map.
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.gfx.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * specular color in preference to the 'specular' property.
-     * @property {pc.Matrix4} specularMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} specularMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's specular map.
      * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128. 
      * A higher shininess value results in a more focussed specular highlight.
      * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * shininess in preference to the 'shininess' property.
-     * @property {pc.Matrix4} glossMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} glossMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's gloss map.
      * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather 
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
      * color in preference to the 'emissive' property.
-     * @property {pc.Matrix4} emissiveMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} emissiveMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's emissive map.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque.
      * @property {pc.gfx.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather 
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
      * in preference to the 'opacity' property.
-     * @property {pc.Matrix4} opacityMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} opacityMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's opacity map.
      * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather 
      * than a cube map. The texture must contains normalized, tangent space normals.
-     * @property {pc.Matrix4} normalMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} normalMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's normal map.
      * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather 
      * than a cube map. The texture contain values defining the height of the surface at that point where darker
      * pixels are lower and lighter pixels are higher.
-     * @property {pc.Matrix4} heightMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} heightMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's height map.
      * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from

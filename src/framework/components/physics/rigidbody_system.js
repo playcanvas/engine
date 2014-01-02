@@ -1,7 +1,7 @@
 pc.extend(pc.fw, function () {
     // Shared math variable to avoid excessive allocation
-    var transform = new pc.Matrix4();
-    var newWtm = new pc.Matrix4();
+    var transform = new pc.Mat4();
+    var newWtm = new pc.Mat4();
 
     var position = new pc.Vec3();
     var rotation = new pc.Vec3();

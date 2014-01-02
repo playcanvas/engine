@@ -17,9 +17,9 @@ pc.extend(pc.scene, function () {
         this._aspect = 16 / 9;
 
         this._projMatDirty = true;
-        this._projMat = new pc.Matrix4();
-        this._viewMat = new pc.Matrix4();
-        this._viewProjMat = new pc.Matrix4();
+        this._projMat = new pc.Mat4();
+        this._viewMat = new pc.Mat4();
+        this._viewProjMat = new pc.Mat4();
 
         this._rect = { 
             x: 0,
@@ -254,7 +254,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.CameraNode#getProjectionMatrix
          * @description Retrieves the projection matrix for the specified camera.
-         * @returns {pc.Matrix4} The camera's projection matrix.
+         * @returns {pc.Mat4} The camera's projection matrix.
          * @author Will Eastcott
          */
         getProjectionMatrix: function () {

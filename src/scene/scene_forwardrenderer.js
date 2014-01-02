@@ -9,18 +9,18 @@ pc.extend(pc.scene, function () {
     }
 
     // Global shadowmap resources
-    var scale = new pc.Matrix4().scale(0.5, 0.5, 0.5);
-    var shift = new pc.Matrix4().translate(0.5, 0.5, 0.5);
-    var scaleShift = new pc.Matrix4().copy(shift).mul(scale);
+    var scale = new pc.Mat4().scale(0.5, 0.5, 0.5);
+    var shift = new pc.Mat4().translate(0.5, 0.5, 0.5);
+    var scaleShift = new pc.Mat4().copy(shift).mul(scale);
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-    var camToLight = new pc.Matrix4().rotate(-90, pc.Vec3.right);
-    var shadowCamWtm = new pc.Matrix4();
-    var shadowCamView = new pc.Matrix4();
-    var shadowCamViewProj = new pc.Matrix4();
+    var camToLight = new pc.Mat4().rotate(-90, pc.Vec3.right);
+    var shadowCamWtm = new pc.Mat4();
+    var shadowCamView = new pc.Mat4();
+    var shadowCamViewProj = new pc.Mat4();
 
-    var viewMat = new pc.Matrix4();
-    var viewProjMat = new pc.Matrix4();
+    var viewMat = new pc.Mat4();
+    var viewProjMat = new pc.Mat4();
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];

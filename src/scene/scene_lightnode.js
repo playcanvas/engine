@@ -29,7 +29,7 @@ pc.extend(pc.scene, function () {
 
         // Shadow mapping resources
         this._shadowCamera = null;
-        this._shadowMatrix = new pc.Matrix4();
+        this._shadowMatrix = new pc.Mat4();
         this._shadowResolution = 1024;
         this._shadowBias = -0.0005;
 

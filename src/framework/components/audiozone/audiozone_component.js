@@ -1,7 +1,7 @@
 pc.extend(pc.fw, function () {
 
     var PositionFilter = function () {
-        this.transform = new pc.Matrix4();
+        this.transform = new pc.Mat4();
         this.audioNode = null;
     };
 

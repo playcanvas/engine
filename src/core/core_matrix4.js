@@ -1,12 +1,12 @@
 pc.extend(pc, function () {
     /**
-    * @name pc.Matrix4
+    * @name pc.Mat4
     * @class A 4x4 matrix.
-    * @constructor Creates a new Matrix4 object
-    * @property {pc.Matrix4} identity [Read only] The identity matrix.
-    * @property {pc.Matrix4} zero [Read only] A matrix with all elements set to zero.
+    * @constructor Creates a new Mat4 object
+    * @property {pc.Mat4} identity [Read only] The identity matrix.
+    * @property {pc.Mat4} zero [Read only] A matrix with all elements set to zero.
     */
-    var Matrix4 = function () {
+    var Mat4 = function () {
         this.data = new Float32Array(16);
 
         if (arguments.length === 16) {
@@ -18,11 +18,11 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4.add
+     * @name pc.Mat4.add
      * @description Returns the result of adding the specified 4x4 matrices together.
-     * @param {pc.Matrix4} lhs The 4x4 matrix used as the first multiplicand of the operation.
-     * @param {pc.Matrix4} rhs The 4x4 matrix used as the second multiplicand of the operation.
-     * @param {pc.Matrix4} [res] The result of the addition. If left undefined, a new matrix is
+     * @param {pc.Mat4} lhs The 4x4 matrix used as the first multiplicand of the operation.
+     * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
+     * @param {pc.Mat4} [res] The result of the addition. If left undefined, a new matrix is
      * created internally.
      * @returns 
      * @example
@@ -35,7 +35,7 @@ pc.extend(pc, function () {
      * console.log("The result of the multiplication is: " a.toString());
      * @author Will Eastcott
      */
-    Matrix4.add = function (lhs, rhs, res) {
+    Mat4.add = function (lhs, rhs, res) {
         if (typeof res === 'undefined') {
             res = new pc.Matrix();
         }
@@ -66,9 +66,9 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#add
+     * @name pc.Mat4#add
      * @description Returns the result of adding the specified 4x4 matrices together.
-     * @param {pc.Matrix4} rhs The 4x4 matrix used as the second multiplicand of the operation.
+     * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
      * @example
      * var a = pc.math.mat4.makeTranslate(10, 20, 30);
      * var b = pc.math.mat4.makeRotate(180, [0, 1, 0]);
@@ -79,38 +79,38 @@ pc.extend(pc, function () {
      * console.log("The result of the addition is: " a.toString());
      * @author Will Eastcott
      */
-    Matrix4.prototype.add = function (rhs) {
-        Matrix4.add(this, rhs, this);
+    Mat4.prototype.add = function (rhs) {
+        Mat4.add(this, rhs, this);
         return this;
     };
 
     /**
      * @function
-     * @name pc.Matrix4#clone
+     * @name pc.Mat4#clone
      * @description Creates a duplicate of the specified matrix.
      * @example
-     * var src = new pc.Matrix4().translate(10, 20, 30);
-     * var dst = new pc.Matrix4();
+     * var src = new pc.Mat4().translate(10, 20, 30);
+     * var dst = new pc.Mat4();
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
      * @author Will Eastcott
      */
-    Matrix4.prototype.clone = function () {
-        return new pc.Matrix4().copy(this);
+    Mat4.prototype.clone = function () {
+        return new pc.Mat4().copy(this);
     };
 
     /**
      * @function
-     * @name pc.Matrix4#copy
+     * @name pc.Mat4#copy
      * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
-     * @param {pc.Matrix4} src A 4x4 matrix to be copied.
-     * var src = new pc.Matrix4().translate(10, 20, 30);
-     * var dst = new pc.Matrix4();
+     * @param {pc.Mat4} src A 4x4 matrix to be copied.
+     * var src = new pc.Mat4().translate(10, 20, 30);
+     * var dst = new pc.Mat4();
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
      * @author Will Eastcott
      */
-    Matrix4.prototype.copy = function (rhs) {
+    Mat4.prototype.copy = function (rhs) {
         var src = rhs.data;
         var dst = this.data;
 
@@ -136,15 +136,15 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#equals
+     * @name pc.Mat4#equals
      * @description Reports whether two matrices are equal.
      * @returns {Booean} true if the matrices are equal and false otherwise.
-     * var a = new pc.Matrix4().translate(10, 20, 30);
-     * var b = new pc.Matrix4();
+     * var a = new pc.Mat4().translate(10, 20, 30);
+     * var b = new pc.Mat4();
      * console.log("The two matrices are " + (a.equal(b) ? "equal" : "different"));
      * @author Will Eastcott
      */
-    Matrix4.prototype.equals = function (rhs) {
+    Mat4.prototype.equals = function (rhs) {
         var l = this.data;
         var r = rhs.data;
         return
@@ -168,14 +168,14 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#isIdentity
+     * @name pc.Mat4#isIdentity
      * @description Reports whether the specified matrix is the identity matrix.
      * @returns {Booean} true if the matrix is identity and false otherwise.
-     * var m = new pc.Matrix4();
+     * var m = new pc.Mat4();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      * @author Will Eastcott
      */
-    Matrix4.prototype.isIdentity = function () {
+    Mat4.prototype.isIdentity = function () {
         var m = this.data;
         return
            ((m[0] === 1) &&
@@ -198,11 +198,11 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4.mul
+     * @name pc.Mat4.mul
      * @description Returns the result of multiplying the specified 4x4 matrices together.
-     * @param {pc.Matrix4} lhs The 4x4 matrix used as the first multiplicand of the operation.
-     * @param {pc.Matrix4} rhs The 4x4 matrix used as the second multiplicand of the operation.
-     * @param {pc.Matrix4} res The result of the multiplication.
+     * @param {pc.Mat4} lhs The 4x4 matrix used as the first multiplicand of the operation.
+     * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
+     * @param {pc.Mat4} res The result of the multiplication.
      * @example
      * var a = pc.math.mat4.makeTranslate(10, 20, 30);
      * var b = pc.math.mat4.makeRotate(180, [0, 1, 0]);
@@ -213,7 +213,7 @@ pc.extend(pc, function () {
      * console.log("The result of the multiplication is: " a.toString());
      * @author Will Eastcott
      */
-    Matrix4.mul = function (lhs, rhs, res) {
+    Mat4.mul = function (lhs, rhs, res) {
         if (typeof res === 'undefined') {
             res = new pc.Matrix();
         }
@@ -280,7 +280,7 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#mul
+     * @name pc.Mat4#mul
      * @description Returns the result of multiplying the specified 4x4 matrices together.
      * @param {Array} m0 The 4x4 matrix used as the first multiplicand of the operation.
      * @param {Array} m1 The 4x4 matrix used as the second multiplicand of the operation.
@@ -296,8 +296,8 @@ pc.extend(pc, function () {
      * console.log("The result of the multiplication is: " a.toString());
      * @author Will Eastcott
      */
-    Matrix4.prototype.mul = function (rhs) {
-        Matrix4.mul(this, rhs, this);
+    Mat4.prototype.mul = function (rhs) {
+        Mat4.mul(this, rhs, this);
         return this;
     };
 
@@ -320,7 +320,7 @@ pc.extend(pc, function () {
      *
      * @author Will Eastcott
      */
-    Matrix4.mulVec3 = function (mtx, vec, w, res) {
+    Mat4.mulVec3 = function (mtx, vec, w, res) {
         if (typeof res === 'undefined') {
             res = new pc.Vec3();
         }
@@ -373,7 +373,7 @@ pc.extend(pc, function () {
      * var lookAt = pc.math.mat4.makeLookAt(position, target, up);
      * @author Will Eastcott
      */
-    Matrix4.prototype.lookAt = function () {
+    Mat4.prototype.lookAt = function () {
         var x = pc.Vec3();
         var y = pc.Vec3();
         var z = pc.Vec3();
@@ -425,7 +425,7 @@ pc.extend(pc, function () {
      * var persp = pc.math.mat4.makeFrustum(-2, 2, -1, 1, 1, 1000);
      * @author Will Eastcott
      */
-    Matrix4.prototype.frustum = function (left, right, bottom, top, znear, zfar) {
+    Mat4.prototype.frustum = function (left, right, bottom, top, znear, zfar) {
         var temp1 = 2.0 * znear;
         var temp2 = right - left;
         var temp3 = top - bottom;
@@ -454,20 +454,20 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#perspective
+     * @name pc.Mat4#perspective
      * @description Generates a persective projection matrix. The function's parameters define
      * the shape of a frustum.
      * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space.
      * @param {Number} aspect The aspect ratio of the frustum's projection plane (width / height).
      * @param {Number} znear The near clip plane in eye coordinates.
      * @param {Number} zfar The far clip plane in eye coordinates.
-     * @returns {pc.Matrix4} The generated perspective projection matrix (useful for chaining).
+     * @returns {pc.Mat4} The generated perspective projection matrix (useful for chaining).
      * @example
      * // Create a 4x4 persepctive projection matrix
-     * var persp = pc.Matrix4().perspective(45.0, 16.0/9.0, 1.0, 1000.0);
+     * var persp = pc.Mat4().perspective(45.0, 16.0/9.0, 1.0, 1000.0);
      * @author Will Eastcott
      */
-    Matrix4.prototype.perspective = function (fovy, aspect, znear, zfar) {
+    Mat4.prototype.perspective = function (fovy, aspect, znear, zfar) {
         var ymax = znear * Math.tan(fovy * Math.PI / 360.0);
         var xmax = ymax * aspect;
 
@@ -476,7 +476,7 @@ pc.extend(pc, function () {
     
     /**
      * @function
-     * @name pc.Matrix4#ortho
+     * @name pc.Mat4#ortho
      * @description Generates an orthographic projection matrix. The function's parameters define
      * the shape of a cuboid-shaped frustum.
      * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
@@ -485,13 +485,13 @@ pc.extend(pc, function () {
      * @param {Number} top The y-coordinate for the top edge of the camera's projection plane in eye space.
      * @param {Number} znear The near clip plane in eye coordinates.
      * @param {Number} zfar The far clip plane in eye coordinates.
-     * @returns {pc.Matrix4} The generated perspective orthographic matrix (useful for chaining).
+     * @returns {pc.Mat4} The generated perspective orthographic matrix (useful for chaining).
      * @example
      * // Create a 4x4 orthographic projection matrix
-     * var ortho = pc.Matrix4().ortho(-2.0, 2.0, -2.0, 2.0, 1.0, 1000.0);
+     * var ortho = pc.Mat4().ortho(-2.0, 2.0, -2.0, 2.0, 1.0, 1000.0);
      * @author Will Eastcott
      */
-    Matrix4.prototype.ortho = function (left, right, bottom, top, near, far) {
+    Mat4.prototype.ortho = function (left, right, bottom, top, near, far) {
         var r = this.data;
 
         r[0] = 2 / (right - left);
@@ -529,7 +529,7 @@ pc.extend(pc, function () {
      * var rotation = pc.math.mat4.makeRotate(180, yaxis);
      * @author Will Eastcott
      */
-    Matrix4.prototype.rotate = function (angle, axis) {
+    Mat4.prototype.rotate = function (angle, axis) {
         var m = this.data;
         var x = axis[0], y = axis[1], z = axis[2];
         var c = Math.cos(angle);
@@ -572,7 +572,7 @@ pc.extend(pc, function () {
      * var translation = pc.math.mat4.makeTranslate(10, 20, 30);
      * @author Will Eastcott
      */
-    Matrix4.prototype.translate = function (tx, ty, tz) {
+    Mat4.prototype.translate = function (tx, ty, tz) {
         var m = this.data;
 
         m[0] = 1;
@@ -609,7 +609,7 @@ pc.extend(pc, function () {
      * var scale = pc.math.mat4.makeScale(10, 10, 10);
      * @author Will Eastcott
      */
-    Matrix4.prototype.scale = function (sx, sy, sz) {
+    Mat4.prototype.scale = function (sx, sy, sz) {
         var m = this.data;
 
         m[0] = sx;
@@ -634,20 +634,20 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#invert
+     * @name pc.Mat4#invert
      * @description Generates the inverse of the specified 4x4 matrix.
-     * @returns {pc.Matrix4} The matrix being inverted.
+     * @returns {pc.Mat4} The matrix being inverted.
      * @example
      * var yaxis = new pc.Vec3(0, 1, 0);
      *
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-     * var rot = new pc.Matrix4().rotate(180, yaxis);
+     * var rot = new pc.Mat4().rotate(180, yaxis);
      *
      * // Invert in place
      * rot.invert();
      * @author Will Eastcott
      */
-    Matrix4.prototype.invert = function () {
+    Mat4.prototype.invert = function () {
         var m = this.data;
 
         var a00 = m[0],  a01 = m[1],  a02 = m[2],  a03 = m[3];
@@ -692,16 +692,16 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#identity
+     * @name pc.Mat4#identity
      * @description Sets the matrix to the identity matrix.
-     * @returns {pc.Matrix4} The newly set identity matrix (useful for chaining).
-     * var m = new pc.Matrix4().translate(10, 20, 30);
-     * var dst = new pc.Matrix4();
+     * @returns {pc.Mat4} The newly set identity matrix (useful for chaining).
+     * var m = new pc.Mat4().translate(10, 20, 30);
+     * var dst = new pc.Mat4();
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
      * @author Will Eastcott
      */
-    Matrix4.prototype.setIdentity = function () {
+    Mat4.prototype.setIdentity = function () {
         var m = this.data;
         m[0] = 1;
         m[1] = 0;
@@ -725,7 +725,7 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#setTRS
+     * @name pc.Mat4#setTRS
      * @description Composes a 4x4 matrix from a translation, a quaternion rotation and
      * a scale.
      * @param {pc.Vec3} t A 3-d vector translation.
@@ -733,11 +733,11 @@ pc.extend(pc, function () {
      * @param {pc.Vec3} s A 3-d vector scale.
      * @returns The newly composed matrix (useful for chaining).
      * @example
-     * var m = new pc.Matrix4();
+     * var m = new pc.Mat4();
      * m.compose(t, r, s);
      * @author Will Eastcott
      */
-    Matrix4.prototype.setTRS = function (t, r, s) {
+    Mat4.prototype.setTRS = function (t, r, s) {
         var qx = r.x;
         var qy = r.y;
         var qz = r.z;
@@ -782,9 +782,9 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#transpose
+     * @name pc.Mat4#transpose
      * @description Generates the transpose of the specified 4x4 matrix.
-     * @returns {pc.Matrix4} The transpose of the source matrix.
+     * @returns {pc.Mat4} The transpose of the source matrix.
      * @example
      * var yaxis = pc.math.vec3.create(0, 1, 0);
      *
@@ -798,7 +798,7 @@ pc.extend(pc, function () {
      * var rotTranspose = pc.math.mat4.transpose(rot);
      * @author Will Eastcott
      */
-    Matrix4.prototype.transpose = function () {
+    Mat4.prototype.transpose = function () {
         var tmp = 0.0;
         tmp = m[1]; m[1] = m[4]; m[4] = tmp;
         tmp = m[2]; m[2] = m[8]; m[8] = tmp;
@@ -810,7 +810,7 @@ pc.extend(pc, function () {
         return this;
     };
 
-    Matrix4.prototype.invertTo3x3 = function () {
+    Mat4.prototype.invertTo3x3 = function () {
         var m = this.data;
 
         var a11 =  m[10] * m[5] - m[6] * m[9];
@@ -825,7 +825,7 @@ pc.extend(pc, function () {
 
         var det =  m[0] * a11 + m[1] * a12 + m[2] * a13;
         if (det == 0) { // no inverse
-            console.warn("pc.Matrix4#invertTo3x3: Matrix not invertible");
+            console.warn("pc.Mat4#invertTo3x3: Matrix not invertible");
             return r;
         }
 
@@ -852,14 +852,14 @@ pc.extend(pc, function () {
      * @returns {pc.Vec3} The translation of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
-     * var m = new pc.Matrix4();
+     * var m = new pc.Mat4();
      *
      * // Query the z-axis component
      * var t = new pc.Vec3();
      * m.getTranslation(t);
      * @author Will Eastcott
      */
-    Matrix4.prototype.getTranslation = function (t) {
+    Mat4.prototype.getTranslation = function (t) {
         if (typeof t === 'undefined') {
             t = new pc.Vec3();
         }
@@ -879,14 +879,14 @@ pc.extend(pc, function () {
      * @returns {pc.Vec3} The x-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
-     * var m = new pc.Matrix4();
+     * var m = new pc.Mat4();
      *
      * // Query the z-axis component
      * var x = new pc.Vec3();
      * m.getX(x);
      * @author Will Eastcott
      */
-    Matrix4.prototype.getX = function (x) {
+    Mat4.prototype.getX = function (x) {
         if (typeof x === 'undefined') {
             x = new pc.Vec3();
         }
@@ -906,14 +906,14 @@ pc.extend(pc, function () {
      * @returns {pc.Vec3} The y-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
-     * var m = new pc.Matrix4();
+     * var m = new pc.Mat4();
      *
      * // Query the z-axis component
      * var y = new pc.Vec3();
      * m.getY(y);
      * @author Will Eastcott
      */
-    Matrix4.prototype.getY = function (y) {
+    Mat4.prototype.getY = function (y) {
         if (typeof y === 'undefined') {
             y = new pc.Vec3();
         }
@@ -933,14 +933,14 @@ pc.extend(pc, function () {
      * @returns {pc.Vec3} The z-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
-     * var m = new pc.Matrix4();
+     * var m = new pc.Mat4();
      *
      * // Query the z-axis component
      * var z = new pc.Vec3();
      * m.getZ(z);
      * @author Will Eastcott
      */
-    Matrix4.prototype.getZ = function (z) {
+    Mat4.prototype.getZ = function (z) {
         if (typeof z === 'undefined') {
             z = new pc.Vec3();
         }
@@ -966,7 +966,7 @@ pc.extend(pc, function () {
      * var scale = pc.math.mat4.getScale(scaleMat);
      * @author Will Eastcott
      */
-    Matrix4.prototype.getScale = function () {
+    Mat4.prototype.getScale = function () {
         var x = new pc.Vec3();
         var y = new pc.Vec3();
         var z = new pc.Vec3();
@@ -989,7 +989,7 @@ pc.extend(pc, function () {
 
     /**
      * @function
-     * @name pc.Matrix4#fromEulerXYZ
+     * @name pc.Mat4#fromEulerXYZ
      * @description Sets a 4x4 matrix from Euler angles specified in XYZ order.
      * @param {Number} ex Angle to rotate around X axis in radians.
      * @param {Number} ey Angle to rotate around Y axis in radians.
@@ -1003,7 +1003,7 @@ pc.extend(pc, function () {
     // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
     // The 3D space is right-handed, so the rotation around each axis will be counterclockwise 
     // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
-    Matrix4.prototype.setFromEulerXYZ = function (ex, ey, ez) {
+    Mat4.prototype.setFromEulerXYZ = function (ex, ey, ez) {
         // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
         var s1 = Math.sin(-x);
         var c1 = Math.cos(-x);
@@ -1054,7 +1054,7 @@ pc.extend(pc, function () {
      * var eulers = pc.math.mat4.toEulerXYZ(m);
      * @author Will Eastcott
      */
-    Matrix4.prototype.toEulerXYZ = function () {
+    Mat4.prototype.toEulerXYZ = function () {
         var scale = this.getScale();
         
         var x; 
@@ -1083,7 +1083,7 @@ pc.extend(pc, function () {
         return r;
     };
 
-    Matrix4.prototype.toString = function () {
+    Mat4.prototype.toString = function () {
         var t = "[";
         for (var i = 0; i < this.data.length; i++) {
             t += this.data[i];
@@ -1093,18 +1093,18 @@ pc.extend(pc, function () {
         return t;
     };
 
-    Object.defineProperty(Matrix4, 'identity', {
+    Object.defineProperty(Mat4, 'identity', {
         get: function () {
-            var identity = new Matrix4();
+            var identity = new Mat4();
             return function() {
                 return identity;
             }
         }()
     });
 
-    Object.defineProperty(Matrix4, 'zero', {
+    Object.defineProperty(Mat4, 'zero', {
         get: function () {
-            var zero = new Matrix4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            var zero = new Mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
             return function() {
                 return zero;
             }
@@ -1112,6 +1112,6 @@ pc.extend(pc, function () {
     });
 
     return {
-        Matrix4: Matrix4
+        Mat4: Mat4
     };
 }());

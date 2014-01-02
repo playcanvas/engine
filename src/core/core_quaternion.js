@@ -137,7 +137,7 @@ pc.extend(pc, function () {
             return this;
         },
 
-        setFromMatrix4: function (m) {
+        setFromMat4: function (m) {
             var m00 = m[0], m01 = m[1], m02 = m[2];
             var m10 = m[4], m11 = m[5], m12 = m[6];
             var m20 = m[8], m21 = m[9], m22 = m[10];

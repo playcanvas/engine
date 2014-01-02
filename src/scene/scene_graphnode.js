@@ -22,10 +22,10 @@ pc.extend(pc.scene, function () {
         this.rotation = new pc.Quaternion(0, 0, 0, 1);
         this.eulerAngles = new pc.Vec3(0, 0, 0);
 
-        this.localTransform = new pc.Matrix4();
+        this.localTransform = new pc.Mat4();
         this.dirtyLocal = false;
 
-        this.worldTransform = new pc.Matrix4();
+        this.worldTransform = new pc.Mat4();
         this.dirtyWorld = false;
 
         this._right = new pc.Vec3();
@@ -312,7 +312,7 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#getLocalTransform
          * @description Get the local transform matrix for this graph node. This matrix
          * is the transform relative to the node's parent's world transformation matrix.
-         * @returns {pc.Matrix4} The node's local transformation matrix.
+         * @returns {pc.Mat4} The node's local transformation matrix.
          * @author Will Eastcott
          * @example
          * var transform = this.entity.getLocalTransform();
@@ -373,7 +373,7 @@ pc.extend(pc.scene, function () {
          * var rotation = this.entity.getRotation();
          */
         getRotation: function () {
-            this.rotation.setFromMatrix4(this.getWorldTransform());
+            this.rotation.setFromMat4(this.getWorldTransform());
             return this.rotation;
         },
 
@@ -381,7 +381,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#getWorldTransform
          * @description Get the world transformation matrix for this graph node.
-         * @returns {pc.Matrix4} The node's world transformation matrix.
+         * @returns {pc.Mat4} The node's world transformation matrix.
          * @author Will Eastcott
          * @example
          * var transform = this.entity.getWorldTransform();
@@ -565,7 +565,7 @@ pc.extend(pc.scene, function () {
          */
         setPosition: function () {
             var position = new pc.Vec3();
-            var invParentWtm = new pc.Matrix4();
+            var invParentWtm = new pc.Mat4();
 
             return function () {
                 if (arguments.length === 1) {
@@ -864,7 +864,7 @@ pc.extend(pc.scene, function () {
          * this.entity.lookAt(10, 10, 10, 0, -1, 0);
          */
         lookAt: function () {
-            var matrix = new pc.Matrix4();
+            var matrix = new pc.Mat4();
             var target = new pc.Vec3();
             var up = new pc.Vec3();
             var rotation = new pc.Quaternion();
@@ -890,7 +890,7 @@ pc.extend(pc.scene, function () {
                 }
 
                 matrix.lookAt(this.getPosition(), target, up);
-                rotation.setFromMatrix4(matrix);
+                rotation.setFromMat4(matrix);
                 this.setRotation(rotation);
             }
         }(),
