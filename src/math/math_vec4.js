@@ -373,6 +373,7 @@ pc.extend(pc, function () {
             v[0] *= scalar;
             v[1] *= scalar;
             v[2] *= scalar;
+            v[3] *= scalar;
 
             return this;
         },
@@ -386,18 +387,19 @@ pc.extend(pc, function () {
          * @param {Number} z The value to set on the third dimension of the vector.
          * @example
          * var v = new pc.Vec4();
-         * v.set(5, 10, 20);
+         * v.set(5, 10, 20, 40);
          *
-         * // Should output 5, 10, 20
+         * // Should output 5, 10, 20, 40
          * console.log("The result of the vector set is: " + v.toString());
          * @author Will Eastcott
          */
-        set: function (x, y, z) {
+        set: function (x, y, z, w) {
             var v = this.data;
 
             v[0] = x;
             v[1] = y;
             v[2] = z;
+            v[3] = w;
 
             return this;
         },
@@ -438,8 +440,8 @@ pc.extend(pc, function () {
          * @param {pc.Vec4} rhs The second vector operand for the subtraction.
          * @returns {pc.Vec4} Self for chaining.
          * @example
-         * var a = new pc.Vec4(10, 10, 10);
-         * var b = new pc.Vec4(20, 20, 20);
+         * var a = new pc.Vec4(10, 10, 10, 10);
+         * var b = new pc.Vec4(20, 20, 20, 20);
          * var r = new pc.Vec4();
          *
          * r.sub2(a, b);
@@ -456,6 +458,7 @@ pc.extend(pc, function () {
             r[0] = a[0] - b[0];
             r[1] = a[1] - b[1];
             r[2] = a[2] - b[2];
+            r[3] = a[3] - b[3];
 
             return this;
         },
