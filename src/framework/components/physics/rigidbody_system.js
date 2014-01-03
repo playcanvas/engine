@@ -336,11 +336,17 @@ pc.extend(pc.fw, function () {
         * @param {pc.Vec3} gravity The gravity vector to use for the 3D physics world.
         */
         setGravity: function () {
-            if (arguments.length === 3) {
-                this._ammoGravity.setValue(arguments[0], arguments[1], arguments[2]);
+            var x, y, z;
+            if (arguments.length === 1) {
+                x = arguments[0].x;
+                y = arguments[0].y;
+                z = arguments[0].z;
             } else {
-                this._ammoGravity.setValue(arguments[0].x, arguments[0].y, arguments[0].z)
+                x = arguments[0];
+                y = arguments[1];
+                z = arguments[2];
             }
+            this._ammoGravity.setValue(x, y, z);
             this.dynamicsWorld.setGravity(this._ammoGravity);
         },
 
