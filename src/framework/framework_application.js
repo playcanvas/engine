@@ -167,7 +167,8 @@ pc.extend(pc.fw, function () {
                     
                     // Initialise pack settings
                     if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
-                        this.context.systems.rigidbody.setGravity(pack.settings.physics.gravity);
+                        var gravity = pack.settings.physics.gravity;
+                        this.context.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
                     }
 
                     var ambientColor = pack.settings.render.global_ambient;
