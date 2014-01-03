@@ -430,11 +430,21 @@ pc.extend(pc.scene, function () {
          * this.entity.setLocalEulerAngles(0, 90, 0); // Set rotation of 90 degress around y-axis.
          */
         setLocalEulerAngles: function () {
-            if (arguments.length === 1) {
-                this.localRotation.setFromEulers(arguments[0]);
-            } else {
-                this.localRotation.setFromEulers(arguments[0], arguments[1], arguments[2]);
+            var ex, ey, ez;
+            switch (arguments.length) {
+                case 1:
+                    ex = arguments[0].x;
+                    ey = arguments[0].y;
+                    ez = arguments[0].z;
+                    break;
+                case 3:
+                    ex = arguments[0];
+                    ey = arguments[1];
+                    ez = arguments[2];
+                    break;
             }
+
+            this.localRotation.setFromEulers(ex, ey, ez);
             this.dirtyLocal = true;
         },
 
@@ -654,17 +664,24 @@ pc.extend(pc.scene, function () {
          * this.entity.setEulerAngles(0, 90, 0);
          */
         setEulerAngles: function () {
-            var eulers = new pc.Vec3();
             var invParentRot = new pc.Quat();
 
             return function () {
-                if (arguments.length === 1) {
-                    eulers.copy(arguments[0]);
-                } else {
-                    eulers.set(arguments[0], arguments[1], arguments[2]);
+                var ex, ey, ez;
+                switch (arguments.length) {
+                    case 1:
+                        ex = arguments[0].x;
+                        ey = arguments[0].y;
+                        ez = arguments[0].z;
+                        break;
+                    case 3:
+                        ex = arguments[0];
+                        ey = arguments[1];
+                        ez = arguments[2];
+                        break;
                 }
 
-                this.localRotation.setFromEulers(eulers);
+                this.localRotation.setFromEulers(ex, ey, ez);
 
                 if (this._parent !== null) {
                     var parentRot = this._parent.getRotation();
@@ -998,21 +1015,25 @@ pc.extend(pc.scene, function () {
          * this.entity.rotate(0, 90, 0);
          */
         rotate: function () {
-            var eulers = new pc.Vec3();
             var quaternion = new pc.Quat();
             var invParentRot = new pc.Quat();
 
             return function () {
+                var ex, ey, ez;
                 switch (arguments.length) {
                     case 1:
-                        eulers.copy(arguments[0]);
+                        ex = arguments[0].x;
+                        ey = arguments[0].y;
+                        ez = arguments[0].z;
                         break;
                     case 3:
-                        eulers.set(arguments[0], arguments[1], arguments[2]);
+                        ex = arguments[0];
+                        ey = arguments[1];
+                        ez = arguments[2];
                         break;
                 }
 
-                quaternion.setFromEulers(eulers);
+                quaternion.setFromEulers(ex, ey, ez);
 
                 if (this._parent === null) {
                     this.localRotation.mul2(quaternion, this.localRotation);
@@ -1053,20 +1074,25 @@ pc.extend(pc.scene, function () {
          * this.entity.rotateLocal(0, 90, 0);
          */
         rotateLocal: function () {
-            var eulers = new pc.Vec3();
             var quaternion = new pc.Quat();
 
             return function () {
+                var ex, ey, ez;
                 switch (arguments.length) {
                     case 1:
-                        eulers.copy(arguments[0]);
+                        ex = arguments[0].x;
+                        ey = arguments[0].y;
+                        ez = arguments[0].z;
                         break;
                     case 3:
-                        eulers.set(arguments[0], arguments[1], arguments[2]);
+                        ex = arguments[0];
+                        ey = arguments[1];
+                        ez = arguments[2];
                         break;
                 }
 
-                quaternion.setFromEulers(eulers);
+                quaternion.setFromEulers(ex, ey, ez);
+
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
             }

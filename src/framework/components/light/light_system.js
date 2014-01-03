@@ -186,7 +186,7 @@ pc.extend(pc.fw, function () {
             var data = {
                 type: entity.light.type,
                 enable: entity.light.enable,
-                color: new pc.Color(entity.light.color),
+                color: entity.light.color.toString(),
                 intensity: entity.light.intensity,
                 range: entity.light.range,
                 innerConeAngle: entity.light.innerConeAngle,
@@ -266,7 +266,7 @@ pc.extend(pc.fw, function () {
             data = data || {};
             data.model = model;
             if (data.color) {
-                data.color = new pc.Color(data.color);    
+                data.color = new pc.Color().fromString(data.color);
             }
         },
 

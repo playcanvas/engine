@@ -95,8 +95,8 @@
         initializeComponentData: function (component, data, properties) {
             data.material = new pc.scene.PhongMaterial();
 
-            if(data.color) {
-                data.color = new pc.Color(data.color);    
+            if (data.color) {
+                data.color = new pc.Color().fromString(data.color);
             }
             
             properties = ['material', 'castShadows', 'color', 'receiveShadows', 'type'];
