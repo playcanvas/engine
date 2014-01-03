@@ -63,7 +63,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0.5,
             filter: {
-                type: ["sphere", "capsule"]
+                type: ["sphere", "capsule", "cylinder"]
             }
         }, {
             name: "axis",
@@ -84,7 +84,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1,
             filter: {
-                type: "capsule"
+                type: ["capsule", "cylinder"]
             }
         }, {
             name: "height",
@@ -97,7 +97,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 2,
             filter: {
-                type: "capsule"
+                type: ["capsule", "cylinder"]
             }
         }, {
             name: "asset",
@@ -766,11 +766,12 @@ pc.extend(pc.fw, function () {
     CollisionCylinderSystemImpl = pc.inherits(CollisionCylinderSystemImpl, CollisionSystemImpl);
 
     CollisionCylinderSystemImpl.prototype = pc.extend(CollisionCylinderSystemImpl.prototype, {
-        createDebugShape: function (data) {            
-            if (!this.mesh) {
+        createDebugMesh: function (data) {            
+            if (data.model && data.model.meshInstances && data.model.meshInstances.length) {
+                return data.model.meshInstances[0];
+            } else {
                 var gd = this.system.context.graphicsDevice;
 
-                // Create the graphical resources required to render a capsule shape
                 var format = new pc.gfx.VertexFormat(gd, [
                     { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
                 ]);
@@ -784,15 +785,15 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = vertexBuffer.getNumVertices();
                 mesh.primitive[0].indexed = false;
-                
-                this.mesh = mesh;
-            }
-            
-            if (!this.material) {
-                var material = new pc.scene.BasicMaterial();
-                material.color = pc.math.vec4.create(0, 0, 1, 1);
-                material.update();
-                this.material = material;    
+
+                if (!this.material) {
+                    var material = new pc.scene.BasicMaterial();
+                    material.color = pc.math.vec4.create(0, 0, 1, 1);
+                    material.update();
+                    this.material = material;    
+                }
+
+                return new pc.scene.MeshInstance(data.model.graph, mesh, this.material);
             }
         },
 
@@ -889,7 +890,7 @@ pc.extend(pc.fw, function () {
         recreatePhysicalShapes: function (component) {
             var model = component.data.model;
             if (model) {
-                var vertexBuffer = model.meshInstances[0].mesh.vertexBuffer; 
+                var vertexBuffer = this.createDebugMesh(component.data).mesh.vertexBuffer;
                 this.updateCylinderShape(component.data, vertexBuffer);
                 CollisionCylinderSystemImpl._super.recreatePhysicalShapes.call(this, component);
             }
