@@ -549,6 +549,8 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         rotate: function (angle, axis) {
+            angle *= pc.math.DEG_TO_RAD;
+
             var m = this.data;
             var x = axis.x, y = axis.y, z = axis.z;
             var c = Math.cos(angle);
@@ -1010,6 +1012,10 @@ pc.extend(pc, function () {
         // The 3D space is right-handed, so the rotation around each axis will be counterclockwise 
         // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
         setFromEulers: function (ex, ey, ez) {
+            ex *= pc.math.DEG_TO_RAD;
+            ey *= pc.math.DEG_TO_RAD;
+            ez *= pc.math.DEG_TO_RAD;
+
             // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
             var s1 = Math.sin(-x);
             var c1 = Math.cos(-x);

@@ -114,8 +114,7 @@ pc.extend(pc, function () {
         },
 
         setFromAxisAngle: function (axis, angle) {
-            var a = axis.data;
-
+            angle *= pc.math.DEG_TO_RAD;
             angle *= 0.5;
 
             var sa = Math.sin(angle);
@@ -130,6 +129,9 @@ pc.extend(pc, function () {
         },
 
         setFromEulers: function (ex, ey, ez) {
+            ex *= pc.math.DEG_TO_RAD;
+            ey *= pc.math.DEG_TO_RAD;
+            ez *= pc.math.DEG_TO_RAD;
             ex *= 0.5;
             ey *= 0.5;
             ez *= 0.5;

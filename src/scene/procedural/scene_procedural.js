@@ -315,8 +315,8 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
                 tangent = new pc.Vec3(cosTheta, 0, -sinTheta);
                 norm.cross(tangent, bottomToTop).normalize();
 
-                positions.push(pos[0], pos[1], pos[2]);
-                normals.push(norm[0], norm[1], norm[2]);
+                positions.push(pos.x, pos.y, pos.z);
+                normals.push(norm.x, norm.y, norm.z);
                 uvs.push(j / capSegments, i / heightSegments);
 
                 if ((i < heightSegments) && (j < capSegments)) {
