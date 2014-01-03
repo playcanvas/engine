@@ -3,6 +3,19 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.134.0
+--------
+* [FIX] Collision component cloning issues
+* [FIX] Fullscreen button should now work in IE11+
+* [FIX] Capsule resize bug in the designer where the same capsule would be always be edited
+* Render collision sphere as a sphere rather than a circle
+* Optimized max anisotropy handling
+* Removed support in the engine for specular factor map because nobody uses them
+* Added docs for gloss map on Phong material
+* Added pc.Color#clone and pc.scene.Material#clone
+* Support for more Phong material attributes in the designer
+
+--------
 v0.133.2
 --------
 * [FIX] More accurate reporting of delta time in the framework (fixes jittery physics).

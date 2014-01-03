@@ -79,6 +79,40 @@ pc.extend(pc.scene, function () {
         }
     });
 
+    Material.prototype._cloneInternal = function (clone) {
+        clone.name = this.name;
+        clone.id = id++;
+        clone.shader = null;
+
+        clone.parameters = {};
+
+        // Render states
+        clone.alphaTest = this.alphaTest;
+
+        clone.blend = this.blend;
+        clone.blendSrc = this.blendSrc;
+        clone.blendDst = this.blendDst;
+        clone.blendEquation = this.blendEquation;
+
+        clone.cull = this.cull;
+
+        clone.depthTest = this.depthTest;
+        clone.depthWrite = this.depthWrite;
+
+        clone.redWrite = this.redWrite;
+        clone.greenWrite = this.greenWrite;
+        clone.blueWrite = this.blueWrite;
+        clone.alphaWrite = this.alphaWrite;
+
+        clone.meshInstances = [];
+    },
+
+    Material.prototype.clone = function () {
+        var clone = new pc.scene.Material();
+        this._cloneInternal(clone);
+        return clone;
+    },
+
     Material.prototype._updateMeshInstanceKeys = function () {
         var i, meshInstances = this.meshInstances;
         for (var i = 0; i < meshInstances.length; i++) {
