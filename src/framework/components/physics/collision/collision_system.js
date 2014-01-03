@@ -31,6 +31,9 @@ pc.extend(pc.fw, function () {
                     name: 'Capsule',
                     value: 'capsule'
                 }, {
+                    name: 'Cylinder',
+                    value: 'cylinder'
+                }, {
                     name: 'Mesh',
                     value: 'mesh'
                 }]
@@ -60,12 +63,12 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0.5,
             filter: {
-                type: ["sphere", "capsule"]
+                type: ["sphere", "capsule", "cylinder"]
             }
         }, {
             name: "axis",
             displayName: "Axis",
-            description: "Major axis of capsule",
+            description: "Major axis of the volume",
             type: "enumeration",
             options: {
                 enumerations: [{
@@ -81,12 +84,12 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1,
             filter: {
-                type: "capsule"
+                type: ["capsule", "cylinder"]
             }
         }, {
             name: "height",
             displayName: "Height",
-            description: "The height of the collision capsule",
+            description: "Height of the volume",
             type: "number",
             options: {
                 min: 0,
@@ -94,7 +97,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 2,
             filter: {
-                type: "capsule"
+                type: ["capsule", "cylinder"]
             }
         }, {
             name: "asset",
@@ -168,6 +171,9 @@ pc.extend(pc.fw, function () {
                         break;
                     case 'capsule':
                         impl = new CollisionCapsuleSystemImpl(this);
+                        break;
+                    case 'cylinder':
+                        impl = new CollisionCylinderSystemImpl(this);
                         break;
                     case 'mesh':
                         impl = new CollisionMeshSystemImpl(this);
@@ -747,6 +753,146 @@ pc.extend(pc.fw, function () {
                 var vertexBuffer = this.createDebugMesh(component.data).mesh.vertexBuffer;
                 this.updateCapsuleShape(component.data, vertexBuffer);
                 CollisionCapsuleSystemImpl._super.recreatePhysicalShapes.call(this, component);
+            }
+        },
+    });
+
+    /**
+    /* Cylinder Collision System
+    */
+    
+    CollisionCylinderSystemImpl = function (system) {};
+
+    CollisionCylinderSystemImpl = pc.inherits(CollisionCylinderSystemImpl, CollisionSystemImpl);
+
+    CollisionCylinderSystemImpl.prototype = pc.extend(CollisionCylinderSystemImpl.prototype, {
+        createDebugMesh: function (data) {            
+            if (data.model && data.model.meshInstances && data.model.meshInstances.length) {
+                return data.model.meshInstances[0];
+            } else {
+                var gd = this.system.context.graphicsDevice;
+
+                var format = new pc.gfx.VertexFormat(gd, [
+                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                ]);
+
+                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 168, pc.gfx.BUFFER_DYNAMIC);
+                this.updateCylinderShape(data, vertexBuffer);
+
+                var mesh = new pc.scene.Mesh();
+                mesh.vertexBuffer = vertexBuffer;
+                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].base = 0;
+                mesh.primitive[0].count = vertexBuffer.getNumVertices();
+                mesh.primitive[0].indexed = false;
+
+                if (!this.material) {
+                    var material = new pc.scene.BasicMaterial();
+                    material.color = pc.math.vec4.create(0, 0, 1, 1);
+                    material.update();
+                    this.material = material;    
+                }
+
+                return new pc.scene.MeshInstance(data.model.graph, mesh, this.material);
+            }
+        },
+
+        updateCylinderShape: function(data, vertexBuffer) {
+            var axis = (typeof data.axis !== 'undefined') ? data.axis : 1;
+            var radius = (typeof data.radius !== 'undefined') ? data.radius : 0.5;
+            var height = (typeof data.height !== 'undefined') ? data.height : 1;
+
+            var positions = new Float32Array(vertexBuffer.lock());
+
+            var xo = 0;
+            var yo = 1;
+            var zo = 2;
+            if (axis === 0) {
+                xo = 1;
+                yo = 0;
+                zo = 2;
+            } else if (axis === 2) {
+                xo = 0;
+                yo = 2;
+                zo = 1;
+            }
+
+            var i, x = 0;
+            var theta;
+            // Generate caps
+            for (cap = -1; cap < 2; cap += 2) {
+                for (i = 0; i < 40; i++) {
+                    theta = 2 * Math.PI * (i / 40);
+                    positions[x+xo] = radius * Math.cos(theta);
+                    positions[x+yo] = cap * height * 0.5;
+                    positions[x+zo] = radius * Math.sin(theta);
+                    x += 3;
+
+                    theta = 2 * Math.PI * ((i + 1) / 40);
+                    positions[x+xo] = radius * Math.cos(theta);
+                    positions[x+yo] = cap * height * 0.5;
+                    positions[x+zo] = radius * Math.sin(theta);
+                    x += 3;
+                }
+            }
+
+            // Connect caps
+            for (i = 0; i < 4; i++) {
+                theta = 2 * Math.PI * (i / 4);
+                positions[x+xo] = radius * Math.cos(theta);
+                positions[x+yo] = height * 0.5;
+                positions[x+zo] = radius * Math.sin(theta);
+                x += 3;
+
+                theta = 2 * Math.PI * (i / 4);
+                positions[x+xo] = radius * Math.cos(theta);
+                positions[x+yo] = -height * 0.5;
+                positions[x+zo] = radius * Math.sin(theta);
+                x += 3;
+            }
+
+            vertexBuffer.unlock();
+        },
+
+        createPhysicalShape: function (entity, data) {
+            var halfExtents = null;
+            var shape = null;
+            var axis = (typeof data.axis !== 'undefined') ? data.axis : 1;
+            var radius = (typeof data.radius !== 'undefined') ? data.radius : 0.5;
+            var height = (typeof data.height !== 'undefined') ? data.height : 1;
+
+            if (typeof(Ammo) !== 'undefined') {
+                switch (axis) {
+                    case 0:
+                        halfExtents = new Ammo.btVector3(height * 0.5, radius, radius);
+                        shape = new Ammo.btCylinderShapeX(halfExtents);
+                        break;
+                    case 1:
+                        halfExtents = new Ammo.btVector3(radius, height * 0.5, radius);
+                        shape = new Ammo.btCylinderShape(halfExtents);
+                        break;
+                    case 2:
+                        halfExtents = new Ammo.btVector3(radius, radius, height * 0.5);
+                        shape = new Ammo.btCylinderShapeZ(halfExtents);
+                        break;
+                }
+            }
+            return shape;
+        },
+
+        updateDebugShape: function (entity, data) {
+            var root = data.model.graph;
+            root.setPosition(entity.getPosition());
+            root.setRotation(entity.getRotation());
+            root.setLocalScale(1, 1, 1);
+        },
+
+        recreatePhysicalShapes: function (component) {
+            var model = component.data.model;
+            if (model) {
+                var vertexBuffer = this.createDebugMesh(component.data).mesh.vertexBuffer;
+                this.updateCylinderShape(component.data, vertexBuffer);
+                CollisionCylinderSystemImpl._super.recreatePhysicalShapes.call(this, component);
             }
         },
     });
