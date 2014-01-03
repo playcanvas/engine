@@ -65,7 +65,7 @@ pc.extend(pc.resources, function () {
 
         entity.setName(data.name);
         entity.setGuid(data.resource_id);
-        entity.setLocalPosition(p[0], p[1], [2]);
+        entity.setLocalPosition(p[0], p[1], p[2]);
         entity.setLocalEulerAngles(r[0], r[1], r[2]);
         entity.setLocalScale(s[0], s[1], s[2]);
         

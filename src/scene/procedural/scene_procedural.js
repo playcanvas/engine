@@ -59,10 +59,10 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
         z1 = v2.z - v1.z;
         z2 = v3.z - v1.z;
 
-        s1 = w2.u - w1.u;
-        s2 = w3.u - w1.u;
-        t1 = w2.v - w1.v;
-        t2 = w3.v - w1.v;
+        s1 = w2.x - w1.x;
+        s2 = w3.x - w1.x;
+        t1 = w2.y - w1.y;
+        t2 = w3.y - w1.y;
 
         r = 1 / (s1 * t2 - s2 * t1);
         sdir.set((t2 * x1 - t1 * x2) * r, 
