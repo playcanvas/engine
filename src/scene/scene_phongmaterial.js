@@ -169,6 +169,8 @@ pc.extend(pc.scene, function () {
             // Initialise material from data
             this.name = data.name;
 
+            var blendTypeOverride = null;
+
             // Read each shader parameter
             for (var i = 0; i < data.parameters.length; i++) {
                 var param = data.parameters[i];
@@ -201,14 +203,18 @@ pc.extend(pc.scene, function () {
                     } else {
                         this[param.name] = null;
                     }
-                } else if (param.type === "float") {
+                } else if (param.type === "float" || param.type === "boolean") {
                     this[param.name] = param.data;
+                }
+
+                if (param.name === 'blendType') {
+                    blendTypeOverride = param.data;
                 }
             }
 
             // Set an appropriate blend mode based on opacity of material
             if (this.opacityMap || this.opacity < 1) {
-                this.blendType = pc.scene.BLEND_NORMAL;
+                this.blendType = blendTypeOverride || pc.scene.BLEND_NORMAL;
             } else {
                 this.blendType = pc.scene.BLEND_NONE;
             }
