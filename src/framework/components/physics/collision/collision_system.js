@@ -138,6 +138,10 @@ pc.extend(pc.fw, function () {
 
             component.data.type = data.type;
 
+            if (data.halfExtents) {
+                data.halfExtents = new pc.Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
+            }
+
             var impl = this._createImplementation(data.type);
             impl.beforeInitialize(component, data);
 
@@ -393,17 +397,13 @@ pc.extend(pc.fw, function () {
 
             var data = {
                 type: src.data.type,
-                halfExtents: pc.extend([], src.data.halfExtents),
+                halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
                 radius: src.data.radius,
                 axis: src.data.axis,
                 height: src.data.height,
                 asset: src.data.asset,
                 model: src.data.model
             };
-
-            //if (src.data.model) {
-            //    data.model = src.data.model.clone();
-            //}
 
             return this.system.addComponent(clone, data);  
         }

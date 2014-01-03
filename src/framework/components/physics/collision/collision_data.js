@@ -1,7 +1,7 @@
 pc.extend(pc.fw, function () {
     var CollisionComponentData = function () {
         this.type = 'box';
-        this.halfExtents = [0.5, 0.5, 0.5];
+        this.halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
         this.radius = 0.5;
         this.axis = 1;
         this.height = 2;

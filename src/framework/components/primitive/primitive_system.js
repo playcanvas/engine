@@ -92,13 +92,25 @@
     PrimitiveComponentSystem = pc.inherits(PrimitiveComponentSystem, pc.fw.ComponentSystem);
 
     pc.extend(PrimitiveComponentSystem.prototype, {
+        cloneComponent: function (entity, clone) {
+            // create new data block for clone
+            var data = {
+                type: entity.primitive.type,
+                color: [entity.primitive.color.r, entity.primitive.color.g, entity.primitive.color.b],
+                castShadows: entity.primitive.castShadows,
+                receiveShadows: entity.primitive.receiveShadows
+            };
+
+            this.addComponent(clone, data);
+        },
+
         initializeComponentData: function (component, data, properties) {
+            if (data.color) {
+                data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
+            }
+
             data.material = new pc.scene.PhongMaterial();
 
-            if (data.color) {
-                data.color = new pc.Color().fromString(data.color);
-            }
-            
             properties = ['material', 'castShadows', 'color', 'receiveShadows', 'type'];
 
             PrimitiveComponentSystem._super.initializeComponentData.call(this, component, data, properties);

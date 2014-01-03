@@ -288,6 +288,13 @@ pc.extend(pc.fw, function () {
                 console.warn("WARNING: rigidbody.bodyType: Property is deprecated. Use type instead.");
             }
 
+            if (data.linearFactor) {
+                data.linearFactor = new pc.Vec3(data.linearFactor[0], data.linearFactor[1], data.linearFactor[2]);
+            }
+            if (data.angularFactor) {
+                data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
+            }
+
             properties = ['mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 

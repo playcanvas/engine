@@ -29,7 +29,7 @@ pc.extend(pc.fw, function () {
          * @description Handle changes to the 'type' variable
          */
         onSetType: function (name, oldValue, newValue) {
-            var data = this.data;//this.getComponentData(entity);
+            var data = this.data;
 
             if (newValue) {
                 var mesh = null;

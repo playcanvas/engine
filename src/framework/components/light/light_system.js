@@ -147,6 +147,10 @@ pc.extend(pc.fw, function () {
 
             component.data.type = data.type;
 
+            if (data.color) {
+                data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
+            }
+
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
@@ -186,7 +190,7 @@ pc.extend(pc.fw, function () {
             var data = {
                 type: entity.light.type,
                 enable: entity.light.enable,
-                color: entity.light.color.toString(),
+                color: [entity.light.color.r, entity.light.color.g, entity.light.color.b],
                 intensity: entity.light.intensity,
                 range: entity.light.range,
                 innerConeAngle: entity.light.innerConeAngle,
@@ -265,9 +269,6 @@ pc.extend(pc.fw, function () {
 
             data = data || {};
             data.model = model;
-            if (data.color) {
-                data.color = new pc.Color().fromString(data.color);
-            }
         },
 
         _createDebugMesh: function () {
