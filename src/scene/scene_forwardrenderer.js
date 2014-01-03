@@ -220,7 +220,7 @@ pc.extend(pc.scene, function () {
             this.viewId.setValue(viewMat.data);
 
             // ViewProjection Matrix
-            viewProjMat.mul(projMat, viewMat);
+            viewProjMat.mul2(projMat, viewMat);
             this.viewProjId.setValue(viewProjMat.data);
 
             // View Position (world space)
@@ -489,7 +489,7 @@ pc.extend(pc.scene, function () {
                         var worldToShadowCam = shadowCamWtm.invert();
                         var camToWorld = camera.worldTransform;
                         var c2sc = new pc.Matrix();
-                        c2sc.mul(worldToShadowCam, camToWorld);
+                        c2sc.mul2(worldToShadowCam, camToWorld);
                         for (j = 0; j < 8; j++) {
                             c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
                         }
@@ -546,12 +546,12 @@ pc.extend(pc.scene, function () {
                         shadowCam.setFov(light.getOuterConeAngle() * 2);
 
                         var lightWtm = light.worldTransform;
-                        shadowCamWtm.mul(lightWtm, camToLight);
+                        shadowCamWtm.mul2(lightWtm, camToLight);
                     }
 
                     shadowCamView.copy(shadowCamWtm).invert();
-                    shadowCamViewProj.mul(shadowCam.getProjectionMatrix(), shadowCamView);
-                    light._shadowMatrix.mul(scaleShift, shadowCamViewProj);
+                    shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                    light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
 
                     // Point the camera along direction of light
                     shadowCam.worldTransform.copy(shadowCamWtm);

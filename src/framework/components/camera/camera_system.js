@@ -144,7 +144,7 @@ pc.extend(pc.fw, function () {
             data = data || {};
             data.camera = new pc.scene.CameraNode();
             if (data.clearColor) {
-                data.clearColor = new pc.Color(data.clearColor);    
+                data.clearColor = new pc.Color().fromString(data.clearColor);
             }
             
             
