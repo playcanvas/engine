@@ -43,8 +43,8 @@ pc.extend(pc.fw, function () {
         * @private
         * @name pc.fw.Body2dComponentSystem#applyForce
         * @description Apply an force to the body
-        * @param {pc.math.vec3} force The force to apply. A 3D world space vector, extra component is ignored
-        * @param {pc.math.vec3} point The point at which to apply the force. A 3D world space vector, extra component is ignored
+        * @param {pc.Vec3} force The force to apply. A 3D world space vector, extra component is ignored
+        * @param {pc.Vec3} point The point at which to apply the force. A 3D world space vector, extra component is ignored
         */
         applyForce: function (force, point) {
             var body = this.entity.body2d.body;
@@ -68,8 +68,8 @@ pc.extend(pc.fw, function () {
         * @private
         * @name pc.fw.Body2dComponentSystem#applyImpulse
         * @description Apply an impulse (instantaneous change of velocity) to the body
-        * @param {pc.math.vec3} impulse The impulse to apply. A 3D world space vector, extra component is ignored
-        * @param {pc.math.vec3} point The point at which to apply the impulse. A 3D world space vector, extra component is ignored
+        * @param {pc.Vec3} impulse The impulse to apply. A 3D world space vector, extra component is ignored
+        * @param {pc.Vec3} point The point at which to apply the impulse. A 3D world space vector, extra component is ignored
         */
         applyImpulse: function (impulse, point) {
             var body = this.entity.body2d.body; 

@@ -118,7 +118,7 @@ pc.extend(pc.fw, function () {
         this.mesh.primitive[0].indexed = true;
 
         this.material = new pc.scene.BasicMaterial();
-        this.material.color = pc.math.vec4.create(0, 0, 1, 1);
+        this.material.color = pc.Color(0, 0, 1, 1);
         this.material.update();
         
         this.debugRender = false;

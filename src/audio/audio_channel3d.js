@@ -20,7 +20,7 @@ pc.extend(pc.audio, function () {
             },
 
             setPosition: function (position) {
-                pc.math.vec3.copy(position, this.position);
+                this.position.copy(position);
                 this.panner.setPosition(position.x, position.y, position.z);
             },
 
@@ -85,7 +85,7 @@ pc.extend(pc.audio, function () {
         var fallOff = function (posOne, posTwo, refDistance, maxDistance, rolloffFactor) {
             var min = 0;
 
-            offset = pc.math.vec3.subtract(posOne, posTwo, offset);
+            offset = offset.sub2(posOne, posTwo);
             distance = offset.length();
 
             if (distance < refDistance) {

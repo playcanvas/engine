@@ -6,8 +6,8 @@ pc.extend(pc.shape, function () {
     /**
      * Frustum
      * @constructor
-     * @param {pc.math.mat4} projectionMatrix The projection matrix describing the shape of the frustum.
-     * @param {pc.math.mat4} viewMatrix The inverse of the world transformation matrix for the frustum.
+     * @param {pc.Mat4} projectionMatrix The projection matrix describing the shape of the frustum.
+     * @param {pc.Mat4} viewMatrix The inverse of the world transformation matrix for the frustum.
      */
     var Frustum = function Frustum (projectionMatrix, viewMatrix) {
         projectionMatrix = projectionMatrix || new pc.Mat4().perspective(90.0, 16 / 9, 0.1, 1000.0);
@@ -104,7 +104,7 @@ pc.extend(pc.shape, function () {
     /**
      * Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
      * considered to be outside the frustum.
-     * @param {pc.math.vec3} point Point to test
+     * @param {pc.Vec3} point Point to test
      * @returns Boolean indicating true if the point is inside the frustum, false otherwise
      */
     Frustum.prototype.containsPoint = function (point) {

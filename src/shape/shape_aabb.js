@@ -62,7 +62,7 @@ pc.extend(pc.shape, function () {
      * @function
      * @name pc.shape.Aabb#getMin
      * @description Return the minimum corner of the AABB.
-     * @return {pc.Vec3} minimum corner
+     * @returns {pc.Vec3} minimum corner
      */
     Aabb.prototype.getMin = function () {
         var min = new pc.Vec3();
@@ -74,7 +74,7 @@ pc.extend(pc.shape, function () {
      * @function
      * @name pc.shape.Aabb#getMax
      * @description Return the maximum corner of the AABB.
-     * @return {pc.shape.vec3} maximum corner
+     * @returns {pc.Vec3} maximum corner
      */
     Aabb.prototype.getMax = function () {
         var max = new pc.Vec3();
@@ -86,8 +86,8 @@ pc.extend(pc.shape, function () {
      * @function
      * @name pc.shape.Aabb#containsPoint
      * @description Test if a point is inside a AABB
-     * @param {Vec3} point - point to test
-     * @param {Aabb} aabb - box to test point against
+     * @param {pc.Vec3} point Point to test
+     * @returns {Boolean} true if the point is inside the AABB and false otherwise
      */
     Aabb.prototype.containsPoint = function (point) {
         var min = this.getMin(), max = this.getMax(), i;
@@ -107,7 +107,7 @@ pc.extend(pc.shape, function () {
      * @description Set an AABB to enclose the specified AABB if it were to be
      * transformed by the specified 4x4 matrix.
      * @param {pc.shape.Aabb} aabb Box to transform and enclose
-     * @param {pc.math.mat4} m Transformation matrix to apply to source AABB.
+     * @param {pc.Mat4} m Transformation matrix to apply to source AABB.
      */
     Aabb.prototype.setFromTransformedAabb = function (aabb, m) {
         var bc = this.center;

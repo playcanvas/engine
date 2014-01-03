@@ -724,7 +724,7 @@ pc.scene.procedural.createPlane = function (device, opts) {
  * <p>Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent 
  * information is generated into the vertex buffer of the box's mesh.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
- * @param {Array} opts.halfExtents The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
+ * @param {pc.Vec3} opts.halfExtents The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the box (defaults to 1).
  * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the box (defaults to 1).
  * @param {Number} opts.heightSegments The number of divisions along the Y axis of the box (defaults to 1).
@@ -733,7 +733,7 @@ pc.scene.procedural.createPlane = function (device, opts) {
  */
 pc.scene.procedural.createBox = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
-    var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : [0.5, 0.5, 0.5];
+    var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new pc.Vec3(0.5, 0.5, 0.5);
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 1;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 1;
     var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
@@ -793,14 +793,14 @@ pc.scene.procedural.createBox = function (device, opts) {
                 var temp2 = new pc.Vec3();
                 var temp3 = new pc.Vec3();
                 var r = new pc.Vec3();
-                pc.math.vec3.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][1]], i / uSegments, temp1); 
-                pc.math.vec3.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][2]], j / vSegments, temp2);
-                pc.math.vec3.subtract(temp2, corners[faceAxes[side][0]], temp3);
-                pc.math.vec3.add(temp1, temp3, r);
+                temp1.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][1]], i / uSegments); 
+                temp2.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][2]], j / vSegments);
+                temp3.sub2(temp2, corners[faceAxes[side][0]]);
+                r.add2(temp1, temp3);
                 u = i / uSegments;
                 v = j / vSegments;
 
-                positions.push(r[0], r[1], r[2]);
+                positions.push(r.x, r.y, r.z);
                 normals.push(faceNormals[side][0], faceNormals[side][1], faceNormals[side][2]);
                 uvs.push(u, v);
 

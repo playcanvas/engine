@@ -76,9 +76,6 @@ pc.extend(pc.anim, function () {
             }
 
             var i;
-            var vlerp = pc.math.vec3.lerp;
-            var qslerp = pc.math.quat.slerp;
-            
             var node, nodeName;
             var keys, interpKey;
             var k1, k2, alpha;
@@ -119,9 +116,9 @@ pc.extend(pc.anim, function () {
                         if ((k1.time <= this._time) && (k2.time >= this._time)) {
                             alpha = (this._time - k1.time) / (k2.time - k1.time);
 
-                            vlerp(k1.position, k2.position, alpha, interpKey._pos);
-                            qslerp(k1.rotation, k2.rotation, alpha, interpKey._quat);
-                            vlerp(k1.scale, k2.scale, alpha, interpKey._scale);
+                            interpKey._pos.lerp(k1.position, k2.position, alpha);
+                            interpKey._quat.slerp(k1.rotation, k2.rotation, alpha);
+                            interpKey._scale.lerp(k1.scale, k2.scale, alpha);
                             interpKey._written = true;
 
                             this._currKeyIndices[nodeName] = currKeyIndex;
@@ -152,9 +149,9 @@ pc.extend(pc.anim, function () {
             var dstKey = this._interpolatedKeys[i];
 
             if (key1._written && key2._written) {
-                pc.math.quat.slerp(key1._quat, skel2._interpolatedKeys[i]._quat, alpha, dstKey._quat);
-                pc.math.vec3.lerp(key1._pos, skel2._interpolatedKeys[i]._pos, alpha, dstKey._pos);
-                pc.math.vec3.lerp(key1._scale, key2._scale, alpha, dstKey._scale);
+                dstKey._quat.slerp(key1._quat, skel2._interpolatedKeys[i]._quat, alpha);
+                dstKey._pos.lerp(key1._pos, skel2._interpolatedKeys[i]._pos, alpha);
+                dstKey._scale.lerp(key1._scale, key2._scale, alpha);
                 dstKey._written = true;
             } else if (key1._written) {
                 dstKey._quat.copy(key1._quat);
