@@ -595,8 +595,8 @@ pc.extend(pc.fw, function () {
             this.syncEntityToBody();
 
             // Reset velocities
-            this.linearVelocity = pc.Vec3.zero;
-            this.angularVelocity = pc.Vec3.zero;
+            this.linearVelocity = pc.Vec3.ZERO;
+            this.angularVelocity = pc.Vec3.ZERO;
         },
 
         onBeforeRemove: function(entity, component) {
