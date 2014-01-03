@@ -40,11 +40,11 @@ pc.extend(pc, function () {
             return this;
         },
 
-        copy: function (that) {
-            this.x = this.x;
-            this.y = this.y;
-            this.z = this.z;
-            this.w = this.w;
+        copy: function (rhs) {
+            this.x = rhs.x;
+            this.y = rhs.y;
+            this.z = rhs.z;
+            this.w = rhs.w;
 
             return this;
         },
