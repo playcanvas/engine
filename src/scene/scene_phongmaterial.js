@@ -96,6 +96,12 @@ pc.extend(pc.scene, function () {
 
         this.lightMap = null;
 
+        // Array to pass uniforms to renderer
+        this.ambientUniform = new Float32Array(3);
+        this.diffuseUniform = new Float32Array(3);
+        this.specularUniform = new Float32Array(3);
+        this.emissiveUniform = new Float32Array(3);
+
         this.update();
     };
 
@@ -213,7 +219,10 @@ pc.extend(pc.scene, function () {
         update: function () {
             this.clearParameters();
 
-            this.setParameter('material_ambient', this.ambient.data);
+            this.ambientUniform[0] = this.ambient.r;
+            this.ambientUniform[1] = this.ambient.g;
+            this.ambientUniform[2] = this.ambient.b;
+            this.setParameter('material_ambient', this.ambientUniform);
 
             if (this.diffuseMap) {
                 this.setParameter('texture_diffuseMap', this.diffuseMap);
@@ -221,7 +230,10 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform);
                 }
             } else {
-                this.setParameter('material_diffuse', this.diffuse.data);
+                this.diffuseUniform[0] = this.diffuse.r;
+                this.diffuseUniform[1] = this.diffuse.g;
+                this.diffuseUniform[2] = this.diffuse.b;
+                this.setParameter('material_diffuse', this.diffuseUniform);
             }
 
             if (this.specularMap) {
@@ -230,7 +242,10 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_specularMapTransform', this.specularMapTransform);
                 }
             } else {
-                this.setParameter('material_specular', this.specular.data);
+                this.specularUniform[0] = this.specular.r;
+                this.specularUniform[1] = this.specular.g;
+                this.specularUniform[2] = this.specular.b;
+                this.setParameter('material_specular', this.specularUniform);
             }
 
             if (this.glossMap) {
@@ -248,7 +263,10 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform);
                 }
             } else {
-                this.setParameter('material_emissive', this.emissive.data);
+                this.emissiveUniform[0] = this.emissive.r;
+                this.emissiveUniform[1] = this.emissive.g;
+                this.emissiveUniform[2] = this.emissive.b;
+                this.setParameter('material_emissive', this.emissiveUniform);
             }
 
             if (this.opacityMap) {
