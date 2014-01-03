@@ -669,7 +669,7 @@ pc.extend(pc.scene, function () {
                 if (this._parent !== null) {
                     var parentRot = this._parent.getRotation();
                     invParentRot.copy(parentRot).invert();
-                    this.localRotation.mul(invParentRot, this.localRotation);
+                    this.localRotation.mul2(invParentRot, this.localRotation);
                 }
                 this.dirtyLocal = true;
             }
@@ -800,7 +800,7 @@ pc.extend(pc.scene, function () {
                 if (this._parent === null) { 
                     this.worldTransform.copy(this.localTransform);
                 } else {
-                    this.worldTransform.mul(this._parent.worldTransform, this.localTransform);
+                    this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
                 }
 
                 this.dirtyWorld = false;
@@ -1015,14 +1015,14 @@ pc.extend(pc.scene, function () {
                 quaternion.setFromEulers(eulers);
 
                 if (this._parent === null) {
-                    this.localRotation.mul(quaternion, this.localRotation);
+                    this.localRotation.mul2(quaternion, this.localRotation);
                 } else {
                     var rot = this.getRotation();
                     var parentRot = this._parent.getRotation();
 
                     invParentRot.copy(parentRot).invert();
-                    quaternion.mul(invParentRot, quaternion);
-                    this.localRotation.mul(quaternion, rot);
+                    quaternion.mul2(invParentRot, quaternion);
+                    this.localRotation.mul2(quaternion, rot);
                 }
 
                 this.dirtyLocal = true;
