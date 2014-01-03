@@ -166,13 +166,16 @@ pc.extend(pc.fw, function () {
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     
                     // Initialise pack settings
-                    this.context.scene.setGlobalAmbient(pack.settings.render.global_ambient);
                     if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
                         this.context.systems.rigidbody.setGravity(pack.settings.physics.gravity);
                     }
 
+                    var ambientColor = pack.settings.render.global_ambient;
+                    this.context.scene.ambientColor = new pc.Color(ambientColor[0], ambientColor[1], ambientColor[2]);
+
                     this.context.scene.fog = pack.settings.render.fog;
-                    this.context.scene.fogColor = new pc.Color(pack.settings.render.fog_color);
+                    var fogColor = pack.settings.render.fog_color;
+                    this.context.scene.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
                     this.context.scene.fogStart = pack.settings.render.fog_start;
                     this.context.scene.fogEnd = pack.settings.render.fog_end;
                     this.context.scene.fogDensity = pack.settings.render.fog_density;

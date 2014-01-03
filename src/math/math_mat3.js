@@ -160,6 +160,29 @@ pc.extend(pc, function () {
             }
             t += "]";
             return t;
+        },
+
+        /**
+         * @function
+         * @name pc.Mat3#transpose
+         * @description Generates the transpose of the specified 3x3 matrix.
+         * @returns {pc.Mat3} Self for chaining.
+         * @example
+         * var m = new pc.Mat3();
+         *
+         * // Transpose in place
+         * m.transpose();
+         * @author Will Eastcott
+         */
+        transpose: function () {
+            var m = this.data;
+
+            var tmp;
+            tmp = m[1]; m[1] = m[3]; m[3] = tmp;
+            tmp = m[2]; m[2] = m[6]; m[6] = tmp;
+            tmp = m[5]; m[5] = m[7]; m[7] = tmp;
+
+            return this;
         }
     };
 

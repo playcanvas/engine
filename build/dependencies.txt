@@ -21,6 +21,7 @@
 ../src/math/math_vec2.js
 ../src/math/math_vec3.js
 ../src/math/math_vec4.js
+../src/math/math_mat3.js
 ../src/math/math_mat4.js
 ../src/math/math_quat.js
 ../src/shape/shape_shape.js

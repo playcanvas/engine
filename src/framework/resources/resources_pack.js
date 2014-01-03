@@ -59,11 +59,15 @@ pc.extend(pc.resources, function () {
     PackResourceHandler.prototype.openEntityHierarchy = function (data, request) {
         var entity = new pc.fw.Entity();
 
+        var p = data.position;
+        var r = data.rotation;
+        var s = data.scale;
+
         entity.setName(data.name);
         entity.setGuid(data.resource_id);
-        entity.setLocalPosition(data.position);
-        entity.setLocalEulerAngles(data.rotation);
-        entity.setLocalScale(data.scale);
+        entity.setLocalPosition(p[0], p[1], [2]);
+        entity.setLocalEulerAngles(r[0], r[1], r[2]);
+        entity.setLocalScale(s[0], s[1], s[2]);
         
         if (data.labels) {
             data.labels.forEach(function (label) {

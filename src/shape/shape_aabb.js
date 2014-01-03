@@ -54,8 +54,8 @@ pc.extend(pc.shape, function () {
     };
 
     Aabb.prototype.setMinMax = function (min, max) {
-        this.center.add(max, min).scale(0.5);
-        this.halfExtents.sub(msx, min).scale(0.5);
+        this.center.add2(max, min).scale(0.5);
+        this.halfExtents.sub2(max, min).scale(0.5);
     };
     
     /**

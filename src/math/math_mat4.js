@@ -309,7 +309,7 @@ pc.extend(pc, function () {
                 res = new pc.Vec3();
             }
 
-            var m = mtx.data;
+            var m = this.data;
             var v = vec.data;
             var r = res.data;
 
@@ -355,7 +355,7 @@ pc.extend(pc, function () {
                 res = new pc.Vec3();
             }
 
-            var m = mtx.data;
+            var m = this.data;
             var v = vec.data;
             var r = res.data;
 

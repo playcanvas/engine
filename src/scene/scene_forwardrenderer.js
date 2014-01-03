@@ -11,7 +11,7 @@ pc.extend(pc.scene, function () {
     // Global shadowmap resources
     var scale = new pc.Mat4().scale(0.5, 0.5, 0.5);
     var shift = new pc.Mat4().translate(0.5, 0.5, 0.5);
-    var scaleShift = new pc.Mat4().copy(shift).mul(scale);
+    var scaleShift = new pc.Mat4().mul2(shift, scale);
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
     var camToLight = new pc.Mat4().rotate(-90, pc.Vec3.RIGHT);
@@ -201,7 +201,8 @@ pc.extend(pc.scene, function () {
             blend: false
         };
 
-        this.fogColor = new Float32Array(0, 0, 0);
+        this.fogColor = new Float32Array(3);
+        this.ambientColor = new Float32Array(3);
     }
 
     pc.extend(ForwardRenderer.prototype, {
@@ -255,19 +256,21 @@ pc.extend(pc.scene, function () {
 
             var scope = this.device.scope;
 
-            scope.resolve("light_globalAmbient").setValue(scene._globalAmbient);
+            this.ambientColor[0] = scene.ambientColor.r;
+            this.ambientColor[1] = scene.ambientColor.g;
+            this.ambientColor[2] = scene.ambientColor.b;
+            scope.resolve("light_globalAmbient").setValue(this.ambientColor);
 
             for (var i = 0; i < numDirs; i++) {
                 var directional = dirs[i];
                 var wtm = directional.getWorldTransform();
                 light = "light" + i;
 
-                scope.resolve(light + "_color").setValue(directional._finalColor);
+                scope.resolve(light + "_color").setValue(directional._finalColor.data);
+
                 // Directionals shine down the negative Y axis
-                directional._direction[0] = -wtm[4];
-                directional._direction[1] = -wtm[5];
-                directional._direction[2] = -wtm[6];
-                scope.resolve(light + "_direction").setValue(directional._direction);
+                wtm.getY(directional._direction).scale(-1);
+                scope.resolve(light + "_direction").setValue(directional._direction.data);
 
                 if (directional.getCastShadows()) {
                     var shadowMap = this.device.extDepthTexture ? 
@@ -629,8 +632,8 @@ pc.extend(pc.scene, function () {
                     modelMatrix.invertTo3x3(normalMatrix);
                     normalMatrix.transpose();
 
-                    this.modelMatrixId.setValue(modelMatrix);
-                    this.normalMatrixId.setValue(normalMatrix);
+                    this.modelMatrixId.setValue(modelMatrix.data);
+                    this.normalMatrixId.setValue(normalMatrix.data);
                     if (meshInstance.skinInstance) {
                         this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
                     }

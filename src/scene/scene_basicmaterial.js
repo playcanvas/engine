@@ -10,7 +10,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     var BasicMaterial = function () {
-        this.color = pc.Color(1, 1, 1, 1);
+        this.color = new pc.Color(1, 1, 1, 1);
         this.colorMap = null;
 
         this.update();
@@ -42,7 +42,7 @@ pc.extend(pc.scene, function () {
         update: function () {
             this.clearParameters();
 
-            this.setParameter('uColor', this.color);
+            this.setParameter('uColor', this.color.data);
             if (this.colorMap) {
                 this.setParameter('texture_diffuseMap', this.colorMap);
             }

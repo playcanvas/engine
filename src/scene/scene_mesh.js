@@ -58,7 +58,7 @@ pc.extend(pc.scene, function () {
 
         // World space AABB
         this.aabb = new pc.shape.Aabb();
-        this.normalMatrix = new pc.Matrix3();
+        this.normalMatrix = new pc.Mat3();
     };
 
     Object.defineProperty(MeshInstance.prototype, 'material', {

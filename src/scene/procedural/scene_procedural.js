@@ -30,9 +30,9 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
     var v1   = new pc.Vec3(0, 0, 0);
     var v2   = new pc.Vec3(0, 0, 0);
     var v3   = new pc.Vec3(0, 0, 0);
-    var w1   = new pc.Vector2(0, 0);
-    var w2   = new pc.Vector2(0, 0);
-    var w3   = new pc.Vector2(0, 0);
+    var w1   = new pc.Vec2(0, 0);
+    var w2   = new pc.Vec2(0, 0);
+    var w3   = new pc.Vec2(0, 0);
     var i; // Loop counter
     var tan1 = new Float32Array(vertexCount * 3);
     var tan2 = new Float32Array(vertexCount * 3);
@@ -93,8 +93,8 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
         tan2[i3 * 3 + 2] += tdir.z;
     }
 
-    t1 = new pc.Vec3(0, 0, 0);
-    t2 = new pc.Vec3(0, 0, 0);
+    var t1 = new pc.Vec3(0, 0, 0);
+    var t2 = new pc.Vec3(0, 0, 0);
     var n    = new pc.Vec3(0, 0, 0);
     var temp = new pc.Vec3(0, 0, 0);
 
@@ -105,16 +105,15 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
 
         // Gram-Schmidt orthogonalize
         var ndott = n.dot(t1);
-        pc.math.vec3.scale(n, ndott, temp);
-        pc.math.vec3.subtract(t1, temp, temp);
-        temp.normalize();
+        temp.copy(n).scale(ndott);
+        temp.sub2(t1, temp).normalize();
 
         tangents[i * 4]     = temp.x;
         tangents[i * 4 + 1] = temp.y;
         tangents[i * 4 + 2] = temp.z;
 
         // Calculate handedness
-        pc.math.vec3.cross(n, t1, temp);
+        temp.cross(n, t1);
         tangents[i * 4 + 3] = (temp.dot(t2) < 0) ? -1 : 1;
     }
     
@@ -311,12 +310,10 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
                 cosTheta = Math.cos(theta);
                 bottom = new pc.Vec3(sinTheta * baseRadius, -height / 2.0, cosTheta * baseRadius);
                 top    = new pc.Vec3(sinTheta * peakRadius,  height / 2.0, cosTheta * peakRadius);
-                pc.math.vec3.lerp(bottom, top, i / heightSegments, pos);
-                pc.math.vec3.subtract(top, bottom, bottomToTop);
-                pc.math.vec3.normalize(bottomToTop, bottomToTop);
-                tangent = new pc.Vec3(cosTheta, 0.0, -sinTheta);
-                pc.math.vec3.cross(tangent, bottomToTop, norm);
-                pc.math.vec3.normalize(norm, norm);
+                pos.lerp(bottom, top, i / heightSegments);
+                bottomToTop.sub2(top, bottom).normalize();
+                tangent = new pc.Vec3(cosTheta, 0, -sinTheta);
+                norm.cross(tangent, bottomToTop).normalize();
 
                 positions.push(pos[0], pos[1], pos[2]);
                 normals.push(norm[0], norm[1], norm[2]);

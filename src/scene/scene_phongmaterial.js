@@ -213,7 +213,7 @@ pc.extend(pc.scene, function () {
         update: function () {
             this.clearParameters();
 
-            this.setParameter('material_ambient', this.ambient);
+            this.setParameter('material_ambient', this.ambient.data);
 
             if (this.diffuseMap) {
                 this.setParameter('texture_diffuseMap', this.diffuseMap);
@@ -221,7 +221,7 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform);
                 }
             } else {
-                this.setParameter('material_diffuse', this.diffuse);
+                this.setParameter('material_diffuse', this.diffuse.data);
             }
 
             if (this.specularMap) {
@@ -230,7 +230,7 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_specularMapTransform', this.specularMapTransform);
                 }
             } else {
-                this.setParameter('material_specular', this.specular);
+                this.setParameter('material_specular', this.specular.data);
             }
 
             if (this.glossMap) {
@@ -248,7 +248,7 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform);
                 }
             } else {
-                this.setParameter('material_emissive', this.emissive);
+                this.setParameter('material_emissive', this.emissive.data);
             }
 
             if (this.opacityMap) {
