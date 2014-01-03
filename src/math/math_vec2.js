@@ -272,6 +272,27 @@ pc.extend(pc, function () {
 
         /**
          * @function
+         * @name pc.Vec2#negate
+         * @description Negate every dimension of the specified 2-dimensional vector.
+         * @returns {pc.Vec2} Self for chaining.
+         * @example
+         * var v = new pc.Vec2(2, 4);
+         * 
+         * // Negate
+         * v.negate();
+         * @author Will Eastcott
+         */
+        negate: function () {
+            var v = this.data;
+
+            v[0] *= -1;
+            v[1] *= -1;
+
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec2#normalize
          * @description Returns the specified 2-dimensional vector copied and converted to a unit vector.
          * @returns {pc.Vec2} Self for chaining.

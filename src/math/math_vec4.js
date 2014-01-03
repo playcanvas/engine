@@ -297,6 +297,29 @@ pc.extend(pc, function () {
 
         /**
          * @function
+         * @name pc.Vec4#negate
+         * @description Negate every dimension of the specified 4-dimensional vector.
+         * @returns {pc.Vec4} Self for chaining.
+         * @example
+         * var v = new pc.Vec4(2, 4, 8, 16);
+         * 
+         * // Negate
+         * v.negate();
+         * @author Will Eastcott
+         */
+        negate: function () {
+            var v = this.data;
+
+            v[0] *= -1;
+            v[1] *= -1;
+            v[2] *= -1;
+            v[3] *= -1;
+
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec4#normalize
          * @description Returns the specified 3-dimensional vector copied and converted to a unit vector.
          * @returns {pc.Vec4} The result of the normalization.
