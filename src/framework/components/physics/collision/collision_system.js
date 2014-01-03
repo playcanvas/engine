@@ -293,12 +293,11 @@ pc.extend(pc.fw, function () {
         * Called before the call to system.super.initializeComponentData is made
         */
         beforeInitialize: function (component, data) {
-            this.createDebugShape(data);
             data.shape = this.createPhysicalShape(component.entity, data);
 
             data.model = new pc.scene.Model();
             data.model.graph = new pc.scene.GraphNode();
-            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ]; 
+            data.model.meshInstances = [this.createDebugMesh(data)];
         },
 
         /** 
@@ -342,9 +341,9 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * Optionally creates a debug shape for a collision
+        * Optionally creates a debug mesh instance for a collision
         */
-        createDebugShape: function (data) {
+        createDebugMesh: function (data) {
             return undefined;
         },
 
@@ -396,7 +395,23 @@ pc.extend(pc.fw, function () {
         * Called when the collision is cloned to another entity
         */
         clone: function (entity, clone) {
-            CollisionComponentSystem._super.cloneComponent.call(this.system, entity, clone);
+            var src = this.system.dataStore[entity.getGuid()];
+
+            var data = {
+                type: src.data.type,
+                halfExtents: pc.extend([], src.data.halfExtents),
+                radius: src.data.radius,
+                axis: src.data.axis,
+                height: src.data.height,
+                asset: src.data.asset,
+                model: src.data.model
+            };
+
+            //if (src.data.model) {
+            //    data.model = src.data.model.clone();
+            //}
+
+            return this.system.addComponent(clone, data);  
         }
     };
 
@@ -409,7 +424,7 @@ pc.extend(pc.fw, function () {
 
     CollisionBoxSystemImpl.prototype = pc.extend(CollisionBoxSystemImpl.prototype, {
 
-        createDebugShape: function (data) {
+        createDebugMesh: function (data) {
             if (!this.mesh) {
                 var gd = this.system.context.graphicsDevice;
 
@@ -443,7 +458,7 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].indexed = true;
                 this.mesh = mesh;
             }
-
+            
             if (!this.material) {
                 var material = new pc.scene.BasicMaterial();
                 material.color = pc.math.vec4.create(0, 0, 1, 1);
@@ -451,6 +466,7 @@ pc.extend(pc.fw, function () {
                 this.material = material;
             }
 
+            return new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material);
         },
 
         createPhysicalShape: function (entity, data) {
@@ -473,14 +489,6 @@ pc.extend(pc.fw, function () {
             root.setPosition(entity.getPosition());
             root.setRotation(entity.getRotation());
             root.setLocalScale(x / 0.5, y / 0.5, z / 0.5);
-        },
-
-        clone: function (entity, clone) {
-            var src = this.system.dataStore[entity.getGuid()];
-            var data = {
-                halfExtents: pc.extend([], src.data.halfExtents)
-            };
-            return this.system.addComponent(clone, data); 
         }
     });
 
@@ -493,7 +501,7 @@ pc.extend(pc.fw, function () {
     CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
 
     CollisionSphereSystemImpl.prototype = pc.extend(CollisionSphereSystemImpl.prototype, {
-        createDebugShape: function (data) {
+        createDebugMesh: function (data) {
             if (!this.mesh) {
                 var context = this.system.context;
                 var gd = context.graphicsDevice;
@@ -503,37 +511,49 @@ pc.extend(pc.fw, function () {
                     { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 41);
+                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 240);
                 var positions = new Float32Array(vertexBuffer.lock());
 
-                var i;
-                var r = 0.5;
-                var numVerts = vertexBuffer.getNumVertices();
-                for (i = 0; i < numVerts-1; i++) {
-                    var theta = 2 * Math.PI * (i / (numVerts-2));
-                    var x = r * Math.cos(theta);
-                    var z = r * Math.sin(theta);
-                    positions[(i)*3+0] = x;
-                    positions[(i)*3+1] = 0;
-                    positions[(i)*3+2] = z;
-                }
-                vertexBuffer.unlock();
+                var i, x = 0;
+                var theta;
+                for (var ring = 0; ring < 3; ring++) {
+                    var xo = 0;
+                    var yo = 1;
+                    var zo = 2;
+                    if (ring === 1) {
+                        xo = 1;
+                        yo = 0;
+                        zo = 2;
+                    } else if (ring === 2) {
+                        xo = 0;
+                        yo = 2;
+                        zo = 1;
+                    }
 
-                var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 80);
-                var inds = new Uint8Array(indexBuffer.lock());
-                for (i = 0; i < 40; i++) {
-                    inds[i * 2 + 0] = i;
-                    inds[i * 2 + 1] = i + 1;
+                    for (i = 0; i < 40; i++) {
+                        theta = 2 * Math.PI * (i / 40);
+                        positions[x+xo] = 0.5 * Math.cos(theta);
+                        positions[x+yo] = 0;
+                        positions[x+zo] = 0.5 * Math.sin(theta);
+                        x += 3;
+
+                        theta = 2 * Math.PI * ((i + 1) / 40);
+                        positions[x+xo] = 0.5 * Math.cos(theta);
+                        positions[x+yo] = 0;
+                        positions[x+zo] = 0.5 * Math.sin(theta);
+                        x += 3;
+                    }
                 }
-                indexBuffer.unlock();
+
+                vertexBuffer.unlock();
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
-                mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
-                mesh.primitive[0].count = indexBuffer.getNumIndices();
-                mesh.primitive[0].indexed = true;
+                mesh.primitive[0].count = vertexBuffer.getNumVertices();
+                mesh.primitive[0].indexed = false;
+                
                 this.mesh = mesh;
             }
             
@@ -543,8 +563,10 @@ pc.extend(pc.fw, function () {
                 material.update();
                 this.material = material;
             }
-        },
 
+            return new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material);
+        },
+    
         createPhysicalShape: function (entity, data) {
             if (typeof(Ammo) !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);   
@@ -571,8 +593,13 @@ pc.extend(pc.fw, function () {
     CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
 
     CollisionCapsuleSystemImpl.prototype = pc.extend(CollisionCapsuleSystemImpl.prototype, {
-        createDebugShape: function (data) {            
-            if (!this.mesh) {
+        createDebugMesh: function (data) {            
+            // The capsule collision system creates a separate debug mesh
+            // for each capsule because of its particular shape. So if a mesh has already
+            // been created for this component then return it, otherwise create a new one
+            if (data.model && data.model.meshInstances && data.model.meshInstances.length) {
+                return data.model.meshInstances[0];
+            } else {
                 var gd = this.system.context.graphicsDevice;
 
                 // Create the graphical resources required to render a capsule shape
@@ -593,12 +620,15 @@ pc.extend(pc.fw, function () {
                 this.mesh = mesh;
             }
             
+            // no need to create a new material for each capsule shape
             if (!this.material) {
                 var material = new pc.scene.BasicMaterial();
                 material.color = pc.math.vec4.create(0, 0, 1, 1);
                 material.update();
                 this.material = material;    
             }
+
+            return new pc.scene.MeshInstance(data.model.graph, mesh, this.material);
         },
 
         updateCapsuleShape: function(data, vertexBuffer) {
@@ -718,7 +748,9 @@ pc.extend(pc.fw, function () {
         recreatePhysicalShapes: function (component) {
             var model = component.data.model;
             if (model) {
-                var vertexBuffer = model.meshInstances[0].mesh.vertexBuffer; 
+                // get the vertex buffer for this collision shape. createDebugMesh
+                // will return the existing mesh if one exists in this case
+                var vertexBuffer = this.createDebugMesh(component.data).mesh.vertexBuffer;
                 this.updateCapsuleShape(component.data, vertexBuffer);
                 CollisionCapsuleSystemImpl._super.recreatePhysicalShapes.call(this, component);
             }
@@ -1029,14 +1061,6 @@ pc.extend(pc.fw, function () {
             }
 
             CollisionMeshSystemImpl._super.updateTransform.call(this, component, position, rotation, scale);
-        },
-
-        clone: function (entity, clone) {
-            var component = this.system.addComponent(clone, {});
-            if (entity.model) {
-                clone.collision.data.asset = entity.model.asset;
-                clone.collision.model = entity.model.clone();
-            }
         }
         
     });

@@ -2,30 +2,42 @@ pc.extend(pc.scene, function () {
 
     /**
      * @name pc.scene.DepthMaterial
-     * @class A Depth material is for rendering depth information.
+     * @class A Depth material is is for rendering linear depth values to a render target.
      * @author Will Eastcott
      */
-    var DepthMaterial = function () {};
+    var DepthMaterial = function () {
+    };
 
     DepthMaterial = pc.inherits(DepthMaterial, pc.scene.Material);
 
-    DepthMaterial.prototype.getProgram = function (device, mesh) {
-        var key = mesh.getGeometry().isSkinned() ? 'skin' : 'static';
+    pc.extend(DepthMaterial.prototype, {
+        /**
+         * @function
+         * @name pc.scene.DepthMaterial#clone
+         * @description Duplicates a Depth material.
+         * @returns {pc.scene.DepthMaterial} A cloned Depth material.
+         * @author Will Eastcott
+         */
+        clone: function () {
+            var clone = new pc.scene.DepthMaterial();
 
-        var program = this._programs[key];
-        if (program) {
-            return program;
+            Material.prototype._cloneInternal.call(this, clone);
+
+            clone.update();
+            return clone;
+        },
+
+        update: function () {
+        },
+
+        updateShader: function (device) {
+            var options = {
+                skin: !!this.meshInstances[0].skinInstance
+            };
+            var library = device.getProgramLibrary();
+            this.shader = library.getProgram('depth', options);
         }
-
-        var skinned = mesh.getGeometry().isSkinned();
-        var options = {
-            skin: skinned
-        };
-        var library = device.getProgramLibrary();
-        program = library.getProgram('depth', options);
-        this._programs[key] = program;
-        return program;
-    };
+    });
     
     return {
         DepthMaterial: DepthMaterial
