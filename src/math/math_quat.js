@@ -89,16 +89,16 @@ pc.extend(pc, function () {
         },
 
         normalize: function () {
-            var l = this.length();
-            if (l === 0) {
+            var len = this.length();
+            if (len === 0) {
                 this.x = this.y = this.z = 0;
                 this.w = 1;
             } else {
-                t = 1 / t;
-                this.x *= t;
-                this.y *= t;
-                this.z *= t;
-                this.w *= t;
+                len = 1 / len;
+                this.x *= len;
+                this.y *= len;
+                this.z *= len;
+                this.w *= len;
             }
 
             return this;
@@ -120,9 +120,9 @@ pc.extend(pc, function () {
             var sa = Math.sin(angle);
             var ca = Math.cos(angle);
 
-            this.x = sa * a.x;
-            this.y = sa * a.y;
-            this.z = sa * a.z;
+            this.x = sa * axis.x;
+            this.y = sa * axis.y;
+            this.z = sa * axis.z;
             this.w = ca;
 
             return this;
@@ -265,6 +265,42 @@ pc.extend(pc, function () {
 
         slerp2: function (lhs, rhs, alpha) {
             return this.copy(lhs).slerp(rhs, alpha);
+        },
+
+        /**
+         * @function
+         * @name pc.math.quat.toEulers
+         * @description Converts the supplied quaternion to Euler angles.
+         * @param {Float32Array} q The quaternion to convert.
+         * @param {Float32Array} [r] The 3-dimensional vector to receive the Euler angles.
+         * @returns {Float32Array} The 3-dimensional vector holding the Euler angles that 
+         * correspond to the supplied quaternion.
+         * @author Will Eastcott
+         */
+        toEulers: function (eulers) {
+            if (typeof eulers === 'undefined') {
+                eulers = new pc.Vec3();
+            }
+
+            var qx = this.x, qy = this.y, qz = this.z, qw = this.w;
+
+            var a2 = 2 * (qw * qy - qx * qz);
+            var x, y, z;
+            if (a2 <= -0.99999) {
+                x = 2 * Math.atan2(qx, qw);
+                y = -Math.PI / 2;
+                z = 0;
+            } else if (a2 >= 0.99999) {
+                x = 2 * Math.atan2(qx, qw);
+                y = Math.PI / 2;
+                z = 0;
+            } else {
+                x = Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
+                y = Math.asin(a2);
+                z = Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+            }
+
+            return eulers.set(x, y, z).scale(pc.math.RAD_TO_DEG);
         },
 
         /**
