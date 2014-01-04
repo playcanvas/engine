@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+pc.extend(pc, (function () {
     'use strict';
 
     /**
@@ -35,9 +35,9 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         add2: function (lhs, rhs) {
-            var a = lhs.data;
-            var b = rhs.data;
-            var r = this.data;
+            var a = lhs.data,
+                b = rhs.data,
+                r = this.data;
 
             r[0] = a[0] + b[0];
             r[1] = a[1] + b[1];
@@ -104,8 +104,8 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         copy: function (rhs) {
-            var src = rhs.data;
-            var dst = this.data;
+            var src = rhs.data,
+                dst = this.data;
 
             dst[0] = src[0];
             dst[1] = src[1];
@@ -138,26 +138,25 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         equals: function (rhs) {
-            var l = this.data;
-            var r = rhs.data;
+            var l = this.data,
+                r = rhs.data;
 
-            return
-               ((l[0] === r[0]) &&
-                (l[1] === r[1]) &&
-                (l[2] === r[2]) &&
-                (l[3] === r[3]) &&
-                (l[4] === r[4]) &&
-                (l[5] === r[5]) &&
-                (l[6] === r[6]) &&
-                (l[7] === r[7]) &&
-                (l[8] === r[8]) &&
-                (l[9] === r[9]) &&
-                (l[10] === r[10]) &&
-                (l[11] === r[11]) &&
-                (l[12] === r[12]) &&
-                (l[13] === r[13]) &&
-                (l[14] === r[14]) &&
-                (l[15] === r[15]));
+            return ((l[0] === r[0]) &&
+                    (l[1] === r[1]) &&
+                    (l[2] === r[2]) &&
+                    (l[3] === r[3]) &&
+                    (l[4] === r[4]) &&
+                    (l[5] === r[5]) &&
+                    (l[6] === r[6]) &&
+                    (l[7] === r[7]) &&
+                    (l[8] === r[8]) &&
+                    (l[9] === r[9]) &&
+                    (l[10] === r[10]) &&
+                    (l[11] === r[11]) &&
+                    (l[12] === r[12]) &&
+                    (l[13] === r[13]) &&
+                    (l[14] === r[14]) &&
+                    (l[15] === r[15]));
         },
 
         /**
@@ -171,23 +170,23 @@ pc.extend(pc, function () {
          */
         isIdentity: function () {
             var m = this.data;
-            return
-               ((m[0] === 1) &&
-                (m[1] === 0) &&
-                (m[2] === 0) &&
-                (m[3] === 0) &&
-                (m[4] === 0) &&
-                (m[5] === 1) &&
-                (m[6] === 0) &&
-                (m[7] === 0) &&
-                (m[8] === 0) &&
-                (m[9] === 0) &&
-                (m[10] === 1) &&
-                (m[11] === 0) &&
-                (m[12] === 0) &&
-                (m[13] === 0) &&
-                (m[14] === 0) &&
-                (m[15] === 1));
+
+            return ((m[0] === 1) &&
+                    (m[1] === 0) &&
+                    (m[2] === 0) &&
+                    (m[3] === 0) &&
+                    (m[4] === 0) &&
+                    (m[5] === 1) &&
+                    (m[6] === 0) &&
+                    (m[7] === 0) &&
+                    (m[8] === 0) &&
+                    (m[9] === 0) &&
+                    (m[10] === 1) &&
+                    (m[11] === 0) &&
+                    (m[12] === 0) &&
+                    (m[13] === 0) &&
+                    (m[14] === 0) &&
+                    (m[15] === 1));
         },
 
         /**
@@ -209,31 +208,36 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         mul2: function (lhs, rhs) {
-            var a = lhs.data;
-            var b = rhs.data;
-            var r = this.data;
+            var a00, a01, a02, a03,
+                a10, a11, a12, a13,
+                a20, a21, a22, a23,
+                a30, a31, a32, a33,
+                b0, b1, b2, b3,
+                a = lhs.data,
+                b = rhs.data,
+                r = this.data;
 
-            var a00 = a[0];
-            var a01 = a[1];
-            var a02 = a[2];
-            var a03 = a[3];
-            var a10 = a[4];
-            var a11 = a[5];
-            var a12 = a[6];
-            var a13 = a[7];
-            var a20 = a[8];
-            var a21 = a[9];
-            var a22 = a[10];
-            var a23 = a[11];
-            var a30 = a[12];
-            var a31 = a[13];
-            var a32 = a[14];
-            var a33 = a[15];
+            a00 = a[0];
+            a01 = a[1];
+            a02 = a[2];
+            a03 = a[3];
+            a10 = a[4];
+            a11 = a[5];
+            a12 = a[6];
+            a13 = a[7];
+            a20 = a[8];
+            a21 = a[9];
+            a22 = a[10];
+            a23 = a[11];
+            a30 = a[12];
+            a31 = a[13];
+            a32 = a[14];
+            a33 = a[15];
 
-            var b0 = b[0];
-            var b1 = b[1];
-            var b2 = b[2];
-            var b3 = b[3];
+            b0 = b[0];
+            b1 = b[1];
+            b2 = b[2];
+            b3 = b[3];
             r[0]  = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
             r[1]  = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
             r[2]  = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
@@ -307,21 +311,18 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         transformPoint: function (vec, res) {
-            if (typeof res === 'undefined') {
-                res = new pc.Vec3();
-            }
+            var x, y, z,
+                m = this.data,
+                v = vec.data;
 
-            var m = this.data;
-            var v = vec.data;
-            var r = res.data;
+            res = (res === undefined) ? new pc.Vec3() : res;
 
-            var x, y, z;
             x =
                 v[0] * m[0] +
                 v[1] * m[4] +
                 v[2] * m[8] +
                 m[12];
-            y = 
+            y =
                 v[0] * m[1] +
                 v[1] * m[5] +
                 v[2] * m[9] +
@@ -353,20 +354,17 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         transformVector: function (vec, res) {
-            if (typeof res === 'undefined') {
-                res = new pc.Vec3();
-            }
+            var x, y, z,
+                m = this.data,
+                v = vec.data;
 
-            var m = this.data;
-            var v = vec.data;
-            var r = res.data;
+            res = (res === undefined) ? new pc.Vec3() : res;
 
-            var x, y, z;
             x =
                 v[0] * m[0] +
                 v[1] * m[4] +
                 v[2] * m[8];
-            y = 
+            y =
                 v[0] * m[1] +
                 v[1] * m[5] +
                 v[2] * m[9];
@@ -398,10 +396,12 @@ pc.extend(pc, function () {
          * var m = new pc.Mat4().lookAt(position, target, up);
          * @author Will Eastcott
          */
-        lookAt: function () {
-            var x = new pc.Vec3();
-            var y = new pc.Vec3();
-            var z = new pc.Vec3();
+        lookAt: (function () {
+            var x, y, z;
+
+            x = new pc.Vec3();
+            y = new pc.Vec3();
+            z = new pc.Vec3();
 
             return function (position, target, up) {
                 z.sub2(position, target).normalize();
@@ -430,7 +430,7 @@ pc.extend(pc, function () {
 
                 return this;
             };
-        }(),
+        }()),
 
         /**
          * @function
@@ -450,12 +450,14 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         frustum: function (left, right, bottom, top, znear, zfar) {
-            var temp1 = 2 * znear;
-            var temp2 = right - left;
-            var temp3 = top - bottom;
-            var temp4 = zfar - znear;
+            var temp1, temp2, temp3, temp4, r;
 
-            var r = this.data;
+            temp1 = 2 * znear;
+            temp2 = right - left;
+            temp3 = top - bottom;
+            temp4 = zfar - znear;
+
+            r = this.data;
             r[0] = temp1 / temp2;
             r[1] = 0;
             r[2] = 0;
@@ -464,9 +466,9 @@ pc.extend(pc, function () {
             r[5] = temp1 / temp3;
             r[6] = 0;
             r[7] = 0;
-            r[8] = (right+left) / temp2;
-            r[9] = (top+bottom) / temp3;
-            r[10] = (-zfar-znear) / temp4;
+            r[8] = (right + left) / temp2;
+            r[9] = (top + bottom) / temp3;
+            r[10] = (-zfar - znear) / temp4;
             r[11] = -1;
             r[12] = 0;
             r[13] = 0;
@@ -492,12 +494,14 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         perspective: function (fovy, aspect, znear, zfar) {
-            var ymax = znear * Math.tan(fovy * Math.PI / 360);
-            var xmax = ymax * aspect;
+            var xmax, ymax;
+
+            ymax = znear * Math.tan(fovy * Math.PI / 360);
+            xmax = ymax * aspect;
 
             return this.frustum(-xmax, xmax, -ymax, ymax, znear, zfar);
         },
-        
+
         /**
          * @function
          * @name pc.Mat4#ortho
@@ -534,7 +538,7 @@ pc.extend(pc, function () {
             r[13] = -(top + bottom) / (top - bottom);
             r[14] = -(far + near) / (far - near);
             r[15] = 1;
-            
+
             return this;
         },
 
@@ -551,27 +555,31 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         rotate: function (angle, axis) {
+            var x, y, z, c, s, t, tx, ty, m;
+
             angle *= pc.math.DEG_TO_RAD;
 
-            var m = this.data;
-            var x = axis.x, y = axis.y, z = axis.z;
-            var c = Math.cos(angle);
-            var s = Math.sin(angle);
-            var t = 1-c;
-            var tx = t * x;
-            var ty = t * y;
+            x = axis.x;
+            y = axis.y;
+            z = axis.z;
+            c = Math.cos(angle);
+            s = Math.sin(angle);
+            t = 1 - c;
+            tx = t * x;
+            ty = t * y;
+            m = this.data;
 
-            m[0] = tx*x+c;
-            m[1] = tx*y+s*z;
-            m[2] = tx*z-s*y;
+            m[0] = tx * x + c;
+            m[1] = tx * y + s * z;
+            m[2] = tx * z - s * y;
             m[3] = 0;
-            m[4] = tx*y-s*z;
-            m[5] = ty*y+c;
-            m[6] = ty*z+s*x;
+            m[4] = tx * y - s * z;
+            m[5] = ty * y + c;
+            m[6] = ty * z + s * x;
             m[7] = 0;
-            m[8] = tx*z+s*y;
-            m[9] = ty*z-x*s;
-            m[10] = t*z*z+c;
+            m[8] = tx * z + s * y;
+            m[9] = ty * z - x * s;
+            m[10] = t * z * z + c;
             m[11] = 0;
             m[12] = 0;
             m[13] = 0;
@@ -667,44 +675,64 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         invert: function () {
-            var m = this.data;
+            var a00, a01, a02, a03,
+                a10, a11, a12, a13,
+                a20, a21, a22, a23,
+                a30, a31, a32, a33,
+                b00, b01, b02, b03,
+                b04, b05, b06, b07,
+                b08, b09, b10, b11,
+                invDet, m;
 
-            var a00 = m[0],  a01 = m[1],  a02 = m[2],  a03 = m[3];
-            var a10 = m[4],  a11 = m[5],  a12 = m[6],  a13 = m[7];
-            var a20 = m[8],  a21 = m[9],  a22 = m[10], a23 = m[11];
-            var a30 = m[12], a31 = m[13], a32 = m[14], a33 = m[15];
+            m = this.data;
+            a00 = m[0];
+            a01 = m[1];
+            a02 = m[2];
+            a03 = m[3];
+            a10 = m[4];
+            a11 = m[5];
+            a12 = m[6];
+            a13 = m[7];
+            a20 = m[8];
+            a21 = m[9];
+            a22 = m[10];
+            a23 = m[11];
+            a30 = m[12];
+            a31 = m[13];
+            a32 = m[14];
+            a33 = m[15];
 
-            var b00 = a00*a11 - a01*a10;
-            var b01 = a00*a12 - a02*a10;
-            var b02 = a00*a13 - a03*a10;
-            var b03 = a01*a12 - a02*a11;
-            var b04 = a01*a13 - a03*a11;
-            var b05 = a02*a13 - a03*a12;
-            var b06 = a20*a31 - a21*a30;
-            var b07 = a20*a32 - a22*a30;
-            var b08 = a20*a33 - a23*a30;
-            var b09 = a21*a32 - a22*a31;
-            var b10 = a21*a33 - a23*a31;
-            var b11 = a22*a33 - a23*a32;
+            b00 = a00 * a11 - a01 * a10;
+            b01 = a00 * a12 - a02 * a10;
+            b02 = a00 * a13 - a03 * a10;
+            b03 = a01 * a12 - a02 * a11;
+            b04 = a01 * a13 - a03 * a11;
+            b05 = a02 * a13 - a03 * a12;
+            b06 = a20 * a31 - a21 * a30;
+            b07 = a20 * a32 - a22 * a30;
+            b08 = a20 * a33 - a23 * a30;
+            b09 = a21 * a32 - a22 * a31;
+            b10 = a21 * a33 - a23 * a31;
+            b11 = a22 * a33 - a23 * a32;
 
-            var invDet = 1 / (b00*b11 - b01*b10 + b02*b09 + b03*b08 - b04*b07 + b05*b06);
+            invDet = 1 / (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
 
-            m[0] = (a11*b11 - a12*b10 + a13*b09)*invDet;
-            m[1] = (-a01*b11 + a02*b10 - a03*b09)*invDet;
-            m[2] = (a31*b05 - a32*b04 + a33*b03)*invDet;
-            m[3] = (-a21*b05 + a22*b04 - a23*b03)*invDet;
-            m[4] = (-a10*b11 + a12*b08 - a13*b07)*invDet;
-            m[5] = (a00*b11 - a02*b08 + a03*b07)*invDet;
-            m[6] = (-a30*b05 + a32*b02 - a33*b01)*invDet;
-            m[7] = (a20*b05 - a22*b02 + a23*b01)*invDet;
-            m[8] = (a10*b10 - a11*b08 + a13*b06)*invDet;
-            m[9] = (-a00*b10 + a01*b08 - a03*b06)*invDet;
-            m[10] = (a30*b04 - a31*b02 + a33*b00)*invDet;
-            m[11] = (-a20*b04 + a21*b02 - a23*b00)*invDet;
-            m[12] = (-a10*b09 + a11*b07 - a12*b06)*invDet;
-            m[13] = (a00*b09 - a01*b07 + a02*b06)*invDet;
-            m[14] = (-a30*b03 + a31*b01 - a32*b00)*invDet;
-            m[15] = (a20*b03 - a21*b01 + a22*b00)*invDet;
+            m[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
+            m[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
+            m[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
+            m[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
+            m[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
+            m[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
+            m[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
+            m[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
+            m[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
+            m[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
+            m[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
+            m[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
+            m[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
+            m[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
+            m[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
+            m[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
 
             return this;
         },
@@ -760,33 +788,37 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         setTRS: function (t, r, s) {
-            var tx = t.x;
-            var ty = t.y;
-            var tz = t.z;
+            var tx, ty, tz, qx, qy, qz, qw, sx, sy, sz,
+                x2, y2, z2, xx, xy, xz, yy, yz, zz, wx, wy, wz, m;
 
-            var qx = r.x;
-            var qy = r.y;
-            var qz = r.z;
-            var qw = r.w;
+            tx = t.x;
+            ty = t.y;
+            tz = t.z;
 
-            var sx = s.x;
-            var sy = s.y;
-            var sz = s.z;
+            qx = r.x;
+            qy = r.y;
+            qz = r.z;
+            qw = r.w;
 
-            var x2 = qx + qx;
-            var y2 = qy + qy;
-            var z2 = qz + qz;
-            var xx = qx * x2;
-            var xy = qx * y2;
-            var xz = qx * z2;
-            var yy = qy * y2;
-            var yz = qy * z2;
-            var zz = qz * z2;
-            var wx = qw * x2;
-            var wy = qw * y2;
-            var wz = qw * z2;
+            sx = s.x;
+            sy = s.y;
+            sz = s.z;
 
-            var m = this.data;
+            x2 = qx + qx;
+            y2 = qy + qy;
+            z2 = qz + qz;
+            xx = qx * x2;
+            xy = qx * y2;
+            xz = qx * z2;
+            yy = qy * y2;
+            yz = qy * z2;
+            zz = qz * z2;
+            wx = qw * x2;
+            wy = qw * y2;
+            wz = qw * z2;
+
+            m = this.data;
+
             m[0] = (1 - (yy + zz)) * sx;
             m[1] = (xy + wz) * sx;
             m[2] = (xz - wy) * sx;
@@ -823,40 +855,59 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         transpose: function () {
-            var m = this.data;
+            var tmp, m = this.data;
 
-            var tmp;
-            tmp = m[1]; m[1] = m[4]; m[4] = tmp;
-            tmp = m[2]; m[2] = m[8]; m[8] = tmp;
-            tmp = m[3]; m[3] = m[12]; m[12] = tmp;
-            tmp = m[6]; m[6] = m[9]; m[9] = tmp;
-            tmp = m[7]; m[7] = m[13]; m[13] = tmp;
-            tmp = m[11]; m[11] = m[14]; m[14] = tmp;
+            tmp = m[1];
+            m[1] = m[4];
+            m[4] = tmp;
+
+            tmp = m[2];
+            m[2] = m[8];
+            m[8] = tmp;
+
+            tmp = m[3];
+            m[3] = m[12];
+            m[12] = tmp;
+
+            tmp = m[6];
+            m[6] = m[9];
+            m[9] = tmp;
+
+            tmp = m[7];
+            m[7] = m[13];
+            m[13] = tmp;
+
+            tmp = m[11];
+            m[11] = m[14];
+            m[14] = tmp;
 
             return this;
         },
 
         invertTo3x3: function (res) {
-            var m = this.data;
-            var r = res.data;
+            var a11, a21, a31, a12, a22, a32, a13, a23, a33,
+                m, r, det, idet;
 
-            var a11 =  m[10] * m[5] - m[6] * m[9];
-            var a21 = -m[10] * m[1] + m[2] * m[9];
-            var a31 =  m[6]  * m[1] - m[2] * m[5];
-            var a12 = -m[10] * m[4] + m[6] * m[8];
-            var a22 =  m[10] * m[0] - m[2] * m[8];
-            var a32 = -m[6]  * m[0] + m[2] * m[4];
-            var a13 =  m[9]  * m[4] - m[5] * m[8];
-            var a23 = -m[9]  * m[0] + m[1] * m[8];
-            var a33 =  m[5]  * m[0] - m[1] * m[4];
+            m = this.data;
+            r = res.data;
 
-            var det =  m[0] * a11 + m[1] * a12 + m[2] * a13;
-            if (det == 0) { // no inverse
+            a11 =  m[10] * m[5] - m[6] * m[9];
+            a21 = -m[10] * m[1] + m[2] * m[9];
+            a31 =  m[6]  * m[1] - m[2] * m[5];
+            a12 = -m[10] * m[4] + m[6] * m[8];
+            a22 =  m[10] * m[0] - m[2] * m[8];
+            a32 = -m[6]  * m[0] + m[2] * m[4];
+            a13 =  m[9]  * m[4] - m[5] * m[8];
+            a23 = -m[9]  * m[0] + m[1] * m[8];
+            a33 =  m[5]  * m[0] - m[1] * m[4];
+
+            det =  m[0] * a11 + m[1] * a12 + m[2] * a13;
+            if (det === 0) { // no inverse
                 console.warn("pc.Mat4#invertTo3x3: Matrix not invertible");
-                return r;
+                return this;
             }
 
-            var idet = 1.0 / det;
+            idet = 1 / det;
 
             r[0] = idet * a11;
             r[1] = idet * a21;
@@ -887,9 +938,7 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         getTranslation: function (t) {
-            if (typeof t === 'undefined') {
-                t = new pc.Vec3();
-            }
+            t = (t === undefined) ? new pc.Vec3() : t;
 
             return t.set(this.data[12], this.data[13], this.data[14]);
         },
@@ -910,9 +959,7 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         getX: function (x) {
-            if (typeof x === 'undefined') {
-                x = new pc.Vec3();
-            }
+            x = (x === undefined) ? new pc.Vec3() : x;
 
             return x.set(this.data[0], this.data[1], this.data[2]);
         },
@@ -933,9 +980,7 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         getY: function (y) {
-            if (typeof y === 'undefined') {
-                y = new pc.Vec3();
-            }
+            y = (y === undefined) ? new pc.Vec3() : y;
 
             return y.set(this.data[4], this.data[5], this.data[6]);
         },
@@ -956,13 +1001,11 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         getZ: function (z) {
-            if (typeof z === 'undefined') {
-                z = new pc.Vec3();
-            }
+            z = (z === undefined) ? new pc.Vec3() : z;
 
             return z.set(this.data[8], this.data[9], this.data[10]);
         },
-            
+
         /**
          * @function
          * @name pc.Mat4#getScale
@@ -977,15 +1020,15 @@ pc.extend(pc, function () {
          * var scale = m.getScale();
          * @author Will Eastcott
          */
-        getScale: function () {
-            var x = new pc.Vec3();
-            var y = new pc.Vec3();
-            var z = new pc.Vec3();
+        getScale: (function () {
+            var x, y, z;
+
+            x = new pc.Vec3();
+            y = new pc.Vec3();
+            z = new pc.Vec3();
 
             return function (scale) {
-                if (typeof scale === 'undefined') {
-                    scale = new pc.Vec3();
-                }
+                scale = (scale === undefined) ? new pc.Vec3() : scale;
 
                 this.getX(x);
                 this.getY(y);
@@ -994,7 +1037,7 @@ pc.extend(pc, function () {
 
                 return scale;
             };
-        }(),
+        }()),
 
         /**
          * @function
@@ -1013,34 +1056,36 @@ pc.extend(pc, function () {
         // The 3D space is right-handed, so the rotation around each axis will be counterclockwise 
         // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
         setFromEulers: function (ex, ey, ez) {
+            var s1, c1, s2, c2, s3, c3, m;
+
             ex *= pc.math.DEG_TO_RAD;
             ey *= pc.math.DEG_TO_RAD;
             ez *= pc.math.DEG_TO_RAD;
 
             // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
-            var s1 = Math.sin(-ex);
-            var c1 = Math.cos(-ex);
-            var s2 = Math.sin(-ey);
-            var c2 = Math.cos(-ey);
-            var s3 = Math.sin(-ez);
-            var c3 = Math.cos(-ez);
+            s1 = Math.sin(-ex);
+            c1 = Math.cos(-ex);
+            s2 = Math.sin(-ey);
+            c2 = Math.cos(-ey);
+            s3 = Math.sin(-ez);
+            c3 = Math.cos(-ez);
 
-            var m = this.data;
+            m = this.data;
 
             // Set rotation elements
-            m[0] = c2*c3;
-            m[1] = -c2*s3;
+            m[0] = c2 * c3;
+            m[1] = -c2 * s3;
             m[2] = s2;
             m[3] = 0;
 
-            m[4] = c1*s3 + c3*s1*s2;
-            m[5] = c1*c3 - s1*s2*s3;
-            m[6] = -c2*s1;
+            m[4] = c1 * s3 + c3 * s1 * s2;
+            m[5] = c1 * c3 - s1 * s2 * s3;
+            m[6] = -c2 * s1;
             m[7] = 0;
 
-            m[8] = s1*s3 - c1*c3*s2;
-            m[9] = c3*s1 + c1*s2*s3;
-            m[10] = c1*c2;
+            m[8] = s1 * s3 - c1 * c3 * s2;
+            m[9] = c3 * s1 + c1 * s2 * s3;
+            m[10] = c1 * c2;
             m[11] = 0;
 
             m[12] = 0;
@@ -1055,8 +1100,8 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mat4#toEulers
          * @description Converts a 4x4 matrix to Euler angles specified in degrees in XYZ order.
-         * @param {Float32Array} [eulers] A 3-d vector to receive the Euler angles.
-         * @returns A 3-d vector containing the Euler angles.
+         * @param {pc.Vec3} [eulers] A 3-d vector to receive the Euler angles.
+         * @returns {pc.Vec3} A 3-d vector containing the Euler angles.
          * @example
          * // Create a 4x4 rotation matrix of 45 degrees around the y-axis
          * var m = new pc.Mat4().rotate(45, pc.Vec3.UP);
@@ -1064,23 +1109,24 @@ pc.extend(pc, function () {
          * var eulers = m.toEulers();
          * @author Will Eastcott
          */
-        toEulers: function () {
+        toEulers: (function () {
             var scale = new pc.Vec3();
 
             return function (eulers) {
+                var x, y, z, sx, sy, sz, m, halfPi;
+
                 this.getScale(scale);
-                var sx = scale.x;
-                var sy = scale.y;
-                var sz = scale.z;
+                sx = scale.x;
+                sy = scale.y;
+                sz = scale.z;
 
-                var m = this.data;
+                m = this.data;
 
-                var x; 
-                var y = Math.asin(-m[2] / sx);
-                var z;
-                var HALF_PI = Math.PI / 2;
-                if (y < HALF_PI) {
-                    if (y > -HALF_PI) {
+                y = Math.asin(-m[2] / sx);
+                halfPi = Math.PI * 0.5;
+
+                if (y < halfPi) {
+                    if (y > -halfPi) {
                         x = Math.atan2(m[6] / sy, m[10] / sz);
                         z = Math.atan2(m[1] / sx, m[0] / sx);
                     } else {
@@ -1091,12 +1137,12 @@ pc.extend(pc, function () {
                 } else {
                     // Not a unique solution
                     z = 0;
-                    x = Math.atan2(m[4] / sy, m[5] / sy);        
+                    x = Math.atan2(m[4] / sy, m[5] / sy);
                 }
 
-                return eulers.set(x * pc.math.RAD_TO_DEG, y * pc.math.RAD_TO_DEG, z * pc.math.RAD_TO_DEG);
-            }
-        }(),
+                return eulers.set(x, y, z).scale(pc.math.RAD_TO_DEG);
+            };
+        }()),
 
         /**
          * @function
@@ -1110,35 +1156,37 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         toString: function () {
-            var t = "[";
-            for (var i = 0; i < 16; i++) {
+            var i, t;
+
+            t = '[';
+            for (i = 0; i < 16; i += 1) {
                 t += this.data[i];
-                t += (i !== 15) ? ", " : "";
+                t += (i !== 15) ? ', ' : '';
             }
-            t += "]";
+            t += ']';
             return t;
         }
     };
 
     Object.defineProperty(Mat4, 'IDENTITY', {
-        get: function () {
+        get: (function () {
             var identity = new Mat4();
-            return function() {
+            return function () {
                 return identity;
-            }
-        }()
+            };
+        }())
     });
 
     Object.defineProperty(Mat4, 'ZERO', {
-        get: function () {
+        get: (function () {
             var zero = new Mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-            return function() {
+            return function () {
                 return zero;
-            }
-        }()
+            };
+        }())
     });
 
     return {
         Mat4: Mat4
     };
-}());
+}()));

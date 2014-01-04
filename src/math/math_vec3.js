@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+pc.extend(pc, (function () {
     'use strict';
 
     /**
@@ -36,8 +36,8 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         add: function (rhs) {
-            var a = this.data;
-            var b = rhs.data;
+            var a = this.data,
+                b = rhs.data;
 
             a[0] += b[0];
             a[1] += b[1];
@@ -65,9 +65,9 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         add2: function (lhs, rhs) {
-            var a = lhs.data;
-            var b = rhs.data;
-            var r = this.data;
+            var a = lhs.data,
+                b = rhs.data,
+                r = this.data;
 
             r[0] = a[0] + b[0];
             r[1] = a[1] + b[1];
@@ -107,8 +107,8 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         copy: function (rhs) {
-            var a = this.data;
-            var b = rhs.data;
+            var a = this.data,
+                b = rhs.data;
 
             a[0] = b[0];
             a[1] = b[1];
@@ -131,9 +131,9 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         cross: function (lhs, rhs) {
-            var a = lhs.data;
-            var b = rhs.data;
-            var r = this.data;
+            var a = lhs.data,
+                b = rhs.data,
+                r = this.data;
 
             r[0] = a[1] * b[2] - b[1] * a[2];
             r[1] = a[2] * b[0] - b[2] * a[0];
@@ -156,10 +156,10 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         dot: function (rhs) {
-            var a = this.data;
-            var b = rhs.data;
+            var a = this.data,
+                b = rhs.data;
 
-            return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+            return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
         },
 
         /**
@@ -173,8 +173,8 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         equals: function (rhs) {
-            var a = this.data;
-            var b = rhs.data;
+            var a = this.data,
+                b = rhs.data;
 
             return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
         },
@@ -194,7 +194,7 @@ pc.extend(pc, function () {
         length: function () {
             var v = this.data;
 
-            return Math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+            return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
         },
 
         /**
@@ -212,7 +212,7 @@ pc.extend(pc, function () {
         lengthSqr: function () {
             var v = this.data;
 
-            return v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+            return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
         },
 
         /**
@@ -235,10 +235,10 @@ pc.extend(pc, function () {
          * r.lerp(a, b, 1);   // r is equal to b
          * @author Will Eastcott
          */
-        lerp: function(lhs, rhs, alpha) {
-            var a = lhs.data;
-            var b = rhs.data;
-            var r = this.data;
+        lerp: function (lhs, rhs, alpha) {
+            var a = lhs.data,
+                b = rhs.data,
+                r = this.data;
 
             r[0] = a[0] + alpha * (b[0] - a[0]);
             r[1] = a[1] + alpha * (b[1] - a[1]);
@@ -264,8 +264,8 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         mul: function (rhs) {
-            var a = this.data;
-            var b = rhs.data;
+            var a = this.data,
+                b = rhs.data;
 
             a[0] += b[0];
             a[1] += b[1];
@@ -293,9 +293,9 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         mul2: function (lhs, rhs) {
-            var a = lhs.data;
-            var b = rhs.data;
-            var r = this.data;
+            var a = lhs.data,
+                b = rhs.data,
+                r = this.data;
 
             r[0] = a[0] * b[0];
             r[1] = a[1] * b[1];
@@ -342,22 +342,6 @@ pc.extend(pc, function () {
          */
         normalize: function () {
             return this.scale(1 / this.length());
-        },
-        
-        /**
-         * @function
-         * @name pc.Vec3#project
-         * @description Calculates the vector projection (also known as the vector resolute, or vector component)
-         * of vector v0 in the direction of a vector v1.
-         * @param {pc.Vec3} v The 3-dimensional direction vector onto which the specified vector is projected.
-         * @returns {pc.Vec3} Self for chaining.
-         * @example
-         */
-        project: function (v) {
-            var sqr = v.lengthSqr();
-            var dot = this.dot(v);
-
-            return this.scale(dot / sqr);
         },
 
         /**
@@ -432,8 +416,8 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         sub: function (rhs) {
-            var a = this.data;
-            var b = rhs.data;
+            var a = this.data,
+                b = rhs.data;
 
             a[0] -= b[0];
             a[1] -= b[1];
@@ -461,9 +445,9 @@ pc.extend(pc, function () {
          * @author Will Eastcott
          */
         sub2: function (lhs, rhs) {
-            var a = lhs.data;
-            var b = rhs.data;
-            var r = this.data;
+            var a = lhs.data,
+                b = rhs.data,
+                r = this.data;
 
             r[0] = a[0] - b[0];
             r[1] = a[1] - b[1];
@@ -486,7 +470,7 @@ pc.extend(pc, function () {
         toString: function () {
             return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + "]";
         }
-    }
+    };
 
     /**
      * @field
@@ -542,12 +526,12 @@ pc.extend(pc, function () {
      * @description A constant vector set to [0, 0, 1].
      */
     Object.defineProperty(Vec3, 'BACK', {
-        get: function () {
+        get: (function () {
             var back = new Vec3(0, 0, 1);
-            return function() {
+            return function () {
                 return back;
-            }
-        }()
+            };
+        }())
     });
 
     /**
@@ -559,12 +543,12 @@ pc.extend(pc, function () {
      * @description A constant vector set to [0, -1, 0].
      */
     Object.defineProperty(Vec3, 'DOWN', {
-        get: function () {
+        get: (function () {
             var down = new Vec3(0, -1, 0);
-            return function() {
+            return function () {
                 return down;
-            }
-        }()
+            };
+        }())
     });
 
     /**
@@ -576,12 +560,12 @@ pc.extend(pc, function () {
      * @description A constant vector set to [0, 0, -1].
      */
     Object.defineProperty(Vec3, 'FORWARD', {
-        get: function () {
+        get: (function () {
             var forward = new Vec3(0, 0, -1);
-            return function() {
+            return function () {
                 return forward;
-            }
-        }()
+            };
+        }())
     });
 
     /**
@@ -593,12 +577,12 @@ pc.extend(pc, function () {
      * @description A constant vector set to [-1, 0, 0].
      */
     Object.defineProperty(Vec3, 'LEFT', {
-        get: function () {
+        get: (function () {
             var left = new Vec3(-1, 0, 0);
-            return function() {
+            return function () {
                 return left;
-            }
-        }()
+            };
+        }())
     });
 
     /**
@@ -610,12 +594,12 @@ pc.extend(pc, function () {
      * @description A constant vector set to [1, 1, 1].
      */
     Object.defineProperty(Vec3, 'ONE', {
-        get: function () {
+        get: (function () {
             var one = new Vec3(1, 1, 1);
-            return function() {
+            return function () {
                 return one;
-            }
-        }()
+            };
+        }())
     });
 
     /**
@@ -627,12 +611,12 @@ pc.extend(pc, function () {
      * @description A constant vector set to [1, 0, 0].
      */
     Object.defineProperty(Vec3, 'RIGHT', {
-        get: function () {
+        get: (function () {
             var right = new Vec3(1, 0, 0);
-            return function() {
+            return function () {
                 return right;
-            }
-        }()
+            };
+        }())
     });
 
     /**
@@ -644,12 +628,12 @@ pc.extend(pc, function () {
      * @description A constant vector set to [0, 1, 0].
      */
     Object.defineProperty(Vec3, 'UP', {
-        get: function () {
+        get: (function () {
             var down = new Vec3(0, 1, 0);
-            return function() {
+            return function () {
                 return down;
-            }
-        }()
+            };
+        }())
     });
 
     /**
@@ -661,15 +645,15 @@ pc.extend(pc, function () {
      * @description A constant vector set to [0, 0, 0].
      */
     Object.defineProperty(Vec3, 'ZERO', {
-        get: function () {
+        get: (function () {
             var zero = new Vec3(0, 0, 0);
-            return function() {
+            return function () {
                 return zero;
-            }
-        }()
+            };
+        }())
     });
 
     return {
         Vec3: Vec3
     };
-}());
+}()));

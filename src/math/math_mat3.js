@@ -1,4 +1,4 @@
-pc.extend(pc, function () {
+pc.extend(pc, (function () {
     'use strict';
 
     /**
@@ -209,4 +209,4 @@ pc.extend(pc, function () {
     return {
         Mat3: Mat3
     };
-}());
+}()));
