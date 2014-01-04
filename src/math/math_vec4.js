@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    'use strict';
+
     /**
     * @name pc.Vec4
     * @class A 4-dimensional vector.

@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    'use strict';
+
     /**
     * @name pc.Mat3
     * @class A 4x4 matrix.

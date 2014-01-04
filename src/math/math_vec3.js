@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    'use strict';
+
     /**
     * @name pc.Vec3
     * @class A 3-dimensional vector.

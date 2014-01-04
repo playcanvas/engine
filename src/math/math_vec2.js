@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    'use strict';
+
     /**
     * @name pc.Vec2
     * @class A 2-dimensional vector.

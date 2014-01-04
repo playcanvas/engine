@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    'use strict';
+
     /**
     * @name pc.Quat
     * @class A quaternion.
