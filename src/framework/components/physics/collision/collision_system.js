@@ -788,7 +788,7 @@ pc.extend(pc.fw, function () {
 
                 if (!this.material) {
                     var material = new pc.scene.BasicMaterial();
-                    material.color = pc.math.vec4.create(0, 0, 1, 1);
+                    material.color = new pc.Color(0, 0, 1, 1);
                     material.update();
                     this.material = material;    
                 }

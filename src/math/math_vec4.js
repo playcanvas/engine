@@ -154,7 +154,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Vec4#equals
          * @description Reports whether two vectors are equal.
-         * @returns {Booean} true if the vectors are equal and false otherwise.
+         * @returns {Boolean} true if the vectors are equal and false otherwise.
          * var a = new pc.Vec4(1, 2, 3, 4);
          * var b = new pc.Vec4(5, 6, 7, 8);
          * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));

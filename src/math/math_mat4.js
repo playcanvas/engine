@@ -21,15 +21,15 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mat4#add2
          * @description Returns the result of adding the specified 4x4 matrices together.
-         * @param {pc.Mat4} lhs The 4x4 matrix used as the first multiplicand of the operation.
-         * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
+         * @param {pc.Mat4} lhs The 4x4 matrix used as the first operand of the addition.
+         * @param {pc.Mat4} rhs The 4x4 matrix used as the second operand of the addition.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * var m = new pc.Mat4();
          *
          * m.add2(pc.Mat4.INDENTITY, pc.Mat4.ONE);
          * 
-         * console.log("The result of the multiplication is: " a.toString());
+         * console.log("The result of the addition is: " a.toString());
          * @author Will Eastcott
          */
         add2: function (lhs, rhs) {
@@ -61,7 +61,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mat4#add
          * @description Returns the result of adding the specified 4x4 matrices together.
-         * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
+         * @param {pc.Mat4} rhs The 4x4 matrix used as the second operand of the addition.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * var m = new pc.Mat4();
@@ -200,10 +200,10 @@ pc.extend(pc, function () {
          * var b = new pc.Mat4().rotate(180, pc.Vec3.UP);
          * var r = new pc.Mat4();
          *
-         * // Generate result into a new matrix and return it
+         * // r = a * b
          * r.mul2(a, b);
          * 
-         * console.log("The result of the multiplication is: " a.toString());
+         * console.log("The result of the multiplication is: " r.toString());
          * @author Will Eastcott
          */
         mul2: function (lhs, rhs) {
@@ -277,7 +277,7 @@ pc.extend(pc, function () {
          * var a = new pc.Mat4().translate(10, 20, 30);
          * var b = new pc.Mat4().rotate(180, pc.Vec3.UP);
          *
-         * // Generate result into a new matrix and return it
+         * // a = a * b
          * a.mul(b);
          * 
          * console.log("The result of the multiplication is: " a.toString());
@@ -378,7 +378,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.math.mat4.makeLookAt
+         * @name pc.Mat4#lookAt
          * @description Creates a viewing matrix derived from an eye point, a reference point indicating the center
          * of the scene, and an up vector. The matrix maps the reference point to the negative z-axis and the eye
          * point to the origin, so that when you use a typical projection matrix, the center of the scene maps to 
@@ -432,7 +432,7 @@ pc.extend(pc, function () {
 
         /**
          * @function
-         * @name pc.math.mat4.makeFrustum
+         * @name pc.Mat4#frustum
          * @description Generates a persective projection matrix. The function's parameters define
          * the shape of a frustum.
          * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
@@ -1001,9 +1001,8 @@ pc.extend(pc, function () {
          * @param {Number} ex Angle to rotate around X axis in radians.
          * @param {Number} ey Angle to rotate around Y axis in radians.
          * @param {Number} ez Angle to rotate around Z axis in radians.
-         * @returns {pc.Mat4} The 4x4 matrix representation of the supplied Euler angles.
+         * @returns {pc.Mat4} Self for chaining.
          * @example
-         * // Create a 4x4 scale matrix
          * var m = new pc.Mat4();
          * m.setFromEulers(45, 90, 180);
          * @author Will Eastcott

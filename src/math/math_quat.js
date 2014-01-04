@@ -40,6 +40,18 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#copy
+         * @description Copies the contents of a source quaternion to a destination quaternion.
+         * @param {pc.Quat} rhs The quaternion to be copied.
+         * @returns {pc.Quat} Self for chaining.
+         * var src = new pc.Quat();
+         * var dst = new pc.Quat();
+         * dst.copy(src, src);
+         * console.log("The two quaternions are " + (src.equals(dst) ? "equal" : "different"));
+         * @author Will Eastcott
+         */
         copy: function (rhs) {
             this.x = rhs.x;
             this.y = rhs.y;
@@ -49,14 +61,49 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#equals
+         * @description Reports whether two quaternions are equal.
+         * @returns {Boolean} true if the quaternions are equal and false otherwise.
+         * var a = new pc.Quat();
+         * var b = new pc.Quat();
+         * console.log("The two quaternions are " + (a.equals(b) ? "equal" : "different"));
+         * @author Will Eastcott
+         */
         equals: function (that) {
             return ((this.x === that.x) && (this.y === that.y) && (this.z === that.z) && (this.w === that.w));
         },
 
+        /**
+         * @function
+         * @name pc.Quat#invert
+         * @description Generates the inverse of the specified quaternion.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * // Create a quaternion rotated 180 degrees around the y-axis
+         * var rot = new pc.Quat().setFromEulers(0, 180, 0);
+         *
+         * // Invert in place
+         * rot.invert();
+         * @author Will Eastcott
+         */
         invert: function () {
             return this.conjugate().normalize();
         },
 
+        /**
+         * @function
+         * @name pc.Quat#length
+         * @description Returns the magnitude of the specified quaternion.
+         * @returns {Number} The magnitude of the specified quaternion.
+         * @example
+         * var q = new pc.Quat(0, 0, 0, 5);
+         * var len = q.length();
+         * // Should output 5
+         * console.log("The length of the quaternion is: " + len);
+         * @author Will Eastcott
+         */
         length: function () {
             var x = this.x;
             var y = this.y;
@@ -65,6 +112,23 @@ pc.extend(pc, function () {
             return Math.sqrt(x * x + y * y + z * z + w * w);
         },
 
+        /**
+         * @function
+         * @name pc.Quat#mul
+         * @description Returns the result of multiplying the specified quaternions together.
+         * @param {pc.Quat} rhs The quaternion used as the second multiplicand of the operation.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * var a = new pc.Quat().setFromEulers(0, 30, 0);
+         * var b = new pc.Quat().setFromEulers(0, 60, 0);
+         *
+         * // a becomes a 90 degree rotation around the Y axis
+         * // In other words, a = a * b
+         * a.mul(b);
+         * 
+         * console.log("The result of the multiplication is: " a.toString());
+         * @author Will Eastcott
+         */
         mul: function (rhs) {
             var q1x = this.x;
             var q1y = this.y;
@@ -84,10 +148,43 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#mul2
+         * @description Returns the result of multiplying the specified quaternions together.
+         * @param {pc.Quat} lhs The quaternion used as the first multiplicand of the operation.
+         * @param {pc.Quat} rhs The quaternion used as the second multiplicand of the operation.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * var a = new pc.Quat().setFromEulers(0, 30, 0);
+         * var b = new pc.Quat().setFromEulers(0, 60, 0);
+         * var r = new pc.Quat();
+         *
+         * // r is set to a 90 degree rotation around the Y axis
+         * // In other words, r = a * b
+         * r.mul2(a, b);
+         * 
+         * console.log("The result of the multiplication is: " r.toString());
+         * @author Will Eastcott
+         */
         mul2: function (lhs, rhs) {
             return this.copy(lhs).mul(rhs);
         },
 
+        /**
+         * @function
+         * @name pc.Quat#normalize
+         * @description Returns the specified quaternion converted in place to a unit quaternion.
+         * @returns {pc.Quat} The result of the normalization.
+         * @example
+         * var v = new pc.Quat(0, 0, 0, 5);
+         *
+         * v.normalize();
+         *
+         * // Should output 0, 0, 0, 1
+         * console.log("The result of the vector normalization is: " + v.toString());
+         * @author Will Eastcott
+         */
         normalize: function () {
             var len = this.length();
             if (len === 0) {
@@ -104,6 +201,22 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#set
+         * @description Sets the specified quaternion to the supplied numerical values.
+         * @param {Number} x The x component of the quaternion.
+         * @param {Number} y The y component of the quaternion.
+         * @param {Number} z The z component of the quaternion.
+         * @param {Number} w The w component of the quaternion.
+         * @example
+         * var q = new pc.Quat();
+         * q.set(1, 0, 0, 0);
+         *
+         * // Should output 1, 0, 0, 0
+         * console.log("The result of the vector set is: " + q.toString());
+         * @author Will Eastcott
+         */
         set: function (x, y, z, w) {
             this.x = x;
             this.y = y;
@@ -113,6 +226,18 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#setFromAxisAngle
+         * @description Sets a quaternion from an angular rotation around an axis.
+         * @param {pc.Vec3} axis World space axis around which to rotate.
+         * @param {Number} ey Angle to rotate around the given axis in degrees.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * var q = new pc.Quat();
+         * q.setFromAxisAngle(pc.Vec3.UP, 90);
+         * @author Will Eastcott
+         */
         setFromAxisAngle: function (axis, angle) {
             angle *= pc.math.DEG_TO_RAD;
             angle *= 0.5;
@@ -128,6 +253,19 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#setFromEulers
+         * @description Sets a quaternion from Euler angles specified in XYZ order.
+         * @param {Number} ex Angle to rotate around X axis in degrees.
+         * @param {Number} ey Angle to rotate around Y axis in degrees.
+         * @param {Number} ez Angle to rotate around Z axis in degrees.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * var q = new pc.Quat();
+         * q.setFromEulers(45, 90, 180);
+         * @author Will Eastcott
+         */
         setFromEulers: function (ex, ey, ez) {
             ex *= pc.math.DEG_TO_RAD;
             ey *= pc.math.DEG_TO_RAD;
@@ -151,6 +289,22 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#setFromMat4
+         * @description Converts the specified 4x4 matrix to a quaternion. Note that since
+         * a quaternion is purely a representation for orientation, only the translational part
+         * of the matrix is lost.
+         * @param {pc.Mat4} m The 4x4 matrix to convert.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
+         * var rot = new pc.Mat4().rotate(180, pc.Vec3.UP);
+         *
+         * // Convert to a quaternion
+         * var q = new pc.Quat().setFromMat4(rot);
+         * @author Will Eastcott
+         */
         setFromMat4: function (m) {
             m = m.data;
 
@@ -226,6 +380,25 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#slerp
+         * @description Performs a spherical interpolation between two quaternions. The result of
+         * the interpolation is written to the quaternion calling the function.
+         * @param {pc.Quat} rhs The quaternion to interpolate to.
+         * @param {Number} alpha The value controlling the interpolation in relation to the two input
+         * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
+         * in between generating a spherical interpolation between the two.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * var q1 = new pc.Quat(-0.11,-0.15,-0.46,0.87);
+         * var q2 = new pc.Quat(-0.21,-0.21,-0.67,0.68);
+         *
+         * q1.slerp(q2, 0);   // q1 = q1
+         * q1.slerp(q2, 0.5); // q1 = midway between q1 and q2
+         * q1.slerp(q2, 1);   // q1 = q2
+         * @author Will Eastcott
+         */
         slerp: function (rhs, alpha) {
             var q1x = this.x;
             var q1y = this.y;
@@ -263,17 +436,37 @@ pc.extend(pc, function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Quat#slerp2
+         * @description Performs a spherical interpolation between two quaternions. The result of
+         * the interpolation is written to the quaternion calling the function.
+         * @param {pc.Quat} lhs The quaternion to interpolate from.
+         * @param {pc.Quat} rhs The quaternion to interpolate to.
+         * @param {Number} alpha The value controlling the interpolation in relation to the two input
+         * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
+         * in between generating a spherical interpolation between the two.
+         * @returns {pc.Quat} Self for chaining.
+         * @example
+         * var q1 = new pc.Quat(-0.11,-0.15,-0.46,0.87);
+         * var q2 = new pc.Quat(-0.21,-0.21,-0.67,0.68);
+         *
+         * var result;
+         * result = new pc.Quat().slerp2(q1, q2, 0);   // Return q1
+         * result = new pc.Quat().slerp2(q1, q2, 0.5); // Return the midpoint interpolant 
+         * result = new pc.Quat().slerp2(q1, q2, 1);   // Return q2
+         * @author Will Eastcott
+         */
         slerp2: function (lhs, rhs, alpha) {
             return this.copy(lhs).slerp(rhs, alpha);
         },
 
         /**
          * @function
-         * @name pc.math.quat.toEulers
+         * @name pc.Quat#toEulers
          * @description Converts the supplied quaternion to Euler angles.
-         * @param {Float32Array} q The quaternion to convert.
-         * @param {Float32Array} [r] The 3-dimensional vector to receive the Euler angles.
-         * @returns {Float32Array} The 3-dimensional vector holding the Euler angles that 
+         * @param {pc.Vec3} [eulers] The 3-dimensional vector to receive the Euler angles.
+         * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that 
          * correspond to the supplied quaternion.
          * @author Will Eastcott
          */
