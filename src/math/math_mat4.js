@@ -402,7 +402,7 @@ pc.extend(pc, function () {
             var z = new pc.Vec3();
 
             return function (position, target, up) {
-                z.subtract(position, target).normalize();
+                z.sub2(position, target).normalize();
                 y.copy(up).normalize();
                 x.cross(y, z).normalize();
                 y.cross(z, x);
@@ -1017,12 +1017,12 @@ pc.extend(pc, function () {
             ez *= pc.math.DEG_TO_RAD;
 
             // Solution taken from http://en.wikipedia.org/wiki/Euler_angles#Matrix_orientation
-            var s1 = Math.sin(-x);
-            var c1 = Math.cos(-x);
-            var s2 = Math.sin(-y);
-            var c2 = Math.cos(-y);
-            var s3 = Math.sin(-z);
-            var c3 = Math.cos(-z);
+            var s1 = Math.sin(-ex);
+            var c1 = Math.cos(-ex);
+            var s2 = Math.sin(-ey);
+            var c2 = Math.cos(-ey);
+            var s3 = Math.sin(-ez);
+            var c3 = Math.cos(-ez);
 
             var m = this.data;
 
@@ -1063,33 +1063,39 @@ pc.extend(pc, function () {
          * var eulers = m.toEulers();
          * @author Will Eastcott
          */
-        toEulers: function (eulers) {
-            var scale = this.getScale();
-            var m = this.data;
+        toEulers: function () {
+            var scale = new pc.Vec3();
 
-            var x; 
-            var y = Math.asin(-m[2] / scale[0]);
-            var z;
-            var HALF_PI = Math.PI / 2;
-            if (y < HALF_PI) {
-                if (y > -HALF_PI) {
-                    x = Math.atan2(m[6] / scale[1], m[10] / scale[2]);
-                    z = Math.atan2(m[1] / scale[0], m[0] / scale[0]);
+            return function (eulers) {
+                this.getScale(scale);
+                var sx = scale.x;
+                var sy = scale.y;
+                var sz = scale.z;
+
+                var m = this.data;
+
+                var x; 
+                var y = Math.asin(-m[2] / sx);
+                var z;
+                var HALF_PI = Math.PI / 2;
+                if (y < HALF_PI) {
+                    if (y > -HALF_PI) {
+                        x = Math.atan2(m[6] / sy, m[10] / sz);
+                        z = Math.atan2(m[1] / sx, m[0] / sx);
+                    } else {
+                        // Not a unique solution
+                        z = 0;
+                        x = -Math.atan2(m[4] / sy, m[5] / sy);
+                    }
                 } else {
                     // Not a unique solution
                     z = 0;
-                    x = -Math.atan2(m[4] / scale[1], m[5] / scale[1]);
+                    x = Math.atan2(m[4] / sy, m[5] / sy);        
                 }
-            } else {
-                // Not a unique solution
-                z = 0;
-                x = Math.atan2(m[4] / scale[1], m[5] / scale[1]);        
-            }
-            
-            eulers.set(x * pc.math.RAD_TO_DEG, y * pc.math.RAD_TO_DEG, z * pc.math.RAD_TO_DEG);
 
-            return eulers;
-        },
+                return eulers.set(x * pc.math.RAD_TO_DEG, y * pc.math.RAD_TO_DEG, z * pc.math.RAD_TO_DEG);
+            }
+        }(),
 
         /**
          * @function
