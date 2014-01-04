@@ -175,7 +175,24 @@ pc.extend(pc, (function () {
          * @author Will Eastcott
          */
         mul2: function (lhs, rhs) {
-            return this.copy(lhs).mul(rhs);
+            var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
+
+            q1x = lhs.x;
+            q1y = lhs.y;
+            q1z = lhs.z;
+            q1w = lhs.w;
+
+            q2x = rhs.x;
+            q2y = rhs.y;
+            q2z = rhs.z;
+            q2w = rhs.w;
+
+            this.x = q1w * q2x + q1x * q2w + q1y * q2z - q1z * q2y;
+            this.y = q1w * q2y + q1y * q2w + q1z * q2x - q1x * q2z;
+            this.z = q1w * q2z + q1z * q2w + q1x * q2y - q1y * q2x;
+            this.w = q1w * q2w - q1x * q2x - q1y * q2y - q1z * q2z;
+
+            return this;
         },
 
         /**
