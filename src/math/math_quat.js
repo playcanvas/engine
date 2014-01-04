@@ -512,6 +512,40 @@ pc.extend(pc, function () {
         }
     };
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Quat
+     * @name pc.Quat.IDENTITY
+     * @description A constant quaternion set to [0, 0, 0, 1] (the identity).
+     */
+    Object.defineProperty(Quat, 'IDENTITY', {
+        get: function () {
+            var identity = new Quat();
+            return function() {
+                return identity;
+            }
+        }()
+    });
+
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Quat
+     * @name pc.Quat.ZERO
+     * @description A constant quaternion set to [0, 0, 0, 0].
+     */
+    Object.defineProperty(Quat, 'ZERO', {
+        get: function () {
+            var zero = new Quat(0, 0, 0, 0);
+            return function() {
+                return zero;
+            }
+        }()
+    });
+
     return {
         Quat: Quat
     };

@@ -998,9 +998,9 @@ pc.extend(pc, function () {
          * @function
          * @name pc.Mat4#setFromEulers
          * @description Sets a 4x4 matrix from Euler angles specified in XYZ order.
-         * @param {Number} ex Angle to rotate around X axis in radians.
-         * @param {Number} ey Angle to rotate around Y axis in radians.
-         * @param {Number} ez Angle to rotate around Z axis in radians.
+         * @param {Number} ex Angle to rotate around X axis in degrees.
+         * @param {Number} ey Angle to rotate around Y axis in degrees.
+         * @param {Number} ez Angle to rotate around Z axis in degrees.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * var m = new pc.Mat4();
