@@ -301,6 +301,22 @@ pc.extend(pc.fw, function () {
             component.createBody();
         },
 
+        cloneComponent: function (entity, clone) {
+            // create new data block for clone
+            var data = {
+                mass: entity.rigidbody.mass,
+                linearDamping: entity.rigidbody.linearDamping,
+                angularDamping: entity.rigidbody.angularDamping,
+                linearFactor: [entity.rigidbody.linearFactor.x, entity.rigidbody.linearFactor.y, entity.rigidbody.linearFactor.z],
+                angularFactor: [entity.rigidbody.angularFactor.x, entity.rigidbody.angularFactor.y, entity.rigidbody.angularFactor.z],
+                friction: entity.rigidbody.friction,
+                restitution: entity.rigidbody.restitution,
+                type: entity.rigidbody.type
+            };
+
+            this.addComponent(clone, data);
+        },
+
         onRemove: function (entity, data) {
             if (data.body) {
                 this.removeBody(data.body);    
