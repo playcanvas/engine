@@ -925,7 +925,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec3#getTranslation
+         * @name pc.Mat4#getTranslation
          * @description Extracts the transational component from the specified 4x4 matrix.
          * @param {pc.Vec3} [t] The vector to receive the translation of the matrix.
          * @returns {pc.Vec3} The translation of the specified 4x4 matrix.
@@ -946,7 +946,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec3#getX
+         * @name pc.Mat4#getX
          * @description Extracts the x-axis from the specified 4x4 matrix.
          * @param {pc.Vec3} [x] The vector to receive the x axis of the matrix.
          * @returns {pc.Vec3} The x-axis of the specified 4x4 matrix.
@@ -967,7 +967,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec3#getY
+         * @name pc.Mat4#getY
          * @description Extracts the y-axis from the specified 4x4 matrix.
          * @param {pc.Vec3} [y] The vector to receive the y axis of the matrix.
          * @returns {pc.Vec3} The y-axis of the specified 4x4 matrix.
@@ -988,7 +988,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec3#getZ
+         * @name pc.Mat4#getZ
          * @description Extracts the z-axis from the specified 4x4 matrix.
          * @param {pc.Vec3} [z] The vector to receive the z axis of the matrix.
          * @returns {pc.Vec3} The z-axis of the specified 4x4 matrix.
