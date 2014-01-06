@@ -21,6 +21,9 @@ pc.extend(pc.fw, function () {
             type: "enumeration",
             options: {
                 enumerations: [{
+                    name: 'Asset',
+                    value: 'asset'
+                }, {
                     name: 'Box',
                     value: pc.shape.Type.BOX
                 }, {
@@ -35,12 +38,9 @@ pc.extend(pc.fw, function () {
                 }, {
                     name: 'Cone',
                     value: pc.shape.Type.CONE
-                }, {
-                    name: 'Asset',
-                    value: 'model'
                 }]
             },
-            defaultValue: "Box"
+            defaultValue: "asset"
         },{
             name: "asset",
             displayName: "Asset",
@@ -52,7 +52,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: null,
             filter: {
-                type: 'model'
+                type: 'asset'
             }
         }, {
             name: "castShadows",
@@ -112,7 +112,7 @@ pc.extend(pc.fw, function () {
         removeComponent: function (entity) {
             var data = entity.model.data;
             entity.model.asset = null;
-            if (data.type !== 'model' && data.model) {
+            if (data.type !== 'asset' && data.model) {
                 this.context.scene.removeModel(data.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;

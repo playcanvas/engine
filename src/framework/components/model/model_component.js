@@ -29,7 +29,7 @@ pc.extend(pc.fw, function () {
         * @param {Boolean} visible True to enable rendering for the model, false to disable it
         */
         setVisible: function (visible) {
-            if (this.data.type === 'model') {
+            if (this.data.type === 'asset') {
                 if (this.data.model) {
                     var inScene = this.system.context.scene.containsModel(this.data.model);
                     
@@ -78,45 +78,45 @@ pc.extend(pc.fw, function () {
             if (newValue) {
                 var mesh = null;
 
-                switch (newValue) {
-                    case pc.shape.Type.BOX: 
-                        mesh = this.system.box;
-                        break;
-                    case pc.shape.Type.CAPSULE:
-                        mesh = this.system.capsule;
-                        break;
-                    case pc.shape.Type.SPHERE:
-                        mesh = this.system.sphere;
-                        break;
-                    case pc.shape.Type.CONE:
-                        mesh = this.system.cone;
-                        break;
-                    case pc.shape.Type.CYLINDER:
-                        mesh = this.system.cylinder;
-                        break;
-                    case 'model':
-                        if (this.data.asset) {
-                            this.loadModelAsset(this.data.asset);
-                        } else {
-                            this.model = null;
-                        }
+                if (newValue === 'asset') {
+                    if (this.data.asset) {
+                        this.loadModelAsset(this.data.asset);
+                    } else {
+                        this.model = null;
+                    }
+                } else {
+                    switch (newValue) {
+                        case pc.shape.Type.BOX: 
+                            mesh = this.system.box;
+                            break;
+                        case pc.shape.Type.CAPSULE:
+                            mesh = this.system.capsule;
+                            break;
+                        case pc.shape.Type.SPHERE:
+                            mesh = this.system.sphere;
+                            break;
+                        case pc.shape.Type.CONE:
+                            mesh = this.system.cone;
+                            break;
+                        case pc.shape.Type.CYLINDER:
+                            mesh = this.system.cylinder;
+                            break;                    
+                        default:
+                            throw new Error("Invalid model type: " + newValue);
+                    }
 
-                        return;
-                    default:
-                        throw new Error("Unknown shape type: " + newValue);
+                    var node = new pc.scene.GraphNode();
+
+                    var model = new pc.scene.Model();
+                    model.graph = node;
+                    model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
+
+                    if (this.system.context.designer) {
+                        model.generateWireframe();
+                    }
+
+                    this.model = model;
                 }
-
-                var node = new pc.scene.GraphNode();
-
-                var model = new pc.scene.Model();
-                model.graph = node;
-                model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
-
-                if (this.system.context.designer) {
-                    model.generateWireframe();
-                }
-
-                this.model = model;
             }
         },
 
@@ -129,7 +129,7 @@ pc.extend(pc.fw, function () {
                 }
             }
 
-            if (this.data.type === 'model') {
+            if (this.data.type === 'asset') {
                 if (newValue) {
                     this.loadModelAsset(newValue);
                 } else {

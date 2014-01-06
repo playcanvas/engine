@@ -9,7 +9,7 @@ pc.extend(pc.fw, function() {
     */
     var ModelComponentData = function () {
         // serialized
-        this.type = pc.shape.Type.BOX;
+        this.type = 'asset';
         this.asset = null;
         this.castShadows = false;
         this.receiveShadows = true;
