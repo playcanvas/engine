@@ -9,6 +9,10 @@ pc.extend(pc, (function () {
     * @param {Number} [y=0] The quaternion's y component
     * @param {Number} [z=0] The quaternion's z component
     * @param {Number} [w=1] The quaternion's w component
+    * @property {Number} x The x component of the quaternion.
+    * @property {Number} y The y component of the quaternion.
+    * @property {Number} z The z component of the quaternion.
+    * @property {Number} w The w component of the quaternion.
     */
     var Quat = function (x, y, z, w) {
         this.x = (x === undefined) ? 0 : x;
@@ -255,7 +259,7 @@ pc.extend(pc, (function () {
          * @name pc.Quat#setFromAxisAngle
          * @description Sets a quaternion from an angular rotation around an axis.
          * @param {pc.Vec3} axis World space axis around which to rotate.
-         * @param {Number} ey Angle to rotate around the given axis in degrees.
+         * @param {Number} angle Angle to rotate around the given axis in degrees.
          * @returns {pc.Quat} Self for chaining.
          * @example
          * var q = new pc.Quat();

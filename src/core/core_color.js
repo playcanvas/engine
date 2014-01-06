@@ -108,7 +108,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec3#toString
+         * @name pc.Color#toString
          * @description Converts the color to string form. The format is '#RRGGBBAA', where
          * RR, GG, BB, AA are the red, green, blue and alph values. When the alpha value is not
          * included (the default), this is the same format as used in HTML/CSS.

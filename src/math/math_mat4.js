@@ -95,6 +95,7 @@ pc.extend(pc, (function () {
          * @name pc.Mat4#copy
          * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
          * @param {pc.Mat4} src A 4x4 matrix to be copied.
+         * @example
          * var src = new pc.Mat4().translate(10, 20, 30);
          * var dst = new pc.Mat4();
          * dst.copy(src);
@@ -130,6 +131,7 @@ pc.extend(pc, (function () {
          * @name pc.Mat4#equals
          * @description Reports whether two matrices are equal.
          * @returns {Boolean} true if the matrices are equal and false otherwise.
+         * @example
          * var a = new pc.Mat4().translate(10, 20, 30);
          * var b = new pc.Mat4();
          * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
@@ -162,6 +164,7 @@ pc.extend(pc, (function () {
          * @name pc.Mat4#isIdentity
          * @description Reports whether the specified matrix is the identity matrix.
          * @returns {Boolean} true if the matrix is identity and false otherwise.
+         * @example
          * var m = new pc.Mat4();
          * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
          * @author Will Eastcott
