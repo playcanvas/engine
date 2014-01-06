@@ -199,7 +199,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec3#length
+         * @name pc.Vec3#lengthSqr
          * @description Returns the magnitude squared of the specified 3-dimensional vector.
          * @returns {Number} The magnitude of the specified 3-dimensional vector.
          * @example

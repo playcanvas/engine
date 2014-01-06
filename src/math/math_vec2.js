@@ -170,7 +170,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec2#length
+         * @name pc.Vec2#lengthSqr
          * @description Returns the magnitude squared of the specified 2-dimensional vector.
          * @returns {Number} The magnitude of the specified 2-dimensional vector.
          * @example

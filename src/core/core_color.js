@@ -147,7 +147,7 @@ pc.extend(pc, (function () {
     /**
      * @field
      * @type Number
-     * @name pc.Color#b
+     * @name pc.Color#g
      * @description The blue component of the color.
      */
     Object.defineProperty(Color.prototype, 'g', {

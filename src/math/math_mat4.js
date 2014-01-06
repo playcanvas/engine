@@ -739,7 +739,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Mat4#identity
+         * @name pc.Mat4#setIdentity
          * @description Sets the matrix to the identity matrix.
          * @returns {pc.Mat4} Self for chaining.
          * @example

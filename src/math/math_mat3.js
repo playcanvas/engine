@@ -113,7 +113,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Mat3#identity
+         * @name pc.Mat3#setIdentity
          * @description Sets the matrix to the identity matrix.
          * @returns {pc.Mat3} Self for chaining.
          * @example
