@@ -108,10 +108,16 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Color#toString()
-         * @description Return a string representation of the color value. In the format '#RRGGBBAA', where RR, GG, BB, AA are the red, green, blue and alph values.
-         * When the alpha value is not included (the default), this is the same format as used in HTML/CSS.
-         * @param {Boolean} [alpha] Include or exlude the alpha part of the color. Defaults to false
+         * @name pc.Vec3#toString
+         * @description Converts the color to string form. The format is '#RRGGBBAA', where
+         * RR, GG, BB, AA are the red, green, blue and alph values. When the alpha value is not
+         * included (the default), this is the same format as used in HTML/CSS.
+         * @returns {String} The color in string form.
+         * @example
+         * var c = new pc.Color(1, 1, 1);
+         * // Should output '#ffffffff'
+         * console.log(c.toString());
+         * @author Will Eastcott
          */
         toString: function (alpha) {
             var s = "#" + ((1 << 24) + (parseInt(this.r*255) << 16) + (parseInt(this.g*255) << 8) + parseInt(this.b*255)).toString(16).slice(1);
