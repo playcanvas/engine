@@ -166,6 +166,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec3#equals
          * @description Reports whether two vectors are equal.
+         * @param {pc.Vec3} rhs The vector to compare to the specified vector.
          * @returns {Booean} true if the vectors are equal and false otherwise.
          * var a = new pc.Vec3(1, 2, 3);
          * var b = new pc.Vec3(4, 5, 6);

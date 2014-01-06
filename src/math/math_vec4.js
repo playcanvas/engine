@@ -5,12 +5,6 @@ pc.extend(pc, (function () {
     * @name pc.Vec4
     * @class A 4-dimensional vector.
     * @constructor Creates a new Vec4 object
-    * @property {pc.Vec4} ONE [Read only] A constant vector set to [1, 1, 1, 1].
-    * @property {pc.Vec4} ZERO [Read only] A constant vector set to [0, 0, 0, 0].
-    * @property {Number} x The first element of the vector.
-    * @property {Number} y The second element of the vector.
-    * @property {Number} z The third element of the vector.
-    * @property {Number} w The fourth element of the vector.
     */
     var Vec4 = function () {
         this.data = new Float32Array(4);
@@ -89,7 +83,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec4#clone
          * @description Returns an identical copy of the specified 4-dimensional vector.
-         * @returns {pc.Vec4} A 3-dimensional vector containing the result of the cloning.
+         * @returns {pc.Vec4} A 4-dimensional vector containing the result of the cloning.
          * @example
          * var v = new pc.Vec4(10, 20, 30, 40);
          * var vclone = v.clone();
@@ -104,8 +98,8 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec4#copy
          * @description Copied the contents of a source 4-dimensional vector to a destination 4-dimensional vector.
-         * @param {Array} src A 4-dimensional vector to be copied.
-         * @param {Array} dst A 4-dimensional vector that will recieve a copy of the source vector.
+         * @param {pc.Vec4} rhs A vector to copy to the specified vector.
+         * @returns {pc.Vec4} Self for chaining.
          * @example
          * var src = new pc.Vec4(10, 20, 30, 40);
          * var dst = new pc.Vec4();
@@ -151,6 +145,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec4#equals
          * @description Reports whether two vectors are equal.
+         * @param {pc.Vec4} rhs The vector to compare to the specified vector.
          * @returns {Boolean} true if the vectors are equal and false otherwise.
          * var a = new pc.Vec4(1, 2, 3, 4);
          * var b = new pc.Vec4(5, 6, 7, 8);
@@ -167,8 +162,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec4#length
-         * @description Returns the magnitude of the specified 3-dimensional vector.
-         * @returns {Number} The magnitude of the specified 3-dimensional vector.
+         * @description Returns the magnitude of the specified 4-dimensional vector.
+         * @returns {Number} The magnitude of the specified 4-dimensional vector.
          * @example
          * var vec = new pc.Vec4(3, 4, 0, 0);
          * var len = vec.length();
@@ -185,8 +180,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec4#lengthSqr
-         * @description Returns the magnitude squared of the specified 3-dimensional vector.
-         * @returns {Number} The magnitude of the specified 3-dimensional vector.
+         * @description Returns the magnitude squared of the specified 4-dimensional vector.
+         * @returns {Number} The magnitude of the specified 4-dimensional vector.
          * @example
          * var vec = new pc.Vec4(3, 4, 0);
          * var len = vec.lengthSqr();
@@ -203,7 +198,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec4#lerp
-         * @description Returns the result of a linear interpolation between two specified 3-dimensional vectors.
+         * @description Returns the result of a linear interpolation between two specified 4-dimensional vectors.
          * @param {pc.Vec4} lhs The 4-dimensional to interpolate from.
          * @param {pc.Vec4} rhs The 4-dimensional to interpolate to.
          * @param {Number} alpha The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
@@ -264,9 +259,9 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec4#mul2
-         * @description Returns the result of multiplying the specified 3-dimensional vectors together.
-         * @param {pc.Vec4} lhs The 3-dimensional vector used as the first multiplicand of the operation.
-         * @param {pc.Vec4} rhs The 3-dimensional vector used as the second multiplicand of the operation.
+         * @description Returns the result of multiplying the specified 4-dimensional vectors together.
+         * @param {pc.Vec4} lhs The 4-dimensional vector used as the first multiplicand of the operation.
+         * @param {pc.Vec4} rhs The 4-dimensional vector used as the second multiplicand of the operation.
          * @returns {pc.Vec4} Self for chaining.
          * @example
          * var a = new pc.Vec4(2, 3, 4, 5);
@@ -318,7 +313,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Vec4#normalize
-         * @description Returns the specified 3-dimensional vector copied and converted to a unit vector.
+         * @description Returns the specified 4-dimensional vector copied and converted to a unit vector.
          * @returns {pc.Vec4} The result of the normalization.
          * @example
          * var v = new pc.Vec4(25, 0, 0, 0);
@@ -465,6 +460,12 @@ pc.extend(pc, (function () {
         }
     };
 
+    /**
+     * @field
+     * @type Number
+     * @name pc.Vec4#x
+     * @description The first element of the vector.
+     */
     Object.defineProperty(Vec4.prototype, 'x', {
         get: function () {
             return this.data[0];
@@ -474,6 +475,12 @@ pc.extend(pc, (function () {
         }
     });
 
+    /**
+     * @field
+     * @type Number
+     * @name pc.Vec4#y
+     * @description The second element of the vector.
+     */
     Object.defineProperty(Vec4.prototype, 'y', {
         get: function () {
             return this.data[1];
@@ -483,6 +490,12 @@ pc.extend(pc, (function () {
         }
     });
 
+    /**
+     * @field
+     * @type Number
+     * @name pc.Vec4#z
+     * @description The third element of the vector.
+     */
     Object.defineProperty(Vec4.prototype, 'z', {
         get: function () {
             return this.data[2];
@@ -492,6 +505,12 @@ pc.extend(pc, (function () {
         }
     });
 
+    /**
+     * @field
+     * @type Number
+     * @name pc.Vec4#w
+     * @description The third element of the vector.
+     */
     Object.defineProperty(Vec4.prototype, 'w', {
         get: function () {
             return this.data[3];
@@ -501,6 +520,14 @@ pc.extend(pc, (function () {
         }
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec4
+     * @name pc.Vec4.ONE
+     * @description A constant vector set to [1, 1, 1, 1].
+     */
     Object.defineProperty(Vec4, 'ONE', {
         get: (function () {
             var one = new Vec4(1, 1, 1, 1);
@@ -510,6 +537,14 @@ pc.extend(pc, (function () {
         }())
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Vec4
+     * @name pc.Vec4.ZERO
+     * @description A constant vector set to [0, 0, 0, 0].
+     */
     Object.defineProperty(Vec4, 'ZERO', {
         get: (function () {
             var zero = new Vec4(0, 0, 0, 0);

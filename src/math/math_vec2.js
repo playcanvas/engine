@@ -137,6 +137,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec2#equals
          * @description Reports whether two vectors are equal.
+         * @param {pc.Vec2} rhs The vector to compare to the specified vector.
          * @returns {Booean} true if the vectors are equal and false otherwise.
          * var a = new pc.Vec2(1, 2);
          * var b = new pc.Vec2(4, 5);
@@ -190,8 +191,8 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec2#lerp
          * @description Returns the result of a linear interpolation between two specified 2-dimensional vectors.
-         * @param {pc.Vec2} lhs The 3-dimensional to interpolate from.
-         * @param {pc.Vec2} rhs The 3-dimensional to interpolate to.
+         * @param {pc.Vec2} lhs The 2-dimensional to interpolate from.
+         * @param {pc.Vec2} rhs The 2-dimensional to interpolate to.
          * @param {Number} alpha The value controlling the point of interpolation. Between 0 and 1, the linear interpolant
          * will occur on a straight line between lhs and rhs. Outside of this range, the linear interpolant will occur on
          * a ray extrapolated from this line.
@@ -247,8 +248,8 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec2#mul2
          * @description Returns the result of multiplying the specified 2-dimensional vectors together.
-         * @param {pc.Vec2} lhs The 3-dimensional vector used as the first multiplicand of the operation.
-         * @param {pc.Vec2} rhs The 3-dimensional vector used as the second multiplicand of the operation.
+         * @param {pc.Vec2} lhs The 2-dimensional vector used as the first multiplicand of the operation.
+         * @param {pc.Vec2} rhs The 2-dimensional vector used as the second multiplicand of the operation.
          * @returns {pc.Vec2} Self for chaining.
          * @example
          * var a = new pc.Vec2(2, 3);

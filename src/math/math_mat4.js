@@ -5,8 +5,6 @@ pc.extend(pc, (function () {
     * @name pc.Mat4
     * @class A 4x4 matrix.
     * @constructor Creates a new Mat4 object
-    * @property {pc.Mat4} identity [Read only] The identity matrix.
-    * @property {pc.Mat4} zero [Read only] A matrix with all elements set to zero.
     */
     var Mat4 = function () {
         this.data = new Float32Array(16);
@@ -1170,6 +1168,14 @@ pc.extend(pc, (function () {
         }
     };
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Mat4
+     * @name pc.Mat4.IDENTITY
+     * @description A constant matrix set to the identity.
+     */
     Object.defineProperty(Mat4, 'IDENTITY', {
         get: (function () {
             var identity = new Mat4();
@@ -1179,6 +1185,14 @@ pc.extend(pc, (function () {
         }())
     });
 
+    /**
+     * @field
+     * @static
+     * @readonly
+     * @type pc.Mat4
+     * @name pc.Mat4.ZERO
+     * @description A constant matrix with all elements set to 0.
+     */
     Object.defineProperty(Mat4, 'ZERO', {
         get: (function () {
             var zero = new Mat4(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
