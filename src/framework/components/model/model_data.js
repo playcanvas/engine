@@ -9,11 +9,13 @@ pc.extend(pc.fw, function() {
     */
     var ModelComponentData = function () {
         // serialized
+        this.type = pc.shape.Type.BOX;
         this.asset = null;
         this.castShadows = false;
         this.receiveShadows = true;
         
         // non-serialized
+        this.material = null;
         this.model = null;
     };
     ModelComponentData = pc.inherits(ModelComponentData, pc.fw.ComponentData);

@@ -13,6 +13,7 @@ pc.extend(pc.fw, function () {
      * @property {pc.scene.Model} model The model that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity) {
+        this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
@@ -28,13 +29,15 @@ pc.extend(pc.fw, function () {
         * @param {Boolean} visible True to enable rendering for the model, false to disable it
         */
         setVisible: function (visible) {
-            if (this.data.model) {
-                var inScene = this.system.context.scene.containsModel(this.data.model);
-                
-                if (visible && !inScene) {
-                    this.system.context.scene.addModel(this.data.model);
-                } else if (!visible && inScene) {
-                    this.system.context.scene.removeModel(this.data.model);
+            if (this.data.type === 'model') {
+                if (this.data.model) {
+                    var inScene = this.system.context.scene.containsModel(this.data.model);
+                    
+                    if (visible && !inScene) {
+                        this.system.context.scene.addModel(this.data.model);
+                    } else if (!visible && inScene) {
+                        this.system.context.scene.removeModel(this.data.model);
+                    }
                 }
             }
         },
@@ -63,6 +66,60 @@ pc.extend(pc.fw, function () {
             }.bind(this));
         },
 
+        /**
+         * @function
+         * @private
+         * @name pc.fw.ModelComponent#onSetType
+         * @description Handle changes to the 'type' variable
+         */
+        onSetType: function (name, oldValue, newValue) {
+            var data = this.data;
+
+            if (newValue) {
+                var mesh = null;
+
+                switch (newValue) {
+                    case pc.shape.Type.BOX: 
+                        mesh = this.system.box;
+                        break;
+                    case pc.shape.Type.CAPSULE:
+                        mesh = this.system.capsule;
+                        break;
+                    case pc.shape.Type.SPHERE:
+                        mesh = this.system.sphere;
+                        break;
+                    case pc.shape.Type.CONE:
+                        mesh = this.system.cone;
+                        break;
+                    case pc.shape.Type.CYLINDER:
+                        mesh = this.system.cylinder;
+                        break;
+                    case 'model':
+                        if (this.data.asset) {
+                            this.loadModelAsset(this.data.asset);
+                        } else {
+                            this.model = null;
+                        }
+
+                        return;
+                    default:
+                        throw new Error("Unknown shape type: " + newValue);
+                }
+
+                var node = new pc.scene.GraphNode();
+
+                var model = new pc.scene.Model();
+                model.graph = node;
+                model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
+
+                if (this.system.context.designer) {
+                    model.generateWireframe();
+                }
+
+                this.model = model;
+            }
+        },
+
         onSetAsset: function (name, oldValue, newValue) {
             if (oldValue) {
                 // Remove old listener
@@ -72,10 +129,12 @@ pc.extend(pc.fw, function () {
                 }
             }
 
-            if (newValue) {
-                this.loadModelAsset(newValue);
-            } else {
-                this.model = null;
+            if (this.data.type === 'model') {
+                if (newValue) {
+                    this.loadModelAsset(newValue);
+                } else {
+                    this.model = null;
+                }
             }
         },
 
@@ -96,13 +155,14 @@ pc.extend(pc.fw, function () {
                 if (inScene) {
                     scene.addModel(model);
                 }
-            }
+            }        
         },
 
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
                 this.system.context.scene.removeModel(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
+                delete oldValue._entity;
             }
 
             if (newValue) {
@@ -123,7 +183,7 @@ pc.extend(pc.fw, function () {
                 if (this.entity.animation) {
                     this.entity.animation.setModel(newValue);
                 }
-            }
+            }        
         },
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
