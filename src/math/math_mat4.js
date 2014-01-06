@@ -1115,6 +1115,8 @@ pc.extend(pc, (function () {
             return function (eulers) {
                 var x, y, z, sx, sy, sz, m, halfPi;
 
+                eulers = (eulers === undefined) ? new pc.Vec3() : eulers;
+
                 this.getScale(scale);
                 sx = scale.x;
                 sy = scale.y;

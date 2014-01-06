@@ -166,6 +166,8 @@ pc.extend(pc.scene, function () {
         * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
         */
         init: function (data) {
+            var m, v;
+
             // Initialise material from data
             this.name = data.name;
 
@@ -175,24 +177,31 @@ pc.extend(pc.scene, function () {
             for (var i = 0; i < data.parameters.length; i++) {
                 var param = data.parameters[i];
 
-                function isMathType(type) {
+                function isVectorType(type) {
                     if (type === 'vec2' ||
                         type === 'vec3' ||
-                        type === 'vec4' ||
-                        type === 'mat3' ||
-                        type === 'mat4') {
+                        type === 'vec4') {
                         return true;
                     }
 
                     return false;
                 }
                 // Update material based on type
-                if (isMathType(param.type)) {
-                    if (param.data) {
-                        this[param.name] = pc.math[param.type].clone(param.data);
-                    } else {
-                        this[param.name] = null;
-                    }
+                if (param.type === "mat3") {
+                    m = param.data;
+                    this[param.name] = new pc.Mat3(m[0], m[1], m[2], 
+                                                   m[3], m[4], m[5],
+                                                   m[6], m[7], m[8]);
+                } else if (param.type === "mat4") {
+                    m = param.data;
+                    this[param.name] = new pc.Mat4(m[0], m[1], m[2], m[3], 
+                                                   m[4], m[5], m[6], m[7],
+                                                   m[8], m[9], m[10], m[11],
+                                                   m[12], m[13], m[14], m[15]);
+                } else if (isMathType(param.type)) {
+                    // ASSUMPTION: For Phong materials, all vectors are 3 component colors
+                    v = param.data;
+                    this[param.name] = new pc.Color(v[0], v[1], v[2]);
                 } else if (param.type === "texture") {
                     if (param.data) {
                         if (param.data instanceof pc.gfx.Texture) {
