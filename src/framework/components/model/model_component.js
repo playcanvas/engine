@@ -115,7 +115,7 @@ pc.extend(pc.fw, function () {
                     var model = new pc.scene.Model();
                     model.graph = node;
 
-                    model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.primitiveMaterial) ];
+                    model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
 
                     if (this.system.context.designer) {
                         model.generateWireframe();
@@ -195,7 +195,7 @@ pc.extend(pc.fw, function () {
         onSetMaterialId: function (name, oldValue, newValue) {
             var guid = newValue;
             var material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
-            this.data.primitiveMaterial = material;
+            this.data.material = material;
             if (this.data.model && this.data.type !== 'asset') {
                 var meshInstances = this.data.model.meshInstances;
                 for (var i=0; i<meshInstances.length; i++) {

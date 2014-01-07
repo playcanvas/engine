@@ -82,10 +82,6 @@ pc.extend(pc.fw, function () {
             type: "boolean",
             defaultValue: true
         }, {
-            name: "primitiveMaterial",
-            exposed: false
-        },
-        {
             name: "material",
             exposed: false
         }, {
@@ -122,10 +118,10 @@ pc.extend(pc.fw, function () {
     
     pc.extend(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            data.primitiveMaterial = this.defaultMaterial;
+            data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['material', 'primitiveMaterial', 'materialId', 'asset', 'castShadows', 'receiveShadows', 'type'];            
+            properties = ['material', 'materialId', 'asset', 'castShadows', 'receiveShadows', 'type'];            
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
