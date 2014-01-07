@@ -171,17 +171,17 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec2#lengthSqr
+         * @name pc.Vec2#lengthSq
          * @description Returns the magnitude squared of the specified 2-dimensional vector.
          * @returns {Number} The magnitude of the specified 2-dimensional vector.
          * @example
          * var vec = new pc.Vec2(3, 4);
-         * var len = vec.lengthSqr();
+         * var len = vec.lengthSq();
          * // Should output 25
          * console.log("The length squared of the vector is: " + len);
          * @author Will Eastcott
          */
-        lengthSqr: function () {
+        lengthSq: function () {
             var v = this.data;
 
             return v[0] * v[0] + v[1] * v[1];

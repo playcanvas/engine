@@ -123,6 +123,24 @@ pc.extend(pc, (function () {
 
         /**
          * @function
+         * @name pc.Quat#lengthSq
+         * @description Returns the magnitude squared of the specified quaternion.
+         * @returns {Number} The magnitude of the specified quaternion.
+         * @example
+         * var q = new pc.Quat(3, 4, 0);
+         * var lenSq = q.lengthSq();
+         * // Should output 25
+         * console.log("The length squared of the quaternion is: " + lenSq);
+         * @author Will Eastcott
+         */
+        lengthSq: function () {
+            var v = this.data;
+
+            return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+        },
+
+        /**
+         * @function
          * @name pc.Quat#mul
          * @description Returns the result of multiplying the specified quaternions together.
          * @param {pc.Quat} rhs The quaternion used as the second multiplicand of the operation.

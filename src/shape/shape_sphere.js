@@ -66,7 +66,7 @@ pc.extend(pc.shape, function () {
             vertex.set(vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
 
             centerToVert.sub(vertex, this.center);
-            maxDistSq = Math.max(centerToVert.lengthSqr(), maxDistSq);
+            maxDistSq = Math.max(centerToVert.lengthSq(), maxDistSq);
         }
 
         this.radius = Math.sqrt(maxDistSq);
