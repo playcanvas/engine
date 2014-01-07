@@ -17,7 +17,6 @@ pc.extend(pc.fw, function() {
         
         // non-serialized
         this.material = null;
-        this.primitiveMaterial = null;
         this.model = null;
     };
     ModelComponentData = pc.inherits(ModelComponentData, pc.fw.ComponentData);
