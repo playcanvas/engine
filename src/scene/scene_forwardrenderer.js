@@ -9,8 +9,8 @@ pc.extend(pc.scene, function () {
     }
 
     // Global shadowmap resources
-    var scale = new pc.Mat4().scale(0.5, 0.5, 0.5);
-    var shift = new pc.Mat4().translate(0.5, 0.5, 0.5);
+    var scale = new pc.Mat4().setScale(0.5, 0.5, 0.5);
+    var shift = new pc.Mat4().setTranslate(0.5, 0.5, 0.5);
     var scaleShift = new pc.Mat4().mul2(shift, scale);
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90

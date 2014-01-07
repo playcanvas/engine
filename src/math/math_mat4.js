@@ -80,7 +80,7 @@ pc.extend(pc, (function () {
          * @name pc.Mat4#clone
          * @description Creates a duplicate of the specified matrix.
          * @example
-         * var src = new pc.Mat4().translate(10, 20, 30);
+         * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var dst = new pc.Mat4();
          * dst.copy(src);
          * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
@@ -96,7 +96,7 @@ pc.extend(pc, (function () {
          * @description Copies the contents of a source 4x4 matrix to a destination 4x4 matrix.
          * @param {pc.Mat4} src A 4x4 matrix to be copied.
          * @example
-         * var src = new pc.Mat4().translate(10, 20, 30);
+         * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var dst = new pc.Mat4();
          * dst.copy(src);
          * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
@@ -132,7 +132,7 @@ pc.extend(pc, (function () {
          * @description Reports whether two matrices are equal.
          * @returns {Boolean} true if the matrices are equal and false otherwise.
          * @example
-         * var a = new pc.Mat4().translate(10, 20, 30);
+         * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var b = new pc.Mat4();
          * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
          * @author Will Eastcott
@@ -198,7 +198,7 @@ pc.extend(pc, (function () {
          * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
          * @returns {pc.Mat4} Self for chaining.
          * @example
-         * var a = new pc.Mat4().translate(10, 20, 30);
+         * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
          * var r = new pc.Mat4();
          *
@@ -281,7 +281,7 @@ pc.extend(pc, (function () {
          * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
          * @returns {pc.Mat4} Self for chaining.
          * @example
-         * var a = new pc.Mat4().translate(10, 20, 30);
+         * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
          *
          * // a = a * b
@@ -305,8 +305,8 @@ pc.extend(pc, (function () {
          * // Create a 3-dimensional vector
          * var v = new pc.Vec3(1, 2, 3);
          *
-         * // Create a 4x4 translation matrix
-         * var m = new pc.Mat4().translate(10, 20, 30);
+         * // Create a 4x4 rotation matrix
+         * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          *
          * var tv = m.transformPoint(v);
          * @author Will Eastcott
@@ -348,8 +348,8 @@ pc.extend(pc, (function () {
          * // Create a 3-dimensional vector
          * var v = new pc.Vec3(1, 2, 3);
          *
-         * // Create a 4x4 translation matrix
-         * var m = new pc.Mat4().translate(10, 20, 30);
+         * // Create a 4x4 rotation matrix
+         * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          *
          * var tv = m.transformVector(v);
          * @author Will Eastcott
@@ -592,8 +592,9 @@ pc.extend(pc, (function () {
         },
 
         /**
+         * @private
          * @function
-         * @name pc.Mat4#translate
+         * @name pc.Mat4#setTranslate
          * @description Generates a translation matrix.
          * @param {Number} x The x-component of the translation.
          * @param {Number} y The y-component of the translation.
@@ -601,10 +602,10 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 translation matrix
-         * var tm = new pc.Mat4().translate(10, 10, 10);
+         * var tm = new pc.Mat4().setTranslate(10, 10, 10);
          * @author Will Eastcott
          */
-        translate: function (tx, ty, tz) {
+        setTranslate: function (tx, ty, tz) {
             var m = this.data;
 
             m[0] = 1;
@@ -628,8 +629,9 @@ pc.extend(pc, (function () {
         },
 
         /**
+         * @private
          * @function
-         * @name pc.Mat4#scale
+         * @name pc.Mat4#setScale
          * @description Generates a scale matrix.
          * @param {Number} x The x-component of the scale.
          * @param {Number} y The y-component of the scale.
@@ -637,10 +639,10 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 scale matrix
-         * var sm = new pc.Mat4().scale(10, 10, 10);
+         * var sm = new pc.Mat4().setScale(10, 10, 10);
          * @author Will Eastcott
          */
-        scale: function (sx, sy, sz) {
+        setScale: function (sx, sy, sz) {
             var m = this.data;
 
             m[0] = sx;
