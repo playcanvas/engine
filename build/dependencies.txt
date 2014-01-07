@@ -159,9 +159,6 @@
 ../src/framework/components/audiolistener/audiolistener_system.js
 ../src/framework/components/audiolistener/audiolistener_component.js
 ../src/framework/components/audiolistener/audiolistener_data.js
-../src/framework/components/primitive/primitive_system.js
-../src/framework/components/primitive/primitive_component.js
-../src/framework/components/primitive/primitive_data.js
 ../src/framework/components/designer/designer_component.js
 ../src/framework/components/designer/designer_data.js
 ../src/framework/components/body2d/body2d_system.js
