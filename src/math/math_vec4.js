@@ -248,10 +248,10 @@ pc.extend(pc, (function () {
             var a = this.data,
                 b = rhs.data;
 
-            a[0] += b[0];
-            a[1] += b[1];
-            a[2] += b[2];
-            a[3] += b[3];
+            a[0] *= b[0];
+            a[1] *= b[1];
+            a[2] *= b[2];
+            a[3] *= b[3];
 
             return this;
         },
