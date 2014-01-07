@@ -88,7 +88,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Quat} Self for chaining.
          * @example
          * // Create a quaternion rotated 180 degrees around the y-axis
-         * var rot = new pc.Quat().setFromEulers(0, 180, 0);
+         * var rot = new pc.Quat().setFromEulerAngles(0, 180, 0);
          *
          * // Invert in place
          * rot.invert();
@@ -146,8 +146,8 @@ pc.extend(pc, (function () {
          * @param {pc.Quat} rhs The quaternion used as the second multiplicand of the operation.
          * @returns {pc.Quat} Self for chaining.
          * @example
-         * var a = new pc.Quat().setFromEulers(0, 30, 0);
-         * var b = new pc.Quat().setFromEulers(0, 60, 0);
+         * var a = new pc.Quat().setFromEulerAngles(0, 30, 0);
+         * var b = new pc.Quat().setFromEulerAngles(0, 60, 0);
          *
          * // a becomes a 90 degree rotation around the Y axis
          * // In other words, a = a * b
@@ -185,8 +185,8 @@ pc.extend(pc, (function () {
          * @param {pc.Quat} rhs The quaternion used as the second multiplicand of the operation.
          * @returns {pc.Quat} Self for chaining.
          * @example
-         * var a = new pc.Quat().setFromEulers(0, 30, 0);
-         * var b = new pc.Quat().setFromEulers(0, 60, 0);
+         * var a = new pc.Quat().setFromEulerAngles(0, 30, 0);
+         * var b = new pc.Quat().setFromEulerAngles(0, 60, 0);
          * var r = new pc.Quat();
          *
          * // r is set to a 90 degree rotation around the Y axis
@@ -302,7 +302,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Quat#setFromEulers
+         * @name pc.Quat#setFromEulerAngles
          * @description Sets a quaternion from Euler angles specified in XYZ order.
          * @param {Number} ex Angle to rotate around X axis in degrees.
          * @param {Number} ey Angle to rotate around Y axis in degrees.
@@ -310,10 +310,10 @@ pc.extend(pc, (function () {
          * @returns {pc.Quat} Self for chaining.
          * @example
          * var q = new pc.Quat();
-         * q.setFromEulers(45, 90, 180);
+         * q.setFromEulerAngles(45, 90, 180);
          * @author Will Eastcott
          */
-        setFromEulers: function (ex, ey, ez) {
+        setFromEulerAngles: function (ex, ey, ez) {
             var sx, cx, sy, cy, sz, cz, halfToRad;
 
             halfToRad = 0.5 * pc.math.DEG_TO_RAD;

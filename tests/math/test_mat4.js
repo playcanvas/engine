@@ -309,7 +309,7 @@ test("toEulers", function () {
     approx(e.z, -45, e.z.toString() + " ~= " + -45);
 });
 
-test("setFromEulers", function () {
+test("setFromEulerAngles", function () {
     var m, mr, mrx, mry, mrz, x, y, z;
 
     /** clip to 3 decimal places and convert to string for comparison **/
@@ -325,33 +325,33 @@ test("setFromEulers", function () {
     
     // no rotation -> identity
     x = y = z = 0;
-    m = new pc.Mat4().setFromEulers(x,y,z);
+    m = new pc.Mat4().setFromEulerAngles(x,y,z);
     QUnit.deepEqual(m.data, new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]));
 
     // Rotate 45 around y
     y = 45;
     x = z = 0;
-    m = new pc.Mat4().setFromEulers(x,y,z);
+    m = new pc.Mat4().setFromEulerAngles(x,y,z);
     var m1 = pc.math.mat4.makeRotate(y, [0, 1, 0]);
     QUnit.deepEqual(clip(m.data), [0.707,0,-0.707,0,0,1,0,0,0.707,0,0.707,0, 0,0,0,1]);
 
     // Rotate 45 around x
     x = 45;
     y = z = 0;
-    m = new pc.Mat4().setFromEulers(x,y,z);
+    m = new pc.Mat4().setFromEulerAngles(x,y,z);
     QUnit.deepEqual(clip(m.data), [1,0,0,0, 0,0.707,0.707,0, 0,-0.707,0.707,0, 0,0,0,1]);
 
     // Rotate 45 around z
     z = 45;
     y = x = 0;
-    m = new pc.Mat4().setFromEulers(x,y,z);
+    m = new pc.Mat4().setFromEulerAngles(x,y,z);
     QUnit.deepEqual(clip(m.data), [0.707,0.707,0,0, -0.707,0.707,0,0, 0,0,1,0, 0,0,0,1]);
 
     // Arbitrary rotation
     x = 33;
     y = 44;
     z = 55;
-    m = new pc.Mat4().setFromEulers(x,y,z);
+    m = new pc.Mat4().setFromEulerAngles(x,y,z);
     mrx = new pc.Mat4().rotate(x, pc.Vec3.RIGHT);
     mry = new pc.Mat4().rotate(y, pc.Vec3.UP);
     mrz = new pc.Mat4().rotate(z, pc.Vec3.BACK);
@@ -376,7 +376,7 @@ test("fromEuler and back", function () {
 
     var r = new pc.Vec3();
     m1.toEulers(r);
-    m2 = new pc.Mat4().setFromEulers(r.x, r.y, r.z);
+    m2 = new pc.Mat4().setFromEulerAngles(r.x, r.y, r.z);
     
     QUnit.deepEqual(clip(m1.data),clip(m2.data));
 });

@@ -1042,7 +1042,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Mat4#setFromEulers
+         * @name pc.Mat4#setFromEulerAngles
          * @description Sets a 4x4 matrix from Euler angles specified in XYZ order.
          * @param {Number} ex Angle to rotate around X axis in degrees.
          * @param {Number} ey Angle to rotate around Y axis in degrees.
@@ -1050,13 +1050,13 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * var m = new pc.Mat4();
-         * m.setFromEulers(45, 90, 180);
+         * m.setFromEulerAngles(45, 90, 180);
          * @author Will Eastcott
          */
         // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
         // The 3D space is right-handed, so the rotation around each axis will be counterclockwise 
         // for an observer placed so that the axis goes in his or her direction (Right-hand rule).
-        setFromEulers: function (ex, ey, ez) {
+        setFromEulerAngles: function (ex, ey, ez) {
             var s1, c1, s2, c2, s3, c3, m;
 
             ex *= pc.math.DEG_TO_RAD;

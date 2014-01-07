@@ -451,7 +451,7 @@ pc.extend(pc.scene, function () {
                     break;
             }
 
-            this.localRotation.setFromEulers(ex, ey, ez);
+            this.localRotation.setFromEulerAngles(ex, ey, ez);
             this.dirtyLocal = true;
         },
 
@@ -688,7 +688,7 @@ pc.extend(pc.scene, function () {
                         break;
                 }
 
-                this.localRotation.setFromEulers(ex, ey, ez);
+                this.localRotation.setFromEulerAngles(ex, ey, ez);
 
                 if (this._parent !== null) {
                     var parentRot = this._parent.getRotation();
@@ -1040,7 +1040,7 @@ pc.extend(pc.scene, function () {
                         break;
                 }
 
-                quaternion.setFromEulers(ex, ey, ez);
+                quaternion.setFromEulerAngles(ex, ey, ez);
 
                 if (this._parent === null) {
                     this.localRotation.mul2(quaternion, this.localRotation);
@@ -1098,7 +1098,7 @@ pc.extend(pc.scene, function () {
                         break;
                 }
 
-                quaternion.setFromEulers(ex, ey, ez);
+                quaternion.setFromEulerAngles(ex, ey, ez);
 
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
