@@ -79,12 +79,12 @@ test("transformPoint: src and result same", function() {
     approx(v.z, 0);
 });
 
-test("lookAt", function() {
+test("setLookAt", function() {
     var position = new pc.Vec3(0, 0, 10);
     var target   = new pc.Vec3(0, 0, 0);
     var up       = new pc.Vec3(0, 1, 0);
 
-    var lookAt = new pc.Mat4().lookAt(position, target, up);
+    var lookAt = new pc.Mat4().setLookAt(position, target, up);
 
     QUnit.equal(lookAt.data[0], 1);
     QUnit.equal(lookAt.data[1], 0);
@@ -107,7 +107,7 @@ test("lookAt", function() {
     QUnit.equal(lookAt.data[15], 1);
 });
 
-test("lookAt: 90deg", function () {
+test("setLookAt: 90deg", function () {
     var m = new pc.Mat4();
     m.setFromAxisAngle(pc.Vec3.UP, 90);
     var r = new pc.Mat4();
@@ -115,14 +115,14 @@ test("lookAt: 90deg", function () {
     var left    = new pc.Vec3(m.data[0], m.data[1], m.data[2]);
     var up      = new pc.Vec3(m.data[4], m.data[5], m.data[6]);
 
-    r.lookAt(new pc.Vec3(), heading, up);
+    r.setLookAt(new pc.Vec3(), heading, up);
 
     for(var index = 0; index < 16; index++) {
         QUnit.equal(r.data[index], m.data[index]);
     }
 });
 
-test("lookAt: 180deg", function () {
+test("setLookAt: 180deg", function () {
     var m = new pc.Mat4();
     m.setFromAxisAngle(pc.Vec3.UP, 90);
     var r = new pc.Mat4();
@@ -130,27 +130,27 @@ test("lookAt: 180deg", function () {
     var left    = new pc.Vec3(m.data[0], m.data[1], m.data[2]);
     var up      = new pc.Vec3(m.data[4], m.data[5], m.data[6]);
     
-    r.lookAt(new pc.Vec3(), heading, up);
+    r.setLookAt(new pc.Vec3(), heading, up);
     
     for(var index = 0; index < 16; index++) {
         QUnit.equal(r.data[index], m.data[index]);
     }
 });
 
-test("translate", function() {
+test("setTranslate", function() {
     var x = 10;
     var y = 20;
     var z = 30;
     
     // Test 1: create matrix internally
-    var t = new pc.Mat4().translate(x, y, z);
+    var t = new pc.Mat4().setTranslate(x, y, z);
     QUnit.equal(t.data[12], x);
     QUnit.equal(t.data[13], y);
     QUnit.equal(t.data[14], z);
     
     // Test 2: generate result in supplied matrix
     var r = new pc.Mat4();
-    r.translate(x, y, z);
+    r.setTranslate(x, y, z);
     QUnit.equal(r.data[12], x);
     QUnit.equal(r.data[13], y);
     QUnit.equal(r.data[14], z);
@@ -161,7 +161,7 @@ test("transpose", function() {
     var x = 10;
     var y = 20;
     var z = 30;
-    var m = new pc.Mat4().translate(x, y, z);
+    var m = new pc.Mat4().setTranslate(x, y, z);
 
     var mTrans = m.transpose();
     var mTransTrans = mTrans.transpose();
@@ -173,7 +173,7 @@ test("invert", function() {
     var x = 10;
     var y = 20;
     var z = 30;
-    var m1 = new pc.Mat4().translate(x, y, z);
+    var m1 = new pc.Mat4().setTranslate(x, y, z);
 
     var inv = m1.clone().invert();
 
@@ -268,42 +268,42 @@ test("getScale", function() {
 });
 
 
-test("toEulers", function () {
+test("getEulerAngles", function () {
     var m, e;
     
     m = new pc.Mat4(1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1);
     e = new pc.Vec3();
-    m.toEulers(e);
+    m.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 0);
 
     m = new pc.Mat4(1,0,0,0, 0,0,1,0, 0,-1,0,0, 0,0,0,1);
-    m.toEulers(e);
+    m.getEulerAngles(e);
     approx(e.x, 90, e.x.toString() + " ~= " + 90);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 0);
 
     m = new pc.Mat4(1,0,0,0 ,0,1,0,0, 0,0,1,0, 0,0,0,1);
-    m.toEulers(e);
+    m.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 0);
     
     m = new pc.Mat4(0.7071067811865476,0,0.7071067811865476,0,0,1,0,0,-0.7071067811865476,0,0.7071067811865476,0,0,0,0,1);
-    m.toEulers(e);
+    m.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     approx(e.y, -45, e.y.toString() + " ~= " + -45);
     QUnit.equal(e.z, 0);
 
     m = new pc.Mat4(1,0,0,0, 0,0.7071067811865476,-0.7071067811865476,0, 0,0.7071067811865476,0.7071067811865476,0, 0,0,0,1);
-    m.toEulers(e);
+    m.getEulerAngles(e);
     approx(e.x, -45, e.x.toString() + " ~= " + -45);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 0);
 
     m = new pc.Mat4(0.7071067811865476,-0.7071067811865476,0,0, 0.7071067811865476,0.7071067811865476,0,0, 0,0,1,0, 0,0,0,1);
-    m.toEulers(e);
+    m.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, 0);
     approx(e.z, -45, e.z.toString() + " ~= " + -45);
@@ -332,7 +332,7 @@ test("setFromEulerAngles", function () {
     y = 45;
     x = z = 0;
     m = new pc.Mat4().setFromEulerAngles(x,y,z);
-    var m1 = pc.math.mat4.makeRotate(y, [0, 1, 0]);
+    var m1 = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, y);
     QUnit.deepEqual(clip(m.data), [0.707,0,-0.707,0,0,1,0,0,0.707,0,0.707,0, 0,0,0,1]);
 
     // Rotate 45 around x
@@ -375,7 +375,7 @@ test("fromEuler and back", function () {
     var m2;
 
     var r = new pc.Vec3();
-    m1.toEulers(r);
+    m1.getEulerAngles(r);
     m2 = new pc.Mat4().setFromEulerAngles(r.x, r.y, r.z);
     
     QUnit.deepEqual(clip(m1.data),clip(m2.data));
@@ -401,9 +401,9 @@ test("setTRS", function() {
     var s = new pc.Vec3(2, 2, 2);
     var m1 = new pc.Mat4().setTRS(t, r, s);
 
-    var mt = new pc.Mat4().translate(tx, ty, tz);
+    var mt = new pc.Mat4().setTranslate(tx, ty, tz);
     var mr = new pc.Mat4().setFromAxisAngle(pc.Vec3.BACK, 90);
-    var ms = new pc.Mat4().scale(2, 2, 2);
+    var ms = new pc.Mat4().setScale(2, 2, 2);
     var temp = new pc.Mat4().mul2(mt, mr);
     var m2 = new pc.Mat4().mul2(temp, ms);
 

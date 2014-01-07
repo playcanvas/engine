@@ -207,7 +207,7 @@ test("setFromMat4", function () {
     QUnit.close(q.w, Math.sqrt(0.5), 0.0001);
 
     // 45 degrees around +ve Z, scaled
-    s = new pc.Mat4().scale(2, 2, 2);
+    s = new pc.Mat4().setScale(2, 2, 2);
     m = new pc.Mat4().setFromAxisAngle(pc.Vec3.BACK, -90);
     m.mul(s);
     q = new pc.Quat().setFromMat4(m);
@@ -220,21 +220,22 @@ test("setFromMat4", function () {
 });
 
 test("transformVector", function () {
-    var q = pc.math.quat.create();
-    var v = pc.math.vec3.create(0, 0, 1);
+    var q = new pc.Quat();
+    var v = new pc.Vec3(0, 0, 1);
+    var r = new pc.Vec3();
 
     // Identity quaternion, no rotation
-    var r = pc.math.quat.transformVector(q, v);
-    QUnit.equal(r[0], 0);
-    QUnit.equal(r[1], 0);
-    QUnit.equal(r[2], 1);
+    q.transformVector(v, r);
+    QUnit.equal(r.x, 0);
+    QUnit.equal(r.y, 0);
+    QUnit.equal(r.z, 1);
 
     // Identity quaternion, no rotation
-    pc.math.quat.fromEulerXYZ(180, 0, 0, q);
-    var r = pc.math.quat.transformVector(q, v);
-    QUnit.close(r[0], 0, 0.0001);
-    QUnit.close(r[1], 0, 0.0001);
-    QUnit.close(r[2], -1, 0.0001);
+    q.setFromEulerAngles(180, 0, 0);
+    q.transformVector(v, r);
+    QUnit.close(r.x, 0, 0.0001);
+    QUnit.close(r.y, 0, 0.0001);
+    QUnit.close(r.z, -1, 0.0001);
 });
 
 test("setFromAxisAngle", function () {
@@ -263,76 +264,76 @@ test("setFromAxisAngle", function () {
     qe.setFromEulerAngles(45, 55, 65);
 });
 
-test("toEulers", function () {
+test("getEulerAngles", function () {
     var q;
     var e = new pc.Vec3();
 
     // Identity quaternion, no rotation
     q = new pc.Quat(0, 0, 0, 1);
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 0);
 
     // 180° turn around X axis
     q = new pc.Quat(1, 0, 0, 0);
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 180);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 0);
 
     // 180° turn around Y axis (note that 0, 180, 0 is equivalent to 180, 0, 180)
     q = new pc.Quat(0, 1, 0, 0);
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 180);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 180);
 
     // 180° turn around Z axis
     q = new pc.Quat(0, 0, 1, 0);
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 180);
 
     // 90° turn around X axis
     q = new pc.Quat(Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 90);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 0);
 
     // 90° turn around Y axis
     q = new pc.Quat(0, Math.sqrt(0.5), 0, Math.sqrt(0.5));
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, 90);
     QUnit.equal(e.z, 0);
 
     // 90° turn around Z axis
     q = new pc.Quat(0, 0, Math.sqrt(0.5), Math.sqrt(0.5));
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 90);
 
     // -90° turn around X axis
     q = new pc.Quat(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, -90);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, 0);
 
     // -90° turn around Y axis
     q = new pc.Quat(0, -Math.sqrt(0.5), 0, Math.sqrt(0.5));
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, -90);
     QUnit.equal(e.z, 0);
 
     // -90° turn around Z axis
     q = new pc.Quat(0, 0, -Math.sqrt(0.5), Math.sqrt(0.5));
-    q.toEulers(e);
+    q.getEulerAngles(e);
     QUnit.equal(e.x, 0);
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, -90);

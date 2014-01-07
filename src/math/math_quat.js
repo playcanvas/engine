@@ -83,6 +83,43 @@ pc.extend(pc, (function () {
 
         /**
          * @function
+         * @name pc.Quat#getEulerAngles
+         * @description Converts the supplied quaternion to Euler angles.
+         * @param {pc.Vec3} [eulers] The 3-dimensional vector to receive the Euler angles.
+         * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that 
+         * correspond to the supplied quaternion.
+         * @author Will Eastcott
+         */
+        getEulerAngles: function (eulers) {
+            var x, y, z, qx, qy, qz, qw, a2;
+
+            eulers = (eulers === undefined) ? new pc.Vec3() : eulers;
+
+            qx = this.x;
+            qy = this.y;
+            qz = this.z;
+            qw = this.w;
+
+            a2 = 2 * (qw * qy - qx * qz);
+            if (a2 <= -0.99999) {
+                x = 2 * Math.atan2(qx, qw);
+                y = -Math.PI / 2;
+                z = 0;
+            } else if (a2 >= 0.99999) {
+                x = 2 * Math.atan2(qx, qw);
+                y = Math.PI / 2;
+                z = 0;
+            } else {
+                x = Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
+                y = Math.asin(a2);
+                z = Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+            }
+
+            return eulers.set(x, y, z).scale(pc.math.RAD_TO_DEG);
+        },
+
+        /**
+         * @function
          * @name pc.Quat#invert
          * @description Generates the inverse of the specified quaternion.
          * @returns {pc.Quat} Self for chaining.
@@ -534,39 +571,41 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Quat#getEulerAngles
-         * @description Converts the supplied quaternion to Euler angles.
-         * @param {pc.Vec3} [eulers] The 3-dimensional vector to receive the Euler angles.
-         * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that 
-         * correspond to the supplied quaternion.
+         * @name pc.Quat#transformVector
+         * @description Transforms a 3-dimensional vector by the specified quaternion.
+         * @param {pc.Vec3} vec The 3-dimensional vector to be transformed.
+         * @param {pc.Vec3} [res] An optional 3-dimensional vector to receive the result of the transformation.
+         * @returns {pc.Vec3} The input vector v transformed by the current instance.
+         * @example
+         * // Create a 3-dimensional vector
+         * var v = new pc.Vec3(1, 2, 3);
+         *
+         * // Create a 4x4 rotation matrix
+         * var q = new pc.Quat().setFromEulerAngles(10, 20, 30);
+         *
+         * var tv = q.transformVector(v);
          * @author Will Eastcott
          */
-        getEulerAngles: function (eulers) {
-            var x, y, z, qx, qy, qz, qw, a2;
-
-            eulers = (eulers === undefined) ? new pc.Vec3() : eulers;
-
-            qx = this.x;
-            qy = this.y;
-            qz = this.z;
-            qw = this.w;
-
-            a2 = 2 * (qw * qy - qx * qz);
-            if (a2 <= -0.99999) {
-                x = 2 * Math.atan2(qx, qw);
-                y = -Math.PI / 2;
-                z = 0;
-            } else if (a2 >= 0.99999) {
-                x = 2 * Math.atan2(qx, qw);
-                y = Math.PI / 2;
-                z = 0;
-            } else {
-                x = Math.atan2(2 * (qw * qx + qy * qz), 1 - 2 * (qx * qx + qy * qy));
-                y = Math.asin(a2);
-                z = Math.atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+        transformVector: function (vec, res) {
+            if (typeof res === 'undefined') {
+                res = new pc.Quat();
             }
 
-            return eulers.set(x, y, z).scale(pc.math.RAD_TO_DEG);
+            var x = vec.x, y = vec.y, z = vec.z;
+            var qx = this.x, qy = this.y, qz = this.z, qw = this.w;
+
+            // calculate quat * vec
+            var ix = qw * x + qy * z - qz * y;
+            var iy = qw * y + qz * x - qx * z;
+            var iz = qw * z + qx * y - qy * x;
+            var iw = -qx * x - qy * y - qz * z;
+
+            // calculate result * inverse quat
+            res.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
+            res.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
+            res.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
+
+            return res;
         },
 
         /**
