@@ -66,7 +66,7 @@ pc.extend(pc.fw, function () {
             defaultValue: null,
             filter: {
                 type: function (value) {
-                    return value !== 'asset';
+                    return false;
                 }
             }
         }, {
