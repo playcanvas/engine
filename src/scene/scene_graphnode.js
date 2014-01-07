@@ -5,7 +5,7 @@ pc.extend(pc.scene, function () {
      * @param {String} name Non-unique, human readable name.
      * @property {pc.Vec3} right Vector representing the X direction of the node in world space (read only).
      * @property {pc.Vec3} up Vector representing the Y direction of the node in world space (read only).
-     * @property {pc.Vec3} forwards Vector representing the negative Z direction of the node in world space (read only).
+     * @property {pc.Vec3} forward Vector representing the negative Z direction of the node in world space (read only).
      */
     var GraphNode = function GraphNode(name) {
         this.name = name || "Untitled"; // Non-unique human readable name
@@ -48,9 +48,16 @@ pc.extend(pc.scene, function () {
         }
     });
 
+    Object.defineProperty(GraphNode.prototype, 'forward', {
+        get: function() {
+            return this.getWorldTransform().getZ(this._forward).normalize().scale(-1);
+        }
+    });
+
     Object.defineProperty(GraphNode.prototype, 'forwards', {
         get: function() {
-            return this.getWorldTransform().getZ(this._forward).normalize().negate();
+            console.log('pc.GraphNode#forwards is DEPRECATED. Use pc.GraphNode#forward instead.');
+            return this.forward;
         }
     });
 
