@@ -379,7 +379,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Mat4#lookAt
+         * @name pc.Mat4#setLookAt
          * @description Creates a viewing matrix derived from an eye point, a reference point indicating the center
          * of the scene, and an up vector. The matrix maps the reference point to the negative z-axis and the eye
          * point to the origin, so that when you use a typical projection matrix, the center of the scene maps to 
@@ -394,10 +394,10 @@ pc.extend(pc, (function () {
          * var position = new pc.Vec3(10, 10, 10);
          * var target = new pc.Vec3(0, 0, 0);
          * var up = new pc.Vec3(0, 1, 0);
-         * var m = new pc.Mat4().lookAt(position, target, up);
+         * var m = new pc.Mat4().setLookAt(position, target, up);
          * @author Will Eastcott
          */
-        lookAt: (function () {
+        setLookAt: (function () {
             var x, y, z;
 
             x = new pc.Vec3();

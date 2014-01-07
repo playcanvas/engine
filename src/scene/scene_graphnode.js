@@ -913,7 +913,7 @@ pc.extend(pc.scene, function () {
                         break;
                 }
 
-                matrix.lookAt(this.getPosition(), target, up);
+                matrix.setLookAt(this.getPosition(), target, up);
                 rotation.setFromMat4(matrix);
                 this.setRotation(rotation);
             }
