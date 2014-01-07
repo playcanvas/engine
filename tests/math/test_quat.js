@@ -189,7 +189,7 @@ test("setFromMat4", function () {
     QUnit.equal(q.w, 1);
 
     // 180 degrees around +ve X
-    m = new pc.Mat4().rotate(180, pc.Vec3.RIGHT);
+    m = new pc.Mat4().setFromAxisAngle(pc.Vec3.RIGHT, 180);
     q = new pc.Quat().setFromMat4(m);
 
     QUnit.equal(q.x, 1);
@@ -198,7 +198,7 @@ test("setFromMat4", function () {
     QUnit.close(q.w, 0, 0.0001);
 
     // -90 degrees around +ve Z
-    m = new pc.Mat4().rotate(-90, pc.Vec3.BACK);
+    m = new pc.Mat4().setFromAxisAngle(pc.Vec3.BACK, -90);
     q = new pc.Quat().setFromMat4(m);
 
     QUnit.equal(q.x, 0);
@@ -208,7 +208,7 @@ test("setFromMat4", function () {
 
     // 45 degrees around +ve Z, scaled
     s = new pc.Mat4().scale(2, 2, 2);
-    m = new pc.Mat4().rotate(-90, pc.Vec3.BACK);
+    m = new pc.Mat4().setFromAxisAngle(pc.Vec3.BACK, -90);
     m.mul(s);
     q = new pc.Quat().setFromMat4(m);
     q.normalize();

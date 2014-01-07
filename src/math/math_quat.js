@@ -346,7 +346,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Quat} Self for chaining.
          * @example
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = new pc.Mat4().rotate(180, pc.Vec3.UP);
+         * var rot = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
          *
          * // Convert to a quaternion
          * var q = new pc.Quat().setFromMat4(rot);

@@ -38,7 +38,7 @@ test("mul2: I*I = I", function() {
 
 test("mul2: I*A = A", function() {
     var m1 = new pc.Mat4();
-    var m2 = new pc.Mat4().rotate(180 / 8, pc.Vec3.UP);
+    var m2 = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180 / 8);
     var m3 = new pc.Mat4();
 
     m3.mul2(m1, m2);
@@ -46,7 +46,7 @@ test("mul2: I*A = A", function() {
 });
 
 test("mul2: A*I = A", function() {
-    var m1 = new pc.Mat4().rotate(180 / 8, pc.Vec3.UP);
+    var m1 = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180 / 8);
     var m2 = new pc.Mat4();
     var m3 = new pc.Mat4();
 
@@ -59,7 +59,7 @@ test("transformPoint", function() {
     var v = new pc.Vec3(1, 0, 0);
     var r = new pc.Vec3();
 
-    t.rotate(90, pc.Vec3.BACK);
+    t.setFromAxisAngle(pc.Vec3.BACK, 90);
     t.transformPoint(v, r);
     
     approx(r.x, 0);
@@ -71,7 +71,7 @@ test("transformPoint: src and result same", function() {
     var t = new pc.Mat4();
     var v = new pc.Vec3(1, 0, 0);
     
-    t.rotate(90, pc.Vec3.BACK);
+    t.setFromAxisAngle(pc.Vec3.BACK, 90);
     t.transformPoint(v, v);
     
     approx(v.x, 0);
@@ -109,7 +109,7 @@ test("lookAt", function() {
 
 test("lookAt: 90deg", function () {
     var m = new pc.Mat4();
-    m.rotate(90, pc.Vec3.UP);
+    m.setFromAxisAngle(pc.Vec3.UP, 90);
     var r = new pc.Mat4();
     var heading = new pc.Vec3(-m.data[8], -m.data[9], -m.data[10]);
     var left    = new pc.Vec3(m.data[0], m.data[1], m.data[2]);
@@ -124,7 +124,7 @@ test("lookAt: 90deg", function () {
 
 test("lookAt: 180deg", function () {
     var m = new pc.Mat4();
-    m.rotate(90, pc.Vec3.UP);
+    m.setFromAxisAngle(pc.Vec3.UP, 90);
     var r = new pc.Mat4();
     var heading = new pc.Vec3(-m.data[8], -m.data[9], -m.data[10]);
     var left    = new pc.Vec3(m.data[0], m.data[1], m.data[2]);
@@ -351,10 +351,10 @@ test("setFromEulerAngles", function () {
     x = 33;
     y = 44;
     z = 55;
-    m = new pc.Mat4().setFromEulerAngles(x,y,z);
-    mrx = new pc.Mat4().rotate(x, pc.Vec3.RIGHT);
-    mry = new pc.Mat4().rotate(y, pc.Vec3.UP);
-    mrz = new pc.Mat4().rotate(z, pc.Vec3.BACK);
+    m = new pc.Mat4().setFromEulerAngles(x, y, z);
+    mrx = new pc.Mat4().setFromAxisAngle(pc.Vec3.RIGHT, x);
+    mry = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, y);
+    mrz = new pc.Mat4().setFromAxisAngle(pc.Vec3.BACK, z);
     mr = new pc.Mat4().mul2(mrz, mry);
     mr.mul(mrx);
     QUnit.deepEqual(clip(m.data), clip(mr.data));
@@ -402,7 +402,7 @@ test("setTRS", function() {
     var m1 = new pc.Mat4().setTRS(t, r, s);
 
     var mt = new pc.Mat4().translate(tx, ty, tz);
-    var mr = new pc.Mat4().rotate(90, pc.Vec3.BACK);
+    var mr = new pc.Mat4().setFromAxisAngle(pc.Vec3.BACK, 90);
     var ms = new pc.Mat4().scale(2, 2, 2);
     var temp = new pc.Mat4().mul2(mt, mr);
     var m2 = new pc.Mat4().mul2(temp, ms);

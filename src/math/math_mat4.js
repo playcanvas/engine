@@ -199,7 +199,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * var a = new pc.Mat4().translate(10, 20, 30);
-         * var b = new pc.Mat4().rotate(180, pc.Vec3.UP);
+         * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
          * var r = new pc.Mat4();
          *
          * // r = a * b
@@ -282,7 +282,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * var a = new pc.Mat4().translate(10, 20, 30);
-         * var b = new pc.Mat4().rotate(180, pc.Vec3.UP);
+         * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
          *
          * // a = a * b
          * a.mul(b);
@@ -547,15 +547,15 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat4#rotate
          * @description Generates a rotation matrix.
-         * @param {Number} angle The angle of rotation in degrees.
          * @param {pc.Vec3} axis The normalized axis vector around which to rotate.
+         * @param {Number} angle The angle of rotation in degrees.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 rotation matrix
-         * var rm = new pc.Mat4().rotate(90, pc.Vec3.UP);
+         * var rm = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 90);
          * @author Will Eastcott
          */
-        rotate: function (angle, axis) {
+        setFromAxisAngle: function (axis, angle) {
             var x, y, z, c, s, t, tx, ty, m;
 
             angle *= pc.math.DEG_TO_RAD;
@@ -669,7 +669,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-         * var rot = new pc.Mat4().rotate(180, pc.Vec3.UP);
+         * var rot = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
          *
          * // Invert in place
          * rot.invert();
@@ -1105,7 +1105,7 @@ pc.extend(pc, (function () {
          * @returns {pc.Vec3} A 3-d vector containing the Euler angles.
          * @example
          * // Create a 4x4 rotation matrix of 45 degrees around the y-axis
-         * var m = new pc.Mat4().rotate(45, pc.Vec3.UP);
+         * var m = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 45);
          *
          * var eulers = m.toEulers();
          * @author Will Eastcott
