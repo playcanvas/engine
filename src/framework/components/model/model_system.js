@@ -55,6 +55,21 @@ pc.extend(pc.fw, function () {
                 type: 'asset'
             }
         }, {
+            name: "materialId",
+            displayName: "Material",
+            description: "The material of the model",
+            type: "asset",
+            options: {
+                max: 1,
+                type: 'material'
+            },
+            defaultValue: null,
+            filter: {
+                type: function (value) {
+                    return value !== 'asset';
+                }
+            }
+        }, {
             name: "castShadows",
             displayName: "Cast shadows",
             description: "Occlude light from shadow casting lights",
@@ -67,6 +82,10 @@ pc.extend(pc.fw, function () {
             type: "boolean",
             defaultValue: true
         }, {
+            name: "primitiveMaterial",
+            exposed: false
+        },
+        {
             name: "material",
             exposed: false
         }, {
@@ -96,15 +115,17 @@ pc.extend(pc.fw, function () {
             radius: 0.5,
             height: 1
         });
+
+        this.defaultMaterial = new pc.scene.PhongMaterial()
     };
     ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.fw.ComponentSystem);
     
     pc.extend(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            data.material = new pc.scene.PhongMaterial();
+            data.primitiveMaterial = this.defaultMaterial;
 
             // order matters here
-            properties = ['material', 'asset', 'castShadows', 'receiveShadows', 'type'];            
+            properties = ['material', 'primitiveMaterial', 'materialId', 'asset', 'castShadows', 'receiveShadows', 'type'];            
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },

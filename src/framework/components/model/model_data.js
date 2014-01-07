@@ -13,9 +13,11 @@ pc.extend(pc.fw, function() {
         this.asset = null;
         this.castShadows = false;
         this.receiveShadows = true;
+        this.materialId = null;
         
         // non-serialized
         this.material = null;
+        this.primitiveMaterial = null;
         this.model = null;
     };
     ModelComponentData = pc.inherits(ModelComponentData, pc.fw.ComponentData);

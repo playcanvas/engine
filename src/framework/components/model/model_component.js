@@ -18,6 +18,9 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
+        this.on("set_materialId", this.onSetMaterialId, this);
+
+        this.materialLoader = new pc.resources.MaterialResourceLoader(system.context.graphicsDevice, system.context.assets);
     };
     ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
     
@@ -42,7 +45,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        loadModelAsset: function(guid) {
+        loadModelAsset: function (guid) {
             var options = {
                 parent: this.entity.getRequest()
             };
@@ -62,7 +65,9 @@ pc.extend(pc.fw, function () {
                     asset.on('change', this.onAssetChange, this);
                 }
 
-                this.model = model;
+                if (this.data.type === 'asset') {
+                    this.model = model;
+                }
             }.bind(this));
         },
 
@@ -109,7 +114,8 @@ pc.extend(pc.fw, function () {
 
                     var model = new pc.scene.Model();
                     model.graph = node;
-                    model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
+
+                    model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.primitiveMaterial) ];
 
                     if (this.system.context.designer) {
                         model.generateWireframe();
@@ -184,6 +190,18 @@ pc.extend(pc.fw, function () {
                     this.entity.animation.setModel(newValue);
                 }
             }        
+        },
+
+        onSetMaterialId: function (name, oldValue, newValue) {
+            var guid = newValue;
+            var material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
+            this.data.primitiveMaterial = material;
+            if (this.data.model && this.data.type !== 'asset') {
+                var meshInstances = this.data.model.meshInstances;
+                for (var i=0; i<meshInstances.length; i++) {
+                    meshInstances[i].material = material;
+                }
+            }
         },
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
