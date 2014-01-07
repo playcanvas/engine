@@ -20,7 +20,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#add2
-         * @description Returns the result of adding the specified 4x4 matrices together.
+         * @description Adds the specified 4x4 matrices together and stores the result in
+         * the current instance.
          * @param {pc.Mat4} lhs The 4x4 matrix used as the first operand of the addition.
          * @param {pc.Mat4} rhs The 4x4 matrix used as the second operand of the addition.
          * @returns {pc.Mat4} Self for chaining.
@@ -60,7 +61,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#add
-         * @description Returns the result of adding the specified 4x4 matrices together.
+         * @description Adds the specified 4x4 matrix to the current instance.
          * @param {pc.Mat4} rhs The 4x4 matrix used as the second operand of the addition.
          * @returns {pc.Mat4} Self for chaining.
          * @example
@@ -193,7 +194,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#mul2
-         * @description Returns the result of multiplying the specified 4x4 matrices together.
+         * @description Multiplies the specified 4x4 matrices together and stores the result in
+         * the current instance.
          * @param {pc.Mat4} lhs The 4x4 matrix used as the first multiplicand of the operation.
          * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
          * @returns {pc.Mat4} Self for chaining.
@@ -277,7 +279,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#mul
-         * @description Returns the result of multiplying the specified 4x4 matrices together.
+         * @description Multiplies the current instance by the specified 4x4 matrix.
          * @param {pc.Mat4} rhs The 4x4 matrix used as the second multiplicand of the operation.
          * @returns {pc.Mat4} Self for chaining.
          * @example
@@ -298,11 +300,11 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat4#transformPoint
          * @description Transforms a 3-dimensional point by a 4x4 matrix.
-         * @param {pc.Vec3} vec The 3-dimensional vector to be multiplied.
-         * @param {pc.Vec3} [res] An optional 3-dimensional vector to receive the result of the multiplication.
-         * @returns {pc.Vec3} The input vector v multiplied by input matrix m.
+         * @param {pc.Vec3} vec The 3-dimensional point to be transformed.
+         * @param {pc.Vec3} [res] An optional 3-dimensional point to receive the result of the transformation.
+         * @returns {pc.Vec3} The input point v transformed by the current instance.
          * @example
-         * // Create a 3-dimensional vector
+         * // Create a 3-dimensional point
          * var v = new pc.Vec3(1, 2, 3);
          *
          * // Create a 4x4 rotation matrix
@@ -341,9 +343,9 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Mat4#transformVector
          * @description Transforms a 3-dimensional vector by a 4x4 matrix.
-         * @param {pc.Vec3} vec The 3-dimensional vector to be multiplied.
-         * @param {pc.Vec3} [res] An optional 3-dimensional vector to receive the result of the multiplication.
-         * @returns {pc.Vec3} The input vector v multiplied by input matrix m.
+         * @param {pc.Vec3} vec The 3-dimensional vector to be transformed.
+         * @param {pc.Vec3} [res] An optional 3-dimensional vector to receive the result of the transformation.
+         * @returns {pc.Vec3} The input vector v transformed by the current instance.
          * @example
          * // Create a 3-dimensional vector
          * var v = new pc.Vec3(1, 2, 3);
@@ -380,12 +382,12 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#setLookAt
-         * @description Creates a viewing matrix derived from an eye point, a reference point indicating the center
-         * of the scene, and an up vector. The matrix maps the reference point to the negative z-axis and the eye
-         * point to the origin, so that when you use a typical projection matrix, the center of the scene maps to 
-         * the center of the viewport. Similarly, the direction described by the up vector projected onto the
-         * viewing plane is mapped to the positive y-axis so that it points upward in the viewport. The up vector
-         * must not be parallel to the line of sight from the eye to the reference point.
+         * @description Sets the specified matrix to a viewing matrix derived from an eye point, a target point
+         * and an up vector. The matrix maps the target point to the negative z-axis and the eye point to the
+         * origin, so that when you use a typical projection matrix, the center of the scene maps to the center
+         * of the viewport. Similarly, the direction described by the up vector projected onto the viewing plane
+         * is mapped to the positive y-axis so that it points upward in the viewport. The up vector must not be
+         * parallel to the line of sight from the eye to the reference point.
          * @param {pc.Vec3} position 3-d vector holding view position.
          * @param {pc.Vec3} target 3-d vector holding reference point.
          * @param {pc.Vec3} up 3-d vector holding the up direction.
@@ -437,7 +439,7 @@ pc.extend(pc, (function () {
          * @private
          * @function
          * @name pc.Mat4#setFrustum
-         * @description Generates a persective projection matrix. The function's parameters define
+         * @description Sets the specified matrix to a persective projection matrix. The function's parameters define
          * the shape of a frustum.
          * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
          * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
@@ -483,8 +485,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#setPerspective
-         * @description Generates a persective projection matrix. The function's parameters define
-         * the shape of a frustum.
+         * @description Sets the specified matrix to a persective projection matrix. The function's
+         * parameters define the shape of a frustum.
          * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space.
          * @param {Number} aspect The aspect ratio of the frustum's projection plane (width / height).
          * @param {Number} znear The near clip plane in eye coordinates.
@@ -507,8 +509,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#setOrtho
-         * @description Generates an orthographic projection matrix. The function's parameters define
-         * the shape of a cuboid-shaped frustum.
+         * @description Sets the specified matrix to an orthographic projection matrix. The function's parameters
+         * define the shape of a cuboid-shaped frustum.
          * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
          * @param {Number} right The x-coordinate for the right edge of the camera's projection plane in eye space.
          * @param {Number} bottom The y-coordinate for the bottom edge of the camera's projection plane in eye space.
@@ -547,7 +549,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#setFromAxisAngle
-         * @description Generates a rotation matrix.
+         * @description Sets the specified matrix to a rotation matrix equivalent to a rotation around
+         * an axis. The axis must be normalized (unit length) and the angle must be specified in degrees.
          * @param {pc.Vec3} axis The normalized axis vector around which to rotate.
          * @param {Number} angle The angle of rotation in degrees.
          * @returns {pc.Mat4} Self for chaining.
@@ -595,7 +598,7 @@ pc.extend(pc, (function () {
          * @private
          * @function
          * @name pc.Mat4#setTranslate
-         * @description Generates a translation matrix.
+         * @description Sets the specified matrix to a translation matrix.
          * @param {Number} x The x-component of the translation.
          * @param {Number} y The y-component of the translation.
          * @param {Number} z The z-component of the translation.
@@ -632,7 +635,7 @@ pc.extend(pc, (function () {
          * @private
          * @function
          * @name pc.Mat4#setScale
-         * @description Generates a scale matrix.
+         * @description Sets the specified matrix to a scale matrix.
          * @param {Number} x The x-component of the scale.
          * @param {Number} y The y-component of the scale.
          * @param {Number} z The z-component of the scale.
@@ -668,7 +671,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#invert
-         * @description Generates the inverse of the specified 4x4 matrix.
+         * @description Sets the specified matrix to its inverse.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
@@ -744,7 +747,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#setIdentity
-         * @description Sets the matrix to the identity matrix.
+         * @description Sets the specified matrix to the identity matrix.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * m.setIdentity();
@@ -776,8 +779,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#setTRS
-         * @description Composes a 4x4 matrix from a translation, a quaternion rotation and
-         * a scale.
+         * @description Sets the specified matrix to the concatenation of a translation, a
+         * quaternion rotation and a scale.
          * @param {pc.Vec3} t A 3-d vector translation.
          * @param {pc.Quat} r A quaternion rotation.
          * @param {pc.Vec3} s A 3-d vector scale.
@@ -849,7 +852,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#transpose
-         * @description Generates the transpose of the specified 4x4 matrix.
+         * @description Sets the specified matrix to its transpose.
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * var m = new pc.Mat4();
@@ -1046,7 +1049,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#setFromEulerAngles
-         * @description Sets a 4x4 matrix from Euler angles specified in XYZ order.
+         * @description Sets the specified matrix to a rotation matrix defined by
+         * Euler angles. The Euler angles are specified in XYZ order and in degrees.
          * @param {Number} ex Angle to rotate around X axis in degrees.
          * @param {Number} ey Angle to rotate around Y axis in degrees.
          * @param {Number} ez Angle to rotate around Z axis in degrees.
@@ -1103,7 +1107,8 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#getEulerAngles
-         * @description Converts a 4x4 matrix to Euler angles specified in degrees in XYZ order.
+         * @description Extracts the Euler angles equivalent to the rotational portion 
+         * of the specified matrix. The returned Euler angles are in XYZ order an in degrees.
          * @param {pc.Vec3} [eulers] A 3-d vector to receive the Euler angles.
          * @returns {pc.Vec3} A 3-d vector containing the Euler angles.
          * @example
@@ -1153,7 +1158,7 @@ pc.extend(pc, (function () {
         /**
          * @function
          * @name pc.Mat4#toString
-         * @description Converts the matrix to string form.
+         * @description Converts the specified matrix to string form.
          * @returns {String} The matrix in string form.
          * @example
          * var m = new pc.Mat4();
