@@ -534,14 +534,14 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Quat#toEulers
+         * @name pc.Quat#getEulerAngles
          * @description Converts the supplied quaternion to Euler angles.
          * @param {pc.Vec3} [eulers] The 3-dimensional vector to receive the Euler angles.
          * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that 
          * correspond to the supplied quaternion.
          * @author Will Eastcott
          */
-        toEulers: function (eulers) {
+        getEulerAngles: function (eulers) {
             var x, y, z, qx, qy, qz, qw, a2;
 
             eulers = (eulers === undefined) ? new pc.Vec3() : eulers;

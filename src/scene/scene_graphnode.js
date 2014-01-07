@@ -242,7 +242,7 @@ pc.extend(pc.scene, function () {
          * this.entity.setEulerAngles(angles);
          */
         getEulerAngles: function () {
-            this.getWorldTransform().toEulers(this.eulerAngles);
+            this.getWorldTransform().getEulerAngles(this.eulerAngles);
             return this.eulerAngles;
         },
 
@@ -261,7 +261,7 @@ pc.extend(pc.scene, function () {
          * this.entity.setLocalEulerAngles(angles);
          */
         getLocalEulerAngles: function () {
-            this.localRotation.toEulers(this.localEulerAngles);
+            this.localRotation.getEulerAngles(this.localEulerAngles);
             return this.localEulerAngles;
         },
 

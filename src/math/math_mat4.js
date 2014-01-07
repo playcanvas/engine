@@ -1100,7 +1100,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Mat4#toEulers
+         * @name pc.Mat4#getEulerAngles
          * @description Converts a 4x4 matrix to Euler angles specified in degrees in XYZ order.
          * @param {pc.Vec3} [eulers] A 3-d vector to receive the Euler angles.
          * @returns {pc.Vec3} A 3-d vector containing the Euler angles.
@@ -1108,10 +1108,10 @@ pc.extend(pc, (function () {
          * // Create a 4x4 rotation matrix of 45 degrees around the y-axis
          * var m = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 45);
          *
-         * var eulers = m.toEulers();
+         * var eulers = m.getEulerAngles();
          * @author Will Eastcott
          */
-        toEulers: (function () {
+        getEulerAngles: (function () {
             var scale = new pc.Vec3();
 
             return function (eulers) {

@@ -122,7 +122,7 @@ pc.extend(pc.fw, function () {
 
         setTransform: function (transform) {
             transform.getTranslation(position);
-            transform.toEulers(rotation);
+            transform.getEulerAngles(rotation);
 
             var angle = this._eulersToAngle(rotation);
 
