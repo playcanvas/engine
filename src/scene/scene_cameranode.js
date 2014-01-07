@@ -260,11 +260,11 @@ pc.extend(pc.scene, function () {
         getProjectionMatrix: function () {
             if (this._projMatDirty) {
                 if (this._projection === pc.scene.Projection.PERSPECTIVE) {
-                    this._projMat.perspective(this._fov, this._aspect, this._nearClip, this._farClip);
+                    this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip);
                 } else {
                     var y = this._orthoHeight;
                     var x = y * this._aspect;
-                    this._projMat.ortho(-x, x, -y, y, this._nearClip, this._farClip);
+                    this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
                 }
 
                 this._projMatDirty = false;

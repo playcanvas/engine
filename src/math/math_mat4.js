@@ -434,8 +434,9 @@ pc.extend(pc, (function () {
         }()),
 
         /**
+         * @private
          * @function
-         * @name pc.Mat4#frustum
+         * @name pc.Mat4#setFrustum
          * @description Generates a persective projection matrix. The function's parameters define
          * the shape of a frustum.
          * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
@@ -447,10 +448,10 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 persepctive projection matrix
-         * var f = pc.Mat4().frustum(-2, 2, -1, 1, 1, 1000);
+         * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
          * @author Will Eastcott
          */
-        frustum: function (left, right, bottom, top, znear, zfar) {
+        setFrustum: function (left, right, bottom, top, znear, zfar) {
             var temp1, temp2, temp3, temp4, r;
 
             temp1 = 2 * znear;
@@ -481,7 +482,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Mat4#perspective
+         * @name pc.Mat4#setPerspective
          * @description Generates a persective projection matrix. The function's parameters define
          * the shape of a frustum.
          * @param {Number} fovy The field of view in the frustum in the Y-axis of eye space.
@@ -491,21 +492,21 @@ pc.extend(pc, (function () {
          * @returns {pc.Mat4} Self for chaining.
          * @example
          * // Create a 4x4 persepctive projection matrix
-         * var persp = pc.Mat4().perspective(45, 16 / 9, 1, 1000);
+         * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
          * @author Will Eastcott
          */
-        perspective: function (fovy, aspect, znear, zfar) {
+        setPerspective: function (fovy, aspect, znear, zfar) {
             var xmax, ymax;
 
             ymax = znear * Math.tan(fovy * Math.PI / 360);
             xmax = ymax * aspect;
 
-            return this.frustum(-xmax, xmax, -ymax, ymax, znear, zfar);
+            return this.setFrustum(-xmax, xmax, -ymax, ymax, znear, zfar);
         },
 
         /**
          * @function
-         * @name pc.Mat4#ortho
+         * @name pc.Mat4#setOrtho
          * @description Generates an orthographic projection matrix. The function's parameters define
          * the shape of a cuboid-shaped frustum.
          * @param {Number} left The x-coordinate for the left edge of the camera's projection plane in eye space.
@@ -520,7 +521,7 @@ pc.extend(pc, (function () {
          * var ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
          * @author Will Eastcott
          */
-        ortho: function (left, right, bottom, top, near, far) {
+        setOrtho: function (left, right, bottom, top, near, far) {
             var r = this.data;
 
             r[0] = 2 / (right - left);
@@ -545,7 +546,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Mat4#rotate
+         * @name pc.Mat4#setFromAxisAngle
          * @description Generates a rotation matrix.
          * @param {pc.Vec3} axis The normalized axis vector around which to rotate.
          * @param {Number} angle The angle of rotation in degrees.

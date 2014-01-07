@@ -10,8 +10,8 @@ pc.extend(pc.shape, function () {
      * @param {pc.Mat4} viewMatrix The inverse of the world transformation matrix for the frustum.
      */
     var Frustum = function Frustum (projectionMatrix, viewMatrix) {
-        projectionMatrix = projectionMatrix || new pc.Mat4().perspective(90.0, 16 / 9, 0.1, 1000.0);
-        viewMatrix = viewMatrix || pc.Mat4.IDENTITY.clone();
+        projectionMatrix = projectionMatrix || new pc.Mat4().setPerspective(90, 16 / 9, 0.1, 1000);
+        viewMatrix = viewMatrix || new pc.Mat4();
 
         this.planes = [];
         for (var i = 0; i < 6; i++) {
