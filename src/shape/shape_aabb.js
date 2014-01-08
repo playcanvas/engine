@@ -39,12 +39,8 @@ pc.extend(pc.shape, function () {
         if (omaxy > tmaxy) tmaxy = omaxy;
         if (ominz < tminz) tminz = ominz;
         if (omaxz > tmaxz) tmaxz = omaxz;
-        tc.x = (tminx + tmaxx) * 0.5;
-        tc.y = (tminy + tmaxy) * 0.5;
-        tc.z = (tminz + tmaxz) * 0.5;
-        th.x = (tmaxx - tminx) * 0.5;
-        th.y = (tmaxy - tminy) * 0.5;
-        th.z = (tmaxz - tminz) * 0.5;
+        tc.set(tminx + tmaxx, tminy + tmaxy, tminz + tmaxz).scale(0.5);
+        th.set(tmaxx - tminx, tmaxy - tminy, tmaxz - tminz).scale(0.5);
     };
 
     Aabb.prototype.copy = function (src) {

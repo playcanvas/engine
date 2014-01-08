@@ -21,13 +21,14 @@ pc.extend(pc.shape, function () {
      * Test whether point is inside sphere
      * @param {pc.Vec3} point Point to test
      */
-    Sphere.prototype.containsPoint = function (point) {
-        var offset = new pc.Vec3();
-        offset.sub(point, this.center);
-        var length = offset.length();
-
-        return (length < this.radius);
-    };
+    Sphere.prototype.containsPoint = (function () {
+        var centerToPoint = new pc.Vec3();
+        return function (point) {
+            var lenSq = centerToPoint.sub2(point, this.center).lengthSq();
+            var r = this.radius;
+            return lenSq < r * r;
+        }
+    }());
 
     Sphere.prototype.compute = function (vertices) {
         var i;
