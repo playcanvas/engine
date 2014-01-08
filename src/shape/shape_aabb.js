@@ -19,32 +19,32 @@ pc.extend(pc.shape, function () {
     Aabb.prototype.add = function (other) {
         var tc = this.center;
         var th = this.halfExtents;
-        var tminx = tc[0] - th[0];
-        var tmaxx = tc[0] + th[0];
-        var tminy = tc[1] - th[1];
-        var tmaxy = tc[1] + th[1];
-        var tminz = tc[2] - th[2];
-        var tmaxz = tc[2] + th[2];
+        var tminx = tc.x - th.x;
+        var tmaxx = tc.x + th.x;
+        var tminy = tc.y - th.y;
+        var tmaxy = tc.y + th.y;
+        var tminz = tc.z - th.z;
+        var tmaxz = tc.z + th.z;
         var oc = other.center;
         var oh = other.halfExtents;
-        var ominx = oc[0] - oh[0];
-        var omaxx = oc[0] + oh[0];
-        var ominy = oc[1] - oh[1];
-        var omaxy = oc[1] + oh[1];
-        var ominz = oc[2] - oh[2];
-        var omaxz = oc[2] + oh[2];
+        var ominx = oc.x - oh.x;
+        var omaxx = oc.x + oh.x;
+        var ominy = oc.y - oh.y;
+        var omaxy = oc.y + oh.y;
+        var ominz = oc.z - oh.z;
+        var omaxz = oc.z + oh.z;
         if (ominx < tminx) tminx = ominx;
         if (omaxx > tmaxx) tmaxx = omaxx;
         if (ominy < tminy) tminy = ominy;
         if (omaxy > tmaxy) tmaxy = omaxy;
         if (ominz < tminz) tminz = ominz;
         if (omaxz > tmaxz) tmaxz = omaxz;
-        tc[0] = (tminx + tmaxx) * 0.5;
-        tc[1] = (tminy + tmaxy) * 0.5;
-        tc[2] = (tminz + tmaxz) * 0.5;
-        th[0] = (tmaxx - tminx) * 0.5;
-        th[1] = (tmaxy - tminy) * 0.5;
-        th[2] = (tmaxz - tminz) * 0.5;
+        tc.x = (tminx + tmaxx) * 0.5;
+        tc.y = (tminy + tmaxy) * 0.5;
+        tc.z = (tminz + tmaxz) * 0.5;
+        th.x = (tmaxx - tminx) * 0.5;
+        th.y = (tmaxy - tminy) * 0.5;
+        th.z = (tmaxz - tminz) * 0.5;
     };
 
     Aabb.prototype.copy = function (src) {
@@ -148,15 +148,18 @@ pc.extend(pc.shape, function () {
     Aabb.prototype.compute = function (vertices) {
         var min = new pc.Vec3(vertices[0], vertices[1], vertices[2]);
         var max = new pc.Vec3(vertices[0], vertices[1], vertices[2]);
-
         var numVerts = vertices.length / 3;
+
         for (var i = 1; i < numVerts; i++) {
-            if (vertices[i*3+0] < min[0]) min[0] = vertices[i*3+0];
-            if (vertices[i*3+1] < min[1]) min[1] = vertices[i*3+1];
-            if (vertices[i*3+2] < min[2]) min[2] = vertices[i*3+2];
-            if (vertices[i*3+0] > max[0]) max[0] = vertices[i*3+0];
-            if (vertices[i*3+1] > max[1]) max[1] = vertices[i*3+1];
-            if (vertices[i*3+2] > max[2]) max[2] = vertices[i*3+2];
+            var x = vertices[i * 3 + 0];
+            var y = vertices[i * 3 + 1];
+            var z = vertices[i * 3 + 2];
+            if (x < min.x) min.x = x;
+            if (y < min.y) min.y = y;
+            if (z < min.z) min.z = z;
+            if (x > max.x) max.x = x;
+            if (y > max.y) max.y = y;
+            if (z > max.z) max.z = z;
         }
 
         this.setMinMax(min, max);
