@@ -42,15 +42,13 @@ pc.extend(pc.fw, function () {
         * @param {Boolean} visible True to enable rendering for the model, false to disable it
         */
         setVisible: function (visible) {
-            if (this.data.type === 'asset') {
-                if (this.data.model) {
-                    var inScene = this.system.context.scene.containsModel(this.data.model);
-                    
-                    if (visible && !inScene) {
-                        this.system.context.scene.addModel(this.data.model);
-                    } else if (!visible && inScene) {
-                        this.system.context.scene.removeModel(this.data.model);
-                    }
+            if (this.data.model) {
+                var inScene = this.system.context.scene.containsModel(this.data.model);
+                
+                if (visible && !inScene) {
+                    this.system.context.scene.addModel(this.data.model);
+                } else if (!visible && inScene) {
+                    this.system.context.scene.removeModel(this.data.model);
                 }
             }
         },

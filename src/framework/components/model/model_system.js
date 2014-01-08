@@ -142,6 +142,8 @@ pc.extend(pc.fw, function () {
         cloneComponent: function (entity, clone) {
             var component = this.addComponent(clone, {});
             
+            clone.model.data.type = entity.model.type;
+            clone.model.data.materialId = entity.model.materialId;
             clone.model.data.asset = entity.model.asset;
             clone.model.data.castShadows = entity.model.castShadows;
             clone.model.data.receiveShadows = entity.model.receiveShadows;
