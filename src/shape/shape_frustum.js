@@ -109,9 +109,9 @@ pc.extend(pc.shape, function () {
      */
     Frustum.prototype.containsPoint = function (point) {
         for (var p = 0; p < 6; p++)
-            if (this.planes[p][0] * point[0] + 
-                this.planes[p][1] * point[1] + 
-                this.planes[p][2] * point[2] + 
+            if (this.planes[p][0] * point.x + 
+                this.planes[p][1] * point.y + 
+                this.planes[p][2] * point.z + 
                 this.planes[p][3] <= 0)
                 return false;
         return true;
