@@ -144,7 +144,7 @@ pc.extend(pc.scene, function () {
                 if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP)) {
                     modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                     if (meshInstance.skinInstance) {
-                        poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                        poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                     }
 
                     this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;

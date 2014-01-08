@@ -430,7 +430,7 @@ pc.extend(pc.scene, function () {
 
                             this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (meshInstance.skinInstance) {
-                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 device.setShader(this._depthShaderSkin);
                             } else {
                                 device.setShader(this._depthShaderStatic);
@@ -572,7 +572,7 @@ pc.extend(pc.scene, function () {
                             scope.resolve('texture_opacityMap').setValue(material.opacityMap);
                         }
                         if (meshInstance.skinInstance) {
-                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             device.setShader(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                         } else {
                             device.setShader(material.opacityMap ? this._depthProgStaticOp : this._depthProgStatic);
@@ -629,7 +629,7 @@ pc.extend(pc.scene, function () {
                     this.modelMatrixId.setValue(modelMatrix.data);
                     this.normalMatrixId.setValue(normalMatrix.data);
                     if (meshInstance.skinInstance) {
-                        this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                        this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                     }
 
                     if (material !== prevMaterial) {
