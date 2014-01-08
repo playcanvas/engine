@@ -37,7 +37,7 @@ pc.extend(pc.shape, function () {
     Plane.prototype.intersectPosition = function (p0, p1) {
         var t = this.intersect(p0, p1);
         var r = new pc.Vec3();
-        pc.Vec3.lerp(p0, p1, t, r);
+        r.lerp(p0, p1, t);
         return r;
     };
 

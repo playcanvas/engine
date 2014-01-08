@@ -130,7 +130,7 @@ pc.extend(pc.scene, function () {
         var projMat = camera.getProjectionMatrix();
         var viewMat = wtm.clone().invert();
         var viewProjMat = new pc.Mat4();
-        viewProjMat.mul(projMat, viewMat);
+        viewProjMat.mul2(projMat, viewMat);
 
         projId.setValue(projMat.data);
         viewProjId.setValue(viewProjMat.data);
