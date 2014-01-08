@@ -65,9 +65,7 @@ pc.extend(pc.shape, function () {
      * @returns {pc.Vec3} minimum corner
      */
     Aabb.prototype.getMin = function () {
-        var min = new pc.Vec3();
-        min.sub(this.center, this.halfExtents);
-        return min;
+        return this.center.clone().sub(this.halfExtents);
     };
     
     /**
@@ -77,9 +75,7 @@ pc.extend(pc.shape, function () {
      * @returns {pc.Vec3} maximum corner
      */
     Aabb.prototype.getMax = function () {
-        var max = new pc.Vec3();
-        max.add(this.center, this.halfExtents);
-        return max;
+        return this.center.clone().add(this.halfExtents);
     };
     
     /**
@@ -93,7 +89,7 @@ pc.extend(pc.shape, function () {
         var min = this.getMin(), max = this.getMax(), i;
         
         for (i = 0; i < 3; ++i) {
-            if (point[i] < min[i] || point[i] > max[i]) {
+            if (point.data[i] < min.data[i] || point.data[i] > max.data[i]) {
                 return false;
             }
         }

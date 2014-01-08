@@ -129,9 +129,9 @@ pc.extend(pc.shape, function () {
         var c = 0;
         var d;
         for (p = 0; p < 6; p++) {
-            d = this.planes[p][0] * sphere.center[0] + 
-                this.planes[p][1] * sphere.center[1] + 
-                this.planes[p][2] * sphere.center[2] + 
+            d = this.planes[p][0] * sphere.center.x + 
+                this.planes[p][1] * sphere.center.y + 
+                this.planes[p][2] * sphere.center.z + 
                 this.planes[p][3];
             if (d <= -sphere.radius)
                 return 0;

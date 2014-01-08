@@ -29,7 +29,7 @@ pc.extend(pc.shape, function () {
 
         // Add scale as it is missing from box.transform
         var t = this.transform.clone();
-        var scale = new pc.Mat4().scale(extents.x * 2, extents.y * 2, extents.z * 2);
+        var scale = new pc.Mat4().setScale(extents.x * 2, extents.y * 2, extents.z * 2);
         t.mul(scale).invert();
 
         // transform point into local space

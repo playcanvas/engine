@@ -10,8 +10,8 @@ pc.extend(pc.shape, function () {
      * @param {Number} radius Radius of sphere
      */
     function Sphere(center, radius) {
-        this.center = (typeof center === 'undefined') ? pc.Vec3(0, 0, 0) : center;
-        this.radius = (typeof radius === 'undefined') ? 1 : radius;
+        this.center = (center === undefined) ? new pc.Vec3(0, 0, 0) : center;
+        this.radius = (radius === undefined) ? 1 : radius;
 
         this.type = pc.shape.Type.SPHERE;
     };
