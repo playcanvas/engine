@@ -136,9 +136,9 @@ pc.extend(pc.resources, function () {
 
             var node = new pc.scene.GraphNode();
             node.setName(nodeData.name);
-            node.setLocalPosition(nodeData.position);
-            node.setLocalEulerAngles(nodeData.rotation);
-            node.setLocalScale(nodeData.scale);
+            node.setLocalPosition(nodeData.position[0], nodeData.position[1], nodeData.position[2]);
+            node.setLocalEulerAngles(nodeData.rotation[0], nodeData.rotation[1], nodeData.rotation[2]);
+            node.setLocalScale(nodeData.scale[0], nodeData.scale[1], nodeData.scale[2]);
 
             nodes.push(node);
         }
