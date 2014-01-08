@@ -2,7 +2,8 @@ pc.extend(pc.fw, function () {
     /**
      * @name pc.fw.ModelComponentSystem
      * @constructor Create a new ModelComponentSystem
-     * @class Allows an Entity to render a model
+     * @class Allows an Entity to render a model or a primitive shape like a box,
+     * capsule, sphere, cylinder, cone etc.
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
      */

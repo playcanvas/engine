@@ -3,13 +3,23 @@ pc.extend(pc.fw, function () {
      * @component
      * @name pc.fw.ModelComponent
      * @constructor Create a new ModelComponentSystem
-     * @class Enables an Entity to render a model. This Component attaches additional model geometry in to the scene graph below the Entity.
+     * @class Enables an Entity to render a model or a primitive shape. This Component attaches additional model geometry in to the scene graph below the Entity.
      * @param {pc.fw.ModelComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
      * @extends pc.fw.Component
-     * @property {String} asset The GUID of the asset for the model
+     * @property {String} type The type of the model, which can be one of the following values:
+     * <ul>
+     *     <li>asset: The component will render a model asset</li>
+     *     <li>box: The component will render a box</li>
+     *     <li>capsule: The component will render a capsule</li>
+     *     <li>cone: The component will render a cone</li>
+     *     <li>cylinder: The component will render a cylinder</li>
+     *     <li>sphere: The component will render a sphere</li>
+     * </ul>
+     * @property {String} asset The GUID of the asset for the model (only applies to models of type 'asset')
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
+     * @property {String} materialId The GUID of the material asset that will be used to render the model (not used on models of type 'asset')
      * @property {pc.scene.Model} model The model that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity) {
