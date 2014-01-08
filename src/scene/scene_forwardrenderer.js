@@ -303,11 +303,9 @@ pc.extend(pc.scene, function () {
                 light = "light" + (numDirs + i);
 
                 scope.resolve(light + "_radius").setValue(point._attenuationEnd);
-                scope.resolve(light + "_color").setValue(point._finalColor);
-                point._position[0] = wtm[12];
-                point._position[1] = wtm[13];
-                point._position[2] = wtm[14];
-                scope.resolve(light + "_position").setValue(point._position);
+                scope.resolve(light + "_color").setValue(point._finalColor.data);
+                wtm.getTranslation(point._position);
+                scope.resolve(light + "_position").setValue(point._position.data);
             }
 
             for (i = 0; i < numSpts; i++) {
@@ -318,16 +316,12 @@ pc.extend(pc.scene, function () {
                 scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
                 scope.resolve(light + "_outerConeAngle").setValue(spot._outerConeAngleCos);
                 scope.resolve(light + "_radius").setValue(spot._attenuationEnd);
-                scope.resolve(light + "_color").setValue(spot._finalColor);
-                spot._position[0] = wtm[12];
-                spot._position[1] = wtm[13];
-                spot._position[2] = wtm[14];
-                scope.resolve(light + "_position").setValue(spot._position);
+                scope.resolve(light + "_color").setValue(spot._finalColor.data);
+                wtm.getTranslation(spot._position);
+                scope.resolve(light + "_position").setValue(spot._position.data);
                 // Spots shine down the negative Y axis
-                spot._direction[0] = -wtm[4];
-                spot._direction[1] = -wtm[5];
-                spot._direction[2] = -wtm[6];
-                scope.resolve(light + "_spotDirection").setValue(spot._direction);
+                wtm.getY(spot._direction).scale(-1);
+                scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
 
                 if (spot.getCastShadows()) {
                     var shadowMap = this.device.extDepthTexture ? 
