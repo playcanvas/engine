@@ -25,19 +25,19 @@ pc.extend(pc.fw, function () {
                     value: 'asset'
                 }, {
                     name: 'Box',
-                    value: pc.shape.Type.BOX
+                    value: 'box'
                 }, {
                     name: 'Capsule',
-                    value: pc.shape.Type.CAPSULE
+                    value: 'capsule'
                 }, {
                     name: 'Sphere',
-                    value: pc.shape.Type.SPHERE
+                    value: 'sphere'
                 }, {
                     name: 'Cylinder',
-                    value: pc.shape.Type.CYLINDER
+                    value: 'cylinder'
                 }, {
                     name: 'Cone',
-                    value: pc.shape.Type.CONE
+                    value: 'cone'
                 }]
             },
             defaultValue: "asset"

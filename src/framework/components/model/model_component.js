@@ -91,19 +91,19 @@ pc.extend(pc.fw, function () {
                     }
                 } else {
                     switch (newValue) {
-                        case pc.shape.Type.BOX: 
+                        case 'box': 
                             mesh = this.system.box;
                             break;
-                        case pc.shape.Type.CAPSULE:
+                        case 'capsule':
                             mesh = this.system.capsule;
                             break;
-                        case pc.shape.Type.SPHERE:
+                        case 'sphere':
                             mesh = this.system.sphere;
                             break;
-                        case pc.shape.Type.CONE:
+                        case 'cone':
                             mesh = this.system.cone;
                             break;
-                        case pc.shape.Type.CYLINDER:
+                        case 'cylinder':
                             mesh = this.system.cylinder;
                             break;                    
                         default:
