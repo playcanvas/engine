@@ -129,8 +129,7 @@ pc.shape.intersection = function () {
          * @returns {Number} 0 if disjoint (no intersection), 1 if intersection found and 2 if ray is in plane of triangle
          */
         rayTriangle: function (rayOrigin, rayDir, t, intersection) {
-            var w0 = new pc.Vec3();
-            w0.sub(rayOrigin, t.v0);
+            var w0 = rayOrigin.clone().sub(t.v0);
             var a = -t.n.dot(w0);
             var b = t.n.dot(rayDir);
             if (Math.fabs(b) < 0.00000001) {     // ray is parallel to triangle plane

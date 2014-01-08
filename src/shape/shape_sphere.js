@@ -65,7 +65,7 @@ pc.extend(pc.shape, function () {
         for (i = 0; i < numVerts; i++) {
             vertex.set(vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
 
-            centerToVert.sub(vertex, this.center);
+            centerToVert.sub2(vertex, this.center);
             maxDistSq = Math.max(centerToVert.lengthSq(), maxDistSq);
         }
 

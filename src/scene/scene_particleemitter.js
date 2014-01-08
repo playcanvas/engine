@@ -216,10 +216,10 @@ pc.extend(pc.scene, function () {
                 var lifeTime = this.lifeTime;
                 var startTime = (p * lifeTime / count);
                 var frameStart = this.frameStart + plusMinus(this.frameStartRange);
-                position.add(this.position, plusMinusVector(this.positionRange));
-                velocity.add(this.velocity, plusMinusVector(this.velocityRange));
-                acceleration.add(this.acceleration, plusMinusVector(this.accelerationRange));
-                colorMult.add(this.colorMult, plusMinusVector(this.colorMultRange));
+                position.add2(this.position, plusMinusVector(this.positionRange));
+                velocity.add2(this.velocity, plusMinusVector(this.velocityRange));
+                acceleration.add2(this.acceleration, plusMinusVector(this.accelerationRange));
+                colorMult.add2(this.colorMult, plusMinusVector(this.colorMultRange));
                 var spinStart = this.spinStart + plusMinus(this.spinStartRange);
                 var spinSpeed = this.spinSpeed + plusMinus(this.spinSpeedRange);
                 var startSize = this.startSize + plusMinus(this.startSizeRange);
