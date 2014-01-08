@@ -428,7 +428,7 @@ pc.extend(pc.scene, function () {
                         if (meshInstance.layer !== pc.scene.LAYER_SKYBOX) {
                             mesh = meshInstance.mesh;
 
-                            this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                            this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (meshInstance.skinInstance) {
                                 this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
                                 device.setShader(this._depthShaderSkin);
@@ -567,7 +567,7 @@ pc.extend(pc.scene, function () {
                         mesh = meshInstance.mesh;
                         material = meshInstance.material;
 
-                        this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                        this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                         if (material.opacityMap) {
                             scope.resolve('texture_opacityMap').setValue(material.opacityMap);
                         }
