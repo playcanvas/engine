@@ -668,9 +668,9 @@ pc.extend(pc.fw, function () {
         _linkUpdateEntityTransform: function (guid, position, rotation, scale) {
             var entity = this.context.root.findByGuid(guid);
             if(entity) {
-                entity.setLocalPosition(position);
-                entity.setLocalEulerAngles(rotation);
-                entity.setLocalScale(scale);
+                entity.setLocalPosition(position[0], position[1], position[2]);
+                entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
+                entity.setLocalScale(scale[0], scale[1], scale[2]);
 
                 // Fire event to notify listeners that the transform has been changed by an external tool
                 entity.fire('livelink:updatetransform', position, rotation, scale);
@@ -732,7 +732,8 @@ pc.extend(pc.fw, function () {
         },
 
         _linkUpdatePackSettings: function (settings) {
-            this.context.scene.setGlobalAmbient(settings.render.global_ambient);
+            var ambient = settings.render.global_ambient;
+            this.context.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
 
             if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
                 this.context.systems.rigidbody.setGravity(settings.physics.gravity);
@@ -741,7 +742,9 @@ pc.extend(pc.fw, function () {
             this.context.scene.fog = settings.render.fog;
             this.context.scene.fogStart = settings.render.fog_start;
             this.context.scene.fogEnd = settings.render.fog_end;
-            this.context.scene.fogColor = new pc.Color(settings.render.fog_color);
+
+            var fog = settings.render.fog_color;
+            this.context.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
             this.context.scene.fogDensity = settings.render.fog_density;
         }
     };

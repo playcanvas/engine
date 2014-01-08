@@ -256,9 +256,9 @@ pc.extend(pc.scene, function () {
 
             var scope = this.device.scope;
 
-            this.ambientColor[0] = scene.ambientColor.r;
-            this.ambientColor[1] = scene.ambientColor.g;
-            this.ambientColor[2] = scene.ambientColor.b;
+            this.ambientColor[0] = scene.ambientLight.r;
+            this.ambientColor[1] = scene.ambientLight.g;
+            this.ambientColor[2] = scene.ambientLight.b;
             scope.resolve("light_globalAmbient").setValue(this.ambientColor);
 
             for (var i = 0; i < numDirs; i++) {
