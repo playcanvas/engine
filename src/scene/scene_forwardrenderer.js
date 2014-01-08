@@ -54,35 +54,35 @@ pc.extend(pc.scene, function () {
         }
         x = y * aspect;
 
-        points[0][0] = x;
-        points[0][1] = -y;
-        points[0][2] = -nearClip;
-        points[1][0] = x;
-        points[1][1] = y;
-        points[1][2] = -nearClip;
-        points[2][0] = -x;
-        points[2][1] = y;
-        points[2][2] = -nearClip;
-        points[3][0] = -x;
-        points[3][1] = -y;
-        points[3][2] = -nearClip;
+        points[0].x = x;
+        points[0].y = -y;
+        points[0].z = -nearClip;
+        points[1].x = x;
+        points[1].y = y;
+        points[1].z = -nearClip;
+        points[2].x = -x;
+        points[2].y = y;
+        points[2].z = -nearClip;
+        points[3].x = -x;
+        points[3].y = -y;
+        points[3].z = -nearClip;
 
         if (projection === pc.scene.Projection.PERSPECTIVE) {
             y = Math.tan(fov / 2.0) * farClip;
             x = y * aspect;
         }
-        points[4][0] = x;
-        points[4][1] = -y;
-        points[4][2] = -farClip;
-        points[5][0] = x;
-        points[5][1] = y;
-        points[5][2] = -farClip;
-        points[6][0] = -x;
-        points[6][1] = y;
-        points[6][2] = -farClip;
-        points[7][0] = -x;
-        points[7][1] = -y;
-        points[7][2] = -farClip;
+        points[4].x = x;
+        points[4].y = -y;
+        points[4].z = -farClip;
+        points[5].x = x;
+        points[5].y = y;
+        points[5].z = -farClip;
+        points[6].x = -x;
+        points[6].y = y;
+        points[6].z = -farClip;
+        points[7].x = -x;
+        points[7].y = -y;
+        points[7].z = -farClip;
 
         return points;
     }
@@ -399,9 +399,9 @@ pc.extend(pc.scene, function () {
                     if (meshInstance.material.blendType === pc.scene.BLEND_NORMAL) {
                         meshInstance.syncAabb();
                         var meshPos = meshInstance.aabb.center;
-                        var tempx = meshPos[0] - camPos[0];
-                        var tempy = meshPos[1] - camPos[1];
-                        var tempz = meshPos[2] - camPos[2];
+                        var tempx = meshPos.x - camPos.x;
+                        var tempy = meshPos.y - camPos.y;
+                        var tempz = meshPos.z - camPos.z;
                         meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
                     } else if (typeof meshInstance.distSqr !== 'undefined') {
                         delete meshInstance.distSqr;
@@ -498,12 +498,12 @@ pc.extend(pc.scene, function () {
                         var maxz = -1000000;
                         for (j = 0; j < 8; j++) {
                             var p = frustumPoints[j];
-                            if (p[0] < minx) minx = p.x;
-                            if (p[0] > maxx) maxx = p.x;
-                            if (p[1] < miny) miny = p.y;
-                            if (p[1] > maxy) maxy = p.y;
-                            if (p[2] < minz) minz = p.z;
-                            if (p[2] > maxz) maxz = p.z;
+                            if (p.x < minx) minx = p.x;
+                            if (p.x > maxx) maxx = p.x;
+                            if (p.y < miny) miny = p.y;
+                            if (p.y > maxy) maxy = p.y;
+                            if (p.z < minz) minz = p.z;
+                            if (p.z > maxz) maxz = p.z;
                         }
     /*
                         var worldUnitsPerTexelX = (maxx - minx) / light._shadowWidth;
