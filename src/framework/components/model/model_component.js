@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
      * @property {String} asset The GUID of the asset for the model (only applies to models of type 'asset')
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {String} materialId The GUID of the material asset that will be used to render the model (not used on models of type 'asset')
+     * @property {String} materialAsset The GUID of the material asset that will be used to render the model (not used on models of type 'asset')
      * @property {pc.scene.Model} model The model that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity) {
@@ -28,7 +28,7 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_materialId", this.onSetMaterialId, this);
+        this.on("set_materialAsset", this.onSetMaterialAsset, this);
 
         this.materialLoader = new pc.resources.MaterialResourceLoader(system.context.graphicsDevice, system.context.assets);
     };
@@ -200,7 +200,7 @@ pc.extend(pc.fw, function () {
             }        
         },
 
-        onSetMaterialId: function (name, oldValue, newValue) {
+        onSetMaterialAsset: function (name, oldValue, newValue) {
             var guid = newValue;
             var material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
             this.data.material = material;

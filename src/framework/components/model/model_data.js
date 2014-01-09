@@ -13,7 +13,7 @@ pc.extend(pc.fw, function() {
         this.asset = null;
         this.castShadows = false;
         this.receiveShadows = true;
-        this.materialId = null;
+        this.materialAsset = null;
         
         // non-serialized
         this.material = null;

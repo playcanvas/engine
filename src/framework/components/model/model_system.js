@@ -56,7 +56,7 @@ pc.extend(pc.fw, function () {
                 type: 'asset'
             }
         }, {
-            name: "materialId",
+            name: "materialAsset",
             displayName: "Material",
             description: "The material of the model",
             type: "asset",
@@ -122,7 +122,7 @@ pc.extend(pc.fw, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['material', 'materialId', 'asset', 'castShadows', 'receiveShadows', 'type'];            
+            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type'];            
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -143,7 +143,7 @@ pc.extend(pc.fw, function () {
             var component = this.addComponent(clone, {});
             
             clone.model.data.type = entity.model.type;
-            clone.model.data.materialId = entity.model.materialId;
+            clone.model.data.materialAsset = entity.model.materialAsset;
             clone.model.data.asset = entity.model.asset;
             clone.model.data.castShadows = entity.model.castShadows;
             clone.model.data.receiveShadows = entity.model.receiveShadows;
