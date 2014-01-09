@@ -41,7 +41,7 @@ pc.extend(pc.scene, function () {
         update: function () {
             this.clearParameters();
 
-            this.setParameter('uColor', this.color);
+            this.setParameter('uColor', this.color.data);
         },
 
         updateShader: function (device) {

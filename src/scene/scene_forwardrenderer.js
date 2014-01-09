@@ -277,7 +277,7 @@ pc.extend(pc.scene, function () {
                             directional._shadowCamera._renderTarget._depthTexture :
                             directional._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
-                    scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
+                    scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._shadowResolution, directional._shadowBias]);
                 }
             }
@@ -328,7 +328,7 @@ pc.extend(pc.scene, function () {
                             spot._shadowCamera._renderTarget._depthTexture :
                             spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
-                    scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
+                    scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._shadowResolution, spot._shadowBias]);
                 }
             }
@@ -482,7 +482,7 @@ pc.extend(pc.scene, function () {
                         _getFrustumPoints(camera, frustumPoints);
                         var worldToShadowCam = shadowCamWtm.invert();
                         var camToWorld = camera.worldTransform;
-                        var c2sc = new pc.Matrix();
+                        var c2sc = new pc.Mat4();
                         c2sc.mul2(worldToShadowCam, camToWorld);
                         for (j = 0; j < 8; j++) {
                             c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);

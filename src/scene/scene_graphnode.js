@@ -897,7 +897,7 @@ pc.extend(pc.scene, function () {
                 switch (arguments.length) {
                     case 1:
                         target.copy(arguments[0]);
-                        up.copy(pc.Vec3.up);
+                        up.copy(pc.Vec3.UP);
                         break;
                     case 2:
                         target.copy(arguments[0]);
@@ -905,7 +905,7 @@ pc.extend(pc.scene, function () {
                         break;
                     case 3:
                         target.set(arguments[0], arguments[1], arguments[2]);
-                        up.copy(pc.Vec3.up);
+                        up.copy(pc.Vec3.UP);
                         break;
                     case 6:
                         target.set(arguments[0], arguments[1], arguments[2]);
