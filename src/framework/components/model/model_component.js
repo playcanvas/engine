@@ -22,16 +22,18 @@ pc.extend(pc.fw, function () {
      * @property {String} materialAsset The material {@link pc.Asset.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.scene.Model} model The model that is added to the scene graph.
      */
-    var ModelComponent = function ModelComponent (system, entity) {
+    var ModelComponent = function ModelComponent (system, entity)   {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_materialAsset", this.onSetMaterialAsset, this);
 
-        // override getter of material asset to return a pc.Asset instead
-        this.__defineGetter__("materialAsset", this.onGetMaterialAsset.bind(this)); 
+        // override materialAsset property to return a pc.Asset instead
+        Object.defineProperty(this, 'materialAsset', {
+            set: this.onSetMaterialAsset.bind(this),
+            get: this.onGetMaterialAsset.bind(this)
+        });
 
         this.materialLoader = new pc.resources.MaterialResourceLoader(system.context.graphicsDevice, system.context.assets);
     };
@@ -203,7 +205,7 @@ pc.extend(pc.fw, function () {
             }        
         },
 
-        onSetMaterialAsset: function (name, oldValue, newValue) {
+        onSetMaterialAsset: function (newValue) {
             // if the type of the value is not a string assume it is an pc.Asset
             var guid = typeof newValue === 'string' || !newValue ? newValue : newValue.resourceId;
 
@@ -215,6 +217,8 @@ pc.extend(pc.fw, function () {
                     meshInstances[i].material = material;
                 }
             }
+
+            this.data.materialAsset = guid;
         },
 
         onGetMaterialAsset: function () {
