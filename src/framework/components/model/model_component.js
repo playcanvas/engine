@@ -19,16 +19,21 @@ pc.extend(pc.fw, function () {
      * @property {String} asset The GUID of the asset for the model (only applies to models of type 'asset')
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {String} materialAsset The GUID of the material asset that will be used to render the model (not used on models of type 'asset')
+     * @property {String} materialAsset The material {@link pc.Asset.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.scene.Model} model The model that is added to the scene graph.
      */
-    var ModelComponent = function ModelComponent (system, entity) {
+    var ModelComponent = function ModelComponent (system, entity)   {
         this.on("set_type", this.onSetType, this);
         this.on("set_asset", this.onSetAsset, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_materialAsset", this.onSetMaterialAsset, this);
+
+        // override materialAsset property to return a pc.Asset instead
+        Object.defineProperty(this, 'materialAsset', {
+            set: this.setMaterialAsset.bind(this),
+            get: this.getMaterialAsset.bind(this)
+        });
 
         this.materialLoader = new pc.resources.MaterialResourceLoader(system.context.graphicsDevice, system.context.assets);
     };
@@ -200,9 +205,11 @@ pc.extend(pc.fw, function () {
             }        
         },
 
-        onSetMaterialAsset: function (name, oldValue, newValue) {
-            var guid = newValue;
-            var material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
+        setMaterialAsset: function (newValue) {
+            // if the type of the value is not a string assume it is an pc.Asset
+            var guid = typeof newValue === 'string' || !newValue ? newValue : newValue.resourceId;
+
+            material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
             this.data.material = material;
             if (this.data.model && this.data.type !== 'asset') {
                 var meshInstances = this.data.model.meshInstances;
@@ -210,6 +217,14 @@ pc.extend(pc.fw, function () {
                     meshInstances[i].material = material;
                 }
             }
+
+            var oldValue = this.data.materialAsset;
+            this.data.materialAsset = guid;
+            this.fire('set', 'materialAsset', oldValue, guid);                            
+        },
+
+        getMaterialAsset: function () {
+            return this.system.context.assets.getAssetByResourceId(this.data.materialAsset);
         },
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
