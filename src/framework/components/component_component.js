@@ -46,7 +46,8 @@ pc.extend(pc.fw, function () {
                     Object.defineProperty(this, prop.name, {
                         get: function () {
                             return this.data[prop.name];
-                        }
+                        },
+                        configurable: true
                     });
                 } else {
                     Object.defineProperty(this, prop.name, {
@@ -57,7 +58,8 @@ pc.extend(pc.fw, function () {
                             var oldValue = this.data[prop.name];
                             this.data[prop.name] = value;
                             this.fire('set', prop.name, oldValue, value);                            
-                        }
+                        },
+                        configurable: true
                     });
                 }
             }.bind(this));

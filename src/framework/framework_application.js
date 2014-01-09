@@ -86,7 +86,6 @@ pc.extend(pc.fw, function () {
         var cubemapsys = new pc.fw.CubeMapComponentSystem(this.context);
         var staticcubemapsys = new pc.fw.StaticCubeMapComponentSystem(this.context);
         var lightsys = new pc.fw.LightComponentSystem(this.context);
-        var primitivesys = new pc.fw.PrimitiveComponentSystem(this.context);
         var packsys = new pc.fw.PackComponentSystem(this.context);
         var skyboxsys = new pc.fw.SkyboxComponentSystem(this.context);
         var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
