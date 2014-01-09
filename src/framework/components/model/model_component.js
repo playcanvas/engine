@@ -31,8 +31,8 @@ pc.extend(pc.fw, function () {
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
-            set: this.onSetMaterialAsset.bind(this),
-            get: this.onGetMaterialAsset.bind(this)
+            set: this.setMaterialAsset.bind(this),
+            get: this.getMaterialAsset.bind(this)
         });
 
         this.materialLoader = new pc.resources.MaterialResourceLoader(system.context.graphicsDevice, system.context.assets);
@@ -205,7 +205,7 @@ pc.extend(pc.fw, function () {
             }        
         },
 
-        onSetMaterialAsset: function (newValue) {
+        setMaterialAsset: function (newValue) {
             // if the type of the value is not a string assume it is an pc.Asset
             var guid = typeof newValue === 'string' || !newValue ? newValue : newValue.resourceId;
 
@@ -218,10 +218,12 @@ pc.extend(pc.fw, function () {
                 }
             }
 
+            var oldValue = this.data.materialAsset;
             this.data.materialAsset = guid;
+            this.fire('set', 'materialAsset', oldValue, guid);                            
         },
 
-        onGetMaterialAsset: function () {
+        getMaterialAsset: function () {
             return this.system.context.assets.getAssetByResourceId(this.data.materialAsset);
         },
 
