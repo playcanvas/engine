@@ -125,19 +125,29 @@ pc.extend(pc, (function () {
          * @param {pc.Vec3} rhs The second 3-dimensional vector operand of the cross product.
          * @returns {pc.Vec3} Self for chaining.
          * @example
-         * var result = pc.Vec3.cross(pc.Vec3.RIGHT, pc.Vec3.UP);
+         * var back = new pc.Vec3().cross(pc.Vec3.RIGHT, pc.Vec3.UP);
+         *
          * // Should print the Z axis (i.e. [0, 0, 1])
-         * console.log("The result of the cross product is: " + result.toString());
+         * console.log("The result of the cross product is: " + back.toString());
          * @author Will Eastcott
          */
         cross: function (lhs, rhs) {
-            var a = lhs.data,
-                b = rhs.data,
-                r = this.data;
+            var a, b, r, ax, ay, az, bx, by, bz;
 
-            r[0] = a[1] * b[2] - b[1] * a[2];
-            r[1] = a[2] * b[0] - b[2] * a[0];
-            r[2] = a[0] * b[1] - b[0] * a[1];
+            a = lhs.data;
+            b = rhs.data;
+            r = this.data;
+
+            ax = a[0];
+            ay = a[1];
+            az = a[2];
+            bx = b[0];
+            by = b[1];
+            bz = b[2];
+
+            r[0] = ay * bz - by * az;
+            r[1] = az * bx - bz * ax;
+            r[2] = ax * by - bx * ay;
 
             return this;
         },
