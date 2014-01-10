@@ -94,7 +94,7 @@ pc.extend(pc.fw, function () {
 
         var gd = context.graphicsDevice;
         this.box = pc.scene.procedural.createBox(gd, {
-            halfExtents: [0.5,0.5,0.5]
+            halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
         });
         this.capsule = pc.scene.procedural.createCapsule(gd, {
             radius: 0.5,

@@ -25,14 +25,14 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
     var vertexCount   = vertices.length / 3;
     var i1, i2, i3;
     var x1, x2, y1, y2, z1, z2, s1, s2, t1, t2, r;
-    var sdir = new pc.Vec3(0, 0, 0);
-    var tdir = new pc.Vec3(0, 0, 0);
-    var v1   = new pc.Vec3(0, 0, 0);
-    var v2   = new pc.Vec3(0, 0, 0);
-    var v3   = new pc.Vec3(0, 0, 0);
-    var w1   = new pc.Vec2(0, 0);
-    var w2   = new pc.Vec2(0, 0);
-    var w3   = new pc.Vec2(0, 0);
+    var sdir = new pc.Vec3();
+    var tdir = new pc.Vec3();
+    var v1   = new pc.Vec3();
+    var v2   = new pc.Vec3();
+    var v3   = new pc.Vec3();
+    var w1   = new pc.Vec2();
+    var w2   = new pc.Vec2();
+    var w3   = new pc.Vec2();
     var i; // Loop counter
     var tan1 = new Float32Array(vertexCount * 3);
     var tan2 = new Float32Array(vertexCount * 3);
@@ -64,7 +64,7 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
         t1 = w2.y - w1.y;
         t2 = w3.y - w1.y;
 
-        r = 1 / (s1 * t2 - s2 * t1);
+        r = 1.0 / (s1 * t2 - s2 * t1);
         sdir.set((t2 * x1 - t1 * x2) * r, 
                  (t2 * y1 - t1 * y2) * r,
                  (t2 * z1 - t1 * z2) * r);
@@ -93,10 +93,10 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
         tan2[i3 * 3 + 2] += tdir.z;
     }
 
-    var t1 = new pc.Vec3(0, 0, 0);
-    var t2 = new pc.Vec3(0, 0, 0);
-    var n    = new pc.Vec3(0, 0, 0);
-    var temp = new pc.Vec3(0, 0, 0);
+    t1 = new pc.Vec3();
+    t2 = new pc.Vec3();
+    var n = new pc.Vec3();
+    var temp = new pc.Vec3();
 
     for (i = 0; i < vertexCount; i++) {
         n.set(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
@@ -114,7 +114,7 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
 
         // Calculate handedness
         temp.cross(n, t1);
-        tangents[i * 4 + 3] = (temp.dot(t2) < 0) ? -1 : 1;
+        tangents[i * 4 + 3] = (temp.dot(t2) < 0.0) ? -1.0 : 1.0;
     }
     
     return tangents;
@@ -312,7 +312,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
                 top    = new pc.Vec3(sinTheta * peakRadius,  height / 2.0, cosTheta * peakRadius);
                 pos.lerp(bottom, top, i / heightSegments);
                 bottomToTop.sub2(top, bottom).normalize();
-                tangent = new pc.Vec3(cosTheta, 0, -sinTheta);
+                tangent = new pc.Vec3(cosTheta, 0.0, -sinTheta);
                 norm.cross(tangent, bottomToTop).normalize();
 
                 positions.push(pos.x, pos.y, pos.z);
@@ -650,7 +650,7 @@ pc.scene.procedural.createSphere = function (device, opts) {
  * <p>Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the plane's mesh.</p>
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
- * @param {Array} opts.halfExtents The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
+ * @param {pc.Vec2} opts.halfExtents The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the plane (defaults to 5).
  * @param {Number} opts.lengthSegments The number of divisions along the Z axis of the plane (defaults to 5).
  * @returns {pc.scene.Mesh} A new plane-shaped mesh.
@@ -658,7 +658,7 @@ pc.scene.procedural.createSphere = function (device, opts) {
  */
 pc.scene.procedural.createPlane = function (device, opts) {
     // Check the supplied options and provide defaults for unspecified ones
-    var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : [0.5, 0.5];
+    var he = opts && opts.halfExtents !== undefined ? opts.halfExtents : new pc.Vec2(0.5, 0.5);
     var ws = opts && opts.widthSegments !== undefined ? opts.widthSegments : 5;
     var ls = opts && opts.lengthSegments !== undefined ? opts.lengthSegments : 5;
 
@@ -681,9 +681,9 @@ pc.scene.procedural.createPlane = function (device, opts) {
     //         width
     for (i = 0; i <= ws; i++) {
         for (j = 0; j <= ls; j++) {
-            x = -he[0] + 2.0 * he[0] * i / ws;
+            x = -he.x + 2.0 * he.x * i / ws;
             y = 0.0;
-            z = -(-he[1] + 2.0 * he[1] * j / ls);
+            z = -(-he.y + 2.0 * he.y * j / ls);
             u = i / ws;
             v = j / ls;
 
@@ -736,14 +736,14 @@ pc.scene.procedural.createBox = function (device, opts) {
     var hs = opts && opts.heightSegments !== undefined ? opts.heightSegments : 1;
 
     var corners = [
-        new pc.Vec3(-he[0], -he[1],  he[2]),
-        new pc.Vec3( he[0], -he[1],  he[2]),
-        new pc.Vec3( he[0],  he[1],  he[2]),
-        new pc.Vec3(-he[0],  he[1],  he[2]),
-        new pc.Vec3( he[0], -he[1], -he[2]),
-        new pc.Vec3(-he[0], -he[1], -he[2]),
-        new pc.Vec3(-he[0],  he[1], -he[2]),
-        new pc.Vec3( he[0],  he[1], -he[2])
+        new pc.Vec3(-he.x, -he.y,  he.z),
+        new pc.Vec3( he.x, -he.y,  he.z),
+        new pc.Vec3( he.x,  he.y,  he.z),
+        new pc.Vec3(-he.x,  he.y,  he.z),
+        new pc.Vec3( he.x, -he.y, -he.z),
+        new pc.Vec3(-he.x, -he.y, -he.z),
+        new pc.Vec3(-he.x,  he.y, -he.z),
+        new pc.Vec3( he.x,  he.y, -he.z)
     ];
 
     var faceAxes = [
@@ -790,7 +790,7 @@ pc.scene.procedural.createBox = function (device, opts) {
                 var temp2 = new pc.Vec3();
                 var temp3 = new pc.Vec3();
                 var r = new pc.Vec3();
-                temp1.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][1]], i / uSegments); 
+                temp1.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][1]], i / uSegments);
                 temp2.lerp(corners[faceAxes[side][0]], corners[faceAxes[side][2]], j / vSegments);
                 temp3.sub2(temp2, corners[faceAxes[side][0]]);
                 r.add2(temp1, temp3);
