@@ -637,15 +637,26 @@ pc.extend(pc.fw, function () {
          */
         _linkUpdateComponent: function(guid, componentName, attributeName, value) {
             var entity = this.context.root.findOne("getGuid", guid);
-            //var system;
+            var attribute;
                 
             if (entity) {
                 if(componentName) {
                     if(entity[componentName]) {
-                        if (editor && editor.link.exposed[componentName][attributeName]) {
+                        attribute = editor.link.exposed[componentName][attributeName];
+                        if (editor && attribute) {
                             // Override Type provided
-                            if (editor.link.exposed[componentName][attributeName].RuntimeType) {
-                                    entity[componentName][attributeName] = new editor.link.exposed[componentName][attributeName].RuntimeType(value);
+                            if (attribute.RuntimeType) {
+                                    if (attribute.RuntimeType === pc.Vec3) {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
+                                    } else if (attribute.RuntimeType === pc.Color) {
+                                        if (value.length === 3) {
+                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
+                                        } else {
+                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
+                                        }
+                                    } else {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value);
+                                    }
                             } else {
                                 entity[componentName][attributeName] = value;        
                             }

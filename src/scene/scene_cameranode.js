@@ -94,25 +94,22 @@ pc.extend(pc.scene, function () {
         worldToScreen: function (point) {
             var projMat,
                 wtm = this.getWorldTransform(),
-                viewMat = pc.math.mat4.invert(wtm),
-                pvm = pc.math.mat4.create(),
+                viewMat = wtm.clone().invert();
+                pvm = new pc.Mat4();
                 width = this._renderTarget.getWidth(),
                 height = this._renderTarget.getHeight(),
-                point2d = Vector4.create();
+                point2d = new pc.Vec3();
 
-            projMat = pc.math.mat4.makePerspective(this._fov, width / height, this._nearClip, this._farClip);
+            projMat = new pc.Mat4().setPerspective(this._fov, width / height, this._nearClip, this._farClip);
             // Create projection view matrix
-            pc.math.mat4.multiply(projMat, viewMat, pvm);    
+            pvm.mul2(projMat, viewMat);
 
             // transform point
-            pc.math.mat4.multiplyVec3(point, 1.0, pvm, point2d);
+            pvm.transformPoint(point, point2d);
 
-            // Convert from homogenous coords
-            var denom = point2d[3] || 1;
-
-            point2d[0] = (width / 2) + (width / 2) * point2d[0] / denom;
-            point2d[1] = height - ((height / 2) + (height / 2) * point2d[1] / denom);
-            point2d[2] = point2d[2] / denom;        
+            point2d.x = (width / 2) + (width / 2) * point2d.x;
+            point2d.y = height - ((height / 2) + (height / 2) * point2d.y);
+            point2d.z = point2d.z;        
 
             return point2d;
         },
