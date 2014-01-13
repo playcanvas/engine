@@ -185,6 +185,8 @@ pc.extend(pc.gfx, function () {
         this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
         if (!this.extTextureFilterAnisotropic) {
             this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+        }
+        if (this.extTextureFilterAnisotropic) {
             this.maxTextureMaxAnisotropy = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
         }
         this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');

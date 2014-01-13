@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.135.1
+--------
+* Hide ballsocketjoint from the docs.
+* [FIX] Prevent the engine throwing an exception on startup if the anisotropic filter extension is not available.
+
+--------
 v0.135.0
 --------
 * Merged model and primitive components

@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @name pc.fw.BallSocketJointComponentSystem
      * @constructor Create a new BallSocketJointComponentSystem
      * @class Manages creation of BallSocketJointComponents
@@ -118,6 +119,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.fw.BallSocketJointComponentSystem#setDebugRender
         * @description Display debug representation of the joint
