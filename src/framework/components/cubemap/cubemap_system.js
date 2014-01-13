@@ -70,13 +70,11 @@ pc.extend(pc.fw, function () {
                     componentData = components[id].data;
 
                     var model;
-                    // Get the model from either the model or primitive component
+                    // Get the model from the model 
                     if (entity.model) {
                         model = entity.model.model;
-                    } else if (entity.primitive) {
-                        model = entity.primitive.model;
-                    }
-
+                    } 
+                    
                     if (model) {
                         var scene = this.context.scene;
                         scene.removeModel(model);

@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.135.0
+--------
+* Merged model and primitive components
+* Added cylinder collision
+
+--------
 v0.134.0
 --------
 * [FIX] Collision component cloning issues
