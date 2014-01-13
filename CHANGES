@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+--------
+v0.135.2
+--------
+* [FIX] bumpMapFactor now becomes bumpiness in the Phong material
+
 v0.135.1
 --------
 * Hide ballsocketjoint from the docs.
