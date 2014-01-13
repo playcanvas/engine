@@ -198,7 +198,12 @@ pc.extend(pc.scene, function () {
                         this[param.name] = null;
                     }
                 } else if (param.type === "float" || param.type === "boolean") {
-                    this[param.name] = param.data;
+                    // Temp hack for bumpMapFactor
+                    if (param.name === 'bumpMapFactor') {
+                        this['bumpiness'] = param.data;
+                    } else {
+                        this[param.name] = param.data;
+                    }
                 }
 
                 if (param.name === 'blendType') {
