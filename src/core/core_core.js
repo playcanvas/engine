@@ -34,16 +34,13 @@ var pc = {
         data: {},
                 
         /**
+         * @private
          * @function
          * @name pc.unpack()
          * @description Copy a set of common PlayCanvas functions/classes/namespaces into the global namespace
          */
         unpack: function () {
-            window.m4 = pc.math.mat4;
-            window.v2 = pc.math.vec2;
-            window.v3 = pc.math.vec3;
-            window.v4 = pc.math.vec4;
-            window.quat = pc.math.quat;
+            console.warn("pc.unpack has been deprecated and will be removed shortly. Please update your code.");
         },
              
         /**

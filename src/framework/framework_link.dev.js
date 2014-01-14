@@ -49,6 +49,8 @@ pc.extend(editor, function () {
         if (details.type === 'vector') {
             // indicate that this is an array type (and therefore is a reference type and needs copying)
             details.array = true;
+            // Provide an RuntimeType which is instatiated after passing an object over livelink
+            details.RuntimeType = pc.Vec3;
         }
 
         if (details.type === 'rgb' || 

@@ -86,7 +86,7 @@ pc.extend(pc.posteffect, function () {
         this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
 
         // Uniforms
-        this.resolution = pc.math.vec2.create(0, 0);
+        this.resolution = new Float32Array(2);
     }
 
     Fxaa.prototype = {
@@ -94,7 +94,8 @@ pc.extend(pc.posteffect, function () {
             var device = this.device;
             var scope = device.scope;
 
-            pc.math.vec2.set(this.resolution, 1/inputTarget.width, 1/inputTarget.height);
+            this.resolution[0] = 1 / inputTarget.width;
+            this.resolution[1] = 1 / inputTarget.height;
             scope.resolve("uResolution").setValue(this.resolution);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.fxaaShader);

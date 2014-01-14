@@ -6,78 +6,74 @@ pc.extend(pc.shape, function () {
      * Sphere shape
      * @constructor
      * @class Create a new Sphere shape
-     * @param {Vec3} center The center of the sphere.
-     * @param {Vec3} radius Radius of sphere
+     * @param {pc.Vec3} center The center of the sphere.
+     * @param {Number} radius Radius of sphere
      */
-    var Sphere = function Sphere(center, radius) {
-        this.center = center || pc.math.vec3.create(0, 0, 0);
-        this.radius = radius || 1;
-        
+    function Sphere(center, radius) {
+        this.center = (center === undefined) ? new pc.Vec3(0, 0, 0) : center;
+        this.radius = (radius === undefined) ? 1 : radius;
+
         this.type = pc.shape.Type.SPHERE;
     };
     Sphere = pc.inherits(Sphere, pc.shape.Shape);
 
     /**
      * Test whether point is inside sphere
-     * @param {Vec3} point - point to test
-     * @param {Vec3} sphere - sphere to check point against.
+     * @param {pc.Vec3} point Point to test
      */
-    Sphere.prototype.containsPoint = function (point) {
-        var offset = pc.math.vec3.create();
-        pc.math.vec3.subtract(point, this.center, offset);
-        var length = pc.math.vec3.length(offset);
-        
-        return (length < this.radius);
-    };
+    Sphere.prototype.containsPoint = (function () {
+        var centerToPoint = new pc.Vec3();
+        return function (point) {
+            var lenSq = centerToPoint.sub2(point, this.center).lengthSq();
+            var r = this.radius;
+            return lenSq < r * r;
+        }
+    }());
 
     Sphere.prototype.compute = function (vertices) {
         var i;
         var numVerts = vertices.length / 3;
-        
-        var vertex = pc.math.vec3.create(0, 0, 0);
-        
+
+        var vertex = new pc.Vec3(0, 0, 0);
+
         // FIRST PASS:
         // Find the "average vertex", which is the sphere's center...
-        var avgVertex = pc.math.vec3.create(0, 0, 0);
-        var sum = pc.math.vec3.create(0, 0, 0);
+        var avgVertex = new pc.Vec3(0, 0, 0);
+        var sum = new pc.Vec3(0, 0, 0);
 
         for (i = 0; i < numVerts; i++) {
-            pc.math.vec3.set(vertex, vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
-            pc.math.vec3.add(sum, vertex, sum);
+            vertex.set(vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
+            sum.addSelf(vertex);
 
             // apply a part-result to avoid float-overflows
             if (i % 100 === 0) {
-                pc.math.vec3.scale(sum, 1.0 / numVerts, sum);
-                pc.math.vec3.add(avgVertex, sum, avgVertex);
-                pc.math.vec3.set(sum, 0.0, 0.0, 0.0);
+                sum.scale(1 / numVerts);
+                avgVertex.add(sum);
+                sum.set(0, 0, 0);
             }
         }
 
-        pc.math.vec3.scale(sum, 1.0 / numVerts, sum);
-        pc.math.vec3.add(avgVertex, sum, avgVertex);
-        pc.math.vec3.set(sum, 0.0, 0.0, 0.0);
+        sum.scale(1 / numVerts);
+        avgVertex.add(sum);
 
-        this.center = avgVertex;
+        this.center.copy(avgVertex);
 
         // SECOND PASS:
         // Find the maximum (squared) distance of all vertices to the center...
-        var maxDistSq = 0.0;
-        var centerToVert = pc.math.vec3.create(0, 0, 0);
+        var maxDistSq = 0;
+        var centerToVert = new pc.Vec3(0, 0, 0);
 
         for (i = 0; i < numVerts; i++) {
-            pc.math.vec3.set(vertex, vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
+            vertex.set(vertices[i*3], vertices[i*3+1], vertices[i*3+2]);
 
-            pc.math.vec3.subtract(vertex, this.center, centerToVert);
-            var distSq = pc.math.vec3.dot(centerToVert, centerToVert);
-            if (distSq > maxDistSq)
-                maxDistSq = distSq;
+            centerToVert.sub2(vertex, this.center);
+            maxDistSq = Math.max(centerToVert.lengthSq(), maxDistSq);
         }
-        
+
         this.radius = Math.sqrt(maxDistSq);
     };
-    
+
     return {
         Sphere: Sphere
     };
-    
 }());

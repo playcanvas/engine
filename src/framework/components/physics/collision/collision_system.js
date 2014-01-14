@@ -141,6 +141,10 @@ pc.extend(pc.fw, function () {
 
             component.data.type = data.type;
 
+            if (data.halfExtents) {
+                data.halfExtents = new pc.Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
+            }
+
             var impl = this._createImplementation(data.type);
             impl.beforeInitialize(component, data);
 
@@ -399,17 +403,13 @@ pc.extend(pc.fw, function () {
 
             var data = {
                 type: src.data.type,
-                halfExtents: pc.extend([], src.data.halfExtents),
+                halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
                 radius: src.data.radius,
                 axis: src.data.axis,
                 height: src.data.height,
                 asset: src.data.asset,
                 model: src.data.model
             };
-
-            //if (src.data.model) {
-            //    data.model = src.data.model.clone();
-            //}
 
             return this.system.addComponent(clone, data);  
         }
@@ -461,7 +461,7 @@ pc.extend(pc.fw, function () {
             
             if (!this.material) {
                 var material = new pc.scene.BasicMaterial();
-                material.color = pc.math.vec4.create(0, 0, 1, 1);
+                material.color = new pc.Color(0, 0, 1, 1);
                 material.update()
                 this.material = material;
             }
@@ -471,24 +471,24 @@ pc.extend(pc.fw, function () {
 
         createPhysicalShape: function (entity, data) {
             if (typeof(Ammo) !== 'undefined') {
-                return new Ammo.btBoxShape( 
-                    new Ammo.btVector3( 
-                        data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]
-                    ));    
+                var he = data.halfExtents;
+                var ammoHe = new Ammo.btVector3(he.x, he.y, he.z);
+                return new Ammo.btBoxShape(ammoHe);
             } else {
                 return undefined;
             }
         },
 
         updateDebugShape : function (entity, data) {
-            var x = data.halfExtents[0];
-            var y = data.halfExtents[1];
-            var z = data.halfExtents[2];
+            var he = data.halfExtents;
+            var x = he.x;
+            var y = he.y;
+            var z = he.z;
 
             var root = data.model.graph;
             root.setPosition(entity.getPosition());
             root.setRotation(entity.getRotation());
-            root.setLocalScale(x / 0.5, y / 0.5, z / 0.5);
+            root.setLocalScale(x * 2, y * 2, z * 2);
         }
     });
 
@@ -559,7 +559,7 @@ pc.extend(pc.fw, function () {
             
             if (!this.material) {
                 var material = new pc.scene.BasicMaterial();
-                material.color = pc.math.vec4.create(0, 0, 1, 1);
+                material.color = new pc.Color(0, 0, 1, 1);
                 material.update();
                 this.material = material;
             }
@@ -576,11 +576,11 @@ pc.extend(pc.fw, function () {
         },
 
         updateDebugShape: function (entity, data) {
-            var r = data.radius;
             var root = data.model.graph;
             root.setPosition(entity.getPosition());
             root.setRotation(entity.getRotation());
-            root.setLocalScale(r / 0.5, r / 0.5, r / 0.5);
+            var s = data.radius * 2;
+            root.setLocalScale(s, s, s);
         }
     });
 
@@ -623,7 +623,7 @@ pc.extend(pc.fw, function () {
             // no need to create a new material for each capsule shape
             if (!this.material) {
                 var material = new pc.scene.BasicMaterial();
-                material.color = pc.math.vec4.create(0, 0, 1, 1);
+                material.color = new pc.Color(0, 0, 1, 1);
                 material.update();
                 this.material = material;    
             }
@@ -788,7 +788,7 @@ pc.extend(pc.fw, function () {
 
                 if (!this.material) {
                     var material = new pc.scene.BasicMaterial();
-                    material.color = pc.math.vec4.create(0, 0, 1, 1);
+                    material.color = new pc.Color(0, 0, 1, 1);
                     material.update();
                     this.material = material;    
                 }
@@ -958,27 +958,27 @@ pc.extend(pc.fw, function () {
                     var triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
 
                     var wtm = meshInstance.node.getWorldTransform();
-                    var scl = pc.math.mat4.getScale(wtm);
-                    triMeshShape.setLocalScaling(new Ammo.btVector3(scl[0], scl[1], scl[2]));
+                    var scl = wtm.getScale();
+                    triMeshShape.setLocalScaling(new Ammo.btVector3(scl.x, scl.y, scl.z));
 
-                    var position = meshInstance.node.getPosition();
-                    var rotation = meshInstance.node.getRotation();
+                    var pos = meshInstance.node.getPosition();
+                    var rot = meshInstance.node.getRotation();
 
                     var transform = new Ammo.btTransform();
                     transform.setIdentity();
-                    transform.getOrigin().setValue(position[0], position[1], position[2]);
+                    transform.getOrigin().setValue(pos.x, pos.y, pos.z);
 
                     var ammoQuat = new Ammo.btQuaternion();
-                    ammoQuat.setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
+                    ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
                     transform.setRotation(ammoQuat);
 
                     shape.addChildShape(transform, triMeshShape);
                 }
 
                 var entityTransform = entity.getWorldTransform();
-                var scale = pc.math.mat4.getScale(entityTransform);
+                var scale = entityTransform.getScale();
                 var vec = new Ammo.btVector3();
-                vec.setValue(scale[0], scale[1], scale[2]);
+                vec.setValue(scale.x, scale.y, scale.z);
                 shape.setLocalScaling(vec);
 
                 return shape;
@@ -998,7 +998,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        loadModelAsset: function(component) {
+        loadModelAsset: function (component) {
             var guid = component.data.asset;
             var entity = component.entity;
             var data = component.data;
@@ -1047,16 +1047,16 @@ pc.extend(pc.fw, function () {
              
         },
 
-        updateTransform: function(component, position, rotation, scale) {
+        updateTransform: function (component, position, rotation, scale) {
             if (component.shape) {
                 var entityTransform = component.entity.getWorldTransform();
-                var worldScale = pc.math.mat4.getScale(entityTransform);
+                var worldScale = entityTransform.getScale();
 
                 // if the scale changed then recreate the shape
                 var previousScale = component.shape.getLocalScaling();                
-                if (worldScale[0] != previousScale.x() ||
-                    worldScale[1] != previousScale.y() ||
-                    worldScale[2] != previousScale.z() ) {
+                if (worldScale.x !== previousScale.x() ||
+                    worldScale.y !== previousScale.y() ||
+                    worldScale.z !== previousScale.z() ) {
                     this.doRecreatePhysicalShape(component);
                 }
             }

@@ -21,7 +21,7 @@ pc.extend(pc, (function () {
     * })
     *
     * To create a pool of vec3's:
-    * var pool = new ObjectPool(pc.math.vec3.create, {
+    * var pool = new ObjectPool(pc.Vec3, {
     *   name: "my pool",
     *   useNew: false
     * })

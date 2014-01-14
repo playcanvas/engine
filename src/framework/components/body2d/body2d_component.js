@@ -1,11 +1,9 @@
 pc.extend(pc.fw, function () {
     // Shared math variable to avoid excessive allocation
-    var transform = pc.math.mat4.create();
-    var newWtm = pc.math.mat4.create();
+    var transform = new pc.Mat4();
 
-    var position = pc.math.vec3.create();
-    var rotation = pc.math.vec3.create();
-    var scale = pc.math.vec3.create();
+    var position = new pc.Vec3();
+    var rotation = new pc.Vec3();
 
     // Unpack common Box2D code
     var b2World, b2Vec2, b2Body, b2BodyDef, b2FixtureDef, b2PolygonShape, b2CircleShape;
@@ -45,8 +43,8 @@ pc.extend(pc.fw, function () {
         * @private
         * @name pc.fw.Body2dComponentSystem#applyForce
         * @description Apply an force to the body
-        * @param {pc.math.vec3} force The force to apply. A 3D world space vector, extra component is ignored
-        * @param {pc.math.vec3} point The point at which to apply the force. A 3D world space vector, extra component is ignored
+        * @param {pc.Vec3} force The force to apply. A 3D world space vector, extra component is ignored
+        * @param {pc.Vec3} point The point at which to apply the force. A 3D world space vector, extra component is ignored
         */
         applyForce: function (force, point) {
             var body = this.entity.body2d.body;
@@ -70,8 +68,8 @@ pc.extend(pc.fw, function () {
         * @private
         * @name pc.fw.Body2dComponentSystem#applyImpulse
         * @description Apply an impulse (instantaneous change of velocity) to the body
-        * @param {pc.math.vec3} impulse The impulse to apply. A 3D world space vector, extra component is ignored
-        * @param {pc.math.vec3} point The point at which to apply the impulse. A 3D world space vector, extra component is ignored
+        * @param {pc.Vec3} impulse The impulse to apply. A 3D world space vector, extra component is ignored
+        * @param {pc.Vec3} point The point at which to apply the impulse. A 3D world space vector, extra component is ignored
         */
         applyImpulse: function (impulse, point) {
             var body = this.entity.body2d.body; 
@@ -123,12 +121,12 @@ pc.extend(pc.fw, function () {
         },
 
         setTransform: function (transform) {
-            pc.math.mat4.getTranslation(transform, position);
-            pc.math.mat4.toEulerXYZ(transform, rotation);
+            transform.getTranslation(position);
+            transform.getEulerAngles(rotation);
 
             var angle = this._eulersToAngle(rotation);
 
-            this.setPositionAndAngle(position[this.system.xi], position[this.system.yi], -angle);
+            this.setPositionAndAngle(position.data[this.system.xi], position.data[this.system.yi], -angle);
         },
 
         /**
@@ -212,13 +210,13 @@ pc.extend(pc.fw, function () {
 
             var position2d = body.GetPosition();
 
-            position[this.system.xi] = position2d.x;
-            position[this.system.ri] = entityPos[1];
-            position[this.system.yi] = position2d.y;
+            position.data[this.system.xi] = position2d.x;
+            position.data[this.system.ri] = entityPos.y;
+            position.data[this.system.yi] = position2d.y;
 
-            rotation[this.system.xi] = 0;
-            rotation[this.system.ri] = -body.GetAngle() * pc.math.RAD_TO_DEG;
-            rotation[this.system.yi] = 0;
+            rotation.data[this.system.xi] = 0;
+            rotation.data[this.system.ri] = -body.GetAngle() * pc.math.RAD_TO_DEG;
+            rotation.data[this.system.yi] = 0;
 
             this.entity.setPosition(position);
             this.entity.setEulerAngles(rotation);

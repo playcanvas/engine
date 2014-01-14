@@ -4,51 +4,51 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.PhongMaterial
      * @class A Phong material is the main, general purpose material that is most often used for rendering. 
      * It can approximate a wide variety of surface types and can simlulate dynamic reflected light.
-     * @property {pc.math.vec3} ambient The ambient color of the material. This color value is 3-component (RGB),
+     * @property {pc.Color} ambient The ambient color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.math.vec3} diffuse The diffuse color of the material. This color value is 3-component (RGB),
+     * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.gfx.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather 
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for diffuse
      * color in preference to the 'diffuse' property.
-     * @property {pc.math.mat4} diffuseMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} diffuseMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's diffuse map.
-     * @property {pc.math.vec3} specular The specular color of the material. This color value is 3-component (RGB),
+     * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.gfx.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * specular color in preference to the 'specular' property.
-     * @property {pc.math.mat4} specularMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} specularMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's specular map.
      * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128. 
      * A higher shininess value results in a more focussed specular highlight.
      * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * shininess in preference to the 'shininess' property.
-     * @property {pc.math.mat4} glossMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} glossMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's gloss map.
-     * @property {pc.math.vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
+     * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather 
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
      * color in preference to the 'emissive' property.
-     * @property {pc.math.mat4} emissiveMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} emissiveMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's emissive map.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque.
      * @property {pc.gfx.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather 
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
      * in preference to the 'opacity' property.
-     * @property {pc.math.mat4} opacityMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} opacityMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's opacity map.
      * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather 
      * than a cube map. The texture must contains normalized, tangent space normals.
-     * @property {pc.math.mat4} normalMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} normalMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's normal map.
      * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather 
      * than a cube map. The texture contain values defining the height of the surface at that point where darker
      * pixels are lower and lighter pixels are higher.
-     * @property {pc.math.mat4} heightMapTransform 4x4 matrix that is used to transform the texture coordinates
+     * @property {pc.Mat4} heightMapTransform 4x4 matrix that is used to transform the texture coordinates
      * of the material's height map.
      * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
@@ -62,13 +62,13 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott
      */
     var PhongMaterial = function () {
-        this.ambient = pc.math.vec3.create(0.7, 0.7, 0.7);
+        this.ambient = new pc.Color(0.7, 0.7, 0.7);
 
-        this.diffuse = pc.math.vec3.create(0.7, 0.7, 0.7);
+        this.diffuse = new pc.Color(0.7, 0.7, 0.7);
         this.diffuseMap = null;
         this.diffuseMapTransform = null;
 
-        this.specular = pc.math.vec3.create(0, 0, 0);
+        this.specular = new pc.Color(0, 0, 0);
         this.specularMap = null;
         this.specularMapTransform = null;
 
@@ -76,7 +76,7 @@ pc.extend(pc.scene, function () {
         this.glossMap = null;
         this.glossMapTransform = null;
 
-        this.emissive = pc.math.vec3.create(0, 0, 0);
+        this.emissive = new pc.Color(0, 0, 0);
         this.emissiveMap = null;
         this.emissiveMapTransform = null;
 
@@ -95,6 +95,12 @@ pc.extend(pc.scene, function () {
         this.reflectivity = 1;
 
         this.lightMap = null;
+
+        // Array to pass uniforms to renderer
+        this.ambientUniform = new Float32Array(3);
+        this.diffuseUniform = new Float32Array(3);
+        this.specularUniform = new Float32Array(3);
+        this.emissiveUniform = new Float32Array(3);
 
         this.update();
     };
@@ -115,32 +121,32 @@ pc.extend(pc.scene, function () {
 
             Material.prototype._cloneInternal.call(this, clone);
 
-            clone.ambient = pc.math.vec3.clone(this.ambient);
+            clone.ambient.copy(this.ambient);
 
-            clone.diffuse = pc.math.vec3.clone(this.diffuse);
+            clone.diffuse.copy(this.diffuse);
             clone.diffuseMap = this.diffuseMap;
-            clone.diffuseMapTransform = this.diffuseMapTransform ? pc.math.mat4.clone(this.diffuseMapTransform) : null;
+            clone.diffuseMapTransform = this.diffuseMapTransform ? this.diffuseMapTransform.clone() : null;
 
-            clone.specular = pc.math.vec3.clone(this.specular);
+            clone.specular.copy(this.specular);
             clone.specularMap = this.specularMap;
-            clone.specularMapTransform = this.specularMapTransform ? pc.math.mat4.clone(this.specularMapTransform) : null;
+            clone.specularMapTransform = this.specularMapTransform ? this.specularMapTransform.clone() : null;
 
             clone.shininess = this.shininess;
             clone.glossMap = this.glossMap;
-            clone.glossMapTransform = this.glossMapTransform ? pc.math.mat4.clone(this.glossMapTransform) : null;
+            clone.glossMapTransform = this.glossMapTransform ? this.glossMapTransform.clone() : null;
 
-            clone.emissive = pc.math.vec3.clone(this.emissive);
+            clone.emissive.copy(this.emissive);
             clone.emissiveMap = this.emissiveMap;
-            clone.emissiveMapTransform = this.emissiveMapTransform ? pc.math.mat4.clone(this.emissiveMapTransform) : null;
+            clone.emissiveMapTransform = this.emissiveMapTransform ? this.emissiveMapTransform.clone() : null;
 
             clone.opacity = this.opacity;
             clone.opacityMap = this.opacityMap;
-            clone.opacityMapTransform = this.opacityMapTransform ? pc.math.mat4.clone(this.opacityMapTransform) : null;
+            clone.opacityMapTransform = this.opacityMapTransform ? this.opacityMapTransform.clone() : null;
 
             clone.normalMap = this.normalMap;
-            clone.normalMapTransform = this.normalMapTransform ? pc.math.mat4.clone(this.normalMapTransform) : null;
+            clone.normalMapTransform = this.normalMapTransform ? this.normalMapTransform.clone() : null;
             clone.heightMap = this.heightMap;
-            clone.heightMapTransform = this.heightMapTransform ? pc.math.mat4.clone(this.heightMapTransform) : null;
+            clone.heightMapTransform = this.heightMapTransform ? this.heightMapTransform.clone() : null;
             clone.bumpiness = this.bumpiness;
 
             clone.cubeMap = this.cubeMap;
@@ -160,6 +166,8 @@ pc.extend(pc.scene, function () {
         * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
         */
         init: function (data) {
+            var m, v;
+
             // Initialise material from data
             this.name = data.name;
 
@@ -169,24 +177,32 @@ pc.extend(pc.scene, function () {
             for (var i = 0; i < data.parameters.length; i++) {
                 var param = data.parameters[i];
 
-                function isMathType(type) {
+                function isVectorType(type) {
                     if (type === 'vec2' ||
                         type === 'vec3' ||
-                        type === 'vec4' ||
-                        type === 'mat3' ||
-                        type === 'mat4') {
+                        type === 'vec4') {
                         return true;
                     }
 
                     return false;
                 }
                 // Update material based on type
-                if (isMathType(param.type)) {
-                    if (param.data) {
-                        this[param.name] = pc.math[param.type].clone(param.data);
-                    } else {
-                        this[param.name] = null;
-                    }
+                if (param.type === "mat3") {
+                    m = param.data;
+                    this[param.name] = new pc.Mat3(m[0], m[1], m[2], 
+                                                   m[3], m[4], m[5],
+                                                   m[6], m[7], m[8]);
+                } else if (param.type === "mat4") {
+                    m = param.data;
+                    this[param.name] = new pc.Mat4(m[0], m[1], m[2], m[3], 
+                                                   m[4], m[5], m[6], m[7],
+                                                   m[8], m[9], m[10], m[11],
+                                                   m[12], m[13], m[14], m[15]);
+                } else if (isVectorType(param.type)) {
+
+                    // ASSUMPTION: For Phong materials, all vectors are 3 component colors
+                    v = param.data;
+                    this[param.name] = new pc.Color(v[0], v[1], v[2]);
                 } else if (param.type === "texture") {
                     if (param.data) {
                         if (param.data instanceof pc.gfx.Texture) {
@@ -224,7 +240,10 @@ pc.extend(pc.scene, function () {
         update: function () {
             this.clearParameters();
 
-            this.setParameter('material_ambient', this.ambient);
+            this.ambientUniform[0] = this.ambient.r;
+            this.ambientUniform[1] = this.ambient.g;
+            this.ambientUniform[2] = this.ambient.b;
+            this.setParameter('material_ambient', this.ambientUniform);
 
             if (this.diffuseMap) {
                 this.setParameter('texture_diffuseMap', this.diffuseMap);
@@ -232,7 +251,10 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform);
                 }
             } else {
-                this.setParameter('material_diffuse', this.diffuse);
+                this.diffuseUniform[0] = this.diffuse.r;
+                this.diffuseUniform[1] = this.diffuse.g;
+                this.diffuseUniform[2] = this.diffuse.b;
+                this.setParameter('material_diffuse', this.diffuseUniform);
             }
 
             if (this.specularMap) {
@@ -241,7 +263,10 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_specularMapTransform', this.specularMapTransform);
                 }
             } else {
-                this.setParameter('material_specular', this.specular);
+                this.specularUniform[0] = this.specular.r;
+                this.specularUniform[1] = this.specular.g;
+                this.specularUniform[2] = this.specular.b;
+                this.setParameter('material_specular', this.specularUniform);
             }
 
             if (this.glossMap) {
@@ -259,7 +284,10 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform);
                 }
             } else {
-                this.setParameter('material_emissive', this.emissive);
+                this.emissiveUniform[0] = this.emissive.r;
+                this.emissiveUniform[1] = this.emissive.g;
+                this.emissiveUniform[2] = this.emissive.b;
+                this.setParameter('material_emissive', this.emissiveUniform);
             }
 
             if (this.opacityMap) {

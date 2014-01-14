@@ -1,6 +1,7 @@
 ../src/core/core_fullscreen.js
 ../src/core/core_requestanimationframe.js
 ../src/core/core_core.js
+../src/core/core_color.js
 ../src/core/core_guid.js
 ../src/core/core_time.js
 ../src/core/core_uri.js
@@ -17,11 +18,12 @@
 ../src/events/events_events.js
 ../src/core/core_dom.js
 ../src/math/math_math.js
-../src/math/math_vector.js
-../src/math/math_matrix.js
-../src/math/math_quaternion.js
-../src/math/math_utils.js
-../src/core/core_color.js
+../src/math/math_vec2.js
+../src/math/math_vec3.js
+../src/math/math_vec4.js
+../src/math/math_mat3.js
+../src/math/math_mat4.js
+../src/math/math_quat.js
 ../src/shape/shape_shape.js
 ../src/shape/shape_intersection.js
 ../src/shape/shape_aabb.js

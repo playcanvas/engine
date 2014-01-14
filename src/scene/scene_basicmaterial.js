@@ -4,13 +4,13 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.BasicMaterial
      * @class A Basic material is is for rendering unlit geometry, either using a constant color or a
      * color map modulated with a color.
-     * @property {Float32Array} color The flat color of the material (RGBA, where each component is 0 to 1).
+     * @property {pc.Color} color The flat color of the material (RGBA, where each component is 0 to 1).
      * @property {pc.gfx.Texture} colorMap The color map of the material. If specified, the color map is 
      * modulated by the color property.
      * @author Will Eastcott
      */
     var BasicMaterial = function () {
-        this.color = pc.math.vec4.create(1, 1, 1, 1);
+        this.color = new pc.Color(1, 1, 1, 1);
         this.colorMap = null;
 
         this.update();
@@ -32,7 +32,7 @@ pc.extend(pc.scene, function () {
 
             Material.prototype._cloneInternal.call(this, clone);
 
-            clone.color = pc.math.vec4.clone(this.color);
+            clone.color.copy(this.color);
             clone.colorMap = this.colorMap;
 
             clone.update();
@@ -42,7 +42,7 @@ pc.extend(pc.scene, function () {
         update: function () {
             this.clearParameters();
 
-            this.setParameter('uColor', this.color);
+            this.setParameter('uColor', this.color.data);
             if (this.colorMap) {
                 this.setParameter('texture_diffuseMap', this.colorMap);
             }

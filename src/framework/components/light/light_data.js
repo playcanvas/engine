@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
         // Serialized
         this.type = 'directional';
         this.enable = true;
-        this.color = new pc.Color(1,1,1);
+        this.color = new pc.Color(1, 1, 1);
         this.intensity = 1;
         this.castShadows = false;
         this.shadowResolution = 1024;

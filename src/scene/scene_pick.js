@@ -128,10 +128,12 @@ pc.extend(pc.scene, function () {
 
         var wtm = camera.getWorldTransform();
         var projMat = camera.getProjectionMatrix();
-        projId.setValue(projMat);
-        var viewMat = pc.math.mat4.invert(wtm);
-        var viewProjMat = pc.math.mat4.multiply(projMat, viewMat);
-        viewProjId.setValue(viewProjMat);
+        var viewMat = wtm.clone().invert();
+        var viewProjMat = new pc.Mat4();
+        viewProjMat.mul2(projMat, viewMat);
+
+        projId.setValue(projMat.data);
+        viewProjId.setValue(viewProjMat.data);
 
         for (i = 0; i < numDrawCalls; i++) {
             if (!drawCalls[i].command) {
@@ -140,9 +142,9 @@ pc.extend(pc.scene, function () {
 
                 type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type; 
                 if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP)) {
-                    modelMatrixId.setValue(meshInstance.node.worldTransform);
+                    modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                     if (meshInstance.skinInstance) {
-                        poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                        poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                     }
 
                     this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;

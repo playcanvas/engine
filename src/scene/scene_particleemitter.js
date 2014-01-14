@@ -1,9 +1,9 @@
 pc.extend(pc.scene, function () {
 
-    var position = pc.math.vec3.create();
-    var velocity = pc.math.vec3.create();
-    var acceleration = pc.math.vec3.create();
-    var colorMult = pc.math.vec4.create();
+    var position = new pc.Vec3();
+    var velocity = new pc.Vec3();
+    var acceleration = new pc.Vec3();
+    var colorMult = new pc.Vec4();
 
     var particleVerts = [
         [-0.5, -0.5],
@@ -77,17 +77,17 @@ pc.extend(pc.scene, function () {
         // The ending size range.
         this.endSizeRange = typeof options.endSizeRange !== 'undefined' ? options.endSizeRange : 0;
         // The starting position of a particle in local space.
-        this.position = typeof options.position !== 'undefined' ? options.position : [0, 0, 0];
+        this.position = typeof options.position !== 'undefined' ? options.position : new pc.Vec3(0, 0, 0);
         // The starting position range.
-        this.positionRange = typeof options.positionRange !== 'undefined' ? options.positionRange : [0, 0, 0];
+        this.positionRange = typeof options.positionRange !== 'undefined' ? options.positionRange : new pc.Vec3(0, 0, 0);
         // The velocity of a paritcle in local space.
-        this.velocity = typeof options.velocity !== 'undefined' ? options.velocity : [0, 0, 0];
+        this.velocity = typeof options.velocity !== 'undefined' ? options.velocity : new pc.Vec3(0, 0, 0);
         // The velocity range.
-        this.velocityRange = typeof options.velocityRange !== 'undefined' ? options.velocityRange : [0, 0, 0];
+        this.velocityRange = typeof options.velocityRange !== 'undefined' ? options.velocityRange : new pc.Vec3(0, 0, 0);
         // The acceleration of a particle in local space.
-        this.acceleration = typeof options.acceleration !== 'undefined' ? options.acceleration : [0, 0, 0];
+        this.acceleration = typeof options.acceleration !== 'undefined' ? options.acceleration : new pc.Vec3(0, 0, 0);
         // The accleration range.
-        this.accelerationRange = typeof options.accelerationRange !== 'undefined' ? options.accelerationRange : [0, 0, 0];
+        this.accelerationRange = typeof options.accelerationRange !== 'undefined' ? options.accelerationRange : new pc.Vec3(0, 0, 0);
         // The starting spin value for a particle in radians.
         this.spinStart = typeof options.spinStart !== 'undefined' ? options.spinStart : 0;
         // The spin start range.
@@ -97,17 +97,17 @@ pc.extend(pc.scene, function () {
         // The spin speed range.
         this.spinSpeedRange = typeof options.spinSpeedRange !== 'undefined' ? options.spinSpeedRange : 0;
         // The color multiplier of a particle.
-        this.colorMult = typeof options.colorMult !== 'undefined' ? options.colorMult : [1, 1, 1, 1];
+        this.colorMult = typeof options.colorMult !== 'undefined' ? options.colorMult : new pc.Vec4(1, 1, 1, 1);
         // The color multiplier range.
-        this.colorMultRange = typeof options.colorMultRange !== 'undefined' ? options.colorMultRange : [0, 0, 0, 0];
+        this.colorMultRange = typeof options.colorMultRange !== 'undefined' ? options.colorMultRange : new pc.Vec4(0, 0, 0, 0);
         // The velocity of all paritcles in world space.
-        this.worldVelocity = typeof options.worldVelocity !== 'undefined' ? options.worldVelocity : [0, 0, 0];
+        this.worldVelocity = typeof options.worldVelocity !== 'undefined' ? options.worldVelocity : new pc.Vec3(0, 0, 0);
         // The acceleration of all paritcles in world space.
-        this.worldAcceleration = typeof options.worldAcceleration !== 'undefined' ? options.worldAcceleration : [0, 0, 0];
+        this.worldAcceleration = typeof options.worldAcceleration !== 'undefined' ? options.worldAcceleration : new pc.Vec3(0, 0, 0);
         // Whether these particles are oriented in 2d or 3d. true = 2d, false = 3d.
         this.billboard = typeof options.billboard !== 'undefined' ? options.billboard : true;
         // The orientation of a particle. This is only used if billboard is false.
-        this.orientation = typeof options.orientation !== 'undefined' ? options.orientation : [0, 0, 0, 1];
+        this.orientation = typeof options.orientation !== 'undefined' ? options.orientation : new pc.Vec4(0, 0, 0, 1);
 
         this.dynamic = typeof options.dynamic !== 'undefined' ? options.dynamic : false;
 
@@ -216,10 +216,10 @@ pc.extend(pc.scene, function () {
                 var lifeTime = this.lifeTime;
                 var startTime = (p * lifeTime / count);
                 var frameStart = this.frameStart + plusMinus(this.frameStartRange);
-                pc.math.vec3.add(this.position, plusMinusVector(this.positionRange), position);
-                pc.math.vec3.add(this.velocity, plusMinusVector(this.velocityRange), velocity);
-                pc.math.vec3.add(this.acceleration, plusMinusVector(this.accelerationRange), acceleration);
-                pc.math.vec4.add(this.colorMult, plusMinusVector(this.colorMultRange), colorMult);
+                position.add2(this.position, plusMinusVector(this.positionRange));
+                velocity.add2(this.velocity, plusMinusVector(this.velocityRange));
+                acceleration.add2(this.acceleration, plusMinusVector(this.accelerationRange));
+                colorMult.add2(this.colorMult, plusMinusVector(this.colorMultRange));
                 var spinStart = this.spinStart + plusMinus(this.spinStartRange);
                 var spinSpeed = this.spinSpeed + plusMinus(this.spinSpeedRange);
                 var startSize = this.startSize + plusMinus(this.startSizeRange);
@@ -236,21 +236,21 @@ pc.extend(pc.scene, function () {
                     data[i + 3]  = frameStart;
 
                     // ATTR1
-                    data[i + 4]  = position[0];
-                    data[i + 5]  = position[1];
-                    data[i + 6]  = position[2];
+                    data[i + 4]  = position.x;
+                    data[i + 5]  = position.y;
+                    data[i + 6]  = position.z;
                     data[i + 7]  = startTime;
 
                     // ATTR2
-                    data[i + 8]  = velocity[0];
-                    data[i + 9]  = velocity[1];
-                    data[i + 10] = velocity[2];
+                    data[i + 8]  = velocity.x;
+                    data[i + 9]  = velocity.y;
+                    data[i + 10] = velocity.z;
                     data[i + 11] = startSize;
 
                     // ATTR3
-                    data[i + 12] = acceleration[0];
-                    data[i + 13] = acceleration[1];
-                    data[i + 14] = acceleration[2];
+                    data[i + 12] = acceleration.x;
+                    data[i + 13] = acceleration.y;
+                    data[i + 14] = acceleration.z;
                     data[i + 15] = endSize;
 
                     // ATTR4
@@ -260,17 +260,17 @@ pc.extend(pc.scene, function () {
                     data[i + 19] = 0;
 
                     // ATTR5
-                    data[i + 20] = colorMult[0];
-                    data[i + 21] = colorMult[1];
-                    data[i + 22] = colorMult[2];
-                    data[i + 23] = colorMult[3];
+                    data[i + 20] = colorMult.x;
+                    data[i + 21] = colorMult.y;
+                    data[i + 22] = colorMult.z;
+                    data[i + 23] = colorMult.w;
 
                     if (!this.billboard) {
                         // ATTR6
-                        data[i + 24] = orientation[0];
-                        data[i + 25] = orientation[1];
-                        data[i + 26] = orientation[2];
-                        data[i + 27] = orientation[3];
+                        data[i + 24] = orientation.x;
+                        data[i + 25] = orientation.y;
+                        data[i + 26] = orientation.z;
+                        data[i + 27] = orientation.w;
                     }
                 }
             }
