@@ -288,10 +288,10 @@ pc.extend(pc.fw, function () {
                 console.warn("WARNING: rigidbody.bodyType: Property is deprecated. Use type instead.");
             }
 
-            if (data.linearFactor) {
+            if (data.linearFactor && pc.type(data.linearFactor) === 'array') {
                 data.linearFactor = new pc.Vec3(data.linearFactor[0], data.linearFactor[1], data.linearFactor[2]);
             }
-            if (data.angularFactor) {
+            if (data.angularFactor && pc.type(data.angularFactor) === 'array') {
                 data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
             }
 

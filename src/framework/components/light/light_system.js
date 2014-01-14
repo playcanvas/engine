@@ -147,7 +147,7 @@ pc.extend(pc.fw, function () {
 
             component.data.type = data.type;
 
-            if (data.color) {
+            if (data.color && pc.type(data.color) === 'array') {
                 data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
             }
 

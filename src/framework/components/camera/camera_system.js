@@ -143,7 +143,7 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             data = data || {};
 
-            if (data.clearColor) {
+            if (data.clearColor && pc.type(data.clearColor) === 'array') {
                 var c = data.clearColor;
                 data.clearColor = new pc.Color(c[0], c[1], c[2], c[3]);
             }

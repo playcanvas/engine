@@ -141,7 +141,7 @@ pc.extend(pc.fw, function () {
 
             component.data.type = data.type;
 
-            if (data.halfExtents) {
+            if (data.halfExtents && pc.type(data.halfExtents) === 'array') {
                 data.halfExtents = new pc.Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
             }
 
