@@ -80,6 +80,10 @@ pc.extend(pc.fw, function () {
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
+        var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);
+        var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
+        var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
+
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
         var modelsys = new pc.fw.ModelComponentSystem(this.context);
         var camerasys = new pc.fw.CameraComponentSystem(this.context);
@@ -88,10 +92,11 @@ pc.extend(pc.fw, function () {
         var lightsys = new pc.fw.LightComponentSystem(this.context);
         var packsys = new pc.fw.PackComponentSystem(this.context);
         var skyboxsys = new pc.fw.SkyboxComponentSystem(this.context);
-        var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
+        var scriptsys = new pc.fw.ScriptComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
+
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
 
         // Load libraries
@@ -544,9 +549,12 @@ pc.extend(pc.fw, function () {
         */
         onLibrariesLoaded: function () {
             // Create systems that may require external libraries
-            var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
-            var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
-            var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
+            // var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
+            // var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
+            // var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
+
+            this.context.systems.rigidbody.onLibraryLoaded();
+            this.context.systems.collision.onLibraryLoaded();
         },
 
         /**

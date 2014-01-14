@@ -133,6 +133,15 @@ pc.extend(pc.fw, function () {
     CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.fw.ComponentSystem);
 
     CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
+        onLibraryLoaded: function () {
+            if (typeof(Ammo) !== 'undefined') {
+                //                
+            } else {
+                // Unbind the update function if we haven't loaded Ammo by now
+                pc.fw.ComponentSystem.off('update', this.onUpdate, this);
+            }
+        },
+
         initializeComponentData: function (component, data, properties) {
 
             if (!data.type) {
