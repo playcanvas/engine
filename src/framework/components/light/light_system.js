@@ -384,7 +384,7 @@ pc.extend(pc.fw, function () {
 
         _createDebugMaterial: function () {
             var material = new pc.scene.BasicMaterial();
-            material.color = new Float32Array([1, 1, 0, 1]);
+            material.color = new pc.Color(1, 1, 0, 1);
             material.update();
             return material;
         }
