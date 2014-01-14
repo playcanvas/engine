@@ -482,9 +482,10 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Quat#slerp
+         * @name pc.Quat#slerp2
          * @description Performs a spherical interpolation between two quaternions. The result of
          * the interpolation is written to the quaternion calling the function.
+         * @param {pc.Quat} lhs The quaternion to interpolate from.
          * @param {pc.Quat} rhs The quaternion to interpolate to.
          * @param {Number} alpha The value controlling the interpolation in relation to the two input
          * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
@@ -494,19 +495,20 @@ pc.extend(pc, (function () {
          * var q1 = new pc.Quat(-0.11,-0.15,-0.46,0.87);
          * var q2 = new pc.Quat(-0.21,-0.21,-0.67,0.68);
          *
-         * q1.slerp(q2, 0);   // q1 = q1
-         * q1.slerp(q2, 0.5); // q1 = midway between q1 and q2
-         * q1.slerp(q2, 1);   // q1 = q2
+         * var result;
+         * result = new pc.Quat().slerp2(q1, q2, 0);   // Return q1
+         * result = new pc.Quat().slerp2(q1, q2, 0.5); // Return the midpoint interpolant 
+         * result = new pc.Quat().slerp2(q1, q2, 1);   // Return q2
          * @author Will Eastcott
          */
-        slerp: function (rhs, alpha) {
+        slerp: function (lhs, rhs, alpha) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w,
                 omega, cosOmega, invSinOmega, flip, beta;
 
-            q1x = this.x;
-            q1y = this.y;
-            q1z = this.z;
-            q1w = this.w;
+            q1x = lhs.x;
+            q1y = lhs.y;
+            q1z = lhs.z;
+            q1w = lhs.w;
 
             q2x = rhs.x;
             q2y = rhs.y;
@@ -542,31 +544,6 @@ pc.extend(pc, (function () {
             this.w = beta * q1w + alpha * q2w;
 
             return this;
-        },
-
-        /**
-         * @function
-         * @name pc.Quat#slerp2
-         * @description Performs a spherical interpolation between two quaternions. The result of
-         * the interpolation is written to the quaternion calling the function.
-         * @param {pc.Quat} lhs The quaternion to interpolate from.
-         * @param {pc.Quat} rhs The quaternion to interpolate to.
-         * @param {Number} alpha The value controlling the interpolation in relation to the two input
-         * quaternions. The value is in the range 0 to 1, 0 generating q1, 1 generating q2 and anything
-         * in between generating a spherical interpolation between the two.
-         * @returns {pc.Quat} Self for chaining.
-         * @example
-         * var q1 = new pc.Quat(-0.11,-0.15,-0.46,0.87);
-         * var q2 = new pc.Quat(-0.21,-0.21,-0.67,0.68);
-         *
-         * var result;
-         * result = new pc.Quat().slerp2(q1, q2, 0);   // Return q1
-         * result = new pc.Quat().slerp2(q1, q2, 0.5); // Return the midpoint interpolant 
-         * result = new pc.Quat().slerp2(q1, q2, 1);   // Return q2
-         * @author Will Eastcott
-         */
-        slerp2: function (lhs, rhs, alpha) {
-            return this.copy(lhs).slerp(rhs, alpha);
         },
 
         /**
