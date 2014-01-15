@@ -137,15 +137,16 @@ pc.extend(pc.scene, function () {
             this._viewMat.copy(wtm).invert();
             this._viewProjMat.mul(projMat, this._viewMat);
 
-            invViewProjMat.copy(this._viewProjMat).invert();
+            var invViewProjMat = this._viewProjMat.clone().invert();
 
             var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
-            var farW = m4.multiplyVec3(far, 1.0, invViewProjMat);
+            var farW = new pc.Vec3();
+            invViewProjMat.transformPoint(far, farW);
 
-            var w = far[0] * invViewProjMat[3] +
-                    far[1] * invViewProjMat[7] +
-                    far[2] * invViewProjMat[11] +
-                    invViewProjMat[15];
+            var w = far.x * invViewProjMat.data[3] +
+                    far.y * invViewProjMat.data[7] +
+                    far.z * invViewProjMat.data[11] +
+                    invViewProjMat.data[15];
 
             farW.scale(1 / w);
 
