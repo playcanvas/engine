@@ -122,9 +122,9 @@ pc.extend(pc.resources, function () {
 
             var node = new pc.scene.GraphNode();
             node.setName(nodeData.name);
-            node.setLocalPosition(nodeData.position);
-            node.setLocalEulerAngles(nodeData.rotation);
-            node.setLocalScale(nodeData.scale);
+            node.setLocalPosition(nodeData.position[0], nodeData.position[1], nodeData.position[2]);
+            node.setLocalEulerAngles(nodeData.rotation[0], nodeData.rotation[1], nodeData.rotation[2]);
+            node.setLocalScale(nodeData.scale[0], nodeData.scale[1], nodeData.scale[2]);
 
             nodes.push(node);
         }
@@ -148,7 +148,11 @@ pc.extend(pc.resources, function () {
 
             var inverseBindMatrices = [];
             for (j = 0; j < skinData.inverseBindMatrices.length; j++) {
-                inverseBindMatrices[j] = pc.math.mat4.clone(skinData.inverseBindMatrices[j]);
+                var ibm = skinData.inverseBindMatrices[j];
+                inverseBindMatrices[j] = new pc.Mat4(ibm[0], ibm[1], ibm[2], ibm[3],
+                                                     ibm[4], ibm[5], ibm[6], ibm[7],
+                                                     ibm[8], ibm[9], ibm[10], ibm[11],
+                                                     ibm[12], ibm[13], ibm[14], ibm[15]);
             }
 
             var skin = new pc.scene.Skin(inverseBindMatrices, skinData.boneNames);
@@ -289,8 +293,8 @@ pc.extend(pc.resources, function () {
             var min = meshData.aabb.min;
             var max = meshData.aabb.max;
             var aabb = new pc.shape.Aabb(
-                pc.math.vec3.create((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                pc.math.vec3.create((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+                new pc.Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+                new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
             );
 
             var indexed = (typeof meshData.indices !== 'undefined');

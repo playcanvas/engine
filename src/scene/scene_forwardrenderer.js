@@ -9,23 +9,23 @@ pc.extend(pc.scene, function () {
     }
 
     // Global shadowmap resources
-    var scale = pc.math.mat4.makeScale(0.5, 0.5, 0.5);
-    var shift = pc.math.mat4.makeTranslate(0.5, 0.5, 0.5);
-    var scaleShift = pc.math.mat4.multiply(shift, scale);
+    var scale = new pc.Mat4().setScale(0.5, 0.5, 0.5);
+    var shift = new pc.Mat4().setTranslate(0.5, 0.5, 0.5);
+    var scaleShift = new pc.Mat4().mul2(shift, scale);
 
     // Lights look down the negative Y and camera's down the positive Z so rotate by -90
-    var camToLight = pc.math.mat4.makeRotate(-90, [1, 0, 0]);
-    var shadowCamWtm = pc.math.mat4.create();
-    var shadowCamView = pc.math.mat4.create();
-    var shadowCamViewProj = pc.math.mat4.create();
+    var camToLight = new pc.Mat4().setFromAxisAngle(pc.Vec3.RIGHT, -90);
+    var shadowCamWtm = new pc.Mat4();
+    var shadowCamView = new pc.Mat4();
+    var shadowCamViewProj = new pc.Mat4();
 
-    var viewMat = pc.math.mat4.create();
-    var viewProjMat = pc.math.mat4.create();
+    var viewMat = new pc.Mat4();
+    var viewProjMat = new pc.Mat4();
 
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (i = 0; i < 8; i++) {
-        frustumPoints.push(pc.math.vec3.create());
+        frustumPoints.push(new pc.Vec3());
     }
 
     function _calculateSceneAabb(scene) {
@@ -54,35 +54,35 @@ pc.extend(pc.scene, function () {
         }
         x = y * aspect;
 
-        points[0][0] = x;
-        points[0][1] = -y;
-        points[0][2] = -nearClip;
-        points[1][0] = x;
-        points[1][1] = y;
-        points[1][2] = -nearClip;
-        points[2][0] = -x;
-        points[2][1] = y;
-        points[2][2] = -nearClip;
-        points[3][0] = -x;
-        points[3][1] = -y;
-        points[3][2] = -nearClip;
+        points[0].x = x;
+        points[0].y = -y;
+        points[0].z = -nearClip;
+        points[1].x = x;
+        points[1].y = y;
+        points[1].z = -nearClip;
+        points[2].x = -x;
+        points[2].y = y;
+        points[2].z = -nearClip;
+        points[3].x = -x;
+        points[3].y = -y;
+        points[3].z = -nearClip;
 
         if (projection === pc.scene.Projection.PERSPECTIVE) {
             y = Math.tan(fov / 2.0) * farClip;
             x = y * aspect;
         }
-        points[4][0] = x;
-        points[4][1] = -y;
-        points[4][2] = -farClip;
-        points[5][0] = x;
-        points[5][1] = y;
-        points[5][2] = -farClip;
-        points[6][0] = -x;
-        points[6][1] = y;
-        points[6][2] = -farClip;
-        points[7][0] = -x;
-        points[7][1] = -y;
-        points[7][2] = -farClip;
+        points[4].x = x;
+        points[4].y = -y;
+        points[4].z = -farClip;
+        points[5].x = x;
+        points[5].y = y;
+        points[5].z = -farClip;
+        points[6].x = -x;
+        points[6].y = y;
+        points[6].z = -farClip;
+        points[7].x = -x;
+        points[7].y = -y;
+        points[7].z = -farClip;
 
         return points;
     }
@@ -201,29 +201,30 @@ pc.extend(pc.scene, function () {
             blend: false
         };
 
-        this.fogColor = pc.math.vec3.create(0, 0, 0);
+        this.fogColor = new Float32Array(3);
+        this.ambientColor = new Float32Array(3);
     }
 
     pc.extend(ForwardRenderer.prototype, {
         setCamera: function (camera) {
             // Projection Matrix
             var projMat = camera.getProjectionMatrix();
-            this.projId.setValue(projMat);
+            this.projId.setValue(projMat.data);
 
             // ViewInverse Matrix
             var wtm = camera.getWorldTransform();
-            this.viewInvId.setValue(wtm);
+            this.viewInvId.setValue(wtm.data);
 
             // View Matrix
-            pc.math.mat4.invert(wtm, viewMat);
-            this.viewId.setValue(viewMat);
+            viewMat.copy(wtm).invert();
+            this.viewId.setValue(viewMat.data);
 
             // ViewProjection Matrix
-            pc.math.mat4.multiply(projMat, viewMat, viewProjMat);
-            this.viewProjId.setValue(viewProjMat);
+            viewProjMat.mul2(projMat, viewMat);
+            this.viewProjId.setValue(viewProjMat.data);
 
             // View Position (world space)
-            this.viewPosId.setValue(camera.getPosition());
+            this.viewPosId.setValue(camera.getPosition().data);
 
             // Near and far clip values
             this.nearClipId.setValue(camera.getNearClip());
@@ -255,26 +256,28 @@ pc.extend(pc.scene, function () {
 
             var scope = this.device.scope;
 
-            scope.resolve("light_globalAmbient").setValue(scene._globalAmbient);
+            this.ambientColor[0] = scene.ambientLight.r;
+            this.ambientColor[1] = scene.ambientLight.g;
+            this.ambientColor[2] = scene.ambientLight.b;
+            scope.resolve("light_globalAmbient").setValue(this.ambientColor);
 
             for (var i = 0; i < numDirs; i++) {
                 var directional = dirs[i];
                 var wtm = directional.getWorldTransform();
                 light = "light" + i;
 
-                scope.resolve(light + "_color").setValue(directional._finalColor);
+                scope.resolve(light + "_color").setValue(directional._finalColor.data);
+
                 // Directionals shine down the negative Y axis
-                directional._direction[0] = -wtm[4];
-                directional._direction[1] = -wtm[5];
-                directional._direction[2] = -wtm[6];
-                scope.resolve(light + "_direction").setValue(directional._direction);
+                wtm.getY(directional._direction).scale(-1);
+                scope.resolve(light + "_direction").setValue(directional._direction.data);
 
                 if (directional.getCastShadows()) {
                     var shadowMap = this.device.extDepthTexture ? 
                             directional._shadowCamera._renderTarget._depthTexture :
                             directional._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
-                    scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix);
+                    scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._shadowResolution, directional._shadowBias]);
                 }
             }
@@ -300,11 +303,9 @@ pc.extend(pc.scene, function () {
                 light = "light" + (numDirs + i);
 
                 scope.resolve(light + "_radius").setValue(point._attenuationEnd);
-                scope.resolve(light + "_color").setValue(point._finalColor);
-                point._position[0] = wtm[12];
-                point._position[1] = wtm[13];
-                point._position[2] = wtm[14];
-                scope.resolve(light + "_position").setValue(point._position);
+                scope.resolve(light + "_color").setValue(point._finalColor.data);
+                wtm.getTranslation(point._position);
+                scope.resolve(light + "_position").setValue(point._position.data);
             }
 
             for (i = 0; i < numSpts; i++) {
@@ -315,23 +316,19 @@ pc.extend(pc.scene, function () {
                 scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
                 scope.resolve(light + "_outerConeAngle").setValue(spot._outerConeAngleCos);
                 scope.resolve(light + "_radius").setValue(spot._attenuationEnd);
-                scope.resolve(light + "_color").setValue(spot._finalColor);
-                spot._position[0] = wtm[12];
-                spot._position[1] = wtm[13];
-                spot._position[2] = wtm[14];
-                scope.resolve(light + "_position").setValue(spot._position);
+                scope.resolve(light + "_color").setValue(spot._finalColor.data);
+                wtm.getTranslation(spot._position);
+                scope.resolve(light + "_position").setValue(spot._position.data);
                 // Spots shine down the negative Y axis
-                spot._direction[0] = -wtm[4];
-                spot._direction[1] = -wtm[5];
-                spot._direction[2] = -wtm[6];
-                scope.resolve(light + "_spotDirection").setValue(spot._direction);
+                wtm.getY(spot._direction).scale(-1);
+                scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
 
                 if (spot.getCastShadows()) {
                     var shadowMap = this.device.extDepthTexture ? 
                             spot._shadowCamera._renderTarget._depthTexture :
                             spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
-                    scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix);
+                    scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._shadowResolution, spot._shadowBias]);
                 }
             }
@@ -402,9 +399,9 @@ pc.extend(pc.scene, function () {
                     if (meshInstance.material.blendType === pc.scene.BLEND_NORMAL) {
                         meshInstance.syncAabb();
                         var meshPos = meshInstance.aabb.center;
-                        var tempx = meshPos[0] - camPos[0];
-                        var tempy = meshPos[1] - camPos[1];
-                        var tempz = meshPos[2] - camPos[2];
+                        var tempx = meshPos.x - camPos.x;
+                        var tempy = meshPos.y - camPos.y;
+                        var tempz = meshPos.z - camPos.z;
                         meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
                     } else if (typeof meshInstance.distSqr !== 'undefined') {
                         delete meshInstance.distSqr;
@@ -431,9 +428,9 @@ pc.extend(pc.scene, function () {
                         if (meshInstance.layer !== pc.scene.LAYER_SKYBOX) {
                             mesh = meshInstance.mesh;
 
-                            this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                            this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (meshInstance.skinInstance) {
-                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 device.setShader(this._depthShaderSkin);
                             } else {
                                 device.setShader(this._depthShaderStatic);
@@ -471,22 +468,24 @@ pc.extend(pc.scene, function () {
                         // working position.
                         var centroid = camera.getFrustumCentroid();
                         shadowCam.setPosition(centroid);
-                        var lightDir = pc.math.mat4.getY(light.worldTransform);
-                        shadowCam.translate(lightDir[0], lightDir[1], lightDir[2]);
+                        var lightDir = new pc.Vec3();
+                        light.worldTransform.getY(lightDir);
+                        shadowCam.translate(lightDir);
 
                         // 2. Come up with a LookAt matrix using the light direction, and the 
                         // temporary working position. This will be the view matrix that is used
                         // when generating the shadow map.
                         shadowCam.lookAt(centroid);
-                        pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
+                        shadowCamWtm.copy(shadowCam.getWorldTransform());
 
                         // 3. Transform the 8 corners of the frustum by the LookAt Matrix
                         _getFrustumPoints(camera, frustumPoints);
-                        var worldToShadowCam = pc.math.mat4.invert(shadowCamWtm);
+                        var worldToShadowCam = shadowCamWtm.invert();
                         var camToWorld = camera.worldTransform;
-                        var c2sc = pc.math.mat4.multiply(worldToShadowCam, camToWorld);
+                        var c2sc = new pc.Mat4();
+                        c2sc.mul2(worldToShadowCam, camToWorld);
                         for (j = 0; j < 8; j++) {
-                            pc.math.mat4.multiplyVec3(frustumPoints[j], 1.0, c2sc, frustumPoints[j]);
+                            c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
                         }
 
                         // 4. Come up with a bounding box (in light-space) by calculating the min
@@ -499,12 +498,12 @@ pc.extend(pc.scene, function () {
                         var maxz = -1000000;
                         for (j = 0; j < 8; j++) {
                             var p = frustumPoints[j];
-                            if (p[0] < minx) minx = p[0];
-                            if (p[0] > maxx) maxx = p[0];
-                            if (p[1] < miny) miny = p[1];
-                            if (p[1] > maxy) maxy = p[1];
-                            if (p[2] < minz) minz = p[2];
-                            if (p[2] > maxz) maxz = p[2];
+                            if (p.x < minx) minx = p.x;
+                            if (p.x > maxx) maxx = p.x;
+                            if (p.y < miny) miny = p.y;
+                            if (p.y > maxy) maxy = p.y;
+                            if (p.z < minz) minz = p.z;
+                            if (p.z > maxz) maxz = p.z;
                         }
     /*
                         var worldUnitsPerTexelX = (maxx - minx) / light._shadowWidth;
@@ -526,7 +525,7 @@ pc.extend(pc.scene, function () {
     */
                         // 5. Use your min and max values to create an off-center orthographic projection.
                         shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
-                        pc.math.mat4.copy(shadowCam.getWorldTransform(), shadowCamWtm);
+                        shadowCamWtm.copy(shadowCam.getWorldTransform());
 
                         shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
                         shadowCam.setNearClip(0);
@@ -541,15 +540,15 @@ pc.extend(pc.scene, function () {
                         shadowCam.setFov(light.getOuterConeAngle() * 2);
 
                         var lightWtm = light.worldTransform;
-                        pc.math.mat4.multiply(lightWtm, camToLight, shadowCamWtm);
+                        shadowCamWtm.mul2(lightWtm, camToLight);
                     }
 
-                    pc.math.mat4.invert(shadowCamWtm, shadowCamView);
-                    pc.math.mat4.multiply(shadowCam.getProjectionMatrix(), shadowCamView, shadowCamViewProj);
-                    pc.math.mat4.multiply(scaleShift, shadowCamViewProj, light._shadowMatrix);
+                    shadowCamView.copy(shadowCamWtm).invert();
+                    shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
+                    light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
 
                     // Point the camera along direction of light
-                    pc.math.mat4.copy(shadowCamWtm, shadowCam.worldTransform);
+                    shadowCam.worldTransform.copy(shadowCamWtm);
 
                     this.setCamera(shadowCam);
 
@@ -568,12 +567,12 @@ pc.extend(pc.scene, function () {
                         mesh = meshInstance.mesh;
                         material = meshInstance.material;
 
-                        this.modelMatrixId.setValue(meshInstance.node.worldTransform);
+                        this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                         if (material.opacityMap) {
                             scope.resolve('texture_opacityMap').setValue(material.opacityMap);
                         }
                         if (meshInstance.skinInstance) {
-                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             device.setShader(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                         } else {
                             device.setShader(material.opacityMap ? this._depthProgStaticOp : this._depthProgStatic);
@@ -624,13 +623,13 @@ pc.extend(pc.scene, function () {
                     var modelMatrix = meshInstance.node.worldTransform;
                     var normalMatrix = meshInstance.normalMatrix;
 
-                    pc.math.mat4.invertTo3x3(modelMatrix, normalMatrix);
-                    pc.math.mat3.transpose(normalMatrix, normalMatrix);
+                    modelMatrix.invertTo3x3(normalMatrix);
+                    normalMatrix.transpose();
 
-                    this.modelMatrixId.setValue(modelMatrix);
-                    this.normalMatrixId.setValue(normalMatrix);
+                    this.modelMatrixId.setValue(modelMatrix.data);
+                    this.normalMatrixId.setValue(normalMatrix.data);
                     if (meshInstance.skinInstance) {
-                        this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPaletteF32);
+                        this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                     }
 
                     if (material !== prevMaterial) {

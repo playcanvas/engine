@@ -80,6 +80,10 @@ pc.extend(pc.fw, function () {
         // Register the ScriptResourceHandler late as we need the context        
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
+        var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);
+        var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
+        var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
+
         var animationsys = new pc.fw.AnimationComponentSystem(this.context);
         var modelsys = new pc.fw.ModelComponentSystem(this.context);
         var camerasys = new pc.fw.CameraComponentSystem(this.context);
@@ -88,10 +92,11 @@ pc.extend(pc.fw, function () {
         var lightsys = new pc.fw.LightComponentSystem(this.context);
         var packsys = new pc.fw.PackComponentSystem(this.context);
         var skyboxsys = new pc.fw.SkyboxComponentSystem(this.context);
-        var scriptsys = new pc.fw.ScriptComponentSystem(this.context);        
+        var scriptsys = new pc.fw.ScriptComponentSystem(this.context);
         var picksys = new pc.fw.PickComponentSystem(this.context);
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
+
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
 
         // Load libraries
@@ -165,13 +170,17 @@ pc.extend(pc.fw, function () {
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     
                     // Initialise pack settings
-                    this.context.scene.setGlobalAmbient(pack.settings.render.global_ambient);
                     if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
-                        this.context.systems.rigidbody.setGravity(pack.settings.physics.gravity);
+                        var gravity = pack.settings.physics.gravity;
+                        this.context.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
                     }
 
+                    var ambientColor = pack.settings.render.global_ambient;
+                    this.context.scene.ambientColor = new pc.Color(ambientColor[0], ambientColor[1], ambientColor[2]);
+
                     this.context.scene.fog = pack.settings.render.fog;
-                    this.context.scene.fogColor = new pc.Color(pack.settings.render.fog_color);
+                    var fogColor = pack.settings.render.fog_color;
+                    this.context.scene.fogColor = new pc.Color(fogColor[0], fogColor[1], fogColor[2]);
                     this.context.scene.fogStart = pack.settings.render.fog_start;
                     this.context.scene.fogEnd = pack.settings.render.fog_end;
                     this.context.scene.fogDensity = pack.settings.render.fog_density;
@@ -540,9 +549,12 @@ pc.extend(pc.fw, function () {
         */
         onLibrariesLoaded: function () {
             // Create systems that may require external libraries
-            var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
-            var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
-            var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
+            // var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
+            // var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
+            // var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
+
+            this.context.systems.rigidbody.onLibraryLoaded();
+            this.context.systems.collision.onLibraryLoaded();
         },
 
         /**
@@ -633,15 +645,26 @@ pc.extend(pc.fw, function () {
          */
         _linkUpdateComponent: function(guid, componentName, attributeName, value) {
             var entity = this.context.root.findOne("getGuid", guid);
-            //var system;
+            var attribute;
                 
             if (entity) {
                 if(componentName) {
                     if(entity[componentName]) {
-                        if (editor && editor.link.exposed[componentName][attributeName]) {
+                        attribute = editor.link.exposed[componentName][attributeName];
+                        if (editor && attribute) {
                             // Override Type provided
-                            if (editor.link.exposed[componentName][attributeName].RuntimeType) {
-                                    entity[componentName][attributeName] = new editor.link.exposed[componentName][attributeName].RuntimeType(value);
+                            if (attribute.RuntimeType) {
+                                    if (attribute.RuntimeType === pc.Vec3) {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
+                                    } else if (attribute.RuntimeType === pc.Color) {
+                                        if (value.length === 3) {
+                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
+                                        } else {
+                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
+                                        }
+                                    } else {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value);
+                                    }
                             } else {
                                 entity[componentName][attributeName] = value;        
                             }
@@ -663,9 +686,9 @@ pc.extend(pc.fw, function () {
         _linkUpdateEntityTransform: function (guid, position, rotation, scale) {
             var entity = this.context.root.findByGuid(guid);
             if(entity) {
-                entity.setLocalPosition(position);
-                entity.setLocalEulerAngles(rotation);
-                entity.setLocalScale(scale);
+                entity.setLocalPosition(position[0], position[1], position[2]);
+                entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
+                entity.setLocalScale(scale[0], scale[1], scale[2]);
 
                 // Fire event to notify listeners that the transform has been changed by an external tool
                 entity.fire('livelink:updatetransform', position, rotation, scale);
@@ -727,7 +750,8 @@ pc.extend(pc.fw, function () {
         },
 
         _linkUpdatePackSettings: function (settings) {
-            this.context.scene.setGlobalAmbient(settings.render.global_ambient);
+            var ambient = settings.render.global_ambient;
+            this.context.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
 
             if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
                 this.context.systems.rigidbody.setGravity(settings.physics.gravity);
@@ -736,7 +760,9 @@ pc.extend(pc.fw, function () {
             this.context.scene.fog = settings.render.fog;
             this.context.scene.fogStart = settings.render.fog_start;
             this.context.scene.fogEnd = settings.render.fog_end;
-            this.context.scene.fogColor = new pc.Color(settings.render.fog_color);
+
+            var fog = settings.render.fog_color;
+            this.context.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
             this.context.scene.fogDensity = settings.render.fog_density;
         }
     };

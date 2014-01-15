@@ -306,7 +306,9 @@ pc.extend(pc.fw, function () {
         _convertAttributeValue: function (attribute) {
             if (attribute.type === 'rgb' || attribute.type === 'rgba') {
                 if (pc.type(attribute.value) === 'array') {
-                    attribute.value = new pc.Color(attribute.value);
+                    attribute.value = attribute.value.length === 3 ? 
+                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) : 
+                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
                 }
             }
         }

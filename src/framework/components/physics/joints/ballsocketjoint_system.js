@@ -82,6 +82,14 @@ pc.extend(pc.fw, function () {
     BallSocketJointComponentSystem = pc.inherits(BallSocketJointComponentSystem, pc.fw.ComponentSystem);
     
     BallSocketJointComponentSystem.prototype = pc.extend(BallSocketJointComponentSystem.prototype, {
+        onLibraryLoaded: function () {
+            if (typeof(Ammo) !== 'undefined') {
+                // Only register update event if Ammo is loaded
+            } else {
+                pc.fw.ComponentSystem.off('update', this.onUpdate, this);
+            }
+        },
+
         initializeComponentData: function (component, data, properties) {
             if (typeof(Ammo) !== 'undefined') {
                 if (component.entity.rigidbody) {

@@ -142,15 +142,17 @@ pc.extend(pc.fw, function () {
     pc.extend(CameraComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             data = data || {};
-            data.camera = new pc.scene.CameraNode();
-            if (data.clearColor) {
-                data.clearColor = new pc.Color(data.clearColor);    
+
+            if (data.clearColor && pc.type(data.clearColor) === 'array') {
+                var c = data.clearColor;
+                data.clearColor = new pc.Color(c[0], c[1], c[2], c[3]);
             }
-            
-            
+
+            data.camera = new pc.scene.CameraNode();
+
             if (this.context.designer && this.displayInTools(component.entity)) {
                 var material = new pc.scene.BasicMaterial();
-                material.color = pc.math.vec4.create(1, 1, 0, 1);
+                material.color = new pc.Color(1, 1, 0, 1);
                 material.update();
 
                 var indexBuffer = new pc.gfx.IndexBuffer(this.context.graphicsDevice, pc.gfx.INDEXFORMAT_UINT8, 24);

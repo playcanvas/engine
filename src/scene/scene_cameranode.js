@@ -4,9 +4,6 @@ pc.scene.Projection = {
 };
 
 pc.extend(pc.scene, function () {
-    var v3 = pc.math.vec3;
-    var m4 = pc.math.mat4;
-
     /**
      * @name pc.scene.CameraNode
      * @class A camera.
@@ -20,9 +17,9 @@ pc.extend(pc.scene, function () {
         this._aspect = 16 / 9;
 
         this._projMatDirty = true;
-        this._projMat = m4.create();
-        this._viewMat = m4.create();
-        this._viewProjMat = m4.create();
+        this._projMat = new pc.Mat4();
+        this._viewMat = new pc.Mat4();
+        this._viewProjMat = new pc.Mat4();
 
         this._rect = { 
             x: 0,
@@ -84,8 +81,8 @@ pc.extend(pc.scene, function () {
         },
 
         getFrustumCentroid: function () {
-            var centroid = pc.math.vec3.create(0, 0, -(this._farClip + this._nearClip) * 0.5);
-            pc.math.mat4.multiplyVec3(centroid, 1, this.getWorldTransform(), centroid);
+            var centroid = new pc.Vec3(0, 0, -(this._farClip + this._nearClip) * 0.5);
+            this.getWorldTransform().transformPoint(centroid, centroid);
             return centroid;
         },
 
@@ -97,25 +94,22 @@ pc.extend(pc.scene, function () {
         worldToScreen: function (point) {
             var projMat,
                 wtm = this.getWorldTransform(),
-                viewMat = pc.math.mat4.invert(wtm),
-                pvm = pc.math.mat4.create(),
+                viewMat = wtm.clone().invert();
+                pvm = new pc.Mat4();
                 width = this._renderTarget.getWidth(),
                 height = this._renderTarget.getHeight(),
-                point2d = Vector4.create();
+                point2d = new pc.Vec3();
 
-            projMat = pc.math.mat4.makePerspective(this._fov, width / height, this._nearClip, this._farClip);
+            projMat = new pc.Mat4().setPerspective(this._fov, width / height, this._nearClip, this._farClip);
             // Create projection view matrix
-            pc.math.mat4.multiply(projMat, viewMat, pvm);    
+            pvm.mul2(projMat, viewMat);
 
             // transform point
-            pc.math.mat4.multiplyVec3(point, 1.0, pvm, point2d);
+            pvm.transformPoint(point, point2d);
 
-            // Convert from homogenous coords
-            var denom = point2d[3] || 1;
-
-            point2d[0] = (width / 2) + (width / 2) * point2d[0] / denom;
-            point2d[1] = height - ((height / 2) + (height / 2) * point2d[1] / denom);
-            point2d[2] = point2d[2] / denom;        
+            point2d.x = (width / 2) + (width / 2) * point2d.x;
+            point2d.y = height - ((height / 2) + (height / 2) * point2d.y);
+            point2d.z = point2d.z;        
 
             return point2d;
         },
@@ -129,8 +123,8 @@ pc.extend(pc.scene, function () {
          * @param {Number} z The distance from the camera in world space to create the new point.
          * @param {Number} cw The width of PlayCanvas' canvas element.
          * @param {Number} ch The height of PlayCanvas' canvas element.
-         * @param {pc.math.vec3} [worldCoord] 3D vector to recieve world coordinate result.
-         * @returns {pc.math.vec3} The world space coordinate.
+         * @param {pc.Vec3} [worldCoord] 3D vector to recieve world coordinate result.
+         * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {
             if (typeof worldCoord === 'undefined') {
@@ -139,11 +133,13 @@ pc.extend(pc.scene, function () {
 
             var projMat = this.getProjectionMatrix();
             var wtm = this.getWorldTransform();
-            m4.invert(wtm, this._viewMat);
-            m4.multiply(projMat, this._viewMat, this._viewProjMat);
-            var invViewProjMat = m4.invert(this._viewProjMat);
 
-            var far = v3.create(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
+            this._viewMat.copy(wtm).invert();
+            this._viewProjMat.mul(projMat, this._viewMat);
+
+            invViewProjMat.copy(this._viewProjMat).invert();
+
+            var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
             var farW = m4.multiplyVec3(far, 1.0, invViewProjMat);
 
             var w = far[0] * invViewProjMat[3] +
@@ -151,13 +147,10 @@ pc.extend(pc.scene, function () {
                     far[2] * invViewProjMat[11] +
                     invViewProjMat[15];
 
-            v3.scale(farW, 1 / w, farW);
+            farW.scale(1 / w);
 
-            var eye = this.getPosition();
-            var t = z / this._farClip;
-            worldCoord[0] = eye[0] + t * (farW[0] - eye[0]);
-            worldCoord[1] = eye[1] + t * (farW[1] - eye[1]);
-            worldCoord[2] = eye[2] + t * (farW[2] - eye[2]);
+            var alpha = z / this._farClip;
+            worldCoord.lerp(this.getPosition(), farW, alpha);
 
             return worldCoord;
         },
@@ -258,17 +251,17 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.CameraNode#getProjectionMatrix
          * @description Retrieves the projection matrix for the specified camera.
-         * @returns {pc.math.mat4} The camera's projection matrix.
+         * @returns {pc.Mat4} The camera's projection matrix.
          * @author Will Eastcott
          */
         getProjectionMatrix: function () {
             if (this._projMatDirty) {
                 if (this._projection === pc.scene.Projection.PERSPECTIVE) {
-                    m4.makePerspective(this._fov, this._aspect, this._nearClip, this._farClip, this._projMat);
+                    this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip);
                 } else {
                     var y = this._orthoHeight;
                     var x = y * this._aspect;
-                    m4.makeOrtho(-x, x, -y, y, this._nearClip, this._farClip, this._projMat);
+                    this._projMat.setOrtho(-x, x, -y, y, this._nearClip, this._farClip);
                 }
 
                 this._projMatDirty = false;

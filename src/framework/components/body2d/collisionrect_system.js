@@ -11,12 +11,6 @@ pc.extend(pc.fw, function () {
         b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
     }
 
-    // Shared vectors to avoid excessive allocation
-    var position = pc.math.vec3.create();
-    var rotation = pc.math.vec3.create();
-    var scale = pc.math.vec3.create(1, 1, 1);
-    var transform = pc.math.mat4.create();
-
     /**
      * @private
      * @name pc.fw.CollisionRectComponentSystem
@@ -122,7 +116,7 @@ pc.extend(pc.fw, function () {
         this.mesh.primitive[0].indexed = true;
 
         this.material = new pc.scene.BasicMaterial();
-        this.material.color = pc.math.vec4.create(0, 0, 1, 1);
+        this.material.color = new pc.Color(0, 0, 1, 1);
         this.material.update();
 
         this.debugRender = false;

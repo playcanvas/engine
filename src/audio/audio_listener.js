@@ -3,9 +3,9 @@ pc.extend(pc.audio, function () {
     
     if (pc.audio.hasAudioContext()) {
         Listener = function (manager) {
-            this.position = pc.math.vec3.create(0,0,0);
-            this.velocity = pc.math.vec3.create(0,0,0);
-            this.orientation = pc.math.mat4.create();
+            this.position = new pc.Vec3();
+            this.velocity = new pc.Vec3();
+            this.orientation = new pc.Mat4();
             
             this.listener = manager.context.listener;
         };
@@ -15,8 +15,8 @@ pc.extend(pc.audio, function () {
         };
 
         Listener.prototype.setPosition = function (position) {
-            pc.math.vec3.copy(position, this.position);
-            this.listener.setPosition(position[0], position[1], position[2]);
+            this.position.copy(position);
+            this.listener.setPosition(position.x, position.y, position.z);
         };
         
         Listener.prototype.getVelocity = function () {
@@ -24,13 +24,13 @@ pc.extend(pc.audio, function () {
         };
 
         Listener.prototype.setVelocity = function (velocity) {
-            pc.math.vec3.copy(velocity, this.velocity);
-            this.listener.setPosition(velocity[0], velocity[1], velocity[2]);        
+            this.velocity.copy(velocity);
+            this.listener.setPosition(velocity.x, velocity.y, velocity.z);
         };
         
         Listener.prototype.setOrientation = function (orientation) {
-            pc.math.mat4.copy(orientation, this.orientation);
-            this.listener.setOrientation(-orientation[8], -orientation[9], -orientation[10], orientation[4], orientation[5], orientation[6]);
+            this.orientation.copy(orientation);
+            this.listener.setOrientation(-orientation.data[8], -orientation.data[9], -orientation.data[10], orientation.data[4], orientation.data[5], orientation.data[6]);
         };
         
         Listener.prototype.getOrientation = function () {
@@ -38,9 +38,9 @@ pc.extend(pc.audio, function () {
         };
     } else {
         Listener = function (manager) {
-            this.position = pc.math.vec3.create(0,0,0);
-            this.velocity = pc.math.vec3.create(0,0,0);
-            this.orientation = pc.math.mat4.create();
+            this.position = new pc.Vec3();
+            this.velocity = new pc.Vec3();
+            this.orientation = new pc.Mat4();
         };
         
         Listener.prototype.getPosition = function () {
@@ -48,7 +48,7 @@ pc.extend(pc.audio, function () {
         };
         
         Listener.prototype.setPosition = function (position) {
-            pc.math.vec3.copy(position, this.position);
+            this.position.copy(position);
         };
         
         Listener.prototype.getVelocity = function () {
@@ -56,11 +56,11 @@ pc.extend(pc.audio, function () {
         };
 
         Listener.prototype.setVelocity = function (velocity) {
-            pc.math.vec3.copy(velocity, this.velocity);
+            this.velocity.copy(velocity);
         };
 
         Listener.prototype.setOrientation = function (orientation) {
-            pc.math.mat4.copy(orientation, this.orientation);
+            this.orientation.copy(orientation);
         };
         
         Listener.prototype.getOrientation = function () {
@@ -71,5 +71,4 @@ pc.extend(pc.audio, function () {
     return {
         Listener: Listener
     };
-    
 }());

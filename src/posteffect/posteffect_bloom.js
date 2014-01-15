@@ -208,7 +208,7 @@ pc.extend(pc.posteffect, function () {
         this.baseSaturation = 1;
 
         // Uniforms
-        this.combineParams = pc.math.vec4.create(0, 0, 0, 0);
+        this.combineParams = new Float32Array(4);
         this.sampleWeights = new Float32Array(SAMPLE_COUNT);
         this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
     }
@@ -243,7 +243,10 @@ pc.extend(pc.posteffect, function () {
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
-            pc.math.vec4.set(this.combineParams, this.bloomIntensity, this.baseIntensity, this.bloomSaturation, this.baseSaturation);
+            this.combineParams[0] = this.bloomIntensity;
+            this.combineParams[1] = this.baseIntensity;
+            this.combineParams[2] = this.bloomSaturation;
+            this.combineParams[3] = this.baseSaturation;
             scope.resolve("uCombineParams").setValue(this.combineParams);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);

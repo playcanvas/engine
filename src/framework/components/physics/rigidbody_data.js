@@ -10,8 +10,8 @@ pc.extend(pc.fw, function () {
         this.mass = 1;
         this.linearDamping = 0;
         this.angularDamping = 0;
-        this.linearFactor = pc.math.vec3.create(1, 1, 1);
-        this.angularFactor = pc.math.vec3.create(1, 1, 1);
+        this.linearFactor = new pc.Vec3(1, 1, 1);
+        this.angularFactor = new pc.Vec3(1, 1, 1);
 
         this.friction = 0.5;
         this.restitution = 0;
