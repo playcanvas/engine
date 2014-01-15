@@ -248,7 +248,7 @@ pc.extend(pc.scene, function () {
             if (this.diffuseMap) {
                 this.setParameter('texture_diffuseMap', this.diffuseMap);
                 if (this.diffuseMapTransform) {
-                    this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform);
+                    this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform.data);
                 }
             } else {
                 this.diffuseUniform[0] = this.diffuse.r;
@@ -260,7 +260,7 @@ pc.extend(pc.scene, function () {
             if (this.specularMap) {
                 this.setParameter('texture_specularMap', this.specularMap);
                 if (this.specularMapTransform) {
-                    this.setParameter('texture_specularMapTransform', this.specularMapTransform);
+                    this.setParameter('texture_specularMapTransform', this.specularMapTransform.data);
                 }
             } else {
                 this.specularUniform[0] = this.specular.r;
@@ -272,7 +272,7 @@ pc.extend(pc.scene, function () {
             if (this.glossMap) {
                 this.setParameter('texture_glossMap', this.glossMap);
                 if (this.glossMapTransform) {
-                    this.setParameter('texture_glossMapTransform', this.glossMapTransform);
+                    this.setParameter('texture_glossMapTransform', this.glossMapTransform.data);
                 }
             } else {
                 this.setParameter('material_shininess', this.shininess);
@@ -281,7 +281,7 @@ pc.extend(pc.scene, function () {
             if (this.emissiveMap) {
                 this.setParameter('texture_emissiveMap', this.emissiveMap);
                 if (this.emissiveMapTransform) {
-                    this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform);
+                    this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform.data);
                 }
             } else {
                 this.emissiveUniform[0] = this.emissive.r;
@@ -293,7 +293,7 @@ pc.extend(pc.scene, function () {
             if (this.opacityMap) {
                 this.setParameter('texture_opacityMap', this.opacityMap);
                 if (this.opacityMapTransform) {
-                    this.setParameter('texture_opacityMapTransform', this.opacityMapTransform);
+                    this.setParameter('texture_opacityMapTransform', this.opacityMapTransform.data);
                 }
             } else {
                 this.setParameter('material_opacity', this.opacity);
@@ -302,13 +302,13 @@ pc.extend(pc.scene, function () {
             if (this.normalMap) {
                 this.setParameter('texture_normalMap', this.normalMap);
                 if (this.normalMapTransform) {
-                    this.setParameter('texture_normalMapTransform', this.normalMapTransform);
+                    this.setParameter('texture_normalMapTransform', this.normalMapTransform.data);
                 }
             } 
             if (this.heightMap) {
                 this.setParameter('texture_heightMap', this.heightMap);
                 if (this.heightMapTransform) {
-                    this.setParameter('texture_heightMapTransform', this.heightMapTransform);
+                    this.setParameter('texture_heightMapTransform', this.heightMapTransform.data);
                 }
             }
             if (this.normalMap || this.heightMap) {

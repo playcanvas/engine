@@ -93,7 +93,15 @@ pc.extend(pc.fw, function () {
         initializeComponentData: function (component, data, properties) {
             if (typeof(Ammo) !== 'undefined') {
                 if (component.entity.rigidbody) {
-                    var pivotA = new Ammo.btVector3(data.pivot[0], data.pivot[1], data.pivot[2]);
+                    if (data.pivot && pc.type(data.pivot) === 'array') {
+                        data.pivot = new pc.Vec3(data.pivot[0], data.pivot[1], data.pivot[2]);
+                    }
+
+                    if (data.position && pc.type(data.position) === 'array') {
+                        data.position = new pc.Vec3(data.position[0], data.position[1], data.position[2]);
+                    }
+
+                    var pivotA = new Ammo.btVector3(data.pivot.x, data.pivot.y, data.pivot.z);
                     var body = component.entity.rigidbody.body;
                     data.constraint = new Ammo.btPoint2PointConstraint(body, pivotA);
 
@@ -112,10 +120,12 @@ pc.extend(pc.fw, function () {
 
         cloneComponent: function (entity, clone) {
             // overridden to make sure pivotA is duplicated
-            var src = this.dataStore[entity.getGuid()];
             var data = {
-                pivot: pc.extend([], src.data.pivot),
-                position: pc.extend([], src.data.position)
+                pivot: [ entity.ballsocketjoint.pivot.x, entity.ballsocketjoint.pivot.y, entity.ballsocketjoint.pivot.z ],
+                position: [ entity.ballsocketjoint.position.x, entity.ballsocketjoint.position.y, entity.ballsocketjoint.position.z ],
+                tau: entity.ballsocketjoint.tau,
+                damping: entity.ballsocketjoint.damping,
+                impulseClamp: entity.ballsocketjoint.impulseClamp
             };
             return this.addComponent(clone, data);
         },
