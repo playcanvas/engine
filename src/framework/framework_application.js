@@ -175,8 +175,8 @@ pc.extend(pc.fw, function () {
                         this.context.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
                     }
 
-                    var ambientColor = pack.settings.render.global_ambient;
-                    this.context.scene.ambientColor = new pc.Color(ambientColor[0], ambientColor[1], ambientColor[2]);
+                    var ambientLight = pack.settings.render.global_ambient;
+                    this.context.scene.ambientLight = new pc.Color(ambientLight[0], ambientLight[1], ambientLight[2]);
 
                     this.context.scene.fog = pack.settings.render.fog;
                     var fogColor = pack.settings.render.fog_color;
