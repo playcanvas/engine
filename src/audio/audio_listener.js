@@ -16,7 +16,7 @@ pc.extend(pc.audio, function () {
 
         Listener.prototype.setPosition = function (position) {
             this.position.copy(position);
-            this.listener.setPosition(position[0], position[1], position[2]);
+            this.listener.setPosition(position.x, position.y, position.z);
         };
         
         Listener.prototype.getVelocity = function () {
@@ -30,7 +30,7 @@ pc.extend(pc.audio, function () {
         
         Listener.prototype.setOrientation = function (orientation) {
             this.orientation.copy(orientation);
-            this.listener.setOrientation(-orientation[8], -orientation[9], -orientation[10], orientation[4], orientation[5], orientation[6]);
+            this.listener.setOrientation(-orientation.data[8], -orientation.data[9], -orientation.data[10], orientation.data[4], orientation.data[5], orientation.data[6]);
         };
         
         Listener.prototype.getOrientation = function () {
