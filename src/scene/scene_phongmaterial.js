@@ -66,41 +66,41 @@ pc.extend(pc.scene, function () {
 
         this.diffuse = new pc.Color(0.7, 0.7, 0.7);
         this.diffuseMap = null;
-        this.diffuseMapScale = pc.Vec2.ONE;
-        this.diffuseMapOffset = pc.Vec2.ZERO;
+        this.diffuseMapScale = new pc.Vec2(1, 1);
+        this.diffuseMapOffset = new pc.Vec2(0, 0);
         this.diffuseMapTransform = null;
 
         this.specular = new pc.Color(0, 0, 0);
         this.specularMap = null;
-        this.specularMapScale = pc.Vec2.ONE;
-        this.specularMapOffset = pc.Vec2.ZERO;
+        this.specularMapScale = new pc.Vec2(1, 1);
+        this.specularMapOffset = new pc.Vec2(0, 0);
         this.specularMapTransform = null;
 
         this.shininess = 25;
         this.glossMap = null;
-        this.glossMapScale = pc.Vec2.ONE;
-        this.glossMapOffset = pc.Vec2.ZERO;
+        this.glossMapScale = new pc.Vec2(1, 1);
+        this.glossMapOffset = new pc.Vec2(0, 0);
         this.glossMapTransform = null;
 
         this.emissive = new pc.Color(0, 0, 0);
         this.emissiveMap = null;
-        this.emissiveMapScale = pc.Vec2.ONE;
-        this.emissiveMapOffset = pc.Vec2.ZERO;
+        this.emissiveMapScale = new pc.Vec2(1, 1);
+        this.emissiveMapOffset = new pc.Vec2(0, 0);
         this.emissiveMapTransform = null;
 
         this.opacity = 1;
         this.opacityMap = null;
-        this.opacityMapScale = pc.Vec2.ONE;
-        this.opacityMapOffset = pc.Vec2.ZERO;
+        this.opacityMapScale = new pc.Vec2(1, 1);
+        this.opacityMapOffset = new pc.Vec2(0, 0);
         this.opacityMapTransform = null;
 
         this.normalMap = null;
         this.normalMapTransform = null;
-        this.normalMapScale = pc.Vec2.ONE;
-        this.normalMapOffset = pc.Vec2.ZERO;
+        this.normalMapScale = new pc.Vec2(1, 1);
+        this.normalMapOffset = new pc.Vec2(0, 0);
         this.heightMap = null;
-        this.heightMapScale = pc.Vec2.ONE;
-        this.heightMapOffset = pc.Vec2.ZERO;
+        this.heightMapScale = new pc.Vec2(1, 1);
+        this.heightMapOffset = new pc.Vec2(0, 0);
         this.heightMapTransform = null;
         this.bumpiness = 1;
 
@@ -133,48 +133,48 @@ pc.extend(pc.scene, function () {
         clone: function () {
             var clone = new pc.scene.PhongMaterial();
 
-            Material.prototype._cloneInternal.call(this, clone);
+            pc.scene.Material.prototype._cloneInternal.call(this, clone);
 
             clone.ambient.copy(this.ambient);
 
             clone.diffuse.copy(this.diffuse);
             clone.diffuseMap = this.diffuseMap;
-            clone.diffuseMapScale = this.diffuseMapScale ? this.diffuseMapScale.clone() : pc.Vec2.ONE;
-            clone.diffuseMapOffset = this.diffuseMapOffset ? this.diffuseMapOffset.clone() : pc.Vec2.ZERO;
+            clone.diffuseMapScale = this.diffuseMapScale ? this.diffuseMapScale.clone() : new pc.Vec2(1, 1);
+            clone.diffuseMapOffset = this.diffuseMapOffset ? this.diffuseMapOffset.clone() : new pc.Vec2(0, 0);
             clone.diffuseMapTransform = this.diffuseMapTransform ? this.diffuseMapTransform.clone() : null;
 
             clone.specular.copy(this.specular);
             clone.specularMap = this.specularMap;
-            clone.specularMapScale = this.specularMapScale ? this.specularMapScale.clone() : pc.Vec2.ONE;
-            clone.specularMapOffset = this.specularMapOffset ? this.specularMapOffset.clone() : pc.Vec2.ZERO;
+            clone.specularMapScale = this.specularMapScale ? this.specularMapScale.clone() : new pc.Vec2(1, 1);
+            clone.specularMapOffset = this.specularMapOffset ? this.specularMapOffset.clone() : new pc.Vec2(0, 0);
             clone.specularMapTransform = this.specularMapTransform ? this.specularMapTransform.clone() : null;
 
             clone.shininess = this.shininess;
             clone.glossMap = this.glossMap;
-            clone.glossMapScale = this.glossMapScale ? this.glossMapScale.clone() : pc.Vec2.ONE;
-            clone.glossMapOffset = this.glossMapOffset ? this.glossMapOffset.clone() : pc.Vec2.ZERO;
+            clone.glossMapScale = this.glossMapScale ? this.glossMapScale.clone() : new pc.Vec2(1, 1);
+            clone.glossMapOffset = this.glossMapOffset ? this.glossMapOffset.clone() : new pc.Vec2(0, 0);
             clone.glossMapTransform = this.glossMapTransform ? this.glossMapTransform.clone() : null;
 
             clone.emissive.copy(this.emissive);
             clone.emissiveMap = this.emissiveMap;
-            clone.emissiveMapScale = this.emissiveMapScale ? this.emissiveMapScale.clone() : pc.Vec2.ONE;
-            clone.emissiveMapOffset = this.emissiveMapOffset ? this.emissiveMapOffset.clone() : pc.Vec2.ZERO;
+            clone.emissiveMapScale = this.emissiveMapScale ? this.emissiveMapScale.clone() : new pc.Vec2(1, 1);
+            clone.emissiveMapOffset = this.emissiveMapOffset ? this.emissiveMapOffset.clone() : new pc.Vec2(0, 0);
             clone.emissiveMapTransform = this.emissiveMapTransform ? this.emissiveMapTransform.clone() : null;
 
             clone.opacity = this.opacity;
             clone.opacityMap = this.opacityMap;
-            clone.opacityMapScale = this.opacityMapScale ? this.opacityMapScale.clone() : pc.Vec2.ONE;
-            clone.opacityMapOffset = this.opacityMapOffset ? this.opacityMapOffset.clone() : pc.Vec2.ZERO;
+            clone.opacityMapScale = this.opacityMapScale ? this.opacityMapScale.clone() : new pc.Vec2(1, 1);
+            clone.opacityMapOffset = this.opacityMapOffset ? this.opacityMapOffset.clone() : new pc.Vec2(0, 0);
             clone.opacityMapTransform = this.opacityMapTransform ? this.opacityMapTransform.clone() : null;
 
             clone.normalMap = this.normalMap;
             clone.normalMapTransform = this.normalMapTransform ? this.normalMapTransform.clone() : null;
-            clone.normalMapScale = this.normalMapScale ? this.normalMapScale.clone() : pc.Vec2.ONE;
-            clone.normalMapOffset = this.normalMapOffset ? this.normalMapOffset.clone() : pc.Vec2.ZERO;
+            clone.normalMapScale = this.normalMapScale ? this.normalMapScale.clone() : new pc.Vec2(1, 1);
+            clone.normalMapOffset = this.normalMapOffset ? this.normalMapOffset.clone() : new pc.Vec2(0, 0);
             clone.heightMap = this.heightMap;
             clone.heightMapTransform = this.heightMapTransform ? this.heightMapTransform.clone() : null;
-            clone.heightMapScale = this.heightMapScale ? this.heightMapScale.clone() : pc.Vec2.ONE;
-            clone.heightMapOffset = this.heightMapOffset ? this.heightMapOffset.clone() : pc.Vec2.ZERO;
+            clone.heightMapScale = this.heightMapScale ? this.heightMapScale.clone() : new pc.Vec2(1, 1);
+            clone.heightMapOffset = this.heightMapOffset ? this.heightMapOffset.clone() : new pc.Vec2(0, 0);
             clone.bumpiness = this.bumpiness;
 
             clone.cubeMap = this.cubeMap;
