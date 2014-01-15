@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.136.1
+--------
+* [FIX] CameraNode#screenToWorld (new Maths API)
+* [FIX] Global ambient now works again
+* [FIX] Triggers now work again (new Maths API)
+
+--------
 v0.136.0
 --------
 * [BREAKING] New Maths API
