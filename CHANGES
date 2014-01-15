@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.136.0
+--------
+* [BREAKING] New Maths API
+* Replaced pc.math.vec2 with pc.Vec2
+* Replaced pc.math.vec3 with pc.Vec3
+* Replaced pc.math.vec4 with pc.Vec4
+* Replaced pc.math.quat with pc.Quat
+* Replaced pc.math.mat4 with pc.Mat4
+* See docs for more details
+
 --------
 v0.135.2
 --------
