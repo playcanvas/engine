@@ -41,11 +41,11 @@ pc.extend(pc.fw, function () {
 
                 var pos = entity.getPosition();
                 var rot = entity.getRotation();
-                ammoQuat.setValue(rot[0], rot[1], rot[2], rot[3]);
+                ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
 
                 var startTransform = new Ammo.btTransform();
                 startTransform.setIdentity();
-                startTransform.getOrigin().setValue(pos[0], pos[1], pos[2]);
+                startTransform.getOrigin().setValue(pos.x, pos.y, pos.z);
                 startTransform.setRotation(ammoQuat);
 
                 var motionState = new Ammo.btDefaultMotionState(startTransform);
@@ -82,9 +82,9 @@ pc.extend(pc.fw, function () {
                 var rotation = this.entity.getRotation();
 
                 var transform = body.getWorldTransform();
-                transform.getOrigin().setValue(position[0], position[1], position[2]);
+                transform.getOrigin().setValue(position.x, position.y, position.z);
 
-                ammoQuat.setValue(rotation[0], rotation[1], rotation[2], rotation[3]);
+                ammoQuat.setValue(rotation.x, rotation.y, rotation.z, rotation.w);
                 transform.setRotation(ammoQuat);
                 body.activate();
             }
