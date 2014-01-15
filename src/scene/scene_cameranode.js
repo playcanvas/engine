@@ -128,20 +128,18 @@ pc.extend(pc.scene, function () {
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {
             if (typeof worldCoord === 'undefined') {
-                worldCoord = v3.create();
+                worldCoord = new pc.Vec3();
             }
 
             var projMat = this.getProjectionMatrix();
             var wtm = this.getWorldTransform();
-
-            this._viewMat.copy(wtm).invert();
-            this._viewProjMat.mul(projMat, this._viewMat);
-
+            this._viewMat.copy(wtm);
+            this._viewMat.invert();
+            this._viewProjMat.mul2(projMat, this._viewMat);
             var invViewProjMat = this._viewProjMat.clone().invert();
 
             var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
-            var farW = new pc.Vec3();
-            invViewProjMat.transformPoint(far, farW);
+            var farW = invViewProjMat.transformPoint(far);
 
             var w = far.x * invViewProjMat.data[3] +
                     far.y * invViewProjMat.data[7] +
