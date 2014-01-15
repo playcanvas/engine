@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.136.2
+--------
+* [FIX] UV transforms work again.
+
+--------
 v0.136.1
 --------
 * [FIX] CameraNode#screenToWorld (new Maths API)
