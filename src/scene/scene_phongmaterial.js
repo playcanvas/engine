@@ -280,8 +280,6 @@ pc.extend(pc.scene, function () {
         },
 
         update: function () {
-            var scale, offset;
-
             this.clearParameters();
 
             this.ambientUniform[0] = this.ambient.r;
