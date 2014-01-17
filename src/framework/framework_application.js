@@ -502,35 +502,44 @@ pc.extend(pc.fw, function () {
             var windowWidth = window.innerWidth;
             var windowHeight = window.innerHeight;
 
-            if (this.fillMode === pc.fw.FillMode.KEEP_ASPECT) {
-                var r = this.canvas.width/this.canvas.height;
-                var winR = windowWidth / windowHeight;
-
-                if (r > winR) {
-                    width = windowWidth;
-                    height = width / r ;
-
-                    //var marginTop = (windowHeight - height) / 2;
-                    //this.container.style.margin = marginTop + "px auto";
-                } else {
-                    height = windowHeight;
-                    width = height * r;
-
-                    //this.container.style.margin = "auto auto";
-                }
-            } else if (this.fillMode === pc.fw.FillMode.FILL_WINDOW) {
+            if (navigator.isCocoonJS) {
                 width = windowWidth;
                 height = windowHeight;
+
+                var ratio = window.devicePixelRatio;
+                this.canvas.width = width * ratio;
+                this.canvas.height = height * ratio;
             } else {
-                // FillMode.NONE use width and height that are provided
-            }
+                if (this.fillMode === pc.fw.FillMode.KEEP_ASPECT) {
+                    var r = this.canvas.width/this.canvas.height;
+                    var winR = windowWidth / windowHeight;
 
-            this.canvas.style.width = width + 'px';
-            this.canvas.style.height = height + 'px';
+                    if (r > winR) {
+                        width = windowWidth;
+                        height = width / r ;
 
-            // In AUTO mode the resolution is changed to match the canvas size
-            if (this.resolutionMode === pc.fw.ResolutionMode.AUTO) {
-                this.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+                        //var marginTop = (windowHeight - height) / 2;
+                        //this.container.style.margin = marginTop + "px auto";
+                    } else {
+                        height = windowHeight;
+                        width = height * r;
+
+                        //this.container.style.margin = "auto auto";
+                    }
+                } else if (this.fillMode === pc.fw.FillMode.FILL_WINDOW) {
+                    width = windowWidth;
+                    height = windowHeight;
+                } else {
+                    // FillMode.NONE use width and height that are provided
+                }
+
+                this.canvas.style.width = width + 'px';
+                this.canvas.style.height = height + 'px';
+
+                // In AUTO mode the resolution is changed to match the canvas size
+                if (this.resolutionMode === pc.fw.ResolutionMode.AUTO) {
+                    this.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+                }
             }
 
             // return the final values calculated for width and height
