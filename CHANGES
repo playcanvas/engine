@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.137.0
+--------
+* Exposed material texture transforms in the designer
+* Added texture tiling, offset and rotation
+
+--------
 v0.136.2
 --------
 * [FIX] UV transforms work again.
