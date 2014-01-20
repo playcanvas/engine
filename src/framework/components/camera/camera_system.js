@@ -66,7 +66,7 @@ pc.extend(pc.fw, function () {
             displayName: "Near Clip",
             description: "Near clipping distance",
             type: "number",
-            defaultValue: 1,
+            defaultValue: 0.3,
             options: {
                 min: 0
             }
@@ -75,7 +75,7 @@ pc.extend(pc.fw, function () {
             displayName: "Far Clip",
             description: "Far clipping distance",
             type: "number",
-            defaultValue: 100000,
+            defaultValue: 1000,
             options: {
                 min: 0
             }
