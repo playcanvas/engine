@@ -324,11 +324,11 @@ pc.extend(pc.fw, function () {
                 var j, count = array ? array.length : 0;
                 for (j=0; j<count; j++) {
                     if (predicate(array[i])) {
-                        return true;
+                        return array[i];
                     }
                 }
 
-                return false;
+                return null;
             };
 
 
