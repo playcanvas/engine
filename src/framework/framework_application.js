@@ -763,7 +763,8 @@ pc.extend(pc.fw, function () {
             this.context.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
 
             if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
-                this.context.systems.rigidbody.setGravity(settings.physics.gravity);
+                var gravity = settings.physics.gravity;
+                this.context.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
             }
 
             this.context.scene.fog = settings.render.fog;
