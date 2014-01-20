@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.137.2
+--------
+* [FIX] Gravity livelink now works with the new Math API.
+
+--------
 v0.137.1
 --------
 * Add support for fullscreen 'screenscanvas' mode in CocoonJS.
