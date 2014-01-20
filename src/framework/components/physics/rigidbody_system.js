@@ -527,14 +527,16 @@ pc.extend(pc.fw, function () {
                         if (!frameCollisions[guid] || frameCollisions[guid].others.indexOf(other) < 0) {
                             others.splice(i, 1);
 
-                            var flags = this._getCollisionFlags(entity, other);
+                            if (entityCollision && other.collision) {
+                                var flags = this._getCollisionFlags(entity, other);
 
-                            if (flags & FLAG_COLLISION_END) {
-                                entityCollision.fire(EVENT_COLLISION_END, other);
-                            }
+                                if (flags & FLAG_COLLISION_END) {
+                                    entityCollision.fire(EVENT_COLLISION_END, other);
+                                }
 
-                            if (flags & FLAG_TRIGGER_LEAVE) {
-                                entityCollision.fire(EVENT_TRIGGER_LEAVE, other);
+                                if (flags & FLAG_TRIGGER_LEAVE) {
+                                    entityCollision.fire(EVENT_TRIGGER_LEAVE, other);
+                                }
                             }
                         }
                     }  
