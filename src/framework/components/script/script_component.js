@@ -20,6 +20,15 @@ pc.extend(pc.fw, function () {
      * @param {String} oldValue The old value of the script attribute
      * @param {String} newValue The new value of the script attribute
     */
+
+    /**
+     * @event
+     * @name pc.fw.ScriptComponent#set
+     * @description Fired when you set the value of a script attribute
+     * @param {String} name The name of the script attribute 
+     * @param {String} oldValue The old value of the script attribute
+     * @param {String} newValue The new value of the script attribute
+    */
    
     var ScriptComponent = function ScriptComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
