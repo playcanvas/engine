@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
     * @component
     * @name pc.fw.ScriptComponent
     * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own javascript files
-    * to be executed with access to the Entity.
+    * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/engine/scripting.html">Scripting</a>.
     * @param {pc.fw.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
@@ -11,25 +11,6 @@ pc.extend(pc.fw, function () {
     * {url: 'url.js', name: 'url', 'attributes': [attribute1, attribute2, ...]}
     */
 
-    // Events Documentation   
-    /**
-     * @event
-     * @name pc.fw.ScriptComponent#onAttributeChanged
-     * @description Fired when a script attribute changes from the designer
-     * @param {String} name The name of the script attribute that changed
-     * @param {String} oldValue The old value of the script attribute
-     * @param {String} newValue The new value of the script attribute
-    */
-
-    /**
-     * @event
-     * @name pc.fw.ScriptComponent#set
-     * @description Fired when you set the value of a script attribute
-     * @param {String} name The name of the script attribute 
-     * @param {String} oldValue The old value of the script attribute
-     * @param {String} newValue The new value of the script attribute
-    */
-   
     var ScriptComponent = function ScriptComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
     };
