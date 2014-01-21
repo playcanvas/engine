@@ -31,7 +31,6 @@ pc.extend(pc, (function () {
          * m.add2(pc.Mat4.INDENTITY, pc.Mat4.ONE);
          * 
          * console.log("The result of the addition is: " a.toString());
-         * @author Will Eastcott
          */
         add2: function (lhs, rhs) {
             var a = lhs.data,
@@ -70,7 +69,6 @@ pc.extend(pc, (function () {
          * m.add(pc.Mat4.ONE);
          * 
          * console.log("The result of the addition is: " a.toString());
-         * @author Will Eastcott
          */
         add: function (rhs) {
             return this.add2(this, rhs);
@@ -85,7 +83,6 @@ pc.extend(pc, (function () {
          * var dst = new pc.Mat4();
          * dst.copy(src);
          * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         clone: function () {
             return new pc.Mat4().copy(this);
@@ -101,7 +98,6 @@ pc.extend(pc, (function () {
          * var dst = new pc.Mat4();
          * dst.copy(src);
          * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         copy: function (rhs) {
             var src = rhs.data,
@@ -136,7 +132,6 @@ pc.extend(pc, (function () {
          * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          * var b = new pc.Mat4();
          * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         equals: function (rhs) {
             var l = this.data,
@@ -168,7 +163,6 @@ pc.extend(pc, (function () {
          * @example
          * var m = new pc.Mat4();
          * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
-         * @author Will Eastcott
          */
         isIdentity: function () {
             var m = this.data;
@@ -208,7 +202,6 @@ pc.extend(pc, (function () {
          * r.mul2(a, b);
          * 
          * console.log("The result of the multiplication is: " r.toString());
-         * @author Will Eastcott
          */
         mul2: function (lhs, rhs) {
             var a00, a01, a02, a03,
@@ -290,7 +283,6 @@ pc.extend(pc, (function () {
          * a.mul(b);
          * 
          * console.log("The result of the multiplication is: " a.toString());
-         * @author Will Eastcott
          */
         mul: function (rhs) {
             return this.mul2(this, rhs);
@@ -311,7 +303,6 @@ pc.extend(pc, (function () {
          * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          *
          * var tv = m.transformPoint(v);
-         * @author Will Eastcott
          */
         transformPoint: function (vec, res) {
             var x, y, z,
@@ -354,7 +345,6 @@ pc.extend(pc, (function () {
          * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
          *
          * var tv = m.transformVector(v);
-         * @author Will Eastcott
          */
         transformVector: function (vec, res) {
             var x, y, z,
@@ -397,7 +387,6 @@ pc.extend(pc, (function () {
          * var target = new pc.Vec3(0, 0, 0);
          * var up = new pc.Vec3(0, 1, 0);
          * var m = new pc.Mat4().setLookAt(position, target, up);
-         * @author Will Eastcott
          */
         setLookAt: (function () {
             var x, y, z;
@@ -451,7 +440,6 @@ pc.extend(pc, (function () {
          * @example
          * // Create a 4x4 persepctive projection matrix
          * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
-         * @author Will Eastcott
          */
         setFrustum: function (left, right, bottom, top, znear, zfar) {
             var temp1, temp2, temp3, temp4, r;
@@ -495,7 +483,6 @@ pc.extend(pc, (function () {
          * @example
          * // Create a 4x4 persepctive projection matrix
          * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
-         * @author Will Eastcott
          */
         setPerspective: function (fovy, aspect, znear, zfar) {
             var xmax, ymax;
@@ -521,7 +508,6 @@ pc.extend(pc, (function () {
          * @example
          * // Create a 4x4 orthographic projection matrix
          * var ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
-         * @author Will Eastcott
          */
         setOrtho: function (left, right, bottom, top, near, far) {
             var r = this.data;
@@ -557,7 +543,6 @@ pc.extend(pc, (function () {
          * @example
          * // Create a 4x4 rotation matrix
          * var rm = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 90);
-         * @author Will Eastcott
          */
         setFromAxisAngle: function (axis, angle) {
             var x, y, z, c, s, t, tx, ty, m;
@@ -606,7 +591,6 @@ pc.extend(pc, (function () {
          * @example
          * // Create a 4x4 translation matrix
          * var tm = new pc.Mat4().setTranslate(10, 10, 10);
-         * @author Will Eastcott
          */
         setTranslate: function (tx, ty, tz) {
             var m = this.data;
@@ -643,7 +627,6 @@ pc.extend(pc, (function () {
          * @example
          * // Create a 4x4 scale matrix
          * var sm = new pc.Mat4().setScale(10, 10, 10);
-         * @author Will Eastcott
          */
         setScale: function (sx, sy, sz) {
             var m = this.data;
@@ -679,7 +662,6 @@ pc.extend(pc, (function () {
          *
          * // Invert in place
          * rot.invert();
-         * @author Will Eastcott
          */
         invert: function () {
             var a00, a01, a02, a03,
@@ -752,7 +734,6 @@ pc.extend(pc, (function () {
          * @example
          * m.setIdentity();
          * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         setIdentity: function () {
             var m = this.data;
@@ -792,7 +773,6 @@ pc.extend(pc, (function () {
          *
          * var m = new pc.Mat4();
          * m.compose(t, r, s);
-         * @author Will Eastcott
          */
         setTRS: function (t, r, s) {
             var tx, ty, tz, qx, qy, qz, qw, sx, sy, sz,
@@ -859,7 +839,6 @@ pc.extend(pc, (function () {
          *
          * // Transpose in place
          * m.transpose();
-         * @author Will Eastcott
          */
         transpose: function () {
             var tmp, m = this.data;
@@ -942,7 +921,6 @@ pc.extend(pc, (function () {
          * // Query the z-axis component
          * var t = new pc.Vec3();
          * m.getTranslation(t);
-         * @author Will Eastcott
          */
         getTranslation: function (t) {
             t = (t === undefined) ? new pc.Vec3() : t;
@@ -963,7 +941,6 @@ pc.extend(pc, (function () {
          * // Query the z-axis component
          * var x = new pc.Vec3();
          * m.getX(x);
-         * @author Will Eastcott
          */
         getX: function (x) {
             x = (x === undefined) ? new pc.Vec3() : x;
@@ -984,7 +961,6 @@ pc.extend(pc, (function () {
          * // Query the z-axis component
          * var y = new pc.Vec3();
          * m.getY(y);
-         * @author Will Eastcott
          */
         getY: function (y) {
             y = (y === undefined) ? new pc.Vec3() : y;
@@ -1005,7 +981,6 @@ pc.extend(pc, (function () {
          * // Query the z-axis component
          * var z = new pc.Vec3();
          * m.getZ(z);
-         * @author Will Eastcott
          */
         getZ: function (z) {
             z = (z === undefined) ? new pc.Vec3() : z;
@@ -1025,7 +1000,6 @@ pc.extend(pc, (function () {
          *
          * // Query the scale component
          * var scale = m.getScale();
-         * @author Will Eastcott
          */
         getScale: (function () {
             var x, y, z;
@@ -1058,7 +1032,6 @@ pc.extend(pc, (function () {
          * @example
          * var m = new pc.Mat4();
          * m.setFromEulerAngles(45, 90, 180);
-         * @author Will Eastcott
          */
         // http://en.wikipedia.org/wiki/Rotation_matrix#Conversion_from_and_to_axis-angle
         // The 3D space is right-handed, so the rotation around each axis will be counterclockwise 
@@ -1116,7 +1089,6 @@ pc.extend(pc, (function () {
          * var m = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 45);
          *
          * var eulers = m.getEulerAngles();
-         * @author Will Eastcott
          */
         getEulerAngles: (function () {
             var scale = new pc.Vec3();
@@ -1164,7 +1136,6 @@ pc.extend(pc, (function () {
          * var m = new pc.Mat4();
          * // Should output '[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]'
          * console.log(m.toString());
-         * @author Will Eastcott
          */
         toString: function () {
             var i, t;

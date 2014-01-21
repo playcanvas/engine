@@ -227,7 +227,6 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.Texture#bind
          * @description Activates the specified texture on the current texture unit.
-         * @author Will Eastcott
          */
         bind: function () {
             var gl = this.device.gl;
@@ -238,7 +237,6 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.Texture#destroy
          * @description Forcibly free up the underlying WebGL resource owned by the texture.
-         * @author Will Eastcott
          */
         destroy: function () {
             var gl = this.device.gl;
@@ -252,7 +250,6 @@ pc.extend(pc.gfx, function () {
          * @param {Object} options Optional options object. Valid properties are as follows:
          * @param {Number} options.level The mip level to lock with 0 being the top level. Defaults to 0.
          * @param {Number} options.face If the texture is a cubemap, this is the index of the face to lock.
-         * @author Will Eastcott
          */
         lock: function (options) {
             // Initialize options to some sensible defaults
@@ -301,7 +298,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.Texture#recover
          * @description Restores the texture in the event of the underlying WebGL context being lost and then
          * restored.
-         * @author Will Eastcott
          */
         recover: function () {
             var gl = this.device.gl;
@@ -351,7 +347,6 @@ pc.extend(pc.gfx, function () {
          * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
          * @param {Array} source Array of 6 HTMLCanvasElement, HTMLImageElement or HTMLVideoElement objects.
          * for the specified texture.
-         * @author Will Eastcott
          */
         setSource: function (source) {
             if (this._cubemap) {
@@ -400,7 +395,6 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.Texture#unlock
          * @description Unlocks the currently locked mip level and uploads it to VRAM.
-         * @author Will Eastcott
          */
         unlock: function () {
             logASSERT(this._lockedLevel !== -1, "Attempting to unlock a texture that is not locked");
@@ -417,7 +411,6 @@ pc.extend(pc.gfx, function () {
          * is called by internally by pc.gfx.Texture#setSource and pc.gfx.Texture#unlock. However, it still needs to
          * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally, 
          * this is done once every frame before video textured geometry is rendered.
-         * @author Will Eastcott
          */
         upload: function () {
             this.bind();

@@ -48,7 +48,6 @@ pc.extend(pc, (function () {
          * dst.copy(src);
          *
          * console.log("The two colors are " + (dst.equals(src) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         copy: function (rhs) {
             var a = this.data;
@@ -117,7 +116,6 @@ pc.extend(pc, (function () {
          * var c = new pc.Color(1, 1, 1);
          * // Should output '#ffffffff'
          * console.log(c.toString());
-         * @author Will Eastcott
          */
         toString: function (alpha) {
             var s = "#" + ((1 << 24) + (parseInt(this.r*255) << 16) + (parseInt(this.g*255) << 8) + parseInt(this.b*255)).toString(16).slice(1);

@@ -32,7 +32,6 @@ pc.extend(pc, (function () {
          * var qclone = q.clone();
          *
          * console.log("The result of the cloning is: " + q.toString());
-         * @author Will Eastcott
          */
         clone: function () {
             return new pc.Quat(this.x, this.y, this.z, this.w);
@@ -56,7 +55,6 @@ pc.extend(pc, (function () {
          * var dst = new pc.Quat();
          * dst.copy(src, src);
          * console.log("The two quaternions are " + (src.equals(dst) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         copy: function (rhs) {
             this.x = rhs.x;
@@ -75,7 +73,6 @@ pc.extend(pc, (function () {
          * var a = new pc.Quat();
          * var b = new pc.Quat();
          * console.log("The two quaternions are " + (a.equals(b) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         equals: function (that) {
             return ((this.x === that.x) && (this.y === that.y) && (this.z === that.z) && (this.w === that.w));
@@ -88,7 +85,6 @@ pc.extend(pc, (function () {
          * @param {pc.Vec3} [eulers] The 3-dimensional vector to receive the Euler angles.
          * @returns {pc.Vec3} The 3-dimensional vector holding the Euler angles that 
          * correspond to the supplied quaternion.
-         * @author Will Eastcott
          */
         getEulerAngles: function (eulers) {
             var x, y, z, qx, qy, qz, qw, a2;
@@ -129,7 +125,6 @@ pc.extend(pc, (function () {
          *
          * // Invert in place
          * rot.invert();
-         * @author Will Eastcott
          */
         invert: function () {
             return this.conjugate().normalize();
@@ -145,7 +140,6 @@ pc.extend(pc, (function () {
          * var len = q.length();
          * // Should output 5
          * console.log("The length of the quaternion is: " + len);
-         * @author Will Eastcott
          */
         length: function () {
             var x, y, z, w;
@@ -168,7 +162,6 @@ pc.extend(pc, (function () {
          * var lenSq = q.lengthSq();
          * // Should output 25
          * console.log("The length squared of the quaternion is: " + lenSq);
-         * @author Will Eastcott
          */
         lengthSq: function () {
             var v = this.data;
@@ -191,7 +184,6 @@ pc.extend(pc, (function () {
          * a.mul(b);
          * 
          * console.log("The result of the multiplication is: " a.toString());
-         * @author Will Eastcott
          */
         mul: function (rhs) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
@@ -231,7 +223,6 @@ pc.extend(pc, (function () {
          * r.mul2(a, b);
          * 
          * console.log("The result of the multiplication is: " r.toString());
-         * @author Will Eastcott
          */
         mul2: function (lhs, rhs) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w;
@@ -266,7 +257,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 0, 0, 0, 1
          * console.log("The result of the vector normalization is: " + v.toString());
-         * @author Will Eastcott
          */
         normalize: function () {
             var len = this.length();
@@ -298,7 +288,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 1, 0, 0, 0
          * console.log("The result of the vector set is: " + q.toString());
-         * @author Will Eastcott
          */
         set: function (x, y, z, w) {
             this.x = x;
@@ -319,7 +308,6 @@ pc.extend(pc, (function () {
          * @example
          * var q = new pc.Quat();
          * q.setFromAxisAngle(pc.Vec3.UP, 90);
-         * @author Will Eastcott
          */
         setFromAxisAngle: function (axis, angle) {
             var sa, ca;
@@ -348,7 +336,6 @@ pc.extend(pc, (function () {
          * @example
          * var q = new pc.Quat();
          * q.setFromEulerAngles(45, 90, 180);
-         * @author Will Eastcott
          */
         setFromEulerAngles: function (ex, ey, ez) {
             var sx, cx, sy, cy, sz, cz, halfToRad;
@@ -387,7 +374,6 @@ pc.extend(pc, (function () {
          *
          * // Convert to a quaternion
          * var q = new pc.Quat().setFromMat4(rot);
-         * @author Will Eastcott
          */
         setFromMat4: function (m) {
             var m00, m01, m02, m10, m11, m12, m20, m21, m22,
@@ -499,7 +485,6 @@ pc.extend(pc, (function () {
          * result = new pc.Quat().slerp2(q1, q2, 0);   // Return q1
          * result = new pc.Quat().slerp2(q1, q2, 0.5); // Return the midpoint interpolant 
          * result = new pc.Quat().slerp2(q1, q2, 1);   // Return q2
-         * @author Will Eastcott
          */
         slerp: function (lhs, rhs, alpha) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w,
@@ -561,7 +546,6 @@ pc.extend(pc, (function () {
          * var q = new pc.Quat().setFromEulerAngles(10, 20, 30);
          *
          * var tv = q.transformVector(v);
-         * @author Will Eastcott
          */
         transformVector: function (vec, res) {
             if (typeof res === 'undefined') {
@@ -594,7 +578,6 @@ pc.extend(pc, (function () {
          * var v = new pc.Quat(0, 0, 0, 1);
          * // Should output '[0, 0, 0, 1]'
          * console.log(v.toString());
-         * @author Will Eastcott
          */
         toString: function () {
             return "[" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + "]";

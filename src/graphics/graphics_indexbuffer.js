@@ -52,7 +52,6 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.IndexBuffer#destroy
          * @description Frees resources associated with this index buffer.
-         * @author Will Eastcott
          */
         destroy: function () {
             var gl = this.device.gl;
@@ -64,7 +63,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.IndexBuffer#getFormat
          * @description Returns the data format of the specified index buffer.
          * @returns {Number} The data format of the specified index buffer (see pc.gfx.INDEXFORMAT_*).
-         * @author Will Eastcott
          */
         getFormat: function () {
             return this.format;
@@ -75,7 +73,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.IndexBuffer#getNumIndices
          * @description Returns the number of indices stored in the specified index buffer.
          * @returns {Number} The number of indices stored in the specified index buffer.
-         * @author Will Eastcott
          */
         getNumIndices: function () {
             return this.numIndices;
@@ -86,7 +83,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.IndexBuffer#lock
          * @description Gives access to the block of memory that stores the buffer's indices.
          * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
-         * @author Will Eastcott
          */
         lock: function () {
             return this.storage;
@@ -98,7 +94,6 @@ pc.extend(pc.gfx, function () {
          * @description Signals that the block of memory returned by a call to the lock function is 
          * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the 
          * currently active device.
-         * @author Will Eastcott
          */
         unlock: function () {
             // Upload the new index data

@@ -25,7 +25,6 @@ pc.extend(pc.scene, function () {
          * @description Duplicates a Basic material. All properties are duplicated except textures
          * where only the references are copied.
          * @returns {pc.scene.BasicMaterial} A cloned Basic material.
-         * @author Will Eastcott
          */
         clone: function () {
             var clone = new pc.scene.BasicMaterial();

@@ -33,7 +33,6 @@ pc.extend(pc, (function () {
          *
          * // Should output [30, 30, 30]
          * console.log("The result of the addition is: " + a.toString());
-         * @author Will Eastcott
          */
         add: function (rhs) {
             var a = this.data,
@@ -62,7 +61,6 @@ pc.extend(pc, (function () {
          * // Should output [30, 30, 30]
          *
          * console.log("The result of the addition is: " + r.toString());
-         * @author Will Eastcott
          */
         add2: function (lhs, rhs) {
             var a = lhs.data,
@@ -85,7 +83,6 @@ pc.extend(pc, (function () {
          * var v = new pc.Vec3(10, 20, 30);
          * var vclone = v.clone();
          * console.log("The result of the cloning is: " + vclone.toString());
-         * @author Will Eastcott
          */
         clone: function () {
             return new Vec3().copy(this);
@@ -104,7 +101,6 @@ pc.extend(pc, (function () {
          * dst.copy(src);
          *
          * console.log("The two vectors are " + (dst.equals(src) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         copy: function (rhs) {
             var a = this.data,
@@ -129,7 +125,6 @@ pc.extend(pc, (function () {
          *
          * // Should print the Z axis (i.e. [0, 0, 1])
          * console.log("The result of the cross product is: " + back.toString());
-         * @author Will Eastcott
          */
         cross: function (lhs, rhs) {
             var a, b, r, ax, ay, az, bx, by, bz;
@@ -163,7 +158,6 @@ pc.extend(pc, (function () {
          * var v2 = new pc.Vec3(10, 20, 40);
          * var v1dotv2 = v1.dot(v2);
          * console.log("The result of the dot product is: " + v1dotv2);
-         * @author Will Eastcott
          */
         dot: function (rhs) {
             var a = this.data,
@@ -181,7 +175,6 @@ pc.extend(pc, (function () {
          * var a = new pc.Vec3(1, 2, 3);
          * var b = new pc.Vec3(4, 5, 6);
          * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         equals: function (rhs) {
             var a = this.data,
@@ -200,7 +193,6 @@ pc.extend(pc, (function () {
          * var len = vec.length();
          * // Should output 5
          * console.log("The length of the vector is: " + len);
-         * @author Will Eastcott
          */
         length: function () {
             var v = this.data;
@@ -218,7 +210,6 @@ pc.extend(pc, (function () {
          * var len = vec.lengthSq();
          * // Should output 25
          * console.log("The length squared of the vector is: " + len);
-         * @author Will Eastcott
          */
         lengthSq: function () {
             var v = this.data;
@@ -244,7 +235,6 @@ pc.extend(pc, (function () {
          * r.lerp(a, b, 0);   // r is equal to a
          * r.lerp(a, b, 0.5); // r is 5, 5, 5
          * r.lerp(a, b, 1);   // r is equal to b
-         * @author Will Eastcott
          */
         lerp: function (lhs, rhs, alpha) {
             var a = lhs.data,
@@ -272,7 +262,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 8, 15, 24
          * console.log("The result of the multiplication is: " + a.toString());
-         * @author Will Eastcott
          */
         mul: function (rhs) {
             var a = this.data,
@@ -301,7 +290,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 8, 15, 24
          * console.log("The result of the multiplication is: " + r.toString());
-         * @author Will Eastcott
          */
         mul2: function (lhs, rhs) {
             var a = lhs.data,
@@ -327,7 +315,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 1, 0, 0, 0
          * console.log("The result of the vector normalization is: " + v.toString());
-         * @author Will Eastcott
          */
         normalize: function () {
             return this.scale(1 / this.length());
@@ -351,7 +338,6 @@ pc.extend(pc, (function () {
          * 
          * // Divide by 2
          * v.scale(0.5);
-         * @author Will Eastcott
          */
         scale: function (scalar) {
             var v = this.data;
@@ -376,7 +362,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 5, 10, 20
          * console.log("The result of the vector set is: " + v.toString());
-         * @author Will Eastcott
          */
         set: function (x, y, z) {
             var v = this.data;
@@ -402,7 +387,6 @@ pc.extend(pc, (function () {
          *
          * // Should output [-10, -10, -10]
          * console.log("The result of the addition is: " + a.toString());
-         * @author Will Eastcott
          */
         sub: function (rhs) {
             var a = this.data,
@@ -431,7 +415,6 @@ pc.extend(pc, (function () {
          *
          * // Should output [-10, -10, -10]
          * console.log("The result of the addition is: " + r.toString());
-         * @author Will Eastcott
          */
         sub2: function (lhs, rhs) {
             var a = lhs.data,
@@ -454,7 +437,6 @@ pc.extend(pc, (function () {
          * var v = new pc.Vec3(20, 10, 5);
          * // Should output '[20, 10, 5]'
          * console.log(v.toString());
-         * @author Will Eastcott
          */
         toString: function () {
             return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + "]";
