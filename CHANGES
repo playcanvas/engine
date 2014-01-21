@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.138.2
+--------
+* [FIX] Only include texture transforms in Phong materials if they are not the identity matrix
+
+--------
 v0.138.1
 --------
 * [FIX] Update particle emitter code to latest Math API.
