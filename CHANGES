@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.138.1
+--------
+* [FIX] Update particle emitter code to latest Math API.
+
+--------
 v0.138.0
 --------
 * Added onAttributeChanged method in scripts and 'set' event for script attributes
