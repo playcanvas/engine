@@ -390,13 +390,17 @@ pc.extend(pc.scene, function () {
 
         _updateMapTransform: function (transform, tiling, offset, rotation) {
             tiling = tiling ? new pc.Vec3(tiling.x, tiling.y, 1) : pc.Vec3.ONE;
-            offset = offset ? new pc.Vec3(offset.x, offset.y, 1) : pc.Vec3.ZERO;
+            offset = offset ? new pc.Vec3(offset.x, offset.y, 0) : pc.Vec3.ZERO;
             rotation = rotation ? new pc.Quat().setFromEulerAngles(rotation.x, rotation.y, rotation.z) : pc.Quat.IDENTITY;
 
             transform = transform || new pc.Mat4();
             transform.setTRS(offset, rotation, tiling);
 
-            return transform;
+            // if the transform is the identity matrix
+            // then just return null so that it is not included
+            // in the shader due to limited number of shader
+            // parameters
+            return transform.isIdentity() ? null : transform;
         },
 
         update: function () {
