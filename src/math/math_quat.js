@@ -565,7 +565,7 @@ pc.extend(pc, (function () {
          */
         transformVector: function (vec, res) {
             if (typeof res === 'undefined') {
-                res = new pc.Quat();
+                res = new pc.Vec3();
             }
 
             var x = vec.x, y = vec.y, z = vec.z;
