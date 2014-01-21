@@ -522,7 +522,7 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Quat#slerp2
+         * @name pc.Quat#slerp
          * @description Performs a spherical interpolation between two quaternions. The result of
          * the interpolation is written to the quaternion calling the function.
          * @param {pc.Quat} lhs The quaternion to interpolate from.
@@ -536,9 +536,9 @@ pc.extend(pc, (function () {
          * var q2 = new pc.Quat(-0.21,-0.21,-0.67,0.68);
          *
          * var result;
-         * result = new pc.Quat().slerp2(q1, q2, 0);   // Return q1
-         * result = new pc.Quat().slerp2(q1, q2, 0.5); // Return the midpoint interpolant 
-         * result = new pc.Quat().slerp2(q1, q2, 1);   // Return q2
+         * result = new pc.Quat().slerp(q1, q2, 0);   // Return q1
+         * result = new pc.Quat().slerp(q1, q2, 0.5); // Return the midpoint interpolant 
+         * result = new pc.Quat().slerp(q1, q2, 1);   // Return q2
          */
         slerp: function (lhs, rhs, alpha) {
             var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w,
