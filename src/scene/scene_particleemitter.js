@@ -16,11 +16,15 @@ pc.extend(pc.scene, function () {
         return (Math.random() - 0.5) * range * 2;
     };
 
-    var plusMinusVector = function(range) {
-        var v = [];
-        for (var ii = 0; ii < range.length; ++ii) {
-            v.push(plusMinus(range[ii]));
-        }
+    var plusMinusVector3 = function(range) {
+        var v = new pc.Vec3();
+        v.set(plusMinus(range.x), plusMinus(range.y), plusMinus(range.z));
+        return v;
+    };
+
+    var plusMinusVector4 = function(range) {
+        var v = new pc.Vec4();
+        v.set(plusMinus(range.x), plusMinus(range.y), plusMinus(range.z), plusMinus(range.w));
         return v;
     };
 
@@ -146,8 +150,8 @@ pc.extend(pc.scene, function () {
             billboard: this.billboard
         });
         material.setShader(shader);
-        material.setParameter('particle_worldVelocity', this.worldVelocity);
-        material.setParameter('particle_worldAcceleration', this.worldAcceleration);
+        material.setParameter('particle_worldVelocity', this.worldVelocity.data);
+        material.setParameter('particle_worldAcceleration', this.worldAcceleration.data);
         material.setParameter('particle_numFrames', this.numFrames);
         material.setParameter('particle_frameDuration', this.frameDuration);
         material.setParameter('particle_timeRange', this.timeRange);
@@ -216,10 +220,10 @@ pc.extend(pc.scene, function () {
                 var lifeTime = this.lifeTime;
                 var startTime = (p * lifeTime / count);
                 var frameStart = this.frameStart + plusMinus(this.frameStartRange);
-                position.add2(this.position, plusMinusVector(this.positionRange));
-                velocity.add2(this.velocity, plusMinusVector(this.velocityRange));
-                acceleration.add2(this.acceleration, plusMinusVector(this.accelerationRange));
-                colorMult.add2(this.colorMult, plusMinusVector(this.colorMultRange));
+                position.add2(this.position, plusMinusVector3(this.positionRange));
+                velocity.add2(this.velocity, plusMinusVector3(this.velocityRange));
+                acceleration.add2(this.acceleration, plusMinusVector3(this.accelerationRange));
+                colorMult.add2(this.colorMult, plusMinusVector4(this.colorMultRange));
                 var spinStart = this.spinStart + plusMinus(this.spinStartRange);
                 var spinSpeed = this.spinSpeed + plusMinus(this.spinSpeedRange);
                 var startSize = this.startSize + plusMinus(this.startSizeRange);
