@@ -425,6 +425,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec4#x
      * @description The first element of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get x
+     * var x = vec.x;
+     *
+     * // Set x
+     * vec.x = 0;
      */
     Object.defineProperty(Vec4.prototype, 'x', {
         get: function () {
@@ -440,6 +448,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec4#y
      * @description The second element of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get y
+     * var y = vec.y;
+     *
+     * // Set y
+     * vec.y = 0;
      */
     Object.defineProperty(Vec4.prototype, 'y', {
         get: function () {
@@ -455,6 +471,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec4#z
      * @description The third element of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get z
+     * var z = vec.z;
+     *
+     * // Set z
+     * vec.z = 0;
      */
     Object.defineProperty(Vec4.prototype, 'z', {
         get: function () {
@@ -470,6 +494,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec4#w
      * @description The third element of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get w
+     * var w = vec.w;
+     *
+     * // Set w
+     * vec.w = 0;
      */
     Object.defineProperty(Vec4.prototype, 'w', {
         get: function () {

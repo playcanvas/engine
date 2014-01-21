@@ -7,10 +7,22 @@ pc.extend(pc.fw, function () {
      * @class A ball-socket joint limits translation such that the local pivot points of two rigid bodies
      * match in world space. A chain of rigidbodies can be connected using this constraint. 
      * @param {pc.fw.BallSocketJointComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
-     * @property {pc.Vec3} pivot The position of the pivot in the local space of the entity.
-     * @property {pc.Vec3} position The world space position of the constraint.
+     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
      * @extends pc.fw.Component
+     */
+    /**
+     * @private
+     * @field
+     * @type pc.Vec3
+     * @name pc.fw.BallSocketJointComponent#pivot
+     * @description The position of the pivot in the local space of the entity.
+     */
+    /**
+     * @private
+     * @field
+     * @type pc.Vec3
+     * @name pc.fw.BallSocketJointComponent#position
+     * @description The world space position of the constraint.
      */
     var BallSocketJointComponent = function BallSocketJointComponent (system, entity) {
         this.on('set_pivot', this.onSetPivot, this);

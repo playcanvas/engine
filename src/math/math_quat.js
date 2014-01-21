@@ -9,11 +9,63 @@ pc.extend(pc, (function () {
     * @param {Number} [y=0] The quaternion's y component
     * @param {Number} [z=0] The quaternion's z component
     * @param {Number} [w=1] The quaternion's w component
-    * @property {Number} x The x component of the quaternion.
-    * @property {Number} y The y component of the quaternion.
-    * @property {Number} z The z component of the quaternion.
-    * @property {Number} w The w component of the quaternion.
     */
+    /**
+     * @field
+     * @type Number
+     * @name pc.Quat#x
+     * @description The x component of the quaternion.
+     * @example
+     * var quat = new pc.Quat();
+     *
+     * // Get x
+     * var x = quat.x;
+     *
+     * // Set x
+     * quat.x = 0;
+     */
+    /**
+     * @field
+     * @type Number
+     * @name pc.Quat#y
+     * @description The y component of the quaternion.
+     * @example
+     * var quat = new pc.Quat();
+     *
+     * // Get y
+     * var y = quat.y;
+     *
+     * // Set y
+     * quat.y = 0;
+     */
+    /**
+     * @field
+     * @type Number
+     * @name pc.Quat#z
+     * @description The z component of the quaternion.
+     * @example
+     * var quat = new pc.Quat();
+     *
+     * // Get z
+     * var z = quat.z;
+     *
+     * // Set z
+     * quat.z = 0;
+     */
+    /**
+     * @field
+     * @type Number
+     * @name pc.Quat#w
+     * @description The w component of the quaternion.
+     * @example
+     * var quat = new pc.Quat();
+     *
+     * // Get w
+     * var w = quat.w;
+     *
+     * // Set w
+     * quat.w = 0;
+     */
     var Quat = function (x, y, z, w) {
         this.x = (x === undefined) ? 0 : x;
         this.y = (y === undefined) ? 0 : y;
@@ -51,6 +103,7 @@ pc.extend(pc, (function () {
          * @description Copies the contents of a source quaternion to a destination quaternion.
          * @param {pc.Quat} rhs The quaternion to be copied.
          * @returns {pc.Quat} Self for chaining.
+         * @example
          * var src = new pc.Quat();
          * var dst = new pc.Quat();
          * dst.copy(src, src);
@@ -70,6 +123,7 @@ pc.extend(pc, (function () {
          * @name pc.Quat#equals
          * @description Reports whether two quaternions are equal.
          * @returns {Boolean} true if the quaternions are equal and false otherwise.
+         * @example
          * var a = new pc.Quat();
          * var b = new pc.Quat();
          * console.log("The two quaternions are " + (a.equals(b) ? "equal" : "different"));

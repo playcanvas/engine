@@ -448,6 +448,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec3#x
      * @description The first element of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get x
+     * var x = vec.x;
+     *
+     * // Set x
+     * vec.x = 0;
      */
     Object.defineProperty(Vec3.prototype, 'x', {
         get: function () {
@@ -463,6 +471,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec3#y
      * @description The second element of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get y
+     * var y = vec.y;
+     *
+     * // Set y
+     * vec.y = 0;
      */
     Object.defineProperty(Vec3.prototype, 'y', {
         get: function () {
@@ -478,6 +494,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec3#z
      * @description The third element of the vector.
+     * @example
+     * var vec = new pc.Vec3(10, 20, 30);
+     *
+     * // Get z
+     * var z = vec.z;
+     *
+     * // Set z
+     * vec.z = 0;
      */
     Object.defineProperty(Vec3.prototype, 'z', {
         get: function () {

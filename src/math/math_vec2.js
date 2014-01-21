@@ -402,6 +402,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec2#x
      * @description The first element of the vector.
+     * @example
+     * var vec = new pc.Vec2(10, 20);
+     *
+     * // Get x
+     * var x = vec.x;
+     *
+     * // Set x
+     * vec.x = 0;
      */
     Object.defineProperty(Vec2.prototype, 'x', {
         get: function () {
@@ -417,6 +425,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec2#y
      * @description The second element of the vector.
+     * @example
+     * var vec = new pc.Vec2(10, 20);
+     *
+     * // Get y
+     * var y = vec.y;
+     *
+     * // Set y
+     * vec.y = 0;
      */
     Object.defineProperty(Vec2.prototype, 'y', {
         get: function () {
