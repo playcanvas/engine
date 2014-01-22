@@ -97,6 +97,7 @@ pc.extend(pc.fw, function () {
                     // to register the instances immediately to call the initialize function
                     if (!options.parent) {
                         this.system.onInitialize(this.entity);
+                        this.system.onPostInitialize(this.entity);
                     }
                 }.bind(this)).then(null, function (error) {
                     // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib

@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.139.0
+--------
+* Added postInitialize method in scripts
+
+--------
 v0.138.3
 --------
 * [FIX] Script Attributes would not update correctly from the designer

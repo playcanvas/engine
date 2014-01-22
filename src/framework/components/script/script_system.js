@@ -34,6 +34,7 @@ pc.extend(pc.fw, function () {
 
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on('initialize', this.onInitialize, this);
+        pc.fw.ComponentSystem.on('postInitialize', this.onPostInitialize, this);
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
         pc.fw.ComponentSystem.on('fixedUpdate', this.onFixedUpdate, this);
         pc.fw.ComponentSystem.on('postUpdate', this.onPostUpdate, this);
@@ -113,6 +114,33 @@ pc.extend(pc.fw, function () {
                     this.onInitialize(children[i]);    
                 }
             } 
+        },
+
+        /**
+         * @function
+         * @private
+         * @name pc.fw.ScriptComponentSystem#onPostInitialize
+         * @description Handler for the 'postInitialize' event which is fired immediately after the 'initialize' event and before the first update loop
+         * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
+         */
+        onPostInitialize: function (root) {
+            if (root.script) {
+                for (var name in root.script.data.instances) {
+                    if (root.script.data.instances.hasOwnProperty(name)) {
+                        if (root.script.data.instances[name].instance.postInitialize) {
+                            root.script.data.instances[name].instance.postInitialize();
+                        }                        
+                    }
+                }                
+            }
+            
+            var children = root.getChildren();
+            var i, len = children.length;
+            for (i = 0; i < len; i++) {
+                if (children[i] instanceof pc.fw.Entity) {
+                    this.onPostInitialize(children[i]);    
+                }
+            } ;
         },
 
         /**
