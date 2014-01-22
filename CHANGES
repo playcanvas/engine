@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.138.3
+--------
+* [FIX] Script Attributes would not update correctly from the designer
+* [FIX] Documentation fixes
+
+--------
 v0.138.2
 --------
 * [FIX] Only include texture transforms in Phong materials if they are not the identity matrix
