@@ -18,6 +18,10 @@ pc.extend(pc.fw, function () {
             ComponentSystem.fire('initialize', root);
         },
 
+        postInitialize: function (root) {
+            ComponentSystem.fire('postInitialize', root);
+        },
+
         /**
         * Update all ComponentSystems
         */
