@@ -168,6 +168,7 @@ pc.extend(pc.fw, function () {
                     var pack = resources[0];
                     this.context.root.addChild(pack.hierarchy);
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
+                    pc.fw.ComponentSystem.postInitialize(pack.hierarchy);
                     
                     // Initialise pack settings
                     if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
