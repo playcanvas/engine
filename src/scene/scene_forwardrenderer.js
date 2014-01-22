@@ -340,7 +340,6 @@ pc.extend(pc.scene, function () {
          * @description Renders the scene using the specified camera.
          * @param {pc.scene.Scene} scene The scene to render.
          * @param {pc.scene.CameraNode} camera The camera with which to render the scene.
-         * @author Will Eastcott
          */
         render: function (scene, camera) {
             var device = this.device;

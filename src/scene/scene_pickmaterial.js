@@ -7,7 +7,6 @@ pc.extend(pc.scene, function () {
      * click coordinate). This implements frame buffer picking.
      * @property {pc.Color} color The flat color to be written to the frame buffer. RGBA, with each
      * component between 0 and 1.
-     * @author Will Eastcott
      */
     var PickMaterial = function () {
         this.color = new pc.Color(1, 1, 1, 1);
@@ -25,7 +24,6 @@ pc.extend(pc.scene, function () {
          * @description Duplicates a Basic material. All properties are duplicated except textures
          * where only the references are copied.
          * @returns {pc.scene.PickMaterial} A cloned Basic material.
-         * @author Will Eastcott
          */
         clone: function () {
             var clone = new pc.scene.PickMaterial();

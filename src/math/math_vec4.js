@@ -34,7 +34,6 @@ pc.extend(pc, (function () {
          *
          * // Should output [30, 30, 30]
          * console.log("The result of the addition is: " + a.toString());
-         * @author Will Eastcott
          */
         add: function (rhs) {
             var a = this.data,
@@ -64,7 +63,6 @@ pc.extend(pc, (function () {
          * // Should output [30, 30, 30]
          *
          * console.log("The result of the addition is: " + r.toString());
-         * @author Will Eastcott
          */
         add2: function (lhs, rhs) {
             var a = lhs.data,
@@ -88,7 +86,6 @@ pc.extend(pc, (function () {
          * var v = new pc.Vec4(10, 20, 30, 40);
          * var vclone = v.clone();
          * console.log("The result of the cloning is: " + vclone.toString());
-         * @author Will Eastcott
          */
         clone: function () {
             return new Vec4().copy(this);
@@ -107,7 +104,6 @@ pc.extend(pc, (function () {
          * dst.copy(src);
          *
          * console.log("The two vectors are " + (dst.equals(src) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         copy: function (rhs) {
             var a = this.data,
@@ -132,7 +128,6 @@ pc.extend(pc, (function () {
          * var v2 = new pc.Vec4(10, 20, 40, 80);
          * var v1dotv2 = v1.dot(v2);
          * console.log("The result of the dot product is: " + v1dotv2);
-         * @author Will Eastcott
          */
         dot: function (rhs) {
             var a = this.data,
@@ -150,7 +145,6 @@ pc.extend(pc, (function () {
          * var a = new pc.Vec4(1, 2, 3, 4);
          * var b = new pc.Vec4(5, 6, 7, 8);
          * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         equals: function (rhs) {
             var a = this.data,
@@ -169,7 +163,6 @@ pc.extend(pc, (function () {
          * var len = vec.length();
          * // Should output 5
          * console.log("The length of the vector is: " + len);
-         * @author Will Eastcott
          */
         length: function () {
             var v = this.data;
@@ -187,7 +180,6 @@ pc.extend(pc, (function () {
          * var len = vec.lengthSq();
          * // Should output 25
          * console.log("The length squared of the vector is: " + len);
-         * @author Will Eastcott
          */
         lengthSq: function () {
             var v = this.data;
@@ -213,7 +205,6 @@ pc.extend(pc, (function () {
          * r.lerp(a, b, 0);   // r is equal to a
          * r.lerp(a, b, 0.5); // r is 5, 5, 5, 5
          * r.lerp(a, b, 1);   // r is equal to b
-         * @author Will Eastcott
          */
         lerp: function (lhs, rhs, alpha) {
             var a = lhs.data,
@@ -242,7 +233,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 8, 15, 24, 35
          * console.log("The result of the multiplication is: " + a.toString());
-         * @author Will Eastcott
          */
         mul: function (rhs) {
             var a = this.data,
@@ -272,7 +262,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 8, 15, 24, 35
          * console.log("The result of the multiplication is: " + r.toString());
-         * @author Will Eastcott
          */
         mul2: function (lhs, rhs) {
             var a = lhs.data,
@@ -299,7 +288,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 1, 0, 0, 0
          * console.log("The result of the vector normalization is: " + v.toString());
-         * @author Will Eastcott
          */
         normalize: function () {
             return this.scale(1 / this.length());
@@ -323,7 +311,6 @@ pc.extend(pc, (function () {
          * 
          * // Divide by 2
          * v.scale(0.5);
-         * @author Will Eastcott
          */
         scale: function (scalar) {
             var v = this.data;
@@ -349,7 +336,6 @@ pc.extend(pc, (function () {
          *
          * // Should output 5, 10, 20, 40
          * console.log("The result of the vector set is: " + v.toString());
-         * @author Will Eastcott
          */
         set: function (x, y, z, w) {
             var v = this.data;
@@ -376,7 +362,6 @@ pc.extend(pc, (function () {
          *
          * // Should output [-10, -10, -10, -10]
          * console.log("The result of the subtraction is: " + a.toString());
-         * @author Will Eastcott
          */
         sub: function (rhs) {
             var a = this.data,
@@ -406,7 +391,6 @@ pc.extend(pc, (function () {
          *
          * // Should output [-10, -10, -10, -10]
          * console.log("The result of the subtraction is: " + r.toString());
-         * @author Will Eastcott
          */
         sub2: function (lhs, rhs) {
             var a = lhs.data,
@@ -430,7 +414,6 @@ pc.extend(pc, (function () {
          * var v = new pc.Vec4(20, 10, 5, 0);
          * // Should output '[20, 10, 5, 0]'
          * console.log(v.toString());
-         * @author Will Eastcott
          */
         toString: function () {
             return "[" + this.data[0] + ", " + this.data[1] + ", " + this.data[2] + ", " + this.data[3] + "]";
@@ -442,6 +425,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec4#x
      * @description The first element of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get x
+     * var x = vec.x;
+     *
+     * // Set x
+     * vec.x = 0;
      */
     Object.defineProperty(Vec4.prototype, 'x', {
         get: function () {
@@ -457,6 +448,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec4#y
      * @description The second element of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get y
+     * var y = vec.y;
+     *
+     * // Set y
+     * vec.y = 0;
      */
     Object.defineProperty(Vec4.prototype, 'y', {
         get: function () {
@@ -472,6 +471,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec4#z
      * @description The third element of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get z
+     * var z = vec.z;
+     *
+     * // Set z
+     * vec.z = 0;
      */
     Object.defineProperty(Vec4.prototype, 'z', {
         get: function () {
@@ -487,6 +494,14 @@ pc.extend(pc, (function () {
      * @type Number
      * @name pc.Vec4#w
      * @description The third element of the vector.
+     * @example
+     * var vec = new pc.Vec4(10, 20, 30, 40);
+     *
+     * // Get w
+     * var w = vec.w;
+     *
+     * // Set w
+     * vec.w = 0;
      */
     Object.defineProperty(Vec4.prototype, 'w', {
         get: function () {

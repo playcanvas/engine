@@ -92,7 +92,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.RenderTarget#bind
          * @description Activates the framebuffer to receive the rasterization of all subsequent draw commands issued by
          * the graphics device.
-         * @author Will Eastcott
          */
         bind: function () {
             var gl = this._device.gl;
@@ -103,7 +102,6 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.RenderTarget#destroy
          * @description Frees resources associated with this render target.
-         * @author Will Eastcott
          */
         destroy: function () {
             var gl = this._device.gl;
@@ -118,7 +116,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.RenderTarget#unbind
          * @description Deactivates the specified render target, restoring the device's main rendering buffer as the
          * active render target.
-         * @author Will Eastcott
          */
         unbind: function () {
             var gl = this._device.gl;

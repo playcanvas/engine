@@ -100,7 +100,6 @@ pc.extend(pc.gfx, function () {
          * iterator.element[pc.gfx.SEMANTIC_POSTIION].set(0.0, 0.9, 0.0);
          * iterator.element[pc.gfx.SEMANTIC_COLOR].set(0, 0, 255, 255);
          * iterator.end();
-         * @author Will Eastcott
          */
         next: function () {
             var i = 0;
@@ -131,7 +130,6 @@ pc.extend(pc.gfx, function () {
          * iterator.element[pc.gfx.SEMANTIC_POSTIION].set(0.0, 0.9, 0.0);
          * iterator.element[pc.gfx.SEMANTIC_COLOR].set(0, 0, 255, 255);
          * iterator.end();
-         * @author Will Eastcott
          */
         end: function () {
             // Unlock the vertex buffer

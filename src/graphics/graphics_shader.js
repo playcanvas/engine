@@ -157,7 +157,6 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.Shader#destroy
          * @description Frees resources associated with this shader.
-         * @author Will Eastcott
          */
         destroy: function () {
             var gl = this.device.gl;

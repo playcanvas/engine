@@ -38,7 +38,6 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.VertexBuffer#destroy
          * @description Frees resources associated with this vertex buffer.
-         * @author Will Eastcott
          */
         destroy: function () {
             var gl = this.device.gl;
@@ -50,7 +49,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.VertexBuffer#getFormat
          * @description Returns the data format of the specified vertex buffer.
          * @returns {pc.gfx.VertexFormat} The data format of the specified vertex buffer.
-         * @author Will Eastcott
          */
         getFormat: function () {
             return this.format;
@@ -64,7 +62,6 @@ pc.extend(pc.gfx, function () {
          * modified repeatedly and used many times (pc.gfx.BUFFER_DYNAMIC) or modified once 
          * and used at most a few times (pc.gfx.BUFFER_STREAM).
          * @returns {Number} The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
-         * @author Will Eastcott
          */
         getUsage: function () {
             return this.usage;
@@ -75,7 +72,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.VertexBuffer#getNumVertices
          * @description Returns the number of vertices stored in the specified vertex buffer.
          * @returns {number} The number of vertices stored in the vertex buffer.
-         * @author Will Eastcott
          */
         getNumVertices: function () {
             return this.numVertices;
@@ -86,7 +82,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.VertexBuffer#lock
          * @description Returns a mapped memory block representing the content of the vertex buffer.
          * @returns {ArrayBuffer} An array containing the byte data stored in the vertex buffer.
-         * @author Will Eastcott
          */
         lock: function () {
             return this.storage;
@@ -97,7 +92,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.VertexBuffer#unlock
          * @description Notifies the graphics engine that the client side copy of the vertex buffer's
          * memory can be returned to the control of the graphics driver.
-         * @author Will Eastcott
          */
         unlock: function () {
             // Upload the new vertex data

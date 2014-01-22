@@ -315,7 +315,6 @@ pc.extend(pc.gfx, function () {
          * @param {Number} y The pixel space y-coordinate of the bottom left corner of the viewport.
          * @param {Number} w The width of the viewport in pixels.
          * @param {Number} h The height of the viewport in pixels.
-         * @author Will Eastcott
          */
         setViewport: function (x, y, width, height) {
             var gl = this.gl;
@@ -330,7 +329,6 @@ pc.extend(pc.gfx, function () {
          * @param {Number} y The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
          * @param {Number} w The width of the scissor rectangle in pixels.
          * @param {Number} h The height of the scissor rectangle in pixels.
-         * @author Will Eastcott
          */
         setScissor: function (x, y, width, height) {
             var gl = this.gl;
@@ -342,7 +340,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.Device#getProgramLibrary
          * @description Retrieves the program library assigned to the specified graphics device.
          * @returns {pc.gfx.ProgramLibrary} The program library assigned to the device.
-         * @author Will Eastcott
          */
         getProgramLibrary: function () {
             return this.programLib;
@@ -356,7 +353,6 @@ pc.extend(pc.gfx, function () {
          * used to render any graphical primitives. However, this function allows the user to
          * replace the existing program library with a new one.
          * @param {pc.gfx.ProgramLibrary} programLib The program library to assign to the device.
-         * @author Will Eastcott
          */
         setProgramLibrary: function (programLib) {
             this.programLib = programLib;
@@ -369,7 +365,6 @@ pc.extend(pc.gfx, function () {
          * binds the render target currently set on the device. This function should be matched
          * with a call to pc.gfx.Device#updateEnd. Calls to pc.gfx.Device#updateBegin
          * and pc.gfx.Device#updateEnd must not be nested.
-         * @author Will Eastcott
          */
         updateBegin: function () {
             logASSERT(this.canvas !== null, "Device has not been started");
@@ -396,7 +391,6 @@ pc.extend(pc.gfx, function () {
          * @description Marks the end of a block of rendering. This function should be called
          * after a matching call to pc.gfx.Device#updateBegin. Calls to pc.gfx.Device#updateBegin
          * and pc.gfx.Device#updateEnd must not be nested.
-         * @author Will Eastcott
          */
         updateEnd: function () {
         },
@@ -418,7 +412,6 @@ pc.extend(pc.gfx, function () {
          *     count: 3,
          *     indexed: false
          * )};
-         * @author Will Eastcott
          */
         draw: function (primitive) {
             var gl = this.gl;
@@ -542,7 +535,6 @@ pc.extend(pc.gfx, function () {
          *     depth: 1.0,
          *     flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
          * });
-         * @author Will Eastcott
          */
         clear: function (options) {
             var defaultOptions = this.defaultClearOptions;
@@ -581,7 +573,6 @@ pc.extend(pc.gfx, function () {
          *
          * // Set the back buffer to receive all rendering output
          * device.setRenderTarget(null);
-         * @author Will Eastcott
          */
         setRenderTarget: function (renderTarget) {
             this.renderTarget = renderTarget;
@@ -595,7 +586,6 @@ pc.extend(pc.gfx, function () {
          * @example
          * // Get the current render target
          * var renderTarget = device.getRenderTarget();
-         * @author Will Eastcott
          */
         getRenderTarget: function () {
             return this.renderTarget;
@@ -609,7 +599,6 @@ pc.extend(pc.gfx, function () {
          * @example
          * var depthTest = device.getDepthTest();
          * console.log('Depth testing is ' + depthTest ? 'enabled' : 'disabled');
-         * @author Will Eastcott
          */
         getDepthTest: function () {
             return this.depthTest;
@@ -623,7 +612,6 @@ pc.extend(pc.gfx, function () {
          * @param {Boolean} depthTest true to enable depth testing and false otherwise.
          * @example
          * device.setDepthTest(true);
-         * @author Will Eastcott
          */
         setDepthTest: function (depthTest) {
             if (this.depthTest !== depthTest) {
@@ -645,7 +633,6 @@ pc.extend(pc.gfx, function () {
          * @example
          * var depthWrite = device.getDepthWrite();
          * console.log('Depth writing is ' + depthWrite ? 'enabled' : 'disabled');
-         * @author Will Eastcott
          */
         getDepthWrite: function () {
             return this.depthWrite;
@@ -659,7 +646,6 @@ pc.extend(pc.gfx, function () {
          * @param {Boolean} writeDepth true to enable depth writing and false otherwise.
          * @example
          * device.setDepthWrite(true);
-         * @author Will Eastcott
          */
         setDepthWrite: function (writeDepth) {
             if (this.depthWrite !== writeDepth) {
@@ -681,7 +667,6 @@ pc.extend(pc.gfx, function () {
          * @example
          * // Just write alpha into the frame buffer
          * device.setColorWrite(false, false, false, true);
-         * @author Will Eastcott
          */
         setColorWrite: function (writeRed, writeGreen, writeBlue, writeAlpha) {
             if ((this.writeRed !== writeRed) ||
@@ -699,7 +684,6 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#getBlending
-         * @author Will Eastcott
          */
         getBlending: function () {
             return this.blending;
@@ -708,7 +692,6 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#setBlending
-         * @author Will Eastcott
          */
         setBlending: function (blending) {
             if (this.blending !== blending) {
@@ -725,7 +708,6 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#setBlendFunction
-         * @author Will Eastcott
          */
         setBlendFunction: function (blendSrc, blendDst) {
             if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
@@ -738,7 +720,6 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#setBlendEquation
-         * @author Will Eastcott
          */
         setBlendEquation: function (blendEquation) {
             if (this.blendEquation !== blendEquation) {
@@ -751,7 +732,6 @@ pc.extend(pc.gfx, function () {
         /**
          * @function
          * @name pc.gfx.Device#setCullMode
-         * @author Will Eastcott
          */
         setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {
@@ -784,7 +764,6 @@ pc.extend(pc.gfx, function () {
          * calls to pc.gfx.Device#draw, the specified index buffer will be used to provide
          * index data for any indexed primitives.
          * @param {pc.gfx.IndexBuffer} indexBuffer The index buffer to assign to the device.
-         * @author Will Eastcott
          */
         setIndexBuffer: function (indexBuffer) {
             // Store the index buffer
@@ -805,7 +784,6 @@ pc.extend(pc.gfx, function () {
          * used to provide vertex data for any primitives.
          * @param {pc.gfx.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
          * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
-         * @author Will Eastcott
          */
         setVertexBuffer: function (vertexBuffer, stream) {
             if (this.vertexBuffers[stream] !== vertexBuffer) {
@@ -832,7 +810,6 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.Device#setShader
          * @description Sets the active shader to be used during subsequent draw calls.
          * @param {pc.gfx.Shader} shader The shader to set to assign to the device.
-         * @author Will Eastcott
          */
         setShader: function(shader) {
             if (shader !== this.shader) {
@@ -857,7 +834,6 @@ pc.extend(pc.gfx, function () {
          * heavyweight shader. If a different number is required, it can be tuned via
          * pc.gfx.Device#setBoneLimit.
          * @returns {Number} The maximum number of bones that can be supported by the host hardware.
-         * @author Will Eastcott
          */
         getBoneLimit: function () {
             return this.boneLimit;
@@ -870,7 +846,6 @@ pc.extend(pc.gfx, function () {
          * the current hardware. This function allows the default calculated value based on
          * available vector uniforms to be overridden.
          * @param {Number} maxBones The maximum number of bones supported by the host hardware.
-         * @author Will Eastcott
          */
         setBoneLimit: function (maxBones) {
             this.boneLimit = maxBones;
@@ -884,7 +859,6 @@ pc.extend(pc.gfx, function () {
          * is detected, it will be output to the Javascript console. Note that enabling
          * validation will have negative performance implications for the PlayCanvas runtime.
          * @param {Boolean} enable true to activate validation and false to deactivate it.
-         * @author Will Eastcott
          */
         enableValidation: function (enable) {
             if (enable === true) {
@@ -914,7 +888,6 @@ pc.extend(pc.gfx, function () {
          * the previous and this call to pc.gfx.Device#validate. If this is the first call to
          * pc.gfx.Device#validate, it detects errors since the device was created.
          * @returns {Boolean} false if there was an error and true otherwise.
-         * @author Will Eastcott
          */
         validate: function () {
             var gl = this.gl;

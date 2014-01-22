@@ -166,7 +166,6 @@ pc.extend(pc.scene, function () {
          * @description Duplicates a Phong material. All properties are duplicated except textures
          * where only the references are copied.
          * @returns {pc.scene.PhongMaterial} A cloned Phong material.
-         * @author Will Eastcott
          */
         clone: function () {
             var clone = new pc.scene.PhongMaterial();

@@ -77,7 +77,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.LightNode#clone
          * @description Duplicates a light node but does not 'deep copy' the hierarchy.
          * @returns {pc.scene.LightNode} A cloned LightNode.
-         * @author Will Eastcott
          */
         clone: function () {
             var clone = new pc.scene.LightNode();
@@ -91,7 +90,6 @@ pc.extend(pc.scene, function () {
          * @description Queries the radius of the point or spot light. In other words, this is
          * the distance at which the light's contribution falls to zero.
          * @returns {Number} The radius of the point or spot light.
-         * @author Will Eastcott
          */
         getAttenuationEnd: function () {
             return this._attenuationEnd;
@@ -102,7 +100,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.LightNode#getAttenuationStart
          * @description Queries the distance from the point or spot light that attenuation begins.
          * @returns {Number} The radius from the light position where attenuation starts.
-         * @author Will Eastcott
          */
         getAttenuationStart: function () {
             return this._attenuationStart;
@@ -114,7 +111,6 @@ pc.extend(pc.scene, function () {
          * @description Queries whether the light casts shadows. Dynamic lights do not
          * cast shadows by default.
          * @returns {Boolean} true if the specified light casts shadows and false otherwise.
-         * @author Will Eastcott
          */
         getCastShadows: function () {
             return this._castShadows;
@@ -127,7 +123,6 @@ pc.extend(pc.scene, function () {
          * value by multiplying it by the diffuse color of a mesh's material and adding it to
          * the total light contribution.
          * @returns {pc.Color} The diffuse color of the light (RGB components ranging 0..1).
-         * @author Will Eastcott
          */
         getColor: function () {
             return this._color;
@@ -138,7 +133,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.LightNode#getEnabled
          * @description Queries whether the specified light is currently enabled.
          * @returns {Boolean} true if the light is enabled and false otherwise.
-         * @author Will Eastcott
          */
         getEnabled: function () {
             return this._enabled;
@@ -150,7 +144,6 @@ pc.extend(pc.scene, function () {
          * @description Queries the inner cone angle of the specified spot light. Note
          * that this function is only valid for spotlights.
          * @returns {Number} The inner cone angle of the specified light in degrees.
-         * @author Will Eastcott
          */
         getInnerConeAngle: function () {
             return this._innerConeAngle;
@@ -161,7 +154,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.LightNode#getIntensity
          * @description Queries the intensity of the specified light.
          * @returns {Number} The intensity of the specified light.
-         * @author Will Eastcott
          */
         getIntensity: function () {
             return this._intensity;
@@ -173,7 +165,6 @@ pc.extend(pc.scene, function () {
          * @description Queries the outer cone angle of the specified spot light. Note
          * that this function is only valid for spotlights.
          * @returns {Number} The outer cone angle of the specified light in degrees.
-         * @author Will Eastcott
          */
         getOuterConeAngle: function () {
             return this._outerConeAngle;
@@ -185,7 +176,6 @@ pc.extend(pc.scene, function () {
          * @description Queries the shadow mapping depth bias for this light. Note
          * that this function is only valid for directional lights and spotlights.
          * @returns {Number} The shadow mapping depth bias.
-         * @author Will Eastcott
          */
         getShadowBias: function () {
             return this._shadowBias;
@@ -197,7 +187,6 @@ pc.extend(pc.scene, function () {
          * @description Queries the shadow map pixel resolution for this light. Note
          * that this function is only valid for directional lights and spotlights.
          * @returns {Number} The shadow map resolution.
-         * @author Will Eastcott
          */
         getShadowResolution: function () {
             return this._shadowResolution;
@@ -209,7 +198,6 @@ pc.extend(pc.scene, function () {
          * @description Queries the type of the light. The light can be a directional light,
          * a point light or a spotlight.
          * @returns {pc.scene.LightType} The type of the specified light.
-         * @author Will Eastcott
          */
         getType: function () {
             return this._type;
@@ -221,7 +209,6 @@ pc.extend(pc.scene, function () {
          * @description Specifies the radius from the light position where the light's
          * contribution falls to zero.
          * @param {number} radius The radius of influence of the light.
-         * @author Will Eastcott
          */
         setAttenuationEnd: function (radius) {
             this._attenuationEnd = radius;
@@ -233,7 +220,6 @@ pc.extend(pc.scene, function () {
          * @description Specifies the radius from the light position where the light
          * contribution begins to attenuate.
          * @param {number} radius The radius at which the light begins to attenuate.
-         * @author Will Eastcott
          */
         setAttenuationStart: function (radius) {
             this._attenuationStart = radius;
@@ -244,7 +230,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.LightNode#setCastShadows
          * @description Toggles the casting of shadows from this light.
          * @param {Boolean} castShadows True to enabled shadow casting, false otherwise.
-         * @author Will Eastcott
          */
         setCastShadows: function (castShadows) {
             this._castShadows = castShadows;
@@ -256,7 +241,6 @@ pc.extend(pc.scene, function () {
          * @description Sets the RGB color of the light. RGB components should be
          * specified in the range 0 to 1.
          * @param {pc.Color} color The RGB color of the light.
-         * @author Will Eastcott
          */
         /**
          * @function
@@ -266,7 +250,6 @@ pc.extend(pc.scene, function () {
          * @param {Number} red The red component of the light color.
          * @param {Number} green The green component of the light color.
          * @param {Number} blue The blue component of the light color.
-         * @author Will Eastcott
          */
         setColor: function () {
             var r, g, b;
@@ -292,7 +275,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.LightNode#setEnabled
          * @description Marks the specified light as enabled or disabled.
          * @param {boolean} enable true to enable the light and false to disable it.
-         * @author Will Eastcott
          */
         setEnabled: function (enable) {
             if (this._enabled !== enable) {
@@ -310,7 +292,6 @@ pc.extend(pc.scene, function () {
          * function only affects spotlights. The contribution of the spotlight is
          * zero outside the cone defined by this angle.
          * @param {Number} angle The inner cone angle of the spotlight in degrees.
-         * @author Will Eastcott
          */
         setInnerConeAngle: function (angle) {
             this._innerConeAngle = angle;
@@ -324,7 +305,6 @@ pc.extend(pc.scene, function () {
          * scale the color of the light. Note that this makes it possible to take
          * the light color's RGB components outside the range 0 to 1.
          * @param {Number} intensity The intensity of the light.
-         * @author Will Eastcott
          */
         setIntensity: function (intensity) {
             this._intensity = intensity;
@@ -345,7 +325,6 @@ pc.extend(pc.scene, function () {
          * function only affects spotlights. The contribution of the spotlight is
          * zero outside the cone defined by this angle.
          * @param {Number} angle The outer cone angle of the spotlight in degrees.
-         * @author Will Eastcott
          */
         setOuterConeAngle: function (angle) {
             this._outerConeAngle = angle;
@@ -358,7 +337,6 @@ pc.extend(pc.scene, function () {
          * @description Sets the depth bias for tuning the appearance of the shadow
          * mapping generated by this light.
          * @param {Number} bias The shadow mapping depth bias (defaults to -0.0005)
-         * @author Will Eastcott
          */
         setShadowBias: function (bias) {
             this._shadowBias = bias;
@@ -370,7 +348,6 @@ pc.extend(pc.scene, function () {
          * @description Sets the pixel width and height of the shadow map associated with this
          * light.
          * @param {Number} resolution The pixel width and height of the shadow map
-         * @author Will Eastcott
          */
         setShadowResolution: function (resolution) {
             this._shadowResolution = resolution;
@@ -382,7 +359,6 @@ pc.extend(pc.scene, function () {
          * @description Sets the type of the light. Avialable lights types are directional,
          * point and spot.
          * @param {Number} type The light type (see pc.scene.LIGHTTYPE).
-         * @author Will Eastcott
          */
         setType: function (type) {
             this._type = type;

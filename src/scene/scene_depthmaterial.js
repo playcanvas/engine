@@ -16,7 +16,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.DepthMaterial#clone
          * @description Duplicates a Depth material.
          * @returns {pc.scene.DepthMaterial} A cloned Depth material.
-         * @author Will Eastcott
          */
         clone: function () {
             var clone = new pc.scene.DepthMaterial();

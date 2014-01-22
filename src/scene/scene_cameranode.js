@@ -72,7 +72,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#clone
          * @description Duplicates a camera node but does not 'deep copy' the hierarchy.
          * @returns {pc.scene.CameraNode} A cloned CameraNode.
-         * @author Will Eastcott
          */
         clone: function () {
             var clone = new pc.scene.CameraNode();
@@ -159,7 +158,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#getAspectRatio
          * @description Retrieves the setting for the specified camera's aspect ratio.
          * @returns {Number} The aspect ratio of the camera (width divided by height).
-         * @author Will Eastcott
          */
         getAspectRatio: function () {
             return this._aspect;
@@ -171,7 +169,6 @@ pc.extend(pc.scene, function () {
          * @description Retrieves the options used to determine how the camera's render target will be cleared.
          * The clearing of the render target actually happens on a call to pc.scene.CameraNode#frameBegin.
          * @return {Object} The options determining the behaviour of render target clears.
-         * @author Will Eastcott
          */
         getClearOptions: function () {
             return this._clearOptions;
@@ -183,7 +180,6 @@ pc.extend(pc.scene, function () {
          * @description Retrieves the setting for the specified camera's far clipping plane. This
          * is a Z-coordinate in eye coordinates.
          * @returns {Number} The far clipping plane distance.
-         * @author Will Eastcott
          */
         getFarClip: function () {
             return this._farClip;
@@ -195,7 +191,6 @@ pc.extend(pc.scene, function () {
          * @description Retrieves the setting for the specified camera's vertical field of view. This
          * angle is in degrees and is measured vertically between the top and bottom camera planes.
          * @returns {Number} The vertical field of view in degrees.
-         * @author Will Eastcott
          */
         getFov: function () {
             return this._fov;
@@ -206,7 +201,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#getFrustum
          * @description Retrieves the frustum shape for the specified camera.
          * @returns {pc.shape.Frustum} The camera's frustum shape.
-         * @author Will Eastcott
          */
         getFrustum: function () {
             return this._frustum;
@@ -218,7 +212,6 @@ pc.extend(pc.scene, function () {
          * @description Retrieves the setting for the specified camera's near clipping plane. This
          * is a Z-coordinate in eye coordinates.
          * @returns {Number} The near clipping plane distance.
-         * @author Will Eastcott
          */
         getNearClip: function () {
             return this._nearClip;
@@ -229,7 +222,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#getOrthoHeight
          * @description Retrieves the half height of the orthographic camera's view window.
          * @returns {Number} The half height of the orthographic view window in eye coordinates.
-         * @author Will Eastcott
          */
         getOrthoHeight: function () {
             return this._orthoHeight;
@@ -240,7 +232,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#getProjection
          * @description Retrieves the projection type for the specified camera.
          * @returns {pc.scene.Projection} The camera's projection type.
-         * @author Will Eastcott
          */
         getProjection: function () {
             return this._projection;
@@ -251,7 +242,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#getProjectionMatrix
          * @description Retrieves the projection matrix for the specified camera.
          * @returns {pc.Mat4} The camera's projection matrix.
-         * @author Will Eastcott
          */
         getProjectionMatrix: function () {
             if (this._projMatDirty) {
@@ -277,7 +267,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#getRenderTarget
          * @description Retrieves the render target currently set on the specified camera.
          * @returns {pc.gfx.RenderTarget} The camera's render target.
-         * @author Will Eastcott
          */
         getRenderTarget: function () {
             return this._renderTarget;
@@ -289,7 +278,6 @@ pc.extend(pc.scene, function () {
          * @description Sets the specified camera's aspect ratio. This is normally the width
          * of the viewport divided by height.
          * @returns {Number} The aspect ratio of the camera.
-         * @author Will Eastcott
          */
         setAspectRatio: function (aspect) {
             this._aspect = aspect;
@@ -305,7 +293,6 @@ pc.extend(pc.scene, function () {
          * @param {Array} clearOptions.color The options determining the behaviour of subsequent render target clears.
          * @param {number} clearOptions.depth The options determining the behaviour of subsequent render target clears.
          * @param {pc.gfx.CLEARFLAG} clearOptions.flags The options determining the behaviour of subsequent render target clears.
-         * @author Will Eastcott
          */
         setClearOptions: function (options) {
             this._clearOptions = options;
@@ -316,7 +303,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#setFarClip
          * @description Sets the specified camera's far clipping plane. This is a Z-coordinate in eye coordinates.
          * @param {Number} far The far clipping plane distance.
-         * @author Will Eastcott
          */
         setFarClip: function (far) {
             this._farClip = far;
@@ -330,7 +316,6 @@ pc.extend(pc.scene, function () {
          * measured vertically from the view direction of the camera. Therefore, the angle is actually half 
          * the angle between the top and bottom camera planes.
          * @param {Number} fov The vertical field of view in degrees.
-         * @author Will Eastcott
          */
         setFov: function (fov) {
             this._fov = fov;
@@ -342,7 +327,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#setNearClip
          * @description Sets the specified camera's near clipping plane. This is a Z-coordinate in eye coordinates.
          * @param {Number} near The near clipping plane distance.
-         * @author Will Eastcott
          */
         setNearClip: function (near) {
             this._nearClip = near;
@@ -354,7 +338,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#setOrthoHeight
          * @description Sets the half height of the orthographic camera's view window.
          * @param {Number} height The half height of the orthographic view window in eye coordinates.
-         * @author Will Eastcott
          */
         setOrthoHeight: function (height) {
             this._orthoHeight = height;
@@ -367,7 +350,6 @@ pc.extend(pc.scene, function () {
          * @description Sets the projection type for the specified camera. This determines whether the projection
          * will be orthographic (parallel projection) or perspective.
          * @param {pc.scene.Projection} type The camera's projection type.
-         * @author Will Eastcott
          */
         setProjection: function (type) {
             this._projection = type;
@@ -386,7 +368,6 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.CameraNode#setRenderTarget
          * @description Sets the specified render target on the camera.
          * @param {pc.gfx.RenderTarget} target The render target to set.
-         * @author Will Eastcott
          */
         setRenderTarget: function (target) {
             this._renderTarget = target;

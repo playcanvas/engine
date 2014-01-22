@@ -26,7 +26,6 @@ pc.extend(pc, (function () {
          * var dst = new pc.Mat3();
          * dst.copy(src);
          * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         clone: function () {
             return new pc.Mat3().copy(this);
@@ -41,7 +40,6 @@ pc.extend(pc, (function () {
          * var dst = new pc.Mat3();
          * dst.copy(src);
          * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         copy: function (rhs) {
             var src = rhs.data;
@@ -68,7 +66,6 @@ pc.extend(pc, (function () {
          * var a = new pc.Mat3().translate(10, 20, 30);
          * var b = new pc.Mat3();
          * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         equals: function (rhs) {
             var l = this.data;
@@ -93,7 +90,6 @@ pc.extend(pc, (function () {
          * @returns {Boolean} true if the matrix is identity and false otherwise.
          * var m = new pc.Mat3();
          * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
-         * @author Will Eastcott
          */
         isIdentity: function () {
             var m = this.data;
@@ -117,7 +113,6 @@ pc.extend(pc, (function () {
          * @example
          * m.setIdentity();
          * console.log("The two matrices are " + (src.equal(dst) ? "equal" : "different"));
-         * @author Will Eastcott
          */
         setIdentity: function () {
             var m = this.data;
@@ -150,7 +145,6 @@ pc.extend(pc, (function () {
          * var m = new pc.Mat3();
          * // Should output '[1, 0, 0, 0, 1, 0, 0, 0, 1]'
          * console.log(m.toString());
-         * @author Will Eastcott
          */
         toString: function () {
             var t = "[";
@@ -172,7 +166,6 @@ pc.extend(pc, (function () {
          *
          * // Transpose in place
          * m.transpose();
-         * @author Will Eastcott
          */
         transpose: function () {
             var m = this.data;
