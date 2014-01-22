@@ -313,24 +313,13 @@ pc.extend(pc.fw, function () {
 
         _updateAccessors: function (entity, instance) {
             var self = this;
-            var i;
+            var i, k, h;
             var len = entity.script.scripts.length;
             var url = instance.url;
             var scriptComponent, script, name, attributes;
             var removedAttributes;
             var previousAttributes;
-
-            var findItem = function (array, predicate) {
-                var j, count = array ? array.length : 0;
-                for (j=0; j<count; j++) {
-                    if (predicate(array[i])) {
-                        return array[i];
-                    }
-                }
-
-                return null;
-            };
-
+            var oldAttribute, newAttribute;
 
             for (i=0; i<len; i++) {
                 scriptComponent = entity.script;
@@ -350,10 +339,19 @@ pc.extend(pc.fw, function () {
                         // and fire onAttributeChange when an attribute value changed
                         previousAttributes = scriptComponent.data.attributes[name];
                         if (previousAttributes) {
-                            previousAttributes.forEach(function (oldAttribute) {
-                                var newAttribute = findItem(attributes, function (a) {
-                                    return a.name === oldAttribute.name;
-                                });
+                            k = previousAttributes.length;
+                            while(k--) {
+                                oldAttribute = previousAttributes[k];
+                                newAttribute = null;
+
+                                h = attributes.length;
+
+                                while (h--) {
+                                    if (oldAttribute.name === attributes[h].name) {
+                                        newAttribute = attributes[h];
+                                        break;
+                                    }
+                                }
 
                                 if (!newAttribute) {
                                     delete instance.instance[oldAttribute.name];
@@ -364,7 +362,7 @@ pc.extend(pc.fw, function () {
                                         }
                                     }
                                 }
-                            })
+                            }
                         }
 
                         if (attributes) {
