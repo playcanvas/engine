@@ -71,6 +71,7 @@ pc.script = (function () {
         *   <li>{Number} min: The minimum value of the attribute</li>
         *   <li>{Number} max: The maximum value of the attribute</li>
         *   <li>{Number} step: The step that will be used when changing the attribute value in the designer</li>
+        *   <li>{Number} decimalPrecision: A number that specifies the number of decimal digits allowed for the value</li>
         *   <li>{Array} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
         * </ul> 
         * @example
