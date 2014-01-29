@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.139.1
+--------
+* Added documentation for decimalPrecision for script attributes
+
+--------
 v0.139.0
 --------
 * Added postInitialize method in scripts
