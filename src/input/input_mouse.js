@@ -283,6 +283,17 @@ pc.extend(pc.input, function () {
             return (this._buttons[button] && !this._lastbuttons[button]);
         },
 
+        /**
+         * @function
+         * @name pc.input.Mouse#wasReleased
+         * @description Returns true if the mouse button was released this frame (since the last call to update).
+         * @param {pc.input.MOUSEBUTTON} button
+         * @returns {Boolean} True if the mouse button was released since the last update
+         */
+        wasReleased: function (button) {
+            return (!this._buttons[button] && this._lastbuttons[button]);
+        },
+
         _handleUp: function (event) {
             // disable released button
             this._buttons[event.button] = false;

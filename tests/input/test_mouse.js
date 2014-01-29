@@ -116,3 +116,12 @@ test("wasPressed", function () {
   m.update()
   equal(m.wasPressed(pc.input.MOUSEBUTTON_LEFT), false);
 });
+
+test("wasReleased", function () {
+  m.update();
+  simulate(document.body, 'mousedown');
+  equal(m.wasReleased(pc.input.MOUSEBUTTON_LEFT), false);
+  m.update()
+  simulate(document.body, 'mouseup');
+  equal(m.wasReleased(pc.input.MOUSEBUTTON_LEFT), true);
+});

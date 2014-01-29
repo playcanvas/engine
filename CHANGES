@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.140.0
+--------
+* Added input_mouse#wasReleased method
+
+--------
 v0.139.1
 --------
 * Added documentation for decimalPrecision for script attributes
