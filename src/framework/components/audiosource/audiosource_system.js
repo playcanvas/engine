@@ -40,7 +40,11 @@ pc.extend(pc.fw, function () {
             displayName: "Pitch",
             description: "The sound pitch",
             type: "number",
-            defaultValue: 1
+            defaultValue: 1,
+            options: {
+                min: 0.01,
+                step: 0.01
+            },
         }, {
             name: "loop",
             displayName: "Loop",
