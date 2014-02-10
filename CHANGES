@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.141.0
+--------
+* Added pitch to audiosource component
+
+--------
 v0.140.0
 --------
 * Added input_mouse#wasReleased method
