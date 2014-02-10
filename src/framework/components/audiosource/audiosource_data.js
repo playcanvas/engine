@@ -3,6 +3,7 @@ pc.fw.AudioSourceComponentData = function AudioSourceComponentData() {
     this.assets = [];
     this.activate = true;
     this.volume = 1;
+    this.pitch = 1;
     this.loop = false;
     this['3d'] = true;
     

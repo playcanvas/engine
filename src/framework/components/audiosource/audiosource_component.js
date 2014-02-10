@@ -10,6 +10,7 @@ pc.extend(pc.fw, function () {
      * @property {Array} assets The list of audio assets
      * @property {Boolean} activate If true the audio will begin playing as soon as the Pack is loaded
      * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
+     * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
      * @property {Boolean} loop If true the audio will restart when it finishes playing
      * @property {Boolean} 3d If true the audio will play back at the location of the Entity in space, so the audio will be affect by the position of the {@link pc.fw.AudioListenerComponent}
      * @property {Number} minDistance The minimum distance from the listener at which audio falloff begins.
@@ -20,6 +21,7 @@ pc.extend(pc.fw, function () {
         this.on("set_assets", this.onSetAssets, this);
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_volume", this.onSetVolume, this);
+        this.on("set_pitch", this.onSetPitch, this);
         this.on("set_minDistance", this.onSetMinDistance, this);
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
@@ -123,6 +125,14 @@ pc.extend(pc.fw, function () {
             if (oldValue != newValue) {
                 if (this.channel) {
                     this.channel.setVolume(newValue);
+                }
+            }
+        },
+
+        onSetPitch: function (name, oldValue, newValue) {
+            if (oldValue != newValue) {
+                if (this.channel) {
+                    this.channel.setPitch(newValue);
                 }
             }
         },

@@ -36,6 +36,16 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1
         }, {
+            name: "pitch",
+            displayName: "Pitch",
+            description: "The sound pitch",
+            type: "number",
+            defaultValue: 1,
+            options: {
+                min: 0.01,
+                step: 0.01
+            },
+        }, {
             name: "loop",
             displayName: "Loop",
             description: "Set whether sound loops or not",
@@ -105,7 +115,7 @@ pc.extend(pc.fw, function () {
     
     pc.extend(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['assets', 'volume', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor'];
+            properties = ['assets', 'volume', 'pitch', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         
             component.paused = !data.activate;
