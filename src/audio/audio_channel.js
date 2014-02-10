@@ -16,6 +16,8 @@ pc.extend(pc.audio, function () {
             options = options || {};
             this.volume = (typeof options.volume === 'undefined') ? 1 : options.volume;
             this.loop = (typeof options.loop === 'undefined') ? false : options.loop;
+            this.pitch = (typeof options.pitch === 'undefined' ? 1 : options.pitch);
+
             this.sound = sound;
                 
             this.paused = false;
@@ -47,6 +49,7 @@ pc.extend(pc.audio, function () {
                 // Initialize volume and loop
                 this.setVolume(this.volume);
                 this.setLoop(this.loop);
+                this.setPitch(this.pitch);
 
                 this.startTime = this.manager.context.currentTime;
                 this.source.start(0, this.startOffset % this.source.buffer.duration);
@@ -86,6 +89,7 @@ pc.extend(pc.audio, function () {
                 // Initialize volume and loop
                 this.setVolume(this.volume);
                 this.setLoop(this.loop);
+                this.setPitch(this.pitch);
 
                 this.startTime = this.manager.context.currentTime;
                 this.source.start(0, this.startOffset % this.source.buffer.duration);
@@ -133,6 +137,13 @@ pc.extend(pc.audio, function () {
                 }
             },
 
+            setPitch: function (pitch) {
+                this.pitch = pitch;
+                if (this.source) {
+                    this.source.playbackRate.value = pitch;
+                }
+            },
+
             isPlaying: function () {
                 return (!this.paused && (this.source.playbackState === this.source.PLAYING_STATE));
             },
@@ -163,6 +174,7 @@ pc.extend(pc.audio, function () {
             this.volume = options.volume || 1;
             this.loop = options.loop || false;
             this.sound = sound;
+            this.pitch = typeof options.pitch !== 'undefined' ? options.pitch : 1;
 
             this.paused = false;
             this.suspended = false;
@@ -179,6 +191,7 @@ pc.extend(pc.audio, function () {
                     this.paused = false;
                     this.setVolume(this.volume);
                     this.setLoop(this.loop);
+                    this.setPitch(this.pitch);
                     this.source.play();
                 }
 
@@ -228,6 +241,13 @@ pc.extend(pc.audio, function () {
                 }
             },
 
+            setPitch: function (pitch) {
+                this.pitch = pitch;
+                if (this.source) {
+                    this.source.playbackRate = pitch;
+                }
+            },
+
             getDuration: function () {
                 if (this.source) {
                     var d = this.source.duration;
@@ -268,6 +288,15 @@ pc.extend(pc.audio, function () {
         */
         getLoop: function () {
             return this.loop;
+        },
+
+        /**
+        * @function
+        * @name pc.audio.Channel#getPitch
+        * @description Get the current pitch of the Channel
+        */
+        getPitch: function () {
+            return this.pitch;
         },
 
         /**
