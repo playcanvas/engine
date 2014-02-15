@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.141.1
+--------
+* [FIX] On FFOS, packaged apps does not have content type set correctly for some data formats (e.g. OGG).
+
+--------
 v0.141.0
 --------
 * Added pitch to audiosource component
