@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.AudioListenerComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
+    * @property {Boolean} enabled If false the component will not affect any audio sources
     */
     var AudioListenerComponent = function (system, entity) {
         this.on('set_enabled', this.onSetEnabled, this);

@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.AudioSourceComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The entity that the Component is attached to
      * @extends pc.fw.Component
+     * @property {Boolean} enabled If false no audio will be played
      * @property {Array} assets The list of audio assets
      * @property {Boolean} activate If true the audio will begin playing as soon as the Pack is loaded
      * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
@@ -40,7 +41,7 @@ pc.extend(pc.fw, function () {
             if (!this.enabled) {
                 return;
             }
-            
+
             if (this.channel) {
                 // If we are currently playing a channel, stop it.
                 this.stop();
