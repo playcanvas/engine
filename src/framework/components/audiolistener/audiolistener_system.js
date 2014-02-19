@@ -13,7 +13,14 @@ pc.extend(pc.fw, function () {
         this.ComponentType = pc.fw.AudioListenerComponent;
         this.DataType = pc.fw.AudioListenerComponentData;
         
-        this.schema = [];
+        this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Disabled audio listener components do not affect audiosources",
+            type: "boolean",
+            defaultValue: true
+        }];
+
         this.exposeProperties();
         
         this.manager = manager;
@@ -25,6 +32,8 @@ pc.extend(pc.fw, function () {
     
     pc.extend(AudioListenerComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
+            properties = ['enabled'];
+            
             AudioListenerComponentSystem._super.initializeComponentData.call(this, component, data, properties);
             component.setCurrentListener();
         },

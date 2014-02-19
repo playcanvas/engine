@@ -9,15 +9,29 @@ pc.extend(pc.fw, function () {
     * @extends pc.fw.Component
     */
     var AudioListenerComponent = function (system, entity) {
+        this.on('set_enabled', this.onSetEnabled, this);
     };
+
     AudioListenerComponent = pc.inherits(AudioListenerComponent, pc.fw.Component);
 
     pc.extend(AudioListenerComponent.prototype, {
         setCurrentListener: function () {
-            if (this.entity.audiolistener) {
+            if (this.data.enabled && this.entity.audiolistener) {
                 this.system.current = this.entity;
                 var position = this.system.current.getPosition();
                 this.system.manager.listener.setPosition(position);
+            }
+        },
+
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (newValue) {
+                    this.setCurrentListener();
+                } else {
+                    if (this.system.current === this.entity) {
+                        this.system.current = null;
+                    }
+                }
             }
         }
     });
