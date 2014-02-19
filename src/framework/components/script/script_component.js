@@ -13,6 +13,7 @@ pc.extend(pc.fw, function () {
 
     var ScriptComponent = function ScriptComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
+        this.on("set_enabled", this.onSetEnabled, this);
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.fw.Component);
 
@@ -40,6 +41,18 @@ pc.extend(pc.fw, function () {
                     return fn.apply(instances[name].instance, args);    
                 }
                 
+            }
+        },
+
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (newValue && !this.data.initialized) {
+                    this.system._initializeScriptComponent(this);
+                }
+
+                if (newValue && !this.data.postInitialized) {
+                    this.system._postInitializeScriptComponent(this);
+                }
             }
         },
 

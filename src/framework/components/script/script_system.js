@@ -1,4 +1,12 @@
 pc.extend(pc.fw, function () {
+
+    var INITIALIZE = "initialize";
+    var POST_INITIALIZE = "postInitialize";
+    var UPDATE = "update";
+    var POST_UPDATE = "postUpdate";
+    var FIXED_UPDATE = "fixedUpdate";
+    var TOOLS_UPDATE = "toolsUpdate";
+
     /**
      * @name pc.fw.ScriptComponentSystem
      * @constructor Create a new ScriptComponentSystem
@@ -15,6 +23,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.ScriptComponentData;
 
         this.schema = [{
+           name: 'enabled',
+           displayName: 'Enabled',
+           description: 'Disabled components are not updated',
+           type: 'boolean',
+           defaultValue: true
+        },{
             name: "scripts",
             displayName: "URLs",
             description: "Attach scripts to this Entity",
@@ -32,19 +46,22 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
+        this.scriptComponents = [];
+
+        this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
-        pc.fw.ComponentSystem.on('initialize', this.onInitialize, this);
-        pc.fw.ComponentSystem.on('postInitialize', this.onPostInitialize, this);
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-        pc.fw.ComponentSystem.on('fixedUpdate', this.onFixedUpdate, this);
-        pc.fw.ComponentSystem.on('postUpdate', this.onPostUpdate, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
+        pc.fw.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
+        pc.fw.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
+        pc.fw.ComponentSystem.on(UPDATE, this.onUpdate, this);
+        pc.fw.ComponentSystem.on(FIXED_UPDATE, this.onFixedUpdate, this);
+        pc.fw.ComponentSystem.on(POST_UPDATE, this.onPostUpdate, this);
+        pc.fw.ComponentSystem.on(TOOLS_UPDATE, this.onToolsUpdate, this);
     };
     ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.fw.ComponentSystem);
 
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['runInTools', 'scripts'];
+            properties = ['runInTools', 'enabled', 'scripts'];
 
             ScriptComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -59,6 +76,13 @@ pc.extend(pc.fw, function () {
             return this.addComponent(clone, data);
         },
 
+        onBeforeRemove: function (entity, component) {
+            var index = this.scriptComponents.indexOf(component);
+            if (index >= 0) {
+                this.scriptComponents.splice(index, 1);
+            }
+        },
+
         /**
         * @private
         * @name pc.fw.ScriptComponentSystem#onRemove
@@ -70,14 +94,6 @@ pc.extend(pc.fw, function () {
             for (var name in data.instances) {
                 if (data.instances.hasOwnProperty(name)) {
                     
-                    // Unbind any instance events that were bound when the script was created
-                    var events = ['update', 'fixedUpdate', 'postUpdate', 'toolsUpdate'];
-                    events.forEach(function (eventName) {
-                        if (data.instances[name].instance[eventName]) {
-                            this.unbind(eventName, data.instances[name].instance[eventName], data.instances[name].instance);
-                        }
-                    }, this);
-
                     if(data.instances[name].instance.destroy) {
                         data.instances[name].instance.destroy();
                     }
@@ -98,13 +114,11 @@ pc.extend(pc.fw, function () {
             this._registerInstances(root);
                 
             if (root.script) {
-                for (var name in root.script.data.instances) {
-                    if (root.script.data.instances.hasOwnProperty(name)) {
-                        if (root.script.data.instances[name].instance.initialize) {
-                            root.script.data.instances[name].instance.initialize();
-                        }                        
-                    }
-                }                
+                this.scriptComponents.push(root.script);
+
+                if (root.script.enabled) {
+                    this._initializeScriptComponent(root.script);
+                }
             }
             
             var children = root.getChildren();
@@ -116,6 +130,18 @@ pc.extend(pc.fw, function () {
             } 
         },
 
+        _initializeScriptComponent: function (script) {
+            for (var name in script.data.instances) {
+                if (script.data.instances.hasOwnProperty(name)) {
+                    if (script.data.instances[name].instance.initialize) {
+                        script.data.instances[name].instance.initialize();
+                    }                        
+                }
+            }                
+
+            script.data.initialized = true;
+        },
+
         /**
          * @function
          * @private
@@ -124,14 +150,8 @@ pc.extend(pc.fw, function () {
          * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
          */
         onPostInitialize: function (root) {
-            if (root.script) {
-                for (var name in root.script.data.instances) {
-                    if (root.script.data.instances.hasOwnProperty(name)) {
-                        if (root.script.data.instances[name].instance.postInitialize) {
-                            root.script.data.instances[name].instance.postInitialize();
-                        }                        
-                    }
-                }                
+            if (root.script && root.script.enabled) {
+                this._postInitializeScriptComponent(root.script);
             }
             
             var children = root.getChildren();
@@ -143,6 +163,39 @@ pc.extend(pc.fw, function () {
             } ;
         },
 
+        _postInitializeScriptComponent: function (script) {
+            for (var name in script.data.instances) {
+                if (script.data.instances.hasOwnProperty(name)) {
+                    if (script.data.instances[name].instance.postInitialize) {
+                        script.data.instances[name].instance.postInitialize();
+                    }                        
+                }
+            }   
+
+            script.data.postInitialized = true;
+        },
+
+        _updateInstances: function (updateMethod, dt) {
+            var i;
+            var maxScripts = this.scriptComponents.length;
+            var script;
+
+            for (i=0; i<maxScripts; i++) {
+                script = this.scriptComponents[i];
+                if (script.enabled) {
+                    var instances = script.instances;
+                    for (var key in instances) {
+                        if (instances.hasOwnProperty(key)) {
+                            var instance = instances[key].instance;
+                            if (instance[updateMethod]) {
+                                instance[updateMethod](dt);
+                            }
+                        }
+                    }
+                }
+            }
+        },
+
         /**
         * @private
         * @function
@@ -151,7 +204,7 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt The time delta since the last update in seconds
         */
         onUpdate: function (dt) {
-            this.fire('update', dt);
+            this._updateInstances(UPDATE, dt);
         },
 
         /**
@@ -162,7 +215,7 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt A fixed timestep of 1/60 seconds
         */
         onFixedUpdate: function (dt) {
-            this.fire('fixedUpdate', dt);
+            this._updateInstances(FIXED_UPDATE, dt);
         },
 
         /**
@@ -173,11 +226,11 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt The time delta since the last update in seconds
         */
         onPostUpdate: function (dt) {
-            this.fire('postUpdate', dt);
+           this._updateInstances(POST_UPDATE, dt);
         },
 
         onToolsUpdate: function (dt) {
-            this.fire('toolsUpdate', dt);
+            this._updateInstances(TOOLS_UPDATE, dt);
         },
 
         /**
@@ -266,20 +319,6 @@ pc.extend(pc.fw, function () {
                             throw Error(pc.string.format("Script with name '{0}' is already attached to Script Component", instanceName));
                         } else {
                             entity.script[instanceName] = instance.instance;
-                        }
-
-                        // Attach events for update, fixedUpdate and postUpdate methods in script instance
-                        if (instance.instance.update) {
-                            this.on('update', instance.instance.update, instance.instance);
-                        }
-                        if (instance.instance.fixedUpdate) {
-                            this.on('fixedUpdate', instance.instance.fixedUpdate, instance.instance);
-                        }
-                        if (instance.instance.postUpdate) {
-                            this.on('postUpdate', instance.instance.postUpdate, instance.instance);
-                        }
-                        if (instance.instance.toolsUpdate) {
-                            this.on('toolsUpdate', instance.instance.toolsUpdate, instance.instance);
                         }
                     }
 
