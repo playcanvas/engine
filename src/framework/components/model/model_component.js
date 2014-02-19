@@ -16,6 +16,7 @@ pc.extend(pc.fw, function () {
      *     <li>cylinder: The component will render a cylinder</li>
      *     <li>sphere: The component will render a sphere</li>
      * </ul>
+     * @property {Boolean} enabled Enable or disable rendering of the Model
      * @property {String} asset The GUID of the asset for the model (only applies to models of type 'asset')
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
@@ -28,6 +29,7 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
+        this.on("set_enabled", this.onSetEnabled, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -40,22 +42,10 @@ pc.extend(pc.fw, function () {
     ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
     
     pc.extend(ModelComponent.prototype, {
-        /**
-        * @function
-        * @name pc.fw.ModelComponent#setVisible
-        * @description Enable or disable rendering for the Model.
-        * @param {Boolean} visible True to enable rendering for the model, false to disable it
-        */
+
         setVisible: function (visible) {
-            if (this.data.model) {
-                var inScene = this.system.context.scene.containsModel(this.data.model);
-                
-                if (visible && !inScene) {
-                    this.system.context.scene.addModel(this.data.model);
-                } else if (!visible && inScene) {
-                    this.system.context.scene.removeModel(this.data.model);
-                }
-            }
+            console.warn("WARNING: setVisible: Function is deprecated. Set enabled property instead.");
+            this.enabled = visible;
         },
 
         loadModelAsset: function (guid) {
@@ -193,7 +183,10 @@ pc.extend(pc.fw, function () {
                 }
 
                 this.entity.addChild(newValue.graph);
-                this.system.context.scene.addModel(newValue);
+
+                if (this.enabled) {
+                    this.system.context.scene.addModel(newValue);
+                }
 
                 // Store the entity that owns this model
                 newValue._entity = this.entity;
@@ -234,6 +227,22 @@ pc.extend(pc.fw, function () {
                     var meshInstances = componentData.model.meshInstances;
                     for (var i = 0; i < meshInstances.length; i++) {
                         meshInstances[i].receiveShadow = newValue;
+                    }
+                }
+            }
+        },
+
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                var visible = newValue;
+
+                if (this.data.model) {
+                    var inScene = this.system.context.scene.containsModel(this.data.model);
+                    
+                    if (visible && !inScene) {
+                        this.system.context.scene.addModel(this.data.model);
+                    } else if (!visible && inScene) {
+                        this.system.context.scene.removeModel(this.data.model);
                     }
                 }
             }
