@@ -19,6 +19,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CameraComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Disabled cameras do not render anything",
+            type: "boolean",
+            defaultValue: true
+        },{
             name: "clearColor",
             displayName: "Clear Color",
             description: "Clear Color",
@@ -80,12 +86,6 @@ pc.extend(pc.fw, function () {
                 min: 0
             }
         }, {
-            name: "activate",
-            displayName: "Activate",
-            description: "Activate camera when scene loads",
-            type: "boolean",
-            defaultValue: true            
-        },{
             name: "camera",
             exposed: false
         }, {
@@ -148,6 +148,15 @@ pc.extend(pc.fw, function () {
                 data.clearColor = new pc.Color(c[0], c[1], c[2], c[3]);
             }
 
+            /*
+            if (data.activate) {
+                console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
+                if (data.enabled === undefined) {
+                    data.enabled = data.activate;
+                }
+            }
+            */
+
             data.camera = new pc.scene.CameraNode();
 
             if (this.context.designer && this.displayInTools(component.entity)) {
@@ -185,11 +194,14 @@ pc.extend(pc.fw, function () {
                 data.model = model;
             }
 
-            properties = ['model', 'camera', 'aspectRatio', 'renderTarget', 'clearColor', 'fov', 'orthoHeight', 'activate', 'nearClip', 'farClip', 'projection'];
+            properties = ['enabled', 'model', 'camera', 'aspectRatio', 'renderTarget', 'clearColor', 'fov', 'orthoHeight', 'nearClip', 'farClip', 'projection'];
     
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-            if (!window.pc.apps.designer && component.activate && !component.entity.hasLabel("pc:designer")) {
+            if (!window.pc.apps.designer && 
+                component.enabled && 
+                !component.entity.hasLabel("pc:designer")) {
+
                 this.current = component.entity;
             }
         },
@@ -300,6 +312,20 @@ pc.extend(pc.fw, function () {
                 positions[22] = -y;
                 positions[23] = -farClip;                
                 vertexBuffer.unlock();
+            }
+        },
+
+        onCameraDisabled: function (cameraComponent) {
+            var components = this.store;
+            for (var id in components) {
+                if (components.hasOwnProperty(id)) {
+                    var entity = components[id].entity;
+                    var data = components[id].data;
+                    if (data.enabled) {
+                        this.current = entity;
+                        break;
+                    }
+                }
             }
         },
 

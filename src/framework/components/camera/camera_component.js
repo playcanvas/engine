@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.CameraComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
+    * @property {Boolean} enabled If true the {@link pc.fw.CameraComponentSystem} will set {@link pc.fw.CameraComponentSystem#current} to this camera. Otherwise if there is another enabled {@link pc.fw.CameraComponentSystem} then that will become the current camera.
     * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
     * @property {pc.scene.Camera} camera The {@link pc.scene.CameraNode} used to render the scene
     * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render
@@ -16,7 +17,6 @@ pc.extend(pc.fw, function () {
     * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.scene.Projection.ORTHOGRAPHIC} cameras only. Defaults to 10.
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
     * @property {pc.scene.Projection} projection The type of projection used to render the camera.
-    * @property {Boolean} activate Activate on load. If true the {@link pc.fw.CameraComponentSystem} will set {@link pc.fw.CameraComponentSystem#current} to this camera as soon as it is loaded.
     * @property {pc.gfx.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
@@ -33,8 +33,20 @@ pc.extend(pc.fw, function () {
         this.on("set_farClip", this.onSetFarClip, this);
         this.on("set_projection", this.onSetProjection, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
+        this.on("set_enabled", this.onSetEnabled, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
+
+    Object.defineProperty(CameraComponent.prototype, "activate", {
+        get: function() {
+            console.warn("WARNING: activate: Property is deprecated. Query enabled property instead.");
+            return this.enabled;
+        },
+        set: function(value) {
+            console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
+            this.enabled = value;
+        },
+    });
 
     pc.extend(CameraComponent.prototype, {
         /**
@@ -87,6 +99,18 @@ pc.extend(pc.fw, function () {
         },
         onSetRenderTarget: function (name, oldValue, newValue) {
             this.data.camera.setRenderTarget(newValue);
+        },
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (newValue) {
+                    this.system.current = this.entity;
+                } else {
+                    if (this.system.current === this.entity) {
+                        this.system.current = null;
+                        this.system.onCameraDisabled(this);
+                    }
+                }
+            }
         }
     });
 
