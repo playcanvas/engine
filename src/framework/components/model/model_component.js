@@ -182,9 +182,8 @@ pc.extend(pc.fw, function () {
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
                 }
 
-                this.entity.addChild(newValue.graph);
-
                 if (this.enabled) {
+                    this.entity.addChild(newValue.graph);
                     this.system.context.scene.addModel(newValue);
                 }
 
