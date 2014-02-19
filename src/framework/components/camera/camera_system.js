@@ -148,14 +148,12 @@ pc.extend(pc.fw, function () {
                 data.clearColor = new pc.Color(c[0], c[1], c[2], c[3]);
             }
 
-            /*
             if (data.activate) {
                 console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
                 if (data.enabled === undefined) {
                     data.enabled = data.activate;
                 }
             }
-            */
 
             data.camera = new pc.scene.CameraNode();
 
