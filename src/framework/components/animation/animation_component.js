@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.AnimationComponentSystem} system The {@link pc.fw.ComponentSystem} that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to
     * @extends pc.fw.Component
+    * @property {Boolean} enabled If false no animation will be played
     * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
     * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
     * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded
@@ -19,6 +20,8 @@ pc.extend(pc.fw, function () {
         this.on('set_assets', this.onSetAssets, this);
         // Handle changes to the 'loop' value
         this.on('set_loop', this.onSetLoop, this);
+        // Handle changes to the 'enabled' value
+        this.on('set_enabled', this.onSetEnabled, this);
     };
     AnimationComponent = pc.inherits(AnimationComponent, pc.fw.Component);
 
@@ -34,6 +37,10 @@ pc.extend(pc.fw, function () {
         play: function (name, blendTime) {
             if (!this.data.animations[name]) {
                 console.error(pc.string.format("Trying to play animation '{0}' which doesn't exist", name));
+                return;
+            }
+
+            if (!this.data.enabled) {
                 return;
             }
 
@@ -138,7 +145,7 @@ pc.extend(pc.fw, function () {
 
             for (var animName in data.animations) {
                 // Set the first loaded animation as the current
-                if (data.activate) {
+                if (data.enabled && data.activate) {
                     this.play(animName, 0);
                 }
                 break;
@@ -151,6 +158,20 @@ pc.extend(pc.fw, function () {
         onSetLoop: function (name, oldValue, newValue) {
             if (this.data.skeleton) {
                 this.data.skeleton.setLooping(this.data.loop);
+            }
+        },
+
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (newValue && 
+                    this.data.activate && 
+                    !this.data.currAnim) {
+
+                    for (var animName in this.data.animations) {
+                        this.play(animName, 0);
+                        break;
+                    }
+                }
             }
         },
 
