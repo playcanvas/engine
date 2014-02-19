@@ -46,8 +46,6 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.scriptComponents = [];
-
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
@@ -75,13 +73,6 @@ pc.extend(pc.fw, function () {
                 enabled: src.data.enabled
             };
             return this.addComponent(clone, data);
-        },
-
-        onBeforeRemove: function (entity, component) {
-            var index = this.scriptComponents.indexOf(component);
-            if (index >= 0) {
-                this.scriptComponents.splice(index, 1);
-            }
         },
 
         /**
@@ -114,12 +105,8 @@ pc.extend(pc.fw, function () {
         onInitialize: function (root) {
             this._registerInstances(root);
                 
-            if (root.script) {
-                this.scriptComponents.push(root.script);
-
-                if (root.script.enabled) {
-                    this._initializeScriptComponent(root.script);
-                }
+            if (root.script && root.script.enabled) {
+                this._initializeScriptComponent(root.script);
             }
             
             var children = root.getChildren();
@@ -176,25 +163,25 @@ pc.extend(pc.fw, function () {
             script.data.postInitialized = true;
         },
 
-        _updateInstances: function (updateMethod, dt) {
-            var i;
-            var maxScripts = this.scriptComponents.length;
-            var script;
+        _updateInstances: function (updateMethod, dt) {            
+            var components = this.store;
 
-            for (i=0; i<maxScripts; i++) {
-                script = this.scriptComponents[i];
-                if (script.enabled) {
-                    var instances = script.instances;
-                    for (var key in instances) {
-                        if (instances.hasOwnProperty(key)) {
-                            var instance = instances[key].instance;
-                            if (instance[updateMethod]) {
-                                instance[updateMethod](dt);
+            for (var id in components) {
+                if (components.hasOwnProperty(id)) {
+                    var componentData = components[id].data;
+                    if (componentData.enabled) {
+                        var instances = componentData.instances;
+                        for (var key in instances) {
+                            if (instances.hasOwnProperty(key)) {
+                                var instance = instances[key].instance;
+                                if (instance[updateMethod]) {
+                                    instance[updateMethod](dt);
+                                }
                             }
                         }
                     }
                 }
-            }
+            }        
         },
 
         /**
