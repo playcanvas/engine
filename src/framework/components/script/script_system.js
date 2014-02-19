@@ -71,7 +71,8 @@ pc.extend(pc.fw, function () {
             var src = this.dataStore[entity.getGuid()];
             var data = {
                 runInTools: src.data.runInTools,
-                scripts: pc.extend([], src.data.scripts)
+                scripts: pc.extend([], src.data.scripts),
+                enabled: src.data.enabled
             };
             return this.addComponent(clone, data);
         },
