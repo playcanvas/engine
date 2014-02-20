@@ -12,6 +12,12 @@ pc.extend(pc.fw, function () {
         context.systems.add(this.id, this);
     
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Enables or disables the component",
+            type: "boolean",
+            defaultValue: true
+        },{
          name: "posx",
          displayName: "POSX",
          description: "URL of the positive X face of cubemap",
@@ -88,18 +94,10 @@ pc.extend(pc.fw, function () {
         
     pc.extend(StaticCubeMapComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            StaticCubeMapComponentSystem._super.initializeComponentData.call(this, component, data, CUBE_MAP_NAMES);
+            properties = ['enabled','posx', 'negx', 'posy', 'negy', 'posz', 'negz'];
+            StaticCubeMapComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         }
     });
-
-    var CUBE_MAP_NAMES = [
-        'posx',
-        'negx',
-        'posy',
-        'negy',
-        'posz',
-        'negz'
-    ];
 
     return {
         StaticCubeMapComponentSystem: StaticCubeMapComponentSystem
