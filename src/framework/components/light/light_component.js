@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
      * <li><strong>spot</strong>: A light that illuminates a cone.</li>
      * </ul>
      * @property {pc.fw.Color} color The Color of the light
-     * @property {Boolean} enables Enable or disable the light
+     * @property {Boolean} enabled Enable or disable the light
      * @property {Number} intensity The brightness of the light.
      * @property {Boolean} castShadows If enabled the light will cast shadows. (Not availablle for point lights)
      * @property {Number} shadowResolution The size of the texture used for the shadow map, 256, 512, 1024, 2048. (Not available for point lights)

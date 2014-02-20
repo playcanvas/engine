@@ -7,6 +7,14 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
+    * @property {Boolean} enabled Enables or disables the Component. If the Component is disabled then the following methods will not be called on the script instances:
+    * <ul>
+    * <li>initialize</li>
+    * <li>postInitialize</li>
+    * <li>update</li>
+    * <li>fixedUpdate</li>
+    * <li>postUpdate</li>
+    * </ul>
     * @property {Object[]} scripts An array of all the scripts to load. Each script object has this format:
     * {url: 'url.js', name: 'url', 'attributes': [attribute1, attribute2, ...]}
     */

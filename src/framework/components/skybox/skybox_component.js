@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
      * Set a texture Asset to be used for each face of the cube.
      * @param {pc.fw.ApplicationContext} context
      * @extends pc.fw.Component
+     * @property {Boolean} enabled Enables or disables rendering of the skybox
      * @property {String} negx Asset GUID of texture that is used for negative x face
      * @property {String} posx Asset GUID of texture that is used for positive x face
      * @property {String} negy Asset GUID of texture that is used for negative y face
