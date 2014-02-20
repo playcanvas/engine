@@ -133,9 +133,7 @@ pc.extend(pc.fw, function () {
                             this.entity.rigidbody.enableSimulation();
                         }
                     } else {
-                        if (this.entity.rigidbody.enabled) {
-                            this.entity.rigidbody.disableSimulation();
-                        }
+                        this.entity.rigidbody.disableSimulation();
                     }
                 }
             }

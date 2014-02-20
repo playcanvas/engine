@@ -94,12 +94,14 @@ pc.extend(pc.fw, function () {
         enable: function () {
             var body = this.body;
             this.context.systems.rigidbody.addBody(body);
+            body.forceActivationState(pc.fw.RIGIDBODY_ACTIVE_TAG);
             body.activate();
         },
 
         disable: function () {
             var body = this.body;
             this.context.systems.rigidbody.removeBody(body);
+            body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_SIMULATION);
         }
     };
 

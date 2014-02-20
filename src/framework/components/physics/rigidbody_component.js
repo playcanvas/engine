@@ -223,6 +223,14 @@ pc.extend(pc.fw, function () {
                 var body = this.body;
                 if (body) {
                     this.system.addBody(body);
+
+                    // set activation state so that the body goes back to normal simulation
+                    if (this.isKinematic()) {
+                        body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_DEACTIVATION);
+                    } else {
+                        body.forceActivationState(pc.fw.RIGIDBODY_ACTIVE_TAG);
+                    }
+
                     body.activate();
                 }
             }
@@ -232,6 +240,9 @@ pc.extend(pc.fw, function () {
             var body = this.body;
             if (body) {
                 this.system.removeBody(body);
+                // set activation state to disable simulation to avoid body.isActive() to return 
+                // true even if it's not in the dynamics world
+                body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_SIMULATION);
             }
         },
 
