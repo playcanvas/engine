@@ -217,6 +217,7 @@ pc.extend(pc.fw, function () {
 
     
     /**
+    * @private
     * @property
     * @name pc.fw.Entity#enabled
     * @description Enables / disables all the components attached to this Entity 
