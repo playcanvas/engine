@@ -94,13 +94,20 @@ pc.extend(pc.fw, function () {
         enable: function () {
             var body = this.body;
             this.context.systems.rigidbody.addBody(body);
+
+            // set the body's activation state to active so that it is 
+            // simulated properly again
             body.forceActivationState(pc.fw.RIGIDBODY_ACTIVE_TAG);
+
             body.activate();
         },
 
         disable: function () {
             var body = this.body;
             this.context.systems.rigidbody.removeBody(body);
+
+            // set the body's activation state to disable simulation so 
+            // that it properly deactivates after we remove it from the physics world
             body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_SIMULATION);
         }
     };
