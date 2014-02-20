@@ -337,7 +337,7 @@ pc.extend(pc.fw, function () {
         */
         afterInitialize: function (component, data) {
             this.recreatePhysicalShapes(component);
-            data.initialized = true;
+            component.data.initialized = true;
         },
 
         /**
