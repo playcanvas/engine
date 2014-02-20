@@ -68,6 +68,7 @@ pc.extend(pc.resources, function () {
         entity.setLocalPosition(p[0], p[1], p[2]);
         entity.setLocalEulerAngles(r[0], r[1], r[2]);
         entity.setLocalScale(s[0], s[1], s[2]);
+        entity.enabled = data.enabled;
         
         if (data.labels) {
             data.labels.forEach(function (label) {

@@ -65,7 +65,7 @@ pc.extend(pc.scene, function () {
 
         _cloneInternal: function (clone) {
             clone.name = this.name;
-            clone._labels = pc.extend(this._lables, {});
+            clone._labels = pc.extend(this._labels, {});
 
             clone.localPosition.copy(this.localPosition);
             clone.localRotation.copy(this.localRotation);
@@ -77,10 +77,10 @@ pc.extend(pc.scene, function () {
             clone.eulerAngles.copy(this.eulerAngles);
 
             clone.localTransform.copy(this.localTransform);
-            clone.dirtyLocal = clone.dirtyLocal;
+            clone.dirtyLocal = this.dirtyLocal;
 
             clone.worldTransform.copy(this.worldTransform);
-            clone.dirtyWorld = clone.dirtyWorld;
+            clone.dirtyWorld = this.dirtyWorld;
         },
 
         clone: function () {

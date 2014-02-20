@@ -49,7 +49,7 @@ pc.extend(pc.fw, function () {
         this._guid = pc.guid.create(); // Globally Unique Identifier 
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
-        this._enabled = true;
+        this._enabled = true; 
 
         pc.extend(this, pc.events);
     };
@@ -197,6 +197,8 @@ pc.extend(pc.fw, function () {
         var c = new pc.fw.Entity();
         pc.fw.Entity._super._cloneInternal.call(this, c);
 
+        c.enabled = this.enabled;
+
         for (type in this.c) {
             var component = this.c[type];
             component.system.cloneComponent(this, c);
@@ -213,6 +215,7 @@ pc.extend(pc.fw, function () {
         return c;
     }   ;
 
+    
     /**
     * @property
     * @name pc.fw.Entity#enabled
@@ -221,19 +224,20 @@ pc.extend(pc.fw, function () {
     *   this.entity.enabled = true; // Enable entity components
     *   this.entity.enabled = false; // Disable entity components
     */
-    get enabled() {
-        return this._enabled;
-    }
+    Object.defineProperty(Entity.prototype, "enabled", {
+        get: function() {
+            return this._enabled;
+        },
+        set: function(value) {
+            this._enabled = value;
 
-    set enabled(value) {
-        this._enabled = value;
-
-        for (type in this.c) {
-            if (this.c.hasOwnProperty(type)) {
-                this.c[type].enabled = value;
+            for (type in this.c) {
+                if (this.c.hasOwnProperty(type)) {
+                    this.c[type].enabled = value;
+                }
             }
-        }
-    }
+        },
+    });
 
     
     Entity.deserialize = function (data) {
@@ -243,12 +247,13 @@ pc.extend(pc.fw, function () {
         var transform = pc.json.parse(data.transform);
         var components = pc.json.parse(data.components);
         var labels = pc.json.parse(data.labels);
-        
+
         var model = {
             _id: data._id,
             resource_id: data.resource_id,
             _rev: data._rev,
             name: data.name,
+            enabled: data.enabled,
             labels: labels,
             template: template,
             parent: parent,
@@ -265,6 +270,7 @@ pc.extend(pc.fw, function () {
             _id: model._id,
             resource_id: model.resource_id,
             name: model.name,
+            enabled: model.enabled,
             labels: pc.json.stringify(model.labels),
             template: pc.json.stringify(model.template),
             parent: pc.json.stringify(model.parent),
