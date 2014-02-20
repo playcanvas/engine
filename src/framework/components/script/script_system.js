@@ -46,7 +46,6 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
         pc.fw.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
