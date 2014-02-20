@@ -52,6 +52,7 @@ pc.extend(pc.fw, function () {
                 var bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
 
                 var body = new Ammo.btRigidBody(bodyInfo);
+                this.body = body;
 
                 body.setRestitution(0);
                 body.setFriction(0);
@@ -63,9 +64,9 @@ pc.extend(pc.fw, function () {
                 body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_NORESPONSE_OBJECT);
                 body.entity = entity;
 
-                this.context.systems.rigidbody.addBody(body);
-                this.body = body;
-                body.activate();
+                if (this.component.enabled) {
+                    this.enable();
+                }
             } 
         },
 
@@ -89,6 +90,17 @@ pc.extend(pc.fw, function () {
                 body.activate();
             }
         },
+
+        enable: function () {
+            var body = this.body;
+            this.context.systems.rigidbody.addBody(body);
+            body.activate();
+        },
+
+        disable: function () {
+            var body = this.body;
+            this.context.systems.rigidbody.removeBody(body);
+        }
     };
 
     return {
