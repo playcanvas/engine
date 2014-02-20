@@ -49,6 +49,7 @@ pc.extend(pc.fw, function () {
         this._guid = pc.guid.create(); // Globally Unique Identifier 
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
+        this._enabled = true;
 
         pc.extend(this, pc.events);
     };
@@ -210,7 +211,30 @@ pc.extend(pc.fw, function () {
         }
 
         return c;
-    };
+    }   ;
+
+    /**
+    * @property
+    * @name pc.fw.Entity#enabled
+    * @description Enables / disables all the components attached to this Entity 
+    * @example
+    *   this.entity.enabled = true; // Enable entity components
+    *   this.entity.enabled = false; // Disable entity components
+    */
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(value) {
+        this._enabled = value;
+
+        for (type in this.c) {
+            if (this.c.hasOwnProperty(type)) {
+                this.c[type].enabled = value;
+            }
+        }
+    }
+
     
     Entity.deserialize = function (data) {
         var template = pc.json.parse(data.template);
