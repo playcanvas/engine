@@ -49,6 +49,7 @@ pc.extend(pc.fw, function () {
      * </p>
      * @param {pc.fw.CollisionComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity that this Component is attached to.     
+     * @property {Boolean} enabled Enables or disables the Component. 
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
      * <ul>
      * <li><strong>box</strong>: A box-shaped collision volume.</li>
@@ -104,6 +105,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that exited this collision volume.
     */
     var CollisionComponent = function CollisionComponent (system, entity) {
+        this.on('set_enabled', this.onSetEnabled, this);
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);
@@ -118,6 +120,26 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CollisionComponent.prototype, {
 
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (this.entity.trigger) {
+                    if (newValue) {
+                        this.entity.trigger.enable();
+                    } else {
+                        this.entity.trigger.disable();
+                    }
+                } else if (this.entity.rigidbody) {
+                    if (newValue) {
+                        if (this.entity.rigidbody.enabled) {
+                            this.entity.rigidbody.enableSimulation();
+                        }
+                    } else {
+                        this.entity.rigidbody.disableSimulation();
+                    }
+                }
+            }
+        },
+
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
                 this.system.changeType(this, oldValue, newValue);
@@ -125,31 +147,31 @@ pc.extend(pc.fw, function () {
         },
 
         onSetHalfExtents: function (name, oldValue, newValue) {
-            if (this.data.type === 'box') {
+            if (this.data.initialized && this.data.type === 'box') {
                 this.system.recreatePhysicalShapes(this);
             }
         },
 
         onSetRadius: function (name, oldValue, newValue) {
-            if (this.data.type === 'sphere' || this.data.type === 'capsule' || this.data.type === 'cylinder') {
+            if (this.data.initialized && (this.data.type === 'sphere' || this.data.type === 'capsule' || this.data.type === 'cylinder')) {
                 this.system.recreatePhysicalShapes(this);
             }
         },
 
         onSetHeight: function (name, oldValue, newValue) {
-            if ((this.data.type === 'capsule') || (this.data.type === 'cylinder')) {
+            if (this.data.initialized && (this.data.type === 'capsule' || this.data.type === 'cylinder')) {
                 this.system.recreatePhysicalShapes(this);
             }
         },
 
         onSetAxis: function (name, oldValue, newValue) {
-            if ((this.data.type === 'capsule') || (this.data.type === 'cylinder')) {
+            if (this.data.initialized && (this.data.type === 'capsule' || this.data.type === 'cylinder')) {
                 this.system.recreatePhysicalShapes(this);
             }
         },
 
         onSetAsset: function (name, oldValue, newValue) {
-            if (this.data.type === 'mesh') {
+            if (this.data.initialized && this.data.type === 'mesh') {
                 this.system.recreatePhysicalShapes(this);
             }
         },
@@ -158,7 +180,9 @@ pc.extend(pc.fw, function () {
          * Handle an update over livelink from the tools updating the Entities transform
          */
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            this.system.onTransformChanged(this, position, rotation, scale);
+            if (this.enabled) {
+                this.system.onTransformChanged(this, position, rotation, scale);
+            }
         },
 
         onBeforeRemove: function(entity, component) {

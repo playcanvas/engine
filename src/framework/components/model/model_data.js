@@ -9,6 +9,7 @@ pc.extend(pc.fw, function() {
     */
     var ModelComponentData = function () {
         // serialized
+        this.enabled = true;
         this.type = 'asset';
         this.asset = null;
         this.castShadows = false;

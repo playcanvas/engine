@@ -144,6 +144,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.RigidBodyComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Enables or disables the rigid body",
+            type: "boolean",
+            defaultValue: true
+        },{
             name: "type",
             displayName: "Type",
             description: "The type of body determines how it moves and collides with other bodies. Dynamic is a normal body. Static will never move. Kinematic can be moved in code, but will not respond to collisions.",
@@ -317,7 +323,7 @@ pc.extend(pc.fw, function () {
                 data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
             }
 
-            properties = ['mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type'];
+            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
             component.createBody();
@@ -326,6 +332,7 @@ pc.extend(pc.fw, function () {
         cloneComponent: function (entity, clone) {
             // create new data block for clone
             var data = {
+                enabled: entity.rigidbody.enabled,
                 mass: entity.rigidbody.mass,
                 linearDamping: entity.rigidbody.linearDamping,
                 angularDamping: entity.rigidbody.angularDamping,
@@ -659,7 +666,7 @@ pc.extend(pc.fw, function () {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
-                    if (componentData.body && componentData.body.isActive() ) {
+                    if (componentData.body && componentData.body.isActive() && componentData.enabled) {
                         if (componentData.type === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
                         } else if (componentData.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {

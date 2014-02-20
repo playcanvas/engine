@@ -7,6 +7,10 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CubeMapComponentData;
 
         this.schema = [{
+            name: 'enabled',
+            type: 'boolean',
+            defaultValue: true
+        },{
             name: 'cubemap',
             exposed: false
         }, {
@@ -54,7 +58,7 @@ pc.extend(pc.fw, function () {
             data.targets = targets;
             data.camera = camera;
 
-            CubeMapComponentSystem._super.initializeComponentData.call(this, component, data, ['targets', 'cubemap', 'camera']);
+            CubeMapComponentSystem._super.initializeComponentData.call(this, component, data, ['enabled', 'targets', 'cubemap', 'camera']);
         },
 
         onUpdate: function (dt) {
@@ -78,7 +82,7 @@ pc.extend(pc.fw, function () {
                     if (model) {
                         var scene = this.context.scene;
                         scene.removeModel(model);
-
+                        
                         var lookAts = [
                           { target: [ 1, 0, 0], up: [0,-1, 0]},
                           { target: [-1, 0, 0], up: [0,-1, 0]},

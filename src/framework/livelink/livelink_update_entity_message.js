@@ -40,6 +40,16 @@ pc.extend(pc.fw, function () {
     };
     LiveLinkUpdateEntityNameMessage = pc.inherits(LiveLinkUpdateEntityNameMessage, pc.fw.LiveLinkMessage);
     pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_NAME");
+
+    var LiveLinkUpdateEntityEnabledMessage = function (id, enabled) {
+        this.type = pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ENABLED;
+        this.content = {
+            id: id,
+            enabled: enabled
+        };
+    };
+    LiveLinkUpdateEntityEnabledMessage = pc.inherits(LiveLinkUpdateEntityEnabledMessage, pc.fw.LiveLinkMessage);
+    pc.fw.LiveLinkMessage.register("UPDATE_ENTITY_ENABLED");
     
     var LiveLinkReparentEntityMessage = function (id, oldParentId, newParentId, index) {
         this.type = pc.fw.LiveLinkMessageType.REPARENT_ENTITY;
@@ -57,6 +67,7 @@ pc.extend(pc.fw, function () {
     return {
         LiveLinkUpdateEntityMessage: LiveLinkUpdateEntityMessage,
         LiveLinkUpdateEntityNameMessage: LiveLinkUpdateEntityNameMessage,
+        LiveLinkUpdateEntityEnabledMessage: LiveLinkUpdateEntityEnabledMessage,
         LiveLinkUpdateEntityTransformMessage: LiveLinkUpdateEntityTransformMessage,
         LiveLinkReparentEntityMessage: LiveLinkReparentEntityMessage
     };

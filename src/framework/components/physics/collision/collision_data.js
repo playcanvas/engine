@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     var CollisionComponentData = function () {
+        this.enabled = true;
         this.type = 'box';
         this.halfExtents = new pc.Vec3(0.5, 0.5, 0.5);
         this.radius = 0.5;
@@ -10,6 +11,7 @@ pc.extend(pc.fw, function () {
         // Non-serialized properties
         this.shape = null;
         this.model = null;
+        this.initialized = false;
     };
     CollisionComponentData = pc.inherits(CollisionComponentData, pc.fw.ComponentData);
 

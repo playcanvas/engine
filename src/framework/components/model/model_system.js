@@ -16,6 +16,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.ModelComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Enable or disable rendering of the Model",
+            type: "boolean",
+            defaultValue: true
+        },{
             name: "type",
             displayName: "Type",
             description: "Type of model",
@@ -122,7 +128,7 @@ pc.extend(pc.fw, function () {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type'];            
+            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'enabled'];            
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -148,6 +154,8 @@ pc.extend(pc.fw, function () {
             clone.model.data.castShadows = entity.model.castShadows;
             clone.model.data.receiveShadows = entity.model.receiveShadows;
             clone.model.data.material = entity.model.material;
+            clone.model.data.enabled = entity.model.enabled;
+
             if (entity.model.model) {
                 clone.model.model = entity.model.model.clone();    
             }

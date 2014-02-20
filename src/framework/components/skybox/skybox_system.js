@@ -16,6 +16,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.SkyboxComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Enables or disables the component",
+            type: "boolean",
+            defaultValue: true
+        },{
              name: "posx",
              displayName: "POSX",
              description: "URL of the positive X face of skybox cubemap",
@@ -94,7 +100,8 @@ pc.extend(pc.fw, function () {
 
     pc.extend(SkyboxComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            SkyboxComponentSystem._super.initializeComponentData.call(this, component, data, CUBE_MAP_NAMES);
+            var properties = ['enabled', 'posx', 'negx', 'posy', 'negy', 'posz', 'negz'];
+            SkyboxComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
         onRemove: function (entity, data) {
@@ -105,15 +112,6 @@ pc.extend(pc.fw, function () {
             }
         }
     });
-
-    var CUBE_MAP_NAMES = [
-        'posx',
-        'negx',
-        'posy',
-        'negy',
-        'posz',
-        'negz'
-    ];
 
     return {
         SkyboxComponentSystem: SkyboxComponentSystem

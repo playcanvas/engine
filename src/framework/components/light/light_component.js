@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
      * <li><strong>spot</strong>: A light that illuminates a cone.</li>
      * </ul>
      * @property {pc.fw.Color} color The Color of the light
-     * @property {Boolean} enable Enable or disable the light
+     * @property {Boolean} enabled Enable or disable the light
      * @property {Number} intensity The brightness of the light.
      * @property {Boolean} castShadows If enabled the light will cast shadows. (Not availablle for point lights)
      * @property {Number} shadowResolution The size of the texture used for the shadow map, 256, 512, 1024, 2048. (Not available for point lights)
@@ -31,7 +31,7 @@ pc.extend(pc.fw, function () {
     var LightComponent = function LightComponent(system, entity) {
         this.on("set_type", this.onSetType, this);
         this.on("set_color", this.onSetColor, this);
-        this.on("set_enable", this.onSetEnable, this);
+        this.on("set_enabled", this.onSetEnabled, this);
         this.on("set_intensity", this.onSetIntensity, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_shadowResolution", this.onSetShadowResolution, this);
@@ -41,6 +41,17 @@ pc.extend(pc.fw, function () {
     };
 
     LightComponent = pc.inherits(LightComponent, pc.fw.Component);
+
+    Object.defineProperty(LightComponent.prototype, "enable", {
+        get: function() {
+            console.warn("WARNING: enable: Property is deprecated. Query enabled property instead.");
+            return this.enabled;
+        },
+        set: function(value) {
+            console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
+            this.enabled = value;
+        },
+    });
 
     pc.extend(LightComponent.prototype, {
         onSetType: function (name, oldValue, newValue) {
@@ -56,7 +67,7 @@ pc.extend(pc.fw, function () {
         refreshProperties: function() {
             this.onSetCastShadows("castShadows", this.castShadows, this.castShadows);
             this.onSetColor("color", this.color, this.color);
-            this.onSetEnable("enable", this.enable, this.enable);
+            this.onSetEnabled("enabled", this.enabled, this.enabled);
             this.onSetIntensity("intensity", this.intensity, this.intensity);
             this.onSetShadowResolution("shadowResolution", this.shadowResolution, this.shadowResolution);
             this.onSetRange("range", this.range, this.range);
@@ -76,7 +87,7 @@ pc.extend(pc.fw, function () {
             light.setColor(newValue);
         },
 
-        onSetEnable: function (name, oldValue, newValue) {
+        onSetEnabled: function (name, oldValue, newValue) {
             var light = this.data.model.lights[0];
             light.setEnabled(newValue);
         },
