@@ -15,6 +15,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.LightComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Enable or disable the light",
+            type: "boolean",
+            defaultValue: true
+        }, {
             name: "type",
             displayName: "Type",
             description: "The type of the light",
@@ -32,12 +38,6 @@ pc.extend(pc.fw, function () {
                 }]
             },
             defaultValue: "directional"
-        }, {
-            name: "enabled",
-            displayName: "Enabled",
-            description: "Enable or disable the light",
-            type: "boolean",
-            defaultValue: true
         }, {
             name: "color",
             displayName: "Color",
