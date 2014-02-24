@@ -31,7 +31,7 @@ test("addComponent: no data", function () {
     equal(1, comp['volume']);
     equal(false, comp['loop'])
     equal(1, comp['rollOffFactor']);
-    equal(1, comp['minDistance']);
+    equal(1, comp['refDistance']);
     equal(10000, comp['maxDistance']);
 });
 

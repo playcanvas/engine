@@ -41,12 +41,12 @@ pc.extend(pc.audio, function () {
                 this.panner.maxDistance = max;
             },
             
-            getMinDistance: function () {
+            getRefDistance: function () {
                 return this.panner.refDistance;
             },
             
-            setMinDistance: function (min) {
-                this.panner.refDistance = min;
+            setRefDistance: function (ref) {
+                this.panner.refDistance = ref;
             },
             
             getRollOffFactor: function () {
@@ -107,7 +107,7 @@ pc.extend(pc.audio, function () {
             this.velocity = new pc.Vec3();
 
             this.maxDistance = MAX_DISTANCE;
-            this.minDistance = 1;
+            this.refDistance = 1;
             this.rollOffFactor = 1;
             
         };
@@ -126,7 +126,7 @@ pc.extend(pc.audio, function () {
                     
                     var lpos = listener.getPosition();
                     
-                    var factor = fallOff(lpos, this.position, this.minDistance, this.maxDistance, this.rollOffFactor);
+                    var factor = fallOff(lpos, this.position, this.refDistance, this.maxDistance, this.rollOffFactor);
                     
                     var v = this.getVolume();
                     this.source.volume = v * factor;                
@@ -149,12 +149,12 @@ pc.extend(pc.audio, function () {
                 this.maxDistance = max;
             },
             
-            getMinDistance: function () {
-                return this.minDistance;
+            getRefDistance: function () {
+                return this.refDistance;
             },
             
-            setMinDistance: function (min) {
-                this.minDistance = min;
+            setRefDistance: function (ref) {
+                this.refDistance = ref;
             },
             
             getRollOffFactor: function () {

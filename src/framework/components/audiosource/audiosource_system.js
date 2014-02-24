@@ -70,8 +70,8 @@ pc.extend(pc.fw, function () {
             type: "boolean",
             defaultValue: true
         }, {
-            name: "minDistance",
-            displayName: "Min Distance",
+            name: "refDistance",
+            displayName: "Ref Distance",
             description: "Distance from listener under which the sound is at full volume",
             type: "number",
             defaultValue: 1,
@@ -121,7 +121,12 @@ pc.extend(pc.fw, function () {
     
     pc.extend(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['enabled', 'assets', 'volume', 'pitch', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor'];
+            if (data.minDistance) {
+                console.warn("WARNING: minDistance: Property is deprecated. Set refDistance property instead.");
+                data.refDistance = data.minDistance;
+            }
+
+            properties = ['enabled', 'assets', 'volume', 'pitch', 'loop', 'activate', '3d', 'refDistance', 'maxDistance', 'rollOffFactor'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         
             component.paused = !(data.enabled && data.activate);

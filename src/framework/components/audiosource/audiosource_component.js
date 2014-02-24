@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
      * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
      * @property {Boolean} loop If true the audio will restart when it finishes playing
      * @property {Boolean} 3d If true the audio will play back at the location of the Entity in space, so the audio will be affect by the position of the {@link pc.fw.AudioListenerComponent}
-     * @property {Number} minDistance The minimum distance from the listener at which audio falloff begins.
+     * @property {Number} refDistance The minimum distance from the listener at which audio falloff begins.
      * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore
      * @property {Number} rollOffFactor The factor used in the falloff equation.
      */
@@ -23,12 +23,23 @@ pc.extend(pc.fw, function () {
         this.on("set_loop", this.onSetLoop, this);
         this.on("set_volume", this.onSetVolume, this);
         this.on("set_pitch", this.onSetPitch, this);
-        this.on("set_minDistance", this.onSetMinDistance, this);
+        this.on("set_refDistance", this.onSetRefDistance, this);
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
         this.on("set_enabled", this.onSetEnabled, this);
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.fw.Component);
+
+    Object.defineProperty(AudioSourceComponent.prototype, "minDistance", {
+        get: function() {
+            console.warn("WARNING: minDistance: Property is deprecated. Query refDistance property instead.");
+            return this.refDistance;
+        },
+        set: function(value) {
+            console.warn("WARNING: minDistance: Property is deprecated. Set refDistance property instead.");
+            this.refDistance = value;
+        },
+    });
         
     pc.extend(AudioSourceComponent.prototype, {
        /**
@@ -151,10 +162,10 @@ pc.extend(pc.fw, function () {
             }
         },
         
-        onSetMinDistance: function (name, oldValue, newValue) {
+        onSetRefDistance: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
                 if (this.channel instanceof pc.audio.Channel3d) {
-                    this.channel.setMinDistance(newValue);
+                    this.channel.setRefDistance(newValue);
                 }
             }
         },

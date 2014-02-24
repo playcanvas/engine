@@ -8,7 +8,7 @@ pc.fw.AudioSourceComponentData = function AudioSourceComponentData() {
     this.loop = false;
     this['3d'] = true;
 
-    this.minDistance = 1;
+    this.refDistance = 1;
     this.maxDistance = 10000;
     this.rollOffFactor = 1;
     
