@@ -150,9 +150,7 @@ pc.extend(pc.fw, function () {
 
             if (data.activate) {
                 console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
-                if (data.enabled === undefined) {
-                    data.enabled = data.activate;
-                }
+                data.enabled = data.activate;
             }
 
             data.camera = new pc.scene.CameraNode();

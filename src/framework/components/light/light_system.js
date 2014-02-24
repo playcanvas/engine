@@ -153,9 +153,7 @@ pc.extend(pc.fw, function () {
 
             if (data.enable) {
                 console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
-                if (data.enabled === undefined) {
-                    data.enabled = data.enable;
-                }
+                data.enabled = data.enable;
             }
 
             var implementation = this._createImplementation(data.type);
