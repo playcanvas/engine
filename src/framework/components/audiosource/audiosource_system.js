@@ -64,9 +64,9 @@ pc.extend(pc.fw, function () {
             type: "boolean",
             defaultValue: true
         }, {
-            name: "3d",
-            displayName: "3d",
-            description: "3d sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-3d sounds are uniform aross space",
+            name: "positional",
+            displayName: "Positional",
+            description: "Positional sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-positional sounds are uniform aross space",
             type: "boolean",
             defaultValue: true
         }, {
@@ -126,7 +126,12 @@ pc.extend(pc.fw, function () {
                 data.refDistance = data.minDistance;
             }
 
-            properties = ['enabled', 'assets', 'volume', 'pitch', 'loop', 'activate', '3d', 'refDistance', 'maxDistance', 'rollOffFactor'];
+            if (data['3d']) {
+                console.warn("WARNING: 3d: Property is deprecated. Set positional property instead.");
+                data.positional = data['3d'];
+            }
+
+            properties = ['enabled', 'assets', 'volume', 'pitch', 'loop', 'activate', 'positional', 'refDistance', 'maxDistance', 'rollOffFactor'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         
             component.paused = !(data.enabled && data.activate);
