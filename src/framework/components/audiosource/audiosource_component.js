@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.AudioSourceComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The entity that the Component is attached to
      * @extends pc.fw.Component
+     * @property {Boolean} enabled If false no audio will be played
      * @property {Array} assets The list of audio assets
      * @property {Boolean} activate If true the audio will begin playing as soon as the Pack is loaded
      * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
@@ -25,6 +26,7 @@ pc.extend(pc.fw, function () {
         this.on("set_minDistance", this.onSetMinDistance, this);
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
+        this.on("set_enabled", this.onSetEnabled, this);
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.fw.Component);
         
@@ -36,6 +38,10 @@ pc.extend(pc.fw, function () {
         * @param {String} name The name of the Asset to play
         */
         play: function(name) {
+            if (!this.enabled) {
+                return;
+            }
+
             if (this.channel) {
                 // If we are currently playing a channel, stop it.
                 this.stop();
@@ -157,6 +163,20 @@ pc.extend(pc.fw, function () {
             if (oldValue != newValue) {
                 if (this.channel instanceof pc.audio.Channel3d) {
                     this.channel.setRollOffFactor(newValue);
+                }
+            }
+        },
+
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (newValue) {
+                    if (this.data.activate && !this.channel) {
+                        this.play(this.currentSource);
+                    } else {
+                        this.unpause();
+                    }
+                } else {
+                    this.pause();
                 }
             }
         },

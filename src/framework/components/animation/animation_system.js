@@ -16,6 +16,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.AnimationComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Disabled animation components do not play any animations",
+            type: "boolean",
+            defaultValue: true
+        },{
             name: "assets",
             displayName: "Asset",
             description: "Animation Asset",
@@ -103,7 +109,7 @@ pc.extend(pc.fw, function () {
     
     pc.extend(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['activate', 'loop', 'speed', 'assets'];
+            properties = ['activate', 'loop', 'speed', 'assets', 'enabled'];
             AnimationComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -114,6 +120,7 @@ pc.extend(pc.fw, function () {
             clone.animation.data.speed = entity.animation.speed;
             clone.animation.data.loop = entity.animation.loop;
             clone.animation.data.activate = entity.animation.activate;
+            clone.animation.data.enabled = entity.animation.enabled;
 
             clone.animation.animations = pc.extend({}, entity.animation.animations);
         },
@@ -131,7 +138,7 @@ pc.extend(pc.fw, function () {
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var componentData = components[id].data;
-                    if (componentData.playing) {
+                    if (componentData.enabled && componentData.playing) {
                         var skeleton = componentData.skeleton;
                         if (skeleton !== null && componentData.model !== null) {
                             if (componentData.blending) {

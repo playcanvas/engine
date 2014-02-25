@@ -15,6 +15,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.LightComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Enable or disable the light",
+            type: "boolean",
+            defaultValue: true
+        }, {
             name: "type",
             displayName: "Type",
             description: "The type of the light",
@@ -32,12 +38,6 @@ pc.extend(pc.fw, function () {
                 }]
             },
             defaultValue: "directional"
-        }, {
-            name: "enable",
-            displayName: "Enable",
-            description: "Enable or disable the light",
-            type: "boolean",
-            defaultValue: true
         }, {
             name: "color",
             displayName: "Color",
@@ -151,10 +151,15 @@ pc.extend(pc.fw, function () {
                 data.color = new pc.Color(data.color[0], data.color[1], data.color[2]);
             }
 
+            if (data.enable) {
+                console.warn("WARNING: enable: Property is deprecated. Set enabled property instead.");
+                data.enabled = data.enable;
+            }
+
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'model', 'enable', 'color', 'intensity', 'range', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
+            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -189,7 +194,7 @@ pc.extend(pc.fw, function () {
             // create new data block for clone
             var data = {
                 type: entity.light.type,
-                enable: entity.light.enable,
+                enabled: entity.light.enabled,
                 color: [entity.light.color.r, entity.light.color.g, entity.light.color.b],
                 intensity: entity.light.intensity,
                 range: entity.light.range,

@@ -12,6 +12,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.RigidBodyComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity this Component is attached to
      * @extends pc.fw.Component
+     * @property {Boolean} enabled Enables or disables the Component. 
      * @property {Number} mass The mass of the body. This is only relevant for {@link pc.fw.RIGIDBODY_TYPE_DYNAMIC} bodies, other types have infinite mass.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
      * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
@@ -38,6 +39,7 @@ pc.extend(pc.fw, function () {
             ammoOrigin = new Ammo.btVector3(0, 0, 0);
         }
 
+        this.on('set_enabled', this.onSetEnabled, this);
         this.on('set_mass', this.onSetMass, this);
         this.on('set_linearDamping', this.onSetLinearDamping, this);
         this.on('set_angularDamping', this.onSetAngularDamping, this);
@@ -177,17 +179,18 @@ pc.extend(pc.fw, function () {
                 ammoVec1.setValue(v.x, v.y, v.z);
                 body.setAngularFactor(ammoVec1);
 
+                body.entity = entity;
+
                 if (this.isKinematic()) {
                     body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_KINEMATIC_OBJECT);
                     body.setActivationState(pc.fw.RIGIDBODY_DISABLE_DEACTIVATION);
                 }
 
-                body.entity = entity;
-
-                this.system.addBody(body);
-
                 entity.rigidbody.body = body;
-                entity.rigidbody.body.activate();
+
+                if (this.enabled) {
+                    this.enableSimulation();
+                } 
             }
         },
 
@@ -213,6 +216,34 @@ pc.extend(pc.fw, function () {
         activate: function () {
             if (this.body) {
                 this.body.activate();
+            }
+        },
+
+        enableSimulation: function () {
+            if (this.entity.collision && this.entity.collision.enabled) {
+                var body = this.body;
+                if (body) {
+                    this.system.addBody(body);
+
+                    // set activation state so that the body goes back to normal simulation
+                    if (this.isKinematic()) {
+                        body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_DEACTIVATION);
+                    } else {
+                        body.forceActivationState(pc.fw.RIGIDBODY_ACTIVE_TAG);
+                    }
+
+                    body.activate();
+                }
+            }
+        },
+
+        disableSimulation: function () {
+            var body = this.body;
+            if (body) {
+                this.system.removeBody(body);
+                // set activation state to disable simulation to avoid body.isActive() to return 
+                // true even if it's not in the dynamics world
+                body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_SIMULATION);
             }
         },
 
@@ -516,10 +547,22 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (newValue) {
+                    this.enableSimulation();
+                } else {
+                    this.disableSimulation();
+                }
+            }
+        },
+
         onSetMass: function (name, oldValue, newValue) {
             var body = this.data.body;
             if (body) {
-                this.system.removeBody(body);
+                if (this.enabled) {
+                    this.disableSimulation();
+                }
 
                 var mass = newValue;
                 var localInertia = new Ammo.btVector3(0, 0, 0);
@@ -527,7 +570,9 @@ pc.extend(pc.fw, function () {
                 body.setMassProps(mass, localInertia);
                 body.updateInertiaTensor();
 
-                this.system.addBody(body);
+                if (this.enabled) {
+                    this.enableSimulation();
+                }
             }
         },
 

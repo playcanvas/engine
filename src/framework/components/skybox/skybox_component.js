@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
      * Set a texture Asset to be used for each face of the cube.
      * @param {pc.fw.ApplicationContext} context
      * @extends pc.fw.Component
+     * @property {Boolean} enabled Enables or disables rendering of the skybox
      * @property {String} negx Asset GUID of texture that is used for negative x face
      * @property {String} posx Asset GUID of texture that is used for positive x face
      * @property {String} negy Asset GUID of texture that is used for negative y face
@@ -46,8 +47,11 @@ pc.extend(pc.fw, function () {
                         });
                         this.data.model = _createSkybox(this.entity, this.system.context, urls);
 
-                        this.system.context.scene.addModel(this.data.model);
-                        this.entity.removeChild(this.data.model.graph);
+                        if (this.enabled) {
+                            this.system.context.scene.addModel(this.data.model);
+                            this.entity.addChild(this.data.model.graph);
+                        }
+
                     }
                 } else {
                     delete assets[index];
@@ -72,8 +76,26 @@ pc.extend(pc.fw, function () {
                     },
                 "negz": function (entity, name, oldValue, newValue) { 
                         _loadTextureAsset.call(this, name, newValue);
+                    },
+                "enabled": function (entity, name, oldValue, newValue) {
+                        if (oldValue !== newValue) {
+                            if (this.data.model) {
+                                if (newValue) {
+                                    if (!this.system.context.scene.containsModel(this.data.model)) {
+                                        this.system.context.scene.addModel(this.data.model);
+                                        this.entity.addChild(this.data.model.graph);
+                                    }
+                                } else {
+                                    if (this.system.context.scene.containsModel(this.data.model)) {
+                                        this.entity.removeChild(this.data.model.graph);
+                                        this.system.context.scene.removeModel(this.data.model);
+                                    }
+                                }
+                            }
+                            
+                        }
                     }
-            };
+                };
 
             if (functions[name]) {
                 functions[name].call(this, this.entity, name, oldValue, newValue);

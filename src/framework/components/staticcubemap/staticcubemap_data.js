@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function() {
     var StaticCubeMapComponentData = function () {
+        this.enabled = true;
         this.posx = null;
         this.negx = null;
         this.posy = null;

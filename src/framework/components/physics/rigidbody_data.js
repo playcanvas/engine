@@ -7,6 +7,7 @@ pc.extend(pc.fw, function () {
     * @extends pc.fw.ComponentData
     */
     var RigidBodyComponentData = function () {
+        this.enabled = true;
         this.mass = 1;
         this.linearDamping = 0;
         this.angularDamping = 0;

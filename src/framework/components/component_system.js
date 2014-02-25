@@ -81,7 +81,13 @@ pc.extend(pc.fw, function () {
             var componentData = new this.DataType();
 
             data = data || {};
-            
+
+            // if the entity is disabled then 
+            // the component should start disabled as well
+            if (!entity.enabled) {
+                data.enabled = false;
+            }
+
             this.dataStore[entity.getGuid()] = {
                 entity: entity,
                 data: componentData

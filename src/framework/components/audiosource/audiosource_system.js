@@ -15,6 +15,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.AudioSourceComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Disabled audiosource components do not play any sounds",
+            type: "boolean",
+            defaultValue: true
+        },{
             name: "assets",
             displayName: "Assets",
             description: "Audio assets",
@@ -115,15 +121,15 @@ pc.extend(pc.fw, function () {
     
     pc.extend(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['assets', 'volume', 'pitch', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor'];
+            properties = ['enabled', 'assets', 'volume', 'pitch', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         
-            component.paused = !data.activate;
+            component.paused = !(data.enabled && data.activate);
         },
 
         onInitialize: function(root) {
             if (root.audiosource) {
-                if (root.audiosource.activate) {
+                if (root.audiosource.enabled && root.audiosource.activate) {
                     root.audiosource.play(root.audiosource.currentSource);
                 }
             }
@@ -146,7 +152,7 @@ pc.extend(pc.fw, function () {
                     var componentData = components[id].data;
                     
                     // Update channel position if this is a 3d sound
-                    if (componentData.channel instanceof pc.audio.Channel3d) {
+                    if (componentData.enabled && componentData.channel instanceof pc.audio.Channel3d) {
                         var pos = entity.getPosition();
                         componentData.channel.setPosition(pos);
                     }

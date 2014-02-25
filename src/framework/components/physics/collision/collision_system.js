@@ -16,6 +16,12 @@ pc.extend(pc.fw, function () {
         this.DataType = pc.fw.CollisionComponentData;
 
         this.schema = [{
+            name: "enabled",
+            displayName: "Enabled",
+            description: "Enables or disables the collision",
+            type: "boolean",
+            defaultValue: true
+        },{
             name: "type",
             displayName: "Type",
             description: "The type of the collision volume",
@@ -157,7 +163,7 @@ pc.extend(pc.fw, function () {
             var impl = this._createImplementation(data.type);
             impl.beforeInitialize(component, data);
 
-            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset'];
+            properties = ['type', 'halfExtents', 'radius', 'axis', 'height', 'shape', 'model', 'asset', 'enabled'];
             CollisionComponentSystem._super.initializeComponentData.call(this.system, component, data, properties);
 
             impl.afterInitialize(component, data);
@@ -214,18 +220,21 @@ pc.extend(pc.fw, function () {
         },
 
         onUpdate: function (dt) {
-            var id, entity;
+            var id, entity, data;
             var components = this.store;
             
             for (id in components) {
                 entity = components[id].entity;
-                
-                if (!entity.rigidbody) {
-                    entity.trigger.syncEntityToBody();
+                data = components[id].data;
+
+                if (data.enabled) {
+                    if (!entity.rigidbody) {
+                        entity.trigger.syncEntityToBody();
+                    }                                    
                 }
-                
+
                 if (this.debugRender) {
-                    this.updateDebugShape(entity, components[id].data, this._getImplementation(entity));
+                    this.updateDebugShape(entity, data, this._getImplementation(entity));
                 }
             }
 
@@ -238,12 +247,21 @@ pc.extend(pc.fw, function () {
                 if (impl.hasDebugShape) {
                     if (data.model) {
                         if (!context.scene.containsModel(data.model)) {
-                            context.scene.addModel(data.model);
-                            context.root.addChild(data.model.graph);
+                            if (data.enabled) {
+                                context.scene.addModel(data.model);
+                                context.root.addChild(data.model.graph);
+                            }
+                        } else {
+                            if (!data.enabled) {
+                                context.root.removeChild(data.model.graph);
+                                context.scene.removeModel(data.model);
+                            }
                         }
                     }
 
-                    impl.updateDebugShape(entity, data);
+                    if (data.enabled) {
+                        impl.updateDebugShape(entity, data);
+                    }
                 } 
             }
         },
@@ -319,6 +337,7 @@ pc.extend(pc.fw, function () {
         */
         afterInitialize: function (component, data) {
             this.recreatePhysicalShapes(component);
+            component.data.initialized = true;
         },
 
         /**
@@ -411,6 +430,7 @@ pc.extend(pc.fw, function () {
             var src = this.system.dataStore[entity.getGuid()];
 
             var data = {
+                enabled: src.data.enabled,
                 type: src.data.type,
                 halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
                 radius: src.data.radius,

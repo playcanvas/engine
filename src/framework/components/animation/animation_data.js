@@ -5,6 +5,7 @@ pc.extend(pc.fw, function() {
         this.speed = 1.0;
         this.loop = true;
         this.activate = true;
+        this.enabled = true;
 
         // Non-serialized
         this.animations = null;
