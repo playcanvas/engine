@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.143.0
+--------
+* Call onEnable / onDisable methods on script instances when their script component is enabled / disbled
+
+--------
 v0.142.0
 --------
 * Added enabling / disabling of Entities and Components
