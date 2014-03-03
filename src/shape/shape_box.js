@@ -1,6 +1,10 @@
 pc.extend(pc.shape, function () {
     // Add to the enumeration of types
     pc.shape.Type.BOX = "Box";
+    var center = new pc.Vec3();
+    var p = new pc.Vec3();
+    var t = new pc.Mat4();
+    var scale = new pc.Mat4();
 
     /**
      * Orientated Box
@@ -21,24 +25,31 @@ pc.extend(pc.shape, function () {
      * @param {pc.Vec3} point Point to test
      */
     Box.prototype.containsPoint = function (point) {
-        var center = new pc.Vec3();
         this.transform.getTranslation(center);
         var extents = this.getHalfExtents();
-        var min = new pc.Vec3(-0.5,-0.5,-0.5);
-        var max = new pc.Vec3(0.5,0.5,0.5);
 
         // Add scale as it is missing from box.transform
-        var t = this.transform.clone();
-        var scale = new pc.Mat4().setScale(extents.x * 2, extents.y * 2, extents.z * 2);
+        t.copy(this.transform);
+
+        p.copy(extents).scale(2);
+        scale.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, p);
         t.mul(scale).invert();
 
         // transform point into local space
-        var p = new pc.Vec3();
         t.transformPoint(point, p);
 
-        if (p.x < min.x || p.x > max.x) return false;
-        if (p.y < min.y || p.y > max.y) return false;
-        if (p.z < min.z || p.z > max.z) return false;
+        var min = -0.5;
+        var max = 0.5;
+        
+        if (p.x < min || p.x > max) {
+            return false;
+        }
+        else if (p.y < min || p.y > max) {
+            return false;
+        } 
+        else if (p.z < min || p.z > max) { 
+            return false;
+        }
 
         return true;
     };
