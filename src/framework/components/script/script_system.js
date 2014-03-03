@@ -46,6 +46,8 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
+        this.components = [];
+
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
         pc.fw.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
@@ -74,6 +76,11 @@ pc.extend(pc.fw, function () {
             return this.addComponent(clone, data);
         },
 
+        addComponent: function (entity, data) {
+            ScriptComponentSystem._super.addComponent.call(this, entity, data);
+            this.components.push(entity.script.data);
+        },
+
         /**
         * @private
         * @name pc.fw.ScriptComponentSystem#onRemove
@@ -91,6 +98,11 @@ pc.extend(pc.fw, function () {
 
                     delete data.instances[name];
                 }
+            }
+
+            var index = this.components.indexOf(data);
+            if (index >= 0) {
+                this.components.splice(index, 1);
             }
         },
 
@@ -147,15 +159,17 @@ pc.extend(pc.fw, function () {
                 if (children[i] instanceof pc.fw.Entity) {
                     this.onPostInitialize(children[i]);    
                 }
-            } ;
+            };
         },
 
         _postInitializeScriptComponent: function (script) {
-            for (var name in script.data.instances) {
-                if (script.data.instances.hasOwnProperty(name)) {
-                    if (script.data.instances[name].instance.postInitialize) {
-                        script.data.instances[name].instance.postInitialize();
-                    }                        
+            var instances = script.data.instances;
+            for (var name in instances) {
+                if (instances.hasOwnProperty(name)) {
+                    var instance = instances[name].instance;
+                    if (instance.postInitialize) {
+                        instance.postInitialize();
+                    }                                        
                 }
             }   
 
@@ -163,24 +177,22 @@ pc.extend(pc.fw, function () {
         },
 
         _updateInstances: function (updateMethod, dt) {            
-            var components = this.store;
-
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var componentData = components[id].data;
-                    if (componentData.enabled) {
-                        var instances = componentData.instances;
-                        for (var key in instances) {
-                            if (instances.hasOwnProperty(key)) {
-                                var instance = instances[key].instance;
-                                if (instance[updateMethod]) {
-                                    instance[updateMethod](dt);
-                                }
+            var i;
+            var len = this.components.length;
+            for (i=0; i<len; i++) {
+                var componentData = this.components[i];
+                if (componentData.enabled) {
+                    var instances = componentData.instances;
+                    for (var key in instances) {
+                        if (instances.hasOwnProperty(key)) {
+                            var instance = instances[key].instance;
+                            if (instance[updateMethod]) {
+                                instance[updateMethod](dt);
                             }
                         }
                     }
                 }
-            }        
+            }
         },
 
         /**
