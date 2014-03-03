@@ -1,5 +1,9 @@
 pc.extend(pc.scene, function () {
 
+    var _tempTiling = new pc.Vec3();
+    var _tempRotation = new pc.Quat();
+    var _tempOffset = new pc.Vec3();
+
     /**
      * @name pc.scene.PhongMaterial
      * @class A Phong material is the main, general purpose material that is most often used for rendering. 
@@ -388,12 +392,26 @@ pc.extend(pc.scene, function () {
         },
 
         _updateMapTransform: function (transform, tiling, offset, rotation) {
-            tiling = tiling ? new pc.Vec3(tiling.x, tiling.y, 1) : pc.Vec3.ONE;
-            offset = offset ? new pc.Vec3(offset.x, offset.y, 0) : pc.Vec3.ZERO;
-            rotation = rotation ? new pc.Quat().setFromEulerAngles(rotation.x, rotation.y, rotation.z) : pc.Quat.IDENTITY;
+            if (tiling) {
+                _tempTiling.set(tiling.x, tiling.y, 1);
+            } else {
+                _tempTiling.set(1,1,1);
+            }
+
+            if (offset) {
+                _tempOffset.set(offset.x, offset.y, 1);
+            } else {
+                _tempOffset.set(0,0,0);
+            }
+
+            if (rotation) {
+                _tempRotation.setFromEulerAngles(rotation.x, rotation.y, rotation.z);
+            } else {
+                _tempRotation.copy(pc.Quat.IDENTITY);
+            }
 
             transform = transform || new pc.Mat4();
-            transform.setTRS(offset, rotation, tiling);
+            transform.setTRS(_tempOffset, _tempRotation, _tempTiling);
 
             // if the transform is the identity matrix
             // then just return null so that it is not included
