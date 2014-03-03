@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.143.2
+--------
+* [FIX] Identity texture transform now correctly generated.
+
+--------
 v0.143.1
 --------
 * Optimizations in the script system, obb shapes and materials
