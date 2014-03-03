@@ -66,7 +66,7 @@ pc.extend(pc.resources, function () {
             }.bind(this), {
                 cache: false,
                 error: function (status, xhr, e) {
-                    reject(pc.string("Error loading model: {0} [{1}]", url, status));
+                    reject(pc.string.format("Error loading model: {0} [{1}]", url, status));
                 }
             });
         });
