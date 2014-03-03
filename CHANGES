@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.143.1
+--------
+* Optimizations in the script system, obb shapes and materials
+
+--------
 v0.143.0
 --------
 * Call onEnable / onDisable methods on script instances when their script component is enabled / disbled
