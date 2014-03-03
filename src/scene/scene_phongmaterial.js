@@ -395,13 +395,13 @@ pc.extend(pc.scene, function () {
             if (tiling) {
                 _tempTiling.set(tiling.x, tiling.y, 1);
             } else {
-                _tempTiling.set(1,1,1);
+                _tempTiling.set(1, 1, 1);
             }
 
             if (offset) {
-                _tempOffset.set(offset.x, offset.y, 1);
+                _tempOffset.set(offset.x, offset.y, 0);
             } else {
-                _tempOffset.set(0,0,0);
+                _tempOffset.set(0, 0, 0);
             }
 
             if (rotation) {
