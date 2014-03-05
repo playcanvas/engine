@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.143.3
+--------
+* [FIX] Call e.preventDefault in 'touchmove' event to avoid issues in Chrome Android
+
+--------
 v0.143.2
 --------
 * [FIX] Identity texture transform now correctly generated.
