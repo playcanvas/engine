@@ -79,8 +79,6 @@ pc.script = (function () {
         * pc.script.attribute('message', 'string', "My message");
         * pc.script.attribute('enemyPosition', 'vector', [1,0,0]);
         * pc.script.attribute('spellType', 'enumeration', 0, {
-        *
-        * pc.script.create( function (context) {
         *     enumerations: [{
         *        name: "Fire",
         *        value: 0
@@ -89,7 +87,8 @@ pc.script = (function () {
         *        value: 1
         *     }]
         *  });
-        *
+        * 
+        * pc.script.create('scriptable', function (context) {
         *  var Scriptable = function (entity) {
         *      // store entity
         *      this.entity = entity;              
