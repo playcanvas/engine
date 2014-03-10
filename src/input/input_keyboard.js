@@ -82,8 +82,8 @@ pc.extend(pc.input, function(){
         this._keyUpHandler = this._handleKeyUp.bind(this);
         this._keyPressHandler = this._handleKeyPress.bind(this);
         
-        pc.extend(this, pc.events);
-        
+        pc.extendWithEvents(this);
+
         this._keymap = {};
         this._lastmap = {};
         

@@ -22,7 +22,7 @@ pc.audio = function () {
         this.volume = 1;
         this.suspended = false;
 
-        pc.extend(this, pc.events);
+        pc.extendWithEvents(this);
     };
     
     AudioManager.prototype = {

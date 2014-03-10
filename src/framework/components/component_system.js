@@ -9,7 +9,7 @@ pc.extend(pc.fw, function () {
         this.dataStore = {};
         this.schema = [];
 
-        pc.extend(this, pc.events);
+        pc.extendWithEvents(this);
     };
 
     // Class methods
@@ -174,7 +174,7 @@ pc.extend(pc.fw, function () {
     };
 
     // Add event support
-    pc.extend(ComponentSystem, pc.events);
+    pc.extendWithEvents(ComponentSystem);
 
     return {
         ComponentSystem: ComponentSystem
