@@ -34,8 +34,8 @@ pc.events = function () {
             target.off = ev.off;
             target.fire = ev.fire;
             target.hasEvent = ev.hasEvent;
-            target.bind = ev.bind;
-            target.unbind = ev.unbind;
+            target.bind = ev.on;
+            target.unbind = ev.off;
         },
 
         /**
