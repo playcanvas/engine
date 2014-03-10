@@ -11,7 +11,7 @@ pc.extend(pc.fw, function () {
         this.system = system;
         this.entity = entity;
 
-        pc.extendWithEvents(this);
+        pc.events.initialize(this);
 
         this.buildAccessors(this.system.schema);
 

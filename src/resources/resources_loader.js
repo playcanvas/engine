@@ -35,7 +35,7 @@
 
         this.cache = true; // set this to false to perform cache busting on resources
 
-        pc.extendWithEvents(this);
+        pc.events.initialize(this);
     };
 
     ResourceLoader.prototype = {

@@ -129,7 +129,7 @@ pc.extend(pc.input, function () {
         }
     
         // Add events
-        pc.extendWithEvents(this);
+        pc.events.initialize(this);
 
     };
 

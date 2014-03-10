@@ -120,21 +120,6 @@ var pc = {
             return target;
         },
 
-        /**
-        * Extend the specified object with pc.events methods.
-        * @param  {Object} target The object to add events to.
-        * @function
-        * @name pc.extendWithEvents
-        */
-        extendWithEvents: function (target) {
-            var ev = pc.events;
-            target.on = ev.on;
-            target.off = ev.off;
-            target.fire = ev.fire;
-            target.hasEvent = ev.hasEvent;
-            target.bind = ev.bind;
-            target.unbind = ev.unbind;
-        },
         
         /**
          * Return true if the Object is not undefined

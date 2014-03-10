@@ -302,7 +302,7 @@ pc.extend(pc.gfx, function () {
                 this.boneLimit = 110;
             }
 
-            pc.extendWithEvents(this);
+            pc.events.initialize(this);
 
             this.boundBuffer = null;
 
