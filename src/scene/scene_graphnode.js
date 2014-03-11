@@ -34,6 +34,8 @@ pc.extend(pc.scene, function () {
 
         this._parent = null;
         this._children = [];
+
+        this._enabled = true; 
     };
 
     Object.defineProperty(GraphNode.prototype, 'right', {
@@ -62,6 +64,92 @@ pc.extend(pc.scene, function () {
     });
 
     pc.extend(GraphNode.prototype, {
+        /**
+        * @private
+        * @function
+        * @name pc.scene.GraphNode#isEnabled
+        * Returns true if the GraphNode is enabled or false otherwise.
+        * A GraphNode can be enabled but considered disabled while the application
+        * is running if one if its parents is disabled.
+        * @return {Boolean} True if enabled false otherwise
+        */
+        isEnabled: function () {
+            return this._enabled;
+        },
+
+        /**
+        * @private
+        * @function
+        * @name pc.scene.GraphNode#isEnabledInHierarchy
+        * Returns true if the GraphNode is enabled including all of its parents. To check
+        * if a GraphNode is actually taking part in the hierarchy query this method instead
+        * of pc.scene.GraphNode#isEnabled.
+        * @return {Boolean} True if enabled false otherwise
+        */
+        isEnabledInHierarchy: function () {
+            var current = this;
+            while (current) {
+                if (!current._enabled) {
+                    return false;
+                }
+
+                current = current._parent;
+            }
+
+            return true; 
+        },
+
+        /**
+        * @private
+        * @function
+        * @name pc.scene.GraphNode#setEnabled
+        * Enable or disable a GraphNode. This will change the value returned 
+        * by pc.scene.GraphNode#isEnabled. If one of the GraphNode's parents is disabled
+        * there will be no other side effects. If all the parents are enabled then
+        * the new value will activate / deactivate all the enabled children of the GraphNode.
+        */
+        setEnabled: function (enabled) {
+            if (this._enabled !== enabled) {
+                this._enabled = enabled;
+
+                var areParentsEnabled = true;
+                var current = this._parent;
+                while (current) {
+                    if (!current._enabled) {
+                        areParentsEnabled = false;
+                        break;
+                    }
+
+                    current = current._parent;
+                }
+
+                if (areParentsEnabled) {
+                    this._notifyHierarchyStateChanged(this, enabled);
+                }
+
+            }
+        },
+
+        _notifyHierarchyStateChanged: function (node, enabled) {
+            node._onHierarchyStateChanged(enabled);
+
+            var c = node._children;
+            for (var i=0, len=c.length; i<len; i++) {
+                if (c[i]._enabled) {
+                    this._notifyHierarchyStateChanged(c[i], enabled);
+                }
+            }
+        },
+
+        /**
+        * @private
+        * @function
+        * Called when the enabled flag of the entity or one of its
+        * parents changes
+        */
+        _onHierarchyStateChanged: function (enabled) {
+            // Override in derived classes
+        },
 
         _cloneInternal: function (clone) {
             clone.name = this.name;
@@ -81,6 +169,8 @@ pc.extend(pc.scene, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone.dirtyWorld = this.dirtyWorld;
+
+            clone._enabled = this._enabled;
         },
 
         clone: function () {
@@ -1065,7 +1155,7 @@ pc.extend(pc.scene, function () {
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
             }
-        }()
+        }(),
     });
 
     return {

@@ -84,7 +84,7 @@ pc.extend(pc.fw, function () {
 
             // if the entity is disabled then 
             // the component should start disabled as well
-            if (!entity.enabled) {
+            if (!entity.isEnabledInHierarchy()) {
                 data.enabled = false;
             }
 

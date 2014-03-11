@@ -6,6 +6,8 @@ pc.extend(pc.fw, function () {
     var POST_UPDATE = "postUpdate";
     var FIXED_UPDATE = "fixedUpdate";
     var TOOLS_UPDATE = "toolsUpdate";
+    var ON_ENABLE = 'onEnable';
+    var ON_DISABLE = 'onDisable';
 
     /**
      * @name pc.fw.ScriptComponentSystem
@@ -129,18 +131,6 @@ pc.extend(pc.fw, function () {
             } 
         },
 
-        _initializeScriptComponent: function (script) {
-            for (var name in script.data.instances) {
-                if (script.data.instances.hasOwnProperty(name)) {
-                    if (script.data.instances[name].instance.initialize) {
-                        script.data.instances[name].instance.initialize();
-                    }                        
-                }
-            }                
-
-            script.data.initialized = true;
-        },
-
         /**
          * @function
          * @private
@@ -162,18 +152,35 @@ pc.extend(pc.fw, function () {
             };
         },
 
-        _postInitializeScriptComponent: function (script) {
+        _callInstancesMethod: function (script, method) {
             var instances = script.data.instances;
             for (var name in instances) {
                 if (instances.hasOwnProperty(name)) {
                     var instance = instances[name].instance;
-                    if (instance.postInitialize) {
-                        instance.postInitialize();
+                    if (instance[method]) {
+                        instance[method].call(instance);
                     }                                        
                 }
-            }   
+            }  
+        },
 
-            script.data.postInitialized = true;
+        _initializeScriptComponent: function (script) {
+            this._callInstancesMethod(script, INITIALIZE);
+            script.data.initialized = true;
+            this._enableScriptComponent(script);
+        },
+
+        _enableScriptComponent: function (script) {
+            this._callInstancesMethod(script, ON_ENABLE);
+        },
+
+        _disableScriptComponent: function (script) {
+            this._callInstancesMethod(script, ON_DISABLE);
+        },
+
+        _postInitializeScriptComponent: function (script) {
+            this._callInstancesMethod(script, POST_INITIALIZE);
+            script.data.initialized = true;
         },
 
         _updateInstances: function (updateMethod, dt) {            

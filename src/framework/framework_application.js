@@ -592,7 +592,7 @@ pc.extend(pc.fw, function () {
                     break;
                 case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ENABLED:
                     entity = this.context.root.findOne("getGuid", msg.content.id);
-                    entity.enabled = msg.content.enabled;
+                    entity.setEnabled(msg.content.enabled);
                     break;
                 case pc.fw.LiveLinkMessageType.REPARENT_ENTITY:
                     this._linkReparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
