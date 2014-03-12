@@ -82,12 +82,6 @@ pc.extend(pc.fw, function () {
 
             data = data || {};
 
-            // if the entity is disabled then 
-            // the component should start disabled as well
-            if (!entity.isEnabledInHierarchy()) {
-                data.enabled = false;
-            }
-
             this.dataStore[entity.getGuid()] = {
                 entity: entity,
                 data: componentData
@@ -99,7 +93,7 @@ pc.extend(pc.fw, function () {
             this.initializeComponentData(component, data, []);
 
             this.fire('add', entity, component);
-
+            
             return component;
         },
 

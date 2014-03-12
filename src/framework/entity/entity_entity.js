@@ -77,12 +77,21 @@ pc.extend(pc.fw, function () {
     };
 
     Entity.prototype._onHierarchyStateChanged = function (enabled) {
-        pc.fw.Entity._super._onHierarchyStateChanged.call(enabled);
+        pc.fw.Entity._super._onHierarchyStateChanged.call(this, enabled);
 
         // enable / disable all the components
-        for (type in this.c) {
-            if (this.c.hasOwnProperty(type)) {
-                this.c[type].enabled = enabled;
+        var component;
+        var components = this.c;
+        for (type in components) {
+            if (components.hasOwnProperty(type)) {
+                component = components[type];
+                if (component.enabled) {
+                    if (enabled) {
+                        component.onEnable();
+                    } else {
+                        component.onDisable();
+                    }
+                }
             }
         }
     };

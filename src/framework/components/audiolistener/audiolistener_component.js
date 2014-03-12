@@ -10,31 +10,31 @@ pc.extend(pc.fw, function () {
     * @property {Boolean} enabled If false the component will not affect any audio sources
     */
     var AudioListenerComponent = function (system, entity) {
-        this.on('set_enabled', this.onSetEnabled, this);
     };
 
     AudioListenerComponent = pc.inherits(AudioListenerComponent, pc.fw.Component);
 
     pc.extend(AudioListenerComponent.prototype, {
         setCurrentListener: function () {
-            if (this.data.enabled && this.entity.audiolistener) {
+            if (this.enabled && this.entity.audiolistener && this.entity.isEnabledInHierarchy()) {
                 this.system.current = this.entity;
                 var position = this.system.current.getPosition();
                 this.system.manager.listener.setPosition(position);
             }
         },
 
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (newValue) {
-                    this.setCurrentListener();
-                } else {
-                    if (this.system.current === this.entity) {
-                        this.system.current = null;
-                    }
-                }
+        onEnable: function () {
+            AudioListenerComponent._super.onEnable.call(this);
+            this.setCurrentListener();
+        },
+
+        onDisable: function () {
+            AudioListenerComponent._super.onDisable.call(this);
+            if (this.system.current === this.entity) {
+                this.system.current = null;
             }
         }
+
     });
 
     return {

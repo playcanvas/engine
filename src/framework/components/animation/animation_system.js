@@ -137,8 +137,9 @@ pc.extend(pc.fw, function () {
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
-                    var componentData = components[id].data;
-                    if (componentData.enabled && componentData.playing) {
+                    var component = components[id];
+                    var componentData = component.data;
+                    if (componentData.enabled && componentData.playing && component.entity.isEnabledInHierarchy()) {
                         var skeleton = componentData.skeleton;
                         if (skeleton !== null && componentData.model !== null) {
                             if (componentData.blending) {

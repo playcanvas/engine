@@ -227,7 +227,7 @@ pc.extend(pc.fw, function () {
                 entity = components[id].entity;
                 data = components[id].data;
 
-                if (data.enabled) {
+                if (data.enabled && entity.isEnabledInHierarchy()) {
                     if (!entity.rigidbody) {
                         entity.trigger.syncEntityToBody();
                     }                                    
@@ -247,19 +247,19 @@ pc.extend(pc.fw, function () {
                 if (impl.hasDebugShape) {
                     if (data.model) {
                         if (!context.scene.containsModel(data.model)) {
-                            if (data.enabled) {
+                            if (entity.isEnabledInHierarchy() && data.enabled) {
                                 context.scene.addModel(data.model);
                                 context.root.addChild(data.model.graph);
                             }
                         } else {
-                            if (!data.enabled) {
+                            if (!data.enabled || !entity.isEnabledInHierarchy()) {
                                 context.root.removeChild(data.model.graph);
                                 context.scene.removeModel(data.model);
                             }
                         }
                     }
 
-                    if (data.enabled) {
+                    if (data.enabled && entity.isEnabledInHierarchy()) {
                         impl.updateDebugShape(entity, data);
                     }
                 } 

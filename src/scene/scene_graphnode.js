@@ -36,6 +36,7 @@ pc.extend(pc.scene, function () {
         this._children = [];
 
         this._enabled = true; 
+        this._enabledInHierarchy = null;
     };
 
     Object.defineProperty(GraphNode.prototype, 'right', {
@@ -87,16 +88,21 @@ pc.extend(pc.scene, function () {
         * @return {Boolean} True if enabled false otherwise
         */
         isEnabledInHierarchy: function () {
-            var current = this;
-            while (current) {
-                if (!current._enabled) {
-                    return false;
+            if (this._enabledInHierarchy === null) {
+                var current = this;
+                while (current) {
+                    if (!current._enabled) {
+                        this._enabledInHierarchy = false;
+                        break;
+                    }
+
+                    current = current._parent;
                 }
 
-                current = current._parent;
+                this._enabledInHierarchy = true;
             }
 
-            return true; 
+            return this._enabled && this._enabledInHierarchy;
         },
 
         /**
@@ -112,18 +118,7 @@ pc.extend(pc.scene, function () {
             if (this._enabled !== enabled) {
                 this._enabled = enabled;
 
-                var areParentsEnabled = true;
-                var current = this._parent;
-                while (current) {
-                    if (!current._enabled) {
-                        areParentsEnabled = false;
-                        break;
-                    }
-
-                    current = current._parent;
-                }
-
-                if (areParentsEnabled) {
+                if (!this._parent || this._parent.isEnabledInHierarchy()) {
                     this._notifyHierarchyStateChanged(this, enabled);
                 }
 
@@ -149,6 +144,7 @@ pc.extend(pc.scene, function () {
         */
         _onHierarchyStateChanged: function (enabled) {
             // Override in derived classes
+            this._enabledInHierarchy = enabled;
         },
 
         _cloneInternal: function (clone) {
@@ -903,14 +899,25 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#syncHierarchy
          * @description Updates the world transformation matrices at this node and all of its descendants.
          */
-        syncHierarchy: function () {
-            this.sync();
+        syncHierarchy: (function () {
+            // cache this._children and the syncHierarchy method itself
+            // for optimization purposes
+            var F = function () {
+                if (!this._enabled) {
+                    return;
+                }
 
-            // Sync subhierarchy
-            for (var i = 0, len = this._children.length; i < len; i++) {
-                this._children[i].syncHierarchy();
-            }
-        },
+                // sync this object
+                this.sync();
+                
+                // sync the children
+                var c = this._children;
+                for(var i = 0, len = c.length;i < len;i++) {
+                    F.call(c[i]);
+                }
+            };
+           return F;
+       })(),
 
         /**
          * @function

@@ -64,7 +64,7 @@ pc.extend(pc.fw, function () {
                 body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_NORESPONSE_OBJECT);
                 body.entity = entity;
 
-                if (this.component.enabled) {
+                if (this.component.enabled && entity.isEnabledInHierarchy()) {
                     this.enable();
                 }
             } 
