@@ -43,7 +43,7 @@ pc.extend(pc.asset, function () {
         this.data = arguments[3] || {};
         this.prefix = arguments[4] || "";
 
-        pc.events.initialize(this);
+        pc.events.attach(this);
     };
         
 

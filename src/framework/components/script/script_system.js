@@ -354,7 +354,7 @@ pc.extend(pc.fw, function () {
                     for (instanceName in entity.script.instances) {
                         instance = entity.script.instances[instanceName];
 
-                        pc.events.initialize(instance.instance);
+                        pc.events.attach(instance.instance);
 
                         if (entity.script.scripts) {
                             this._createAccessors(entity, instance);

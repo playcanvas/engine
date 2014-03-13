@@ -93,7 +93,7 @@ pc.extend(pc.input, function () {
         
         this.attach(element);
         
-        pc.events.initialize(this);
+        pc.events.attach(this);
     };
 
     TouchDevice.prototype = {
