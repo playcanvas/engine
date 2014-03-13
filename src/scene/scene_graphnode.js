@@ -139,6 +139,7 @@ pc.extend(pc.scene, function () {
             clone.dirtyWorld = this.dirtyWorld;
 
             clone._enabled = this._enabled;
+            clone._enabledInHierarchy = this._enabledInHierarchy;
         },
 
         clone: function () {
