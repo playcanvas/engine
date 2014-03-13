@@ -230,22 +230,6 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                var visible = newValue;
-
-                if (this.data.model) {
-                    var inScene = this.system.context.scene.containsModel(this.data.model);
-                    
-                    if (visible && !inScene) {
-                        this.system.context.scene.addModel(this.data.model);
-                    } else if (!visible && inScene) {
-                        this.system.context.scene.removeModel(this.data.model);
-                    }
-                }
-            }
-        },
-
         onEnable: function () {
             ModelComponent._super.onEnable.call(this);
 
