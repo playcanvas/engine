@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.144.1
+--------
+* [FIX] Renamed pc.events.initalize to pc.events.attach to prevent it breaking compatibility when adding events to script instances
+
+--------
 v0.144.0
 --------
 * Improved entity enabling / disabling mechanism to include children
