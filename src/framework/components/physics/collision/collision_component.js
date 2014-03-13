@@ -105,7 +105,6 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that exited this collision volume.
     */
     var CollisionComponent = function CollisionComponent (system, entity) {
-        this.on('set_enabled', this.onSetEnabled, this);
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
         this.on('set_radius', this.onSetRadius, this);
@@ -119,26 +118,6 @@ pc.extend(pc.fw, function () {
     CollisionComponent = pc.inherits(CollisionComponent, pc.fw.Component);
     
     pc.extend(CollisionComponent.prototype, {
-
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (this.entity.trigger) {
-                    if (newValue) {
-                        this.entity.trigger.enable();
-                    } else {
-                        this.entity.trigger.disable();
-                    }
-                } else if (this.entity.rigidbody) {
-                    if (newValue) {
-                        if (this.entity.rigidbody.enabled) {
-                            this.entity.rigidbody.enableSimulation();
-                        }
-                    } else {
-                        this.entity.rigidbody.disableSimulation();
-                    }
-                }
-            }
-        },
 
         onSetType: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
@@ -175,12 +154,34 @@ pc.extend(pc.fw, function () {
                 this.system.recreatePhysicalShapes(this);
             }
         },
- 
+
+        onEnable: function () {
+            CollisionComponent._super.onEnable.call(this);
+
+            if (this.entity.trigger) {
+                this.entity.trigger.enable();
+            } else if (this.entity.rigidbody) {
+                if (this.entity.rigidbody.enabled) {
+                    this.entity.rigidbody.enableSimulation();
+                }
+            }
+        },
+
+        onDisable: function () {
+            CollisionComponent._super.onDisable.call(this);
+
+            if (this.entity.trigger) {
+                this.entity.trigger.disable();
+            } else if (this.entity.rigidbody) {
+                this.entity.rigidbody.disableSimulation();
+            }
+        },
+
         /**
          * Handle an update over livelink from the tools updating the Entities transform
          */
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            if (this.enabled) {
+            if (this.enabled && this.entity.enabled) {
                 this.system.onTransformChanged(this, position, rotation, scale);
             }
         },

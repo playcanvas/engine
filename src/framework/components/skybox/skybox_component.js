@@ -47,7 +47,7 @@ pc.extend(pc.fw, function () {
                         });
                         this.data.model = _createSkybox(this.entity, this.system.context, urls);
 
-                        if (this.enabled) {
+                        if (this.enabled && this.entity.enabled) {
                             this.system.context.scene.addModel(this.data.model);
                             this.entity.addChild(this.data.model.graph);
                         }
@@ -76,31 +76,33 @@ pc.extend(pc.fw, function () {
                     },
                 "negz": function (entity, name, oldValue, newValue) { 
                         _loadTextureAsset.call(this, name, newValue);
-                    },
-                "enabled": function (entity, name, oldValue, newValue) {
-                        if (oldValue !== newValue) {
-                            if (this.data.model) {
-                                if (newValue) {
-                                    if (!this.system.context.scene.containsModel(this.data.model)) {
-                                        this.system.context.scene.addModel(this.data.model);
-                                        this.entity.addChild(this.data.model.graph);
-                                    }
-                                } else {
-                                    if (this.system.context.scene.containsModel(this.data.model)) {
-                                        this.entity.removeChild(this.data.model.graph);
-                                        this.system.context.scene.removeModel(this.data.model);
-                                    }
-                                }
-                            }
-                            
-                        }
                     }
                 };
 
             if (functions[name]) {
                 functions[name].call(this, this.entity, name, oldValue, newValue);
             }
-        }    
+        },
+
+        onEnable: function () {
+           SkyboxComponent._super.onEnable.call(this);
+            if (this.data.model) {
+                if (!this.system.context.scene.containsModel(this.data.model)) {
+                    this.system.context.scene.addModel(this.data.model);
+                    this.entity.addChild(this.data.model.graph);
+                }
+            }
+        },
+
+        onDisable: function () {
+            SkyboxComponent._super.onDisable.call(this);
+            if (this.data.model) {
+                if (this.system.context.scene.containsModel(this.data.model)) {
+                    this.entity.removeChild(this.data.model.graph);
+                    this.system.context.scene.removeModel(this.data.model);
+                }
+            }
+        },     
     });
 
     // Private    

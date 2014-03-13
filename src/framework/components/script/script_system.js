@@ -6,6 +6,8 @@ pc.extend(pc.fw, function () {
     var POST_UPDATE = "postUpdate";
     var FIXED_UPDATE = "fixedUpdate";
     var TOOLS_UPDATE = "toolsUpdate";
+    var ON_ENABLE = 'onEnable';
+    var ON_DISABLE = 'onDisable';
 
     /**
      * @name pc.fw.ScriptComponentSystem
@@ -140,29 +142,19 @@ pc.extend(pc.fw, function () {
         onInitialize: function (root) {
             this._registerInstances(root);
                 
-            if (root.script && root.script.enabled) {
-                this._initializeScriptComponent(root.script);
+            if (root.enabled) {
+                if (root.script && root.script.enabled) {
+                    this._initializeScriptComponent(root.script);
+                }
+                
+                var children = root.getChildren();
+                var i, len = children.length;
+                for (i = 0; i < len; i++) {
+                    if (children[i] instanceof pc.fw.Entity) {
+                        this.onInitialize(children[i]);    
+                    }
+                } 
             }
-            
-            var children = root.getChildren();
-            var i, len = children.length;
-            for (i = 0; i < len; i++) {
-                if (children[i] instanceof pc.fw.Entity) {
-                    this.onInitialize(children[i]);    
-                }
-            } 
-        },
-
-        _initializeScriptComponent: function (script) {
-            for (var name in script.data.instances) {
-                if (script.data.instances.hasOwnProperty(name)) {
-                    if (script.data.instances[name].instance.initialize) {
-                        script.data.instances[name].instance.initialize();
-                    }                        
-                }
-            }                
-
-            script.data.initialized = true;
         },
 
         /**
@@ -173,30 +165,54 @@ pc.extend(pc.fw, function () {
          * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
          */
         onPostInitialize: function (root) {
-            if (root.script && root.script.enabled) {
-                this._postInitializeScriptComponent(root.script);
-            }
-            
-            var children = root.getChildren();
-            var i, len = children.length;
-            for (i = 0; i < len; i++) {
-                if (children[i] instanceof pc.fw.Entity) {
-                    this.onPostInitialize(children[i]);    
+            if (root.enabled) {
+                if (root.script && root.script.enabled) {
+                    this._postInitializeScriptComponent(root.script);
                 }
-            };
+                
+                var children = root.getChildren();
+                var i, len = children.length;
+                for (i = 0; i < len; i++) {
+                    if (children[i] instanceof pc.fw.Entity) {
+                        this.onPostInitialize(children[i]);    
+                    }
+                };
+            }
         },
 
-        _postInitializeScriptComponent: function (script) {
+        _callInstancesMethod: function (script, method) {
             var instances = script.data.instances;
             for (var name in instances) {
                 if (instances.hasOwnProperty(name)) {
                     var instance = instances[name].instance;
-                    if (instance.postInitialize) {
-                        instance.postInitialize();
+                    if (instance[method]) {
+                        instance[method].call(instance);
                     }                                        
                 }
-            }   
+            }  
+        },
 
+        _initializeScriptComponent: function (script) {
+            this._callInstancesMethod(script, INITIALIZE);
+            script.data.initialized = true;
+
+            // check again if the script and the entity are enabled
+            // in case they got disabled during initialize 
+            if (script.enabled && script.entity.enabled) {
+                this._enableScriptComponent(script);
+            }
+        },
+
+        _enableScriptComponent: function (script) {
+            this._callInstancesMethod(script, ON_ENABLE);
+        },
+
+        _disableScriptComponent: function (script) {
+            this._callInstancesMethod(script, ON_DISABLE);
+        },
+
+        _postInitializeScriptComponent: function (script) {
+            this._callInstancesMethod(script, POST_INITIALIZE);
             script.data.postInitialized = true;
         },
 
@@ -204,7 +220,7 @@ pc.extend(pc.fw, function () {
             var item;
             for (var i=0, len=updateList.length; i<len; i++) {
                 item = updateList[i];
-                if (item.entity.script.enabled) {
+                if (item.entity.script.enabled && item.entity.enabled) {
                     item[method].call(item, dt);
                 }
             }

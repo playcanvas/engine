@@ -39,7 +39,6 @@ pc.extend(pc.fw, function () {
             ammoOrigin = new Ammo.btVector3(0, 0, 0);
         }
 
-        this.on('set_enabled', this.onSetEnabled, this);
         this.on('set_mass', this.onSetMass, this);
         this.on('set_linearDamping', this.onSetLinearDamping, this);
         this.on('set_angularDamping', this.onSetAngularDamping, this);
@@ -188,7 +187,7 @@ pc.extend(pc.fw, function () {
 
                 entity.rigidbody.body = body;
 
-                if (this.enabled) {
+                if (this.enabled && this.entity.enabled) {
                     this.enableSimulation();
                 } 
             }
@@ -547,20 +546,22 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (newValue) {
-                    this.enableSimulation();
-                } else {
-                    this.disableSimulation();
-                }
-            }
+
+        onEnable: function () {
+            RigidBodyComponent._super.onEnable.call(this);
+            this.enableSimulation();
+        },
+
+        onDisable: function () {
+            RigidBodyComponent._super.onDisable.call(this);
+            this.disableSimulation();
         },
 
         onSetMass: function (name, oldValue, newValue) {
             var body = this.data.body;
             if (body) {
-                if (this.enabled) {
+                var isEnabled = this.enabled && this.entity.enabled;
+                if (isEnabled) {
                     this.disableSimulation();
                 }
 
@@ -570,7 +571,7 @@ pc.extend(pc.fw, function () {
                 body.setMassProps(mass, localInertia);
                 body.updateInertiaTensor();
 
-                if (this.enabled) {
+                if (isEnabled) {
                     this.enableSimulation();
                 }
             }

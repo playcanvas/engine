@@ -31,7 +31,6 @@ pc.extend(pc.fw, function () {
     var LightComponent = function LightComponent(system, entity) {
         this.on("set_type", this.onSetType, this);
         this.on("set_color", this.onSetColor, this);
-        this.on("set_enabled", this.onSetEnabled, this);
         this.on("set_intensity", this.onSetIntensity, this);
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_shadowResolution", this.onSetShadowResolution, this);
@@ -67,12 +66,15 @@ pc.extend(pc.fw, function () {
         refreshProperties: function() {
             this.onSetCastShadows("castShadows", this.castShadows, this.castShadows);
             this.onSetColor("color", this.color, this.color);
-            this.onSetEnabled("enabled", this.enabled, this.enabled);
             this.onSetIntensity("intensity", this.intensity, this.intensity);
             this.onSetShadowResolution("shadowResolution", this.shadowResolution, this.shadowResolution);
             this.onSetRange("range", this.range, this.range);
             this.onSetInnerConeAngle("innerConeAngle", this.innerConeAngle, this.innerConeAngle);
             this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
+
+            if (this.enabled && this.entity.enabled) {
+                this.onEnable();
+            }
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
@@ -85,11 +87,6 @@ pc.extend(pc.fw, function () {
         onSetColor: function (name, oldValue, newValue) {
             var light = this.data.model.lights[0];
             light.setColor(newValue);
-        },
-
-        onSetEnabled: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setEnabled(newValue);
         },
 
         onSetIntensity: function (name, oldValue, newValue) {
@@ -123,7 +120,19 @@ pc.extend(pc.fw, function () {
                 var light = this.data.model.lights[0];
                 light.setOuterConeAngle(newValue);
             }
-        }
+        },
+
+        onEnable: function () {
+            LightComponent._super.onEnable.call(this);
+            var light = this.data.model.lights[0];
+            light.setEnabled(true);
+        },
+
+        onDisable: function () {
+            LightComponent._super.onDisable.call(this);
+            var light = this.data.model.lights[0];
+            light.setEnabled(false);
+        } 
     });
 
     return {

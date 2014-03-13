@@ -34,6 +34,9 @@ pc.extend(pc.scene, function () {
 
         this._parent = null;
         this._children = [];
+
+        this._enabled = true; 
+        this._enabledInHierarchy = true;
     };
 
     Object.defineProperty(GraphNode.prototype, 'right', {
@@ -61,7 +64,60 @@ pc.extend(pc.scene, function () {
         }
     });
 
+
+    Object.defineProperty(GraphNode.prototype, 'enabled', {
+        /**
+        * @private
+        * Returns true if the GraphNode and all its parents are enabled.
+        * @return {Boolean} True if enabled false otherwise
+        */
+        get: function () {
+            // make sure to check this._enabled too because if that 
+            // was false when a parent was updated the _enabledInHierarchy
+            // flag may not have been updated for optimization purposes
+            return this._enabled && this._enabledInHierarchy;
+        },
+
+        /**
+        * @private
+        * Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
+        * there will be no other side effects. If all the parents are enabled then
+        * the new value will activate / deactivate all the enabled children of the GraphNode.
+        */
+        set: function (enabled) {
+            if (this._enabled !== enabled) {
+                this._enabled = enabled;
+
+                if (!this._parent || this._parent.enabled) {
+                    this._notifyHierarchyStateChanged(this, enabled);
+                }
+
+            }
+        }
+    });
+
     pc.extend(GraphNode.prototype, {
+        _notifyHierarchyStateChanged: function (node, enabled) {
+            node._onHierarchyStateChanged(enabled);
+
+            var c = node._children;
+            for (var i=0, len=c.length; i<len; i++) {
+                if (c[i]._enabled) {
+                    this._notifyHierarchyStateChanged(c[i], enabled);
+                }
+            }
+        },
+
+        /**
+        * @private
+        * @function
+        * Called when the enabled flag of the entity or one of its
+        * parents changes
+        */
+        _onHierarchyStateChanged: function (enabled) {
+            // Override in derived classes
+            this._enabledInHierarchy = enabled;
+        },
 
         _cloneInternal: function (clone) {
             clone.name = this.name;
@@ -81,6 +137,9 @@ pc.extend(pc.scene, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone.dirtyWorld = this.dirtyWorld;
+
+            clone._enabled = this._enabled;
+            clone._enabledInHierarchy = this._enabledInHierarchy;
         },
 
         clone: function () {
@@ -688,6 +747,7 @@ pc.extend(pc.scene, function () {
 
             this._children.push(node);
             node._parent = this;
+            node._enabledInHierarchy = (node._enabled && this.enabled);
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node.dirtyWorld = true;
@@ -817,9 +877,13 @@ pc.extend(pc.scene, function () {
             // cache this._children and the syncHierarchy method itself
             // for optimization purposes
             var F = function () {
+                if (!this._enabled) {
+                    return;
+                }
+
                 // sync this object
                 this.sync();
-
+                
                 // sync the children
                 var c = this._children;
                 for(var i = 0, len = c.length;i < len;i++) {
@@ -1072,7 +1136,7 @@ pc.extend(pc.scene, function () {
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
             }
-        }()
+        }(),
     });
 
     return {
