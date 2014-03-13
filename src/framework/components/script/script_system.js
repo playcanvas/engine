@@ -142,17 +142,19 @@ pc.extend(pc.fw, function () {
         onInitialize: function (root) {
             this._registerInstances(root);
                 
-            if (root.script && root.script.enabled && root.enabled) {
-                this._initializeScriptComponent(root.script);
-            }
-            
-            var children = root.getChildren();
-            var i, len = children.length;
-            for (i = 0; i < len; i++) {
-                if (children[i] instanceof pc.fw.Entity) {
-                    this.onInitialize(children[i]);    
+            if (root.enabled) {
+                if (root.script && root.script.enabled) {
+                    this._initializeScriptComponent(root.script);
                 }
-            } 
+                
+                var children = root.getChildren();
+                var i, len = children.length;
+                for (i = 0; i < len; i++) {
+                    if (children[i] instanceof pc.fw.Entity) {
+                        this.onInitialize(children[i]);    
+                    }
+                } 
+            }
         },
 
         /**
@@ -163,17 +165,19 @@ pc.extend(pc.fw, function () {
          * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
          */
         onPostInitialize: function (root) {
-            if (root.script && root.script.enabled && root.enabled) {
-                this._postInitializeScriptComponent(root.script);
-            }
-            
-            var children = root.getChildren();
-            var i, len = children.length;
-            for (i = 0; i < len; i++) {
-                if (children[i] instanceof pc.fw.Entity) {
-                    this.onPostInitialize(children[i]);    
+            if (root.enabled) {
+                if (root.script && root.script.enabled) {
+                    this._postInitializeScriptComponent(root.script);
                 }
-            };
+                
+                var children = root.getChildren();
+                var i, len = children.length;
+                for (i = 0; i < len; i++) {
+                    if (children[i] instanceof pc.fw.Entity) {
+                        this.onPostInitialize(children[i]);    
+                    }
+                };
+            }
         },
 
         _callInstancesMethod: function (script, method) {
@@ -191,7 +195,12 @@ pc.extend(pc.fw, function () {
         _initializeScriptComponent: function (script) {
             this._callInstancesMethod(script, INITIALIZE);
             script.data.initialized = true;
-            this._enableScriptComponent(script);
+
+            // check again if the script and the entity are enabled
+            // in case they got disabled during initialize 
+            if (script.enabled && script.entity.enabled) {
+                this._enableScriptComponent(script);
+            }
         },
 
         _enableScriptComponent: function (script) {
@@ -204,7 +213,7 @@ pc.extend(pc.fw, function () {
 
         _postInitializeScriptComponent: function (script) {
             this._callInstancesMethod(script, POST_INITIALIZE);
-            script.data.initialized = true;
+            script.data.postInitialized = true;
         },
 
         _updateInstances: function (method, updateList, dt) {            
