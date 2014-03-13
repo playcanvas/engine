@@ -36,7 +36,7 @@ pc.extend(pc.scene, function () {
         this._children = [];
 
         this._enabled = true; 
-        this._enabledInHierarchy = null;
+        this._enabledInHierarchy = true;
     };
 
     Object.defineProperty(GraphNode.prototype, 'right', {
@@ -72,20 +72,9 @@ pc.extend(pc.scene, function () {
         * @return {Boolean} True if enabled false otherwise
         */
         get: function () {
-            if (this._enabledInHierarchy === null) {
-                var current = this;
-                while (current) {
-                    if (!current._enabled) {
-                        this._enabledInHierarchy = false;
-                        break;
-                    }
-
-                    current = current._parent;
-                }
-
-                this._enabledInHierarchy = true;
-            }
-
+            // make sure to check this._enabled too because if that 
+            // was false when a parent was updated the _enabledInHierarchy
+            // flag may not have been updated for optimization purposes
             return this._enabled && this._enabledInHierarchy;
         },
 
@@ -757,6 +746,7 @@ pc.extend(pc.scene, function () {
 
             this._children.push(node);
             node._parent = this;
+            node._enabledInHierarchy = (node._enabled && this.enabled);
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node.dirtyWorld = true;
