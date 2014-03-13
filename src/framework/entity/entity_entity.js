@@ -51,7 +51,7 @@ pc.extend(pc.fw, function () {
         this.c = {}; // Component storage
         this._enabled = true; 
 
-        pc.extend(this, pc.events);
+        pc.events.initialize(this);
     };
     Entity = pc.inherits(Entity, pc.scene.GraphNode);
     

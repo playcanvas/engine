@@ -813,14 +813,21 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#syncHierarchy
          * @description Updates the world transformation matrices at this node and all of its descendants.
          */
-        syncHierarchy: function () {
-            this.sync();
+        syncHierarchy: (function () {
+            // cache this._children and the syncHierarchy method itself
+            // for optimization purposes
+            var F = function () {
+                // sync this object
+                this.sync();
 
-            // Sync subhierarchy
-            for (var i = 0, len = this._children.length; i < len; i++) {
-                this._children[i].syncHierarchy();
-            }
-        },
+                // sync the children
+                var c = this._children;
+                for(var i = 0, len = c.length;i < len;i++) {
+                    F.call(c[i]);
+                }
+            };
+           return F;
+       })(),
 
         /**
          * @function

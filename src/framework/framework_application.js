@@ -26,7 +26,7 @@ pc.extend(pc.fw, function () {
         this._inTools = false;
 
         // Add event support
-        pc.extend(this, pc.events);
+        pc.events.initialize(this);
 
         this.content = options.content;
         this.canvas = canvas;

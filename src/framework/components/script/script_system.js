@@ -46,7 +46,11 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.components = [];
+        // arrays to cache script instances for fast iteration
+        this.instancesWithUpdate = [];
+        this.instancesWithFixedUpdate = [];
+        this.instancesWithPostUpdate = [];
+        this.instancesWithToolsUpdate = [];
 
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
@@ -76,11 +80,6 @@ pc.extend(pc.fw, function () {
             return this.addComponent(clone, data);
         },
 
-        addComponent: function (entity, data) {
-            ScriptComponentSystem._super.addComponent.call(this, entity, data);
-            this.components.push(entity.script.data);
-        },
-
         /**
         * @private
         * @name pc.fw.ScriptComponentSystem#onRemove
@@ -89,20 +88,45 @@ pc.extend(pc.fw, function () {
         * @param {pc.fw.ComponentData} data The data object for the removed component
         */
         onRemove: function (entity, data) {
-            for (var name in data.instances) {
-                if (data.instances.hasOwnProperty(name)) {
-                    
-                    if(data.instances[name].instance.destroy) {
-                        data.instances[name].instance.destroy();
+            var index;
+            var instances = data.instances;
+            for (var name in instances) {
+                if (instances.hasOwnProperty(name)) {
+                    var instance = instances[name].instance;
+                    if(instance.destroy) {
+                        instances.destroy();
+                    }
+
+                    if (instance.update) {
+                        index = this.instancesWithUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.fixedUpdate) {
+                        index = this.instancesWithFixedUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithFixedUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.postUpdate) {
+                        index = this.instancesWithPostUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithPostUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.toolsUpdate) {
+                        index = this.instancesWithToolsUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithToolsUpdate.splice(index, 1);
+                        }
                     }
 
                     delete data.instances[name];
                 }
-            }
-
-            var index = this.components.indexOf(data);
-            if (index >= 0) {
-                this.components.splice(index, 1);
             }
         },
 
@@ -176,21 +200,12 @@ pc.extend(pc.fw, function () {
             script.data.postInitialized = true;
         },
 
-        _updateInstances: function (updateMethod, dt) {            
-            var i;
-            var len = this.components.length;
-            for (i=0; i<len; i++) {
-                var componentData = this.components[i];
-                if (componentData.enabled) {
-                    var instances = componentData.instances;
-                    for (var key in instances) {
-                        if (instances.hasOwnProperty(key)) {
-                            var instance = instances[key].instance;
-                            if (instance[updateMethod]) {
-                                instance[updateMethod](dt);
-                            }
-                        }
-                    }
+        _updateInstances: function (method, updateList, dt) {            
+            var item;
+            for (var i=0, len=updateList.length; i<len; i++) {
+                item = updateList[i];
+                if (item.entity.script.enabled) {
+                    item[method].call(item, dt);
                 }
             }
         },
@@ -203,7 +218,7 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt The time delta since the last update in seconds
         */
         onUpdate: function (dt) {
-            this._updateInstances(UPDATE, dt);
+            this._updateInstances(UPDATE, this.instancesWithUpdate, dt);
         },
 
         /**
@@ -214,7 +229,7 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt A fixed timestep of 1/60 seconds
         */
         onFixedUpdate: function (dt) {
-            this._updateInstances(FIXED_UPDATE, dt);
+            this._updateInstances(FIXED_UPDATE, this.instancesWithFixedUpdate, dt);
         },
 
         /**
@@ -225,11 +240,11 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt The time delta since the last update in seconds
         */
         onPostUpdate: function (dt) {
-           this._updateInstances(POST_UPDATE, dt);
+            this._updateInstances(POST_UPDATE, this.instancesWithPostUpdate, dt);
         },
 
         onToolsUpdate: function (dt) {
-            this._updateInstances(TOOLS_UPDATE, dt);
+            this._updateInstances(TOOLS_UPDATE, this.instancesWithToolsUpdate, dt);
         },
 
         /**
@@ -285,6 +300,22 @@ pc.extend(pc.fw, function () {
                     name: name,
                     instance: instance
                 };
+
+                if (instance.update) {
+                    this.instancesWithUpdate.push(instance);
+                }
+
+                if (instance.fixedUpdate) {
+                    this.instancesWithFixedUpdate.push(instance);
+                }
+
+                if (instance.postUpdate) {
+                    this.instancesWithPostUpdate.push(instance);
+                }
+
+                if (instance.toolsUpdate) {
+                    this.instancesWithToolsUpdate.push(instance);
+                }
             }
         },
     
@@ -307,7 +338,7 @@ pc.extend(pc.fw, function () {
                     for (instanceName in entity.script.instances) {
                         instance = entity.script.instances[instanceName];
 
-                        pc.extend(instance.instance, pc.events);
+                        pc.events.initialize(instance.instance);
 
                         if (entity.script.scripts) {
                             this._createAccessors(entity, instance);
