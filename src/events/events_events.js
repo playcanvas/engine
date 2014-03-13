@@ -22,13 +22,13 @@ pc.events = function () {
     
     var Events = {
         /**
-        * Extend the specified object with pc.events methods.
-        * @param  {Object} target The object to add events to.
         * @function
+        * @name pc.events.attach
+        * @description Attach event methods 'on', 'off', 'fire' and 'hasEvent' to the target object
+        * @param  {Object} target The object to add events to.
         * @return {Object} The target object
-        * @name pc.events.initialize
         */
-        initialize: function (target) {
+        attach: function (target) {
             var ev = pc.events;
             target.on = ev.on;
             target.off = ev.off;
@@ -36,6 +36,7 @@ pc.events = function () {
             target.hasEvent = ev.hasEvent;
             target.bind = ev.on;
             target.unbind = ev.off;
+            return target;
         },
 
         /**
