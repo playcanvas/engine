@@ -64,30 +64,14 @@ pc.extend(pc.scene, function () {
         }
     });
 
-    pc.extend(GraphNode.prototype, {
-        /**
-        * @private
-        * @function
-        * @name pc.scene.GraphNode#isEnabled
-        * Returns true if the GraphNode is enabled or false otherwise.
-        * A GraphNode can be enabled but considered disabled while the application
-        * is running if one if its parents is disabled.
-        * @return {Boolean} True if enabled false otherwise
-        */
-        isEnabled: function () {
-            return this._enabled;
-        },
 
+    Object.defineProperty(GraphNode.prototype, 'enabled', {
         /**
         * @private
-        * @function
-        * @name pc.scene.GraphNode#isEnabledInHierarchy
-        * Returns true if the GraphNode is enabled including all of its parents. To check
-        * if a GraphNode is actually taking part in the hierarchy query this method instead
-        * of pc.scene.GraphNode#isEnabled.
+        * Returns true if the GraphNode and all its parents are enabled.
         * @return {Boolean} True if enabled false otherwise
         */
-        isEnabledInHierarchy: function () {
+        get: function () {
             if (this._enabledInHierarchy === null) {
                 var current = this;
                 while (current) {
@@ -107,24 +91,23 @@ pc.extend(pc.scene, function () {
 
         /**
         * @private
-        * @function
-        * @name pc.scene.GraphNode#setEnabled
-        * Enable or disable a GraphNode. This will change the value returned 
-        * by pc.scene.GraphNode#isEnabled. If one of the GraphNode's parents is disabled
+        * Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
         * there will be no other side effects. If all the parents are enabled then
         * the new value will activate / deactivate all the enabled children of the GraphNode.
         */
-        setEnabled: function (enabled) {
+        set: function (enabled) {
             if (this._enabled !== enabled) {
                 this._enabled = enabled;
 
-                if (!this._parent || this._parent.isEnabledInHierarchy()) {
+                if (!this._parent || this._parent.enabled) {
                     this._notifyHierarchyStateChanged(this, enabled);
                 }
 
             }
-        },
+        }
+    });
 
+    pc.extend(GraphNode.prototype, {
         _notifyHierarchyStateChanged: function (node, enabled) {
             node._onHierarchyStateChanged(enabled);
 

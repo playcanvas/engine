@@ -142,7 +142,7 @@ pc.extend(pc.fw, function () {
         onInitialize: function (root) {
             this._registerInstances(root);
                 
-            if (root.script && root.script.enabled && root.isEnabledInHierarchy()) {
+            if (root.script && root.script.enabled && root.enabled) {
                 this._initializeScriptComponent(root.script);
             }
             
@@ -163,7 +163,7 @@ pc.extend(pc.fw, function () {
          * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
          */
         onPostInitialize: function (root) {
-            if (root.script && root.script.enabled && root.isEnabledInHierarchy()) {
+            if (root.script && root.script.enabled && root.enabled) {
                 this._postInitializeScriptComponent(root.script);
             }
             
@@ -211,7 +211,7 @@ pc.extend(pc.fw, function () {
             var item;
             for (var i=0, len=updateList.length; i<len; i++) {
                 item = updateList[i];
-                if (item.entity.script.enabled && item.entity.isEnabledInHierarchy()) {
+                if (item.entity.script.enabled && item.entity.enabled) {
                     item[method].call(item, dt);
                 }
             }

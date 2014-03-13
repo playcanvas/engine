@@ -162,7 +162,7 @@ pc.extend(pc.fw, function () {
             properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-            if (component.enabled && component.entity.isEnabledInHierarchy()) {
+            if (component.enabled && component.entity.enabled) {
                 component.onEnable();
             }
         },

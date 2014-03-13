@@ -129,7 +129,7 @@ pc.extend(pc.fw, function () {
 
         onInitialize: function(root) {
             if (root.audiosource && 
-                root.isEnabledInHierarchy() &&
+                root.enabled &&
                 root.audiosource.enabled &&
                 root.audiosource.activate) {
                 
@@ -155,7 +155,7 @@ pc.extend(pc.fw, function () {
                     var componentData = component.data;
                     
                     // Update channel position if this is a 3d sound
-                    if (componentData.enabled && entity.isEnabledInHierarchy() && componentData.channel instanceof pc.audio.Channel3d) {
+                    if (componentData.enabled && entity.enabled && componentData.channel instanceof pc.audio.Channel3d) {
                         var pos = entity.getPosition();
                         componentData.channel.setPosition(pos);
                     }

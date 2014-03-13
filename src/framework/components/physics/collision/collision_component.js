@@ -181,7 +181,7 @@ pc.extend(pc.fw, function () {
          * Handle an update over livelink from the tools updating the Entities transform
          */
         onLiveLinkUpdateTransform: function (position, rotation, scale) {
-            if (this.enabled && this.entity.isEnabledInHierarchy()) {
+            if (this.enabled && this.entity.enabled) {
                 this.system.onTransformChanged(this, position, rotation, scale);
             }
         },

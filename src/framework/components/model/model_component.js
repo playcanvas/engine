@@ -181,7 +181,7 @@ pc.extend(pc.fw, function () {
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
                 }
 
-                if (this.enabled && this.entity.isEnabledInHierarchy()) {
+                if (this.enabled && this.entity.enabled) {
                     this.entity.addChild(newValue.graph);
                     this.system.context.scene.addModel(newValue);
                 }

@@ -70,7 +70,7 @@ pc.extend(pc.fw, function () {
 
         onSetEnabled: function (name, oldValue, newValue) {
             if (oldValue !== newValue) {
-                if (this.entity.isEnabledInHierarchy()) {
+                if (this.entity.enabled) {
                     if (newValue) {
                         this.onEnable();
                     } else {

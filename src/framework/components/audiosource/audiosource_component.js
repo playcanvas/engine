@@ -37,7 +37,7 @@ pc.extend(pc.fw, function () {
         * @param {String} name The name of the Asset to play
         */
         play: function(name) {
-            if (!this.enabled || !this.entity.isEnabledInHierarchy()) {
+            if (!this.enabled || !this.entity.enabled) {
                 return;
             }
 

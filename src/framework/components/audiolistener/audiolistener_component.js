@@ -16,7 +16,7 @@ pc.extend(pc.fw, function () {
 
     pc.extend(AudioListenerComponent.prototype, {
         setCurrentListener: function () {
-            if (this.enabled && this.entity.audiolistener && this.entity.isEnabledInHierarchy()) {
+            if (this.enabled && this.entity.audiolistener && this.entity.enabled) {
                 this.system.current = this.entity;
                 var position = this.system.current.getPosition();
                 this.system.manager.listener.setPosition(position);

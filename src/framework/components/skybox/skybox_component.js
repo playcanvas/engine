@@ -47,7 +47,7 @@ pc.extend(pc.fw, function () {
                         });
                         this.data.model = _createSkybox(this.entity, this.system.context, urls);
 
-                        if (this.enabled && this.entity.isEnabledInHierarchy()) {
+                        if (this.enabled && this.entity.enabled) {
                             this.system.context.scene.addModel(this.data.model);
                             this.entity.addChild(this.data.model.graph);
                         }

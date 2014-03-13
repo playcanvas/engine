@@ -187,7 +187,7 @@ pc.extend(pc.fw, function () {
 
                 entity.rigidbody.body = body;
 
-                if (this.enabled && this.entity.isEnabledInHierarchy()) {
+                if (this.enabled && this.entity.enabled) {
                     this.enableSimulation();
                 } 
             }
@@ -560,7 +560,7 @@ pc.extend(pc.fw, function () {
         onSetMass: function (name, oldValue, newValue) {
             var body = this.data.body;
             if (body) {
-                var isEnabled = this.enabled && this.entity.isEnabledInHierarchy();
+                var isEnabled = this.enabled && this.entity.enabled;
                 if (isEnabled) {
                     this.disableSimulation();
                 }

@@ -72,7 +72,7 @@ pc.extend(pc.fw, function () {
             this.onSetInnerConeAngle("innerConeAngle", this.innerConeAngle, this.innerConeAngle);
             this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
 
-            if (this.enabled && this.entity.isEnabledInHierarchy()) {
+            if (this.enabled && this.entity.enabled) {
                 this.onEnable();
             }
         },

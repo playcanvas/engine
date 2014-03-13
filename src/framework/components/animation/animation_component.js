@@ -38,7 +38,7 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            if (!this.enabled || !this.entity.isEnabledInHierarchy()) {
+            if (!this.enabled || !this.entity.enabled) {
                 return;
             }
 
@@ -143,7 +143,7 @@ pc.extend(pc.fw, function () {
 
             for (var animName in data.animations) {
                 // Set the first loaded animation as the current
-                if (data.activate && data.enabled && this.entity.isEnabledInHierarchy()) {
+                if (data.activate && data.enabled && this.entity.enabled) {
                     this.play(animName, 0);
                 }
                 break;
