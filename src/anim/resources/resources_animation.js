@@ -15,7 +15,7 @@ pc.extend(pc.resources, function () {
                     reject(pc.string.format("An error occured while loading animation from: '{0}'", url));
                 }
             }.bind(this), {
-                cache: false,
+                cache: options.cache,
                 error: function (errors) {
                     reject(errors);
                 }

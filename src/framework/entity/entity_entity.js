@@ -50,7 +50,7 @@ pc.extend(pc.fw, function () {
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
 
-        pc.extend(this, pc.events);
+        pc.events.initialize(this);
     };
     Entity = pc.inherits(Entity, pc.scene.GraphNode);
     

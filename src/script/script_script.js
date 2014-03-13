@@ -111,7 +111,7 @@ pc.script = (function () {
         }
     };
     
-    pc.extend(script, pc.events);
+    pc.events.initialize(script);
         
     return script;
 }());
