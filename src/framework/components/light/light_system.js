@@ -161,6 +161,10 @@ pc.extend(pc.fw, function () {
 
             properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+
+            if (component.enabled && component.entity.enabled) {
+                component.onEnable();
+            }
         },
 
         _createImplementation: function (type) {
@@ -237,14 +241,14 @@ pc.extend(pc.fw, function () {
 
     LightComponentImplementation.prototype = {
         initialize: function (component, data) {
-            var node = this._createLightNode(data);
+            var node = this._createLightNode(component, data);
             this._createDebugShape(component, data, node);
         }, 
 
-        _createLightNode: function (data) {
+        _createLightNode: function (component, data) {
             var node = new pc.scene.LightNode();
             node.setName(data.type + "light");
-            node.setType(this._getLightType());
+            node.setType(this._getLightType());            
             return node;
         },
 

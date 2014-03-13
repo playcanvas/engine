@@ -29,7 +29,6 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_enabled", this.onSetEnabled, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -182,7 +181,7 @@ pc.extend(pc.fw, function () {
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
                 }
 
-                if (this.enabled) {
+                if (this.enabled && this.entity.enabled) {
                     this.entity.addChild(newValue.graph);
                     this.system.context.scene.addModel(newValue);
                 }
@@ -231,18 +230,26 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                var visible = newValue;
+        onEnable: function () {
+            ModelComponent._super.onEnable.call(this);
 
-                if (this.data.model) {
-                    var inScene = this.system.context.scene.containsModel(this.data.model);
-                    
-                    if (visible && !inScene) {
-                        this.system.context.scene.addModel(this.data.model);
-                    } else if (!visible && inScene) {
-                        this.system.context.scene.removeModel(this.data.model);
-                    }
+            if (this.data.model) {
+                var inScene = this.system.context.scene.containsModel(this.data.model);
+                
+                if (!inScene) {
+                    this.system.context.scene.addModel(this.data.model);
+                } 
+            }
+        },
+
+        onDisable: function () {
+            ModelComponent._super.onDisable.call(this);
+
+            if (this.data.model) {
+                var inScene = this.system.context.scene.containsModel(this.data.model);
+                
+                if (inScene) {
+                    this.system.context.scene.removeModel(this.data.model);
                 }
             }
         },

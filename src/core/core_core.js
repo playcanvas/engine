@@ -119,6 +119,7 @@ var pc = {
             
             return target;
         },
+
         
         /**
          * Return true if the Object is not undefined

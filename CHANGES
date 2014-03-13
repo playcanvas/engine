@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.144.0
+--------
+* Improved entity enabling / disabling mechanism to include children
+* Improved component enabling / disabling mechanism
+* Various optimizations
+
+--------
 v0.143.4
 --------
 * [FIX] Fixed typos in script attribute docs

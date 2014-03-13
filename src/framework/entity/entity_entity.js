@@ -49,9 +49,8 @@ pc.extend(pc.fw, function () {
         this._guid = pc.guid.create(); // Globally Unique Identifier 
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
-        this._enabled = true; 
 
-        pc.extend(this, pc.events);
+        pc.events.initialize(this);
     };
     Entity = pc.inherits(Entity, pc.scene.GraphNode);
     
@@ -75,6 +74,26 @@ pc.extend(pc.fw, function () {
      */
     Entity.prototype.setGuid = function (guid) {
         this._guid = guid;
+    };
+
+    Entity.prototype._onHierarchyStateChanged = function (enabled) {
+        pc.fw.Entity._super._onHierarchyStateChanged.call(this, enabled);
+
+        // enable / disable all the components
+        var component;
+        var components = this.c;
+        for (type in components) {
+            if (components.hasOwnProperty(type)) {
+                component = components[type];
+                if (component.enabled) {
+                    if (enabled) {
+                        component.onEnable();
+                    } else {
+                        component.onDisable();
+                    }
+                }
+            }
+        }
     };
 
     /**
@@ -197,8 +216,6 @@ pc.extend(pc.fw, function () {
         var c = new pc.fw.Entity();
         pc.fw.Entity._super._cloneInternal.call(this, c);
 
-        c.enabled = this.enabled;
-
         for (type in this.c) {
             var component = this.c[type];
             component.system.cloneComponent(this, c);
@@ -213,33 +230,7 @@ pc.extend(pc.fw, function () {
         }
 
         return c;
-    }   ;
-
-    
-    /**
-    * @private
-    * @property
-    * @name pc.fw.Entity#enabled
-    * @description Enables / disables all the components attached to this Entity 
-    * @example
-    *   this.entity.enabled = true; // Enable entity components
-    *   this.entity.enabled = false; // Disable entity components
-    */
-    Object.defineProperty(Entity.prototype, "enabled", {
-        get: function() {
-            return this._enabled;
-        },
-        set: function(value) {
-            this._enabled = value;
-
-            for (type in this.c) {
-                if (this.c.hasOwnProperty(type)) {
-                    this.c[type].enabled = value;
-                }
-            }
-        },
-    });
-
+    };
     
     Entity.deserialize = function (data) {
         var template = pc.json.parse(data.template);

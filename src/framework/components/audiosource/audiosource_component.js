@@ -26,7 +26,6 @@ pc.extend(pc.fw, function () {
         this.on("set_minDistance", this.onSetMinDistance, this);
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
-        this.on("set_enabled", this.onSetEnabled, this);
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.fw.Component);
         
@@ -38,7 +37,7 @@ pc.extend(pc.fw, function () {
         * @param {String} name The name of the Asset to play
         */
         play: function(name) {
-            if (!this.enabled) {
+            if (!this.enabled || !this.entity.enabled) {
                 return;
             }
 
@@ -167,18 +166,18 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (newValue) {
-                    if (this.data.activate && !this.channel) {
-                        this.play(this.currentSource);
-                    } else {
-                        this.unpause();
-                    }
-                } else {
-                    this.pause();
-                }
+        onEnable: function () {
+            AudioSourceComponent._super.onEnable.call(this);
+            if (this.data.activate && !this.channel) {
+                this.play(this.currentSource);
+            } else {
+                this.unpause();
             }
+        },
+
+        onDisable: function () {
+            AudioSourceComponent._super.onDisable.call(this);
+            this.pause();
         },
          
         loadAudioSourceAssets: function (guids) {

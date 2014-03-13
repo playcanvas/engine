@@ -33,7 +33,6 @@ pc.extend(pc.fw, function () {
         this.on("set_farClip", this.onSetFarClip, this);
         this.on("set_projection", this.onSetProjection, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
-        this.on("set_enabled", this.onSetEnabled, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
 
@@ -69,6 +68,7 @@ pc.extend(pc.fw, function () {
         onSetAspectRatio: function (name, oldValue, newValue) {
             this.data.camera.setAspectRatio(newValue);
         },
+
         onSetCamera: function (name, oldValue, newValue) {
             // remove old camera node from hierarchy and add new one
             if (oldValue) {
@@ -76,42 +76,50 @@ pc.extend(pc.fw, function () {
             }        
             this.entity.addChild(newValue);
         },
+
         onSetClearColor: function (name, oldValue, newValue) {
             var clearOptions = this.data.camera.getClearOptions();
             clearOptions.color[0] = newValue.r;
             clearOptions.color[1] = newValue.g;
             clearOptions.color[2] = newValue.b;
         },
+
         onSetFov: function (name, oldValue, newValue) {
             this.data.camera.setFov(newValue);
         },
+
         onSetOrthoHeight: function (name, oldValue, newValue) {
             this.data.camera.setOrthoHeight(newValue);
         },
+
         onSetNearClip: function (name, oldValue, newValue) {
             this.data.camera.setNearClip(newValue);
         },
+
         onSetFarClip: function (name, oldValue, newValue) {
             this.data.camera.setFarClip(newValue);
         },
+
         onSetProjection: function (name, oldValue, newValue) {
             this.data.camera.setProjection(newValue);
         },
+
         onSetRenderTarget: function (name, oldValue, newValue) {
             this.data.camera.setRenderTarget(newValue);
         },
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (newValue) {
-                    this.system.current = this.entity;
-                } else {
-                    if (this.system.current === this.entity) {
-                        this.system.current = null;
-                        this.system.onCameraDisabled(this);
-                    }
-                }
+
+        onEnable: function () {
+            CameraComponent._super.onEnable.call(this);
+            this.system.current = this.entity;
+        },
+
+        onDisable: function () {
+            CameraComponent._super.onDisable.call(this);
+            if (this.system.current === this.entity) {
+                this.system.current = null;
+                this.system.onCameraDisabled(this);
             }
-        }
+        }    
     });
 
     return {

@@ -21,7 +21,6 @@ pc.extend(pc.fw, function () {
 
     var ScriptComponent = function ScriptComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
-        this.on("set_enabled", this.onSetEnabled, this);
     };
     ScriptComponent = pc.inherits(ScriptComponent, pc.fw.Component);
 
@@ -52,34 +51,22 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (newValue && !this.data.initialized) {
-                    this.system._initializeScriptComponent(this);
-                }
-
-                if (newValue && !this.data.postInitialized) {
-                    this.system._postInitializeScriptComponent(this);
-                }
-
-                var instances = this.data.instances;
-                if (instances) {
-                    for (var key in instances) {
-                        if (instances.hasOwnProperty(key)) {
-                            var instance = instances[key].instance;
-                            if (newValue) {
-                                if (instance.onEnable) {
-                                    instance.onEnable();
-                                }
-                            } else {
-                                if (instance.onDisable) {
-                                    instance.onDisable();
-                                }
-                            }
-                        }
-                    }
-                }
+        onEnable: function () {
+            ScriptComponent._super.onEnable.call(this);
+            if (!this.data.initialized) {
+                this.system._initializeScriptComponent(this);
+            } else {
+                this.system._enableScriptComponent(this);
             }
+
+            if (!this.data.postInitialized) {
+                this.system._postInitializeScriptComponent(this);
+            }
+        },
+
+        onDisable: function () {
+            ScriptComponent._super.onDisable.call(this);
+            this.system._disableScriptComponent(this);
         },
 
         onSetScripts: function(name, oldValue, newValue) {            

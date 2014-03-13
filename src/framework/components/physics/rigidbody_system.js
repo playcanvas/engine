@@ -666,7 +666,7 @@ pc.extend(pc.fw, function () {
                 if (components.hasOwnProperty(id)) {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
-                    if (componentData.body && componentData.body.isActive() && componentData.enabled) {
+                    if (componentData.body && componentData.body.isActive() && componentData.enabled && entity.enabled) {
                         if (componentData.type === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
                         } else if (componentData.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
