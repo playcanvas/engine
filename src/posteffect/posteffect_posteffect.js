@@ -25,6 +25,10 @@ pc.posteffect = {
     drawFullscreenQuad: function (device, target, vertexBuffer, shader) {
         device.setRenderTarget(target);
         device.updateBegin();
+        var w = (target !== null) ? target.width : device.width;
+        var h = (target !== null) ? target.height : device.height;
+        device.setViewport(0, 0, w, h);
+        device.setScissor(0, 0, w, h);
         var oldDepthTest = device.getDepthTest();
         var oldDepthWrite = device.getDepthWrite();
         device.setDepthTest(false);

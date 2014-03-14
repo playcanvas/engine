@@ -462,6 +462,22 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
+         * @name pc.scene.GraphNode#reparent
+         * @description Remove graph node from current parent and add as child to new parent
+         * @param {pc.scene.GraphNode} parent New parent to attach graph node to 
+         */
+        reparent: function (parent) {
+            var current = this.getParent();
+            if (current) {
+                current.removeChild(this);
+            }
+            if (parent) {
+                parent.addChild(this);            
+            }
+        },
+
+        /**
+         * @function
          * @name pc.scene.GraphNode#setLocalEulerAngles
          * @description Sets the local space rotation of the specified graph node using euler angles.
          * Eulers are interpreted in XYZ order. Eulers must be specified in degrees.
