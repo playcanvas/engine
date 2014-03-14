@@ -22,13 +22,13 @@ pc.events = function () {
     
     var Events = {
         /**
-        * Extend the specified object with pc.events methods.
-        * @param  {Object} target The object to add events to.
         * @function
+        * @name pc.events.attach
+        * @description Attach event methods 'on', 'off', 'fire' and 'hasEvent' to the target object
+        * @param  {Object} target The object to add events to.
         * @return {Object} The target object
-        * @name pc.events.initialize
         */
-        initialize: function (target) {
+        attach: function (target) {
             var ev = pc.events;
             target.on = ev.on;
             target.off = ev.off;
@@ -36,6 +36,7 @@ pc.events = function () {
             target.hasEvent = ev.hasEvent;
             target.bind = ev.on;
             target.unbind = ev.off;
+            return target;
         },
 
         /**
@@ -47,7 +48,7 @@ pc.events = function () {
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
          * @example
          * var o = {};
-         * pc.events.initialize(o);
+         * pc.events.attach(o);
          * o.on('event_name', function (a, b) {
          *   console.log(a + b);
          * });
@@ -79,7 +80,7 @@ pc.events = function () {
          * var handler = function () {
          * };
          * var o = {};
-         * pc.events.initialize(o);
+         * pc.events.attach(o);
          * o.on('event_name', handler);
          * 
          * o.off('event_name'); // Remove all events called 'event_name'
@@ -125,7 +126,7 @@ pc.events = function () {
          * @param {*} [...] Arguments that are passed to the event handler
          * @example
          * var o = {};
-         * pc.events.initialize(o);
+         * pc.events.attach(o);
          * o.on('event_name', function (msg) {
          *   alert('event_name fired: ' + msg);
          * });
@@ -157,7 +158,7 @@ pc.events = function () {
         * @param {String} name The name of the event to test
         * @example
         * var o = {};
-        * pc.events.initialize(o); // add events to o
+        * pc.events.attach(o); // add events to o
         * o.on('event_name', function () {}); // bind an event to 'event_name'
         * o.hasEvent('event_name'); // returns true
         */
