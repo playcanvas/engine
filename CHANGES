@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.144.3
+--------
+* [FIX] Ensure render targets are rendered fullscreen for post fx.
+
+--------
 v0.144.2
 --------
 * [FIX] Error when trying to call script instance#destroy when removing a script component
