@@ -96,7 +96,7 @@ pc.extend(pc.fw, function () {
                 if (instances.hasOwnProperty(name)) {
                     var instance = instances[name].instance;
                     if(instance.destroy) {
-                        instances.destroy();
+                        instance.destroy();
                     }
 
                     if (instance.update) {
