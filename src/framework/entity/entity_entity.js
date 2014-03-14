@@ -152,23 +152,6 @@ pc.extend(pc.fw, function () {
     };
 
     /**
-     * @private
-     * @function
-     * @name pc.fw.Entity#reparent
-     * @description Remove Entity from current parent and add as child to new parent
-     * @param {pc.scene.GraphNode} parent New parent to attach Entity to 
-     */
-    Entity.prototype.reparent = function(parent) {
-        var current = this.getParent();
-        if(current) {
-            current.removeChild(this);
-        }
-        if(parent) {
-            parent.addChild(this);            
-        }
-    };
-
-    /**
     * @function
     * @name pc.fw.Entity#destroy
     * @description Remove all components from the Entity and detach it from the Entity hierarchy. Then recursively destroy all ancestor Entities
