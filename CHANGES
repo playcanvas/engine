@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.144.2
+--------
+* [FIX] Error when trying to call script instance#destroy when removing a script component
+
+--------
 v0.144.1
 --------
 * [FIX] Renamed pc.events.initalize to pc.events.attach to prevent it breaking compatibility when adding events to script instances
