@@ -214,7 +214,7 @@ pc.extend(pc.fw, function () {
         cloneComponent: function (entity, clone) {
             return this._getImplementation(entity).clone(entity, clone);
         },
-        
+
         onRemove: function (entity, data) {
             this.implementations[data.type].remove(entity, data);
         },
@@ -365,8 +365,9 @@ pc.extend(pc.fw, function () {
                 } else {
                     if (!entity.trigger) {
                         entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                    } else {
+                        entity.trigger.initialize(data);
                     }
-                    entity.trigger.initialize(data);
                 }
             }
         },
@@ -1066,9 +1067,10 @@ pc.extend(pc.fw, function () {
                 } else {
                     if (!entity.trigger) {
                         entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                    } else {
+                        entity.trigger.initialize(data);
                     }
 
-                    entity.trigger.initialize(data);
                 } 
             } else {
                 this.remove(entity, data);
