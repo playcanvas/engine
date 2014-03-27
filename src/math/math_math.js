@@ -175,7 +175,8 @@ pc.math = {
     /**
      * @function
      * @name pc.math.random
-     * @description Return a pseudo-random number between min and max.
+     * @description Return a pseudo-random number between min and max. 
+     * The number generated is in the range [min, max), that is inclusive of the minimum but exclusive of the maximum.
      * @param {Number} min Lower bound for range.
      * @param {Number} max Upper bound for range.
      * @returns {Number} Pseudo-random number between the supplied range.
