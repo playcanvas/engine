@@ -179,6 +179,11 @@ pc.extend(pc.fw, function () {
     });
 
     Object.defineProperties(AnimationComponent.prototype, {
+        /**
+        * @property
+        * @name pc.fw.AnimationComponent#currentTime
+        * @description Get or Set the current time position (in seconds) of the animation
+        */
         currentTime: {
             get: function () {
                 return this.data.skeleton.getCurrentTime();
@@ -189,6 +194,12 @@ pc.extend(pc.fw, function () {
                 this.data.skeleton.updateGraph();                
             }
         },
+
+        /**
+        * @property
+        * @name pc.fw.AnimationComponent#duration
+        * @description Get the duration in seconds of the current animation.
+        */
         duration: {
             get: function () {
                 return this.data.animations[this.data.currAnim].getDuration();
