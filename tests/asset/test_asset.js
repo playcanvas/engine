@@ -58,3 +58,34 @@ test("new pc.asset.Asset, name, data", function () {
     equal(asset.getFileUrl(), null);
     equal(asset.prefix, "");
 });
+
+
+test("asset.resourceId", function () {
+    var prefix = "/dir";
+    var data = {}
+    
+    var asset = new pc.fw.Asset("abc", data, prefix);
+    
+    equal(asset.resourceId, "abc");
+});
+
+test("asset.data", function () {
+    var prefix = "/dir";
+    var data = {}
+    
+    var asset = new pc.fw.Asset("abc", data, prefix);
+    equal(asset.key, data['key']);
+    equal(asset.key2, data['key2']);
+});
+
+test("asset.getFileUrl", function () {
+    var prefix = "/dir";
+    var data = {
+        "file": {
+            "url": "path/to/file.txt"
+        }
+    };
+    
+    var asset = new pc.fw.Asset("abc", data, prefix);
+    equal(asset.getFileUrl(), "/dir/path/to/file.txt"); 
+});

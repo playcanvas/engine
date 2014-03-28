@@ -36,7 +36,7 @@ test("mul2", function () {
     q1.setFromEulerAngles(90, 0, 0);
     q2.setFromEulerAngles(-90, 0, 0);
     qr.mul2(q1, q2);
-    QUnit.equal(qr.x, 0);
+    QUnit.close(qr.x, 0, 0.0001);
     QUnit.equal(qr.y, 0);
     QUnit.equal(qr.z, 0);
     QUnit.close(qr.w, 1, 0.0001);
