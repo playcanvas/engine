@@ -23,6 +23,8 @@ pc.extend(pc.fw, function () {
      * app.start()
      */
     var Application = function (canvas, options) {
+        options = options || {};
+
         this._inTools = false;
 
         // Add event support
@@ -353,7 +355,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#setCanvasFillMode()
+        * @name pc.fw.Application#setCanvasFillMode
         * @description Change the way the canvas fills the window and resizes when the window changes
         * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
         * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
@@ -369,7 +371,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#setCanvasResolution()
+        * @name pc.fw.Application#setCanvasResolution
         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
         * In AUTO mode, the resolution is change to match the size of the canvas when the canvas resizes
         * In FIXED mode, the resolution remains until another call to setCanvasResolution()
@@ -784,12 +786,37 @@ pc.extend(pc.fw, function () {
 
     return {
         FillMode: {
+            /**
+            * @enum pc.fw.FillMode
+            * @name pc.fw.FillMode.NONE
+            * @description When resizing the window the size of the canvas will not change.
+            */
             NONE: 'NONE',
+            /**
+            * @enum pc.fw.FillMode
+            * @name pc.fw.FillMode.FILL_WINDOW
+            * @description When resizing the window the size of the canvas will change to fill the window exactly.
+            */
             FILL_WINDOW: 'FILL_WINDOW',
+            /**
+            * @enum pc.fw.FillMode
+            * @name pc.fw.FillMode.KEEP_ASPECT
+            * @description When resizing the window the size of the canvas will change to fill the window as best it can, while maintaining the same aspect ratio.
+            */
             KEEP_ASPECT: 'KEEP_ASPECT'
         },
         ResolutionMode: {
+            /**
+            * @enum pc.fw.ResolutionMode
+            * @name pc.fw.ResolutionMode.AUTO
+            * @description When the canvas is resized the resolution of the canvas will change to match the size of the canvas.
+            */
             AUTO: 'AUTO',
+            /**
+            * @enum pc.fw.ResolutionMode
+            * @name pc.fw.ResolutionMode.FIXED
+            * @description When the canvas is resized the resolution of the canvas will remain at the same value and the output will just be scaled to fit the canvas.
+            */
             FIXED: 'FIXED'
         },
         Application: Application

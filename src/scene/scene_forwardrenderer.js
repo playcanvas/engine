@@ -264,7 +264,7 @@ pc.extend(pc.scene, function () {
             for (var i = 0; i < numDirs; i++) {
                 var directional = dirs[i];
                 var wtm = directional.getWorldTransform();
-                light = "light" + i;
+                var light = "light" + i;
 
                 scope.resolve(light + "_color").setValue(directional._finalColor.data);
 
@@ -286,6 +286,7 @@ pc.extend(pc.scene, function () {
         dispatchLocalLights: function (scene) {
             var i, wtm;
             var point, spot;
+            var light;
             var localLights = scene._localLights;
 
             var pnts = localLights[pc.scene.LIGHTTYPE_POINT-1];
