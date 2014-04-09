@@ -55,6 +55,34 @@ pc.path = function () {
             
             return result;
         },
+
+        /**
+        * @function
+        * @name pc.path.split
+        * @description Split the pathname path into a pair [head, tail] where tail is the final part of the path
+        * after the last delimiter and head is everything leading up to that. tail will never contain a slash
+        */
+        split: function (path) {
+            var parts = path.split(pc.path.delimiter);
+            var tail = parts.slice(parts.length-1)[0];
+            var head = parts.slice(0,parts.length-1).join(pc.path.delimiter);
+            return [head, tail];
+        },
+
+        /**
+        * @function
+        * @name pc.path.getBasename
+        * @description Return the basename of the path. That is the second element of the pair returned by
+        * passing path into {@link pc.path.split}.
+        * @example
+        * pc.path.getBasename("/path/to/file.txt"); // returns "path.txt"
+        * pc.path.getBasename("/path/to/dir"); // returns "dir"
+        * @returns {String} The basename
+        */
+        getBasename: function(path) {
+            return pc.path.split(path)[1];
+        },
+
         /**
          * Get the directory name from the path. This is everything up to the final instance of pc.path.delimiter
          * @param {String} path The path to get the directory from

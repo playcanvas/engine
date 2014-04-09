@@ -43,6 +43,9 @@ pc.extend(pc.asset, function () {
         this.data = arguments[3] || {};
         this.prefix = arguments[4] || "";
 
+        // This is where the loaded resource will be
+        this.resource = null;
+
         pc.events.attach(this);
     };
         

@@ -36,7 +36,7 @@ pc.extend(pc.resources, function () {
     var ModelResourceHandler = function (device, assetRegistry) {
         this._device = device;
         this._assets = assetRegistry;
-        this.materialLoader = new pc.resources.MaterialResourceLoader(device, assetRegistry);
+        this._materialLoader = new pc.resources.MaterialResourceLoader(device, assetRegistry);
     };
     ModelResourceHandler = pc.inherits(ModelResourceHandler, pc.resources.ResourceHandler);
 
@@ -52,6 +52,7 @@ pc.extend(pc.resources, function () {
      * @param {Number} [options.priority] The priority to load the model textures at.
      */
     ModelResourceHandler.prototype.load = function (request, options) {
+        var self = this;
 
         var promise = new RSVP.Promise(function (resolve, reject) {
             var url = request.canonical;
@@ -62,8 +63,36 @@ pc.extend(pc.resources, function () {
             var ext = pc.path.getExtension(uri.path);
             
             pc.net.http.get(url, function (response) {
-                resolve(response);
-            }.bind(this), {
+                var path = pc.path.split(url)[0];
+
+                var model = response.model;
+                if (model.version >= 3 && model.mapping) {
+                    // If this model has built in mapping we need to 
+                    // create and load all the material assets
+                    var i, n = model.mapping.length;
+                    var assets = [];
+                    for (i = 0; i < n; i++) {
+                        if (model.mapping[i].path) {
+                            var filename = pc.path.getBasename(model.mapping[i].path);
+                            var materialPath = pc.path.join(path, model.mapping[i].path)
+                            assets.push(new pc.asset.Asset(filename, "material", {
+                                url: materialPath
+                            }));                                
+                        }
+                    }
+
+                    // Only once all materials are loaded is the model loaded
+                    self._assets.load(assets).then(function (resources) {
+                        assets.forEach(function (asset, i) {
+                            asset.data = resources[i];
+                        });
+                        resolve(response);
+                    });
+                } else {
+                    resolve(response);    
+                }
+                
+            }, {
                 cache: options.cache,
                 error: function (status, xhr, e) {
                     reject(pc.string.format("Error loading model: {0} [{1}]", url, status));
@@ -91,8 +120,17 @@ pc.extend(pc.resources, function () {
         var model = null;
         if (data.model.version <= 1) {
             logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", request.canonical));
-        } else {
+        } else if (data.model.version === 2) {
             model = this._loadModelJson(data, request.data, options);
+        } else if (data.model.version >= 3) {
+            if (data.model.mapping) {
+                // model contains it's own mapping data (final export)
+                model = this._loadModelJson(data, data.model.mapping, options);
+            } else {
+                // mapping data provided from asset
+                model = this._loadModelJson(data, request.data, options);
+            }
+            
         }
 
         return model;
@@ -331,8 +369,10 @@ pc.extend(pc.resources, function () {
 
             var node = nodes[meshInstanceData.node];
             var mesh = meshes[meshInstanceData.mesh];
-            var material = (mapping && mapping[i].material) ? this.materialLoader.load(mapping[i].material) : defaultMaterial;
-
+            var material = this._getMaterial(i, mapping, options);
+            if (!material) {
+                material = defaultMaterial;
+            }
             var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
 
             if (mesh.skin) {
@@ -359,6 +399,31 @@ pc.extend(pc.resources, function () {
 
         return model;
     };
+
+    /**
+    * Load the material using either the material resource id or the path provided in the mapping
+    */
+    ModelResourceHandler.prototype._getMaterial = function (meshInstanceIndex, mapping, options) {
+        var material;
+
+        if (mapping) {
+            if (mapping[meshInstanceIndex].material) {
+                material = this._materialLoader.load(mapping[i].material);
+            } else if (mapping[meshInstanceIndex].path) {
+                // get directory of model
+                var path = pc.path.split(options.parent.canonical)[0];
+                path = pc.path.join(path, mapping[meshInstanceIndex].path);
+
+                // Get material asset
+                var asset = this._assets.getAssetByUrl(path);
+                if (asset) {
+                    material = asset.resource;
+                }
+            }
+        }
+
+        return material;
+    }
    
 	var ModelRequest = function ModelRequest(identifier) {		
 	};

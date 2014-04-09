@@ -15,8 +15,9 @@ pc.extend(pc.asset, function () {
         this.loader = loader;
         this._prefix = prefix || "";
 
-        this._cache = {};
-        this._names = {};
+        this._cache = {}; // main asset cache, keyed by resourceId
+        this._names = {}; // index for looking up assets by name
+        this._urls = {}; // index for looking up assets by url
     };
 
     AssetRegistry.prototype = {
@@ -67,6 +68,10 @@ pc.extend(pc.asset, function () {
                 this._names[asset.name] = [];
             }
             this._names[asset.name].push(asset.resourceId);
+            if (asset.file) {
+                this._urls[asset.file.url] = asset.resourceId;
+            }
+            
         },
 
         /**
@@ -126,6 +131,11 @@ pc.extend(pc.asset, function () {
         * @returns {pc.asset.Asset} The Asset or null if no Asset is found.
         */
         getAssetByResourceId: function (resourceId) {
+            return this._cache[resourceId];
+        },
+
+        getAssetByUrl: function (url) {
+            var resourceId = this._urls[url];
             return this._cache[resourceId];
         },
 
@@ -190,34 +200,34 @@ pc.extend(pc.asset, function () {
             }, this);
 
             // request all assets
-            return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(null, function (error) {
-                // Ensure exceptions while loading are thrown and not swallowed by promises
-                setTimeout(function () {
-                    throw error;
-                }, 0)
-            });
-
-            // TODO: release this
-            // request all assets, also attach loaded resources onto asset
-            // return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
-            //     var promise = new RSVP.Promise(function (resolve, reject) {
-            //         var index = 0;
-            //         requests.forEach(function (r, i) {
-            //             if (r) {
-            //                 assets[i].resource = resources[index++];
-            //             } else {
-            //                 assets[i].resource = null;
-            //             }
-            //         });
-            //         resolve(resources);
-            //     });
-            //     return promise;
-            // }, function (error) {
+            // return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(null, function (error) {
             //     // Ensure exceptions while loading are thrown and not swallowed by promises
             //     setTimeout(function () {
             //         throw error;
             //     }, 0)
             // });
+
+            // TODO: release this
+            // request all assets, then attach loaded resources onto asset
+            return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
+                var promise = new RSVP.Promise(function (resolve, reject) {
+                    var index = 0;
+                    requests.forEach(function (r, i) {
+                        if (r) {
+                            assets[i].resource = resources[index++];
+                        } else {
+                            assets[i].resource = null;
+                        }
+                    });
+                    resolve(resources);
+                });
+                return promise;
+            }, function (error) {
+                // Ensure exceptions while loading are thrown and not swallowed by promises
+                setTimeout(function () {
+                    throw error;
+                }, 0)
+            });
         },
 
         _createAssetRequest: function (asset, result) {
