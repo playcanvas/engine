@@ -61,7 +61,7 @@ Full documentation available on the [PlayCanvas Developer](http://developer.play
 
 ## Contributing
 
-What to help us make the best damn 3D engine on the web? Great, just a few house rules first.
+What to help us make the best damn 3D engine on the web? Great!
 
 ### Github Issues
 
@@ -76,14 +76,6 @@ Please follow these steps to report a bug
 2. **Create a testcase** - Please create the smallest isolated testcase that you can that reproduces your bug
 
 3. **Share as much information as possible** - everything little helps, OS, browser version, all that stuff.
-
-### Making Changes
-
-1. [**Sign the CLA**](https://docs.google.com/a/playcanvas.com/forms/d/1Ih69zQfJG-QDLIEpHr6CsaAs6fPORNOVnMv5nuo0cjk/viewform). Sadly, we can only look at pull requests if you have signed our Contributor License Agreement. This is to protect us and you and ensure that the PlayCanvas Engine remains open-source and trouble-free. 
-
-2. **Use 'default' branch** - Pull requests should go to the 'default' branch. 'stable' branch is for release builds only.
-
-3. **Stay focused** - Pull requests should only fix one issue.
 
 ## PlayCanvas Platform
 
