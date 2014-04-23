@@ -63,16 +63,16 @@
     // scale it
     floor.setLocalScale(10, 1, 10);
 
-    // add a collision component
-    application.context.systems.collision.addComponent(floor, {
-        type: "box",
-        halfExtents: new pc.Vec3(5, 0.5, 5)
-    });
-
     // add a rigidbody component so that other objects collide with it
     application.context.systems.rigidbody.addComponent(floor, {
         type: "static",
         restitution: 0.5
+    });
+
+    // add a collision component
+    application.context.systems.collision.addComponent(floor, {
+        type: "box",
+        halfExtents: new pc.Vec3(5, 0.5, 5)
     });
 
     // add the floor to the hierarchy
@@ -121,18 +121,18 @@
         castShadows: true
     });
 
-    // ... a collision component of type 'box'...
-    application.context.systems.collision.addComponent(boxTemplate, {
-        type: "box",
-        halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
-    });
-
-    // ... and a rigidbody component of type 'dynamic' so that it is simulated
-    // by the physics engine
+     // ...a rigidbody component of type 'dynamic' so that it is simulated
+    // by the physics engine...
     application.context.systems.rigidbody.addComponent(boxTemplate, {
         type: "dynamic",
         mass: 50,
         restitution: 0.5
+    });
+
+    // ... and a collision component of type 'box'
+    application.context.systems.collision.addComponent(boxTemplate, {
+        type: "box",
+        halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
     });
 
     // make the box red
@@ -147,16 +147,17 @@
         castShadows: true
     });
 
-    application.context.systems.collision.addComponent(sphereTemplate, {
-        type: "sphere",
-        radius: 0.5
-    });
-
     application.context.systems.rigidbody.addComponent(sphereTemplate, {
         type: "dynamic",
         mass: 50,
         restitution: 0.5
     });
+
+    application.context.systems.collision.addComponent(sphereTemplate, {
+        type: "sphere",
+        radius: 0.5
+    });
+
 
     // make the sphere green
     sphereTemplate.model.material = green;
@@ -168,17 +169,18 @@
         castShadows: true
     });
 
+    application.context.systems.rigidbody.addComponent(capsuleTemplate, {
+        type: "dynamic",
+        mass: 50,
+        restitution: 0.5
+    });
+
     application.context.systems.collision.addComponent(capsuleTemplate, {
         type: "capsule",
         radius: 0.5,
         height: 2
     });
 
-    application.context.systems.rigidbody.addComponent(capsuleTemplate, {
-        type: "dynamic",
-        mass: 50,
-        restitution: 0.5
-    });
 
     // make the capsule blue
     capsuleTemplate.model.material = blue;
@@ -190,17 +192,18 @@
         castShadows: true
     });
 
+    application.context.systems.rigidbody.addComponent(cylinderTemplate, {
+        type: "dynamic",
+        mass: 50,
+        restitution: 0.5
+    });
+
     application.context.systems.collision.addComponent(cylinderTemplate, {
         type: "cylinder",
         radius: 0.5,
         height: 1
     });
 
-    application.context.systems.rigidbody.addComponent(cylinderTemplate, {
-        type: "dynamic",
-        mass: 50,
-        restitution: 0.5
-    });
 
     // make the cylinder yellow
     cylinderTemplate.model.material = yellow;
@@ -209,15 +212,10 @@
     // we can randomly spawn them
     var templates = [boxTemplate, sphereTemplate, capsuleTemplate, cylinderTemplate];
 
-    // position our templates out of the view
+    // disable the templates because we don't want them to be visible
+    // we'll just use them to clone other Entities
     templates.forEach(function (template) {
-        application.context.root.addChild(template);
-        template.setLocalPosition(500, 0, 0);
-
-        // when we manually change the position of an Entity with a dynamic rigidbody
-        // we need to call syncEntityToBody() so that the rigidbody will get the position
-        // and rotation of the Entity.
-        template.rigidbody.syncEntityToBody();
+        template.enabled = false;
     })
 
     // ***********    Update Function   *******************
@@ -238,9 +236,16 @@
                 // Clone a random template and position it above the floor
                 var template = templates[Math.floor(pc.math.random(0, templates.length))];
                 var clone = template.clone();
+                // enable the clone because the template is disabled
+                clone.enabled = true;
+
                 application.context.root.addChild(clone);
+
                 clone.setLocalPosition(pc.math.random(-1,1), 10, pc.math.random(-1,1));
 
+                // when we manually change the position of an Entity with a dynamic rigidbody
+                // we need to call syncEntityToBody() so that the rigidbody will get the position
+                // and rotation of the Entity.
                 clone.rigidbody.syncEntityToBody();
             }
         }
