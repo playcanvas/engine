@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+    <script src="/engine/build/output/playcanvas-latest.js"></script>
+    <style>
+        html, body {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        canvas {
+            height: 720px;
+            width: 1200px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas" width="1200" height="720"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the graphics device
+        var device = new pc.gfx.Device(canvas);
+
+        // Create renderer
+        var renderer = new pc.scene.ForwardRenderer(device);
+
+        // Create Scene
+        var scene = new pc.scene.Scene();
+
+        // Create camera node
+        var camera = new pc.scene.CameraNode();
+        camera.setLocalPosition(0,0,2);
+
+        // Set up a default scene light
+        var light = new pc.scene.LightNode();
+        light.setType(pc.scene.LIGHTTYPE_POINT);
+        light.setAttenuationEnd(100);
+        light.setLocalPosition(0, 2, 2);
+        light.setEnabled(true);
+        scene.addLight(light);
+
+        // Create resource and asset loaders
+        var loader = new pc.resources.ResourceLoader();
+        var assets = new pc.asset.AssetRegistry(loader);
+        // Register loaders for models, textures and materials
+        loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(assets));
+        loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(device));
+        loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(device, assets));
+
+        // Create Assets
+        var modelAsset = new pc.asset.Asset("MCCV", "model", {
+            url: "../assets/ship/MCCV-2.json",
+            hash: 1
+        });
+
+        var materialAsset = new pc.asset.Asset("ship_hull_1Mat", "material", {
+            url: "../assets/ship/material.json",
+            hash: 2
+        });
+
+        var textureAsset = new pc.asset.Asset("texture1", "texture", {
+            url: "../assets/ship/texture1.png",
+            hash: 3
+        });
+
+        var specularAsset = new pc.asset.Asset("text-spec", "texture", {
+            url: "../assets/ship/text-spec.png",
+            hash: 4
+        });
+
+        // Load Assets
+        assets.load([modelAsset, materialAsset, textureAsset, specularAsset]).then(function (resources) {
+
+            var model = resources[0];
+            var material = resources[1];
+            var texture1 = resources[2];
+            var textureSpec = resources[3];
+
+            // Hook up textures to material
+            material.diffuseMap = texture1;
+            material.specularMap = textureSpec;
+            material.update();
+
+            // Hook up material to meshInstance
+            model.meshInstances[0].material = material;
+
+            // Add model to scene
+            scene.addModel(model);
+        });
+
+
+        // Setup update, render and tick functions
+
+
+        var update = function (dt) {
+            if (modelAsset.resource) {
+                modelAsset.resource.getGraph().rotate(0, 90*dt, 0);
+            }
+            scene.update();
+        };
+
+        var render = function () {
+            renderer.render(scene, camera);
+        }
+
+        var time = 0;
+        var tick = function () {
+            var now = (window.performance && window.performance.now) ? performance.now() : Date.now();
+            var dt = (now - (time || now)) / 1000.0;
+            time = now;
+
+            update(dt);
+            render();
+
+            requestAnimationFrame(tick, canvas);
+        }
+
+        // start running
+        tick();
+    </script>
+</body>
+</html>
