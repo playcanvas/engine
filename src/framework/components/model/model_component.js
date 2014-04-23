@@ -39,7 +39,7 @@ pc.extend(pc.fw, function () {
         this.materialLoader = new pc.resources.MaterialResourceLoader(system.context.graphicsDevice, system.context.assets);
     };
     ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
-    
+
     pc.extend(ModelComponent.prototype, {
 
         setVisible: function (visible) {
@@ -51,7 +51,7 @@ pc.extend(pc.fw, function () {
             var options = {
                 parent: this.entity.getRequest()
             };
-            
+
             var asset = this.system.context.assets.getAssetByResourceId(guid);
             if (!asset) {
                 logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
@@ -63,7 +63,7 @@ pc.extend(pc.fw, function () {
 
                 if (this.system.context.designer) {
                     model.generateWireframe();
-                
+
                     asset.on('change', this.onAssetChange, this);
                 }
 
@@ -93,7 +93,7 @@ pc.extend(pc.fw, function () {
                     }
                 } else {
                     switch (newValue) {
-                        case 'box': 
+                        case 'box':
                             mesh = this.system.box;
                             break;
                         case 'capsule':
@@ -107,7 +107,7 @@ pc.extend(pc.fw, function () {
                             break;
                         case 'cylinder':
                             mesh = this.system.cylinder;
-                            break;                    
+                            break;
                         default:
                             throw new Error("Invalid model type: " + newValue);
                     }
@@ -133,13 +133,17 @@ pc.extend(pc.fw, function () {
                 // Remove old listener
                 var asset = this.system.context.assets.getAssetByResourceId(oldValue);
                 if (asset) {
-                    asset.off('change', this.onAssetChange, this);    
+                    asset.off('change', this.onAssetChange, this);
                 }
             }
 
             if (this.data.type === 'asset') {
                 if (newValue) {
-                    this.loadModelAsset(newValue);
+                    if (newValue instanceof pc.asset.Asset) {
+                        this.model = newValue.resource;
+                    } else {
+                        this.loadModelAsset(newValue);
+                    }
                 } else {
                     this.model = null;
                 }
@@ -163,7 +167,7 @@ pc.extend(pc.fw, function () {
                 if (inScene) {
                     scene.addModel(model);
                 }
-            }        
+            }
         },
 
         onSetModel: function (name, oldValue, newValue) {
@@ -193,7 +197,7 @@ pc.extend(pc.fw, function () {
                 if (this.entity.animation) {
                     this.entity.animation.setModel(newValue);
                 }
-            }        
+            }
         },
 
         setMaterialAsset: function (newValue) {
@@ -211,7 +215,7 @@ pc.extend(pc.fw, function () {
 
             var oldValue = this.data.materialAsset;
             this.data.materialAsset = guid;
-            this.fire('set', 'materialAsset', oldValue, guid);                            
+            this.fire('set', 'materialAsset', oldValue, guid);
         },
 
         getMaterialAsset: function () {
@@ -235,10 +239,10 @@ pc.extend(pc.fw, function () {
 
             if (this.data.model) {
                 var inScene = this.system.context.scene.containsModel(this.data.model);
-                
+
                 if (!inScene) {
                     this.system.context.scene.addModel(this.data.model);
-                } 
+                }
             }
         },
 
@@ -247,7 +251,7 @@ pc.extend(pc.fw, function () {
 
             if (this.data.model) {
                 var inScene = this.system.context.scene.containsModel(this.data.model);
-                
+
                 if (inScene) {
                     this.system.context.scene.removeModel(this.data.model);
                 }

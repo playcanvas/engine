@@ -2,7 +2,7 @@ pc.extend(pc.asset, function () {
     /**
     * @name pc.asset.AssetRegistry
     * @class Container for all assets that are available to this application
-    * @constructor Create an instance of an AssetRegistry. 
+    * @constructor Create an instance of an AssetRegistry.
     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'context.assets'.
     * @param {pc.resources.ResourceLoader} loader The ResourceLoader used to to load the asset files.
     * @param {String} prefix The prefix added to file urls before the loader tries to fetch them
@@ -59,7 +59,7 @@ pc.extend(pc.asset, function () {
         /**
         * @function
         * @name pc.asset.AssetRegistry#addAsset
-        * @description Add a new 
+        * @description Add a new
         * @param {pc.asset.Asset} asset The asset to add to the registry
         */
         addAsset: function (asset) {
@@ -71,7 +71,7 @@ pc.extend(pc.asset, function () {
             if (asset.file) {
                 this._urls[asset.file.url] = asset.resourceId;
             }
-            
+
         },
 
         /**
@@ -160,7 +160,6 @@ pc.extend(pc.asset, function () {
         * @returns {Promise} A Promise to the resources
         * @example
         * var asset = new pc.asset.Asset("My Texture", "texture", {
-        *   filename: "mytexture.jpg",
         *   url: "/example/mytexture.jpg"
         * });
         */
@@ -168,15 +167,14 @@ pc.extend(pc.asset, function () {
             if (!assets.length) {
                 assets = [assets];
             }
-            
+
             if (typeof(options) === 'undefined') {
                 // shift arguments
                 options = results;
                 results = [];
             }
 
-            var requests = []
-
+            var requests = [];
             assets.forEach(function (asset, index) {
                 var existing = this.getAssetByResourceId(asset.resourceId);
                 if (!existing) {
@@ -207,9 +205,9 @@ pc.extend(pc.asset, function () {
             //     }, 0)
             // });
 
-            // TODO: release this
             // request all assets, then attach loaded resources onto asset
             return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
+
                 var promise = new RSVP.Promise(function (resolve, reject) {
                     var index = 0;
                     requests.forEach(function (r, i) {
@@ -237,7 +235,7 @@ pc.extend(pc.asset, function () {
             } else {
                 return null;
             }
-            
+
         },
 
         _createModelRequest: function (asset) {

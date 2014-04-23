@@ -84,10 +84,10 @@ pc.extend(pc.resources, function () {
             texture.addressU = jsonToAddressMode[textureData.addressu];
             texture.addressV = jsonToAddressMode[textureData.addressv];
             texture.magFilter = jsonToFilterMode[textureData.magfilter];
-            texture.minFilter = jsonToFilterMode[textureData.minfilter];                
+            texture.minFilter = jsonToFilterMode[textureData.minfilter];
         }
 
-        this._assets.load([asset], [texture], {});    
+        this._assets.load([asset], [texture], {});
 
         return texture;
     };
@@ -101,22 +101,23 @@ pc.extend(pc.resources, function () {
         // Used to load material data from a file (as opposed to from an asset)
         var promise = new RSVP.Promise(function (resolve, reject) {
             pc.net.http.get(request.canonical, function(response) {
-                var textures = this._listTextures(response);
-                var assets = [];
+                resolve(response);
+                // var textures = this._listTextures(response);
+                // var assets = [];
 
-                // Create and load all texture assets
-                textures.forEach(function (texturePath) {
-                    var filename = pc.path.getBasename(texturePath);
-                    var textureUrl = pc.path.join(pc.path.split(request.canonical)[0], texturePath);
-                    assets.push(new pc.asset.Asset(filename, "texture", {
-                        url: textureUrl
-                    }));
-                });
+                // // Create and load all texture assets
+                // textures.forEach(function (texturePath) {
+                //     var filename = pc.path.getBasename(texturePath);
+                //     var textureUrl = pc.path.join(pc.path.split(request.canonical)[0], texturePath);
+                //     assets.push(new pc.asset.Asset(filename, "texture", {
+                //         url: textureUrl
+                //     }));
+                // });
 
-                this._assets.load(assets).then(function (responses) {
-                    // Only when texture assets are loaded do we resolve the material load
-                    resolve(response);
-                });
+                // this._assets.load(assets).then(function (responses) {
+                //     // Only when texture assets are loaded do we resolve the material load
+                //     resolve(response);
+                // });
             }.bind(this), {
                 error: function () {
                     reject();
@@ -174,7 +175,7 @@ pc.extend(pc.resources, function () {
         if (asset.resource) {
             return asset.resource;
         }
-        
+
         var url = asset.getFileUrl();
         if (!url) {
             return null;
@@ -192,15 +193,15 @@ pc.extend(pc.resources, function () {
             texture.addressU = jsonToAddressMode[textureData.addressu];
             texture.addressV = jsonToAddressMode[textureData.addressv];
             texture.magFilter = jsonToFilterMode[textureData.magfilter];
-            texture.minFilter = jsonToFilterMode[textureData.minfilter];                
+            texture.minFilter = jsonToFilterMode[textureData.minfilter];
         }
 
-        this._assets.load([asset], [texture], {});    
+        this._assets.load([asset], [texture], {});
 
         return texture;
     };
 
-    var MaterialRequest = function MaterialRequest(identifier) {      
+    var MaterialRequest = function MaterialRequest(identifier) {
     };
     MaterialRequest = pc.inherits(MaterialRequest, pc.resources.ResourceRequest);
     MaterialRequest.prototype.type = "material";
