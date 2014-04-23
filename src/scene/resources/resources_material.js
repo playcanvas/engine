@@ -101,23 +101,27 @@ pc.extend(pc.resources, function () {
         // Used to load material data from a file (as opposed to from an asset)
         var promise = new RSVP.Promise(function (resolve, reject) {
             pc.net.http.get(request.canonical, function(response) {
-                resolve(response);
-                // var textures = this._listTextures(response);
-                // var assets = [];
+                if (response.mapping_format === "path") {
+                    var textures = this._listTextures(response);
+                    var assets = [];
 
-                // // Create and load all texture assets
-                // textures.forEach(function (texturePath) {
-                //     var filename = pc.path.getBasename(texturePath);
-                //     var textureUrl = pc.path.join(pc.path.split(request.canonical)[0], texturePath);
-                //     assets.push(new pc.asset.Asset(filename, "texture", {
-                //         url: textureUrl
-                //     }));
-                // });
+                    // Create and load all texture assets
+                    textures.forEach(function (texturePath) {
+                        var filename = pc.path.getBasename(texturePath);
+                        var textureUrl = pc.path.join(pc.path.split(request.canonical)[0], texturePath);
+                        assets.push(new pc.asset.Asset(filename, "texture", {
+                            url: textureUrl
+                        }));
+                    });
 
-                // this._assets.load(assets).then(function (responses) {
-                //     // Only when texture assets are loaded do we resolve the material load
-                //     resolve(response);
-                // });
+                    this._assets.load(assets).then(function (responses) {
+                        // Only when texture assets are loaded do we resolve the material load
+                        resolve(response);
+                    });
+                } else {
+                    resolve(response);
+                }
+
             }.bind(this), {
                 error: function () {
                     reject();
@@ -135,6 +139,7 @@ pc.extend(pc.resources, function () {
     };
 
     MaterialResourceHandler.prototype._listTextures = function (data) {
+        // Get all texture data parameters from the material
         var i, n = data.parameters.length;
         var param;
         var textures = [];
@@ -172,6 +177,7 @@ pc.extend(pc.resources, function () {
             return null;
         }
 
+        // Asset already loaded, use cached texture
         if (asset.resource) {
             return asset.resource;
         }

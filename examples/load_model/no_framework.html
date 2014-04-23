@@ -51,55 +51,59 @@
         loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(assets));
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(device));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(device, assets));
+        loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
 
-        // Create Assets
-        var modelAsset = new pc.asset.Asset("MCCV", "model", {
-            url: "../assets/ship/MCCV-2.json",
-            hash: 1
+        function loadModel (url) {
+            // Create Assets
+            var modelAsset = new pc.asset.Asset("MCCV", "model", {
+                url: url
+            });
+
+            var parts = pc.path.split(url);
+            parts[1] = parts[1].replace(".json", ".mapping.json");
+            var mappingUrl = pc.path.join(parts[0], parts[1]);
+
+            var mappingAsset = new pc.asset.Asset("mapping", "json", {
+                url: mappingUrl
+            });
+
+            // Load Assets
+            var promise = assets.load([modelAsset, mappingAsset]);
+
+            promise.then(function (resources) {
+                var model = resources[0];
+                var mapping = resources[1];
+
+                var dir = pc.path.getDirectory(url);
+
+                var materialAssets = [];
+                mapping.mapping.forEach(function (map) {
+                    materialAssets.push(new pc.asset.Asset(pc.path.getBasename(map.path), "material", {
+                        url: pc.path.join(dir, map.path)
+                    }));
+                });
+
+                return assets.load(materialAssets).then(function (materials) {
+                    for(var i = 0, n = model.meshInstances.length; i < n; i++) {
+                        model.meshInstances[i].material = materials[i];
+                    }
+
+                    scene.addModel(model);
+                });
+            });
+
+            return promise;
+        }
+
+        var model = null;
+        loadModel("../assets/ship/MCCV-2.json").then(function (resources) {
+            model = resources[0];
         });
-
-        var materialAsset = new pc.asset.Asset("ship_hull_1Mat", "material", {
-            url: "../assets/ship/material.json",
-            hash: 2
-        });
-
-        var textureAsset = new pc.asset.Asset("texture1", "texture", {
-            url: "../assets/ship/texture1.png",
-            hash: 3
-        });
-
-        var specularAsset = new pc.asset.Asset("text-spec", "texture", {
-            url: "../assets/ship/text-spec.png",
-            hash: 4
-        });
-
-        // Load Assets
-        assets.load([modelAsset, materialAsset, textureAsset, specularAsset]).then(function (resources) {
-
-            var model = resources[0];
-            var material = resources[1];
-            var texture1 = resources[2];
-            var textureSpec = resources[3];
-
-            // Hook up textures to material
-            material.diffuseMap = texture1;
-            material.specularMap = textureSpec;
-            material.update();
-
-            // Hook up material to meshInstance
-            model.meshInstances[0].material = material;
-
-            // Add model to scene
-            scene.addModel(model);
-        });
-
 
         // Setup update, render and tick functions
-
-
         var update = function (dt) {
-            if (modelAsset.resource) {
-                modelAsset.resource.getGraph().rotate(0, 90*dt, 0);
+            if (model) {
+                model.getGraph().rotate(0, 90*dt, 0);
             }
             scene.update();
         };

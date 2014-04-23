@@ -63,36 +63,7 @@ pc.extend(pc.resources, function () {
             var ext = pc.path.getExtension(uri.path);
 
             pc.net.http.get(url, function (response) {
-                var path = pc.path.split(url)[0];
-
-                var model = response.model;
-                // if (model.version >= 3 && model.mapping) {
-                //     // If this model has built in mapping we need to
-                //     // create and load all the material assets
-                //     var i, n = model.mapping.length;
-                //     var assets = [];
-                //     for (i = 0; i < n; i++) {
-                //         if (model.mapping[i].path) {
-                //             var filename = pc.path.getBasename(model.mapping[i].path);
-                //             var materialPath = pc.path.join(path, model.mapping[i].path)
-                //             assets.push(new pc.asset.Asset(filename, "material", {
-                //                 url: materialPath
-                //             }));
-                //         }
-                //     }
-
-                //     // Only once all materials are loaded is the model loaded
-                //     self._assets.load(assets).then(function (resources) {
-                //         assets.forEach(function (asset, i) {
-                //             asset.data = resources[i];
-                //         });
-                //         resolve(response);
-                //     });
-                // } else {
-                //     resolve(response);
-                // }
                 resolve(response);
-
             }, {
                 cache: options.cache,
                 error: function (status, xhr, e) {
@@ -121,17 +92,8 @@ pc.extend(pc.resources, function () {
         var model = null;
         if (data.model.version <= 1) {
             logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", request.canonical));
-        } else if (data.model.version === 2) {
+        } else if (data.model.version >== 2) {
             model = this._loadModelJson(data, request.data, options);
-        } else if (data.model.version >= 3) {
-            if (data.model.mapping) {
-                // model contains it's own mapping data (final export)
-                model = this._loadModelJson(data, data.model.mapping, options);
-            } else {
-                // mapping data provided from asset
-                model = this._loadModelJson(data, request.data, options);
-            }
-
         }
 
         return model;
@@ -409,8 +371,11 @@ pc.extend(pc.resources, function () {
 
         if (mapping && mapping.length > meshInstanceIndex) {
             if (mapping[meshInstanceIndex].material) {
+                // resource id mapping
                 material = this._materialLoader.load(mapping[i].material);
             } else if (mapping[meshInstanceIndex].path) {
+                // path mapping
+
                 // get directory of model
                 var path = pc.path.split(options.parent.canonical)[0];
                 path = pc.path.join(path, mapping[meshInstanceIndex].path);
