@@ -7,12 +7,12 @@ pc.extend(pc.fw, function () {
      * @component
      * @name pc.fw.RigidBodyComponent
      * @constructor Create a new RigidBodyComponent
-     * @class The rigidbody Component, when combined with a {@link pc.fw.CollisionComponent}, allows your Entities to be simulated using realistic physics. 
+     * @class The rigidbody Component, when combined with a {@link pc.fw.CollisionComponent}, allows your Entities to be simulated using realistic physics.
      * A rigidbody Component will fall under gravity and collide with other rigid bodies, using scripts you can apply forces to the body.
      * @param {pc.fw.RigidBodyComponentSystem} system The ComponentSystem that created this Component
      * @param {pc.fw.Entity} entity The Entity this Component is attached to
      * @extends pc.fw.Component
-     * @property {Boolean} enabled Enables or disables the Component. 
+     * @property {Boolean} enabled Enables or disables the Component.
      * @property {Number} mass The mass of the body. This is only relevant for {@link pc.fw.RIGIDBODY_TYPE_DYNAMIC} bodies, other types have infinite mass.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
      * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
@@ -21,12 +21,12 @@ pc.extend(pc.fw, function () {
      * @property {pc.Vec3} linearFactor Scaling factor for linear movement of the body in each axis.
      * @property {pc.Vec3} angularFactor Scaling factor for angular movement of the body in each axis.
      * @property {Number} friction The friction value used when contacts occur between two bodies. A higher value indicates more friction.
-     * @property {Number} restitution The amount of energy lost when two objects collide, this determines the bounciness of the object. 
-     * A value of 0 means that no energy is lost in the collision, a value of 1 means that all energy is lost. 
+     * @property {Number} restitution The amount of energy lost when two objects collide, this determines the bounciness of the object.
+     * A value of 0 means that no energy is lost in the collision, a value of 1 means that all energy is lost.
      * So the higher the value the less bouncy the object is.
-     * @property {pc.fw.RIGIDBODY_TYPE} type The type of RigidBody determines how it is simulated. 
-     * Static objects have infinite mass and cannot move, 
-     * Dynamic objects are simulated according to the forces applied to them, 
+     * @property {pc.fw.RIGIDBODY_TYPE} type The type of RigidBody determines how it is simulated.
+     * Static objects have infinite mass and cannot move,
+     * Dynamic objects are simulated according to the forces applied to them,
      * Kinematic objects have infinite mass and do not respond to forces, but can still be moved by setting their velocity or position.
      */
     var RigidBodyComponent = function RigidBodyComponent (system, entity) {
@@ -90,7 +90,7 @@ pc.extend(pc.fw, function () {
                 if (body) {
                     ammoVec1.setValue(lv.x, lv.y, lv.z);
                     body.setLinearVelocity(ammoVec1);
-                }                
+                }
             } else {
                 this._linearVelocity.copy(lv);
             }
@@ -136,8 +136,8 @@ pc.extend(pc.fw, function () {
 
             if (entity.collision) {
                 shape = entity.collision.shape;
-            } 
-            
+            }
+
             if (shape) {
                 if (this.body) {
                     this.system.removeBody(this.body);
@@ -189,7 +189,7 @@ pc.extend(pc.fw, function () {
 
                 if (this.enabled && this.entity.enabled) {
                     this.enableSimulation();
-                } 
+                }
             }
         },
 
@@ -219,7 +219,7 @@ pc.extend(pc.fw, function () {
         },
 
         enableSimulation: function () {
-            if (this.entity.collision && this.entity.collision.enabled) {
+            if (this.entity.collision && this.entity.collision.enabled && !this.data.simulationEnabled) {
                 var body = this.body;
                 if (body) {
                     this.system.addBody(body);
@@ -227,22 +227,26 @@ pc.extend(pc.fw, function () {
                     // set activation state so that the body goes back to normal simulation
                     if (this.isKinematic()) {
                         body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_DEACTIVATION);
+                        body.activate();
                     } else {
                         body.forceActivationState(pc.fw.RIGIDBODY_ACTIVE_TAG);
+                        this.syncEntityToBody();
                     }
 
-                    body.activate();
+                    this.data.simulationEnabled = true;
                 }
             }
         },
 
         disableSimulation: function () {
             var body = this.body;
-            if (body) {
+            if (body && this.data.simulationEnabled) {
                 this.system.removeBody(body);
-                // set activation state to disable simulation to avoid body.isActive() to return 
+                // set activation state to disable simulation to avoid body.isActive() to return
                 // true even if it's not in the dynamics world
                 body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_SIMULATION);
+
+                this.data.simulationEnabled = false;
             }
         },
 
@@ -305,7 +309,7 @@ pc.extend(pc.fw, function () {
                 } else {
                     body.applyForce(ammoVec1, ammoOrigin);
                 }
-                
+
             }
         },
 
@@ -403,7 +407,7 @@ pc.extend(pc.fw, function () {
                 ammoVec1.setValue(x, y, z);
                 if (typeof(px) !== 'undefined') {
                     ammoVec2.setValue(px, py, pz);
-                    body.applyImpulse(ammoVec1, ammoVec2);                    
+                    body.applyImpulse(ammoVec1, ammoVec2);
                 } else {
                     body.applyImpulse(ammoVec1, ammoOrigin);
                 }
@@ -445,7 +449,7 @@ pc.extend(pc.fw, function () {
             if (body) {
                 body.activate();
                 ammoVec1.setValue(x, y, z);
-                body.applyTorqueImpulse(ammoVec1);                    
+                body.applyTorqueImpulse(ammoVec1);
             }
         },
 
@@ -503,7 +507,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        /** 
+        /**
          * @private
          * @function
          * @name pc.fwRigidBodyComponent#syncBodyToEntity
@@ -581,14 +585,14 @@ pc.extend(pc.fw, function () {
             var body = this.data.body;
             if (body) {
                 body.setDamping(newValue, this.data.angularDamping);
-            }                
+            }
         },
 
         onSetAngularDamping: function (name, oldValue, newValue) {
             var body = this.data.body;
             if (body) {
                 body.setDamping(this.data.linearDamping, newValue);
-            }                
+            }
         },
 
         onSetLinearFactor: function (name, oldValue, newValue) {
@@ -596,7 +600,7 @@ pc.extend(pc.fw, function () {
             if (body) {
                 ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
                 body.setLinearFactor(ammoVec1);
-            }                
+            }
         },
 
         onSetAngularFactor: function (name, oldValue, newValue) {
@@ -604,21 +608,21 @@ pc.extend(pc.fw, function () {
             if (body) {
                 ammoVec1.setValue(newValue.x, newValue.y, newValue.z);
                 body.setAngularFactor(ammoVec1);
-            }                
+            }
         },
 
         onSetFriction: function (name, oldValue, newValue) {
             var body = this.data.body;
             if (body) {
                 body.setFriction(newValue);
-            }                
+            }
         },
 
         onSetRestitution: function (name, oldValue, newValue) {
             var body = this.data.body;
             if (body) {
                 body.setRestitution(newValue);
-            }                
+            }
         },
 
         onSetType: function (name, oldValue, newValue) {
@@ -629,7 +633,7 @@ pc.extend(pc.fw, function () {
         },
 
         onSetBody: function (name, oldValue, newValue) {
-            if (this.body) {
+            if (this.body && this.data.simulationEnabled) {
                 this.body.activate();
             }
         },

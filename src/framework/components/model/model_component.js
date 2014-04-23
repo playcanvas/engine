@@ -182,8 +182,9 @@ pc.extend(pc.fw, function () {
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
                 }
 
+                this.entity.addChild(newValue.graph);
+
                 if (this.enabled && this.entity.enabled) {
-                    this.entity.addChild(newValue.graph);
                     this.system.context.scene.addModel(newValue);
                 }
 
@@ -240,11 +241,12 @@ pc.extend(pc.fw, function () {
         onEnable: function () {
             ModelComponent._super.onEnable.call(this);
 
-            if (this.data.model) {
-                var inScene = this.system.context.scene.containsModel(this.data.model);
+            var model = this.data.model;
+            if (model) {
+                var inScene = this.system.context.scene.containsModel(model);
 
                 if (!inScene) {
-                    this.system.context.scene.addModel(this.data.model);
+                    this.system.context.scene.addModel(model);
                 }
             }
         },
@@ -252,11 +254,12 @@ pc.extend(pc.fw, function () {
         onDisable: function () {
             ModelComponent._super.onDisable.call(this);
 
-            if (this.data.model) {
-                var inScene = this.system.context.scene.containsModel(this.data.model);
+            var model = this.data.model;
+            if (model) {
+                var inScene = this.system.context.scene.containsModel(model);
 
                 if (inScene) {
-                    this.system.context.scene.removeModel(this.data.model);
+                    this.system.context.scene.removeModel(model);
                 }
             }
         },

@@ -21,6 +21,7 @@ pc.extend(pc.fw, function () {
 
         // Non-serialized properties
         this.body = null;
+        this.simulationEnabled = false;
     };
     RigidBodyComponentData = pc.inherits(RigidBodyComponentData, pc.fw.ComponentData);
 
