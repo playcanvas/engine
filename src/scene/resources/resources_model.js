@@ -92,7 +92,7 @@ pc.extend(pc.resources, function () {
         var model = null;
         if (data.model.version <= 1) {
             logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", request.canonical));
-        } else if (data.model.version >== 2) {
+        } else if (data.model.version >= 2) {
             model = this._loadModelJson(data, request.data, options);
         }
 
@@ -372,7 +372,7 @@ pc.extend(pc.resources, function () {
         if (mapping && mapping.length > meshInstanceIndex) {
             if (mapping[meshInstanceIndex].material) {
                 // resource id mapping
-                material = this._materialLoader.load(mapping[i].material);
+                material = this._materialLoader.load(mapping[meshInstanceIndex].material);
             } else if (mapping[meshInstanceIndex].path) {
                 // path mapping
 
