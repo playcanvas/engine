@@ -14,6 +14,13 @@ application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 // Set the gravity for our rigid bodies
 application.context.systems.rigidbody.setGravity(0, -9.8, 0);
 
+// create a few materials for our objects
+var white = createMaterial(new pc.Color(1,1,1));
+var red = createMaterial(new pc.Color(1,0,0));
+var green = createMaterial(new pc.Color(0,1,0));
+var blue = createMaterial(new pc.Color(0,0,1));
+var yellow = createMaterial(new pc.Color(1,1,0));
+
 // ***********    Create our floor   *******************
 
 var floor = new pc.fw.Entity();
@@ -22,6 +29,9 @@ var floor = new pc.fw.Entity();
 application.context.systems.model.addComponent(floor, {
     type: "box",
 });
+
+// make the floor white
+floor.model.material = white;
 
 // scale it
 floor.setLocalScale(10, 1, 10);
@@ -38,13 +48,16 @@ application.context.systems.rigidbody.addComponent(floor, {
     restitution: 0.5
 });
 
+// add the floor to the hierarchy
+application.context.root.addChild(floor);
+
 // ***********    Create lights   *******************
 
 // make our scene prettier by adding a directional light
 var light = new pc.fw.Entity();
 application.context.systems.light.addComponent(light, {
     type: "directional",
-    color: new pc.Color(0.7, 0.7, 0.7),
+    color: new pc.Color(1, 1, 1),
     castShadows: true,
     shadowResolution: 2048
 });
@@ -52,18 +65,19 @@ application.context.systems.light.addComponent(light, {
 // set the direction for our light
 light.setLocalEulerAngles(45, 30, 0);
 
+// Add the light to the hierarchy
+application.context.root.addChild(light);
+
 // ***********    Create camera    *******************
 
 // Create an Entity with a camera component
 var camera = new pc.fw.Entity();
 application.context.systems.camera.addComponent(camera, {
-    clearColor: new pc.Color(0.8, 0.8, 0.8),
+    clearColor: new pc.Color(0.5, 0.5, 0.8),
     farClip: 50
 });
 
-// Add the new Entities to the hierarchy
-application.context.root.addChild(floor);
-application.context.root.addChild(light);
+// add the camera to the hierarchy
 application.context.root.addChild(camera);
 
 // Move the camera a little further away
@@ -94,6 +108,9 @@ application.context.systems.rigidbody.addComponent(boxTemplate, {
     restitution: 0.5
 });
 
+// make the box red
+boxTemplate.model.material = red;
+
 // Create other shapes too for variety...
 
 // A sphere...
@@ -114,6 +131,9 @@ application.context.systems.rigidbody.addComponent(sphereTemplate, {
     restitution: 0.5
 });
 
+// make the sphere green
+sphereTemplate.model.material = green;
+
 // A capsule...
 var capsuleTemplate = new pc.fw.Entity();
 application.context.systems.model.addComponent(capsuleTemplate, {
@@ -133,6 +153,9 @@ application.context.systems.rigidbody.addComponent(capsuleTemplate, {
     restitution: 0.5
 });
 
+// make the capsule blue
+capsuleTemplate.model.material = blue;
+
 // A cylinder...
 var cylinderTemplate = new pc.fw.Entity();
 application.context.systems.model.addComponent(cylinderTemplate, {
@@ -151,6 +174,9 @@ application.context.systems.rigidbody.addComponent(cylinderTemplate, {
     mass: 50,
     restitution: 0.5
 });
+
+// make the cylinder yellow
+cylinderTemplate.model.material = yellow;
 
 // add all the templates to an array so that
 // we can randomly spawn them
