@@ -11,13 +11,15 @@
 </head>
 
 <body>
-    <!-- The canvas element -->
-    <canvas id="application-canvas"></canvas>
+    <!-- The canvas element. Set tabindex="0" for keyboard focus -->
+    <canvas id="application-canvas" tabindex="0"></canvas>
 
     <!-- The script -->
     <script>
     // ***********    Initialize application   *******************
     var canvas = document.getElementById("application-canvas");
+    // focus the canvas for keyboard input
+    canvas.focus();
 
     // Create the application and start the update loop
     var application = new pc.fw.Application(canvas, {
