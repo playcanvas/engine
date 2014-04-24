@@ -5,6 +5,9 @@ pc.extend(pc, (function () {
     * @name pc.Vec3
     * @class A 3-dimensional vector.
     * @constructor Creates a new Vec3 object
+    * @param {Number} [x] The x value
+    * @param {Number} [y] The y value
+    * @param {Number} [z] The z value
     */
     var Vec3 = function () {
         this.data = new Float32Array(3);

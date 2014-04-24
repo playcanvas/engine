@@ -481,7 +481,7 @@ pc.extend(pc.fw, function () {
                 entity.collision.fire(EVENT_CONTACT, result);
             }
 
-            if (collisionFlags & FLAG_COLLISION_START || collisionFlags & FLAG_TRIGGER_ENTER ) {
+            if (collisionFlags & (FLAG_COLLISION_START | FLAG_TRIGGER_ENTER | FLAG_COLLISION_END | FLAG_TRIGGER_LEAVE)) {
                 if (this._storeCollision(entity, other)) {
                     if (collisionFlags & FLAG_COLLISION_START) {
                         result = result || new ContactResult(other, contactPoints);

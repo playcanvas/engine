@@ -40,10 +40,6 @@ def build(dst):
     if compilation_level == COMP_LEVELS[0]:
         formatting = "pretty_print"
     
-    #compilation_level = "WHITESPACE_ONLY"
-    #compilation_level = "SIMPLE_OPTIMIZATIONS"
-    #compilation_level = "ADVANCED_OPTIMIZATIONS"
-    
     dependency_file = os.path.join(root, "dependencies.txt")
     compiler_path = os.path.join(root, "closure/compiler.jar")
     temp_path = os.path.join(root, "out.js")
@@ -138,9 +134,9 @@ def create_package_json():
       "name": "playcanvas",
       "description": "PlayCanvas Engine",
       "version": "__VERSION__",
-      "homepage": "http://playcanvas.com",
+      "homepage": "https://playcanvas.com",
       "repository": "https://bitbucket.org/playcanvas/engine",
-      "author": "David Evans <dave@playcanvas.com>",
+      "author": "PlayCanvas <support@playcanvas.com>",
       "main": "build/output/playcanvas-latest.js",
       "engines": {
         "node": ">= 0.6.12"
