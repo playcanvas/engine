@@ -136,6 +136,13 @@ pc.extend(pc.fw, function () {
 
             if (entity.collision) {
                 shape = entity.collision.shape;
+
+                // if a trigger was already created from the collision system
+                // destroy it
+                if (entity.trigger) {
+                    entity.trigger.destroy();
+                    delete entity.trigger;
+                }
             }
 
             if (shape) {

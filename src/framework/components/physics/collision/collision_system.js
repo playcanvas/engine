@@ -1,12 +1,12 @@
 pc.extend(pc.fw, function () {
-       
+
     /**
      * @name pc.fw.CollisionComponentSystem
      * @constructor Creates a new CollisionComponentSystem.
      * @class Manages creation of {@link pc.fw.CollisionComponent}s.
      * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application.
      * @extends pc.fw.ComponentSystem
-     */    
+     */
      var CollisionComponentSystem = function CollisionComponentSystem (context) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
@@ -141,7 +141,7 @@ pc.extend(pc.fw, function () {
     CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
         onLibraryLoaded: function () {
             if (typeof(Ammo) !== 'undefined') {
-                //                
+                //
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
                 pc.fw.ComponentSystem.off('update', this.onUpdate, this);
@@ -171,7 +171,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * Creates an implementation based on the collision type and caches it 
+        * Creates an implementation based on the collision type and caches it
         * in an internal implementations structure, before returning it.
         */
         _createImplementation: function (type) {
@@ -222,7 +222,7 @@ pc.extend(pc.fw, function () {
         onUpdate: function (dt) {
             var id, entity, data;
             var components = this.store;
-            
+
             for (id in components) {
                 entity = components[id].entity;
                 data = components[id].data;
@@ -230,7 +230,7 @@ pc.extend(pc.fw, function () {
                 if (data.enabled && entity.enabled) {
                     if (!entity.rigidbody) {
                         entity.trigger.syncEntityToBody();
-                    }                                    
+                    }
                 }
 
                 if (this.debugRender) {
@@ -262,7 +262,7 @@ pc.extend(pc.fw, function () {
                     if (data.enabled && entity.enabled) {
                         impl.updateDebugShape(entity, data);
                     }
-                } 
+                }
             }
         },
 
@@ -273,7 +273,7 @@ pc.extend(pc.fw, function () {
         onToolsUpdate: function (dt) {
             var id, entity;
             var components = this.store;
-            
+
             for (id in components) {
                 entity = components[id].entity;
                 this.updateDebugShape(entity, components[id].data, this._getImplementation(entity));
@@ -305,22 +305,22 @@ pc.extend(pc.fw, function () {
         * Recreates rigid bodies or triggers for the specified component
         */
         recreatePhysicalShapes: function (component) {
-            this.implementations[component.data.type].recreatePhysicalShapes(component); 
+            this.implementations[component.data.type].recreatePhysicalShapes(component);
         }
     });
 
-    /** 
+    /**
     * Collision system implementations
     */
     CollisionSystemImpl = function (system) {
         this.system = system;
         // set this to false if you don't want to create a debug shape
-        this.hasDebugShape = true; 
+        this.hasDebugShape = true;
     };
 
     CollisionSystemImpl.prototype = {
         /**
-        * @private 
+        * @private
         * Called before the call to system.super.initializeComponentData is made
         */
         beforeInitialize: function (component, data) {
@@ -331,7 +331,7 @@ pc.extend(pc.fw, function () {
             data.model.meshInstances = [this.createDebugMesh(data)];
         },
 
-        /** 
+        /**
         * @private
         * Called after the call to system.super.initializeComponentData is made
         */
@@ -342,7 +342,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * Called when a collision component changes type in order to 
+        * Called when a collision component changes type in order to
         * recreate debug and physical shapes
         */
         reset: function (component, data) {
@@ -380,21 +380,21 @@ pc.extend(pc.fw, function () {
             return undefined;
         },
 
-        /** 
+        /**
         * @private
         * Creates a physical shape for the collision. This consists
-        * of the actual shape that will be used for the rigid bodies / triggers of 
+        * of the actual shape that will be used for the rigid bodies / triggers of
         * the collision.
         */
         createPhysicalShape: function (entity, data) {
             return undefined;
         },
 
-        /** 
+        /**
         * @private
         * Updates the transform of the debug shape if one exists
         */
-        updateDebugShape: function (entity, data) { 
+        updateDebugShape: function (entity, data) {
         },
 
         updateTransform: function(component, position, rotation, scale) {
@@ -405,7 +405,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * Called when the collision is removed 
+        * Called when the collision is removed
         */
         remove: function (entity, data) {
             var context = this.system.context;
@@ -415,6 +415,7 @@ pc.extend(pc.fw, function () {
 
             if (entity.trigger) {
                 entity.trigger.destroy();
+                delete entity.trigger;
             }
 
             if (context.scene.containsModel(data.model)) {
@@ -441,7 +442,7 @@ pc.extend(pc.fw, function () {
                 model: src.data.model
             };
 
-            return this.system.addComponent(clone, data);  
+            return this.system.addComponent(clone, data);
         }
     };
 
@@ -488,7 +489,7 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].indexed = true;
                 this.mesh = mesh;
             }
-            
+
             if (!this.material) {
                 var material = new pc.scene.BasicMaterial();
                 material.color = new pc.Color(0, 0, 1, 1);
@@ -525,7 +526,7 @@ pc.extend(pc.fw, function () {
     /**
     /* Sphere Collision System
     */
-    
+
     CollisionSphereSystemImpl = function (system) {};
 
     CollisionSphereSystemImpl = pc.inherits(CollisionSphereSystemImpl, CollisionSystemImpl);
@@ -583,10 +584,10 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = vertexBuffer.getNumVertices();
                 mesh.primitive[0].indexed = false;
-                
+
                 this.mesh = mesh;
             }
-            
+
             if (!this.material) {
                 var material = new pc.scene.BasicMaterial();
                 material.color = new pc.Color(0, 0, 1, 1);
@@ -596,10 +597,10 @@ pc.extend(pc.fw, function () {
 
             return new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material);
         },
-    
+
         createPhysicalShape: function (entity, data) {
             if (typeof(Ammo) !== 'undefined') {
-                return new Ammo.btSphereShape(data.radius);   
+                return new Ammo.btSphereShape(data.radius);
             } else {
                 return undefined;
             }
@@ -617,13 +618,13 @@ pc.extend(pc.fw, function () {
     /**
     /* Capsule Collision System
     */
-    
+
     CollisionCapsuleSystemImpl = function (system) {};
 
     CollisionCapsuleSystemImpl = pc.inherits(CollisionCapsuleSystemImpl, CollisionSystemImpl);
 
     CollisionCapsuleSystemImpl.prototype = pc.extend(CollisionCapsuleSystemImpl.prototype, {
-        createDebugMesh: function (data) {            
+        createDebugMesh: function (data) {
             // The capsule collision system creates a separate debug mesh
             // for each capsule because of its particular shape. So if a mesh has already
             // been created for this component then return it, otherwise create a new one
@@ -646,16 +647,16 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = vertexBuffer.getNumVertices();
                 mesh.primitive[0].indexed = false;
-                
+
                 this.mesh = mesh;
             }
-            
+
             // no need to create a new material for each capsule shape
             if (!this.material) {
                 var material = new pc.scene.BasicMaterial();
                 material.color = new pc.Color(0, 0, 1, 1);
                 material.update();
-                this.material = material;    
+                this.material = material;
             }
 
             return new pc.scene.MeshInstance(data.model.graph, mesh, this.material);
@@ -790,13 +791,13 @@ pc.extend(pc.fw, function () {
     /**
     /* Cylinder Collision System
     */
-    
+
     CollisionCylinderSystemImpl = function (system) {};
 
     CollisionCylinderSystemImpl = pc.inherits(CollisionCylinderSystemImpl, CollisionSystemImpl);
 
     CollisionCylinderSystemImpl.prototype = pc.extend(CollisionCylinderSystemImpl.prototype, {
-        createDebugMesh: function (data) {            
+        createDebugMesh: function (data) {
             if (data.model && data.model.meshInstances && data.model.meshInstances.length) {
                 return data.model.meshInstances[0];
             } else {
@@ -820,7 +821,7 @@ pc.extend(pc.fw, function () {
                     var material = new pc.scene.BasicMaterial();
                     material.color = new pc.Color(0, 0, 1, 1);
                     material.update();
-                    this.material = material;    
+                    this.material = material;
                 }
 
                 return new pc.scene.MeshInstance(data.model.graph, mesh, this.material);
@@ -930,7 +931,7 @@ pc.extend(pc.fw, function () {
     /**
     /* Mesh Collision System
     */
-    
+
     CollisionMeshSystemImpl = function (system) {
         this.hasDebugShape = false;
     };
@@ -1060,7 +1061,7 @@ pc.extend(pc.fw, function () {
                    Ammo.destroy(data.shape);
                 }
 
-                data.shape = this.createPhysicalShape(entity, data);                
+                data.shape = this.createPhysicalShape(entity, data);
 
                 if (entity.rigidbody) {
                     entity.rigidbody.createBody();
@@ -1071,11 +1072,11 @@ pc.extend(pc.fw, function () {
                         entity.trigger.initialize(data);
                     }
 
-                } 
+                }
             } else {
                 this.remove(entity, data);
             }
-             
+
         },
 
         updateTransform: function (component, position, rotation, scale) {
@@ -1084,7 +1085,7 @@ pc.extend(pc.fw, function () {
                 var worldScale = entityTransform.getScale();
 
                 // if the scale changed then recreate the shape
-                var previousScale = component.shape.getLocalScaling();                
+                var previousScale = component.shape.getLocalScaling();
                 if (worldScale.x !== previousScale.x() ||
                     worldScale.y !== previousScale.y() ||
                     worldScale.z !== previousScale.z() ) {
@@ -1094,7 +1095,7 @@ pc.extend(pc.fw, function () {
 
             CollisionMeshSystemImpl._super.updateTransform.call(this, component, position, rotation, scale);
         }
-        
+
     });
 
     return {
