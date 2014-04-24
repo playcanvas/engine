@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.145.1
+--------
+* [FIX] Remove assignment to constructor property in pc.inherits, seems to fix FF Bug which breaks inheritance randomly!?
+
+--------
 v0.145.0
 --------
 * Added documentation to currentTime and duration in the animation component
