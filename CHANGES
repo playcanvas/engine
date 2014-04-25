@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.145.2
+--------
+* Changed camera nearClip and farClip minimum to be 0.0001 and decimal precision to 3 digits
+
+--------
 v0.145.1
 --------
 * [FIX] Remove assignment to constructor property in pc.inherits, seems to fix FF Bug which breaks inheritance randomly!?
