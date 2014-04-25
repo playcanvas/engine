@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
         this.id = 'camera';
         this.description = "Renders the scene from the location of the Entity.";
         context.systems.add(this.id, this);
-        
+
         this.ComponentType = pc.fw.CameraComponent;
         this.DataType = pc.fw.CameraComponentData;
 
@@ -74,7 +74,8 @@ pc.extend(pc.fw, function () {
             type: "number",
             defaultValue: 0.3,
             options: {
-                min: 0
+                min: 0.0001,
+                decimalPrecision: 3
             }
         }, {
             name: "farClip",
@@ -83,7 +84,8 @@ pc.extend(pc.fw, function () {
             type: "number",
             defaultValue: 1000,
             options: {
-                min: 0
+                min: 0.0001,
+                decimalPrecision: 3
             }
         }, {
             name: "camera",
@@ -109,13 +111,13 @@ pc.extend(pc.fw, function () {
 
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
-    
+
     /**
     * @property
     * @name pc.fw.CameraComponentSystem#current
     * @description Get or set the current camera. Use this property to set which Camera Entity is used to render the scene. This must be set to an Entity with a {@link pc.fw.CameraComponent}.
-    * @type pc.fw.Entity 
-    * @example 
+    * @type pc.fw.Entity
+    * @example
     * var e = context.root.findByName('A Camera');
     * context.systems.camera.current = e;
     */
@@ -133,7 +135,7 @@ pc.extend(pc.fw, function () {
             if (!entity.camera) {
                 throw Error("Entity must have camera Component");
             }
-            
+
             this._currentEntity = entity;
             this._currentNode = entity.camera.data.camera;
         }
@@ -191,17 +193,17 @@ pc.extend(pc.fw, function () {
             }
 
             properties = ['enabled', 'model', 'camera', 'aspectRatio', 'renderTarget', 'clearColor', 'fov', 'orthoHeight', 'nearClip', 'farClip', 'projection'];
-    
+
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-            if (!window.pc.apps.designer && 
-                component.enabled && 
+            if (!window.pc.apps.designer &&
+                component.enabled &&
                 !component.entity.hasLabel("pc:designer")) {
 
                 this.current = component.entity;
             }
         },
-        
+
         /**
          * Start rendering the frame for the current camera
          * @function
@@ -243,7 +245,7 @@ pc.extend(pc.fw, function () {
             entity.removeChild(data.camera);
             data.camera = null;
         },
-    
+
         toolsUpdate: function (fn) {
             var components = this.store;
             for (var id in components) {
@@ -306,7 +308,7 @@ pc.extend(pc.fw, function () {
                 positions[20] = -farClip;
                 positions[21] = -x;
                 positions[22] = -y;
-                positions[23] = -farClip;                
+                positions[23] = -farClip;
                 vertexBuffer.unlock();
             }
         },
@@ -331,7 +333,7 @@ pc.extend(pc.fw, function () {
 
         displayInTools: function (entity) {
             return (!this.isToolsCamera(entity) || (entity.getName() === "Perspective"));
-        } 
+        }
     });
 
     return {
