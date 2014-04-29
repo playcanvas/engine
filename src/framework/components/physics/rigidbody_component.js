@@ -262,7 +262,7 @@ pc.extend(pc.fw, function () {
          * @name pc.fw.RigidBodyComponent#applyForce
          * @description Apply an force to the body at a point
          * @param {pc.Vec3} force The force to apply, in world space.
-         * @param {pc.Vec3} [relativePoint] The point at which to apply the force, in local space (relative to the entity).
+         * @param {pc.Vec3} [relativePoint] A world space offset from the body's position where the force is applied.
          */
         /**
          * @function
@@ -271,9 +271,9 @@ pc.extend(pc.fw, function () {
          * @param {Number} x The x component of the force to apply, in world space.
          * @param {Number} y The y component of the force to apply, in world space.
          * @param {Number} z The z component of the force to apply, in world space.
-         * @param {Number} [px] The x component of the point at which to apply the force, in local space (relative to the Entity).
-         * @param {Number} [py] The y component of the point at which to apply the force, in local space (relative to the Entity).
-         * @param {Number} [pz] The z component of the point at which to apply the force, in local space (relative to the Entity).
+         * @param {Number} [px] The x component of a world space offset from the body's position where the force is applied.
+         * @param {Number} [py] The y component of a world space offset from the body's position where the force is applied.
+         * @param {Number} [pz] The z component of a world space offset from the body's position where the force is applied.
          */
         applyForce: function () {
             var x, y, z;
