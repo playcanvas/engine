@@ -260,20 +260,49 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @name pc.fw.RigidBodyComponent#applyForce
-         * @description Apply an force to the body at a point
+         * @description Apply an force to the body at a point. By default, the force is applied at the origin of the
+         * body. However, the force can be applied at an offset this point by specifying a world space vector from
+         * the body's origin to the point of application.
          * @param {pc.Vec3} force The force to apply, in world space.
          * @param {pc.Vec3} [relativePoint] A world space offset from the body's position where the force is applied.
+         * @example
+         * // EXAMPLE 1: Apply a force at the body's center
+         * // Calculate a force vector pointing in the world space direction of the entity
+         * var force = this.entity.forward.clone().scale(100);
+         *
+         * // Apply the force
+         * this.entity.rigidbody.applyForce(force);
+         *
+         * // EXAMPLE 2: Apply a force at some relative offset from the body's center
+         * // Calculate a force vector pointing in the world space direction of the entity
+         * var force = this.entity.forward.clone().scale(100);
+         *
+         * // Calculate the world space relative offset
+         * var relativePos = new pc.Vec3();
+         * var childEntity = this.entity.findByName('Engine');
+         * relativePos.sub2(childEntity.getPosition(), this.entity.getPosition());
+         *
+         * // Apply the force
+         * this.entity.rigidbody.applyForce(force, relativePos);
          */
         /**
          * @function
          * @name pc.fw.RigidBodyComponent#applyForce^2
-         * @description Apply an force to the body at a point
+         * @description Apply an force to the body at a point. By default, the force is applied at the origin of the
+         * body. However, the force can be applied at an offset this point by specifying a world space vector from
+         * the body's origin to the point of application.
          * @param {Number} x The x component of the force to apply, in world space.
          * @param {Number} y The y component of the force to apply, in world space.
          * @param {Number} z The z component of the force to apply, in world space.
          * @param {Number} [px] The x component of a world space offset from the body's position where the force is applied.
          * @param {Number} [py] The y component of a world space offset from the body's position where the force is applied.
          * @param {Number} [pz] The z component of a world space offset from the body's position where the force is applied.
+         * @example
+         * // EXAMPLE 1: Apply an approximation of gravity at the body's center
+         * this.entity.rigidbody.applyForce(0, -10, 0);
+         *
+         * // EXAMPLE 2: Apply an approximation of gravity at 1 unit down the world Z from the center of the body
+         * this.entity.rigidbody.applyForce(0, -10, 0, 0, 0, 1);
          */
         applyForce: function () {
             var x, y, z;
@@ -301,9 +330,9 @@ pc.extend(pc.fw, function () {
                     x = arguments[0];
                     y = arguments[1];
                     z = arguments[2];
-                    px = arguments[0];
-                    py = arguments[1];
-                    pz = arguments[2];
+                    px = arguments[3];
+                    py = arguments[4];
+                    pz = arguments[5];
                     break;
             }
             var body = this.body;
