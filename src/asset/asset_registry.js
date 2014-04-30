@@ -227,6 +227,59 @@ pc.extend(pc.asset, function () {
             });
         },
 
+        loadModel: function (url) {
+            var self = this;
+
+            var dir = pc.path.getDirectory(url);
+            var basename = pc.path.getBasename(url);
+
+            var name = basename.replace(".json", "");
+            var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
+
+            // Create Model Asset
+            var modelAsset = new pc.asset.Asset(name, "model", {
+                url: url
+            });
+
+            // Create Mapping Asset
+            var mappingAsset = new pc.asset.Asset(name + ".mapping", "json", {
+                url: mappingUrl
+            });
+
+            var promise = RSVP.Promise(function (resolve, reject) {
+                // Load Model and Mapping
+                self.load([modelAsset, mappingAsset]).then(function (resources) {
+                    var model = resources[0];
+                    var mapping = resources[1];
+
+                    modelAsset.data = mapping; // Update model asset with mapping data
+
+                    var materialAssets = [];
+                    mapping.mapping.forEach(function (map) {
+                        materialAssets.push(new pc.asset.Asset(pc.path.getBasename(map.path), "material", {
+                            url: pc.path.join(dir, map.path)
+                        }));
+                    });
+
+                    var promise = self.load(materialAssets)
+
+                    promise.then(function (materials) {
+                        for(var i = 0, n = model.meshInstances.length; i < n; i++) {
+                            model.meshInstances[i].material = materials[i];
+                        }
+                        resolve({
+                            model: model,
+                            asset: modelAsset
+                        });
+                    });
+
+                    return promise;
+                });
+            });
+
+            return promise;
+        },
+
         _createAssetRequest: function (asset, result) {
             var url = asset.getFileUrl();
             if (url) {

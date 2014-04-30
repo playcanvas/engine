@@ -34,7 +34,7 @@
 
         // Create camera node
         var camera = new pc.scene.CameraNode();
-        camera.setLocalPosition(0,1,2);
+        camera.setLocalPosition(0, 0, 5);
 
         // Set up a default scene light
         var light = new pc.scene.LightNode();
@@ -47,56 +47,18 @@
         // Create resource and asset loaders
         var loader = new pc.resources.ResourceLoader();
         var assets = new pc.asset.AssetRegistry(loader);
+
         // Register loaders for models, textures and materials
         loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(assets));
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(device));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(device, assets));
         loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
 
-        function loadModel (url, assets) {
-            // Create Assets
-            var modelAsset = new pc.asset.Asset("MCCV", "model", {
-                url: url
-            });
-
-            var parts = pc.path.split(url);
-            parts[1] = parts[1].replace(".json", ".mapping.json");
-            var mappingUrl = pc.path.join(parts[0], parts[1]);
-
-            var mappingAsset = new pc.asset.Asset("mapping", "json", {
-                url: mappingUrl
-            });
-
-            // Load Assets
-            var promise = assets.load([modelAsset, mappingAsset]);
-
-            promise.then(function (resources) {
-                var model = resources[0];
-                var mapping = resources[1];
-
-                var dir = pc.path.getDirectory(url);
-
-                var materialAssets = [];
-                mapping.mapping.forEach(function (map) {
-                    materialAssets.push(new pc.asset.Asset(pc.path.getBasename(map.path), "material", {
-                        url: pc.path.join(dir, map.path)
-                    }));
-                });
-
-                return assets.load(materialAssets).then(function (materials) {
-                    for(var i = 0, n = model.meshInstances.length; i < n; i++) {
-                        model.meshInstances[i].material = materials[i];
-                    }
-                });
-            });
-
-            return promise;
-        }
+        var url = "../assets/test/modelskinrig.json";
 
         var model = null;
-        loadModel("../assets/test/modelskinrig.json", assets).then(function (resources) {
-            model = resources[0];
-
+        assets.loadModel(url).then(function (results) {
+            model = results.model;
             scene.addModel(model);
         });
 

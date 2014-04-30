@@ -21,12 +21,12 @@ pc.extend(pc.resources, function () {
         this._assets = assetRegistry;
     };
 
-    MaterialResourceLoader.prototype.load = function (materialOrName) {
-        if (!materialCache[materialOrName]) {
+    MaterialResourceLoader.prototype.load = function (materialId) {
+        if (!materialCache[materialId]) {
             var material = new pc.scene.PhongMaterial();
-            var asset = this._assets.getAssetByResourceId(materialOrName);
+            var asset = this._assets.getAssetByResourceId(materialId);
             if (!asset) {
-                asset = this._assets.find(materialOrName);
+                asset = this._assets.find(materialId);
             }
 
             if (asset) {
@@ -41,10 +41,10 @@ pc.extend(pc.resources, function () {
                 }, this);
             }
 
-            materialCache[materialOrName] = material;
+            materialCache[materialId] = material;
         }
 
-        return materialCache[materialOrName];
+        return materialCache[materialId];
     };
 
     // Copy asset data into material
