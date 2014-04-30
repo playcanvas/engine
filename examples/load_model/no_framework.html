@@ -34,7 +34,7 @@
 
         // Create camera node
         var camera = new pc.scene.CameraNode();
-        camera.setLocalPosition(0,0,2);
+        camera.setLocalPosition(0,1,2);
 
         // Set up a default scene light
         var light = new pc.scene.LightNode();
@@ -53,7 +53,7 @@
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(device, assets));
         loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
 
-        function loadModel (url) {
+        function loadModel (url, assets) {
             // Create Assets
             var modelAsset = new pc.asset.Asset("MCCV", "model", {
                 url: url
@@ -96,7 +96,7 @@
         }
 
         var model = null;
-        loadModel("../assets/ship/MCCV-2.json").then(function (resources) {
+        loadModel("../assets/test/modelskinrig.json", assets).then(function (resources) {
             model = resources[0];
         });
 

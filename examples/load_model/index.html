@@ -29,7 +29,7 @@
         application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
 
-        function loadModel (url, assets) {
+         function loadModel (url, assets) {
             // Create Assets
             var modelAsset = new pc.asset.Asset("MCCV", "model", {
                 url: url
@@ -43,28 +43,32 @@
                 url: mappingUrl
             });
 
-            // Load Assets
-            var promise = assets.load([modelAsset, mappingAsset]);
+            var promise = RSVP.Promise(function (resolve, reject) {
+                // Load Assets
+                assets.load([modelAsset, mappingAsset]).then(function (resources) {
+                    var model = resources[0];
+                    var mapping = resources[1];
 
-            promise.then(function (resources) {
-                var model = resources[0];
-                var mapping = resources[1];
+                    var dir = pc.path.getDirectory(url);
 
-                var dir = pc.path.getDirectory(url);
+                    var materialAssets = [];
+                    mapping.mapping.forEach(function (map) {
+                        materialAssets.push(new pc.asset.Asset(pc.path.getBasename(map.path), "material", {
+                            url: pc.path.join(dir, map.path)
+                        }));
+                    });
 
-                var materialAssets = [];
-                mapping.mapping.forEach(function (map) {
-                    materialAssets.push(new pc.asset.Asset(pc.path.getBasename(map.path), "material", {
-                        url: pc.path.join(dir, map.path)
-                    }));
-                });
+                    var promise = assets.load(materialAssets)
 
-                return assets.load(materialAssets).then(function (materials) {
-                    for(var i = 0, n = model.meshInstances.length; i < n; i++) {
-                        model.meshInstances[i].material = materials[i];
-                    }
+                    promise.then(function (materials) {
+                        for(var i = 0, n = model.meshInstances.length; i < n; i++) {
+                            model.meshInstances[i].material = materials[i];
+                        }
 
-                    scene.addModel(model);
+                        resolve([model, modelAsset]); // return the model
+                    });
+
+                    return promise;
                 });
             });
 
@@ -73,63 +77,27 @@
 
         var ship, light, camera;
 
-        loadModel("../assets/ship/MCCV-2.json", application.context.assets).then(function (models) {
+        loadModel("../assets/test/modelskinrig.json", application.context.assets).then(function (resources) {
+            var model = resources[0];
+            var asset = resources[1];
+
             var ship = new pc.fw.Entity();
-            var asset = application.context.assets.getAssetByUrl("../assets/ship/MCCV-2.json");
+            // var asset = application.context.assets.getAssetByUrl("../assets/test/modelskinrig.json");
             application.context.systems.model.addComponent(ship, {
                 type: "asset",
                 asset: asset
             });
+            // ship.model.model = model;
             ship.rotate(0, 45, 0);
             application.context.root.addChild(ship);
         });
-
-        // var modelAsset = new pc.asset.Asset("MCCV", "model", {
-        //     url: "../assets/ship/MCCV-2.json",
-        //     hash: 1
-        // });
-
-        // var materialAsset = new pc.asset.Asset("ship_hull_1Mat", "material", {
-        //     url: "../assets/ship/material.json",
-        //     hash: 2
-        // });
-
-        // var textureAsset = new pc.asset.Asset("texture1", "texture", {
-        //     url: "../assets/ship/texture1.png",
-        //     hash: 3
-        // });
-
-        // var specularAsset = new pc.asset.Asset("text-spec", "texture", {
-        //     url: "../assets/ship/text-spec.png",
-        //     hash: 4
-        // });
-
-        // application.context.assets.load([modelAsset, materialAsset, textureAsset, specularAsset]).then(function (resources) {
-
-        //     var model = resources[0];
-        //     var material = resources[1];
-
-        //     material.diffuseMap = resources[2];
-        //     material.specularMap = resources[3];
-        //     material.update();
-
-        //     model.meshInstances[0].material = material;
-
-        //     var ship = new pc.fw.Entity();
-        //     application.context.systems.model.addComponent(ship, {
-        //         type: "asset",
-        //         asset: modelAsset
-        //     });
-        //     ship.rotate(0, 45, 0);
-        //     application.context.root.addChild(ship);
-        // });
 
         // Create an Entity with a camera component
         var camera = new pc.fw.Entity();
         application.context.systems.camera.addComponent(camera, {
             clearColor: new pc.Color(0.8, 0.8, 0.8)
         });
-        camera.translate(0, 0, 2);
+        camera.translate(0, 1, 2);
 
         // Create an Entity with a point light component and a sphere model component.
         var light = new pc.fw.Entity();
