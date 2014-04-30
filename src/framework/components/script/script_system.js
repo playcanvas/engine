@@ -20,7 +20,7 @@ pc.extend(pc.fw, function () {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         context.systems.add(this.id, this);
-        
+
         this.ComponentType = pc.fw.ScriptComponent;
         this.DataType = pc.fw.ScriptComponentData;
 
@@ -141,19 +141,19 @@ pc.extend(pc.fw, function () {
          */
         onInitialize: function (root) {
             this._registerInstances(root);
-                
+
             if (root.enabled) {
                 if (root.script && root.script.enabled) {
                     this._initializeScriptComponent(root.script);
                 }
-                
+
                 var children = root.getChildren();
                 var i, len = children.length;
                 for (i = 0; i < len; i++) {
                     if (children[i] instanceof pc.fw.Entity) {
-                        this.onInitialize(children[i]);    
+                        this.onInitialize(children[i]);
                     }
-                } 
+                }
             }
         },
 
@@ -169,12 +169,12 @@ pc.extend(pc.fw, function () {
                 if (root.script && root.script.enabled) {
                     this._postInitializeScriptComponent(root.script);
                 }
-                
+
                 var children = root.getChildren();
                 var i, len = children.length;
                 for (i = 0; i < len; i++) {
                     if (children[i] instanceof pc.fw.Entity) {
-                        this.onPostInitialize(children[i]);    
+                        this.onPostInitialize(children[i]);
                     }
                 };
             }
@@ -187,9 +187,9 @@ pc.extend(pc.fw, function () {
                     var instance = instances[name].instance;
                     if (instance[method]) {
                         instance[method].call(instance);
-                    }                                        
+                    }
                 }
-            }  
+            }
         },
 
         _initializeScriptComponent: function (script) {
@@ -197,7 +197,7 @@ pc.extend(pc.fw, function () {
             script.data.initialized = true;
 
             // check again if the script and the entity are enabled
-            // in case they got disabled during initialize 
+            // in case they got disabled during initialize
             if (script.enabled && script.entity.enabled) {
                 this._enableScriptComponent(script);
             }
@@ -216,11 +216,11 @@ pc.extend(pc.fw, function () {
             script.data.postInitialized = true;
         },
 
-        _updateInstances: function (method, updateList, dt) {            
+        _updateInstances: function (method, updateList, dt) {
             var item;
             for (var i=0, len=updateList.length; i<len; i++) {
                 item = updateList[i];
-                if (item.entity.script.enabled && item.entity.enabled) {
+                if (item && item.entity.script.enabled && item.entity.enabled) {
                     item[method].call(item, dt);
                 }
             }
@@ -276,11 +276,11 @@ pc.extend(pc.fw, function () {
          */
         broadcast: function (name, functionName) {
             var args = pc.makeArray(arguments).slice(2);
-            
+
             var id, data, fn;
             var dataStore = this.store;
             // var results = [];
-            
+
             for (id in dataStore) {
                 if (dataStore.hasOwnProperty(id)) {
                     data = dataStore[id].data;
@@ -299,7 +299,7 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.ScriptComponentSystem#_preRegisterInstance
         * @description Internal method used to store a instance of a script created while loading. Instances are preregistered while loadeding
-        * and then all registered at the same time once loading is complete 
+        * and then all registered at the same time once loading is complete
         * @param {pc.fw.Entity} entity The Entity the script instance is attached to
         * @param {String} url The url of the script
         * @param {String} name The name of the script
@@ -334,7 +334,7 @@ pc.extend(pc.fw, function () {
                 }
             }
         },
-    
+
         /**
         * @private
         * @function
@@ -343,7 +343,7 @@ pc.extend(pc.fw, function () {
         * and binding events for the update, fixedUpdate, postUpdate and toolsUpdate methods.
         * This function is recursive and calls itself for the complete hierarchy down from the supplied Entity
         * @param {pc.fw.Entity} entity The Entity the instances are attached to
-        */        
+        */
         _registerInstances: function (entity) {
             var instance, instanceName;
 
@@ -371,16 +371,16 @@ pc.extend(pc.fw, function () {
                     // Remove temp storage
                     delete entity.script.data._instances;
                 }
-                
+
             }
 
             var children = entity.getChildren();
             var i, len = children.length;
             for (i = 0; i < len; i++) {
                 if (children[i] instanceof pc.fw.Entity) {
-                    this._registerInstances(children[i]);    
+                    this._registerInstances(children[i]);
                 }
-            }    
+            }
         },
 
         _createAccessors: function (entity, instance) {
@@ -446,7 +446,7 @@ pc.extend(pc.fw, function () {
                             attributes.forEach(function (attribute, index) {
                                 self._createAccessor(attribute, instance);
                             });
-                        } 
+                        }
 
                         // delete accessors for attributes that no longer exist
                         // and fire onAttributeChange when an attribute value changed
@@ -493,8 +493,8 @@ pc.extend(pc.fw, function () {
         _convertAttributeValue: function (attribute) {
             if (attribute.type === 'rgb' || attribute.type === 'rgba') {
                 if (pc.type(attribute.value) === 'array') {
-                    attribute.value = attribute.value.length === 3 ? 
-                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) : 
+                    attribute.value = attribute.value.length === 3 ?
+                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
                                       new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
                 }
             }
