@@ -1,11 +1,6 @@
 {
     "model": {
-        "version": 3,
-        "mapping": [
-            {
-                "path": "material 1.json"
-            }
-        ],
+        "version": 2,
         "nodes": [
             {
                 "name": "RootNode",

@@ -105,19 +105,23 @@ pc.extend(pc.resources, function () {
                     var textures = this._listTextures(response);
                     var assets = [];
 
-                    // Create and load all texture assets
-                    textures.forEach(function (texturePath) {
-                        var filename = pc.path.getBasename(texturePath);
-                        var textureUrl = pc.path.join(pc.path.split(request.canonical)[0], texturePath);
-                        assets.push(new pc.asset.Asset(filename, "texture", {
-                            url: textureUrl
-                        }));
-                    });
+                    if (textures.length) {
+                        // Create and load all texture assets
+                        textures.forEach(function (texturePath) {
+                            var filename = pc.path.getBasename(texturePath);
+                            var textureUrl = pc.path.join(pc.path.split(request.canonical)[0], texturePath);
+                            assets.push(new pc.asset.Asset(filename, "texture", {
+                                url: textureUrl
+                            }));
+                        });
 
-                    this._assets.load(assets).then(function (responses) {
-                        // Only when texture assets are loaded do we resolve the material load
+                        this._assets.load(assets).then(function (responses) {
+                            // Only when texture assets are loaded do we resolve the material load
+                            resolve(response);
+                        });
+                    } else {
                         resolve(response);
-                    });
+                    }
                 } else {
                     resolve(response);
                 }

@@ -3,9 +3,9 @@
     * @name pc.resources.ResourceLoader
     * @constructor Create a new instance of a ResourceLoader
     * @class Used to make requests for remote resources.
-    * The ResourceLoader is used to request a resource using an identifier (often the url of a remote file). 
+    * The ResourceLoader is used to request a resource using an identifier (often the url of a remote file).
     * Registered {@link pc.resources.ResourceHandler} perform the specific loading and opening functionality and will return
-    * a new instance of a resource. The ResourceLoader contains a built in cache, that uses file hashes to ensure that 
+    * a new instance of a resource. The ResourceLoader contains a built in cache, that uses file hashes to ensure that
     * resources are not fetched multiple times. Hashes must be registered against an identifier prior to making requests.
     * @example
     * var loader = new pc.resources.Loader();
@@ -59,7 +59,7 @@
         /**
          * @function
          * @name pc.resources.ResourceLoader#registerHandler
-         * @description Register a handler for a new type of resource. To register a handler you need to provided an instance of a ResourceHandler, 
+         * @description Register a handler for a new type of resource. To register a handler you need to provided an instance of a ResourceHandler,
          * and the ResourceRequest type to be associated with the handler.
          * @param {pc.resources.ResourceRequest} RequestType The type of request to associate with this handler
          * @param {pc.resources.ResourceHandler} handler A ResourceHandler instance.
@@ -96,7 +96,7 @@
         */
         request: function (requests, options) {
             options = options || {};
-            
+
             var self = this;
             var parent = options.parent;
 
@@ -163,7 +163,7 @@
                 }, function (error) {
                     reject(error);
                 });
-                
+
             });
 
             return promise;
@@ -222,7 +222,7 @@
         addToCache: function (identifier, resource) {
             var hash = this.getHash(identifier);
             if (hash) {
-                this._cache[hash] = resource;    
+                this._cache[hash] = resource;
             } else {
                 //logWARNING(pc.string.format("Could not add {0} to cache, no hash registered", identifier));
             }
@@ -238,14 +238,14 @@
         getFromCache: function (identifier) {
             var hash = this.getHash(identifier);
             if (hash) {
-                return this._cache[hash];    
+                return this._cache[hash];
             } else {
                 return null;
             }
         },
 
         /**
-        * @function 
+        * @function
         * @name pc.resources.ResourceLoader#removeFromCache
         * @description Remove a resource from the cache
         * @param {String} identifier The identifier for the resource
@@ -279,7 +279,7 @@
             }
 
             if (request.id === null) {
-                request.id = this._sequence++;    
+                request.id = this._sequence++;
             }
             this.fire("request", request);
 
@@ -287,6 +287,7 @@
                 // If the request has already been made, then wait for the result to come in
                 request.promises.push(new RSVP.Promise(function (resolve, reject) {
                     request.promises[0].then(function (resource) {
+
                         var resource = self._postOpen(resource, request);
                         resolve(resource);
                     });
@@ -304,10 +305,10 @@
                     }
 
                     var resource = self.getFromCache(request.canonical);
-                    
+
                     // If there is a cached resource.
                     // If the request specifies a type, we check the cached type matches
-                    if (resource && (request.Type === undefined || (resource instanceof request.Type))) { 
+                    if (resource && (request.Type === undefined || (resource instanceof request.Type))) {
                         // In cache, just resolve
                         resource = self._postOpen(resource, request);
                         resolve(resource);
@@ -318,9 +319,9 @@
                             try {
                                 var resource = self._open(data, request, options);
                                 if (resource) {
-                                    resource = self._postOpen(resource, request);    
+                                    resource = self._postOpen(resource, request);
                                 }
-                                resolve(resource);                                
+                                resolve(resource);
                             } catch (e) {
                                 reject(e);
                             }
@@ -344,15 +345,15 @@
         },
 
         // After loading and opening clean up and fire events
-        // Note, this method is called in three places, 
+        // Note, this method is called in three places,
         // - with a newly opened resource
         // - with a resource retrieved from the cache
         // - with a resource that was requested twice concurrently, this is called again for the second request.
         _postOpen: function (resource, request) {
             this.addToCache(request.canonical, resource);
-    
+
             resource = this._handlers[request.type].clone(resource, request);
-            
+
             delete this._requests[request.canonical];
             this._loaded++
             this.fire("progress", this._loaded / this._requested);
@@ -367,7 +368,7 @@
         * @description Set the canonical property on the request object. The canonical identifier is the identifier used
         * to make all requests. Resources with the same hash but different URLs will have the same canonical so that requests are not
         * duplicated
-        * 
+        *
         */
         _makeCanonical: function (request) {
             var hash = this.getHash(request.identifier);
@@ -392,7 +393,7 @@
                     return request;
                 } else {
                     return existing;
-                }                
+                }
             } else {
                 return request;
             }
@@ -424,14 +425,14 @@
      * @name pc.resources.ResourceHandler
      * @class Abstract base class for ResourceHandler. The resource handler performs the request to fetch the resource from a remote location,
      * and then it converts the response into the runtime resource object type. A resource handler must implement three methods:
-     * 
+     *
      * load() which fetches the resource data from a remote location (a file, a remote server, etc)
      * open() which takes the response from load() and creates a new instance of a Resource
      * clone() which takes the opened resource and _may_ return a new copy of it, if necessary. Otherwise returns the original.
      */
     var ResourceHandler = function () {
-    }; 
-    
+    };
+
     ResourceHandler.prototype = {
         setLoader: function (loader) {
             this._loader = loader;
@@ -440,8 +441,8 @@
         /**
          * @function
          * @name pc.resources.ResourceHandler#load
-         * @description Fetch the resource from a remote location and then call the success callback with the response 
-         * If an error occurs the request is stopped and the error callback is called with details of the error. 
+         * @description Fetch the resource from a remote location and then call the success callback with the response
+         * If an error occurs the request is stopped and the error callback is called with details of the error.
          * If supported the progress callback is called during the download to report percentage complete progress.
          * @param {string} identifier A unique identifier for the resource, possibly the URL or GUID of the resource
          * @param {Object} [options]
@@ -455,7 +456,7 @@
         /**
         * @function
         * @name pc.resources.ResourceHandler#open
-        * @description Take the data downloaded from the request and turn it into a resource object for use at runtime. 
+        * @description Take the data downloaded from the request and turn it into a resource object for use at runtime.
         * For example, and ImageResourceHandler.open() will return an Image object and an EntityResourceHandler.open() will return an Entity.
         * @param data The data used to instanciate the resource
         * @param [options]

@@ -140,7 +140,8 @@ pc.extend(pc.fw, function () {
             if (this.data.type === 'asset') {
                 if (newValue) {
                     if (newValue instanceof pc.asset.Asset) {
-                        this.model = newValue.resource;
+                        this.data.asset = newValue.resourceId;
+                        this.loadModelAsset(newValue.resourceId);
                     } else {
                         this.loadModelAsset(newValue);
                     }

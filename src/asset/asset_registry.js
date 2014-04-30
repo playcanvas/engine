@@ -164,7 +164,7 @@ pc.extend(pc.asset, function () {
         * });
         */
         load: function (assets, results, options) {
-            if (!assets.length) {
+            if (assets && !assets.length) {
                 assets = [assets];
             }
 
@@ -194,7 +194,6 @@ pc.extend(pc.asset, function () {
                         break;
                     }
                 }
-
             }, this);
 
             // request all assets

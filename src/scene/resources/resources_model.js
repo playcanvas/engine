@@ -370,12 +370,9 @@ pc.extend(pc.resources, function () {
         var material;
 
         if (mapping && mapping.length > meshInstanceIndex) {
-            if (mapping[meshInstanceIndex].material) {
-                // resource id mapping
+            if (mapping[meshInstanceIndex].material) { // resource id mapping
                 material = this._materialLoader.load(mapping[meshInstanceIndex].material);
-            } else if (mapping[meshInstanceIndex].path) {
-                // path mapping
-
+            } else if (mapping[meshInstanceIndex].path) { // path mapping
                 // get directory of model
                 var path = pc.path.split(options.parent.canonical)[0];
                 path = pc.path.join(path, mapping[meshInstanceIndex].path);

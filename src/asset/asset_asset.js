@@ -7,14 +7,14 @@ pc.extend(pc.asset, function () {
     /**
     * @name pc.asset.Asset
     * @class An asset record that can be loaded by the engine. Aside from detail like resourceId and name,
-    * the asset class contains one or both of 'file' and 'data' properties. 
+    * the asset class contains one or both of 'file' and 'data' properties.
     * 'file' contains the details of the file to load (filename, url), 'data' contains a JSON blob which
     * contains either more information about the file or the actual asset data itself.
     * @constructor Create a new Asset record. Generaly, Assets are created in the Pack loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
     * @param {String} type Type of asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture"]
     * @param {Object} file Details about the file the asset is made from. For assets that don't contain file data use null.
-    * @example 
+    * @example
     * var file = {
     *   filename: "filename.txt",
     *   url: "/example/filename.txt",
@@ -40,6 +40,10 @@ pc.extend(pc.asset, function () {
             hash: file.hash,
             url: file.url
         } : null;
+        // if (this.file && !this.file.hash) {
+        //     // if there is no hash use the URL
+        //     this.file.hash = this.file.url;
+        // }
         this.data = arguments[3] || {};
         this.prefix = arguments[4] || "";
 
@@ -48,7 +52,7 @@ pc.extend(pc.asset, function () {
 
         pc.events.attach(this);
     };
-        
+
 
     Asset.prototype = {
         /**

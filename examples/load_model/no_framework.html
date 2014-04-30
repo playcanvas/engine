@@ -87,8 +87,6 @@
                     for(var i = 0, n = model.meshInstances.length; i < n; i++) {
                         model.meshInstances[i].material = materials[i];
                     }
-
-                    scene.addModel(model);
                 });
             });
 
@@ -98,6 +96,8 @@
         var model = null;
         loadModel("../assets/test/modelskinrig.json", assets).then(function (resources) {
             model = resources[0];
+
+            scene.addModel(model);
         });
 
         // Setup update, render and tick functions

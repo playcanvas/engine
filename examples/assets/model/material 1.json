@@ -1,5 +1,6 @@
 {
     "name": "Material #1",
+    "mapping_format": "path",
     "shader": "phong",
     "parameters": [{
         "name": "ambient",
