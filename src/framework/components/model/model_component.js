@@ -29,6 +29,7 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
+        this.on("set_material", this.onSetMaterial, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -207,13 +208,7 @@ pc.extend(pc.fw, function () {
             var guid = typeof newValue === 'string' || !newValue ? newValue : newValue.resourceId;
 
             material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
-            this.data.material = material;
-            if (this.data.model && this.data.type !== 'asset') {
-                var meshInstances = this.data.model.meshInstances;
-                for (var i=0; i<meshInstances.length; i++) {
-                    meshInstances[i].material = material;
-                }
-            }
+            this.material = material;
 
             var oldValue = this.data.materialAsset;
             this.data.materialAsset = guid;
@@ -222,6 +217,18 @@ pc.extend(pc.fw, function () {
 
         getMaterialAsset: function () {
             return this.system.context.assets.getAssetByResourceId(this.data.materialAsset);
+        },
+
+        onSetMaterial: function (name, oldValue, newValue) {
+            if (newValue !== oldValue) {
+                this.data.material = newValue;
+                if (this.data.model && this.data.type !== 'asset') {
+                    var meshInstances = this.data.model.meshInstances;
+                    for (var i=0; i<meshInstances.length; i++) {
+                        meshInstances[i].material = newValue;
+                    }
+                }
+            }
         },
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
