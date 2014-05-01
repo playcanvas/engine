@@ -54,11 +54,9 @@
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(device, assets));
         loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
 
-        var url = "../assets/model/gem2.json";
-
         var model = null;
-        assets.loadModel(url).then(function (results) {
-            model = results.model;
+        assets.loadUrl("../assets/model/gem2.json", "model").then(function (results) {
+            model = results.resource;
             scene.addModel(model);
         });
 

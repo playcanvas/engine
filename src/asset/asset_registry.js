@@ -227,6 +227,36 @@ pc.extend(pc.asset, function () {
             });
         },
 
+        loadUrl: function (url, type) {
+            if (!type) {
+                throw Error("type required")
+            }
+
+            if (type === "model") {
+                return this.loadModel(url);
+            }
+
+            var dir = pc.path.getDirectory(url);
+            var basename = pc.path.getBasename(url);
+            var name = basename.replace(".json", "");
+
+            var asset = new pc.asset.Asset(name, type, {
+                url: url
+            });
+
+            var promise = new RSVP.Promise(function (resolve, reject) {
+                this.load(asset).then(function (resource) {
+                    resolve({
+                        resource: resource,
+                        asset: asset
+                    });
+                });
+            }.bind(this));
+
+            return promise;
+        },
+
+
         loadModel: function (url) {
             var self = this;
 
@@ -268,7 +298,7 @@ pc.extend(pc.asset, function () {
                             model.meshInstances[i].material = materials[i];
                         }
                         resolve({
-                            model: model,
+                            resource: model,
                             asset: modelAsset
                         });
                     });
