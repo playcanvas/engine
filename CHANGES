@@ -1,6 +1,36 @@
 --------------------------
-PlayCanvas Runtime Changes 
+PlayCanvas Runtime Changes
 --------------------------
+
+--------
+v0.145.3
+--------
+* [FIX] Added null check when updating script instances in case some of them are removed from the update list while the loop is in progress
+
+--------
+v0.145.2
+--------
+* Changed camera nearClip and farClip minimum to be 0.0001 and decimal precision to 3 digits
+
+--------
+v0.145.1
+--------
+* [FIX] Remove assignment to constructor property in pc.inherits, seems to fix FF Bug which breaks inheritance randomly!?
+
+--------
+v0.145.0
+--------
+* Added documentation to currentTime and duration in the animation component
+* Updated docs for pc.math.random
+* Added examples directory with spinning cube example
+* Added docs for pc.math.Vec3 parameters
+* [FIX] Bug where triggerleave / collisionend would not always be fired
+* [FIX] Removed call to entity.trigger.initialize right after the constructor
+* [FIX] All tests now pass
+* [FIX] Rogue 'light' global var
+* [FIX] Added simulationEnabled in rigidbody_data to avoid enabling / disabling rigidbody simulation multiple times
+* [FIX] Bug where a model component would not update its model's graph if it started disabled
+* [FIX] If a collision component is initialised before a rigid body component and a trigger is created, make sure to destroy that trigger when the rigid body is initialised
 
 --------
 v0.144.3
@@ -301,7 +331,7 @@ v0.126.6
 --------
 v0.126.5
 --------
-* Changed trigger documentation. 
+* Changed trigger documentation.
 * Added particle system support - only static emitters are supported for now.
 
 --------
@@ -415,7 +445,7 @@ v0.119.1
 --------
 v0.119.0
 --------
-* No longer caching scripts when running from the designer 
+* No longer caching scripts when running from the designer
 
 --------
 v0.118.0
@@ -443,7 +473,7 @@ v0.115.1
 v0.115.0
 --------
 * Changed setLinearVelocity and setAngularVelocity methods to linearVelocity and angularVelocity properties
-* Add applyTorque and applyTorqueImpulse to Rigidbody Component 
+* Add applyTorque and applyTorqueImpulse to Rigidbody Component
 * Changed setLinearFactor and setAngularFactor methods to linearFactor and angularFactor properties
 * Add linearDamping and angularDamping properties to Rigidbody Component
 
@@ -1135,7 +1165,7 @@ v0.77.0
 * [BREAKING] All pc.math library functions take degrees instead of radians
 * [BREAKING] Removed GraphNode methods setParent() and setChildren()
 * [BREAKING] Update binary model format to use new transform components
-* [BREAKING] Update animation format to use eulers instead of quaternions for rotations 
+* [BREAKING] Update animation format to use eulers instead of quaternions for rotations
 * Split LTM out into distinct position, rotation, scale components, generate LTM/WTM only when dirty
 * Added methods to quaternion invert(), setFromEulers(), transformVector()
 * Change Pack format to use position, rotation, scale instead of translate, rotate, scale
@@ -1265,8 +1295,8 @@ v0.67.2
 -------
 v0.67.1
 -------
-* [FIX] Body2d Component rotates correctly in designer. 
-* Added setPositionAndAngle() to Body2d component 
+* [FIX] Body2d Component rotates correctly in designer.
+* Added setPositionAndAngle() to Body2d component
 
 -------
 v0.67.0
@@ -1281,7 +1311,7 @@ v0.66.0
 -------
 v0.65.0
 -------
-* Added optional ignore value to Body2dComponentSystem.raycastFirst 
+* Added optional ignore value to Body2dComponentSystem.raycastFirst
 
 -------
 v0.64.1
@@ -1324,7 +1354,7 @@ v0.61.0
 -------
 v0.60.0
 -------
-* Added caching for downloaded files to pc.resources.ResourceLoader. 
+* Added caching for downloaded files to pc.resources.ResourceLoader.
     Anything store as a Asset on the server can be cached and multiple instances are cloned (models) or shared.
 * Added canonical identifiers internally to pc.resources.ResourceLoader.
     Files in different assets with matches hashes will be loaded from a single source
@@ -1568,7 +1598,7 @@ v0.36.0
 * All ComponentSystems can implement an initialize() method which is passed the root entity of a loaded Pack after the Pack is loaded, but before any updates are called
 * Exposed both inner and outer spotlight cone angles in Designer
 * Moved light management into pc.scene.Scene. Lighting requires a Scene object to work now
-* Removed functions pc.scene.LightNode#getNumEnabled() and pc.scene.LightNode#dispatch. 
+* Removed functions pc.scene.LightNode#getNumEnabled() and pc.scene.LightNode#dispatch.
 * Moved static global lighting functions onto Scene instance
 
 -------
@@ -1583,7 +1613,7 @@ v0.35.0
 * Optimized animation addTime function by caching keyframe indices
 * Enable PCF filtering of shadow maps
 * Added spotlight component
-* Update the orientation of listener in audiolistener components so that supported platforms have correct panning.  
+* Update the orientation of listener in audiolistener components so that supported platforms have correct panning.
 
 -------
 v0.34.0
@@ -1814,8 +1844,8 @@ v0.14.1
 -------
 * Fix for pc.fw.Application still referencing old _camera variable
 * Fix for Bloom Component still referencing old _camera variable
-* Fix for SkyBox Component still referencing old _camera variable 
- 
+* Fix for SkyBox Component still referencing old _camera variable
+
 -------
 v0.14.0
 -------
@@ -1824,7 +1854,7 @@ v0.14.0
 -------
 v0.13.1
 -------
-* Fix mouse down event for left mouse button. 
+* Fix mouse down event for left mouse button.
 
 -------
 v0.13.0
