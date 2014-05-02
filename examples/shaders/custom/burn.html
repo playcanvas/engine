@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+<head>
+    <script src="/engine/build/output/playcanvas-latest.js"></script>
+    <script src="http://code.playcanvas.com/ammo.3c2cc63.js"></script>
+    <style>
+        html, body {
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+        }
+        canvas: {
+            display: block;
+        }
+        .overlay {
+            font-family: helvetica, arial, sans-serif;
+            position: absolute;
+            left: 0px;
+            bottom: 0px;
+            user-select: none;
+        }
+        .overlay img {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- Instructions -->
+    <div class="overlay">
+        <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
+        <span>Custom Shaders - wibbly wobbly</span>
+    </div>
+    <!-- The script -->
+    <script>
+        var entity, light, camera;
+        var time = 0;
+        var shader, material, oldMaterial;
+        var canvas = document.getElementById("application-canvas");
+
+
+
+        // Create the application and start the update loop
+        var application = new pc.fw.Application(canvas);
+        application.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
+        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+
+        application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        // Create an Entity with a camera component
+        camera = new pc.fw.Entity();
+        application.context.systems.camera.addComponent(camera, {
+            clearColor: new pc.Color(0.8, 0.8, 0.8)
+        });
+        camera.rotate(-30,0,0);
+        camera.translateLocal(0, 0, 1);
+
+        // Create an Entity with a point light component and a sphere model component.
+        light = new pc.fw.Entity();
+        application.context.systems.light.addComponent(light, {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            radius: 10
+        });
+        light.translate(0, 1, 0);
+
+        // Add entities into scene hierarchy
+        application.context.root.addChild(camera);
+        application.context.root.addChild(light);
+
+        var model, asset, heightMap;
+        var url = "../../assets/model/gem2.json";
+        application.context.assets.loadUrl(url, "model").then(function (results) {
+            model = results.resource;
+            asset = results.asset;
+            return application.context.assets.loadUrl('../../assets/clouds.jpg', 'texture');
+        }).then(function (results) {
+            heightMap = results.resource[0];
+
+            entity = new pc.fw.Entity();
+            entity.rotateLocal(0,130,0);
+            application.context.systems.model.addComponent(entity, {
+                type: "asset",
+                asset: asset
+            });
+            application.context.root.addChild(entity);
+
+            var gd = application.context.graphicsDevice;
+            gd.setBlending(true);
+            var shaderDefinition = {
+                attributes: {
+                    aPosition: pc.gfx.SEMANTIC_POSITION,
+                    aUv0: pc.gfx.SEMANTIC_TEXCOORD0
+                },
+                vshader: [
+                    "attribute vec3 aPosition;",
+                    "attribute vec2 aUv0;",
+                    "",
+                    "uniform mat4 matrix_model;",
+                    "uniform mat4 matrix_viewProjection;",
+                    // "uniform float uTime;",
+                    "",
+                    "varying vec2 vUv0;",
+                    "",
+                    "void main(void)",
+                    "{",
+                    "    vUv0 = aUv0;",
+                    "    gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);",
+                    "}"
+                ].join("\n"),
+                fshader: [
+                    "precision " + gd.precision + " float;",
+                    "",
+                    "varying vec2 vUv0;",
+                    "",
+                    "uniform sampler2D uDiffuseMap;",
+                    "uniform sampler2D uHeightMap;",
+                    "uniform float uTime;",
+                    "",
+                    "void main(void)",
+                    "{",
+                    "    float height = texture2D(uHeightMap, vUv0).r;",
+                    "    vec4 color = texture2D(uDiffuseMap, vUv0);",
+                    "    if (height < uTime) {",
+                    "      discard;",
+                    "    }",
+                    "    if (height < (uTime+0.04)) {",
+                    "      color = vec4(1, 0.2, 0, 1.0);",
+                    "    }",
+                    "    gl_FragColor = color;",
+                    "}"
+                ].join("\n")
+            };
+
+            shader = new pc.gfx.Shader(gd, shaderDefinition);
+
+            oldMaterial = model.meshInstances[0].material;
+
+            material = new pc.scene.Material();
+
+            material.setShader(this.shader);
+            material.setParameter('uTime', 0);
+
+            model.meshInstances[0].material = material;
+
+            application.on("update", function (dt) {
+                time += dt;
+
+                var t = ((time * 1000) % 2000);
+                if (t > 1000) t = 1000 - (t - 1000);
+
+                material.setParameter('uTime', t / 1000);
+                material.setParameter('uHeightMap', heightMap);
+                material.setParameter('uDiffuseMap', oldMaterial.diffuseMap);
+            });
+
+        });
+    </script>
+</body>
+</html>
