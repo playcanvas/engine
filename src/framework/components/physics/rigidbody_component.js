@@ -663,6 +663,7 @@ pc.extend(pc.fw, function () {
 
         onSetType: function (name, oldValue, newValue) {
             if (newValue !== oldValue) {
+                this.disableSimulation();
                 // Create a new body
                 this.createBody();
             }
