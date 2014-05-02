@@ -59,9 +59,8 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            this.system.context.assets.load(asset, [], options).then(function (resources) {
+            function _onLoad(resources) {
                 var model = resources[0];
-
                 if (this.system.context.designer) {
                     model.generateWireframe();
 
@@ -71,7 +70,15 @@ pc.extend(pc.fw, function () {
                 if (this.data.type === 'asset') {
                     this.model = model;
                 }
-            }.bind(this));
+            }
+
+            if (asset.resource) {
+                setTimeout(function () {
+                    _onLoad.call(this, [asset.resource]);
+                }.bind(this), 0);
+            } else {
+                this.system.context.assets.load(asset, [], options).then(_onLoad.bind(this));
+            }
         },
 
         /**
