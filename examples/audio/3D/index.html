@@ -63,7 +63,8 @@
         // Create an Entity with a camera component
         var camera = new pc.fw.Entity();
         application.context.systems.camera.addComponent(camera, {
-            clearColor: new pc.Color(0.1, 0.1, 0.4)
+            clearColor: new pc.Color(0.1, 0.1, 0.4),
+            fov: 45,
         });
         application.context.systems.audiolistener.addComponent(camera, {});
 
@@ -103,21 +104,21 @@
             application.context.systems.model.addComponent(entity, {
                 type: "sphere"
             });
-            entity.setLocalScale(0.1, 0.1, 0.1);
+            entity.setLocalScale(1,1,1);
 
             entity.audiosource.play("footsteps_gravel_01");
             application.context.root.addChild(entity);
 
             var pos;
-            var angle = 0;
-            var radius = 3;
+            var angle = 180;
+            var radius = 4;
             application.on("update", function (dt) {
-                angle += 0.5*dt;
+                angle += 15*dt;
                 if (angle > 360) {
                     angle -= 360;
                 }
-                pos = camera.getPosition();
-                 entity.setLocalPosition(pos.x + radius * Math.sin(angle), 1, pos.z + radius * Math.cos(angle));
+                var pos = camera.getPosition();
+                entity.setLocalPosition(pos.x + radius * Math.sin(angle*pc.math.DEG_TO_RAD), 0.5, pos.z + radius * Math.cos(angle*pc.math.DEG_TO_RAD));
             });
         });
 
