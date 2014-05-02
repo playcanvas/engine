@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.145.4
+--------
+* [FIX] Disable simulation before changing the rigidbody type so that simulation will be properly enabled again after the type changes
+* Improved the docs for applyForce
+
+
+--------
 v0.145.3
 --------
 * [FIX] Added null check when updating script instances in case some of them are removed from the update list while the loop is in progress
