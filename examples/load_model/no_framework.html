@@ -6,18 +6,33 @@
         html, body {
             margin: 0px;
             padding: 0px;
+            overflow: hidden;
         }
-
-        canvas {
-            height: 720px;
-            width: 1200px;
+        canvas: {
+            display: block;
+        }
+        .overlay {
+            font-family: helvetica, arial, sans-serif;
+            position: absolute;
+            left: 0px;
+            bottom: 0px;
+            user-select: none;
+        }
+        .overlay img {
+            vertical-align: middle;
         }
     </style>
 </head>
 
 <body>
     <!-- The canvas element -->
-    <canvas id="application-canvas" width="1200" height="720"></canvas>
+    <canvas id="application-canvas" height="720" width="1200"></canvas>
+
+    <!-- Instructions -->
+    <div class="overlay">
+        <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
+        <span>Model Loading without using framework</span>
+    </div>
 
     <!-- The script -->
     <script>

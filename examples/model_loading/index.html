@@ -6,6 +6,10 @@
         html, body {
             margin: 0px;
             padding: 0px;
+            overflow: hidden;
+        }
+        canvas: {
+            display: block;
         }
     </style>
 </head>
@@ -21,7 +25,7 @@
         // Create the application and start the update loop
         var application = new pc.fw.Application(canvas);
         application.start();
-        
+
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
         application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
@@ -72,7 +76,7 @@
             // Move the camera 10m along the z-axis
             camera.translate(0, 0, 1);
         });
-        
+
         // Set an update function on the application's update event
         var angle = 0;
         application.on("update", function (dt) {
@@ -83,8 +87,8 @@
 
             if (light && model) {
                 // Move the light in a circle
-                light.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));                
-    
+                light.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));
+
                 // Rotate the model
                 model.rotate(0, 10*dt, 0);
             }

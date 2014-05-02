@@ -6,13 +6,33 @@
         html, body {
             margin: 0px;
             padding: 0px;
+            overflow: hidden;
+        }
+        canvas: {
+            display: block;
+        }
+        .overlay {
+            font-family: helvetica, arial, sans-serif;
+            position: absolute;
+            left: 0px;
+            bottom: 0px;
+            user-select: none;
+        }
+        .overlay img {
+            vertical-align: middle;
         }
     </style>
 </head>
 
 <body>
-    <!-- The canvas element. Set tabindex="0" for keyboard focus -->
+    <!-- The canvas element -->
     <canvas id="application-canvas" tabindex="0"></canvas>
+
+    <!-- Instructions -->
+    <div class="overlay">
+        <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
+        <span>Camera - First Person Camera</span>
+    </div>
 
     <!-- The script -->
     <script>
