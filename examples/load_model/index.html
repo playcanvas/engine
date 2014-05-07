@@ -52,7 +52,7 @@
 
         var url = "../assets/model/gem2.json";
 
-        application.context.assets.loadUrl(url, "model").then(function (results) {
+        application.context.assets.loadFromUrl(url, "model").then(function (results) {
             var model = results.resource;
             var asset = results.asset;
 

@@ -59,7 +59,7 @@ pc.extend(pc.asset, function () {
         /**
         * @function
         * @name pc.asset.AssetRegistry#addAsset
-        * @description Add a new
+        * @description Add a new asset to the registry
         * @param {pc.asset.Asset} asset The asset to add to the registry
         */
         addAsset: function (asset) {
@@ -71,7 +71,6 @@ pc.extend(pc.asset, function () {
             if (asset.file) {
                 this._urls[asset.file.url] = asset.resourceId;
             }
-
         },
 
         /**
@@ -196,14 +195,6 @@ pc.extend(pc.asset, function () {
                 }
             }, this);
 
-            // request all assets
-            // return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(null, function (error) {
-            //     // Ensure exceptions while loading are thrown and not swallowed by promises
-            //     setTimeout(function () {
-            //         throw error;
-            //     }, 0)
-            // });
-
             // request all assets, then attach loaded resources onto asset
             return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
 
@@ -227,13 +218,13 @@ pc.extend(pc.asset, function () {
             });
         },
 
-        loadUrl: function (url, type) {
+        loadFromUrl: function (url, type) {
             if (!type) {
                 throw Error("type required")
             }
 
             if (type === "model") {
-                return this.loadModel(url);
+                return this._loadModel(url);
             }
 
             var dir = pc.path.getDirectory(url);
@@ -257,7 +248,7 @@ pc.extend(pc.asset, function () {
         },
 
 
-        loadModel: function (url) {
+        _loadModel: function (url) {
             var self = this;
 
             var dir = pc.path.getDirectory(url);

@@ -65,7 +65,7 @@
 
         // Load a model file
         // Once it's loaded create a Entity with a model component
-        application.context.assets.loadUrl("../assets/model/gem2.json", "model").then(function (results) {
+        application.context.assets.loadFromUrl("../assets/model/gem2.json", "model").then(function (results) {
             var model = results.resource;
             var asset = results.asset;
 

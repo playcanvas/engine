@@ -93,7 +93,7 @@
         });
         light.setLocalPosition(0, 10, 0);
 
-        application.context.assets.loadUrl("../../assets/footsteps_gravel_01.mp3", "audio").then(function (result) {
+        application.context.assets.loadFromUrl("../../assets/footsteps_gravel_01.mp3", "audio").then(function (result) {
             entity = new pc.fw.Entity();
             application.context.systems.audiosource.addComponent(entity, {
                 assets: [

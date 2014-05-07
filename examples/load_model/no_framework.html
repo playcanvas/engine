@@ -70,8 +70,9 @@
         loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
 
         var model = null;
-        assets.loadUrl("../assets/model/gem2.json", "model").then(function (results) {
-            model = results.resource;
+
+        assets.loadFromUrl("../assets/model/gem2.json", "model").then(function (asset) {
+            model = asset.resource;
             scene.addModel(model);
         });
 
