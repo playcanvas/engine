@@ -63,7 +63,6 @@ pc.extend(pc.fw, function () {
                 var model = resources[0];
                 if (this.system.context.designer) {
                     model.generateWireframe();
-
                     asset.on('change', this.onAssetChange, this);
                 }
 
@@ -74,7 +73,8 @@ pc.extend(pc.fw, function () {
 
             if (asset.resource) {
                 setTimeout(function () {
-                    _onLoad.call(this, [asset.resource]);
+                    var model = asset.resource.clone();
+                    _onLoad.call(this, [model]);
                 }.bind(this), 0);
             } else {
                 this.system.context.assets.load(asset, [], options).then(_onLoad.bind(this));
