@@ -32,7 +32,7 @@
     <!-- Instructions -->
     <div class="overlay">
         <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
-        <span>Custom Shaders - wibbly wobbly</span>
+        <span>Custom Shaders - Dissolve/Burn</span>
     </div>
     <!-- The script -->
     <script>
@@ -40,8 +40,6 @@
         var time = 0;
         var shader, material, oldMaterial;
         var canvas = document.getElementById("application-canvas");
-
-
 
         // Create the application and start the update loop
         var application = new pc.fw.Application(canvas);
@@ -56,10 +54,10 @@
         // Create an Entity with a camera component
         camera = new pc.fw.Entity();
         application.context.systems.camera.addComponent(camera, {
-            clearColor: new pc.Color(0.8, 0.8, 0.8)
+            clearColor: new pc.Color(0.6, 0.6, 0.7)
         });
-        camera.rotate(-30,0,0);
-        camera.translateLocal(0, 0, 1);
+        camera.rotate(0,0,0);
+        camera.translateLocal(0, 7, 24);
 
         // Create an Entity with a point light component and a sphere model component.
         light = new pc.fw.Entity();
@@ -75,7 +73,7 @@
         application.context.root.addChild(light);
 
         var model, asset, heightMap;
-        var url = "../../assets/model/gem2.json";
+        var url = "../../assets/statue/Statue_1.json";
         application.context.assets.loadFromUrl(url, "model").then(function (results) {
             model = results.resource;
             asset = results.asset;
@@ -84,7 +82,7 @@
             heightMap = results.resource[0];
 
             entity = new pc.fw.Entity();
-            entity.rotateLocal(0,130,0);
+            entity.rotateLocal(0,0,0);
             application.context.systems.model.addComponent(entity, {
                 type: "asset",
                 asset: asset
@@ -147,7 +145,9 @@
             material.setShader(this.shader);
             material.setParameter('uTime', 0);
 
-            model.meshInstances[0].material = material;
+            model.meshInstances.forEach(function (mesh) {
+                mesh.material = material;
+            });
 
             application.on("update", function (dt) {
                 time += dt;
