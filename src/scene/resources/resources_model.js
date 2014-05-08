@@ -23,7 +23,7 @@ pc.extend(pc.resources, function () {
         "point":       pc.scene.LIGHTTYPE_POINT,
         "spot":        pc.scene.LIGHTTYPE_SPOT
     };
-    
+
     var jsonToProjectionType = {
         "perspective":  pc.scene.Projection.PERSPECTIVE,
         "orthographic": pc.scene.Projection.ORTHOGRAPHIC
@@ -36,7 +36,7 @@ pc.extend(pc.resources, function () {
     var ModelResourceHandler = function (device, assetRegistry) {
         this._device = device;
         this._assets = assetRegistry;
-        this.materialLoader = new pc.resources.MaterialResourceLoader(device, assetRegistry);
+        this._materialLoader = new pc.resources.MaterialResourceLoader(device, assetRegistry);
     };
     ModelResourceHandler = pc.inherits(ModelResourceHandler, pc.resources.ResourceHandler);
 
@@ -52,6 +52,7 @@ pc.extend(pc.resources, function () {
      * @param {Number} [options.priority] The priority to load the model textures at.
      */
     ModelResourceHandler.prototype.load = function (request, options) {
+        var self = this;
 
         var promise = new RSVP.Promise(function (resolve, reject) {
             var url = request.canonical;
@@ -60,10 +61,10 @@ pc.extend(pc.resources, function () {
 
             var uri = new pc.URI(url);
             var ext = pc.path.getExtension(uri.path);
-            
+
             pc.net.http.get(url, function (response) {
                 resolve(response);
-            }.bind(this), {
+            }, {
                 cache: options.cache,
                 error: function (status, xhr, e) {
                     reject(pc.string.format("Error loading model: {0} [{1}]", url, status));
@@ -73,7 +74,7 @@ pc.extend(pc.resources, function () {
 
         return promise;
     };
-	
+
 	/**
 	 * @function
 	 * @name pc.resources.ModelResourceHandler#open
@@ -91,7 +92,7 @@ pc.extend(pc.resources, function () {
         var model = null;
         if (data.model.version <= 1) {
             logERROR(pc.string.format("Asset: {0}, is an old model format. Upload source assets to re-import.", request.canonical));
-        } else {
+        } else if (data.model.version >= 2) {
             model = this._loadModelJson(data, request.data, options);
         }
 
@@ -313,7 +314,7 @@ pc.extend(pc.resources, function () {
                 indexData.set(meshData.indices, indexBase);
                 indexBase += meshData.indices.length;
             }
-            
+
             meshes.push(mesh);
         }
 
@@ -331,8 +332,10 @@ pc.extend(pc.resources, function () {
 
             var node = nodes[meshInstanceData.node];
             var mesh = meshes[meshInstanceData.mesh];
-            var material = (mapping && mapping[i].material) ? this.materialLoader.load(mapping[i].material) : defaultMaterial;
-
+            var material = this._getMaterial(i, mapping, options);
+            if (!material) {
+                material = defaultMaterial;
+            }
             var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
 
             if (mesh.skin) {
@@ -359,13 +362,38 @@ pc.extend(pc.resources, function () {
 
         return model;
     };
-   
-	var ModelRequest = function ModelRequest(identifier) {		
+
+    /**
+    * Load the material using either the material resource id or the path provided in the mapping
+    */
+    ModelResourceHandler.prototype._getMaterial = function (meshInstanceIndex, mapping, options) {
+        var material;
+
+        if (mapping && mapping.length > meshInstanceIndex) {
+            if (mapping[meshInstanceIndex].material) { // resource id mapping
+                material = this._materialLoader.load(mapping[meshInstanceIndex].material);
+            } else if (mapping[meshInstanceIndex].path) { // path mapping
+                // get directory of model
+                var path = pc.path.split(options.parent.canonical)[0];
+                path = pc.path.join(path, mapping[meshInstanceIndex].path);
+
+                // Get material asset
+                var asset = this._assets.getAssetByUrl(path);
+                if (asset) {
+                    material = asset.resource;
+                }
+            }
+        }
+
+        return material;
+    }
+
+	var ModelRequest = function ModelRequest(identifier) {
 	};
 	ModelRequest = pc.inherits(ModelRequest, pc.resources.ResourceRequest);
     ModelRequest.prototype.type = "model";
     ModelRequest.prototype.Type = pc.scene.Model;
-    
+
 	return {
 		ModelResourceHandler: ModelResourceHandler,
 		ModelRequest: ModelRequest

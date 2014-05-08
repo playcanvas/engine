@@ -71,6 +71,7 @@ pc.extend(pc.fw, function () {
         
         loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
+        loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(this.context.assets));
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());

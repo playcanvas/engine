@@ -122,13 +122,13 @@ pc.extend(pc.fw, function () {
         this.defaultMaterial = new pc.scene.PhongMaterial()
     };
     ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.fw.ComponentSystem);
-    
+
     pc.extend(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             data.material = this.defaultMaterial;
 
             // order matters here
-            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'enabled'];            
+            properties = ['material', 'materialAsset', 'asset', 'castShadows', 'receiveShadows', 'type', 'enabled'];
 
             ModelComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -147,7 +147,7 @@ pc.extend(pc.fw, function () {
 
         cloneComponent: function (entity, clone) {
             var component = this.addComponent(clone, {});
-            
+
             clone.model.data.type = entity.model.type;
             clone.model.data.materialAsset = entity.model.materialAsset;
             clone.model.data.asset = entity.model.asset;
@@ -157,7 +157,7 @@ pc.extend(pc.fw, function () {
             clone.model.data.enabled = entity.model.enabled;
 
             if (entity.model.model) {
-                clone.model.model = entity.model.model.clone();    
+                clone.model.model = entity.model.model.clone();
             }
         }
     });
