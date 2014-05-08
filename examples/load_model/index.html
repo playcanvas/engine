@@ -21,6 +21,9 @@
         .overlay img {
             vertical-align: middle;
         }
+        .small {
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
@@ -30,8 +33,8 @@
 
     <!-- Instructions -->
     <div class="overlay">
-        <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
-        <span>Model Loading</span>
+        <a href="https://playcanvas.com"><img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img></a>
+        <span>Model Loading</span><span class="small"> - model by Ben Sidwell</span>
     </div>
 
     <!-- The script -->
@@ -50,7 +53,7 @@
 
         var entity, light, camera;
 
-        var url = "../assets/model/gem2.json";
+        var url = "../assets/statue/Statue_1.json";
 
         application.context.assets.loadFromUrl(url, "model").then(function (results) {
             var model = results.resource;
@@ -63,28 +66,32 @@
                 asset: asset
             });
 
-            entity.rotate(0, 45, 0);
+            entity.rotate(0, 0, 0);
             application.context.root.addChild(entity);
         });
 
         // Create an Entity with a camera component
         var camera = new pc.fw.Entity();
         application.context.systems.camera.addComponent(camera, {
-            clearColor: new pc.Color(0.8, 0.8, 0.8)
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
-        camera.translate(0, 1, 5);
+        camera.translate(0, 7, 24);
 
         // Create an Entity with a point light component and a sphere model component.
         var light = new pc.fw.Entity();
         application.context.systems.light.addComponent(light, {
             type: "point",
             color: new pc.Color(1, 1, 1),
-            radius: 100
+            range: 100
         });
-        light.translate(0, 0.4, 2);
+        light.translate(5, 0, 15);
 
         application.context.root.addChild(camera);
         application.context.root.addChild(light);
+
+        application.on("update", function (dt) {
+            entity.rotate(0,10*dt,0);
+        })
     </script>
 </body>
 </html>

@@ -7,10 +7,14 @@
             margin: 0px;
             padding: 0px;
             overflow: hidden;
+            background-color: #667380;
         }
-        canvas: {
+
+        canvas {
             display: block;
+            width: 100%;
         }
+
         .overlay {
             font-family: helvetica, arial, sans-serif;
             position: absolute;
@@ -18,8 +22,13 @@
             bottom: 0px;
             user-select: none;
         }
+
         .overlay img {
             vertical-align: middle;
+        }
+
+        .small {
+            font-size: 0.8em;
         }
     </style>
 </head>
@@ -31,7 +40,7 @@
     <!-- Instructions -->
     <div class="overlay">
         <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
-        <span>Model Loading without using framework</span>
+        <span>Model Loading without using framework</span><span class="small"> - model by Ben Sidwell</span>
     </div>
 
     <!-- The script -->
@@ -49,13 +58,16 @@
 
         // Create camera node
         var camera = new pc.scene.CameraNode();
-        camera.setLocalPosition(0, 0, 5);
+        camera.setClearOptions({
+            color: [0.4, 0.45, 0.5]
+        });
+        camera.setLocalPosition(0, 7, 24);
 
         // Set up a default scene light
         var light = new pc.scene.LightNode();
         light.setType(pc.scene.LIGHTTYPE_POINT);
         light.setAttenuationEnd(100);
-        light.setLocalPosition(0, 2, 2);
+        light.setLocalPosition(5, 0, 15);
         light.setEnabled(true);
         scene.addLight(light);
 
@@ -71,7 +83,7 @@
 
         var model = null;
 
-        assets.loadFromUrl("../assets/model/gem2.json", "model").then(function (asset) {
+        assets.loadFromUrl("../assets/statue/Statue_1.json", "model").then(function (asset) {
             model = asset.resource;
             scene.addModel(model);
         });

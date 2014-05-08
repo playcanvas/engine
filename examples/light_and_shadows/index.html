@@ -21,6 +21,10 @@
         .overlay img {
             vertical-align: middle;
         }
+
+        .small {
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
@@ -31,7 +35,7 @@
     <!-- Instructions -->
     <div class="overlay">
         <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
-        <span>Light and Shadows</span>
+        <span>Light and Shadows</span><span class="small"> - model by Ben Sidwell</span>
     </div>
 
 
@@ -63,9 +67,9 @@
 
         var entity, light, camera;
 
-        // Load a model file
-        // Once it's loaded create a Entity with a model component
-        application.context.assets.loadFromUrl("../assets/model/gem2.json", "model").then(function (results) {
+        // Load a model file and create a Entity with a model component
+        var url = "../assets/statue/Statue_1.json";
+        application.context.assets.loadFromUrl(url, "model").then(function (results) {
             var model = results.resource;
             var asset = results.asset;
 
@@ -81,10 +85,10 @@
         // Create an Entity with a camera component
         var camera = new pc.fw.Entity();
         application.context.systems.camera.addComponent(camera, {
-            clearColor: new pc.Color(0.8, 0.8, 0.8)
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
-        camera.translate(1, 0.24, -1);
-        camera.rotate(0, 135, 0)
+        camera.translate(0, 7, 24);
+        camera.rotate(0, 0, 0)
 
         // Create an Entity for the ground
         var ground = new pc.fw.Entity();
@@ -93,33 +97,55 @@
         });
         ground.setLocalScale(50, 1, 50);
         ground.setLocalPosition(0, -0.5, 0);
+
         var material = createMaterial({
             ambient: new pc.Color(0.1, 0.4, 0.1),
             diffuse: new pc.Color(0.1, 0.4, 0.1),
         });
         ground.model.model.meshInstances[0].material = material;
 
-        // Create an Entity with a point light component and a sphere model component.
+        // Create an spot light
         var light = new pc.fw.Entity();
         application.context.systems.light.addComponent(light, {
             type: "spot",
             color: new pc.Color(1, 1, 1),
             outerConeAngle: 60,
             innerConeAngle: 40,
-            range: 20,
+            range: 100,
             intensity: 1,
             castShadows: true,
             shadowResolution: 2048
         });
 
+        light.light.model.lights[0].setShadowBias(-0.00005); // nasty bit to ensure the shadows line up with the ground properly
+
+        // Create a point light
+        var pointlight = new pc.fw.Entity();
+        application.context.systems.light.addComponent(pointlight, {
+            type: "point",
+            color: new pc.Color(0, 0, 1),
+            range: 100,
+            intensity: 1
+        });
+        application.context.systems.model.addComponent(pointlight, {
+            type: "sphere"
+        });
+        pointlight.model.model.meshInstances[0].material = createMaterial({ambient: new pc.Color(0,0,1), diffuse: new pc.Color(0,0,1)});
+        // pointlight.setLocalScale(0.1, 0.1, 0.1);
+
         // Add Entities into the scene hierarchy
         application.context.root.addChild(camera);
         application.context.root.addChild(light);
+        application.context.root.addChild(pointlight);
         application.context.root.addChild(ground);
 
         // Simple update loop to rotate the light
-        var radius = 1;
+        var radius = 20;
+        var height = 5;
         var angle = 0;
+
+        var pointRadius = 5;
+        var pointHeight = 10;
         application.on("update", function (dt) {
             angle += 20*dt;
             if (angle > 360) {
@@ -128,8 +154,12 @@
             if (entity) {
                 light.lookAt(entity.getPosition());
                 light.rotateLocal(90, 0, 0);
-                light.setLocalPosition(radius * Math.sin(angle*pc.math.DEG_TO_RAD), 0.3, radius * Math.cos(angle*pc.math.DEG_TO_RAD))
+                light.setLocalPosition(radius * Math.sin(angle*pc.math.DEG_TO_RAD), height, radius * Math.cos(angle*pc.math.DEG_TO_RAD));
+                // light.enabled = false;
+
+                pointlight.setLocalPosition(pointRadius * Math.sin(-2*angle*pc.math.DEG_TO_RAD), pointHeight, pointRadius * Math.cos(-2*angle*pc.math.DEG_TO_RAD));
             }
+
         });
     </script>
 </body>

@@ -22,6 +22,11 @@
         .overlay img {
             vertical-align: middle;
         }
+
+        .small {
+            font-size: 0.8em;
+        }
+
     </style>
 </head>
 
@@ -32,8 +37,49 @@
     <!-- Instructions -->
     <div class="overlay">
         <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
-        <span>Custom Shaders - Dissolve/Burn</span>
+        <span>Custom Shaders - Burn</span><span class="small"> - model by Ben Sidwell</span>
     </div>
+
+    <!-- shaders -->
+    <script id="vshader" type="x-shader/x-vertex">
+        attribute vec3 aPosition;
+        attribute vec2 aUv0;
+
+        uniform mat4 matrix_model;
+        uniform mat4 matrix_viewProjection;
+
+        varying vec2 vUv0;
+
+        void main(void)
+        {
+            vUv0 = aUv0;
+            gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
+        }
+    </script>
+
+    <script id="fshader" type="x-shader/x-fragment">
+        precision highp float;
+
+        varying vec2 vUv0;
+
+        uniform sampler2D uDiffuseMap;
+        uniform sampler2D uHeightMap;
+        uniform float uTime;
+
+        void main(void)
+        {
+            float height = texture2D(uHeightMap, vUv0).r;
+            vec4 color = texture2D(uDiffuseMap, vUv0);
+            if (height < uTime) {
+              discard;
+            }
+            if (height < (uTime + uTime * 0.1)) {
+              color = vec4(1.0, 0.2, 0.0, 1.0);
+            }
+            gl_FragColor = color;
+        }
+    </script>
+
     <!-- The script -->
     <script>
         var entity, light, camera;
@@ -54,7 +100,7 @@
         // Create an Entity with a camera component
         camera = new pc.fw.Entity();
         application.context.systems.camera.addComponent(camera, {
-            clearColor: new pc.Color(0.6, 0.6, 0.7)
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
         camera.rotate(0,0,0);
         camera.translateLocal(0, 7, 24);
@@ -96,44 +142,8 @@
                     aPosition: pc.gfx.SEMANTIC_POSITION,
                     aUv0: pc.gfx.SEMANTIC_TEXCOORD0
                 },
-                vshader: [
-                    "attribute vec3 aPosition;",
-                    "attribute vec2 aUv0;",
-                    "",
-                    "uniform mat4 matrix_model;",
-                    "uniform mat4 matrix_viewProjection;",
-                    // "uniform float uTime;",
-                    "",
-                    "varying vec2 vUv0;",
-                    "",
-                    "void main(void)",
-                    "{",
-                    "    vUv0 = aUv0;",
-                    "    gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);",
-                    "}"
-                ].join("\n"),
-                fshader: [
-                    "precision " + gd.precision + " float;",
-                    "",
-                    "varying vec2 vUv0;",
-                    "",
-                    "uniform sampler2D uDiffuseMap;",
-                    "uniform sampler2D uHeightMap;",
-                    "uniform float uTime;",
-                    "",
-                    "void main(void)",
-                    "{",
-                    "    float height = texture2D(uHeightMap, vUv0).r;",
-                    "    vec4 color = texture2D(uDiffuseMap, vUv0);",
-                    "    if (height < uTime) {",
-                    "      discard;",
-                    "    }",
-                    "    if (height < (uTime+0.04)) {",
-                    "      color = vec4(1, 0.2, 0, 1.0);",
-                    "    }",
-                    "    gl_FragColor = color;",
-                    "}"
-                ].join("\n")
+                vshader: document.getElementById("vshader").textContent,
+                fshader: document.getElementById("fshader").textContent
             };
 
             shader = new pc.gfx.Shader(gd, shaderDefinition);
@@ -152,14 +162,17 @@
             application.on("update", function (dt) {
                 time += dt;
 
-                var t = ((time * 1000) % 2000);
-                if (t > 1000) t = 1000 - (t - 1000);
+                var t = time % 2;
 
-                material.setParameter('uTime', t / 1000);
+                // reverse time
+                if (t > 1) {
+                    t = 1 - (t - 1);
+                }
+
+                material.setParameter('uTime', t );
                 material.setParameter('uHeightMap', heightMap);
                 material.setParameter('uDiffuseMap', oldMaterial.diffuseMap);
             });
-
         });
     </script>
 </body>

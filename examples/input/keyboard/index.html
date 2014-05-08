@@ -2,7 +2,6 @@
 <html>
 <head>
     <script src="/engine/build/output/playcanvas-latest.js"></script>
-    <script src="http://code.playcanvas.com/ammo.3c2cc63.js"></script>
     <style>
         html, body {
             margin: 0px;
@@ -22,6 +21,9 @@
         .overlay img {
             vertical-align: middle;
         }
+        .small {
+            font-size: 0.8em;
+        }
     </style>
 </head>
 
@@ -31,8 +33,8 @@
 
     <!-- Instructions -->
     <div class="overlay">
-        <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
-        <span>Spinning Cube</span>
+        <a href="https://playcanvas.com"><img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img></a>
+        <span>Keyboard Input - use left and right arrow keys to rotate the model</span><span class="small"> - model by Ben Sidwell</span>
     </div>
 
     <!-- The script -->
@@ -49,53 +51,53 @@
 
         application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        // Create a Entity with a Box model component
-        var box = new pc.fw.Entity();
-        application.context.systems.model.addComponent(box, {
-            type: "box",
-        });
-
-        // Create an Entity with a point light component and a sphere model component.
-        var light = new pc.fw.Entity();
-        application.context.systems.light.addComponent(light, {
-            type: "point",
-            color: new pc.Color(1, 0, 0),
-            radius: 10
-        });
-        application.context.systems.model.addComponent(light, {
-            type: "sphere"
-        });
-        // Scale the sphere down to 0.1m
-        light.setLocalScale(0.1, 0.1, 0.1);
+        var entity, light, camera;
 
         // Create an Entity with a camera component
         var camera = new pc.fw.Entity();
         application.context.systems.camera.addComponent(camera, {
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
+        camera.translate(0, 7, 24);
 
-        // Add the new Entities to the hierarchy
-        application.context.root.addChild(box);
-        application.context.root.addChild(light);
-        application.context.root.addChild(camera);
-
-        // Move the camera 10m along the z-axis
-        camera.translate(0, 0, 10);
-
-        // Set an update function on the application's update event
-        var angle = 0;
-        application.on("update", function (dt) {
-            angle += dt;
-            if (angle > 360) {
-                angle = 0;
-            }
-
-            // Move the light in a circle
-            light.setLocalPosition(3 * Math.sin(angle), 0, 3 * Math.cos(angle));
-
-            // Rotate the box
-            box.setEulerAngles(angle*2, angle*4, angle*8);
+        // Create an Entity with a point light component and a sphere model component.
+        var light = new pc.fw.Entity();
+        application.context.systems.light.addComponent(light, {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100
         });
+        light.translate(5, 5, 10);
+
+        application.context.root.addChild(camera);
+        application.context.root.addChild(light);
+
+        var url = "../../assets/statue/Statue_1.json";
+        application.context.assets.loadFromUrl(url, "model").then(function (results) {
+            var model = results.resource;
+            var asset = results.asset;
+
+            entity = new pc.fw.Entity();
+
+            application.context.systems.model.addComponent(entity, {
+                type: "asset",
+                asset: asset
+            });
+
+            application.context.root.addChild(entity);
+        });
+
+        var keyboard = new pc.input.Keyboard(document);
+
+        application.on("update", function () {
+            if (keyboard.isPressed(pc.input.KEY_LEFT)) {
+                entity.rotate(0, -1, 0)
+            }
+            if (keyboard.isPressed(pc.input.KEY_RIGHT)) {
+                entity.rotate(0, 1, 0)
+            }
+        });
+
     </script>
 </body>
 </html>
