@@ -45,7 +45,7 @@ module('pc.fw.Entity', {
             this.two = null;
             this.clonable = null;
         };
-        DerivedComponentData = pc.inherits(DerivedComponentData, pc.fw.ComponentData);        
+        DerivedComponentData = pc.inherits(DerivedComponentData, pc.fw.ComponentData);
     }
 });
 
@@ -58,15 +58,15 @@ test("New", function () {
 
 test("setGuid/getGuid", function () {
     jack(function () {
-        
+
         var gm = jack.create("gm", ["addNode", "removeNode"]);
-        
+
         var e = new pc.fw.Entity();
-        
+
         e.setGuid("123", gm);
-        
+
         equal(e.getGuid(), "123");
-        
+
     });
 });
 
@@ -95,8 +95,67 @@ test('clone - component', function () {
     deepEqual(e.derived.one, c.derived.one);
 
     equal(e.derived.two, c.derived.two);
-    
+
     notEqual(e.derived.clonable, c.derived.clonable);
     equal(c.derived.clonable.value, 1);
 
 });
+
+test('reparent entity', function () {
+    var e = new pc.fw.Entity();
+    var child = new pc.fw.Entity();
+    e.addChild(child);
+
+    equal(child.getParent(), e);
+    var e2 = new pc.fw.Entity();
+    child.reparent(e2);
+    equal(child.getParent(), e2);
+});
+
+test('disable entity', function () {
+    var e = new pc.fw.Entity();
+    equal(e.enabled, true);
+    e.enabled = false;
+    equal(e.enabled, false);
+});
+
+test('disable entity with child', function () {
+    var e = new pc.fw.Entity();
+    var child = new pc.fw.Entity();
+    e.addChild(child);
+
+    equal(child.enabled, true);
+
+    e.enabled = false;
+    equal(child.enabled, false);
+
+    e.enabled = true;
+    equal(child.enabled, true);
+});
+
+test('reparent disabled', function () {
+    var e = new pc.fw.Entity();
+    var child = new pc.fw.Entity();
+    e.addChild(child);
+    e.enabled = false;
+    equal(child.enabled, false);
+
+    var e2 = new pc.fw.Entity();
+    child.reparent(e2);
+    equal(child.enabled, true);
+})
+
+test('reparent 2 levels deep - disabled', function () {
+    var entity_level0 = new pc.fw.Entity();
+    var entity_level1 = new pc.fw.Entity();
+    var entity_level2 = new pc.fw.Entity();
+    entity_level0.addChild(entity_level1);
+    entity_level1.addChild(entity_level2);
+
+    entity_level0.enabled = false;
+    equal(entity_level2.enabled, false);
+
+    var entity2_levelRoot = new pc.fw.Entity();
+    entity_level1.reparent(entity2_levelRoot);
+    equal(entity_level2.enabled, true);
+})
