@@ -194,3 +194,4 @@
 ../src/asset/asset_asset.js
 ../src/asset/asset_registry.js
 ../contrib/rsvp-461e814fd8.min.js
+../src/core/core_promise.js
