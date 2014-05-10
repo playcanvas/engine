@@ -1,8 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <script src="/engine/build/output/playcanvas-latest.js"></script>
-    <script src="http://code.playcanvas.com/ammo.3c2cc63.js"></script>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
     <style>
         html, body {
             margin: 0px;
@@ -160,7 +159,7 @@
             });
 
             application.on("update", function (dt) {
-                time += dt;
+                time += 0.2*dt;
 
                 var t = time % 2;
 
