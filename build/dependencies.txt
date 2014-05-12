@@ -1,6 +1,6 @@
+../src/core/core_core.js
 ../src/core/core_fullscreen.js
 ../src/core/core_requestanimationframe.js
-../src/core/core_core.js
 ../src/core/core_color.js
 ../src/core/core_guid.js
 ../src/core/core_time.js
@@ -193,5 +193,5 @@
 ../src/framework/entity/entity_entity.js
 ../src/asset/asset_asset.js
 ../src/asset/asset_registry.js
-../contrib/rsvp-461e814fd8.min.js
+../contrib/rsvp-3.0.6.min.js
 ../src/core/core_promise.js

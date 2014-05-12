@@ -90,8 +90,10 @@
         application.context.root.addChild(light);
 
         application.on("update", function (dt) {
-            entity.rotate(0,10*dt,0);
-        })
+            if (entity) {
+                entity.rotate(0,10*dt,0);
+            }
+        });
     </script>
 </body>
 </html>

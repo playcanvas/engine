@@ -16,11 +16,11 @@ pc.extend(pc.resources, function () {
         this._device = device;
     };
     TextureResourceHandler = pc.inherits(TextureResourceHandler, pc.resources.ResourceHandler);
-    
+
     TextureResourceHandler.prototype.load = function (request, options) {
         var identifier = request.canonical;
 
-        var promise = new RSVP.Promise(function (resolve, reject) {
+        var promise = new pc.promise.Promise(function (resolve, reject) {
             var ext = pc.path.getExtension(identifier).toLowerCase();
             if ((ext === '.dds') || (ext === '.crn')) {
                 options = options || {};
@@ -48,7 +48,7 @@ pc.extend(pc.resources, function () {
                 image.src = identifier;
             }
         });
-    
+
         return promise;
     };
 
@@ -59,7 +59,7 @@ pc.extend(pc.resources, function () {
             var img = data;
             if (request.result) {
                 texture = request.result;
-            } else {            
+            } else {
                 texture = new pc.gfx.Texture(this._device, {
                     width: img.width,
                     height: img.height,
@@ -92,7 +92,7 @@ pc.extend(pc.resources, function () {
     TextureRequest = pc.inherits(TextureRequest, pc.resources.ResourceRequest);
     TextureRequest.prototype.type = "texture";
     TextureRequest.prototype.Type = pc.gfx.Texture;
-    
+
     return {
         TextureResourceHandler: TextureResourceHandler,
         TextureRequest: TextureRequest

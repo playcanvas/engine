@@ -198,7 +198,7 @@ pc.extend(pc.asset, function () {
             // request all assets, then attach loaded resources onto asset
             return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
 
-                var promise = new RSVP.Promise(function (resolve, reject) {
+                var promise = new pc.promise.Promise(function (resolve, reject) {
                     var index = 0;
                     requests.forEach(function (r, i) {
                         if (r) {
@@ -235,7 +235,7 @@ pc.extend(pc.asset, function () {
                 url: url
             });
 
-            var promise = new RSVP.Promise(function (resolve, reject) {
+            var promise = new pc.promise.Promise(function (resolve, reject) {
                 this.load(asset).then(function (resource) {
                     resolve({
                         resource: resource,
@@ -267,7 +267,7 @@ pc.extend(pc.asset, function () {
                 url: mappingUrl
             });
 
-            var promise = RSVP.Promise(function (resolve, reject) {
+            var promise = new pc.promise.Promise(function (resolve, reject) {
                 // Load Model and Mapping
                 self.load([modelAsset, mappingAsset]).then(function (resources) {
                     var model = resources[0];

@@ -4,7 +4,7 @@ pc.extend(pc.resources, function () {
     AnimationResourceHandler = pc.inherits(AnimationResourceHandler, pc.resources.ResourceHandler);
 
     AnimationResourceHandler.prototype.load = function (request, options) {
-        var promise = new RSVP.Promise(function (resolve, reject) {
+        var promise = new pc.promise.Promise(function (resolve, reject) {
             var url = request.canonical;
             var dir = pc.path.getDirectory(url);
 
@@ -37,7 +37,7 @@ pc.extend(pc.resources, function () {
         anim.setDuration(animData.duration);
 
         for (var i = 0; i < animData.nodes.length; i++) {
-            var node = new pc.anim.Node();            
+            var node = new pc.anim.Node();
 
             var n = animData.nodes[i];
             node._name = n.name;
@@ -72,7 +72,7 @@ pc.extend(pc.resources, function () {
         anim.setDuration(animData.duration);
 
         for (var i = 0; i < animData.nodes.length; i++) {
-            var node = new pc.anim.Node();            
+            var node = new pc.anim.Node();
 
             var n = animData.nodes[i];
             node._name = n.name;
@@ -102,13 +102,13 @@ pc.extend(pc.resources, function () {
 
         return anim;
     };
-	
+
     var AnimationRequest = function AnimationRequest(identifier) {};
 
     AnimationRequest = pc.inherits(AnimationRequest, pc.resources.ResourceRequest);
     AnimationRequest.prototype.type = "animation";
     AnimationRequest.prototype.Type = pc.anim.Animation;
-    	
+
     return {
         AnimationResourceHandler: AnimationResourceHandler,
         AnimationRequest: AnimationRequest

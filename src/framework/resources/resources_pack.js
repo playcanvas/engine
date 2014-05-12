@@ -6,14 +6,14 @@ pc.extend(pc.resources, function () {
     var PackResourceHandler = function (registry, depot) {
         this._registry = registry;
         this._depot = depot;
-    
+
     };
     PackResourceHandler = pc.inherits(PackResourceHandler, pc.resources.ResourceHandler);
-    
+
     PackResourceHandler.prototype.load = function (request, options) {
         options = options || {};
-        
-        var promise = new RSVP.Promise(function (resolve, reject) {
+
+        var promise = new pc.promise.Promise(function (resolve, reject) {
             var guid = request.canonical;
             if(guid in pc.content.packs) {
                 // Get the pack from the content file
@@ -39,7 +39,7 @@ pc.extend(pc.resources, function () {
 
         return pack;
     };
-    
+
     PackResourceHandler.prototype.openPack = function (data, request) {
         var d = pc.extend({}, data);
         d.hierarchy = this.openEntity(d.hierarchy, request);
@@ -52,10 +52,10 @@ pc.extend(pc.resources, function () {
         hierarchy = this.openEntityHierarchy(data, request);
         hierarchy.syncHierarchy();
         hierarchy = this.openComponentData(hierarchy, data, request);
-        
+
         return hierarchy;
     };
-    
+
     PackResourceHandler.prototype.openEntityHierarchy = function (data, request) {
         var entity = new pc.fw.Entity();
 
@@ -74,9 +74,9 @@ pc.extend(pc.resources, function () {
         if (data.labels) {
             data.labels.forEach(function (label) {
                 entity.addLabel(label);
-            });            
+            });
         }
-        
+
         // Parent and child data is stored temporarily until children are patched.
         entity.__parent = data.parent;
         entity.__children = data.children;
@@ -85,7 +85,7 @@ pc.extend(pc.resources, function () {
         // entity.version = data.version;
         entity.name = data.name;
         entity.template = data.template;
-                
+
         // Open all children and add them to the node
         var i, child, length = data.children.length;
         for (i = 0; i < length; i++) {
@@ -137,7 +137,7 @@ pc.extend(pc.resources, function () {
     PackRequest = pc.inherits(PackRequest, pc.resources.ResourceRequest);
     PackRequest.prototype.type = "pack";
     PackRequest.prototype.Type = pc.fw.Pack;
-        
+
     return {
         PackResourceHandler: PackResourceHandler,
         PackRequest: PackRequest

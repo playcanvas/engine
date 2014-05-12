@@ -99,7 +99,7 @@ pc.extend(pc.resources, function () {
 
     MaterialResourceHandler.prototype.load = function (request, options) {
         // Used to load material data from a file (as opposed to from an asset)
-        var promise = new RSVP.Promise(function (resolve, reject) {
+        var promise = new pc.promise.Promise(function (resolve, reject) {
             pc.net.http.get(request.canonical, function(response) {
                 if (response.mapping_format === "path") {
                     var textures = this._listTextures(response);

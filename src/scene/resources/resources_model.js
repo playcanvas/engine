@@ -54,7 +54,7 @@ pc.extend(pc.resources, function () {
     ModelResourceHandler.prototype.load = function (request, options) {
         var self = this;
 
-        var promise = new RSVP.Promise(function (resolve, reject) {
+        var promise = new pc.promise.Promise(function (resolve, reject) {
             var url = request.canonical;
             options = options || {};
             options.directory = pc.path.getDirectory(url);

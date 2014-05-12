@@ -82,7 +82,7 @@
         * the cached value.
         * The request() call returns a Promise object which is used to access the resources once they have all been loaded.
         * @param {pc.resources.ResourceRequest|pc.resources.ResourceRequest[]} requests A single or list of {@link pc.resources.ResourceRequest}s which will be requested in this batch.
-        * @returns {RSVP.Promise} A Promise object which is used to retrieve the resources once they have completed
+        * @returns {pc.promise.Promise} A Promise object which is used to retrieve the resources once they have completed
         * @example
         * var requests = [
         *   new pc.resources.ImageRequest("http://example.com/image_one.png"),
@@ -102,7 +102,7 @@
 
             options.cache = self.cache;
 
-            var promise = new RSVP.Promise(function (resolve, reject) {
+            var promise = new pc.promise.Promise(function (resolve, reject) {
                 var i, n;
                 var p;
 
@@ -147,7 +147,7 @@
                     });
 
                     if (childPromises.length) {
-                        RSVP.all(childPromises).then(function(childResources) {
+                        pc.promise.all(childPromises).then(function(childResources) {
                             check(resources, childRequests, childPromises);
                         }, function (error) {
                             reject(error);
@@ -158,7 +158,7 @@
                     }
                 }
 
-                RSVP.all(promises).then(function (resources) {
+                pc.promise.all(promises).then(function (resources) {
                     check(resources, requested, promises);
                 }, function (error) {
                     reject(error);
@@ -285,7 +285,7 @@
 
             if (request.promises.length) {
                 // If the request has already been made, then wait for the result to come in
-                request.promises.push(new RSVP.Promise(function (resolve, reject) {
+                request.promises.push(new pc.promise.Promise(function (resolve, reject) {
                     request.promises[0].then(function (resource) {
 
                         var resource = self._postOpen(resource, request);
@@ -295,7 +295,7 @@
             } else {
 
                 // Check cache, load and open the requested data
-                request.promises[0] = new RSVP.Promise(function (resolve, reject) {
+                request.promises[0] = new pc.promise.Promise(function (resolve, reject) {
                     var handler = self._handlers[request.type];
                     if (!handler) {
                         var msg = "Missing handler for type: " + request.type;
