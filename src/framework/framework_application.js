@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
      * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
      * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
      * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
-     * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading 
+     * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
      *
      * @example
      * // Create application
@@ -47,29 +47,30 @@ pc.extend(pc.fw, function () {
         this.graphicsDevice = new pc.gfx.Device(canvas);
 
         // Enable validation of each WebGL command
-        this.graphicsDevice.enableValidation(false);            
+        this.graphicsDevice.enableValidation(false);
 
         var registry = new pc.fw.ComponentSystemRegistry();
-    
+
         this.audioManager = new pc.audio.AudioManager();
-        
+
         // Create resource loader
         var loader = new pc.resources.ResourceLoader();
         if( options.cache === false )
             loader.cache = false;
-            
+
         // Display shows debug loading information. Only really fit for debug display at the moment.
         if (options.displayLoader) {
             var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
         }
-        
+
         // The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
-        
+
         // Enable new texture bank feature to cache textures
         var textureCache = new pc.resources.TextureCache(loader);
-        
+
         loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
+        loader.registerHandler(pc.resources.TextRequest, new pc.resources.TextResourceHandler());
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
         loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(this.context.assets));
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice));
@@ -80,7 +81,7 @@ pc.extend(pc.fw, function () {
 
         this.renderer = new pc.scene.ForwardRenderer(this.graphicsDevice);
 
-        // Register the ScriptResourceHandler late as we need the context        
+        // Register the ScriptResourceHandler late as we need the context
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
         var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);
@@ -122,13 +123,13 @@ pc.extend(pc.fw, function () {
         if (typeof document.hidden !== 'undefined') {
             this._hiddenAttr = 'hidden';
             document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.mozHidden !== 'undefined') {  
+        } else if (typeof document.mozHidden !== 'undefined') {
             this._hiddenAttr = 'mozHidden';
             document.addEventListener('mozvisibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.msHidden !== 'undefined') {  
+        } else if (typeof document.msHidden !== 'undefined') {
             this._hiddenAttr = 'msHidden';
             document.addEventListener('msvisibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.webkitHidden !== 'undefined') {  
+        } else if (typeof document.webkitHidden !== 'undefined') {
             this._hiddenAttr = 'webkitHidden';
             document.addEventListener('webkitvisibilitychange', this.onVisibilityChange.bind(this), false);
         }
@@ -157,22 +158,22 @@ pc.extend(pc.fw, function () {
             success = success || function () {};
             error = error || function () {};
             progress = progress || function () {};
-            
+
             var requests = [];
 
             // Populate the AssetRegistry and register hashes
             this.context.assets.update(toc);
 
             var onLoaded = function (resources) {
-                // load pack 
+                // load pack
                 guid = toc.packs[0];
-                
+
                 this.context.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
                     var pack = resources[0];
                     this.context.root.addChild(pack.hierarchy);
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     pc.fw.ComponentSystem.postInitialize(pack.hierarchy);
-                    
+
                     // Initialise pack settings
                     if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
                         var gravity = pack.settings.physics.gravity;
@@ -196,7 +197,7 @@ pc.extend(pc.fw, function () {
                 }).then(null, function (error) {
                     // Re-throw any exceptions from the script's initialize method to stop them being swallowed by the Promises lib
                     setTimeout(function () {
-                        throw error;    
+                        throw error;
                     }, 0);
                 });
             }.bind(this);
@@ -204,7 +205,7 @@ pc.extend(pc.fw, function () {
             var load = function () {
                 // Get a list of all assets
                 var assets = this.context.assets.all();
-                
+
                 // start recording loading progress from here
                 this.context.loader.on('progress', progress);
 
@@ -217,7 +218,7 @@ pc.extend(pc.fw, function () {
                     setTimeout(function () {
                         onLoaded([]);
                     }, 0);
-                }       
+                }
             }.bind(this);
 
             if (!this.librariesLoaded) {
@@ -237,10 +238,10 @@ pc.extend(pc.fw, function () {
 
         //             // add to hierarchy
         //             this.context.root.addChild(pack.hierarchy);
-                    
+
         //             // Initialise any systems with an initialize() method after pack is loaded
         //             pc.fw.ComponentSystem.initialize(pack.hierarchy);
-                    
+
         //             // callback
         //             if (success) {
         //                 success(pack);
@@ -278,10 +279,10 @@ pc.extend(pc.fw, function () {
                     this.tick();
                 }, this);
             } else {
-                this.tick();    
+                this.tick();
             }
         },
-        
+
         /**
          * @function
          * @name pc.fw.Application#update
@@ -313,7 +314,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        /** 
+        /**
          * @function
          * @name pc.fw.Application#render
          * @description Application specific render method. Override this if you have a custom Application
@@ -329,11 +330,11 @@ pc.extend(pc.fw, function () {
 
                 this.renderer.render(context.scene, cameraEntity.camera.camera);
 
-                context.systems.camera.frameEnd();            
+                context.systems.camera.frameEnd();
             }
         },
 
-        /** 
+        /**
          * @function
          * @name pc.fw.Application#tick
          * @description Application specific tick method that calls update and render and queues
@@ -345,11 +346,11 @@ pc.extend(pc.fw, function () {
 
             var now = (window.performance && window.performance.now) ? performance.now() : Date.now();
             var dt = (now - (time || now)) / 1000.0;
- 
+
             time = now;
 
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
-            
+
             this.update(dt);
             this.render();
         },
@@ -379,7 +380,7 @@ pc.extend(pc.fw, function () {
         * @param {pc.fw.ResolutionMode} mode The mode to use when setting the resolution
         * @param {Number} [width] The horizontal resolution, only used in FIXED mode
         * @param {Number} [height] The vertical resolution, only used in FIXED mode
-        */ 
+        */
         setCanvasResolution: function (mode, width, height) {
             this.resolutionMode = mode;
 
@@ -425,7 +426,7 @@ pc.extend(pc.fw, function () {
         */
         enableFullscreen: function (element, success, error) {
             element = element || this.canvas;
-                
+
             // success callback
             var s = function () {
                 success();
@@ -439,7 +440,7 @@ pc.extend(pc.fw, function () {
             };
 
             if (success) {
-                document.addEventListener('fullscreenchange', s, false);    
+                document.addEventListener('fullscreenchange', s, false);
             }
 
             if (error) {
@@ -462,7 +463,7 @@ pc.extend(pc.fw, function () {
             };
 
             if (success) {
-                document.addEventListener('fullscreenchange', s, false);    
+                document.addEventListener('fullscreenchange', s, false);
             }
 
             document.exitFullscreen();
@@ -472,7 +473,7 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.Application#isHidden
         * @description Returns true if the window or tab in which the application is running in is not visible to the user.
-        */ 
+        */
         isHidden: function () {
             return document[this._hiddenAttr];
         },
@@ -562,7 +563,7 @@ pc.extend(pc.fw, function () {
         */
         onLibrariesLoaded: function () {
             // Create systems that may require external libraries
-            // var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
+            // var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);
             // var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
             // var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
 
@@ -603,7 +604,7 @@ pc.extend(pc.fw, function () {
                 case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                     entity = this.context.root.findOne("getGuid", msg.content.id);
                     if(entity) {
-                        logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid())); 
+                        logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid()));
                         entity.destroy();
                     }
                     break;
@@ -654,7 +655,7 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @name pc.fw.Application#_linkUpdateComponent
-         * @description Update a value on a component, 
+         * @description Update a value on a component,
          * @param {String} guid GUID for the entity
          * @param {String} componentName name of the component to update
          * @param {String} attributeName name of the attribute on the component
@@ -663,7 +664,7 @@ pc.extend(pc.fw, function () {
         _linkUpdateComponent: function(guid, componentName, attributeName, value) {
             var entity = this.context.root.findOne("getGuid", guid);
             var attribute;
-                
+
             if (entity) {
                 if(componentName) {
                     if(entity[componentName]) {
@@ -683,13 +684,13 @@ pc.extend(pc.fw, function () {
                                         entity[componentName][attributeName] = new attribute.RuntimeType(value);
                                     }
                             } else {
-                                entity[componentName][attributeName] = value;        
+                                entity[componentName][attributeName] = value;
                             }
                         } else {
                             entity[componentName][attributeName] = value;
                         }
 
-                        
+
                     } else {
                         logWARNING(pc.string.format("No component system called '{0}' exists", componentName));
                     }
@@ -711,14 +712,14 @@ pc.extend(pc.fw, function () {
                 entity.fire('livelink:updatetransform', position, rotation, scale);
             }
         },
-        
+
         _linkReparentEntity: function (guid, parentId, index) {
             var entity = this.context.root.findByGuid(guid);
             var parent = this.context.root.findByGuid(parentId);
             // TODO: use index to insert child into child list
-            entity.reparent(parent);    
+            entity.reparent(parent);
         },
-        
+
         /**
          * @function
          * @name pc.fw.Application#_updateEntity
@@ -730,9 +731,9 @@ pc.extend(pc.fw, function () {
         _linkUpdateEntity: function (guid, components) {
             var type;
             var entity = this.context.root.findOne("getGuid", guid);
-            
+
             if(entity) {
-                var order = this.context.systems.getComponentSystemOrder(); 
+                var order = this.context.systems.getComponentSystemOrder();
 
                 var i, len = order.length;
                 for(i = 0; i < len; i++) {
@@ -743,7 +744,7 @@ pc.extend(pc.fw, function () {
                         }
                     }
                 }
-                
+
                 for(type in this.context.systems) {
                     if(type === "gizmo" || type === "pick") {
                         continue;
