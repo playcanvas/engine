@@ -83,4 +83,4 @@ The PlayCanvas Engine is an open-source game engine which you can use to create 
 
 ## License
 
-The PlayCanvas Engine is released under the [MIT](http://opensource.org/licenses/MIT). See LICENSE file.
+The PlayCanvas Engine is released under the [MIT](http://opensource.org/licenses/MIT) license. See LICENSE file.
