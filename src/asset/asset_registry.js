@@ -2,7 +2,7 @@ pc.extend(pc.asset, function () {
     /**
     * @name pc.asset.AssetRegistry
     * @class Container for all assets that are available to this application
-    * @constructor Create an instance of an AssetRegistry. 
+    * @constructor Create an instance of an AssetRegistry.
     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'context.assets'.
     * @param {pc.resources.ResourceLoader} loader The ResourceLoader used to to load the asset files.
     * @param {String} prefix The prefix added to file urls before the loader tries to fetch them
@@ -15,8 +15,9 @@ pc.extend(pc.asset, function () {
         this.loader = loader;
         this._prefix = prefix || "";
 
-        this._cache = {};
-        this._names = {};
+        this._cache = {}; // main asset cache, keyed by resourceId
+        this._names = {}; // index for looking up assets by name
+        this._urls = {}; // index for looking up assets by url
     };
 
     AssetRegistry.prototype = {
@@ -58,7 +59,7 @@ pc.extend(pc.asset, function () {
         /**
         * @function
         * @name pc.asset.AssetRegistry#addAsset
-        * @description Add a new 
+        * @description Add a new asset to the registry
         * @param {pc.asset.Asset} asset The asset to add to the registry
         */
         addAsset: function (asset) {
@@ -67,6 +68,9 @@ pc.extend(pc.asset, function () {
                 this._names[asset.name] = [];
             }
             this._names[asset.name].push(asset.resourceId);
+            if (asset.file) {
+                this._urls[asset.file.url] = asset.resourceId;
+            }
         },
 
         /**
@@ -129,6 +133,11 @@ pc.extend(pc.asset, function () {
             return this._cache[resourceId];
         },
 
+        getAssetByUrl: function (url) {
+            var resourceId = this._urls[url];
+            return this._cache[resourceId];
+        },
+
         /**
         * @private
         */
@@ -150,23 +159,21 @@ pc.extend(pc.asset, function () {
         * @returns {Promise} A Promise to the resources
         * @example
         * var asset = new pc.asset.Asset("My Texture", "texture", {
-        *   filename: "mytexture.jpg",
         *   url: "/example/mytexture.jpg"
         * });
         */
         load: function (assets, results, options) {
-            if (!assets.length) {
+            if (assets && !assets.length) {
                 assets = [assets];
             }
-            
+
             if (typeof(options) === 'undefined') {
                 // shift arguments
                 options = results;
                 results = [];
             }
 
-            var requests = []
-
+            var requests = [];
             assets.forEach(function (asset, index) {
                 var existing = this.getAssetByResourceId(asset.resourceId);
                 if (!existing) {
@@ -186,38 +193,134 @@ pc.extend(pc.asset, function () {
                         break;
                     }
                 }
-
             }, this);
 
-            // request all assets
-            return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(null, function (error) {
+            // request all assets, then attach loaded resources onto asset
+            return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
+
+                var promise = new pc.promise.Promise(function (resolve, reject) {
+                    var index = 0;
+                    requests.forEach(function (r, i) {
+                        if (r) {
+                            assets[i].resource = resources[index++];
+                        } else {
+                            assets[i].resource = null;
+                        }
+                    });
+                    resolve(resources);
+                });
+                return promise;
+            }, function (error) {
                 // Ensure exceptions while loading are thrown and not swallowed by promises
                 setTimeout(function () {
                     throw error;
                 }, 0)
             });
+        },
 
-            // TODO: release this
-            // request all assets, also attach loaded resources onto asset
-            // return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
-            //     var promise = new RSVP.Promise(function (resolve, reject) {
-            //         var index = 0;
-            //         requests.forEach(function (r, i) {
-            //             if (r) {
-            //                 assets[i].resource = resources[index++];
-            //             } else {
-            //                 assets[i].resource = null;
-            //             }
-            //         });
-            //         resolve(resources);
-            //     });
-            //     return promise;
-            // }, function (error) {
-            //     // Ensure exceptions while loading are thrown and not swallowed by promises
-            //     setTimeout(function () {
-            //         throw error;
-            //     }, 0)
-            // });
+        /**
+        * @function
+        * @name pc.asset.AssetRegistry#loadFromUrl
+        * @description Load the resources for an asset by its URL and return a promise that will be resolved
+        * when the asset is loaded.
+        * @param  {String} url  The URL of the asset
+        * @param  {String} type The type of the asset
+        * @return {Promise} A Promise to the resources
+        * @example
+        * var url = "../assets/statue/Statue_1.json";
+        *    application.context.assets.loadFromUrl(url, "model").then(function (results) {
+        *    var model = results.resource;
+        *    var asset = results.asset;
+        *
+        *    entity = new pc.fw.Entity();
+        *     application.context.systems.model.addComponent(entity, {
+        *        type: "asset",
+        *        asset: asset
+        *    });
+        *    application.context.root.addChild(entity);
+        * });
+        */
+        loadFromUrl: function (url, type) {
+            if (!type) {
+                throw Error("type required")
+            }
+
+            if (type === "model") {
+                return this._loadModel(url);
+            }
+
+            var dir = pc.path.getDirectory(url);
+            var basename = pc.path.getBasename(url);
+            var name = basename.replace(".json", "");
+
+            var asset = new pc.asset.Asset(name, type, {
+                url: url
+            });
+
+            var promise = new pc.promise.Promise(function (resolve, reject) {
+                this.load(asset).then(function (resource) {
+                    resolve({
+                        resource: resource,
+                        asset: asset
+                    });
+                });
+            }.bind(this));
+
+            return promise;
+        },
+
+
+        _loadModel: function (url) {
+            var self = this;
+
+            var dir = pc.path.getDirectory(url);
+            var basename = pc.path.getBasename(url);
+
+            var name = basename.replace(".json", "");
+            var mappingUrl = pc.path.join(dir, basename.replace(".json", ".mapping.json"));
+
+            // Create Model Asset
+            var modelAsset = new pc.asset.Asset(name, "model", {
+                url: url
+            });
+
+            // Create Mapping Asset
+            var mappingAsset = new pc.asset.Asset(name + ".mapping", "json", {
+                url: mappingUrl
+            });
+
+            var promise = new pc.promise.Promise(function (resolve, reject) {
+                // Load Model and Mapping
+                self.load([modelAsset, mappingAsset]).then(function (resources) {
+                    var model = resources[0];
+                    var mapping = resources[1];
+
+                    modelAsset.data = mapping; // Update model asset with mapping data
+
+                    var materialAssets = [];
+                    mapping.mapping.forEach(function (map) {
+                        materialAssets.push(new pc.asset.Asset(pc.path.getBasename(map.path), "material", {
+                            url: pc.path.join(dir, map.path)
+                        }));
+                    });
+
+                    var promise = self.load(materialAssets)
+
+                    promise.then(function (materials) {
+                        for(var i = 0, n = model.meshInstances.length; i < n; i++) {
+                            model.meshInstances[i].material = materials[i];
+                        }
+                        resolve({
+                            resource: model,
+                            asset: modelAsset
+                        });
+                    });
+
+                    return promise;
+                });
+            });
+
+            return promise;
         },
 
         _createAssetRequest: function (asset, result) {
@@ -227,12 +330,12 @@ pc.extend(pc.asset, function () {
             } else {
                 return null;
             }
-            
+
         },
 
         _createModelRequest: function (asset) {
             var url = asset.getFileUrl();
-            var mapping = (asset.data && asset.data.mapping) ? asset.data.mapping : [];
+            var mapping = (asset.data && asset.data.mapping) ? asset.data.mapping: [];
 
             return new pc.resources.ModelRequest(url, mapping);
         },

@@ -380,7 +380,8 @@ pc.extend(pc.scene, function () {
                             });
                             if (materialMappings) {
                                 materialMappings.push({
-                                    material: materialMappings[k].material
+                                    material: materialMappings[k].material,
+                                    path: materialMappings[k].path
                                 });
                             }
                         }

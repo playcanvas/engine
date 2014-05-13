@@ -1,0 +1,163 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <style>
+        html, body {
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+        }
+        canvas: {
+            display: block;
+        }
+        .overlay {
+            font-family: helvetica, arial, sans-serif;
+            position: absolute;
+            left: 0px;
+            bottom: 0px;
+            user-select: none;
+        }
+        .overlay img {
+            vertical-align: middle;
+        }
+        .small {
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- Instructions -->
+    <div class="overlay">
+        <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
+        <span>3D Positional Sound (best with headphones)</span><span class="small"> - audio from <a href="http://www.freesfx.co.uk">http://www.freesfx.co.uk</a></span>
+    </div>
+
+    <script>
+        function createMaterial(colors) {
+            var material = new pc.scene.PhongMaterial();
+            for (var param in colors) {
+                material[param] = colors[param];
+            }
+            material.update();
+            return material;
+        }
+    </script>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var application = new pc.fw.Application(canvas);
+        application.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
+        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+
+        var entity, light, camera;
+
+        // Create an Entity with a camera component
+        var camera = new pc.fw.Entity();
+        application.context.systems.camera.addComponent(camera, {
+            clearColor: new pc.Color(0,0,0)
+        });
+
+        camera.rotateLocal(-30, 0, 0);
+        camera.translateLocal(0, 0, 5);
+
+        // Create an Entity for the ground
+        var ground = new pc.fw.Entity();
+        application.context.systems.model.addComponent(ground, {
+            type: "box"
+        });
+        ground.setLocalScale(50, 1, 50);
+        ground.setLocalPosition(0, -0.5, 0);
+
+        // Create an Entity with a point light component and a sphere model component.
+        var lightDir = new pc.fw.Entity();
+        application.context.systems.light.addComponent(lightDir, {
+            type: "directional",
+            color: new pc.Color(1, .4, 0),
+            intensity: 1
+            // shadowResolution: 2048
+        });
+        lightDir.setLocalEulerAngles(-80, 70, 0);
+
+        var light = new pc.fw.Entity();
+        application.context.systems.light.addComponent(light, {
+            type: "spot",
+            color: new pc.Color(.6, .85, 1),
+            outerConeAngle: 45,
+            innerConeAngle: 40,
+            range: 20,
+            intensity: 2,
+            castShadows: true,
+            shadowResolution: 2048
+        });
+        light.setLocalPosition(0, 5, 0);
+        light.light.model.lights[0].setShadowBias(-0.00005);
+        application.context.systems.audiolistener.addComponent(light, {});
+
+        var requests = [
+            application.context.assets.loadFromUrl("../../assets/footsteps_gravel_01.mp3", "audio"),
+            application.context.assets.loadFromUrl("../../assets/walkcycle/walkcycle.json", "model"),
+            application.context.assets.loadFromUrl("../../assets/walkcycle/walkcycle_animation.json", "animation")
+        ];
+
+        pc.promise.all(requests).then(function (results) {
+            var gravel = results[0].asset;
+            var model = results[1].asset;
+            var anim = results[2].asset;
+
+            // Create walking dude
+            entity = new pc.fw.Entity();
+            application.context.systems.audiosource.addComponent(entity, {
+                assets: [
+                    gravel.resourceId
+                ],
+                loop: true,
+                pitch: 1.05
+            });
+            application.context.systems.model.addComponent(entity, {
+                type: "asset",
+                asset: model,
+                castShadows: true
+            });
+            application.context.systems.animation.addComponent(entity, {
+                assets: [anim.resourceId],
+                speed: 0.63
+            });
+            entity.setLocalScale(4, 4, 4);
+            application.context.root.addChild(entity);
+
+            // start the audio
+            entity.audiosource.play("footsteps_gravel_01");
+
+            var pos;
+            var angle = 135;
+            var radius = 3;
+            var height = 1.1;
+            application.on("update", function (dt) {
+                angle += 30*dt;
+                if (angle > 360) {
+                    angle -= 360;
+                }
+                var pos = camera.getPosition();
+                entity.setLocalPosition(radius * Math.sin(angle*pc.math.DEG_TO_RAD), height, radius * Math.cos(angle*pc.math.DEG_TO_RAD));
+                entity.setLocalEulerAngles(0, angle+90, 0);
+            });
+        });
+
+        // Add Entities into the scene hierarchy
+        application.context.root.addChild(camera);
+        application.context.root.addChild(light);
+        application.context.root.addChild(ground);
+    </script>
+</body>
+</html>

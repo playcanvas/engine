@@ -2,11 +2,11 @@ pc.extend(pc.resources, function () {
 	var ImageResourceHandler = function () {
 	};
 	ImageResourceHandler = pc.inherits(ImageResourceHandler, pc.resources.ResourceHandler);
-	
+
     ImageResourceHandler.prototype.load = function (request, options) {
         var self = this;
-        
-        var promise = new RSVP.Promise(function (resolve, reject) {
+
+        var promise = new pc.promise.Promise(function (resolve, reject) {
             var image = new Image();
             // Call success callback after opening Image
             image.onload = function () {
@@ -28,13 +28,13 @@ pc.extend(pc.resources, function () {
     ImageResourceHandler.prototype.open = function (data, request, options) {
         return data;
     };
-	
+
 	var ImageRequest = function ImageRequest(identifier) {
 	};
 	ImageRequest = pc.inherits(ImageRequest, pc.resources.ResourceRequest);
 	ImageRequest.prototype.type = "image";
 	ImageRequest.prototype.Type = Image;
-    
+
 	return {
 		ImageResourceHandler: ImageResourceHandler,
 		ImageRequest: ImageRequest

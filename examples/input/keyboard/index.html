@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <style>
+        html, body {
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+        }
+        canvas: {
+            display: block;
+        }
+        .overlay {
+            font-family: helvetica, arial, sans-serif;
+            position: absolute;
+            left: 0px;
+            bottom: 0px;
+            user-select: none;
+        }
+        .overlay img {
+            vertical-align: middle;
+        }
+        .small {
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- Instructions -->
+    <div class="overlay">
+        <a href="https://playcanvas.com"><img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img></a>
+        <span>Keyboard Input - use left and right arrow keys to rotate the model</span><span class="small"> - model by Ben Sidwell</span>
+    </div>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var application = new pc.fw.Application(canvas);
+        application.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
+        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+
+        application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        var entity, light, camera;
+
+        // Create an Entity with a camera component
+        var camera = new pc.fw.Entity();
+        application.context.systems.camera.addComponent(camera, {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 7, 24);
+
+        // Create an Entity with a point light component and a sphere model component.
+        var light = new pc.fw.Entity();
+        application.context.systems.light.addComponent(light, {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100
+        });
+        light.translate(5, 5, 10);
+
+        application.context.root.addChild(camera);
+        application.context.root.addChild(light);
+
+        var url = "../../assets/statue/Statue_1.json";
+        application.context.assets.loadFromUrl(url, "model").then(function (results) {
+            var model = results.resource;
+            var asset = results.asset;
+
+            entity = new pc.fw.Entity();
+
+            application.context.systems.model.addComponent(entity, {
+                type: "asset",
+                asset: asset
+            });
+
+            application.context.root.addChild(entity);
+        });
+
+        var keyboard = new pc.input.Keyboard(document);
+
+        application.on("update", function () {
+            if (keyboard.isPressed(pc.input.KEY_LEFT)) {
+                entity.rotate(0, -1, 0)
+            }
+            if (keyboard.isPressed(pc.input.KEY_RIGHT)) {
+                entity.rotate(0, 1, 0)
+            }
+        });
+
+    </script>
+</body>
+</html>

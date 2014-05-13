@@ -38,7 +38,7 @@ The PlayCanvas Engine is a fully feature 3D game engine.
 * **Input**
  	* Mouse, Keyboard, Touch, Gamepad support
 
-## Examples 
+## Examples
 
 Take a look at in the [examples directory](examples)
 
@@ -79,8 +79,8 @@ Please follow these steps to report a bug
 
 ## PlayCanvas Platform
 
-The PlayCanvas Engine is an open-source game engine which you can use to create games or render 3D in the browser. In addition to the free and open-source engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a level design tool, asset management and a hosting and publishing service. 
+The PlayCanvas Engine is an open-source game engine which you can use to create games or render 3D in the browser. In addition to the free and open-source engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a level design tool, asset management and a hosting and publishing service.
 
 ## License
 
-The PlayCanvas Engine is released under the [XX](). See LICENSE file.
+The PlayCanvas Engine is released under the [MIT](http://opensource.org/licenses/MIT). See LICENSE file.

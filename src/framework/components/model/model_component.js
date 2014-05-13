@@ -29,6 +29,7 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
+        this.on("set_material", this.onSetMaterial, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -58,19 +59,26 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            this.system.context.assets.load(asset, [], options).then(function (resources) {
+            function _onLoad(resources) {
                 var model = resources[0];
-
                 if (this.system.context.designer) {
                     model.generateWireframe();
-
                     asset.on('change', this.onAssetChange, this);
                 }
 
                 if (this.data.type === 'asset') {
                     this.model = model;
                 }
-            }.bind(this));
+            }
+
+            if (asset.resource) {
+                setTimeout(function () {
+                    var model = asset.resource.clone();
+                    _onLoad.call(this, [model]);
+                }.bind(this), 0);
+            } else {
+                this.system.context.assets.load(asset, [], options).then(_onLoad.bind(this));
+            }
         },
 
         /**
@@ -139,7 +147,12 @@ pc.extend(pc.fw, function () {
 
             if (this.data.type === 'asset') {
                 if (newValue) {
-                    this.loadModelAsset(newValue);
+                    if (newValue instanceof pc.asset.Asset) {
+                        this.data.asset = newValue.resourceId;
+                        this.loadModelAsset(newValue.resourceId);
+                    } else {
+                        this.loadModelAsset(newValue);
+                    }
                 } else {
                     this.model = null;
                 }
@@ -202,13 +215,7 @@ pc.extend(pc.fw, function () {
             var guid = typeof newValue === 'string' || !newValue ? newValue : newValue.resourceId;
 
             material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
-            this.data.material = material;
-            if (this.data.model && this.data.type !== 'asset') {
-                var meshInstances = this.data.model.meshInstances;
-                for (var i=0; i<meshInstances.length; i++) {
-                    meshInstances[i].material = material;
-                }
-            }
+            this.material = material;
 
             var oldValue = this.data.materialAsset;
             this.data.materialAsset = guid;
@@ -217,6 +224,18 @@ pc.extend(pc.fw, function () {
 
         getMaterialAsset: function () {
             return this.system.context.assets.getAssetByResourceId(this.data.materialAsset);
+        },
+
+        onSetMaterial: function (name, oldValue, newValue) {
+            if (newValue !== oldValue) {
+                this.data.material = newValue;
+                if (this.data.model && this.data.type !== 'asset') {
+                    var meshInstances = this.data.model.meshInstances;
+                    for (var i=0; i<meshInstances.length; i++) {
+                        meshInstances[i].material = newValue;
+                    }
+                }
+            }
         },
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
@@ -237,7 +256,6 @@ pc.extend(pc.fw, function () {
             var model = this.data.model;
             if (model) {
                 var inScene = this.system.context.scene.containsModel(model);
-
                 if (!inScene) {
                     this.system.context.scene.addModel(model);
                 }
@@ -250,7 +268,6 @@ pc.extend(pc.fw, function () {
             var model = this.data.model;
             if (model) {
                 var inScene = this.system.context.scene.containsModel(model);
-
                 if (inScene) {
                     this.system.context.scene.removeModel(model);
                 }
