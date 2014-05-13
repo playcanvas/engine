@@ -218,6 +218,28 @@ pc.extend(pc.asset, function () {
             });
         },
 
+        /**
+        * @function
+        * @name pc.asset.AssetRegistry#loadFromUrl
+        * @description Load the resources for an asset by its URL and return a promise that will be resolved
+        * when the asset is loaded.
+        * @param  {String} url  The URL of the asset
+        * @param  {String} type The type of the asset
+        * @return {Promise} A Promise to the resources
+        * @example
+        * var url = "../assets/statue/Statue_1.json";
+        *    application.context.assets.loadFromUrl(url, "model").then(function (results) {
+        *    var model = results.resource;
+        *    var asset = results.asset;
+        *
+        *    entity = new pc.fw.Entity();
+        *     application.context.systems.model.addComponent(entity, {
+        *        type: "asset",
+        *        asset: asset
+        *    });
+        *    application.context.root.addChild(entity);
+        * });
+        */
         loadFromUrl: function (url, type) {
             if (!type) {
                 throw Error("type required")
