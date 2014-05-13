@@ -7,7 +7,6 @@ test("load", function () {
     var request = new pc.resources.TextRequest("file.txt");
 
     handler.load(request).then(function (resources) {
-        console.log(resources);
         equal(resources, 'this is some text');
         start();
 
