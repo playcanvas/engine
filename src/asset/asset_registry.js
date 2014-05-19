@@ -40,7 +40,15 @@ pc.extend(pc.asset, function () {
                     // Update asset data
                     pc.extend(asset, toc.assets[resourceId]);
                 }
+            }
 
+            if (toc.deleted) {
+                for (var resourceId in toc.deleted) {
+                    var asset = this.getAssetByResourceId(resourceId);
+                    if (asset) {
+                        this.removeAsset(asset);
+                    }
+                }
             }
         },
 
@@ -70,6 +78,20 @@ pc.extend(pc.asset, function () {
             this._names[asset.name].push(asset.resourceId);
             if (asset.file) {
                 this._urls[asset.file.url] = asset.resourceId;
+            }
+        },
+
+        /**
+        * @function
+        * @name pc.asset.AssetRegistry#removeAsset
+        * @description Removes an asset from the registry
+        * @param {pc.asset.Asset} asset The asset to remove
+        */
+        removeAsset: function (asset) {
+            delete this._cache[asset.resourceId];
+            delete this._names[asset.name];
+            if (asset.file) {
+                delete this._urls[asset.file.url];
             }
         },
 
