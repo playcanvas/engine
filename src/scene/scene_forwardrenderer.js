@@ -550,8 +550,6 @@ pc.extend(pc.scene, function () {
                     // Point the camera along direction of light
                     shadowCam.worldTransform.copy(shadowCamWtm);
 
-                    this.setCamera(shadowCam);
-
                     device.setBlending(false);
                     device.setColorWrite(true, true, true, true);
                     device.setCullMode(pc.gfx.CULLFACE_BACK);
@@ -561,6 +559,8 @@ pc.extend(pc.scene, function () {
                     if (device.extDepthTexture) {
                         device.setColorWrite(false, false, false, false);
                     }
+
+                    this.setCamera(shadowCam);
 
                     for (j = 0, numInstances = shadowCasters.length; j < numInstances; j++) {
                         meshInstance = shadowCasters[j];

@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.146.1
+--------
+* [FIX] Set state that affects shadow buffer clearing before the clear happens (in particular, depth write).
+
+--------
 v0.146.0
 --------
 * Support for loading models with URL mapping instead of resource_id mapping
