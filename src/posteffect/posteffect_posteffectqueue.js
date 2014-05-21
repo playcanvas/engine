@@ -42,6 +42,38 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
+         * @name pc.fw.PostEffectQueue#addEffect
+         * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
+         * automatically enable the queue.
+         * @param {Object} effect The post effect to add to the queue.
+         * @param {Boolean} needsDepthBuffer Set to true if this post effect requires a depth buffer for its input render target
+         */
+        addEffect: function (effect, needsDepthBuffer) {
+            if (!needsDepthBuffer) {
+                // first rendering of the scene requires depth buffer
+                needsDepthBuffer = this.effects.length === 0;
+            }
+
+            var effects = this.effects;
+            var newEntry = {
+                effect: effect,
+                inputTarget: this._createOffscreenTarget(needsDepthBuffer),
+                outputTarget: null
+            };
+
+            effects.push(newEntry);
+
+            var len = effects.length;
+            if (len > 1) {
+                // connect the effect with the previous effect if one exists
+                effects[len - 2].outputTarget = newEntry.inputTarget;
+            }
+
+            this.enable();
+        },
+
+        /**
+         * @function
          * @name pc.fw.PostEffectQueue#removeEffect
          * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
          * @param {Object} effect The post effect to remove.
