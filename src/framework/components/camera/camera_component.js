@@ -18,6 +18,7 @@ pc.extend(pc.fw, function () {
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
     * @property {pc.scene.Projection} projection The type of projection used to render the camera.
     * @property {pc.gfx.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
+    * @property {pc.posteffect.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add / remove post effects from the camera.
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
     * effects).
@@ -49,7 +50,7 @@ pc.extend(pc.fw, function () {
 
     pc.extend(CameraComponent.prototype, {
         /**
-         * @function 
+         * @function
          * @name pc.fw.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
          * @param {Number} x x coordinate on PlayCanvas' canvas element.
@@ -73,7 +74,7 @@ pc.extend(pc.fw, function () {
             // remove old camera node from hierarchy and add new one
             if (oldValue) {
                 this.entity.removeChild(oldValue);
-            }        
+            }
             this.entity.addChild(newValue);
         },
 
@@ -111,18 +112,20 @@ pc.extend(pc.fw, function () {
         onEnable: function () {
             CameraComponent._super.onEnable.call(this);
             this.system.current = this.entity;
+            this.postEffects.enable();
         },
 
         onDisable: function () {
             CameraComponent._super.onDisable.call(this);
+            this.postEffects.disable();
             if (this.system.current === this.entity) {
                 this.system.current = null;
                 this.system.onCameraDisabled(this);
             }
-        }    
+        }
     });
 
     return {
         CameraComponent: CameraComponent
-    }; 
+    };
 }());

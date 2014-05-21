@@ -61,6 +61,7 @@
 ../src/graphics/programlib/programlib_pick.js
 ../src/graphics/programlib/programlib_skybox.js
 ../src/posteffect/posteffect_posteffect.js
+../src/posteffect/posteffect_posteffectqueue.js
 ../src/posteffect/posteffect_blend.js
 ../src/posteffect/posteffect_bloom.js
 ../src/posteffect/posteffect_bokeh.js
