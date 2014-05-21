@@ -26,24 +26,24 @@ test("new", function () {
     jack(function () {
         pc.resources = jack.create("pc.resources", ["ResourceLoader"]);
         var sc = new pc.fw.ScriptComponentSystem(context);
-        
+
         ok(sc);
-        ok(context.systems.script);        
+        ok(context.systems.script);
     });
 });
 
 test("addComponent: no data", function () {
     jack(function() {
         pc.resources = jack.create("pc.resources", ["ResourceLoader"]);
-        
+
         var sc = new pc.fw.ScriptComponentSystem(context);
         var e = new pc.fw.Entity();
-        
+
         var c = sc.addComponent(e);
         ok(c);
         equal(c.scripts.length, 0);
-        
-    });    
+
+    });
 });
 
 asyncTest("send() - send a message, check its return value", function () {
@@ -54,9 +54,9 @@ asyncTest("send() - send a message, check its return value", function () {
     e.script.scripts = [{ url: 'script.js'}];
     var count = 0;
     setTimeout(function () {
-        var r = e.script.send("test_script", "sum", 1, 2);    
+        var r = e.script.send("test_script", "sum", 1, 2);
         equal(r, 3);
-        start();    
+        start();
     }, 1000);
 });
 
@@ -65,7 +65,7 @@ asyncTest("broadcast() - send many messages, test they were received", function 
     var entities = [];
     var comps = [];
     var i, length = 3;
-    
+
     for(i = 0; i < length; ++i) {
         entities[i] = new pc.fw.Entity();
         comps[i] = sc.addComponent(entities[i]);
@@ -74,9 +74,9 @@ asyncTest("broadcast() - send many messages, test they were received", function 
 
     var count = 0;
     setTimeout(function () {
-        var r = sc.broadcast("test_script", "store", "value");    
+        var r = sc.broadcast("test_script", "store", "value");
         equal(r, undefined);
-        
+
         for(i = 0; i < length; ++i) {
             equal(comps[i].instances['test_script'].instance.v, "value");
         }
@@ -100,7 +100,7 @@ asyncTest("update event called with correct this", 1, function () {
 
         // Test in script.js
         pc.fw.ComponentSystem.update(0.1, context);
-        
+
         start();
     }, 1000);
 });
@@ -161,6 +161,70 @@ test("addComponent, removeComponent, addComponent", function () {
     stop();
 });
 
+test("initialize, postInitialize, onEnable called", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        scripts: [{
+            url: 'scripts/events.js'
+        }]
+    });
+
+    setTimeout(function () {
+        equal(e.initEvents[0], 'initialize');
+        equal(e.initEvents[1], 'onEnable');
+        equal(e.initEvents[2], 'postInitialize');
+        start();
+    }, 500);
+
+    stop();
+});
+
+test("onDisable, destroy called", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        scripts: [{
+            url: 'scripts/events.js'
+        }]
+    });
+
+    setTimeout(function () {
+        sc.removeComponent(e);
+        setTimeout(function () {
+            equal(e.destroyEvents[0], 'onDisable');
+            equal(e.destroyEvents[1], 'destroy');
+            start();
+        }, 500);
+    }, 500);
+
+    stop();
+});
+
+test("onDisable not called if already disabled", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        scripts: [{
+            url: 'scripts/events.js'
+        }]
+    });
+
+    setTimeout(function () {
+        e.script.enabled = false;
+        sc.removeComponent(e);
+        setTimeout(function () {
+            equal(e.destroyEvents[0], 'onDisable');
+            equal(e.destroyEvents[1], 'destroy');
+            start();
+        }, 500);
+    }, 500);
+
+    stop();
+});
 
 /*
 test("Scripts Initialize called in correct order", function () {
@@ -203,7 +267,7 @@ test("Scripts Initialize called in correct order", function () {
         delete window.script;
         start();
     }, 1000);
-    
+
     stop();
 });
 
@@ -236,7 +300,7 @@ test("Scripts Update in correct order", function () {
     });
 
     setTimeout(function () {
-        sc.onUpdate(1/60);    
+        sc.onUpdate(1/60);
 
         equal(window.script.order[0], "a");
         equal(window.script.order[1], "a");
@@ -245,7 +309,7 @@ test("Scripts Update in correct order", function () {
         delete window.script;
         start();
     }, 1000);
-    
+
     stop();
 });
 */
