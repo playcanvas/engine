@@ -14,6 +14,9 @@ pc.extend(pc.posteffect, function () {
         // if the queue is enabled it will render all of its effects
         // otherwise it will not render anything
         this.enabled = false;
+        // this render target has depth encoded in RGB - needed for effects that
+        // require a depth buffer
+        this.depthTarget = null;
     }
 
     PostEffectQueue.prototype = {
@@ -49,17 +52,24 @@ pc.extend(pc.posteffect, function () {
          * @param {Boolean} needsDepthBuffer Set to true if this post effect requires a depth buffer for its input render target
          */
         addEffect: function (effect, needsDepthBuffer) {
-            if (!needsDepthBuffer) {
-                // first rendering of the scene requires depth buffer
-                needsDepthBuffer = this.effects.length === 0;
-            }
+            // first rendering of the scene requires depth buffer
+            var isFirstEffect = this.effects.length === 0;
 
             var effects = this.effects;
             var newEntry = {
                 effect: effect,
-                inputTarget: this._createOffscreenTarget(needsDepthBuffer),
+                inputTarget: this._createOffscreenTarget(isFirstEffect),
                 outputTarget: null
             };
+
+            if (needsDepthBuffer) {
+                // TODO: Delete depth target when it's no longer needed
+                if (!this.depthTarget) {
+                    this.depthTarget = this._createOffscreenTarget(true);
+                }
+
+                effect.depthMap = this.depthTarget.colorBuffer;
+            }
 
             effects.push(newEntry);
 
@@ -140,6 +150,7 @@ pc.extend(pc.posteffect, function () {
                         var len = effects.length;
                         if (len) {
                             camera.renderTarget = effects[0].inputTarget;
+                            camera.camera._depthTarget = this.depthTarget;
 
                             for (var i=0; i<len; i++) {
                                 var fx = effects[i];
@@ -163,6 +174,7 @@ pc.extend(pc.posteffect, function () {
                 this.enabled = false;
                 // restore the camera's renderTarget to null
                 this.camera.renderTarget = null;
+                this.camera.camera._depthTarget = null;
                 // remove the draw command
                 var i = this.context.scene.drawCalls.indexOf(this.command);
                 if (i >= 0) {
