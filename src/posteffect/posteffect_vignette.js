@@ -42,6 +42,9 @@ pc.extend(pc.posteffect, function () {
             fshader: luminosityFrag
         });
 
+        this.offset = 1;
+        this.darkness = 1;
+
         this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
     }
 
@@ -51,8 +54,8 @@ pc.extend(pc.posteffect, function () {
             var scope = device.scope;
 
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            scope.resolve("uOffset").setValue(1);
-            scope.resolve("uDarkness").setValue(1);
+            scope.resolve("uOffset").setValue(this.offset);
+            scope.resolve("uDarkness").setValue(this.darkness);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.vignetteShader);
         }
     };
