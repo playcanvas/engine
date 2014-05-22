@@ -1,3 +1,9 @@
+/**
+ * Shader author: alteredq / http://alteredqualia.com/
+ *
+ * Simple fake tilt-shift effect, modulating two pass Gaussian blur (see above) by vertical position
+ */
+
 pc.extend(pc.posteffect, function () {
 
     function HorizontalTiltShift(graphicsDevice) {

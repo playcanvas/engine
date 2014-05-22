@@ -1,3 +1,8 @@
+/**
+ * Shader author alteredq / http://alteredqualia.com/
+ *
+ */
+
 pc.extend(pc.posteffect, function () {
 
     function ColorCorrection(graphicsDevice) {
