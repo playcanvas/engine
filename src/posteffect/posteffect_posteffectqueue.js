@@ -39,8 +39,24 @@ pc.extend(pc.posteffect, function () {
             colorBuffer.magFilter = pc.gfx.FILTER_NEAREST;
             colorBuffer.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
             colorBuffer.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-            var renderTarget = new pc.gfx.RenderTarget(this.context.graphicsDevice, colorBuffer, { depth: useDepth });
-            return renderTarget;
+
+            return new pc.gfx.RenderTarget(this.context.graphicsDevice, colorBuffer, { depth: useDepth });
+        },
+
+        _setDepthTarget: function (depthTarget) {
+            if (this.depthTarget !== depthTarget) {
+                // destroy existing depth target
+                if (this.depthTarget) {
+                    this.depthTarget.destroy();
+                }
+
+                this.depthTarget = depthTarget;
+            }
+
+            // set this to the _depthTarget field of the camera node
+            // used by the forward renderer to render the scene with
+            // a depth shader on the depth target
+            this.camera.camera._depthTarget = depthTarget;
         },
 
         /**
@@ -59,16 +75,20 @@ pc.extend(pc.posteffect, function () {
             var newEntry = {
                 effect: effect,
                 inputTarget: this._createOffscreenTarget(isFirstEffect),
-                outputTarget: null
+                outputTarget: null,
+                needsDepthBuffer: needsDepthBuffer
             };
 
             if (needsDepthBuffer) {
-                // TODO: Delete depth target when it's no longer needed
                 if (!this.depthTarget) {
-                    this.depthTarget = this._createOffscreenTarget(true);
+                    this._setDepthTarget(this._createOffscreenTarget(true));
                 }
 
                 effect.depthMap = this.depthTarget.colorBuffer;
+            }
+
+            if (isFirstEffect) {
+                this.camera.renderTarget = newEntry.inputTarget;
             }
 
             effects.push(newEntry);
@@ -89,6 +109,7 @@ pc.extend(pc.posteffect, function () {
          * @param {Object} effect The post effect to remove.
          */
         removeEffect: function (effect) {
+            // find index of effect
             var index = -1;
             for (var i=0,len=this.effects.length; i<len; i++) {
                 if (this.effects[i].effect === effect) {
@@ -100,7 +121,7 @@ pc.extend(pc.posteffect, function () {
             if (index >= 0) {
                 if (index > 0)  {
                     // connect the previous effect with the effect after the one we're about to remove
-                    this.effects[index-1].outputTarget = this.effects.length > index + 1 ?
+                    this.effects[index-1].outputTarget = (index + 1) < this.effects.length ?
                                                          this.effects[index+1].inputTarget :
                                                          null;
                 } else {
@@ -109,13 +130,34 @@ pc.extend(pc.posteffect, function () {
                         // the input render target of the effect that will now become the first one
                         // has a depth buffer
                         if (!this.effects[1].inputTarget._depth) {
+                            this.effects[1].inputTarget.destroy();
                             this.effects[1].inputTarget = this._createOffscreenTarget(true);
                         }
+
+                        this.camera.renderTarget = this.effects[1].inputTarget;
                     }
                 }
 
+                // release memory for removed effect
+                this.effects[index].inputTarget.destroy();
+
                 this.effects.splice(index, 1);
             }
+
+            if (this.depthTarget) {
+                var isDepthTargetNeeded = false;
+                for (var i=0,len=this.effects.length; i<len; i++) {
+                    if (this.effects[i].needsDepthBuffer) {
+                        isDepthTargetNeeded = true;
+                        break;
+                    }
+                }
+
+                if (!isDepthTargetNeeded) {
+                    this._setDepthTarget(null);
+                }
+            }
+
 
             if (this.effects.length === 0) {
                 this.disable();
@@ -128,7 +170,19 @@ pc.extend(pc.posteffect, function () {
          * @description Removes all the effects from the queue and disables it
          */
         destroy: function () {
+            // release memory of depth target
+            if (this.depthTarget) {
+                this.depthTarget.destroy();
+                this.depthTarget = null;
+            }
+
+            // release memory for all effects
+            for (var i=0,len=this.effects.length; i<len; i++) {
+                this.effects[i].inputTarget.destroy();
+            }
+
             this.effects.length = 0;
+
             this.disable();
         },
 
@@ -150,7 +204,7 @@ pc.extend(pc.posteffect, function () {
                         var len = effects.length;
                         if (len) {
                             camera.renderTarget = effects[0].inputTarget;
-                            camera.camera._depthTarget = this.depthTarget;
+                            this._setDepthTarget(this.depthTarget);
 
                             for (var i=0; i<len; i++) {
                                 var fx = effects[i];
@@ -172,9 +226,10 @@ pc.extend(pc.posteffect, function () {
         disable: function () {
             if (this.enabled) {
                 this.enabled = false;
-                // restore the camera's renderTarget to null
+
                 this.camera.renderTarget = null;
                 this.camera.camera._depthTarget = null;
+
                 // remove the draw command
                 var i = this.context.scene.drawCalls.indexOf(this.command);
                 if (i >= 0) {
