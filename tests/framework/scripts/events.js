@@ -8,6 +8,7 @@ pc.script.create("events", function(context) {
     Events.prototype = {
         initialize: function () {
             this.entity.initEvents.push('initialize');
+            this.on('set', this.onSet, this);
         },
 
         postInitialize: function () {
@@ -24,6 +25,14 @@ pc.script.create("events", function(context) {
 
         destroy: function () {
             this.entity.destroyEvents.push('destroy');
+        },
+
+        onSet: function (name, oldValue, newValue) {
+            this.entity.setEventFired = true;
+        },
+
+        onAttributeChanged: function (name, oldValue, newValue) {
+            this.entity.onAttributeChangedCalled = true;
         }
     };
 

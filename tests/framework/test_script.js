@@ -57,7 +57,7 @@ asyncTest("send() - send a message, check its return value", function () {
         var r = e.script.send("test_script", "sum", 1, 2);
         equal(r, 3);
         start();
-    }, 1000);
+    }, 500);
 });
 
 asyncTest("broadcast() - send many messages, test they were received", function () {
@@ -81,7 +81,7 @@ asyncTest("broadcast() - send many messages, test they were received", function 
             equal(comps[i].instances['test_script'].instance.v, "value");
         }
         start();
-    }, 1000);
+    }, 500);
 });
 
 asyncTest("update event called with correct this", 1, function () {
@@ -102,7 +102,7 @@ asyncTest("update event called with correct this", 1, function () {
         pc.fw.ComponentSystem.update(0.1, context);
 
         start();
-    }, 1000);
+    }, 500);
 });
 
 test("addComponent, removeComponent", function () {
@@ -121,7 +121,7 @@ test("addComponent, removeComponent", function () {
         equal(e.script, undefined);
         equal(e.destroyed, undefined);
         start();
-    }, 2000);
+    }, 500);
 
     stop();
 });
@@ -156,7 +156,7 @@ test("addComponent, removeComponent, addComponent", function () {
             equal(e.count, 1);
             start();
         });
-    }, 2000);
+    }, 500);
 
     stop();
 });
@@ -215,12 +215,137 @@ test("onDisable not called if already disabled", function () {
 
     setTimeout(function () {
         e.script.enabled = false;
+        equal(e.destroyEvents[0], 'onDisable');
         sc.removeComponent(e);
         setTimeout(function () {
             equal(e.destroyEvents[0], 'onDisable');
             equal(e.destroyEvents[1], 'destroy');
             start();
         }, 500);
+    }, 500);
+
+    stop();
+});
+
+test("onAttributeChanged called", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        scripts: [{
+            url: 'scripts/events.js',
+            name: 'events',
+            attributes: [{
+                type: 'number',
+                name: 'attr',
+                value: 1
+            }]
+        }]
+    })
+
+    setTimeout(function () {
+        notEqual(e.onAttributeChangedCalled, true);
+
+        // set new attributes for the script which should call onAttributeChanged
+        e.script.scripts = [{
+            url: 'scripts/events.js',
+            name: 'events',
+            attributes: [{
+                type: 'number',
+                name: 'attr',
+                value: 2
+            }]
+        }]
+        equal(e.onAttributeChangedCalled, true);
+        start();
+    }, 500);
+
+    stop();
+});
+
+test("'set' event fired", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        scripts: [{
+            url: 'scripts/events.js',
+            name: 'events',
+            attributes: [{
+                type: 'number',
+                name: 'attr',
+                value: 1
+            }]
+        }]
+    })
+
+    setTimeout(function () {
+        notEqual(e.setEventFired, true);
+        e.script.events.attr = 2;
+        equal(e.setEventFired, true);
+        start();
+    }, 500);
+
+    stop();
+});
+
+test("set new scripts reinitializes instances", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        scripts: [{
+            url: 'scripts/test_order_a.js'
+        }, {
+            url: 'scripts/test_order_b.js'
+        }]
+    });
+
+    setTimeout(function () {
+        pc.fw.ComponentSystem.update(0.1, context);
+        pc.fw.ComponentSystem.postUpdate(0.1, context);
+
+        // check that script methods were called
+        // in the right order
+        function test1 (array) {
+            equal(array.length, 5);
+            equal(array[0], 'initialize');
+            equal(array[1], 'onEnable');
+            equal(array[2], 'postInitialize');
+            equal(array[3], 'update');
+            equal(array[4], 'postUpdate');
+        }
+
+        test1(e.methodsByA);
+        test1(e.methodsByB);
+
+        // change order
+        e.script.scripts = [{
+            url: 'scripts/test_order_b.js'
+        }, {
+            url: 'scripts/test_order_a.js'
+        }];
+
+        // check that onDisable and then destroy
+        // was called on the existing script instances
+        equal(e.methodsByA[5], 'onDisable');
+        equal(e.methodsByA[6], 'destroy');
+        equal(e.methodsByB[5], 'onDisable');
+        equal(e.methodsByB[6], 'destroy');
+
+        // reset test arrays
+        e.methodsByA.length = 0;
+        e.methodsByB.length = 0;
+
+        setTimeout(function () {
+            pc.fw.ComponentSystem.update(0.1, context);
+            pc.fw.ComponentSystem.postUpdate(0.1, context);
+
+            test1(e.methodsByB);
+            test1(e.methodsByA);
+            start();
+        }, 500);
+
     }, 500);
 
     stop();
