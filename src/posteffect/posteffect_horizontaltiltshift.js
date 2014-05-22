@@ -30,7 +30,7 @@ pc.extend(pc.posteffect, function () {
 
                     "vec4 sum = vec4( 0.0 );",
 
-                    "float hh = uH * abs( uR - vUv0.y );",
+                    "float hh = uH * abs( uR - vUv0.x );",
 
                     "sum += texture2D( uColorBuffer, vec2( vUv0.x - 4.0 * hh, vUv0.y ) ) * 0.051;",
                     "sum += texture2D( uColorBuffer, vec2( vUv0.x - 3.0 * hh, vUv0.y ) ) * 0.0918;",
