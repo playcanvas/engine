@@ -45,10 +45,14 @@ pc.extend(pc.posteffect, function () {
                     "gl_FragColor = sum;",
 
                 "}"
+
             ].join("\n")
         });
 
         this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
+
+        // uniforms
+        this.focus = 0.35;
     }
 
     HorizontalTiltShift.prototype = {
@@ -57,7 +61,7 @@ pc.extend(pc.posteffect, function () {
             var scope = device.scope;
 
             scope.resolve("uH").setValue(1/inputTarget.width);
-            scope.resolve("uR").setValue(1/inputTarget.height);
+            scope.resolve("uR").setValue(this.focus);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
         }
