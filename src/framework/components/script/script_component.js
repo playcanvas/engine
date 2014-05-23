@@ -53,14 +53,19 @@ pc.extend(pc.fw, function () {
 
         onEnable: function () {
             ScriptComponent._super.onEnable.call(this);
-            if (!this.data.initialized) {
-                this.system._initializeScriptComponent(this);
-            } else {
-                this.system._enableScriptComponent(this);
-            }
 
-            if (!this.data.postInitialized) {
-                this.system._postInitializeScriptComponent(this);
+            // if the scripts of the component have been loaded
+            // then call the appropriate methods on the component
+            if (this.data.areScriptsLoaded) {
+                if (!this.data.initialized) {
+                    this.system._initializeScriptComponent(this);
+                } else {
+                    this.system._enableScriptComponent(this);
+                }
+
+                if (!this.data.postInitialized) {
+                    this.system._postInitializeScriptComponent(this);
+                }
             }
         },
 
@@ -99,6 +104,8 @@ pc.extend(pc.fw, function () {
 
                 this.system._destroyScriptComponent(this);
 
+                this.data.areScriptsLoaded = false;
+
                 var scripts = newValue;
                 var urls = scripts.map(function (s) {
                     return s.url;
@@ -125,6 +132,11 @@ pc.extend(pc.fw, function () {
                             }
                         }
                     }, this);
+
+                    if (this.data) {
+                        this.data.areScriptsLoaded = true;
+                    }
+
                     // If there is no request batch, then this is not part of a load request and so we need
                     // to register the instances immediately to call the initialize function
                     if (!options.parent) {
