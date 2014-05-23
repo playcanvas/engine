@@ -676,6 +676,10 @@ pc.extend(pc.fw, function () {
                             if (attribute.RuntimeType) {
                                     if (attribute.RuntimeType === pc.Vec3) {
                                         entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
+                                    } else if (attribute.RuntimeType === pc.Vec4) {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
+                                    } else if (attribute.RuntimeType === pc.Vec2) {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1]);
                                     } else if (attribute.RuntimeType === pc.Color) {
                                         if (value.length === 3) {
                                             entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);

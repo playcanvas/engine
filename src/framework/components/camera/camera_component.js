@@ -17,6 +17,10 @@ pc.extend(pc.fw, function () {
     * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.scene.Projection.ORTHOGRAPHIC} cameras only. Defaults to 10.
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
     * @property {pc.scene.Projection} projection The type of projection used to render the camera.
+    * @property {Number} priority Controls which camera will be rendered first. Smaller numbers are rendered first.
+    * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
+    * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
+    * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates. The order of the values is [x, y, width, height]
     * @property {pc.gfx.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
@@ -32,7 +36,11 @@ pc.extend(pc.fw, function () {
         this.on("set_nearClip", this.onSetNearClip, this);
         this.on("set_farClip", this.onSetFarClip, this);
         this.on("set_projection", this.onSetProjection, this);
+        this.on("set_priority", this.onSetPriority, this);
+        this.on("set_clearColorBuffer", this.updateClearFlags, this);
+        this.on("set_clearDepthBuffer", this.updateClearFlags, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
+        this.on("set_rect", this.onSetRect, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
 
@@ -104,8 +112,30 @@ pc.extend(pc.fw, function () {
             this.data.camera.setProjection(newValue);
         },
 
+        onSetPriority: function (name, oldValue, newValue) {
+            this.system.sortCamerasByPriority();
+        },
+
+        updateClearFlags: function () {
+            var clearOptions = this.data.camera.getClearOptions();
+            var flags = 0;
+            if (this.clearColorBuffer) {
+                flags = flags | pc.gfx.CLEARFLAG_COLOR;
+            }
+
+            if (this.clearDepthBuffer) {
+                flags = flags | pc.gfx.CLEARFLAG_DEPTH;
+            }
+
+            clearOptions.flags = flags;
+        },
+
         onSetRenderTarget: function (name, oldValue, newValue) {
             this.data.camera.setRenderTarget(newValue);
+        },
+
+        onSetRect: function (name, oldValue, newValue) {
+            this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
         },
 
         onEnable: function () {

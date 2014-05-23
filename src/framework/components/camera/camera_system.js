@@ -24,12 +24,27 @@ pc.extend(pc.fw, function () {
             description: "Disabled cameras do not render anything",
             type: "boolean",
             defaultValue: true
-        },{
+        }, {
+            name: "clearColorBuffer",
+            displayName: "Clear Color Buffer",
+            description: "Clear color buffer",
+            type: "boolean",
+            defaultValue: true
+        }, {
             name: "clearColor",
             displayName: "Clear Color",
             description: "Clear Color",
             type: "rgba",
-            defaultValue: [0.7294117647058823, 0.7294117647058823, 0.6941176470588235, 1.0]
+            defaultValue: [0.7294117647058823, 0.7294117647058823, 0.6941176470588235, 1.0],
+            filter: {
+                clearColorBuffer: true
+            }
+        }, {
+            name: 'clearDepthBuffer',
+            displayName: "Clear Depth Buffer",
+            description: "Clear depth buffer",
+            type: "boolean",
+            defaultValue: true
         }, {
             name: "projection",
             displayName: "Projection",
@@ -88,6 +103,18 @@ pc.extend(pc.fw, function () {
                 decimalPrecision: 3
             }
         }, {
+            name: "priority",
+            displayName: "Priority",
+            description: "Controls which camera will be rendered first. Smaller numbers are rendered first.",
+            type: "number",
+            defaultValue: 0
+        }, {
+            name: "rect",
+            displayName: "Viewport",
+            description: "Controls where on the screen the camera will be rendered in normalized coordinates.",
+            type: "vector",
+            defaultValue: [0,0,1,1]
+        },{
             name: "camera",
             exposed: false
         }, {
@@ -119,6 +146,11 @@ pc.extend(pc.fw, function () {
             if (data.clearColor && pc.type(data.clearColor) === 'array') {
                 var c = data.clearColor;
                 data.clearColor = new pc.Color(c[0], c[1], c[2], c[3]);
+            }
+
+            if (data.rect && pc.type(data.rect) === 'array') {
+                var rect = data.rect;
+                data.rect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
             }
 
             if (data.activate) {
@@ -163,7 +195,23 @@ pc.extend(pc.fw, function () {
                 data.model = model;
             }
 
-            properties = ['enabled', 'model', 'camera', 'aspectRatio', 'renderTarget', 'clearColor', 'fov', 'orthoHeight', 'nearClip', 'farClip', 'projection'];
+            properties = [
+                'enabled',
+                'model',
+                'camera',
+                'aspectRatio',
+                'renderTarget',
+                'clearColor',
+                'fov',
+                'orthoHeight',
+                'nearClip',
+                'farClip',
+                'projection',
+                'priority',
+                'clearColorBuffer',
+                'clearDepthBuffer',
+                'rect'
+            ];
 
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -249,13 +297,21 @@ pc.extend(pc.fw, function () {
 
         addCamera: function (camera) {
             this.cameras.push(camera);
+            this.sortCamerasByPriority();
         },
 
         removeCamera: function (camera) {
             var index = this.cameras.indexOf(camera);
             if (index >= 0) {
                 this.cameras.splice(index, 1);
+                this.sortCamerasByPriority();
             }
+        },
+
+        sortCamerasByPriority: function () {
+            this.cameras.sort(function (a, b) {
+                return a.priority - b.priority;
+            });
         },
 
         isToolsCamera: function (entity) {
