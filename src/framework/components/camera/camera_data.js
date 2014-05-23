@@ -16,7 +16,7 @@ pc.extend(pc.fw, function () {
         this.orthoHeight = 100;
         this.projection = pc.scene.Projection.PERSPECTIVE;
         this.priority = 0;
-        this.rect = [0,0,1,1];
+        this.rect = new pc.Vec4(0,0,1,1);
         this.enabled = true;
 
         // not serialized
