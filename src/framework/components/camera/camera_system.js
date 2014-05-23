@@ -103,43 +103,14 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this._currentEntity = null;
-        this._currentNode = null;
+        // holds all the active camera components
+        this.cameras = [];
 
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
 
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
-
-    /**
-    * @property
-    * @name pc.fw.CameraComponentSystem#current
-    * @description Get or set the current camera. Use this property to set which Camera Entity is used to render the scene. This must be set to an Entity with a {@link pc.fw.CameraComponent}.
-    * @type pc.fw.Entity
-    * @example
-    * var e = context.root.findByName('A Camera');
-    * context.systems.camera.current = e;
-    */
-    Object.defineProperty(CameraComponentSystem.prototype, 'current', {
-        get: function () {
-            return this._currentEntity;
-        },
-        set: function (entity) {
-            if (entity === null) {
-                this._currentEntity = null;
-                this._currentNode = null;
-                return;
-            }
-
-            if (!entity.camera) {
-                throw Error("Entity must have camera Component");
-            }
-
-            this._currentEntity = entity;
-            this._currentNode = entity.camera.data.camera;
-        }
-    });
 
     pc.extend(CameraComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
@@ -195,47 +166,10 @@ pc.extend(pc.fw, function () {
             properties = ['enabled', 'model', 'camera', 'aspectRatio', 'renderTarget', 'clearColor', 'fov', 'orthoHeight', 'nearClip', 'farClip', 'projection'];
 
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-
-            if (!window.pc.apps.designer &&
-                component.enabled &&
-                !component.entity.hasLabel("pc:designer")) {
-
-                this.current = component.entity;
-            }
         },
 
-        /**
-         * Start rendering the frame for the current camera
-         * @function
-         * @name pc.fw.CameraComponentSystem#frameBegin
-         */
-        frameBegin: function () {
-            var camera = this._currentNode;
-            if (!camera) {
-                return;
-            }
-
-            var device = this.context.graphicsDevice;
-            var aspect = device.width / device.height;
-            if (aspect !== camera.getAspectRatio()) {
-                camera.setAspectRatio(aspect);
-            }
-        },
-
-        /**
-         * End rendering the frame for the current camera
-         * @function
-         * @name pc.fw.CameraComponentSystem#frameEnd
-         */
-        frameEnd: function () {
-        },
 
         onRemove: function (entity, data) {
-            // If this is the current camera then clear it
-            if (this._currentEntity === entity) {
-                this.current = null;
-            }
-
             if (this.context.designer && this.displayInTools(entity)) {
                 if (this.context.scene.containsModel(data.model)) {
                     this.context.scene.removeModel(data.model);
@@ -313,17 +247,14 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onCameraDisabled: function (cameraComponent) {
-            var components = this.store;
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var entity = components[id].entity;
-                    var data = components[id].data;
-                    if (data.enabled) {
-                        this.current = entity;
-                        break;
-                    }
-                }
+        addCamera: function (camera) {
+            this.cameras.push(camera);
+        },
+
+        removeCamera: function (camera) {
+            var index = this.cameras.indexOf(camera);
+            if (index >= 0) {
+                this.cameras.splice(index, 1);
             }
         },
 

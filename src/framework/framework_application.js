@@ -321,16 +321,18 @@ pc.extend(pc.fw, function () {
          */
         render: function () {
             var context = this.context;
+            var cameras = context.systems.camera.cameras;
+            var camera = null;
+            var renderer = this.renderer;
 
             context.root.syncHierarchy();
 
-            var cameraEntity = context.systems.camera.current;
-            if (cameraEntity) {
-                context.systems.camera.frameBegin();
-
-                this.renderer.render(context.scene, cameraEntity.camera.camera);
-
-                context.systems.camera.frameEnd();
+            // render the scene from each camera
+            for (var i=0,len=cameras.length; i<len; i++) {
+                camera = cameras[i];
+                camera.frameBegin();
+                renderer.render(context.scene, camera.camera);
+                camera.frameEnd();
             }
         },
 

@@ -49,7 +49,7 @@ pc.extend(pc.fw, function () {
 
     pc.extend(CameraComponent.prototype, {
         /**
-         * @function 
+         * @function
          * @name pc.fw.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
          * @param {Number} x x coordinate on PlayCanvas' canvas element.
@@ -73,7 +73,7 @@ pc.extend(pc.fw, function () {
             // remove old camera node from hierarchy and add new one
             if (oldValue) {
                 this.entity.removeChild(oldValue);
-            }        
+            }
             this.entity.addChild(newValue);
         },
 
@@ -110,19 +110,40 @@ pc.extend(pc.fw, function () {
 
         onEnable: function () {
             CameraComponent._super.onEnable.call(this);
-            this.system.current = this.entity;
+            this.system.addCamera(this);
         },
 
         onDisable: function () {
             CameraComponent._super.onDisable.call(this);
-            if (this.system.current === this.entity) {
-                this.system.current = null;
-                this.system.onCameraDisabled(this);
+            this.system.removeCamera(this);
+        },
+
+        /**
+         * Start rendering the frame for this camera
+         * @function
+         * @name pc.fw.CameraComponent#frameBegin
+         */
+        frameBegin: function () {
+            var camera = this.camera;
+            if (camera) {
+                var device = this.system.context.graphicsDevice;
+                var aspect = device.width / device.height;
+                if (aspect !== camera.getAspectRatio()) {
+                    camera.setAspectRatio(aspect);
+                }
             }
-        }    
+        },
+
+        /**
+         * End rendering the frame for this camera
+         * @function
+         * @name pc.fw.CameraComponent#frameEnd
+         */
+        frameEnd: function () {
+        },
     });
 
     return {
         CameraComponent: CameraComponent
-    }; 
+    };
 }());
