@@ -4,8 +4,8 @@ pc.extend(pc.fw, function () {
 
     /**
      * @name pc.fw.CameraComponentSystem
-     * @class Used to add and remove {@link pc.fw.CameraComponent}s from Entities.
-     * It also manages the currently active camera and controls the rendering part of the frame with beginFrame()/endFrame().
+     * @class Used to add and remove {@link pc.fw.CameraComponent}s from Entities. It also holds an
+     * array of all active cameras.
      * @constructor Create a new CameraComponentSystem
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
