@@ -11,6 +11,7 @@ pc.extend(pc.fw, function () {
         this.attributes = {};
         this.initialized = false;
         this.postInitialized = false;
+        this.areScriptsLoaded = false;
     };
     ScriptComponentData = pc.inherits(ScriptComponentData, pc.fw.ComponentData);
 

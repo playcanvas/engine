@@ -109,7 +109,7 @@ pc.extend(pc.fw, function () {
             options: {
                 min: 0,
                 max: 90
-            }, 
+            },
             filter: {
                 type: 'spot'
             }
@@ -130,13 +130,13 @@ pc.extend(pc.fw, function () {
             name: 'model',
             exposed: false
         }];
-        
+
         this.exposeProperties();
         this.implementations = {};
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
     };
-        
+
     LightComponentSystem = pc.inherits(LightComponentSystem, pc.fw.ComponentSystem);
 
     pc.extend(LightComponentSystem.prototype, {
@@ -161,10 +161,6 @@ pc.extend(pc.fw, function () {
 
             properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-
-            if (component.enabled && component.entity.enabled) {
-                component.onEnable();
-            }
         },
 
         _createImplementation: function (type) {
@@ -243,12 +239,12 @@ pc.extend(pc.fw, function () {
         initialize: function (component, data) {
             var node = this._createLightNode(component, data);
             this._createDebugShape(component, data, node);
-        }, 
+        },
 
         _createLightNode: function (component, data) {
             var node = new pc.scene.LightNode();
             node.setName(data.type + "light");
-            node.setType(this._getLightType());            
+            node.setType(this._getLightType());
             return node;
         },
 
@@ -265,7 +261,7 @@ pc.extend(pc.fw, function () {
 
             if (context.designer) {
                 this.mesh = this._createDebugMesh();
-                
+
                 if (!this.material) {
                     this.material = this._createDebugMaterial();
                 }
@@ -322,7 +318,7 @@ pc.extend(pc.fw, function () {
             ]);
 
             // Generate the directional light arrow vertex data
-            vertexData = [ 
+            vertexData = [
                 // Center arrow
                 0, 0, 0, 0, -8, 0,       // Stalk
                 -0.5, -8, 0, 0.5, -8, 0, // Arrowhead base
@@ -432,8 +428,8 @@ pc.extend(pc.fw, function () {
                     inds[8 + i * 2 + 0] = i + 1;
                     inds[8 + i * 2 + 1] = i + 2;
                 }
-                indexBuffer.unlock(); 
-                this.indexBuffer = indexBuffer;   
+                indexBuffer.unlock();
+                this.indexBuffer = indexBuffer;
             }
 
             var vertexFormat = new pc.gfx.VertexFormat(context.graphicsDevice, [

@@ -6,7 +6,7 @@ pc.extend(editor, function () {
         this.systems = []; // list of registered system names
     };
 
-    /** 
+    /**
      * Expose a Component
      * @param {Object} componentSystem
      */
@@ -33,27 +33,41 @@ pc.extend(editor, function () {
         }
     };
 
-    
+
     /**
      * Expose a property of an object to the editor. This property will appear in the attribute editor control
      * @param {Object} details
      */
-    LinkInterface.prototype.expose = function (system, details) {    
+    LinkInterface.prototype.expose = function (system, details) {
         if(!details.name) {
             throw new Error("Missing option 'name'");
         }
-        
+
         // Add default values
-        details.options = details.options || {};        
+        details.options = details.options || {};
 
         if (details.type === 'vector') {
             // indicate that this is an array type (and therefore is a reference type and needs copying)
             details.array = true;
             // Provide an RuntimeType which is instatiated after passing an object over livelink
-            details.RuntimeType = pc.Vec3;
+            if (details.defaultValue) {
+                switch(details.defaultValue.length) {
+                    case 2:
+                        details.RuntimeType = pc.Vec2;
+                        break;
+                    case 3:
+                        details.RuntimeType = pc.Vec3;
+                        break;
+                    case 4:
+                        details.RuntimeType = pc.Vec4;
+                        break;
+                }
+            } else {
+                details.RuntimeType = pc.Vec3;
+            }
         }
 
-        if (details.type === 'rgb' || 
+        if (details.type === 'rgb' ||
             details.type === 'rgba') {
             // indicate that this is an array type (and therefore is a reference type and needs copying)
             details.array = true;
@@ -64,10 +78,10 @@ pc.extend(editor, function () {
         if (!this.exposed[system][details.name]) {
             this.exposed[system][details.name] = {};
         }
-        
+
         this.exposed[system][details.name] = details;
     };
-    
+
     /**
      * Add a property to the added list. Added properties are created in the viewmodels and can be used internally.
      * They are never visible in the Designer
@@ -76,20 +90,20 @@ pc.extend(editor, function () {
     LinkInterface.prototype.add = function (details) {
         logASSERT(details.system, "Missing option: 'system'");
         logASSERT(details.variable, "Missing option: 'variable'");
-        
+
         if(!this.added[details.system]) {
             this.added[details.system] = {};
         }
         if(!this.added[details.system][details.variable]) {
             this.added[details.system][details.variable] = {};
-        }        
+        }
         this.added[details.system][details.variable] = details;
     };
-    
+
     LinkInterface.prototype.scriptexpose = function (details) {
-        this.scripts[details.script] = details;    
+        this.scripts[details.script] = details;
     };
-    
+
     return {
         LinkInterface: LinkInterface,
         link: new LinkInterface()

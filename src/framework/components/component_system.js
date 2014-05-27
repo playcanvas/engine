@@ -67,7 +67,7 @@ pc.extend(pc.fw, function () {
         * @param {pc.fw.Entity} entity The Entity to attach this component to
         * @param {Object} data The source data with which to create the compoent
         * @returns {pc.fw.Component} Returns a Component of type defined by the component system
-        * @example 
+        * @example
         *   var data = {
         *       type: 'Box',
         *       color: new pc.Color(1,1,1)
@@ -93,7 +93,7 @@ pc.extend(pc.fw, function () {
             this.initializeComponentData(component, data, []);
 
             this.fire('add', entity, component);
-            
+
             return component;
         },
 
@@ -138,7 +138,7 @@ pc.extend(pc.fw, function () {
         */
         initializeComponentData: function (component, data, properties) {
             data = data || {};
-            
+
             // initialize
             properties.forEach(function(value) {
                 if (typeof data[value] !== 'undefined') {
@@ -146,8 +146,13 @@ pc.extend(pc.fw, function () {
                 } else {
                     component[value] = component.data[value];
                 }
-                
+
             }, this);
+
+            // after component is initialized call onEnable
+            if (component.enabled && component.entity.enabled) {
+                component.onEnable();
+            }
         },
 
         /**
@@ -158,12 +163,12 @@ pc.extend(pc.fw, function () {
         */
         exposeProperties: function () {
             editor.link.addComponentType(this);
-                
+
             this.schema.forEach(function (prop) {
                 if (prop.exposed !== false) {
-                    editor.link.expose(this.id, prop);    
+                    editor.link.expose(this.id, prop);
                 }
-            }.bind(this));                
+            }.bind(this));
         }
     };
 
