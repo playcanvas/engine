@@ -54,7 +54,7 @@ pc.extend(pc.fw, function () {
         this.instancesWithPostUpdate = [];
         this.instancesWithToolsUpdate = [];
 
-        this.on('remove', this.onRemove, this);
+        this.on('beforeremove', this.onBeforeRemove, this);
         pc.fw.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
         pc.fw.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
         pc.fw.ComponentSystem.on(UPDATE, this.onUpdate, this);
@@ -84,52 +84,20 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.ScriptComponentSystem#onRemove
-        * @description Handler for 'remove' event which is fired when a script component is removed from an entity;
-        * @param {pc.fw.Entity} entity The entity that the component was removed from
-        * @param {pc.fw.ComponentData} data The data object for the removed component
+        * @name pc.fw.ScriptComponentSystem#onBeforeRemove
+        * @description Handler for 'beforeremove' event which is fired when a script component is about to be removed from an entity;
+        * @param {pc.fw.Entity} entity The entity that the component will be removed from
+        * @param {pc.fw.Component} component The component about to be removed
         */
-        onRemove: function (entity, data) {
-            var index;
-            var instances = data.instances;
-            for (var name in instances) {
-                if (instances.hasOwnProperty(name)) {
-                    var instance = instances[name].instance;
-                    if(instance.destroy) {
-                        instance.destroy();
-                    }
-
-                    if (instance.update) {
-                        index = this.instancesWithUpdate.indexOf(instance);
-                        if (index >= 0) {
-                            this.instancesWithUpdate.splice(index, 1);
-                        }
-                    }
-
-                    if (instance.fixedUpdate) {
-                        index = this.instancesWithFixedUpdate.indexOf(instance);
-                        if (index >= 0) {
-                            this.instancesWithFixedUpdate.splice(index, 1);
-                        }
-                    }
-
-                    if (instance.postUpdate) {
-                        index = this.instancesWithPostUpdate.indexOf(instance);
-                        if (index >= 0) {
-                            this.instancesWithPostUpdate.splice(index, 1);
-                        }
-                    }
-
-                    if (instance.toolsUpdate) {
-                        index = this.instancesWithToolsUpdate.indexOf(instance);
-                        if (index >= 0) {
-                            this.instancesWithToolsUpdate.splice(index, 1);
-                        }
-                    }
-
-                    delete data.instances[name];
-                }
+        onBeforeRemove: function (entity, component) {
+            // if the script component is enabled
+            // call onDisable on all its instances first
+            if (component.enabled) {
+                this._disableScriptComponent(component);
             }
+
+            // then call destroy on all the script instances
+            this._destroyScriptComponent(component);
         },
 
         /**
@@ -209,6 +177,52 @@ pc.extend(pc.fw, function () {
 
         _disableScriptComponent: function (script) {
             this._callInstancesMethod(script, ON_DISABLE);
+        },
+
+        _destroyScriptComponent: function (script) {
+            var index;
+            var instances = script.data.instances;
+            for (var name in instances) {
+                if (instances.hasOwnProperty(name)) {
+                    var instance = instances[name].instance;
+                    if(instance.destroy) {
+                        instance.destroy();
+                    }
+
+                    if (instance.update) {
+                        index = this.instancesWithUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.fixedUpdate) {
+                        index = this.instancesWithFixedUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithFixedUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.postUpdate) {
+                        index = this.instancesWithPostUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithPostUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.toolsUpdate) {
+                        index = this.instancesWithToolsUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithToolsUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (script.instances[name].instance === script[name]) {
+                        delete script[name];
+                    }
+                    delete script.instances[name];
+                }
+            }
         },
 
         _postInitializeScriptComponent: function (script) {
@@ -316,22 +330,6 @@ pc.extend(pc.fw, function () {
                     name: name,
                     instance: instance
                 };
-
-                if (instance.update) {
-                    this.instancesWithUpdate.push(instance);
-                }
-
-                if (instance.fixedUpdate) {
-                    this.instancesWithFixedUpdate.push(instance);
-                }
-
-                if (instance.postUpdate) {
-                    this.instancesWithPostUpdate.push(instance);
-                }
-
-                if (instance.toolsUpdate) {
-                    this.instancesWithToolsUpdate.push(instance);
-                }
             }
         },
 
@@ -345,26 +343,43 @@ pc.extend(pc.fw, function () {
         * @param {pc.fw.Entity} entity The Entity the instances are attached to
         */
         _registerInstances: function (entity) {
-            var instance, instanceName;
+            var preRegistered, instance, instanceName;
 
             if (entity.script) {
                 if (entity.script.data._instances) {
                     entity.script.instances = entity.script.data._instances;
 
                     for (instanceName in entity.script.instances) {
-                        instance = entity.script.instances[instanceName];
+                        preRegistered = entity.script.instances[instanceName];
+                        instance = preRegistered.instance;
 
-                        pc.events.attach(instance.instance);
+                        pc.events.attach(instance);
+
+                        if (instance.update) {
+                            this.instancesWithUpdate.push(instance);
+                        }
+
+                        if (instance.fixedUpdate) {
+                            this.instancesWithFixedUpdate.push(instance);
+                        }
+
+                        if (instance.postUpdate) {
+                            this.instancesWithPostUpdate.push(instance);
+                        }
+
+                        if (instance.toolsUpdate) {
+                            this.instancesWithToolsUpdate.push(instance);
+                        }
 
                         if (entity.script.scripts) {
-                            this._createAccessors(entity, instance);
+                            this._createAccessors(entity, preRegistered);
                         }
 
                         // Make instance accessible from the script component of the Entity
                         if (entity.script[instanceName]) {
                             throw Error(pc.string.format("Script with name '{0}' is already attached to Script Component", instanceName));
                         } else {
-                            entity.script[instanceName] = instance.instance;
+                            entity.script[instanceName] = instance;
                         }
                     }
 

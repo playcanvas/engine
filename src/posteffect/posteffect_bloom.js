@@ -5,7 +5,7 @@ pc.extend(pc.posteffect, function () {
         return ((1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta)));
     }
 
-    function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {        
+    function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {
         // Look up how many samples our gaussian blur effect supports.
 
         // Create temporary arrays for computing our filter settings.
@@ -50,9 +50,19 @@ pc.extend(pc.posteffect, function () {
         }
     }
 
-    function Bloom(graphicsDevice) {
-        this.device = graphicsDevice;
-
+    /**
+     * @name pc.posteffect.Bloom
+     * @class Implements the Bloom post processing effect
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @property {Number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1
+     * @property {Number} blurAmount Controls the amount of blurring.
+     * @property {Number} bloomIntensity The intensity of the effect.
+     * @property {Number} baseIntensity The intensity of the entire screen.
+     * @property {Number} bloomSaturation The saturation of the effect.
+     * @property {Number} baseSaturation The saturation of the scene.
+     */
+    function Bloom (graphicsDevice) {
         // Shaders
         var attributes = {
             aPosition: pc.gfx.SEMANTIC_POSITION
@@ -178,8 +188,6 @@ pc.extend(pc.posteffect, function () {
             fshader: bloomCombineFrag
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Render targets
         var width = graphicsDevice.width;
         var height = graphicsDevice.height;
@@ -213,8 +221,10 @@ pc.extend(pc.posteffect, function () {
         this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
     }
 
-    Bloom.prototype = {
-        render: function (inputTarget, outputTarget) {
+    Bloom = pc.inherits(Bloom, pc.posteffect.PostEffect);
+
+    Bloom.prototype = pc.extend(Bloom.prototype, {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
@@ -250,11 +260,11 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uCombineParams").setValue(this.combineParams);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader, rect);
         }
-    };
+    });
 
     return {
         Bloom: Bloom
-    }; 
+    };
 }());

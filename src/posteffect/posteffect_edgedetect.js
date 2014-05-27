@@ -1,8 +1,6 @@
 pc.extend(pc.posteffect, function () {
 
     function EdgeDetect(graphicsDevice) {
-        this.device = graphicsDevice;
-
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -61,14 +59,14 @@ pc.extend(pc.posteffect, function () {
             ].join("\n")
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Uniforms
         this.resolution = new Float32Array(2);
     }
 
-    EdgeDetect.prototype = {
-        render: function (inputTarget, outputTarget) {
+    EdgeDetect = pc.inherits(EdgeDetect, pc.posteffect.PostEffect);
+
+    EdgeDetect.prototype = pc.extend(EdgeDetect.prototype, {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
@@ -76,9 +74,9 @@ pc.extend(pc.posteffect, function () {
             this.resolution[1] = 1 / inputTarget.height;
             scope.resolve("uResolution").setValue(this.resolution);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         EdgeDetect: EdgeDetect

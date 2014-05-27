@@ -3,6 +3,19 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.0
+--------
+* When an entity is destroyed it will first disable all of its components.
+* When a component is initialized its onEnable method will be called.
+* Added pc.posteffect.PostEffectQueue for managing multiple post effects for a camera. The camera component now has a post effects queue allowing users to add / remove post effects to a camera.
+* Added example using post effects.
+* Added various post effects.
+* Camera system now has an array of active cameras instead of a 'current' camera. The application framework now renders all cameras instead of just the current camera.
+* Exposed priority, clearColorBuffer, clearDepthBuffer and rect for the camera component, Now supporting pc.Vec2 and pc.Vec4 as runtime types.
+* All post effects now derive from pc.posteffect.PostEffect.
+* [FIX] Set particle_time to 0 when a particle emitter is initialized.
+
+--------
 v0.146.1
 --------
 * [FIX] Set state that affects shadow buffer clearing before the clear happens (in particular, depth write).

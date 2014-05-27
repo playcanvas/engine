@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
     * @component
     * @name pc.fw.ScriptComponent
     * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own javascript files
-    * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/engine/scripting.html">Scripting</a>.
+    * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
     * @param {pc.fw.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
@@ -41,26 +41,31 @@ pc.extend(pc.fw, function () {
             var args = pc.makeArray(arguments).slice(2);
             var instances = this.entity.script.instances;
             var fn;
-            
+
             if(instances && instances[name]) {
                 fn = instances[name].instance[functionName];
                 if (fn) {
-                    return fn.apply(instances[name].instance, args);    
+                    return fn.apply(instances[name].instance, args);
                 }
-                
+
             }
         },
 
         onEnable: function () {
             ScriptComponent._super.onEnable.call(this);
-            if (!this.data.initialized) {
-                this.system._initializeScriptComponent(this);
-            } else {
-                this.system._enableScriptComponent(this);
-            }
 
-            if (!this.data.postInitialized) {
-                this.system._postInitializeScriptComponent(this);
+            // if the scripts of the component have been loaded
+            // then call the appropriate methods on the component
+            if (this.data.areScriptsLoaded) {
+                if (!this.data.initialized) {
+                    this.system._initializeScriptComponent(this);
+                } else {
+                    this.system._enableScriptComponent(this);
+                }
+
+                if (!this.data.postInitialized) {
+                    this.system._postInitializeScriptComponent(this);
+                }
             }
         },
 
@@ -69,7 +74,7 @@ pc.extend(pc.fw, function () {
             this.system._disableScriptComponent(this);
         },
 
-        onSetScripts: function(name, oldValue, newValue) {            
+        onSetScripts: function(name, oldValue, newValue) {
             if (!this.system._inTools || this.runInTools) {
                 var onlyUpdateAttributes = true;
                 if (oldValue.length !== newValue.length) {
@@ -93,6 +98,14 @@ pc.extend(pc.fw, function () {
                     return;
                 }
 
+                if (this.enabled) {
+                    this.system._disableScriptComponent(this);
+                }
+
+                this.system._destroyScriptComponent(this);
+
+                this.data.areScriptsLoaded = false;
+
                 var scripts = newValue;
                 var urls = scripts.map(function (s) {
                     return s.url;
@@ -105,7 +118,7 @@ pc.extend(pc.fw, function () {
                 var options = {
                     parent: this.entity.getRequest()
                 };
-                var promise = this.system.context.loader.request(requests, options); 
+                var promise = this.system.context.loader.request(requests, options);
                 promise.then(function (resources) {
                     resources.forEach(function (ScriptType, index) {
                         // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
@@ -113,13 +126,18 @@ pc.extend(pc.fw, function () {
                         if (ScriptType && this.entity.script) {
                             // Make sure that we haven't already instaciated another identical script while loading
                             // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
-                            if (!this.entity.script.instances[ScriptType._pcScriptName]) { 
+                            if (!this.entity.script.instances[ScriptType._pcScriptName]) {
                                 var instance = new ScriptType(this.entity);
                                 this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
                             }
                         }
                     }, this);
-                    // If there is no request batch, then this is not part of a load request and so we need 
+
+                    if (this.data) {
+                        this.data.areScriptsLoaded = true;
+                    }
+
+                    // If there is no request batch, then this is not part of a load request and so we need
                     // to register the instances immediately to call the initialize function
                     if (!options.parent) {
                         this.system.onInitialize(this.entity);
@@ -131,40 +149,6 @@ pc.extend(pc.fw, function () {
                         throw error;
                     })
                 });
-
-                // urls.forEach(function (url, index, arr) {
-                //     var url = urls[index].trim();
-                //     var options = {
-                //         parent: this.entity.getRequest()
-                //     };
-                //     var promise = this.system.context.loader.request(new pc.resources.ScriptRequest(url), options); 
-                //     promise.then(function (resources) {
-                //         var ScriptType = resources[0];
-
-                //         // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
-                //         // Make sure that script component hasn't been removed since we started loading
-                //         if (ScriptType && this.entity.script) {
-                //             // Make sure that we haven't already instaciated another identical script while loading
-                //             // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
-                //             if (!this.entity.script.instances[ScriptType._pcScriptName]) { 
-                //                 var instance = new ScriptType(this.entity);
-                //                 this.system._preRegisterInstance(this.entity, url, ScriptType._pcScriptName, instance);
-                                
-                //                 // If there is no request batch, then this is not part of a load request and so we need 
-                //                 // to register the instances immediately to call the initialize function
-                //                 if (!options.parent) {
-                //                     this.system.onInitialize(this.entity);
-                //                 }
-                //             }
-                            
-                //         }
-                //     }.bind(this)).then(null, function (error) {
-                //         // Re-throw any exceptions from the Script constructor to stop them being swallowed by the Promises lib
-                //         setTimeout(function () {
-                //             throw error;
-                //         })
-                //     });
-                // }, this);            
             }
         }
     });

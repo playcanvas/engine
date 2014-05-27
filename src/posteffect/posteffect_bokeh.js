@@ -1,7 +1,24 @@
-pc.extend(pc.posteffect, function () {
+/**
+ * Shader author: alteredq / http://alteredqualia.com/
+ *
+ * Depth-of-field shader with bokeh
+ * ported from GLSL shader by Martins Upitis
+ * http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
+ */
 
+pc.extend(pc.posteffect, function () {
+    /**
+     * @name pc.posteffect.Bokeh
+     * @class Implements the Bokeh post processing effect
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @property {Number} maxBlur The maximum amount of blurring. Ranges from 0 to 1
+     * @property {Number} aperture Bigger values create a shallower depth of field
+     * @property {Number} focus Controls the focus of the effect
+     * @property {Number} aspect Controls the blurring effect
+     */
     function Bokeh(graphicsDevice) {
-        this.device = graphicsDevice;
+        this.needsDepthBuffer = true;
 
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
@@ -99,18 +116,17 @@ pc.extend(pc.posteffect, function () {
             ].join("\n")
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Uniforms
         this.maxBlur = 1;
         this.aperture = 0.025;
         this.focus = 1;
         this.aspect = 1;
-        this.depthMap = new pc.gfx.Texture(graphicsDevice);
     }
 
-    Bokeh.prototype = {
-        render: function (inputTarget, outputTarget) {
+    Bokeh = pc.inherits(Bokeh, pc.posteffect.PostEffect);
+
+    Bokeh.prototype = pc.extend(Bokeh.prototype, {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
@@ -120,9 +136,9 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uAspect").setValue(this.aspect);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uDepthMap").setValue(this.depthMap);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         Bokeh: Bokeh

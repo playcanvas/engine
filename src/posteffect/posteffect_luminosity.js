@@ -1,8 +1,6 @@
 pc.extend(pc.posteffect, function () {
 
     function Luminosity(graphicsDevice) {
-        this.device = graphicsDevice;
-
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -33,19 +31,19 @@ pc.extend(pc.posteffect, function () {
                 "}"
             ].join("\n")
         });
-
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
     }
 
-    Luminosity.prototype = {
-        render: function (inputTarget, outputTarget) {
+    Luminosity = pc.inherits(Luminosity, pc.posteffect.PostEffect);
+
+    Luminosity.prototype = pc.extend(Luminosity.prototype, {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         Luminosity: Luminosity

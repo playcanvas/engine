@@ -13,6 +13,10 @@ module('pc.fw.Entity', {
             this.DataType = DerivedComponentData;
             this.ComponentType = DerivedComponent;
             this.schema = [{
+                name: 'enabled',
+                type: 'boolean',
+                defaultValue: true
+            },{
                 name: 'one',
                 type: 'array'
             }, {
@@ -26,7 +30,7 @@ module('pc.fw.Entity', {
         DerivedSystem = pc.inherits(DerivedSystem, pc.fw.ComponentSystem);
         pc.extend(DerivedSystem.prototype, {
             initializeComponentData: function (component, data, properties) {
-                DerivedSystem._super.initializeComponentData.call(this, component, data, ['one', 'two', 'clonable']);
+                DerivedSystem._super.initializeComponentData.call(this, component, data, ['enabled', 'one', 'two', 'clonable']);
 
                 component.one = [1,2,3];
                 component.two = 42;
@@ -38,12 +42,22 @@ module('pc.fw.Entity', {
         };
         DerivedComponent = pc.inherits(DerivedComponent, pc.fw.Component);
         pc.extend(DerivedComponent.prototype, {
+            onEnable: function () {
+                DerivedComponent._super.onEnable.call(this);
+                this.entity.onEnabledCalled = true;
+            },
+
+            onDisable: function () {
+                DerivedComponent._super.onDisable.call(this);
+                this.entity.onDisableCalled = true;
+            }
         });
 
         DerivedComponentData = function () {
             this.one = null;
             this.two = null;
             this.clonable = null;
+            this.enabled = true;
         };
         DerivedComponentData = pc.inherits(DerivedComponentData, pc.fw.ComponentData);
     }
@@ -143,7 +157,7 @@ test('reparent disabled', function () {
     var e2 = new pc.fw.Entity();
     child.reparent(e2);
     equal(child.enabled, true);
-})
+});
 
 test('reparent 2 levels deep - disabled', function () {
     var entity_level0 = new pc.fw.Entity();
@@ -158,4 +172,24 @@ test('reparent 2 levels deep - disabled', function () {
     var entity2_levelRoot = new pc.fw.Entity();
     entity_level1.reparent(entity2_levelRoot);
     equal(entity_level2.enabled, true);
-})
+});
+
+test('destroy entity disables components', function () {
+    var system = new DerivedSystem();
+
+    var e = new pc.fw.Entity();
+    system.addComponent(e);
+
+    notEqual(e.onDisableCalled, true);
+    e.destroy();
+    equal(e.onDisableCalled, true);
+});
+
+test('onEnable is called after component is initialized', function () {
+    var system = new DerivedSystem();
+
+    var e = new pc.fw.Entity();
+    notEqual(e.onEnabledCalled, true);
+    system.addComponent(e);
+    equal(e.onEnabledCalled, true);
+});

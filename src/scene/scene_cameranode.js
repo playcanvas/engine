@@ -21,7 +21,7 @@ pc.extend(pc.scene, function () {
         this._viewMat = new pc.Mat4();
         this._viewProjMat = new pc.Mat4();
 
-        this._rect = { 
+        this._rect = {
             x: 0,
             y: 0,
             width: 1,
@@ -108,7 +108,7 @@ pc.extend(pc.scene, function () {
 
             point2d.x = (width / 2) + (width / 2) * point2d.x;
             point2d.y = height - ((height / 2) + (height / 2) * point2d.y);
-            point2d.z = point2d.z;        
+            point2d.z = point2d.z;
 
             return point2d;
         },
@@ -167,7 +167,6 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.CameraNode#getClearOptions
          * @description Retrieves the options used to determine how the camera's render target will be cleared.
-         * The clearing of the render target actually happens on a call to pc.scene.CameraNode#frameBegin.
          * @return {Object} The options determining the behaviour of render target clears.
          */
         getClearOptions: function () {
@@ -288,7 +287,6 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.CameraNode#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
-         * The clearing of the render target actually happens on a call to pc.scene.CameraNode#frameBegin.
          * @param {Object} clearOptions The options determining the behaviour of subsequent render target clears.
          * @param {Array} clearOptions.color The options determining the behaviour of subsequent render target clears.
          * @param {number} clearOptions.depth The options determining the behaviour of subsequent render target clears.
@@ -313,7 +311,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.CameraNode#setFov
          * @description Sets the specified camera's vertical field of view. This angle is in degrees and is
-         * measured vertically from the view direction of the camera. Therefore, the angle is actually half 
+         * measured vertically from the view direction of the camera. Therefore, the angle is actually half
          * the angle between the top and bottom camera planes.
          * @param {Number} fov The vertical field of view in degrees.
          */
@@ -376,6 +374,5 @@ pc.extend(pc.scene, function () {
 
     return {
         CameraNode: CameraNode
-    }; 
+    };
 }());
-    

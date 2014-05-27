@@ -1,8 +1,13 @@
 pc.extend(pc.posteffect, function () {
-
+    /**
+     * @name pc.posteffect.Blend
+     * @class Blends the input render target with another texture
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @property {pc.gfx.Texture} blendMap The texture with which to blend the input render target with
+     * @property {Number} mixRatio The amount of blending between the input and the blendMap. Ranges from 0 to 1
+     */
     function Blend(graphicsDevice) {
-        this.device = graphicsDevice;
-
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -36,24 +41,24 @@ pc.extend(pc.posteffect, function () {
             ].join("\n")
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Uniforms
         this.mixRatio = 0.5;
         this.blendMap = new pc.gfx.Texture(graphicsDevice);
     }
 
-    Blend.prototype = {
-        render: function (inputTarget, outputTarget) {
+    Blend = pc.inherits(Blend, pc.posteffect.PostEffect);
+
+    Blend.prototype = pc.extend(Blend.prototype, {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uMixRatio").setValue(this.mixRatio);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uBlendMap").setValue(this.blendMap);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         Blend: Blend

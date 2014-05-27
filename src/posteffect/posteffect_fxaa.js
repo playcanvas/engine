@@ -1,8 +1,6 @@
 pc.extend(pc.posteffect, function () {
 
     function Fxaa(graphicsDevice) {
-        this.device = graphicsDevice;
-
         // Shaders
         var attributes = {
             aPosition: pc.gfx.SEMANTIC_POSITION
@@ -83,14 +81,14 @@ pc.extend(pc.posteffect, function () {
             fshader: fxaaFrag
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Uniforms
         this.resolution = new Float32Array(2);
     }
 
-    Fxaa.prototype = {
-        render: function (inputTarget, outputTarget) {
+    Fxaa = pc.inherits(Fxaa, pc.posteffect.PostEffect);
+
+    Fxaa.prototype = pc.extend(Fxaa.prototype, {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
@@ -98,9 +96,9 @@ pc.extend(pc.posteffect, function () {
             this.resolution[1] = 1 / inputTarget.height;
             scope.resolve("uResolution").setValue(this.resolution);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.fxaaShader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.fxaaShader, rect);
         }
-    };
+    });
 
     return {
         Fxaa: Fxaa
