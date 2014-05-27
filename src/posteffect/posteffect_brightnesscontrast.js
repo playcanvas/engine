@@ -9,6 +9,14 @@
 
 pc.extend(pc.posteffect, function () {
 
+    /**
+     * @name pc.posteffect.BrightnessContrast
+     * @class Changes the brightness and contrast of the input render target
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @property {Number} brightness Controls the brightness of the render target. Ranges from -1 to 1 (-1 is solid black, 0 no change, 1 solid white)
+     * @property {Number} contrast Controls the contrast of the render target. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum contrast)
+     */
     function BrightnessContrast(graphicsDevice) {
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {

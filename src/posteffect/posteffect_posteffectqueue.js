@@ -73,9 +73,8 @@ pc.extend(pc.posteffect, function () {
          * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
          * automatically enable the queue.
          * @param {Object} effect The post effect to add to the queue.
-         * @param {Boolean} needsDepthBuffer Set to true if this post effect requires a depth buffer for its input render target
          */
-        addEffect: function (effect, needsDepthBuffer) {
+        addEffect: function (effect) {
             // first rendering of the scene requires depth buffer
             var isFirstEffect = this.effects.length === 0;
 
@@ -83,11 +82,10 @@ pc.extend(pc.posteffect, function () {
             var newEntry = {
                 effect: effect,
                 inputTarget: this._createOffscreenTarget(isFirstEffect),
-                outputTarget: null,
-                needsDepthBuffer: needsDepthBuffer
+                outputTarget: null
             };
 
-            if (needsDepthBuffer) {
+            if (effect.needsDepthBuffer) {
                 if (!this.depthTarget) {
                     this._setDepthTarget(this._createOffscreenTarget(true));
                 }
@@ -155,7 +153,7 @@ pc.extend(pc.posteffect, function () {
             if (this.depthTarget) {
                 var isDepthTargetNeeded = false;
                 for (var i=0,len=this.effects.length; i<len; i++) {
-                    if (this.effects[i].needsDepthBuffer) {
+                    if (this.effects[i].effect.needsDepthBuffer) {
                         isDepthTargetNeeded = true;
                         break;
                     }
@@ -275,9 +273,9 @@ pc.extend(pc.posteffect, function () {
                 if (fx.inputTarget.width !== desiredWidth ||
                     fx.inputTarget.height !== desiredHeight)  {
                     fx.inputTarget.destroy();
-                    fx.inputTarget = this._createOffscreenTarget(fx.needsDepthBuffer || i === 0);
+                    fx.inputTarget = this._createOffscreenTarget(fx.effect.needsDepthBuffer || i === 0);
 
-                    if (fx.needsDepthBuffer) {
+                    if (fx.effect.needsDepthBuffer) {
                         fx.depthMap = this.depthTarget;
                     }
 

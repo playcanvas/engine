@@ -7,8 +7,19 @@
  */
 
 pc.extend(pc.posteffect, function () {
-
+    /**
+     * @name pc.posteffect.Bokeh
+     * @class Implements the Bokeh post processing effect
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @property {Number} maxBlur The maximum amount of blurring. Ranges from 0 to 1
+     * @property {Number} aperture Bigger values create a shallower depth of field
+     * @property {Number} focus Controls the focus of the effect
+     * @property {Number} aspect Controls the blurring effect
+     */
     function Bokeh(graphicsDevice) {
+        this.needsDepthBuffer = true;
+
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION

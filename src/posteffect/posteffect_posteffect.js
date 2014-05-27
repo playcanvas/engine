@@ -19,6 +19,7 @@ pc.extend(pc.posteffect, function () {
         this.shader = null;
         this.depthMap = null;
         this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
+        this.needsDepthBuffer = false;
     };
 
     PostEffect.prototype = {
