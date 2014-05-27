@@ -50,9 +50,7 @@ pc.extend(pc.posteffect, function () {
         }
     }
 
-    function Bloom(graphicsDevice) {
-        this.device = graphicsDevice;
-
+    function Bloom (graphicsDevice) {
         // Shaders
         var attributes = {
             aPosition: pc.gfx.SEMANTIC_POSITION
@@ -178,8 +176,6 @@ pc.extend(pc.posteffect, function () {
             fshader: bloomCombineFrag
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Render targets
         var width = graphicsDevice.width;
         var height = graphicsDevice.height;
@@ -213,7 +209,9 @@ pc.extend(pc.posteffect, function () {
         this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
     }
 
-    Bloom.prototype = {
+    Bloom = pc.inherits(Bloom, pc.posteffect.PostEffect);
+
+    Bloom.prototype = pc.extend(Bloom.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -252,7 +250,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader, rect);
         }
-    };
+    });
 
     return {
         Bloom: Bloom

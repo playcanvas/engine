@@ -1,5 +1,19 @@
-pc.posteffect = {
-    createFullscreenQuad: function (device) {
+pc.posteffect = {};
+
+pc.extend(pc.posteffect, function () {
+    var PostEffect = function (graphicsDevice) {
+        this.device = graphicsDevice;
+        this.shader = null;
+        this.depthMap = null;
+        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
+    };
+
+    PostEffect.prototype = {
+        render: function (inputTarget, outputTarget, rect) {
+        }
+    };
+
+    function createFullscreenQuad (device) {
         // Create the vertex format
         var vertexFormat = new pc.gfx.VertexFormat(device, [
             { semantic: pc.gfx.SEMANTIC_POSITION, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
@@ -20,9 +34,9 @@ pc.posteffect = {
         iterator.end();
 
         return vertexBuffer;
-    },
+    }
 
-    drawFullscreenQuad: function (device, target, vertexBuffer, shader, rect) {
+    function drawFullscreenQuad (device, target, vertexBuffer, shader, rect) {
         device.setRenderTarget(target);
         device.updateBegin();
         var w = (target !== null) ? target.width : device.width;
@@ -56,4 +70,10 @@ pc.posteffect = {
         device.setDepthWrite(oldDepthWrite);
         device.updateEnd();
     }
-};
+
+    return {
+        PostEffect: PostEffect,
+        createFullscreenQuad: createFullscreenQuad,
+        drawFullscreenQuad: drawFullscreenQuad
+    };
+}());

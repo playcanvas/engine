@@ -6,8 +6,6 @@
 pc.extend(pc.posteffect, function () {
 
     function ColorCorrection(graphicsDevice) {
-        this.device = graphicsDevice;
-
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -40,14 +38,14 @@ pc.extend(pc.posteffect, function () {
             ].join("\n")
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Uniforms
         this.powerRgb = [1,1,1];
         this.mulRgb = [1,1,1];
     }
 
-    ColorCorrection.prototype = {
+    ColorCorrection = pc.inherits(ColorCorrection, pc.posteffect.PostEffect);
+
+    ColorCorrection.prototype = pc.extend(ColorCorrection.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -57,7 +55,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         ColorCorrection: ColorCorrection

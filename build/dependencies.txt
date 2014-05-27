@@ -65,7 +65,6 @@
 ../src/posteffect/posteffect_blend.js
 ../src/posteffect/posteffect_bloom.js
 ../src/posteffect/posteffect_bokeh.js
-../src/posteffect/posteffect_bokeh2.js
 ../src/posteffect/posteffect_edgedetect.js
 ../src/posteffect/posteffect_fxaa.js
 ../src/posteffect/posteffect_luminosity.js

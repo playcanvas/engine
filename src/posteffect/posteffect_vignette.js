@@ -1,8 +1,6 @@
 pc.extend(pc.posteffect, function () {
 
     function Vignette(graphicsDevice) {
-        this.device = graphicsDevice;
-
         // Shaders
         var attributes = {
             aPosition: pc.gfx.SEMANTIC_POSITION
@@ -44,11 +42,11 @@ pc.extend(pc.posteffect, function () {
 
         this.offset = 1;
         this.darkness = 1;
-
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
     }
 
-    Vignette.prototype = {
+    Vignette = pc.inherits(Vignette, pc.posteffect.PostEffect);
+
+    Vignette.prototype = pc.extend(Vignette, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -58,7 +56,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uDarkness").setValue(this.darkness);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.vignetteShader, rect);
         }
-    };
+    });
 
     return {
         Vignette: Vignette

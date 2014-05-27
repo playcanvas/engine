@@ -10,8 +10,6 @@
 pc.extend(pc.posteffect, function () {
 
     function HueSaturation(graphicsDevice) {
-        this.device = graphicsDevice;
-
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -62,14 +60,14 @@ pc.extend(pc.posteffect, function () {
             ].join("\n")
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // uniforms
         this.hue = 0;
         this.saturation = 0;
     }
 
-    HueSaturation.prototype = {
+    HueSaturation = pc.inherits(HueSaturation, pc.posteffect.PostEffect);
+
+    HueSaturation.prototype = pc.extend(HueSaturation.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -79,7 +77,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         HueSaturation: HueSaturation

@@ -10,8 +10,6 @@
 pc.extend(pc.posteffect, function () {
 
     function BrightnessContrast(graphicsDevice) {
-        this.device = graphicsDevice;
-
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -51,14 +49,14 @@ pc.extend(pc.posteffect, function () {
             ].join("\n")
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Uniforms
         this.brightness = 0;
         this.contrast = 0;
     }
 
-    BrightnessContrast.prototype = {
+    BrightnessContrast = pc.inherits(BrightnessContrast, pc.posteffect.PostEffect);
+
+    BrightnessContrast.prototype = pc.extend(BrightnessContrast.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -68,7 +66,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         BrightnessContrast: BrightnessContrast

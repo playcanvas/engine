@@ -9,8 +9,6 @@
 pc.extend(pc.posteffect, function () {
 
     function Bokeh(graphicsDevice) {
-        this.device = graphicsDevice;
-
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -107,17 +105,16 @@ pc.extend(pc.posteffect, function () {
             ].join("\n")
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Uniforms
         this.maxBlur = 1;
         this.aperture = 0.025;
         this.focus = 1;
         this.aspect = 1;
-        this.depthMap = new pc.gfx.Texture(graphicsDevice);
     }
 
-    Bokeh.prototype = {
+    Bokeh = pc.inherits(Bokeh, pc.posteffect.PostEffect);
+
+    Bokeh.prototype = pc.extend(Bokeh.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -130,7 +127,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uDepthMap").setValue(this.depthMap);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         Bokeh: Bokeh
