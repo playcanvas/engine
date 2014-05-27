@@ -278,6 +278,9 @@ pc.extend(pc.gfx, function () {
             this.setDepthTest(true);
             this.setDepthWrite(true);
 
+            this.setClearDepth(1);
+            this.setClearColor(0, 0, 0, 0);
+
             gl.enable(gl.SCISSOR_TEST);
 
             this.programLib = new pc.gfx.ProgramLibrary(this);
@@ -561,24 +564,40 @@ pc.extend(pc.gfx, function () {
             var defaultOptions = this.defaultClearOptions;
             options = options || defaultOptions;
 
-            var flags = options.flags || defaultOptions.flags;
-            var glFlags = this.glClearFlag[flags];
+            var flags = (options.flags === undefined) ? defaultOptions.flags : options.flags;
+            if (flags !== 0) {
+                // Set the clear color
+                if (flags & pc.gfx.CLEARFLAG_COLOR) {
+                    var color = (options.color === undefined) ? defaultOptions.color : options.color;
+                    this.setClearColor(color[0], color[1], color[2], color[3]);
+                }
 
-            // Set the clear color
-            var gl = this.gl;
-            if (glFlags & gl.COLOR_BUFFER_BIT) {
-                var color = options.color || defaultOptions.color;
-                gl.clearColor(color[0], color[1], color[2], color[3]);
+                if (flags & pc.gfx.CLEARFLAG_DEPTH) {
+                    // Set the clear depth
+                    var depth = (options.depth === undefined) ? defaultOptions.depth : options.depth;
+                    this.setClearDepth(depth);
+                }
+
+                // Clear the frame buffer
+                this.gl.clear(this.glClearFlag[flags]);
             }
+        },
 
-            if (glFlags & gl.DEPTH_BUFFER_BIT) {
-                // Set the clear depth
-                var depth = options.depth || defaultOptions.depth;
-                gl.clearDepth(depth);
+        setClearDepth: function (depth) {
+            if (depth !== this.clearDepth) {
+                this.gl.clearDepth(depth);
+                this.clearDepth = depth;
             }
+        },
 
-            // Clear the frame buffer
-            gl.clear(glFlags);
+        setClearColor: function (r, g, b, a) {
+            if ((r !== this.clearRed) || (g !== this.clearGreen) || (b !== this.clearBlue) || (a !== this.clearAlpha)) {
+                this.gl.clearColor(r, g, b, a);
+                this.clearRed = r;
+                this.clearGreen = g;
+                this.clearBlue = b;
+                this.clearAlpha = a;
+            }
         },
 
         /**
