@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.2
+--------
+* [FIX] Frame buffer clearing now works if flags are zero.
+* [FIX] Documentation fixes for post effects.
+
+--------
 v0.147.1
 --------
 * Documented post effects.

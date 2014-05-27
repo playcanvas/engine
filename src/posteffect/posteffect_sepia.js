@@ -1,9 +1,10 @@
 pc.extend(pc.posteffect, function () {
 
     /**
-     * @name pc.posteffect.Luminosity
+     * @name pc.posteffect.Sepia
      * @class Implements the Sepia color filter.
-     * @extends {pc.posteffect.PostEffect}
+     * @constructor Creates new instance of the post effect.
+     * @extends pc.posteffect.PostEffect
      * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
      * @property {Number} amount Controls the intensity of the effect. Ranges from 0 to 1.
      */

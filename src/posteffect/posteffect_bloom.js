@@ -53,7 +53,8 @@ pc.extend(pc.posteffect, function () {
     /**
      * @name pc.posteffect.Bloom
      * @class Implements the Bloom post processing effect
-     * @extends {pc.posteffect.PostEffect}
+     * @constructor Creates new instance of the post effect.
+     * @extends pc.posteffect.PostEffect
      * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
      * @property {Number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1
      * @property {Number} blurAmount Controls the amount of blurring.

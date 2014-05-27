@@ -8,12 +8,13 @@ pc.posteffect = {};
 pc.extend(pc.posteffect, function () {
 
     /**
-     * @name pc.posteffect.PostEffect
-     * @class Base class for all post effects. Post effects take a a render target as input
-     * apply effects to it and then render the result to an output render target or the screen
-     * if no output is specified.
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
-     */
+    * @name pc.posteffect.PostEffect
+    * @class Base class for all post effects. Post effects take a a render target as input
+    * apply effects to it and then render the result to an output render target or the screen
+    * if no output is specified.
+    * @constructor Creates new PostEffect
+    * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+    */
     var PostEffect = function (graphicsDevice) {
         this.device = graphicsDevice;
         this.shader = null;
@@ -24,6 +25,7 @@ pc.extend(pc.posteffect, function () {
 
     PostEffect.prototype = {
         /**
+        * @function
         * @name pc.posteffect.PostEffect#render
         * @description Render the post effect using the specified inputTarget
         * to the specified outputTarget.
