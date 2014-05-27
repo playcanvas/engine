@@ -68,7 +68,7 @@ pc.extend(pc.posteffect, function () {
     }
 
     EdgeDetect.prototype = {
-        render: function (inputTarget, outputTarget) {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
@@ -76,7 +76,7 @@ pc.extend(pc.posteffect, function () {
             this.resolution[1] = 1 / inputTarget.height;
             scope.resolve("uResolution").setValue(this.resolution);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     };
 

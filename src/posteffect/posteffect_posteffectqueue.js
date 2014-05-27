@@ -17,6 +17,10 @@ pc.extend(pc.posteffect, function () {
         // this render target has depth encoded in RGB - needed for effects that
         // require a depth buffer
         this.depthTarget = null;
+
+        camera.on('set_rect', this.onCameraRectChanged, this);
+
+        this.previous
     }
 
     PostEffectQueue.prototype = {
@@ -29,10 +33,14 @@ pc.extend(pc.posteffect, function () {
          * @returns {pc.gfx.RenderTarget} The render target
          */
         _createOffscreenTarget: function (useDepth) {
+            var rect = this.camera.rect;
+            var width = Math.floor(rect.z * this.context.graphicsDevice.width);
+            var height = Math.floor(rect.w * this.context.graphicsDevice.height);
+
             var colorBuffer = new pc.gfx.Texture(this.context.graphicsDevice, {
                 format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
-                width: this.context.graphicsDevice.canvas.width,
-                height: this.context.graphicsDevice.canvas.height
+                width: width,
+                height: height
             });
 
             colorBuffer.minFilter = pc.gfx.FILTER_NEAREST;
@@ -198,9 +206,16 @@ pc.extend(pc.posteffect, function () {
                 var effects = this.effects;
                 var camera = this.camera;
 
+                // set the camera's rect to full screen. Set it directly to the
+                // camera node instead of the component because we want to keep the old
+                // rect set in the component for restoring the camera to its original settings
+                // when the queue is disabled.
+                camera.camera.setRect(0, 0, 1, 1);
+
                 // create a new command that renders all of the effects one after the other
                 this.command = new pc.scene.Command(pc.scene.LAYER_FX, pc.scene.BLEND_NONE, function () {
-                    if (this.enabled) {
+                    if (this.enabled && camera.data.isRendering) {
+                        var rect = null;
                         var len = effects.length;
                         if (len) {
                             camera.renderTarget = effects[0].inputTarget;
@@ -208,7 +223,11 @@ pc.extend(pc.posteffect, function () {
 
                             for (var i=0; i<len; i++) {
                                 var fx = effects[i];
-                                fx.effect.render(fx.inputTarget, fx.outputTarget);
+                                if (i === len - 1) {
+                                    rect = camera.rect;
+                                }
+
+                                fx.effect.render(fx.inputTarget, fx.outputTarget, rect);
                             }
                         }
                     }
@@ -229,12 +248,54 @@ pc.extend(pc.posteffect, function () {
 
                 this.camera.renderTarget = null;
                 this.camera.camera._depthTarget = null;
+                var rect = this.camera.rect;
+                this.camera.camera.setRect(rect.x, rect.y, rect.z, rect.w);
 
                 // remove the draw command
                 var i = this.context.scene.drawCalls.indexOf(this.command);
                 if (i >= 0) {
                     this.context.scene.drawCalls.splice(i, 1);
                 }
+            }
+        },
+
+        resizeRenderTargets: function () {
+            var rect = this.camera.rect;
+            var desiredWidth = Math.floor(rect.z * this.context.graphicsDevice.width);
+            var desiredHeight = Math.floor(rect.w * this.context.graphicsDevice.height);
+
+            var effects = this.effects;
+
+            if (this.depthTarget && this.depthTarget.width !== desiredWidth && this.depthTarget.height !== desiredHeight) {
+                this._setDepthTarget(this._createOffscreenTarget(true));
+            }
+
+            for (var i=0,len=effects.length; i<len; i++) {
+                var fx = effects[i];
+                if (fx.inputTarget.width !== desiredWidth ||
+                    fx.inputTarget.height !== desiredHeight)  {
+                    fx.inputTarget.destroy();
+                    fx.inputTarget = this._createOffscreenTarget(fx.needsDepthBuffer || i === 0);
+
+                    if (fx.needsDepthBuffer) {
+                        fx.depthMap = this.depthTarget;
+                    }
+
+                    if (i>0) {
+                        effects[i-1].outputTarget = fx.inputTarget;
+                    } else {
+                        this.camera.renderTarget = fx.inputTarget;
+                    }
+                }
+            }
+        },
+
+        onCameraRectChanged: function (name, oldValue, newValue) {
+            if (this.enabled) {
+                // reset the camera node's rect to full screen otherwise
+                // post effect will not work correctly
+                this.camera.camera.setRect(0, 0, 1, 1);
+                this.resizeRenderTargets();
             }
         }
     };

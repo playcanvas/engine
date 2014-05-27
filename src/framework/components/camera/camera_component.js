@@ -154,27 +154,29 @@ pc.extend(pc.fw, function () {
         /**
          * Start rendering the frame for this camera
          * @function
-         * @private
          * @name pc.fw.CameraComponent#frameBegin
          */
         frameBegin: function () {
             var camera = this.camera;
             if (camera) {
                 var device = this.system.context.graphicsDevice;
-                var aspect = device.width / device.height;
+                var rect = this.rect;
+                var aspect = (device.width * rect.z) / (device.height * rect.w);
                 if (aspect !== camera.getAspectRatio()) {
                     camera.setAspectRatio(aspect);
                 }
             }
+
+            this.data.isRendering = true;
         },
 
         /**
          * End rendering the frame for this camera
          * @function
-         * @private
          * @name pc.fw.CameraComponent#frameEnd
          */
         frameEnd: function () {
+            this.data.isRendering = false;
         },
     });
 

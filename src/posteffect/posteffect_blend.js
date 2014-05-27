@@ -44,14 +44,14 @@ pc.extend(pc.posteffect, function () {
     }
 
     Blend.prototype = {
-        render: function (inputTarget, outputTarget) {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uMixRatio").setValue(this.mixRatio);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uBlendMap").setValue(this.blendMap);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     };
 

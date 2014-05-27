@@ -5,7 +5,7 @@ pc.extend(pc.posteffect, function () {
         return ((1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta)));
     }
 
-    function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {        
+    function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {
         // Look up how many samples our gaussian blur effect supports.
 
         // Create temporary arrays for computing our filter settings.
@@ -214,7 +214,7 @@ pc.extend(pc.posteffect, function () {
     }
 
     Bloom.prototype = {
-        render: function (inputTarget, outputTarget) {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
@@ -250,11 +250,11 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uCombineParams").setValue(this.combineParams);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader, rect);
         }
     };
 
     return {
         Bloom: Bloom
-    }; 
+    };
 }());

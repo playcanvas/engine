@@ -24,6 +24,7 @@ pc.extend(pc.fw, function () {
         this.aspectRatio = 16 / 9;
         this.renderTarget = null;
         this.postEffects = null;
+        this.isRendering = false;
     };
     CameraComponentData = pc.inherits(CameraComponentData, pc.fw.ComponentData);
 

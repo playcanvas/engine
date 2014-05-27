@@ -48,14 +48,14 @@ pc.extend(pc.posteffect, function () {
     }
 
     ColorCorrection.prototype = {
-        render: function (inputTarget, outputTarget) {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uPowRGB").setValue(this.powerRgb);
             scope.resolve("uMulRGB").setValue(this.mulRgb);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     };
 

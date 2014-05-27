@@ -22,13 +22,24 @@ pc.posteffect = {
         return vertexBuffer;
     },
 
-    drawFullscreenQuad: function (device, target, vertexBuffer, shader) {
+    drawFullscreenQuad: function (device, target, vertexBuffer, shader, rect) {
         device.setRenderTarget(target);
         device.updateBegin();
         var w = (target !== null) ? target.width : device.width;
         var h = (target !== null) ? target.height : device.height;
-        device.setViewport(0, 0, w, h);
-        device.setScissor(0, 0, w, h);
+        var x = 0;
+        var y = 0;
+
+        if (rect) {
+            x = rect.x * w;
+            y = rect.y * h;
+            w *= rect.z;
+            h *= rect.w;
+        }
+
+        device.setViewport(x, y, w, h);
+        device.setScissor(x, y, w, h);
+
         var oldDepthTest = device.getDepthTest();
         var oldDepthWrite = device.getDepthWrite();
         device.setDepthTest(false);

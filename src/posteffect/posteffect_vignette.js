@@ -49,14 +49,14 @@ pc.extend(pc.posteffect, function () {
     }
 
     Vignette.prototype = {
-        render: function (inputTarget, outputTarget) {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uOffset").setValue(this.offset);
             scope.resolve("uDarkness").setValue(this.darkness);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.vignetteShader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.vignetteShader, rect);
         }
     };
 

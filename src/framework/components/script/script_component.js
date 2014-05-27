@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
     * @component
     * @name pc.fw.ScriptComponent
     * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own javascript files
-    * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/engine/scripting.html">Scripting</a>.
+    * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
     * @param {pc.fw.ScriptComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component

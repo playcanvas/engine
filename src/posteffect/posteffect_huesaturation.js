@@ -70,14 +70,14 @@ pc.extend(pc.posteffect, function () {
     }
 
     HueSaturation.prototype = {
-        render: function (inputTarget, outputTarget) {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uHue").setValue(this.hue);
             scope.resolve("uSaturation").setValue(this.saturation);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     };
 

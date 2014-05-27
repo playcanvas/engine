@@ -118,7 +118,7 @@ pc.extend(pc.posteffect, function () {
     }
 
     Bokeh.prototype = {
-        render: function (inputTarget, outputTarget) {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
@@ -128,7 +128,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uAspect").setValue(this.aspect);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uDepthMap").setValue(this.depthMap);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     };
 

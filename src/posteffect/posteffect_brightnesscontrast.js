@@ -59,14 +59,14 @@ pc.extend(pc.posteffect, function () {
     }
 
     BrightnessContrast.prototype = {
-        render: function (inputTarget, outputTarget) {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uBrightness").setValue(this.brightness);
             scope.resolve("uContrast").setValue(this.contrast);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     };
 
