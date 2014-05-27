@@ -2,7 +2,8 @@ pc.extend(pc.posteffect, function () {
     /**
      * @name pc.posteffect.Blend
      * @class Blends the input render target with another texture
-     * @extends {pc.posteffect.PostEffect}
+     * @constructor Creates new instance of the post effect.
+     * @extends pc.posteffect.PostEffect
      * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
      * @property {pc.gfx.Texture} blendMap The texture with which to blend the input render target with
      * @property {Number} mixRatio The amount of blending between the input and the blendMap. Ranges from 0 to 1

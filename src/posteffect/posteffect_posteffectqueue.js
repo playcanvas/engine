@@ -27,7 +27,7 @@ pc.extend(pc.posteffect, function () {
          /**
          * @private
          * @function
-         * @name pc.fw.PostEffectQueue#_createOffscreenTarget
+         * @name pc.posteffect.PostEffectQueue#_createOffscreenTarget
          * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer
          * @param {Boolean} useDepth Set to true if you want to create a render target with a depth buffer
          * @returns {pc.gfx.RenderTarget} The render target
@@ -69,7 +69,7 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.fw.PostEffectQueue#addEffect
+         * @name pc.posteffect.PostEffectQueue#addEffect
          * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
          * automatically enable the queue.
          * @param {Object} effect The post effect to add to the queue.
@@ -110,7 +110,7 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.fw.PostEffectQueue#removeEffect
+         * @name pc.posteffect.PostEffectQueue#removeEffect
          * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
          * @param {Object} effect The post effect to remove.
          */
@@ -172,7 +172,7 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.fw.PostEffectQueue#destroy
+         * @name pc.posteffect.PostEffectQueue#destroy
          * @description Removes all the effects from the queue and disables it
          */
         destroy: function () {
@@ -194,7 +194,7 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.fw.PostEffectQueue#enable
+         * @name pc.posteffect.PostEffectQueue#enable
          * @description Enables the queue and all of its effects. If there are no effects then the queue will not be enabled.
          */
         enable: function () {
@@ -237,7 +237,7 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.fw.PostEffectQueue#disable
+         * @name pc.posteffect.PostEffectQueue#disable
          * @description Disables the queue and all of its effects.
          */
         disable: function () {

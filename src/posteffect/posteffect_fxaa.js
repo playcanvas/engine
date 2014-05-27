@@ -3,7 +3,8 @@ pc.extend(pc.posteffect, function () {
     /**
      * @name pc.posteffect.Fxaa
      * @class Implements the FXAA post effect by NVIDIA
-     * @extends {pc.posteffect.PostEffect}
+     * @constructor Creates new instance of the post effect.
+     * @extends pc.posteffect.PostEffect
      * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
      */
     function Fxaa(graphicsDevice) {

@@ -12,7 +12,8 @@ pc.extend(pc.posteffect, function () {
     /**
      * @name pc.posteffect.HueSaturation
      * @class Allows hue and saturation adjustment of the input render target.
-     * @extends {pc.posteffect.PostEffect}
+     * @constructor Creates new instance of the post effect.
+     * @extends pc.posteffect.PostEffect
      * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
      * @property {Number} hue Controls the hue. Ranges from -1 to 1 (-1 is 180 degrees in the negative direction, 0 no change, 1 180 degrees in the postitive direction).
      * @property {Number} saturation Controls the saturation. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum saturation).

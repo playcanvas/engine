@@ -3,7 +3,7 @@ pc.extend(pc.posteffect, function () {
     /**
      * @name pc.posteffect.Vignette
      * @class Implements the Vignette post processing effect.
-     * @extends {pc.posteffect.PostEffect}
+     * @extends pc.posteffect.PostEffect
      * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
      * @property {Number} offset Controls the offset of the effect.
      * @property {Number} darkness Controls the darkness of the effect.
