@@ -15,7 +15,7 @@ pc.extend(pc.posteffect, function () {
      * @constructor Creates new instance of the post effect.
      * @extends pc.posteffect.PostEffect
      * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
-     * @property {Number} hue Controls the hue. Ranges from -1 to 1 (-1 is 180 degrees in the negative direction, 0 no change, 1 180 degrees in the postitive direction).
+     * @property {Number} hue Controls the hue. Ranges from -1 to 1 (-1 is 180 degrees in the negative direction, 0 no change, 1 is 180 degrees in the postitive direction).
      * @property {Number} saturation Controls the saturation. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum saturation).
      */
     function HueSaturation(graphicsDevice) {
