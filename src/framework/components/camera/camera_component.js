@@ -22,6 +22,7 @@ pc.extend(pc.fw, function () {
     * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
     * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates. The order of the values is [x, y, width, height]
     * @property {pc.gfx.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
+    * @property {pc.posteffect.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add / remove post effects from the camera.
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
     * effects).
@@ -141,10 +142,12 @@ pc.extend(pc.fw, function () {
         onEnable: function () {
             CameraComponent._super.onEnable.call(this);
             this.system.addCamera(this);
+            this.postEffects.enable();
         },
 
         onDisable: function () {
             CameraComponent._super.onDisable.call(this);
+            this.postEffects.disable();
             this.system.removeCamera(this);
         },
 
@@ -158,11 +161,14 @@ pc.extend(pc.fw, function () {
             var camera = this.camera;
             if (camera) {
                 var device = this.system.context.graphicsDevice;
-                var aspect = device.width / device.height;
+                var rect = this.rect;
+                var aspect = (device.width * rect.z) / (device.height * rect.w);
                 if (aspect !== camera.getAspectRatio()) {
                     camera.setAspectRatio(aspect);
                 }
             }
+
+            this.data.isRendering = true;
         },
 
         /**
@@ -172,6 +178,7 @@ pc.extend(pc.fw, function () {
          * @name pc.fw.CameraComponent#frameEnd
          */
         frameEnd: function () {
+            this.data.isRendering = false;
         },
     });
 

@@ -40,7 +40,7 @@ pc.extend(pc.gfx, function () {
      * @name pc.gfx.Device
      * @class The graphics device manages the underlying graphics context. It is responsible
      * for submitting render state changes and graphics primitives to the hardware. A graphics
-     * device is tied to a specific canvas HTML element. It is valid to have more than one 
+     * device is tied to a specific canvas HTML element. It is valid to have more than one
      * canvas element per page and create a new graphics device against each.
      * @constructor Creates a new graphics device.
      * @param {Object} canvas The canvas to which the graphics device is tied.
@@ -72,7 +72,7 @@ pc.extend(pc.gfx, function () {
             throw new pc.gfx.ContextCreationError();
         }
 
-        // put the rest of the contructor in a function 
+        // put the rest of the contructor in a function
         // so that the constructor remains small. Small constructors
         // are optimized by Firefox due to type inference
         (function() {
@@ -138,15 +138,15 @@ pc.extend(pc.gfx, function () {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
-                flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_COLOR 
+                flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_COLOR
             };
 
             this.glPrimitive = [
-                gl.POINTS, 
-                gl.LINES, 
-                gl.LINE_STRIP, 
-                gl.TRIANGLES, 
-                gl.TRIANGLE_STRIP 
+                gl.POINTS,
+                gl.LINES,
+                gl.LINE_STRIP,
+                gl.TRIANGLES,
+                gl.TRIANGLE_STRIP
             ];
 
             this.glBlendEquation = [
@@ -250,11 +250,11 @@ pc.extend(pc.gfx, function () {
             this.commitFunction = {};
             this.commitFunction[pc.gfx.ShaderInputType.BOOL ] = function (locationId, value) { gl.uniform1i(locationId, value); };
             this.commitFunction[pc.gfx.ShaderInputType.INT  ] = function (locationId, value) { gl.uniform1i(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.FLOAT] = function (locationId, value) { 
-                if (typeof value == "number") 
+            this.commitFunction[pc.gfx.ShaderInputType.FLOAT] = function (locationId, value) {
+                if (typeof value == "number")
                     gl.uniform1f(locationId, value);
                 else
-                    gl.uniform1fv(locationId, value); 
+                    gl.uniform1fv(locationId, value);
                 };
             this.commitFunction[pc.gfx.ShaderInputType.VEC2 ] = function (locationId, value) { gl.uniform2fv(locationId, value); };
             this.commitFunction[pc.gfx.ShaderInputType.VEC3 ] = function (locationId, value) { gl.uniform3fv(locationId, value); };
@@ -324,7 +324,7 @@ pc.extend(pc.gfx, function () {
 
 
         }).call(this);
-        
+
     };
 
     Device.prototype = {
@@ -469,9 +469,9 @@ pc.extend(pc.gfx, function () {
                             gl.enableVertexAttribArray(attribute.locationId);
                             this.enabledAttributes[attribute.locationId] = true;
                         }
-                        gl.vertexAttribPointer(attribute.locationId, 
-                                               element.numComponents, 
-                                               this.glType[element.dataType], 
+                        gl.vertexAttribPointer(attribute.locationId,
+                                               element.numComponents,
+                                               this.glType[element.dataType],
                                                element.normalize,
                                                element.stride,
                                                element.offset);
@@ -547,7 +547,7 @@ pc.extend(pc.gfx, function () {
          * // Clear just the color buffer to red
          * device.clear({
          *     color: [1, 0, 0, 1],
-         *     flags: pc.gfx.CLEARFLAG_COLOR 
+         *     flags: pc.gfx.CLEARFLAG_COLOR
          * });
          *
          * // Clear color buffer to yellow and depth to 1.0
@@ -801,7 +801,7 @@ pc.extend(pc.gfx, function () {
          * @function
          * @name pc.gfx.Device#setVertexBuffer
          * @description Sets the current vertex buffer for a specific stream index on the graphics
-         * device. On subsequent calls to pc.gfx.Device#draw, the specified vertex buffer will be 
+         * device. On subsequent calls to pc.gfx.Device#draw, the specified vertex buffer will be
          * used to provide vertex data for any primitives.
          * @param {pc.gfx.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
          * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
@@ -845,13 +845,13 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
-        
+
          * @function
          * @name pc.gfx.Device#getBoneLimit
          * @description Queries the maximum number of bones that can be referenced by a shader.
          * The shader generators (pc.gfx.programlib) use this number to specify the matrix array
-         * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of 
-         * available uniform vectors available after subtracting the number taken by a typical 
+         * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of
+         * available uniform vectors available after subtracting the number taken by a typical
          * heavyweight shader. If a different number is required, it can be tuned via
          * pc.gfx.Device#setBoneLimit.
          * @returns {Number} The maximum number of bones that can be supported by the host hardware.
@@ -953,5 +953,5 @@ pc.extend(pc.gfx, function () {
         UnsupportedBrowserError: UnsupportedBrowserError,
         ContextCreationError: ContextCreationError,
         Device: Device
-    }; 
+    };
 }());

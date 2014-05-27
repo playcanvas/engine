@@ -1,8 +1,6 @@
 pc.extend(pc.posteffect, function () {
 
     function Sepia(graphicsDevice) {
-        this.device = graphicsDevice;
-
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -39,22 +37,22 @@ pc.extend(pc.posteffect, function () {
             ].join("\n")
         });
 
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
-
         // Uniforms
         this.amount = 1;
     }
 
-    Sepia.prototype = {
-        render: function (inputTarget, outputTarget) {
+    Sepia = pc.inherits(Sepia, pc.posteffect.PostEffect);
+
+    Sepia.prototype = pc.extend(Sepia.prototype, {
+        render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uAmount").setValue(this.amount);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader);
+            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
-    };
+    });
 
     return {
         Sepia: Sepia

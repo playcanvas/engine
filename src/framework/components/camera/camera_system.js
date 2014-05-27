@@ -160,6 +160,8 @@ pc.extend(pc.fw, function () {
 
             data.camera = new pc.scene.CameraNode();
 
+            data.postEffects = new pc.posteffect.PostEffectQueue(this.context, component);
+
             if (this.context.designer && this.displayInTools(component.entity)) {
                 var material = new pc.scene.BasicMaterial();
                 material.color = new pc.Color(1, 1, 0, 1);
@@ -210,7 +212,8 @@ pc.extend(pc.fw, function () {
                 'priority',
                 'clearColorBuffer',
                 'clearDepthBuffer',
-                'rect'
+                'rect',
+                'postEffects'
             ];
 
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
