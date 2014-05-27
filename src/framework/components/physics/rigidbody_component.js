@@ -589,6 +589,10 @@ pc.extend(pc.fw, function () {
 
         onEnable: function () {
             RigidBodyComponent._super.onEnable.call(this);
+            if (!this.body) {
+                this.createBody();
+            }
+
             this.enableSimulation();
         },
 

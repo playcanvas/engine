@@ -119,7 +119,7 @@ pc.extend(pc.fw, function () {
         this.contacts = contacts;
     }
 
-    // Events Documentation   
+    // Events Documentation
     /**
     * @event
     * @name pc.fw.RigidBodyComponentSystem#contact
@@ -139,7 +139,7 @@ pc.extend(pc.fw, function () {
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
         context.systems.add(this.id, this);
-        
+
         this.ComponentType = pc.fw.RigidBodyComponent;
         this.DataType = pc.fw.RigidBodyComponentData;
 
@@ -261,7 +261,7 @@ pc.extend(pc.fw, function () {
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
-        
+
         // // Create the Ammo physics world
         // if (typeof(Ammo) !== 'undefined') {
         //     var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -272,7 +272,7 @@ pc.extend(pc.fw, function () {
 
         //     this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
         //     this.dynamicsWorld.setGravity(this._ammoGravity);
-            
+
         //     // Only bind 'update' if Ammo is loaded
         //     pc.fw.ComponentSystem.on('update', this.onUpdate, this);
 
@@ -286,7 +286,7 @@ pc.extend(pc.fw, function () {
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
     };
     RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.fw.ComponentSystem);
-    
+
     pc.extend(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {
             // Create the Ammo physics world
@@ -299,7 +299,7 @@ pc.extend(pc.fw, function () {
 
                 this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
                 this.dynamicsWorld.setGravity(this._ammoGravity);
-                
+
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
                 ammoRayEnd = new Ammo.btVector3();
@@ -325,8 +325,6 @@ pc.extend(pc.fw, function () {
 
             properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-
-            component.createBody();
         },
 
         cloneComponent: function (entity, clone) {
@@ -348,10 +346,10 @@ pc.extend(pc.fw, function () {
 
         onRemove: function (entity, data) {
             if (data.body) {
-                this.removeBody(data.body);    
+                this.removeBody(data.body);
                 Ammo.destroy(data.body);
             }
-            
+
             data.body = null;
         },
 
@@ -405,7 +403,7 @@ pc.extend(pc.fw, function () {
         /**
         * @function
         * @name pc.fw.RigidBodyComponentSystem#raycastFirst
-        * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end, 
+        * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
         * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
         * @param {pc.Vec3} start The world space point where the ray starts
         * @param {pc.Vec3} end The world space point where the ray ends
@@ -426,7 +424,7 @@ pc.extend(pc.fw, function () {
 
                 if (body) {
                     callback(new RaycastResult(
-                                    body.entity, 
+                                    body.entity,
                                     new pc.Vec3(point.x(), point.y(), point.z()),
                                     new pc.Vec3(normal.x(), normal.y(), normal.z())
                                 )
@@ -443,10 +441,10 @@ pc.extend(pc.fw, function () {
         * @name pc.fw.RigidBodyComponentSystem#_storeCollision
         * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision
         * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
-        * @param {pc.fw.Entity} entity The entity 
+        * @param {pc.fw.Entity} entity The entity
         * @param {pc.fw.Entity} other The entity that collides with the first entity
         */
-        _storeCollision: function (entity, other) {   
+        _storeCollision: function (entity, other) {
             var isNewCollision = false;
             var guid = entity.getGuid();
 
@@ -456,10 +454,10 @@ pc.extend(pc.fw, function () {
                 collisions[guid].others.push(other);
                 isNewCollision = true;
             }
-            
+
             frameCollisions[guid] = frameCollisions[guid] || {others: [], entity: entity};
             frameCollisions[guid].others.push(other);
-            
+
             return isNewCollision;
         },
 
@@ -469,7 +467,7 @@ pc.extend(pc.fw, function () {
         * @name pc.fw.RigidBodyComponentSystem#_handleEntityCollision
         * @description Fires a contact event if there is a collison between the two entities and a collisionstart event
         * if it is a new coliision
-        * @param {pc.fw.Entity} entity The entity 
+        * @param {pc.fw.Entity} entity The entity
         * @param {pc.fw.Entity} other The entity that collides with the first entity
         * @param {pc.fw.ContactPoint[]} contactPoints An array of contacts points between the two entities
         */
@@ -546,13 +544,13 @@ pc.extend(pc.fw, function () {
                                 }
                             }
                         }
-                    }  
+                    }
 
                     if (others.length === 0) {
                         delete collisions[guid];
-                    }          
+                    }
                 }
-            } 
+            }
         },
 
         _getCollisionFlags: function (entity, other) {
@@ -570,7 +568,7 @@ pc.extend(pc.fw, function () {
             var store = this.store;
             var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.type !== pc.fw.RIGIDBODY_TYPE_STATIC;
             var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.type !== pc.fw.RIGIDBODY_TYPE_STATIC;
-           
+
             // find flags cell in collision table
             var row = 0;
             var col = 0;
@@ -590,7 +588,7 @@ pc.extend(pc.fw, function () {
             var flags = collision_table[row][col];
 
             if (flags) {
-                var collision = entity.collision;            
+                var collision = entity.collision;
 
                 // turn off flags that do not correspond to event listeners
                 if (!this.hasEvent(EVENT_CONTACT)) {
@@ -624,7 +622,7 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @name pc.fw.RigidBodyComponentSystem#raycast
-        * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end, 
+        * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end,
         * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
         * @param {pc.Vec3} start The world space point where the ray starts
         * @param {pc.Vec3} end The world space point where the ray ends
@@ -643,7 +641,7 @@ pc.extend(pc.fw, function () {
 
         //         if (body) {
         //             callback(new RaycastResult(
-        //                             body.entity, 
+        //                             body.entity,
         //                             new pc.Vec3(point.x(), point.y(), point.z()),
         //                             new pc.Vec3(normal.x(), normal.y(), normal.z())
         //                         )
@@ -671,7 +669,7 @@ pc.extend(pc.fw, function () {
                             entity.rigidbody.syncBodyToEntity();
                         } else if (componentData.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
                             entity.rigidbody.updateKinematic(dt);
-                        } 
+                        }
                     }
 
                 }
@@ -681,7 +679,7 @@ pc.extend(pc.fw, function () {
             var dispatcher = this.dynamicsWorld.getDispatcher();
             var numManifolds = dispatcher.getNumManifolds();
             var i, j;
-            
+
             frameCollisions = {};
 
             // loop through the all contacts and fire events
@@ -706,7 +704,7 @@ pc.extend(pc.fw, function () {
                 if (collisionFlags0 || collisionFlags1) {
                     var numContacts = manifold.getNumContacts();
 
-                    if (numContacts > 0) {                   
+                    if (numContacts > 0) {
                         var cachedContactPoint, cachedContactResult;
                         var useContacts0 = collisionFlags0 & FLAG_COLLISION_START || collisionFlags0 & FLAG_CONTACT;
                         var useContacts1 = collisionFlags1 & FLAG_COLLISION_START || collisionFlags1 & FLAG_CONTACT;
@@ -731,31 +729,31 @@ pc.extend(pc.fw, function () {
                             }
                         }
 
-                        this._handleEntityCollision(e0, e1, contacts0, collisionFlags0);                        
+                        this._handleEntityCollision(e0, e1, contacts0, collisionFlags0);
                         this._handleEntityCollision(e1, e0, contacts1, collisionFlags1);
                     }
                 }
-            }                
+            }
 
             // check for collisions that no longer exist and fire events
-            this._cleanOldCollisions();         
+            this._cleanOldCollisions();
         }
     });
 
     return {
-        /** 
+        /**
         * @enum pc.fw.RIGIDBODY_TYPE
         * @name pc.fw.RIGIDBODY_TYPE_STATIC
         * @description Static rigid bodies have infinite mass and can never move. You cannot apply forces or impulses to them or set their velocity.
         */
         RIGIDBODY_TYPE_STATIC: 'static',
-        /** 
+        /**
         * @enum pc.fw.RIGIDBODY_TYPE
         * @name pc.fw.RIGIDBODY_TYPE_DYNAMIC
         * @description Dynamic rigid bodies are simulated according to the forces acted on them. They have a positive, non-zero mass.
         */
         RIGIDBODY_TYPE_DYNAMIC: 'dynamic',
-        /** 
+        /**
         * @enum pc.fw.RIGIDBODY_TYPE
         * @name pc.fw.RIGIDBODY_TYPE_KINEMATIC
         * @description Kinematic rigid bodies are objects with infinite mass but can be moved by directly setting their velocity. You cannot apply forces or impulses to them.
@@ -773,7 +771,7 @@ pc.extend(pc.fw, function () {
         RIGIDBODY_WANTS_DEACTIVATION: 3,
         RIGIDBODY_DISABLE_DEACTIVATION: 4,
         RIGIDBODY_DISABLE_SIMULATION: 5,
- 
+
         RigidBodyComponentSystem: RigidBodyComponentSystem
     };
 }());
