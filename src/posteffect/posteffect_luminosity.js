@@ -1,5 +1,11 @@
 pc.extend(pc.posteffect, function () {
 
+    /**
+     * @name pc.posteffect.Luminosity
+     * @class Outputs the luminosity of the input render target.
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     */
     function Luminosity(graphicsDevice) {
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {

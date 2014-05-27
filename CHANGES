@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.1
+--------
+* Documented post effects.
+
+--------
 v0.147.0
 --------
 * When an entity is destroyed it will first disable all of its components.
