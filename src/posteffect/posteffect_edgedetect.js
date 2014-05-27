@@ -1,5 +1,11 @@
 pc.extend(pc.posteffect, function () {
 
+    /**
+     * @name pc.posteffect.EdgeDetect
+     * @class Edge Detection post effect using Sobel filter
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     */
     function EdgeDetect(graphicsDevice) {
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {

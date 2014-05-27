@@ -6,6 +6,13 @@
 
 pc.extend(pc.posteffect, function () {
 
+    /**
+     * @name pc.posteffect.HorizontalTiltShift
+     * @class Simple fake tilt-shift effect, modulating two pass Gaussian blur by vertical position
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @property {Number} focus Controls where the "focused" horizontal line lies
+     */
     function VerticalTiltShift(graphicsDevice) {
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {

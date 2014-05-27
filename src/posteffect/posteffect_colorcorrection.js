@@ -5,6 +5,14 @@
 
 pc.extend(pc.posteffect, function () {
 
+    /**
+     * @name pc.posteffect.ColorCorrection
+     * @class Allows tuning of the colors of the input render target.
+     * @extends {pc.posteffect.PostEffect}
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @property {Array} powerRgb The r,g,b components of the input render target will be raised to the power contained in the respective values of powerRgb
+     * @property {Array} mulRgb The r,g,b components of the input render target will be multiplied by the value contained in the respective values of mulRgb
+     */
     function ColorCorrection(graphicsDevice) {
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
