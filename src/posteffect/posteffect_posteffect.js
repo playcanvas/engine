@@ -1,6 +1,19 @@
+/**
+ * @name pc.posteffect
+ * @namespace Post Effects API
+ * @description Functions for implementing post effects
+ */
 pc.posteffect = {};
 
 pc.extend(pc.posteffect, function () {
+
+    /**
+     * @name pc.posteffect.PostEffect
+     * @class Base class for all post effects. Post effects take a a render target as input
+     * apply effects to it and then render the result to an output render target or the screen
+     * if no output is specified.
+     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     */
     var PostEffect = function (graphicsDevice) {
         this.device = graphicsDevice;
         this.shader = null;
@@ -9,6 +22,14 @@ pc.extend(pc.posteffect, function () {
     };
 
     PostEffect.prototype = {
+        /**
+        * @name pc.posteffect.PostEffect#render
+        * @description Render the post effect using the specified inputTarget
+        * to the specified outputTarget.
+        * @param {pc.gfx.RenderTarget} inputTarget The input render target
+        * @param {pc.gfx.RenderTarget} outputTarget The output render target. If null then this will be the screen.
+        * @param {pc.Vec4} rect (Optional) The rect of the current camera. If not specified then it will default to [0,0,1,1]
+        */
         render: function (inputTarget, outputTarget, rect) {
         }
     };
