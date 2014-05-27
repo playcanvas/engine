@@ -154,6 +154,7 @@ pc.extend(pc.fw, function () {
         /**
          * Start rendering the frame for this camera
          * @function
+         * @private
          * @name pc.fw.CameraComponent#frameBegin
          */
         frameBegin: function () {
@@ -173,6 +174,7 @@ pc.extend(pc.fw, function () {
         /**
          * End rendering the frame for this camera
          * @function
+         * @private
          * @name pc.fw.CameraComponent#frameEnd
          */
         frameEnd: function () {
