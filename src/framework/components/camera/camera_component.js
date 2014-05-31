@@ -137,6 +137,7 @@ pc.extend(pc.fw, function () {
 
         onSetRect: function (name, oldValue, newValue) {
             this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
+            this._resetAspectRatio();
         },
 
         onEnable: function () {
@@ -151,13 +152,7 @@ pc.extend(pc.fw, function () {
             this.system.removeCamera(this);
         },
 
-        /**
-         * Start rendering the frame for this camera
-         * @function
-         * @private
-         * @name pc.fw.CameraComponent#frameBegin
-         */
-        frameBegin: function () {
+        _resetAspectRatio: function () {
             var camera = this.camera;
             if (camera) {
                 var device = this.system.context.graphicsDevice;
@@ -167,7 +162,16 @@ pc.extend(pc.fw, function () {
                     camera.setAspectRatio(aspect);
                 }
             }
+        },
 
+        /**
+         * Start rendering the frame for this camera
+         * @function
+         * @private
+         * @name pc.fw.CameraComponent#frameBegin
+         */
+        frameBegin: function () {
+            this._resetAspectRatio();
             this.data.isRendering = true;
         },
 

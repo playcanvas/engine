@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.3
+--------
+* Improve float packing algorithm (used for shadow mapping).
+* [FIX] postEffects is initialized before enabled
+
+--------
 v0.147.2
 --------
 * [FIX] Frame buffer clearing now works if flags are zero.
