@@ -198,6 +198,7 @@ pc.extend(pc.fw, function () {
             }
 
             properties = [
+                'postEffects',
                 'enabled',
                 'model',
                 'camera',
@@ -212,8 +213,7 @@ pc.extend(pc.fw, function () {
                 'priority',
                 'clearColorBuffer',
                 'clearDepthBuffer',
-                'rect',
-                'postEffects'
+                'rect'
             ];
 
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
