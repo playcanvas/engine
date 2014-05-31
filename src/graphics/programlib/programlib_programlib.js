@@ -70,13 +70,6 @@ pc.gfx.programlib = {
                 code += 'precision ' + device.precision + ' float;\n\n';
                 break;
 
-            case 'fs_depth_encode_rgba':
-                // Using a bit-shift of vec4(256.0*256.0*256.0, 256.0*256.0, 256.0, 1.0)
-                // and a bit-mask of    vec4(0.0, 1.0/256.0, 1.0/256.0, 1.0/256.0)
-                code += '    vec4 packedDepth = fract((gl_FragCoord.z * vec4(1.67772e+07, 65536.0, 256.0, 1.0)));\n';
-                code += '    gl_FragData[0] = (packedDepth - (packedDepth.xxyz * vec4(0.0, 0.00390625, 0.00390625, 0.00390625)));\n';
-                break;
-
             case 'fs_height_map_funcs':
                 code += 'vec3 perturb_normal( vec3 N, vec3 p, vec2 uv )\n';
                 code += '{\n';
