@@ -539,6 +539,13 @@ pc.gfx.programlib.phong = {
         code += "\n"; // End of uniform declarations
 
         if (numShadowLights > 0) {
+            code += 'float unpackFloat(vec4 rgbaDepth)\n';
+            code += '{\n';
+            code += '    const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);\n';
+            code += '    float depth = dot(rgbaDepth, bitShift);\n';
+            code += '    return depth;\n';
+            code += '}\n\n';
+
             code += "float calculateShadowFactor(const in vec4 sc, const in vec3 sp, const in sampler2D shadowMap)\n";
             code += "{\n";
             code += "    float depth;\n";
@@ -605,46 +612,34 @@ pc.gfx.programlib.phong = {
                 code += "        mat3 shadowKernel;\n",
                 code += "        mat3 depthKernel;\n",
 
-                // Vector equivalent to vec4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1.0)";
-                code += "        const vec4 bit_shift = vec4(5.96046e-08, 1.52588e-05, 0.00390625, 1.0);\n";
+                code += "        depthKernel[0][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, dy0)));\n";
+                code += "        depthKernel[0][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, 0.0)));\n";
+                code += "        depthKernel[0][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, dy1)));\n";
+                code += "        depthKernel[1][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, dy0)));\n";
+                code += "        depthKernel[1][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy));\n";
+                code += "        depthKernel[1][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, dy1)));\n";
+                code += "        depthKernel[2][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dy0)));\n";
+                code += "        depthKernel[2][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)));\n";
+                code += "        depthKernel[2][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dy1)));\n";
 
-                code += "        depthKernel[0][0] = dot(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, dy0)), bit_shift);\n";
-                code += "        shadowKernel[0][0] = (depthKernel[0][0] < shadowCoord.z) ? 0.25 : 0.0;\n";
-
-                code += "        depthKernel[0][1] = dot(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, 0.0)), bit_shift);\n";
-                code += "        shadowKernel[0][1] = (depthKernel[0][1] < shadowCoord.z) ? 0.25 : 0.0;\n";
-
-                code += "        depthKernel[0][2] = dot(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, dy1)), bit_shift);\n";
-                code += "        shadowKernel[0][2] = (depthKernel[0][2] < shadowCoord.z) ? 0.25 : 0.0;\n";
-
-                code += "        depthKernel[1][0] = dot(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, dy0)), bit_shift);\n";
-                code += "        shadowKernel[1][0] = (depthKernel[1][0] < shadowCoord.z) ? 0.25 : 0.0;\n";
-
-                code += "        depthKernel[1][1] = dot(texture2D(shadowMap, shadowCoord.xy), bit_shift);\n";
-                code += "        shadowKernel[1][1] = (depthKernel[1][1] < shadowCoord.z) ? 0.25 : 0.0;\n";
-
-                code += "        depthKernel[1][2] = dot(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, dy1)), bit_shift);\n";
-                code += "        shadowKernel[1][2] = (depthKernel[1][2] < shadowCoord.z) ? 0.25 : 0.0;\n";
-
-                code += "        depthKernel[2][0] = dot(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dy0)), bit_shift);\n";
-                code += "        shadowKernel[2][0] = (depthKernel[2][0] < shadowCoord.z) ? 0.25 : 0.0;\n";
-
-                code += "        depthKernel[2][1] = dot(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)), bit_shift);\n";
-                code += "        shadowKernel[2][1] = (depthKernel[2][1] < shadowCoord.z) ? 0.25 : 0.0;\n";
-
-                code += "        depthKernel[2][2] = dot(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dy1)), bit_shift);\n";
-                code += "        shadowKernel[2][2] = (depthKernel[2][2] < shadowCoord.z) ? 0.25 : 0.0;\n";
+                code += "        vec3 shadowZ = vec3(shadowCoord.z);\n";
+                code += "        shadowKernel[0] = vec3(lessThan(depthKernel[0], shadowZ));\n";
+                code += "        shadowKernel[0] *= vec3(0.25);\n";
+                code += "        shadowKernel[1] = vec3(lessThan(depthKernel[1], shadowZ));\n";
+                code += "        shadowKernel[1] *= vec3(0.25);\n";
+                code += "        shadowKernel[2] = vec3(lessThan(depthKernel[2], shadowZ));\n";
+                code += "        shadowKernel[2] *= vec3(0.25);\n";
 
                 code += "        vec2 fractionalCoord = 1.0 - fract( shadowCoord.xy * sp.xy );\n";
 
-                code += "        shadowKernel[0] = mix( shadowKernel[1], shadowKernel[0], fractionalCoord.x );\n";
-                code += "        shadowKernel[1] = mix( shadowKernel[2], shadowKernel[1], fractionalCoord.x );\n";
+                code += "        shadowKernel[0] = mix(shadowKernel[1], shadowKernel[0], fractionalCoord.x);\n";
+                code += "        shadowKernel[1] = mix(shadowKernel[2], shadowKernel[1], fractionalCoord.x);\n";
 
                 code += "        vec4 shadowValues;\n";
-                code += "        shadowValues.x = mix( shadowKernel[0][1], shadowKernel[0][0], fractionalCoord.y );\n";
-                code += "        shadowValues.y = mix( shadowKernel[0][2], shadowKernel[0][1], fractionalCoord.y );\n";
-                code += "        shadowValues.z = mix( shadowKernel[1][1], shadowKernel[1][0], fractionalCoord.y );\n";
-                code += "        shadowValues.w = mix( shadowKernel[1][2], shadowKernel[1][1], fractionalCoord.y );\n";
+                code += "        shadowValues.x = mix(shadowKernel[0][1], shadowKernel[0][0], fractionalCoord.y);\n";
+                code += "        shadowValues.y = mix(shadowKernel[0][2], shadowKernel[0][1], fractionalCoord.y);\n";
+                code += "        shadowValues.z = mix(shadowKernel[1][1], shadowKernel[1][0], fractionalCoord.y);\n";
+                code += "        shadowValues.w = mix(shadowKernel[1][2], shadowKernel[1][1], fractionalCoord.y);\n";
 
                 code += "        shadowAccum = 1.0 - dot( shadowValues, vec4( 1.0 ) );\n";
 

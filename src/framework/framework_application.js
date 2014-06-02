@@ -380,14 +380,14 @@ pc.extend(pc.fw, function () {
         * In AUTO mode, the resolution is change to match the size of the canvas when the canvas resizes
         * In FIXED mode, the resolution remains until another call to setCanvasResolution()
         * @param {pc.fw.ResolutionMode} mode The mode to use when setting the resolution
-        * @param {Number} [width] The horizontal resolution, only used in FIXED mode
-        * @param {Number} [height] The vertical resolution, only used in FIXED mode
+        * @param {Number} [width] The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
+        * @param {Number} [height] The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
         */
         setCanvasResolution: function (mode, width, height) {
             this.resolutionMode = mode;
 
-            // In AUTO mode the resolution is the same as the canvas size
-            if (mode === pc.fw.ResolutionMode.AUTO) {
+            // In AUTO mode the resolution is the same as the canvas size, unless specified
+            if (mode === pc.fw.ResolutionMode.AUTO && (width === undefined)) {
                 width = this.canvas.clientWidth;
                 height = this.canvas.clientHeight;
             }
@@ -524,14 +524,9 @@ pc.extend(pc.fw, function () {
                     if (r > winR) {
                         width = windowWidth;
                         height = width / r ;
-
-                        //var marginTop = (windowHeight - height) / 2;
-                        //this.container.style.margin = marginTop + "px auto";
                     } else {
                         height = windowHeight;
                         width = height * r;
-
-                        //this.container.style.margin = "auto auto";
                     }
                 } else if (this.fillMode === pc.fw.FillMode.FILL_WINDOW) {
                     width = windowWidth;
