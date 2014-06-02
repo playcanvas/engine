@@ -1,12 +1,4 @@
-/**
- * Shader author: tapio / http://tapio.github.com/
- *
- * Hue and saturation adjustment
- * https://github.com/evanw/glfx.js
- * hue: -1 to 1 (-1 is 180 degrees in the negative direction, 0 is no change, etc.
- * saturation: -1 to 1 (-1 is solid gray, 0 is no change, and 1 is maximum saturation)
- */
-
+//--------------- POST EFFECT DEFINITION ------------------------//
 pc.extend(pc.posteffect, function () {
 
     /**
@@ -18,7 +10,8 @@ pc.extend(pc.posteffect, function () {
      * @property {Number} hue Controls the hue. Ranges from -1 to 1 (-1 is 180 degrees in the negative direction, 0 no change, 1 is 180 degrees in the postitive direction).
      * @property {Number} saturation Controls the saturation. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum saturation).
      */
-    function HueSaturation(graphicsDevice) {
+    var HueSaturation = function (graphicsDevice) {
+        // Shader author: tapio / http://tapio.github.com/
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -92,3 +85,48 @@ pc.extend(pc.posteffect, function () {
         HueSaturation: HueSaturation
     };
 }());
+
+//--------------- SCRIPT ATTRIBUTES ------------------------//
+pc.script.attribute('hue', 'number', 0, {
+    min: -1,
+    max: 1,
+    step: 0.05,
+    decimalPrecision: 5
+});
+
+pc.script.attribute('saturation', 'number', 0, {
+    min: -1,
+    max: 1,
+    step: 0.05,
+    decimalPrecision: 5
+});
+
+//--------------- SCRIPT DEFINITION------------------------//
+pc.script.create('huesaturation', function (context) {
+    var Huesaturation = function (entity) {
+        this.entity = entity;
+        this.effect = new pc.posteffect.HueSaturation(context.graphicsDevice);
+    };
+
+    Huesaturation.prototype = {
+        initialize: function () {
+            this.effect.hue = this.hue;
+            this.effect.saturation = this.saturation;
+            this.on('set', this.onAttributeChanged, this);
+        },
+
+        onAttributeChanged: function (name, oldValue, newValue) {
+            this.effect[name] = newValue;
+        },
+
+        onEnable: function () {
+            this.entity.camera.postEffects.addEffect(this.effect);
+        },
+
+        onDisable: function () {
+            this.entity.camera.postEffects.removeEffect(this.effect);
+        }
+    };
+
+    return Huesaturation;
+});
