@@ -1,8 +1,8 @@
 pc.script.attribute('speed', 'number', 10);
 pc.script.attribute('fastSpeed', 'number', 20);
 
-pc.script.create('camera_firstperson', function (context) {
-    var Camera_firstperson = function (entity) {
+pc.script.create('camera_fly', function (context) {
+    var Camera_fly = function (entity) {
         this.entity = entity;
 
         // Camera euler angle rotation around x and y axes
@@ -18,7 +18,7 @@ pc.script.create('camera_firstperson', function (context) {
 
     };
 
-    Camera_firstperson.prototype = {
+    Camera_fly.prototype = {
         update: function (dt) {
             // Update the camera's orientation
             this.entity.setLocalEulerAngles(this.ex, this.ey, 0);
@@ -57,5 +57,5 @@ pc.script.create('camera_firstperson', function (context) {
         },
     };
 
-   return Camera_firstperson;
+   return Camera_fly;
 });
