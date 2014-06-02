@@ -30,6 +30,8 @@ pc.extend(pc.posteffect, function () {
                 "uniform sampler2D uColorBuffer;",
                 "varying vec2 vUv0;",
                 "uniform vec2 uResolution;",
+                "uniform float uIntensity;",
+                "uniform vec4 uColor;",
                 "",
                 "mat3 G[2];",
                 "",
@@ -62,13 +64,15 @@ pc.extend(pc.posteffect, function () {
                 "        cnv[i] = dp3 * dp3; ",
                 "    }",
                 "",
-                "    gl_FragColor = vec4(0.5 * sqrt(cnv[0]*cnv[0]+cnv[1]*cnv[1]));",
+                "    gl_FragColor = uIntensity * uColor * vec4(sqrt(cnv[0]*cnv[0]+cnv[1]*cnv[1]));",
                 "}"
             ].join("\n")
         });
 
         // Uniforms
         this.resolution = new Float32Array(2);
+        this.intensity = 1.0;
+        this.color = new pc.Color(1,1,1,1);
     }
 
     EdgeDetect = pc.inherits(EdgeDetect, pc.posteffect.PostEffect);
@@ -82,6 +86,8 @@ pc.extend(pc.posteffect, function () {
             this.resolution[1] = 1 / inputTarget.height;
             scope.resolve("uResolution").setValue(this.resolution);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
+            scope.resolve("uColor").setValue(this.color.data);
+            scope.resolve("uIntensity").setValue(this.intensity);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
@@ -91,6 +97,13 @@ pc.extend(pc.posteffect, function () {
     };
 }());
 
+//----------------------------- SCRIPT ATTRIBUTES -----------------------------//
+pc.script.attribute('intensity', 'number', 1, {
+    min: 0,
+    max: 2
+});
+
+pc.script.attribute('color', 'rgba', [0.5, 0.5, 0.5, 1]);
 
 //----------------------------- SCRIPT DEFINITION -----------------------------//
 pc.script.create('edgedetect', function (context) {
@@ -100,6 +113,16 @@ pc.script.create('edgedetect', function (context) {
     };
 
     Edgedetect.prototype = {
+        initialize: function () {
+            this.on('set', this.onAttributeChanged, this);
+            this.effect.intensity = this.intensity;
+            this.effect.color = this.color;
+        },
+
+        onAttributeChanged: function (name, oldValue, newValue) {
+            this.effect[name] = newValue;
+        },
+
         onEnable: function () {
             this.entity.camera.postEffects.addEffect(this.effect);
         },
