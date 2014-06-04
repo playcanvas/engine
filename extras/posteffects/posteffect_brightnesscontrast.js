@@ -1,12 +1,4 @@
-/**
- * Shader author: tapio / http://tapio.github.com/
- *
- * Brightness and contrast adjustment
- * https://github.com/evanw/glfx.js
- * brightness: -1 to 1 (-1 is solid black, 0 is no change, and 1 is solid white)
- * contrast: -1 to 1 (-1 is solid gray, 0 is no change, and 1 is maximum contrast)
- */
-
+//--------------------------------- POST EFFECT DEFINITION -----------------------------------//
 pc.extend(pc.posteffect, function () {
 
     /**
@@ -18,7 +10,8 @@ pc.extend(pc.posteffect, function () {
      * @property {Number} brightness Controls the brightness of the render target. Ranges from -1 to 1 (-1 is solid black, 0 no change, 1 solid white)
      * @property {Number} contrast Controls the contrast of the render target. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum contrast)
      */
-    function BrightnessContrast(graphicsDevice) {
+    var BrightnessContrast = function (graphicsDevice) {
+        // Shader author: tapio / http://tapio.github.com/
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -81,3 +74,51 @@ pc.extend(pc.posteffect, function () {
         BrightnessContrast: BrightnessContrast
     };
 }());
+
+//--------------------------------- SCRIPT ATTRIBUTES DEFINITION -----------------------------------//
+
+pc.script.attribute('brightness', 'number', 0, {
+    min: -1,
+    max: 1,
+    step: 0.05,
+    decimalPrecision: 5
+});
+
+pc.script.attribute('contrast', 'number', 0, {
+    min: -1,
+    max: 1,
+    step: 0.05,
+    decimalPrecision: 5
+});
+
+//--------------------------------- SCRIPT DEFINITION -----------------------------------//
+
+pc.script.create('brightnesscontrast', function (context) {
+    var Brightnesscontrast = function (entity) {
+        this.entity = entity;
+        this.effect = new pc.posteffect.BrightnessContrast(context.graphicsDevice);
+    };
+
+    Brightnesscontrast.prototype = {
+        initialize:  function () {
+            this.on('set', this.onAttributeChanged, this);
+
+            this.effect.brightness = this.brightness;
+            this.effect.contrast = this.contrast;
+        },
+
+        onAttributeChanged: function (name, oldValue, newValue) {
+            this.effect[name] = newValue;
+        },
+
+        onEnable: function () {
+            this.entity.camera.postEffects.addEffect(this.effect);
+        },
+
+        onDisable: function () {
+            this.entity.camera.postEffects.removeEffect(this.effect);
+        }
+    };
+
+    return Brightnesscontrast;
+});

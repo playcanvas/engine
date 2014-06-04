@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../build/output/playcanvas-latest.js"></script>
+    <style>
+        html, body {
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+        }
+        canvas: {
+            display: block;
+        }
+        .overlay {
+            font-family: helvetica, arial, sans-serif;
+            position: absolute;
+            left: 0px;
+            bottom: 0px;
+            color: white;
+            user-select: none;
+        }
+        .overlay img {
+            vertical-align: middle;
+        }
+        .small {
+            font-size: 0.8em;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- Instructions -->
+    <div class="overlay">
+        <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
+        <span>Animation example</span>
+    </div>
+
+    <script>
+        function createMaterial(colors) {
+            var material = new pc.scene.PhongMaterial();
+            for (var param in colors) {
+                material[param] = colors[param];
+            }
+            material.update();
+            return material;
+        }
+    </script>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var application = new pc.fw.Application(canvas);
+        application.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
+        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+
+        var entity;
+
+        // Create an Entity with a camera component
+        var cameraEntity = new pc.fw.Entity();
+        application.context.systems.camera.addComponent(cameraEntity, {
+            clearColor: new pc.Color(0,0,0)
+        });
+        cameraEntity.rotateLocal(0, 0, 0);
+        cameraEntity.translateLocal(0, 0.6, 1.8);
+
+        // Create a directional light
+        var lightDirEntity = new pc.fw.Entity();
+        application.context.systems.light.addComponent(lightDirEntity, {
+            type: "directional",
+            color: new pc.Color(1, .4, 0),
+            intensity: 1
+        });
+        lightDirEntity.setLocalEulerAngles(-80, 70, 0);
+
+        // Create a spot light
+        var lightEntity = new pc.fw.Entity();
+        application.context.systems.light.addComponent(lightEntity, {
+            type: "spot",
+            color: new pc.Color(.6, .85, 1),
+            outerConeAngle: 45,
+            innerConeAngle: 40,
+            range: 20,
+            intensity: 2,
+            castShadows: true,
+            shadowResolution: 2048
+        });
+        lightEntity.rotateLocal(45, 0, 0);
+        lightEntity.translateLocal(0,10,0);
+
+        // Add Entities into the scene hierarchy
+        application.context.root.addChild(cameraEntity);
+        application.context.root.addChild(lightDirEntity);
+        application.context.root.addChild(lightEntity);
+
+        // Load model and animation assets
+        var model = null;
+        var runAnim = null;
+        var idleAnim = null;
+
+        application.context.assets.loadFromUrl("../assets/Playbot/Playbot.json", "model").then(function (resource) {
+            model = resource.asset;
+            return application.context.assets.loadFromUrl("../assets/Playbot/Playbot_run.json", "animation");
+        }).then(function (resource) {
+            runAnim = resource.asset;
+            return application.context.assets.loadFromUrl("../assets/Playbot/Playbot_idle.json", "animation");
+        }).then(function (resource) {
+            idleAnim = resource.asset;
+            entity = new pc.fw.Entity();
+            // add model component to entity
+            application.context.systems.model.addComponent(entity, {
+                type: "asset",
+                asset: model,
+                castShadows: true
+            });
+            // add animation component to entity
+            application.context.systems.animation.addComponent(entity, {
+                assets: [idleAnim.resourceId, runAnim.resourceId],
+                speed: 1
+            });
+            application.context.root.addChild(entity);
+
+            /// Alternate between running and idling every 1000ms
+
+            // Start running then stop in 1s
+            function run() {
+                entity.animation.play("Playbot_run", 0.2);
+                setTimeout(function () {
+                    stop();
+                }, 1000);
+            };
+
+            // Stop running then start running in 1s
+            function stop() {
+                entity.animation.play("Playbot_idle", 0.2);
+                setTimeout(function () {
+                    run();
+                }, 1000);
+            }
+
+            // Start alternating between run and stop
+            setTimeout(function () {
+                run();
+            }, 1000);
+
+        });
+    </script>
+</body>
+</html>

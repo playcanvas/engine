@@ -106,8 +106,8 @@
 
         var requests = [
             application.context.assets.loadFromUrl("../../assets/footsteps_gravel_01.mp3", "audio"),
-            application.context.assets.loadFromUrl("../../assets/walkcycle/walkcycle.json", "model"),
-            application.context.assets.loadFromUrl("../../assets/walkcycle/walkcycle_animation.json", "animation")
+            application.context.assets.loadFromUrl("../../assets/Playbot/Playbot.json", "model"),
+            application.context.assets.loadFromUrl("../../assets/Playbot/Playbot_run.json", "animation")
         ];
 
         pc.promise.all(requests).then(function (results) {
@@ -122,7 +122,7 @@
                     gravel.resourceId
                 ],
                 loop: true,
-                pitch: 1.05
+                pitch: 1.7
             });
             application.context.systems.model.addComponent(entity, {
                 type: "asset",
@@ -131,9 +131,8 @@
             });
             application.context.systems.animation.addComponent(entity, {
                 assets: [anim.resourceId],
-                speed: 0.63
+                speed: 0.8
             });
-            entity.setLocalScale(4, 4, 4);
             application.context.root.addChild(entity);
 
             // start the audio
@@ -142,7 +141,7 @@
             var pos;
             var angle = 135;
             var radius = 3;
-            var height = 1.1;
+            var height = 0;//1.1;
             application.on("update", function (dt) {
                 angle += 30*dt;
                 if (angle > 360) {

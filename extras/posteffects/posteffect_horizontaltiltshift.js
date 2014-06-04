@@ -1,9 +1,4 @@
-/**
- * Shader author: alteredq / http://alteredqualia.com/
- *
- * Simple fake tilt-shift effect, modulating two pass Gaussian blur (see above) by vertical position
- */
-
+//--------------- POST EFFECT DEFINITION ------------------------//
 pc.extend(pc.posteffect, function () {
 
     /**
@@ -14,7 +9,8 @@ pc.extend(pc.posteffect, function () {
      * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
      * @property {Number} focus Controls where the "focused" vertical line lies
      */
-    function HorizontalTiltShift(graphicsDevice) {
+    var HorizontalTiltShift = function (graphicsDevice) {
+        // Shader author: alteredq / http://alteredqualia.com/
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -83,3 +79,42 @@ pc.extend(pc.posteffect, function () {
         HorizontalTiltShift: HorizontalTiltShift
     };
 }());
+
+
+//--------------- SCRIPT ATTRIBUTES ------------------------//
+pc.script.attribute('focus', 'number', 0.35, {
+    min: 0,
+    max: 1,
+    step: 0.05,
+    decimalPrecision: 5
+});
+
+//--------------- SCRIPT DEFINITION------------------------//
+pc.script.create('horizontaltiltshift', function (context) {
+    // Creates a new Horizontaltiltshift instance
+    var Horizontaltiltshift = function (entity) {
+        this.entity = entity;
+        this.effect = new pc.posteffect.HorizontalTiltShift(context.graphicsDevice);
+    };
+
+    Horizontaltiltshift.prototype = {
+        initialize: function () {
+            this.effect.focus = this.focus;
+            this.on('set', this.onAttributeChanged, this);
+        },
+
+        onAttributeChanged: function (name, oldValue, newValue) {
+            this.effect[name] = newValue;
+        },
+
+        onEnable: function () {
+            this.entity.camera.postEffects.addEffect(this.effect);
+        },
+
+        onDisable: function () {
+            this.entity.camera.postEffects.removeEffect(this.effect);
+        }
+    };
+
+    return Horizontaltiltshift;
+});

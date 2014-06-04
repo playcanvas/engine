@@ -1,8 +1,4 @@
-/**
- * Shader author alteredq / http://alteredqualia.com/
- *
- */
-
+//----------------------------- POST EFFECT DEFINITION -----------------------------//
 pc.extend(pc.posteffect, function () {
 
     /**
@@ -14,7 +10,8 @@ pc.extend(pc.posteffect, function () {
      * @property {Array} powerRgb The r,g,b components of the input render target will be raised to the power contained in the respective values of powerRgb
      * @property {Array} mulRgb The r,g,b components of the input render target will be multiplied by the value contained in the respective values of mulRgb
      */
-    function ColorCorrection(graphicsDevice) {
+    var ColorCorrection = function (graphicsDevice) {
+        // Shader author alteredq / http://alteredqualia.com/
         this.shader = new pc.gfx.Shader(graphicsDevice, {
             attributes: {
                 aPosition: pc.gfx.SEMANTIC_POSITION
@@ -70,3 +67,38 @@ pc.extend(pc.posteffect, function () {
         ColorCorrection: ColorCorrection
     };
 }());
+
+//----------------------------- SCRIPT ATTRIBUTES -----------------------------//
+pc.script.attribute('powerRgb', 'vector', [1,1,1]);
+pc.script.attribute('mulRgb', 'vector', [1,1,1]);
+
+//----------------------------- SCRIPT DEFINITION -----------------------------//
+pc.script.create('colorcorrection', function (context) {
+    var Colorcorrection = function (entity) {
+        this.entity = entity;
+        this.effect = new pc.posteffect.ColorCorrection(context.graphicsDevice);
+    };
+
+    Colorcorrection.prototype = {
+        initialize:  function () {
+            this.on('set', this.onAttributeChanged, this);
+
+            this.effect.powerRgb = this.powerRgb;
+            this.effect.mulRgb = this.mulRgb;
+        },
+
+        onAttributeChanged: function (name, oldValue, newValue) {
+            this.effect[name] = newValue;
+        },
+
+        onEnable: function () {
+            this.entity.camera.postEffects.addEffect(this.effect);
+        },
+
+        onDisable: function () {
+            this.entity.camera.postEffects.removeEffect(this.effect);
+        }
+    };
+
+    return Colorcorrection;
+});
