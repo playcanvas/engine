@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.4
+--------
+* Added animation example and Playbot model
+* Added post effects and camera scripts under extras
+* Added LICENSE file
+
+--------
 v0.147.3
 --------
 * Improve float packing algorithm (used for shadow mapping).
