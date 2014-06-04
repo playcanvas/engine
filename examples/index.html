@@ -1,94 +1,200 @@
-<!doctype html>
-<html>
-    <head>
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset="utf-8">
+    <title>PlayCanvas Examples</title>
 
-        <style>
-            body {
-                font-family: helvetica, arial, sans-serif;
-                font-size: 12px;
-                width: 80%;
-                margin: 0px auto;
-            }
-            a {
-                display: block;
-                width: 200px;
-                padding: 0px;
-                margin: 10px;
-                float: left;
-            }
-            img {
-                width: 200px;
-                height: 200px;
-            }
-            p {
-                padding: 0px;
-                margin: 0px;
-                text-align: center;
-            }
-            h1 {
-                text-align: center;
-            }
-        </style>
-    </head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
 
-    <body>
-        <h1>PlayCanvas Engine Examples</h1>
+    <meta name="author" content="PlayCanvas" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
 
-        <a href="spinning_cube/index.html">
-            <img src="images/spinning_cube.png"></img>
-            <p>Spinning Cube</p>
-        </a>
-        <a href="load_model/index.html">
-            <img src="images/load_model.png"></img>
-            <p>Load a Model</p>
-        </a>
-        <a href="load_model/no_framework.html">
-            <img src="images/load_model.png" />
-            <p>Load a Model without framework</p>
-        </a>
-        <a href="animation/index.html">
-            <img src="images/animation.png" />
-            <p>Animation</p>
-        </a>
-        <a href="light_and_shadows/index.html">
-            <img src="images/lights_and_shadows.png" />
-            <p>Light and Shadows</p>
-        </a>
-        <a href="post_effects/index.html">
-            <img src="images/post_effects.png" />
-            <p>Post Effects</p>
-        </a>
-        <a href="physics/falling_shapes/index.html">
-            <img src="images/physics.png" />
-            <p>Rigidbody Physics - Falling shapes</p>
-        </a>
-        <a href="camera/first_person/index.html">
-            <img src="images/fps.png" />
-            <p>First Person Camera</p>
-        </a>
-            <a href="audio/3D/index.html">
-            <img src="images/3D_audio.png" />
-            <p>3D Positional Audio</p>
-        </a>
-            <a href="shaders/custom/index.html">
-            <img src="images/custom_shader.png" />
-            <p>Writing Custom Shaders</p>
-        </a>
-        <a href="shaders/custom/burn.html">
-            <img src="images/burn_shader.png"/>
-            <p>Burn Shader</p>
-        </a>
-        <a href="shaders/custom/toon.html">
-            <img src="images/toon_shader.png">
-            <p>Toon Shader</p>
-        </a>
-        <a href="input/keyboard/index.html">
-            <img src="images/input_keyboard.png" />
-            <p>Keyboard input</p>
-        </a>
-        <a href="input/mouse/index.html">
-            <img src="images/input_mouse.png" />
-            <p>Mouse input</p>
-        </a>
-    </body>
+    <link href="./style.css" rel="stylesheet" />
+</head>
+
+<body>
+    <h1 id='header'>
+        <img src='http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png' alt='logo' class='logo' />
+        <div class='back no-select'>&#9664;</div>
+        <span class='title'>PlayCanvas Engine Examples</span>
+    </h1>
+
+    <div id='examples' class='active'>
+
+        <div class='example' data-link='spinning_cube/index.html'>
+            <div class='inner'>
+                <img src="images/spinning_cube.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Spinning Cube</h2>
+        </div>
+
+        <div class='example' data-link='load_model/index.html'>
+            <div class='inner'>
+                <img src="images/load_model.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Load a Model</h2>
+        </div>
+
+        <div class='example' data-link='load_model/no_framework.html'>
+            <div class='inner'>
+                <img src="images/load_model.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Load a Model without framework</h2>
+        </div>
+
+        <div class='example' data-link='animation/index.html'>
+            <div class='inner'>
+                <img src="images/animation.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Animation</h2>
+        </div>
+
+        <div class='example' data-link='light_and_shadows/index.html'>
+            <div class='inner'>
+                <img src="images/lights_and_shadows.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Light and Shadows</h2>
+        </div>
+
+        <div class='example' data-link='post_effects/index.html'>
+            <div class='inner'>
+                <img src="images/post_effects.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Post Effects</h2>
+        </div>
+
+        <div class='example' data-link='physics/falling_shapes/index.html'>
+            <div class='inner'>
+                <img src="images/physics.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Rigidbody Physics - Falling shapes</h2>
+        </div>
+
+        <div class='example' data-link='camera/first_person/index.html'>
+            <div class='inner'>
+                <img src="images/fps.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>First Person Camera</h2>
+        </div>
+
+        <div class='example' data-link='audio/3D/index.html'>
+            <div class='inner'>
+                <img src="images/3D_audio.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>3D Positional Audio</h2>
+        </div>
+
+        <div class='example' data-link='shaders/custom/index.html'>
+            <div class='inner'>
+                <img src="images/custom_shader.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Writing Custom Shaders</h2>
+        </div>
+
+        <div class='example' data-link='shaders/custom/burn.html'>
+            <div class='inner'>
+                <img src="images/burn_shader.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Burn Shader</h2>
+        </div>
+
+        <div class='example' data-link='shaders/custom/toon.html'>
+            <div class='inner'>
+                <img src="images/toon_shader.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Toon Shader</h2>
+        </div>
+
+        <div class='example' data-link='input/keyboard/index.html'>
+            <div class='inner'>
+                <img src="images/input_keyboard.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Keyboard input</h2>
+        </div>
+
+        <div class='example' data-link='input/mouse/index.html'>
+            <div class='inner'>
+                <img src="images/input_mouse.png" />
+                <div class='overlay'><span class='play'></span></div>
+            </div>
+            <h2>Mouse input</h2>
+        </div>
+
+    </div>
+
+    <iframe id='example' frameborder='0' marginwidth='0' scrolling='no' hspace='0' vspace='0' seamless='seamless'></iframe>
+
+    <script type='text/javascript'>
+
+        // DOM shim
+        HTMLElement="undefiend"!=typeof HTMLElement?HTMLElement:Element;HTMLElement.prototype.addClass=function(a){a instanceof Array||(a=a.split(" "));for(var b=0,c=a.length;b<c;++b)a[b]&&!(new RegExp("(\\s+|^)"+a[b]+"(\\s+|$)")).test(this.className)&&(this.className=this.className.trim()+" "+a[b])};HTMLElement.prototype.removeClass=function(a){a instanceof Array||(a=a.split(" "));for(var b=0,c=a.length;b<c;++b)this.className=this.className.replace(new RegExp("(\\s+|^)"+a[b]+"(\\s+|$)")," ").trim()};
+        HTMLElement.prototype.toggleClass=function(a){if(a){if((new RegExp("(\\s+|^)"+a+"(\\s+|$)")).test(this.className))return this.className=this.className.replace(new RegExp("(\\s+|^)"+a+"(\\s+|$)")," ").trim(),!1;this.className=this.className.trim()+" "+a;return!0}};HTMLElement.prototype.hasClass=function(a){return a&&(new RegExp("(\\s+|^)"+a+"(\\s+|$)")).test(this.className)};
+
+        // elements
+        var examples = document.getElementById('examples');
+        var frame = document.getElementById('example');
+        var headerTitle = document.querySelector('#header > .title');
+        var initialTitle = headerTitle.textContent;
+
+        var rootUrl = window.location;
+
+        // BACK button
+        document.querySelector('#header > .back').addEventListener('click', function() {
+            history.back();
+        });
+
+        // make all examples clickable
+        var exampleElements = examples.querySelectorAll('.example');
+        var i = exampleElements.length;
+        while(i--) {
+            exampleElements[i].addEventListener('click', function() {
+                var title = this.querySelector('h2').textContent;
+                var url = this.getAttribute('data-link');
+                openExample(title, url);
+            });
+        }
+
+        // OPEN example
+        function openExample(title, url, noState) {
+            frame.contentWindow.location.replace(url);
+            document.body.addClass('preview');
+            headerTitle.textContent = title;
+
+            if (! noState) {
+                history.pushState({ title: title, url: url }, title, url);
+            }
+        }
+
+        // CLOSE example
+        function closeExample() {
+            document.body.removeClass('preview');
+            headerTitle.textContent = initialTitle;
+        }
+
+        // HISTORY
+        window.addEventListener('popstate', function(evt) {
+            if (evt.state == null) {
+                closeExample();
+            } else {
+                openExample(evt.state.title, rootUrl.href, true);
+            }
+        })
+
+    </script>
+
+</body>
 </html>
