@@ -180,11 +180,10 @@
             frame.disabled = true;
             document.body.removeClass('preview');
             headerTitle.textContent = initialTitle;
-            location.hash = '';
+            location.hash = '#';
         }
 
-        // HISTORY
-        window.addEventListener('hashchange', processLocation, false);
+        var lastHash = null;
 
         function processLocation(url) {
             if (location.hash && location.hash !== '#') {
@@ -195,13 +194,21 @@
                     var title = element.querySelector('h2').textContent;
                     var url = element.getAttribute('data-link');
                     openExample(title, url);
+                    lastHash = true;
                     return;
                 }
             }
-            closeExample();
+
+            if (lastHash) {
+                closeExample();
+            }
+            lastHash = true;
         }
 
         processLocation();
+
+        // HISTORY
+        window.addEventListener('hashchange', processLocation, false);
     </script>
 
 </body>
