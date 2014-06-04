@@ -83,7 +83,7 @@
                 <img src="images/fps.png" />
                 <div class='overlay'><span class='play'></span></div>
             </div>
-            <h2>First Person Camera</h2>
+            <h2>Fly Camera</h2>
         </div>
 
         <div class='example' data-link='audio/3D/index.html'>
@@ -150,8 +150,6 @@
         var headerTitle = document.querySelector('#header > .title');
         var initialTitle = headerTitle.textContent;
 
-        var rootUrl = window.location;
-
         // BACK button
         document.querySelector('#header > .back').addEventListener('click', function() {
             history.back();
@@ -169,31 +167,41 @@
         }
 
         // OPEN example
-        function openExample(title, url, noState) {
+        function openExample(title, url) {
             frame.contentWindow.location.replace(url);
             document.body.addClass('preview');
             headerTitle.textContent = title;
-
-            if (! noState) {
-                history.pushState({ title: title, url: url }, title, url);
-            }
+            location.hash = url;
         }
 
         // CLOSE example
         function closeExample() {
+            frame.contentWindow.location.replace('/examples');
+            frame.disabled = true;
             document.body.removeClass('preview');
             headerTitle.textContent = initialTitle;
+            location.hash = '';
         }
 
         // HISTORY
-        window.addEventListener('popstate', function(evt) {
-            if (evt.state == null) {
-                closeExample();
-            } else {
-                openExample(evt.state.title, rootUrl.href, true);
-            }
-        });
+        window.addEventListener('hashchange', processLocation, false);
 
+        function processLocation(url) {
+            if (location.hash && location.hash !== '#') {
+                var url = location.hash.slice(1);
+
+                var element = document.querySelector('#examples .example[data-link="' + url + '"]');
+                if (element) {
+                    var title = element.querySelector('h2').textContent;
+                    var url = element.getAttribute('data-link');
+                    openExample(title, url);
+                    return;
+                }
+            }
+            closeExample();
+        }
+
+        processLocation();
     </script>
 
 </body>
