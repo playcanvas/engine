@@ -53,6 +53,10 @@ The PlayCanvas Engine uses the python and the Closure Compiler to build which re
 
 Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/engine/api/stable)
 
+## How to get models?
+
+To convert and models created using a 3D modelling package see [this page](http://developer.playcanvas.com/engine/) in the developer documentation.
+
 ## Getting Help
 
 [**Answers**](http://answers.playcanvas.com) - Use PlayCanvas Answers to ask specific questions about how to achieve something with the engine
