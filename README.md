@@ -55,7 +55,7 @@ Full documentation available on the [PlayCanvas Developer](http://developer.play
 
 ## How to get models?
 
-To convert and models created using a 3D modelling package see [this page](http://developer.playcanvas.com/engine/) in the developer documentation.
+To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/engine/) in the developer documentation.
 
 ## Getting Help
 
