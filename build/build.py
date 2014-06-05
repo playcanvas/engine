@@ -1,4 +1,4 @@
-"""
+"""\
 Build playcanvas sdk using Google Closure compiler
 Options:
     -h : Display this help
@@ -30,7 +30,9 @@ COMP_LEVELS = [
 
 def get_revision():
     """
-    Try and write the mercurial revision out to the file 'revision.py'
+    Try and write the mercurial revision out to the file 'revision.py'.
+    This will silence errors from mercurial, so beware of weird cases. If
+    you want to read stderr eventually, read out[1]
     """
     try:
         process = subprocess.Popen(['hg', 'id', '-in'], shell=False,
@@ -38,12 +40,17 @@ def get_revision():
             stderr=subprocess.PIPE)
         out = process.communicate()
 
+        if not out[0]:
+            print "Error extracting mercurial revision: %s" % out[1].strip()
+            return ("-", "-")
+
         (revision, id) = out[0].split()
         if revision and id:
             return (revision, id)
         else:
-            raise Exception("No revision number found")
-    except:
+            raise Exception("Error extracting mercurial")
+    except Exception as e:
+        print("An error occurred while attemptign to extract the mercurial revision: (%s)!" % e)
         return ("-", "-")
 
 def get_version():
@@ -58,12 +65,6 @@ def get_version():
     return version
 
 def build(dst):
-    formatting = None
-
-    # Set options
-    if COMPILATION_LEVEL == COMP_LEVELS[0]:
-        formatting = "pretty_print"
-
     dependency_file = os.path.join(ROOT, "dependencies.txt")
     compiler_path = os.path.join(ROOT, "closure/compiler.jar")
     temp_path = os.path.join(ROOT, "out.js")
@@ -79,8 +80,8 @@ def build(dst):
         "--manage_closure_dependencies", "true"
     ]
 
-    if formatting:
-        cmd += ["--formatting", formatting]
+    if COMPILATION_LEVEL == COMP_LEVELS[0]:
+        cmd += ["--formatting", 'pretty_print']
 
     # Use ECMA script 5 which supports getters and setters
     cmd.append("--language_in=ECMASCRIPT5")
