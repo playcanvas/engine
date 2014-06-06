@@ -493,7 +493,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec3#sub
          * @description Subtracts a 3-dimensional vector from another in place.
-         * @param {pc.Vec3} rhs The vector to add to the specified vector.
+         * @param {pc.Vec3} rhs The vector to subtract from the specified vector.
          * @returns {pc.Vec3} Self for chaining.
          * @example
          * var a = new pc.Vec3(10, 10, 10);
@@ -502,7 +502,7 @@ pc.extend(pc, (function () {
          * a.sub(b);
          *
          * // Should output [-10, -10, -10]
-         * console.log("The result of the addition is: " + a.toString());
+         * console.log("The result of the subtraction is: " + a.toString());
          */
         sub: function (rhs) {
             var a = this.data,
@@ -517,18 +517,18 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec3#sub
-         * @description Subtracts a 3-dimensional vector from another in place.
-         * @param {pc.Vec3} rhs The vector to add to the specified vector.
+         * @name pc.Vec3#subScalar
+         * @description Subtracts a number from a 3-dimensional vector in place.
+         * @param {Number} number The number to subtract from each component of the vector.
          * @returns {pc.Vec3} Self for chaining.
          * @example
-         * var a = new pc.Vec3(10, 10, 10);
-         * var b = new pc.Vec3(20, 20, 20);
+         * var a = new pc.Vec3(10, 15, 20);
+         * var n = 5;
          *
-         * a.sub(b);
+         * a.subScalar(n);
          *
-         * // Should output [-10, -10, -10]
-         * console.log("The result of the addition is: " + a.toString());
+         * // Should output [5, 10, 15]
+         * console.log("The result of the subtraction is: " + a.toString());
          */
         subScalar: function (number) {
             var a = this.data;
@@ -544,8 +544,8 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec3#sub2
          * @description Subtracts two 3-dimensional vectors from one another and returns the result.
-         * @param {pc.Vec3} lhs The first vector operand for the addition.
-         * @param {pc.Vec3} rhs The second vector operand for the addition.
+         * @param {pc.Vec3} lhs The first vector operand for the subtraction.
+         * @param {pc.Vec3} rhs The second vector operand for the subtraction.
          * @returns {pc.Vec3} Self for chaining.
          * @example
          * var a = new pc.Vec3(10, 10, 10);
@@ -555,7 +555,7 @@ pc.extend(pc, (function () {
          * r.sub2(a, b);
          *
          * // Should output [-10, -10, -10]
-         * console.log("The result of the addition is: " + r.toString());
+         * console.log("The result of the subtraction is: " + r.toString());
          */
         sub2: function (lhs, rhs) {
             var a = lhs.data,
@@ -569,6 +569,23 @@ pc.extend(pc, (function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Vec3#sub2Scalar
+         * @description Subtracts a number from a 3-dimensional vector and returns the result.
+         * @param {pc.Vec3} lhs The first vector operand for the subtraction.
+         * @param {Number} number The scalar number operand for the subtraction.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(10, 12, 14);
+         * var n = 5;
+         * var r = new pc.Vec3();
+         *
+         * r.sub2Scalar(a, n);
+         *
+         * // Should output [5, 7, 9]
+         * console.log("The result of the subtraction is: " + r.toString());
+         */
         sub2Scalar: function (lhs, number) {
             var a = lhs.data,
                 r = this.data;
