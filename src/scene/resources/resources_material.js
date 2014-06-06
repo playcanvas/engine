@@ -23,7 +23,6 @@ pc.extend(pc.resources, function () {
 
     MaterialResourceLoader.prototype.load = function (materialId) {
         if (!materialCache[materialId]) {
-            var material = new pc.scene.PhongMaterial();
             var asset = this._assets.getAssetByResourceId(materialId);
             if (!asset) {
                 asset = this._assets.find(materialId);
@@ -31,6 +30,8 @@ pc.extend(pc.resources, function () {
 
             if (asset) {
                 var materialData = asset.data;
+                var material = new pc.scene.PhongMaterial();
+
                 this._updatePhongMaterial(material, asset.data);
 
                 // When running in the tools listen for change events on the asset so we can update the material
@@ -39,9 +40,9 @@ pc.extend(pc.resources, function () {
                         this._updatePhongMaterial(material, value);
                     }
                 }, this);
-            }
 
-            materialCache[materialId] = material;
+                materialCache[materialId] = material;
+            }
         }
 
         return materialCache[materialId];
