@@ -251,7 +251,8 @@ pc.extend(pc, (function () {
          * console.log("The distance between the vectors: " + distance); // 10
          */
         distanceTo2: function (lhs, rhs) {
-            return lhs.distanceTo(rhs);
+            var difference = rhs.sub(lhs);
+            return difference.length();
         },
 
         /**
