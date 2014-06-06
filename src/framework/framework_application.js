@@ -643,6 +643,10 @@ pc.extend(pc.fw, function () {
                     this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
                     break;
 
+                case pc.fw.LiveLinkMessageType.UPDATE_ASSETCACHE:
+                    this.context.assets.update(msg.content, this.context.loader);
+                    break;
+
                 case pc.fw.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
                     this._linkUpdatePackSettings(msg.content.settings);
                     break;

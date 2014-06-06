@@ -2,43 +2,12 @@
 <html>
 <head>
     <script src="../../../build/output/playcanvas-latest.js"></script>
-    <style>
-        html, body {
-            margin: 0px;
-            padding: 0px;
-            overflow: hidden;
-        }
-        canvas: {
-            display: block;
-        }
-        .overlay {
-            font-family: helvetica, arial, sans-serif;
-            position: absolute;
-            left: 0px;
-            bottom: 0px;
-            user-select: none;
-        }
-
-        .overlay img {
-            vertical-align: middle;
-        }
-
-        .small {
-            font-size: 0.8em;
-        }
-
-    </style>
+    <link href="../../style.css" rel="stylesheet" />
 </head>
 
 <body>
     <!-- The canvas element -->
     <canvas id="application-canvas"></canvas>
-
-    <!-- Instructions -->
-    <div class="overlay">
-        <img width="48px" height="48px" src="http://static.playcanvas.com/platform/images/logo/playcanvas-logo-small.png"></img>
-        <span>Mouse Input - use left-click and drag to rotate the status</span><span class="small"> - model by Ben Sidwell</span>
-    </div>
 
     <!-- The script -->
     <script>

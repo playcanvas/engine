@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.5
+--------
+* [FIX] Delete the cached model when in onAssetChange
+* [FIX] Add onAssetChange listener even when we're not in the designer so that we catch changes to model mappings that come from the designer via livelink
+* [FIX] New assets are now added to the asset registry via livelink
+* Fixes in README.md
+* Updated examples
+
+--------
 v0.147.4
 --------
 * Added animation example and Playbot model

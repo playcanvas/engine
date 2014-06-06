@@ -40,7 +40,7 @@ The PlayCanvas Engine is a fully feature 3D game engine.
 
 ## Examples
 
-Take a look at in the [examples directory](examples)
+See all the [examples](http://playcanvas.github.io) here or browse them locally in the examples directory
 
 ## How to build
 
@@ -52,6 +52,10 @@ The PlayCanvas Engine uses the python and the Closure Compiler to build which re
 ## Documentation
 
 Full documentation available on the [PlayCanvas Developer](http://developer.playcanvas.com) site including [API reference](http://developer.playcanvas.com/engine/api/stable)
+
+## How to get models?
+
+To convert any models created using a 3D modelling package see [this page](http://developer.playcanvas.com/engine/) in the developer documentation.
 
 ## Getting Help
 
@@ -79,7 +83,7 @@ Please follow these steps to report a bug
 
 ## PlayCanvas Platform
 
-The PlayCanvas Engine is an open-source game engine which you can use to create games or render 3D in the browser. In addition to the free and open-source engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a level design tool, asset management and a hosting and publishing service.
+The PlayCanvas Engine is an open source game engine which you can use to create games or render 3D in the browser. In addition to the engine we also make the [PlayCanvas development platform](https://playcanvas.com/) which features a level design tool, asset management and a hosting and publishing service.
 
 ## License
 

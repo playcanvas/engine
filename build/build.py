@@ -15,12 +15,15 @@ def get_revision():
         import subprocess
         process = subprocess.Popen(['hg', 'id', '-in'], shell=False, stdout=subprocess.PIPE)
         output = process.communicate()
-        #parts = output[0].split()
-        #return "%s-%s" % (parts[1], parts[0])
+
+        (revision, id) = output[0].split()
+        if revision and id:
+            return (revision, id)
+        else:
+            raise Exception("No revision number found")
         return output[0].split()
     except Exception, e:
-        print(str(e))
-        return ("__MERCURIAL_REVISION__", "")
+        return ("-", "-")
 
 def get_version():
     try:
@@ -39,19 +42,19 @@ def build(dst):
     # Set options
     if compilation_level == COMP_LEVELS[0]:
         formatting = "pretty_print"
-    
+
     dependency_file = os.path.join(root, "dependencies.txt")
     compiler_path = os.path.join(root, "closure/compiler.jar")
     temp_path = os.path.join(root, "out.js")
 
     dependencies = open(dependency_file, "r");
-    
+
     # Build and call command
     cmd = ["java", "-jar", compiler_path, "--compilation_level", compilation_level, "--js_output_file=" + temp_path, "--manage_closure_dependencies", "true"]
-    if formatting: 
+    if formatting:
         cmd.append("--formatting")
         cmd.append(formatting)
-    
+
     # Use ECMA script 5 which supports getters and setters
     cmd.append("--language_in=ECMASCRIPT5")
 
@@ -59,12 +62,12 @@ def build(dst):
         cmd.append( "--js=" + os.path.join(root, file.strip()))
 
     retcode = subprocess.call(cmd)
-    
+
     # Copy output to build directory
     if not os.path.exists(os.path.dirname(dst)):
        os.mkdir(os.path.dirname(dst))
     shutil.move(temp_path, dst)
-    
+
     return retcode
 
 def usage():
@@ -83,7 +86,7 @@ def setup():
     except getopt.GetoptError, err:
         print(str(err))
         sys.exit(2)
-    
+
     global root
     global output
     global compilation_level
@@ -106,22 +109,22 @@ def insert_versions(path):
     '''.. ::insert_versions(path)
     Insert the version and revision numbers into the path file.
     '''
-    
+
     # open source, read in data and replace with version and revision numbers
     sf = open(path, 'r')
     text = sf.read()
     text = text.replace("__CURRENT_SDK_VERSION__", get_version())
     text = text.replace("__MERCURIAL_REVISION__", get_revision()[0])
-    
+
     # Open a temporary destination file
     dst = path + '.tmp'
     df = open(dst, 'w')
     df.write(text)
-    
+
     # close files
     sf.close()
     df.close()
-    
+
     # replace path with dst, delete temporary file
     shutil.copy(dst, path)
     os.remove(dst)
@@ -157,6 +160,6 @@ if __name__ == "__main__":
     retcode = build(output_path)
     if retcode:
         sys.exit(retcode)
-    
+
     insert_versions(output_path)
     create_package_json()
