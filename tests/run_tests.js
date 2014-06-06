@@ -9,7 +9,7 @@ var url = system.args[1];
 var urls = [
     url + '/tests/audio/test_audio.html',
     url + '/tests/core/test_core.html',
-    url + '/tests/event/test_event.html',
+    url + '/tests/events/test_events.html',
     url + '/tests/framework/test_framework.html',
     url + '/tests/input/test_input.html',
     url + '/tests/math/test_math.html'
