@@ -253,15 +253,6 @@ test("normalize", function(){
     QUnit.equal(1, z.z);
 });
 
-test("perpendicular", function() {
-    var v = new pc.Vec3(0, 1, 0);
-    var r = v.perpendicular();
-
-    QUnit.equal(1, v.x);
-    QUnit.equal(0, v.y);
-    QUnit.equal(0, v.z);
-});
-
 test("perpendicularTo", function() {
     var v1 = new pc.Vec3(0, 1, 0);
     var v2 = new pc.Vec3(0, 0, 1);
@@ -312,8 +303,8 @@ test("subScalar", function() {
     v1.subScalar(n);
 
     QUnit.equal(1, v1.x);
-    QUnit.equal(2, v1.y);
-    QUnit.equal(3, v1.z);
+    QUnit.equal(3, v1.y);
+    QUnit.equal(5, v1.z);
 });
 
 test("sub2", function() {

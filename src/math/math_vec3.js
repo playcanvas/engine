@@ -483,21 +483,6 @@ pc.extend(pc, (function () {
 
         /**
          * @function
-         * @name pc.Vec3#perpendicular
-         * @description Returns a new vector that is perpendicular to the specified 3-dimensional vector.
-         * @returns {pc.Vec3} A 3-dimensional vector perpendicular to the caller.
-         * @example
-         * var v = new pc.Vec3(0, 1, 0);
-         * var vPerp = v.perpendicular();
-         * console.log("Perpendicular: " + vPerp.toString()); // (1, 0, 0)
-         */
-        perpendicular: function () {
-            var v = this.data;
-            return new pc.Vec3(-v[0], v[1], v[0]);
-        },
-
-        /**
-         * @function
          * @name pc.Vec3#perpendicularTo
          * @description Tests whether the two vectors are perpedicular.
          * @returns {boolean} A boolean value indicating if the vectors are perpedicular
