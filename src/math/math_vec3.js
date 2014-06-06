@@ -24,6 +24,29 @@ pc.extend(pc, (function () {
     Vec3.prototype = {
         /**
          * @function
+         * @name pc.Vec3#addScalar
+         * @description Adds a single number to each component of the vector
+         * @param {pc.Vec3} number The scalar to add to the specified vector.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(5, 5, 5);
+         * a.addScalar(10);
+         *
+         * // Should output [15, 15, 15]
+         * console.log("The result of the addition is: " + a.toString());
+         */
+        addScalar: function (number) {
+            var a = this.data;
+
+            a[0] += number;
+            a[1] += number;
+            a[2] += number;
+
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec3#add
          * @description Adds a 3-dimensional vector to another in place.
          * @param {pc.Vec3} rhs The vector to add to the specified vector.
@@ -75,6 +98,36 @@ pc.extend(pc, (function () {
             r[2] = a[2] + b[2];
 
             return this;
+        },
+
+        add2Scalar: function (lhs, number) {
+            var a = lhs.data,
+                r = this.data;
+
+            r[0] = a[0] + number;
+            r[1] = a[1] + number;
+            r[2] = a[2] + number;
+
+            return this;
+        },
+
+        angle: function () {
+            var v = this.data;
+            return Math.atan2(v[1], v[0]);
+        },
+
+        angleTo: function (rhs) {
+            var dot = this.dot(rhs);
+            var magnitude = this.length() * rhs.length();
+            // Sanity check
+            if (magnitude == 0) return 0;
+
+            var dir = pc.math.clamp(dot / magnitude, -1, 1);
+            return Math.acos(dir);
+        },
+
+        angle2To: function (lhs, rhs) {
+            return lhs.angleTo(rhs);
         },
 
         /**
@@ -148,6 +201,15 @@ pc.extend(pc, (function () {
             r[2] = ax * by - bx * ay;
 
             return this;
+        },
+
+        distanceTo: function (rhs) {
+            var difference = rhs.sub(this);
+            return difference.length();
+        },
+
+        distanceTo2: function (lhs, rhs) {
+            return lhs.distanceTo(rhs);
         },
 
         /**
@@ -277,6 +339,17 @@ pc.extend(pc, (function () {
             return this;
         },
 
+        mulScalar: function (number) {
+            var a = this.data;
+
+            a[0] *= number;
+            a[1] *= number;
+            a[2] *= number;
+
+            return this;
+        },
+
+
         /**
          * @function
          * @name pc.Vec3#mul2
@@ -306,6 +379,17 @@ pc.extend(pc, (function () {
             return this;
         },
 
+        mul2Scalar: function (lhs, number) {
+            var a = lhs.data,
+                r = this.data;
+
+            r[0] = a[0] * number;
+            r[1] = a[1] * number;
+            r[2] = a[2] * number;
+
+            return this;
+        },
+
         /**
          * @function
          * @name pc.Vec3#normalize
@@ -321,6 +405,35 @@ pc.extend(pc, (function () {
          */
         normalize: function () {
             return this.scale(1 / this.length());
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#perpendicular
+         * @description Returns a new vector that is perpendicular to the specified 3-dimensional vector.
+         * @returns {pc.Vec3} A 3-dimensional vector perpendicular to the caller.
+         * @example
+         * var v = new pc.Vec3(0, 1, 0);
+         * var vPerp = v.perpendicular();
+         * console.log("Perpendicular: " + vPerp.toString()); // (1, 0, 0)
+         */
+        perpendicular: function () {
+            var v = this.data;
+            return new pc.Vec3(-v[0], v[1], v[0]);
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#perpendicularTo
+         * @description Tests whether the two vectors are perpedicular.
+         * @returns {boolean} A boolean value indicating if the vectors are perpedicular
+         * @example
+         * var v1 = new pc.Vec3(0, 1, 0);
+         * var v2 = new pc.Vec3(0, 1, 1);
+         * console.log("Perpendicular? " + v1.perpendicularTo(v2)); // false
+         */
+        perpendicularTo: function (rhs) {
+            return (this.dot(rhs) === 0);
         },
 
         /**
@@ -404,6 +517,31 @@ pc.extend(pc, (function () {
 
         /**
          * @function
+         * @name pc.Vec3#sub
+         * @description Subtracts a 3-dimensional vector from another in place.
+         * @param {pc.Vec3} rhs The vector to add to the specified vector.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(10, 10, 10);
+         * var b = new pc.Vec3(20, 20, 20);
+         *
+         * a.sub(b);
+         *
+         * // Should output [-10, -10, -10]
+         * console.log("The result of the addition is: " + a.toString());
+         */
+        subScalar: function (number) {
+            var a = this.data;
+
+            a[0] -= number;
+            a[1] -= number;
+            a[2] -= number;
+
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec3#sub2
          * @description Subtracts two 3-dimensional vectors from one another and returns the result.
          * @param {pc.Vec3} lhs The first vector operand for the addition.
@@ -427,6 +565,17 @@ pc.extend(pc, (function () {
             r[0] = a[0] - b[0];
             r[1] = a[1] - b[1];
             r[2] = a[2] - b[2];
+
+            return this;
+        },
+
+        sub2Scalar: function (lhs, number) {
+            var a = lhs.data,
+                r = this.data;
+
+            r[0] = a[0] - number;
+            r[1] = a[1] - number;
+            r[2] = a[2] - number;
 
             return this;
         },
