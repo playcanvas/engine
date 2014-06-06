@@ -104,22 +104,22 @@ test("cross", function() {
 });
 
 test("distanceTo", function() {
-    var v1 = new pc.Vec3(1, 2, 3);
-    var v2 = new pc.Vec3(4, 5, 6);
+    var v1 = new pc.Vec3(0, 0, 1);
+    var v2 = new pc.Vec3(0, 0, 6);
 
     var r = v1.distanceTo(v2);
 
-    QUnit.equal(r, 32);
+    QUnit.equal(r, 5);
 });
 
 test("distanceTo2", function() {
-    var v1 = new pc.Vec3(1, 2, 3);
-    var v2 = new pc.Vec3(4, 5, 6);
+    var v1 = new pc.Vec3(0, 1, 0);
+    var v2 = new pc.Vec3(0, 5, 0);
     var r = new pc.Vec3();
 
-    r.distanceTo2(v1, v2);
+    var distance = r.distanceTo2(v1, v2);
 
-    QUnit.equal(r, 32);
+    QUnit.equal(distance, 4);
 });
 
 test("dot", function() {
