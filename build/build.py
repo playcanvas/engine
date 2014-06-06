@@ -41,16 +41,17 @@ def get_revision():
         out = process.communicate()
 
         if not out[0]:
-            print "Error extracting mercurial revision: %s" % out[1].strip()
+            print("WARNING: error occured extracting mercurial revision: %s" % out[1].strip())
             return ("-", "-")
 
         (revision, id) = out[0].split()
         if revision and id:
             return (revision, id)
         else:
-            raise Exception("Error extracting mercurial")
+            print("WARINING: Something went wrong trying to extract mercurial revision!")
+            return ("-", "-")
     except Exception as e:
-        print("An error occurred while attemptign to extract the mercurial revision: (%s)!" % e)
+        print("WARNING: Failed to extract the mercurial revision: (%s)!" % e)
         return ("-", "-")
 
 def get_version():
