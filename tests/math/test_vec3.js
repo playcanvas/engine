@@ -15,6 +15,17 @@ test("z", function() {
     QUnit.equal(6, v1.z);
 });
 
+test("addScalar", function() {
+    var v1 = new pc.Vec3(2, 4, 6);
+    var n = 3;
+
+    var r = v1.addScalar(n);
+
+    QUnit.equal(5, r.x);
+    QUnit.equal(7, r.y);
+    QUnit.equal(9, r.z);
+});
+
 test("add2", function() {
     var v1 = new pc.Vec3(2, 4, 6);
     var v2 = new pc.Vec3(1, 2, 3);
@@ -25,6 +36,47 @@ test("add2", function() {
     QUnit.equal(3, r.x);
     QUnit.equal(6, r.y);
     QUnit.equal(9, r.z);
+});
+
+test("add2Scalar", function() {
+    var v1 = new pc.Vec3(2, 4, 6);
+    var n = 3;
+    var r = new pc.Vec3();
+
+    r.add2Scalar(v1, n);
+
+    QUnit.equal(5, r.x);
+    QUnit.equal(7, r.y);
+    QUnit.equal(9, r.z);
+});
+
+test("angle", function() {
+    var v1 = new pc.Vec3(0, 1, 0);
+
+    var r = v1.angle();
+
+    // TODO:
+    QUnit.equal(90, r);
+});
+
+test("angleTo", function() {
+    var v1 = new pc.Vec3(0, 1, 0);
+    var v1 = new pc.Vec3(0, 0, 1);
+    var r = v1.angleTo(v2);
+
+    // TODO:
+    QUnit.equal(90, r);
+});
+
+test("angleTo2", function() {
+    var v1 = new pc.Vec3(0, 1, 0);
+    var v1 = new pc.Vec3(0, 0, 1);
+    var r = new pc.Vec3();
+
+    r.angleTo2(v1, v2);
+
+    // TODO:
+    QUnit.equal(90, r);
 });
  
 test("clone", function () {
@@ -78,6 +130,25 @@ test("cross", function() {
     QUnit.equal(0, r.x);
     QUnit.equal(0, r.y);
     QUnit.equal(1, r.z);        
+});
+
+test("distanceTo", function() {
+    var v1 = new pc.Vec3(1, 2, 3);
+    var v2 = new pc.Vec3(4, 5, 6);
+
+    var r = v1.distanceTo(v2);
+
+    QUnit.equal(r, 32);
+});
+
+test("distanceTo2", function() {
+    var v1 = new pc.Vec3(1, 2, 3);
+    var v2 = new pc.Vec3(4, 5, 6);
+    var r = new pc.Vec3();
+
+    r.distanceTo2(v1, v2);
+
+    QUnit.equal(r, 32);
 });
 
 test("dot", function() {
@@ -158,6 +229,16 @@ test("mul", function() {
     QUnit.equal(18, v1.z);
 });
 
+test("mulScalar", function() {
+    var v1 = new pc.Vec3(1, 2, 3);
+    var n = 4;
+    v1.mulScalar(n);
+
+    QUnit.equal(4, v1.x);
+    QUnit.equal(8, v1.y);
+    QUnit.equal(12, v1.z);
+});
+
 test("mul2", function() {
     var v1 = new pc.Vec3(1, 2, 3);
     var v2 = new pc.Vec3(1, 2, 3);
@@ -167,6 +248,17 @@ test("mul2", function() {
     QUnit.equal(1, r.x);
     QUnit.equal(4, r.y);
     QUnit.equal(9, r.z);
+});
+
+test("mul2Scalar", function() {
+    var v1 = new pc.Vec3(1, 2, 3);
+    var n = 4;
+    var r = new pc.Vec3();
+    r.mul2Scalar(v1, n);
+    
+    QUnit.equal(4, r.x);
+    QUnit.equal(8, r.y);
+    QUnit.equal(12, r.z);
 });
 
 test("normalize", function(){
@@ -188,6 +280,28 @@ test("normalize", function(){
     QUnit.equal(0, z.x);
     QUnit.equal(0, z.y);
     QUnit.equal(1, z.z);
+});
+
+test("perpendicular", function() {
+    var v = new pc.Vec3(0, 1, 0);
+    var r = v.perpendicular();
+
+    QUnit.equal(1, v.x);
+    QUnit.equal(0, v.y);
+    QUnit.equal(0, v.z);
+});
+
+test("perpendicularTo", function() {
+    var v1 = new pc.Vec3(0, 1, 0);
+    var v2 = new pc.Vec3(0, 0, 1);
+    var r1 = v1.perpendicularTo(v2);
+
+    QUnit.equal(true, r1);
+
+    var v3 = new pc.Vec3(0, 1, 1);
+    var r2 = v1.perpendicularTo(v3);
+
+    QUnit.equal(false, r2);
 });
 
 test("scale", function() {
@@ -220,6 +334,17 @@ test("sub", function() {
     QUnit.equal(3, v1.z);
 });
 
+test("subScalar", function() {
+    var v1 = new pc.Vec3(2, 4, 6);
+    var n = 1;
+
+    v1.subScalar(n);
+
+    QUnit.equal(1, v1.x);
+    QUnit.equal(2, v1.y);
+    QUnit.equal(3, v1.z);
+});
+
 test("sub2", function() {
     var v1 = new pc.Vec3(2, 4, 6);
     var v2 = new pc.Vec3(1, 2, 3);
@@ -230,6 +355,18 @@ test("sub2", function() {
     QUnit.equal(1, r.x);
     QUnit.equal(2, r.y);
     QUnit.equal(3, r.z);
+});
+
+test("sub2Scalar", function() {
+    var v1 = new pc.Vec3(2, 4, 6);
+    var n = 2;
+    var r = new pc.Vec3();
+
+    r.sub2Scalar(v1, n);
+
+    QUnit.equal(0, r.x);
+    QUnit.equal(2, r.y);
+    QUnit.equal(4, r.z);
 });
 
 test("toString", function() {
