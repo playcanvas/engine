@@ -16,6 +16,7 @@ import getopt
 import subprocess
 import shutil
 import json
+import time
 
 ROOT = "."
 OUTPUT = "output/playcanvas-%s.js" % ('latest')
@@ -174,6 +175,7 @@ def create_package_json():
 
 
 if __name__ == "__main__":
+    start = time.time()
     setup()
     output_path = os.path.join(ROOT, OUTPUT)
 
@@ -183,3 +185,4 @@ if __name__ == "__main__":
 
     insert_versions(output_path)
     create_package_json()
+    print("Build completed in %s seconds!" % (time.time() - start))
