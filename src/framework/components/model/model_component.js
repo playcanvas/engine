@@ -215,7 +215,18 @@ pc.extend(pc.fw, function () {
             // if the type of the value is not a string assume it is an pc.Asset
             var guid = typeof newValue === 'string' || !newValue ? newValue : newValue.resourceId;
 
-            material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
+            var material;
+
+            // try to load the material asset
+            if (guid) {
+                material = this.materialLoader.load(guid);
+            }
+
+            // if no material asset was loaded then use the default material
+            if (!material) {
+                material = this.system.defaultMaterial;
+            }
+
             this.material = material;
 
             var oldValue = this.data.materialAsset;
