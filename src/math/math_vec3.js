@@ -100,6 +100,23 @@ pc.extend(pc, (function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Vec3#add2Scalar
+         * @description Adds a number to a 3-dimensional vector and returns the result.
+         * @param {pc.Vec3} lhs The first vector operand for the addition.
+         * @param {Number} number The scalar operand for the addition.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(5, 10, 15);
+         * var n = 4;
+         * var r = new pc.Vec3();
+         *
+         * r.add2Scalar(a, n);
+         * // Should output [9, 14, 19]
+         *
+         * console.log("The result of the addition is: " + r.toString());
+         */
         add2Scalar: function (lhs, number) {
             var a = lhs.data,
                 r = this.data;
@@ -203,11 +220,39 @@ pc.extend(pc, (function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Vec3#distanceTo
+         * @description Returns the distance to another vector.
+         * @param {pc.Vec3} rhs The 3-dimensional vector operand.
+         * @returns {Number} The result of the distance calculation.
+         * @example
+         * var v1 = new pc.Vec3(5, 0, 0);
+         * var v2 = new pc.Vec3(-5, 0, 0);
+         *
+         * var distance = v1.distanceTo(v2);
+         * console.log("The distance between the vectors: " + distance); // 10
+         */
         distanceTo: function (rhs) {
             var difference = rhs.sub(this);
             return difference.length();
         },
 
+        /**
+         * @function
+         * @name pc.Vec3#distanceTo2
+         * @description Returns the distance between two arbitrary vectors.
+         * @param {pc.Vec3} lhs The first 3-dimensional vector operand.
+         * @param {pc.Vec3} rhs The second 3-dimensional vector operand.
+         * @returns {Number} The result of the distance calculation.
+         * @example
+         * var v1 = new pc.Vec3(5, 0, 0);
+         * var v2 = new pc.Vec3(-5, 0, 0);
+         * var r = new pc.Vec3();
+         *
+         * var distance = r.distanceTo2(v1, v2);
+         * console.log("The distance between the vectors: " + distance); // 10
+         */
         distanceTo2: function (lhs, rhs) {
             return lhs.distanceTo(rhs);
         },
@@ -339,6 +384,21 @@ pc.extend(pc, (function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Vec3#mulScalar
+         * @description Returns the result of multiplying a scalar with each component of the specified 3-dimensional vector.
+         * @param {Number} number The scalar used as the second multiplicand of the operation.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(2, 3, 4);
+         * var n = 4;
+         *
+         * a.mulScalar(n);
+         *
+         * // Should output 8, 12, 16
+         * console.log("The result of the multiplication is: " + a.toString());
+         */
         mulScalar: function (number) {
             var a = this.data;
 
@@ -348,7 +408,6 @@ pc.extend(pc, (function () {
 
             return this;
         },
-
 
         /**
          * @function
@@ -379,6 +438,23 @@ pc.extend(pc, (function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Vec3#mul2Scalar
+         * @description Returns the result of multiplying a specified 3-dimensional vector with a scalar.
+         * @param {pc.Vec3} lhs The 3-dimensional vector used as the first multiplicand of the operation.
+         * @param {Number} number The scalar used as the second multiplicand of the operation.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(2, 3, 4);
+         * var n = 5;
+         * var r = new pc.Vec3();
+         *
+         * r.mul2Scalar(a, n);
+         *
+         * // Should output 10, 15, 12
+         * console.log("The result of the multiplication is: " + r.toString());
+         */
         mul2Scalar: function (lhs, number) {
             var a = lhs.data,
                 r = this.data;
