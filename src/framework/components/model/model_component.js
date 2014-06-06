@@ -63,8 +63,9 @@ pc.extend(pc.fw, function () {
                 var model = resources[0];
                 if (this.system.context.designer) {
                     model.generateWireframe();
-                    asset.on('change', this.onAssetChange, this);
                 }
+
+                asset.on('change', this.onAssetChange, this);
 
                 if (this.data.type === 'asset') {
                     this.model = model;
@@ -281,6 +282,7 @@ pc.extend(pc.fw, function () {
         */
         onAssetChange: function (asset) {
             // Remove the asset from the cache and reload it
+            asset.resource = null;
             this.system.context.loader.removeFromCache(asset.getFileUrl());
             this.asset = null;
             this.asset = asset.resourceId;
