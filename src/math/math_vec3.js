@@ -128,23 +128,20 @@ pc.extend(pc, (function () {
             return this;
         },
 
+        /**
+         * @function
+         * @name pc.Vec3#angle
+         * @description Returns the angle of the specified 3-dimensional vector.
+         * @returns {Number} The angle of the specified 3-dimensional vector in degrees.
+         * @example
+         * var vec = new pc.Vec3(1, 1, 0);
+         * var angle = vec.angle();
+         * // Should output 45
+         * console.log("The angle of the vector is: " + angle);
+         */
         angle: function () {
             var v = this.data;
             return Math.atan2(v[1], v[0]);
-        },
-
-        angleTo: function (rhs) {
-            var dot = this.dot(rhs);
-            var magnitude = this.length() * rhs.length();
-            // Sanity check
-            if (magnitude == 0) return 0;
-
-            var dir = pc.math.clamp(dot / magnitude, -1, 1);
-            return Math.acos(dir);
-        },
-
-        angle2To: function (lhs, rhs) {
-            return lhs.angleTo(rhs);
         },
 
         /**
