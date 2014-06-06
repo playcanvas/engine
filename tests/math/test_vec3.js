@@ -49,35 +49,6 @@ test("add2Scalar", function() {
     QUnit.equal(7, r.y);
     QUnit.equal(9, r.z);
 });
-
-test("angle", function() {
-    var v1 = new pc.Vec3(0, 1, 0);
-
-    var r = v1.angle();
-
-    // TODO:
-    QUnit.equal(90, r);
-});
-
-test("angleTo", function() {
-    var v1 = new pc.Vec3(0, 1, 0);
-    var v1 = new pc.Vec3(0, 0, 1);
-    var r = v1.angleTo(v2);
-
-    // TODO:
-    QUnit.equal(90, r);
-});
-
-test("angleTo2", function() {
-    var v1 = new pc.Vec3(0, 1, 0);
-    var v1 = new pc.Vec3(0, 0, 1);
-    var r = new pc.Vec3();
-
-    r.angleTo2(v1, v2);
-
-    // TODO:
-    QUnit.equal(90, r);
-});
  
 test("clone", function () {
     var v1 = new pc.Vec3();
