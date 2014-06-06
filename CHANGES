@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.6
+--------
+* [FIX] Only add material to material cache if its asset is found in the asset registry
+
+--------
 v0.147.5
 --------
 * [FIX] Delete the cached model when in onAssetChange
