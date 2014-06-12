@@ -392,13 +392,7 @@ pc.extend(pc.fw, function () {
                 height = this.canvas.clientHeight;
             }
 
-            this.canvas.width = width;
-            this.canvas.height = height;
-
-            var resizeEvent = 'resizecanvas';
-            if (this.graphicsDevice.hasEvent(resizeEvent)) {
-                this.graphicsDevice.fire(resizeEvent, width, height);
-            }
+            this.graphicsDevice.resizeCanvas(width, height);
         },
 
         /**
@@ -519,8 +513,7 @@ pc.extend(pc.fw, function () {
                 height = windowHeight;
 
                 var ratio = window.devicePixelRatio;
-                this.canvas.width = width * ratio;
-                this.canvas.height = height * ratio;
+                this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
             } else {
                 if (this.fillMode === pc.fw.FillMode.KEEP_ASPECT) {
                     var r = this.canvas.width/this.canvas.height;

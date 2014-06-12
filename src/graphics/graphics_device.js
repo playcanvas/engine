@@ -1,6 +1,9 @@
 pc.gfx.precalculatedTangents = true;
 
 pc.extend(pc.gfx, function () {
+
+    var EVENT_RESIZE = 'resizecanvas';
+
     // Exceptions
     function UnsupportedBrowserError(message) {
         this.name = "UnsupportedBrowserError";
@@ -947,6 +950,20 @@ pc.extend(pc.gfx, function () {
             }
 
             return true;
+        },
+
+        /**
+        * @function
+        * @name pc.gfx.Device#resizeCanvas
+        * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
+        */
+        resizeCanvas: function (width, height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+
+            if (this.hasEvent(EVENT_RESIZE)) {
+                this.fire(EVENT_RESIZE, width, height);
+            }
         }
     };
 
