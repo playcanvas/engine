@@ -961,9 +961,7 @@ pc.extend(pc.gfx, function () {
             this.canvas.width = width;
             this.canvas.height = height;
 
-            if (this.hasEvent(EVENT_RESIZE)) {
-                this.fire(EVENT_RESIZE, width, height);
-            }
+            this.fire(EVENT_RESIZE, width, height);
         }
     };
 
