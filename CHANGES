@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.7
+--------
+* Added 'resizecanvas' event fired from the pc.gfx.Device
+* [FIX] Render targets of post effects are now resized when necessary
+* Added optimization for events#fire method
+
+--------
 v0.147.6
 --------
 * [FIX] Only add material to material cache if its asset is found in the asset registry
