@@ -48,6 +48,14 @@ pc.extend(pc.gfx, function () {
      * @property {Number} height Height of the back buffer in pixels (read-only).
      * is attached is fullscreen or not.
      */
+
+     /**
+     * @event
+     * @name pc.gfx.Device#resizecanvas
+     * @description The 'resizecanvas' event is fired when the canvas is resized
+     * @param {Number} width The new width of the canvas in pixels
+     * @param {Number} height The new height of the canvas in pixels
+    */
     var Device = function (canvas) {
         this.gl = undefined;
         this.canvas = canvas;

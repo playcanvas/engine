@@ -394,6 +394,11 @@ pc.extend(pc.fw, function () {
 
             this.canvas.width = width;
             this.canvas.height = height;
+
+            var resizeEvent = 'resizecanvas';
+            if (this.graphicsDevice.hasEvent(resizeEvent)) {
+                this.graphicsDevice.fire(resizeEvent, width, height);
+            }
         },
 
         /**
