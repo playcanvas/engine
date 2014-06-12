@@ -264,6 +264,7 @@ pc.extend(pc.posteffect, function () {
         },
 
         _onCanvasResized: function (width, height) {
+            // avoid resizing the render targets too often by using a timeout
             if (this.resizeTimeout) {
                 clearTimeout(this.resizeTimeout);
             }
