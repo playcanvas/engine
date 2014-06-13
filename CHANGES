@@ -1,6 +1,163 @@
 --------------------------
-PlayCanvas Runtime Changes 
+PlayCanvas Runtime Changes
 --------------------------
+
+--------
+v0.147.7
+--------
+* Added 'resizecanvas' event fired from the pc.gfx.Device
+* [FIX] Render targets of post effects are now resized when necessary
+* Added optimization for events#fire method
+
+--------
+v0.147.6
+--------
+* [FIX] Only add material to material cache if its asset is found in the asset registry
+
+--------
+v0.147.5
+--------
+* [FIX] Delete the cached model when in onAssetChange
+* [FIX] Add onAssetChange listener even when we're not in the designer so that we catch changes to model mappings that come from the designer via livelink
+* [FIX] New assets are now added to the asset registry via livelink
+* Fixes in README.md
+* Updated examples
+
+--------
+v0.147.4
+--------
+* Added animation example and Playbot model
+* Added post effects and camera scripts under extras
+* Added LICENSE file
+
+--------
+v0.147.3
+--------
+* Improve float packing algorithm (used for shadow mapping).
+* [FIX] postEffects is initialized before enabled
+
+--------
+v0.147.2
+--------
+* [FIX] Frame buffer clearing now works if flags are zero.
+* [FIX] Documentation fixes for post effects.
+
+--------
+v0.147.1
+--------
+* Documented post effects.
+
+--------
+v0.147.0
+--------
+* When an entity is destroyed it will first disable all of its components.
+* When a component is initialized its onEnable method will be called.
+* Added pc.posteffect.PostEffectQueue for managing multiple post effects for a camera. The camera component now has a post effects queue allowing users to add / remove post effects to a camera.
+* Added example using post effects.
+* Added various post effects.
+* Camera system now has an array of active cameras instead of a 'current' camera. The application framework now renders all cameras instead of just the current camera.
+* Exposed priority, clearColorBuffer, clearDepthBuffer and rect for the camera component, Now supporting pc.Vec2 and pc.Vec4 as runtime types.
+* All post effects now derive from pc.posteffect.PostEffect.
+* [FIX] Set particle_time to 0 when a particle emitter is initialized.
+
+--------
+v0.146.1
+--------
+* [FIX] Set state that affects shadow buffer clearing before the clear happens (in particular, depth write).
+
+--------
+v0.146.0
+--------
+* Support for loading models with URL mapping instead of resource_id mapping
+* Added resource handler for text resources
+
+--------
+v0.145.4
+--------
+* [FIX] Disable simulation before changing the rigidbody type so that simulation will be properly enabled again after the type changes
+* Improved the docs for applyForce
+
+--------
+v0.145.3
+--------
+* [FIX] Added null check when updating script instances in case some of them are removed from the update list while the loop is in progress
+
+--------
+v0.145.2
+--------
+* Changed camera nearClip and farClip minimum to be 0.0001 and decimal precision to 3 digits
+
+--------
+v0.145.1
+--------
+* [FIX] Remove assignment to constructor property in pc.inherits, seems to fix FF Bug which breaks inheritance randomly!?
+
+--------
+v0.145.0
+--------
+* Added documentation to currentTime and duration in the animation component
+* Updated docs for pc.math.random
+* Added examples directory with spinning cube example
+* Added docs for pc.math.Vec3 parameters
+* [FIX] Bug where triggerleave / collisionend would not always be fired
+* [FIX] Removed call to entity.trigger.initialize right after the constructor
+* [FIX] All tests now pass
+* [FIX] Rogue 'light' global var
+* [FIX] Added simulationEnabled in rigidbody_data to avoid enabling / disabling rigidbody simulation multiple times
+* [FIX] Bug where a model component would not update its model's graph if it started disabled
+* [FIX] If a collision component is initialised before a rigid body component and a trigger is created, make sure to destroy that trigger when the rigid body is initialised
+
+--------
+v0.144.3
+--------
+* [FIX] Ensure render targets are rendered fullscreen for post fx.
+
+--------
+v0.144.2
+--------
+* [FIX] Error when trying to call script instance#destroy when removing a script component
+
+--------
+v0.144.1
+--------
+* [FIX] Renamed pc.events.initalize to pc.events.attach to prevent it breaking compatibility when adding events to script instances
+
+--------
+v0.144.0
+--------
+* Improved entity enabling / disabling mechanism to include children
+* Improved component enabling / disabling mechanism
+* Various optimizations
+
+--------
+v0.143.4
+--------
+* [FIX] Fixed typos in script attribute docs
+
+--------
+v0.143.3
+--------
+* [FIX] Call e.preventDefault in 'touchmove' event to avoid issues in Chrome Android
+
+--------
+v0.143.2
+--------
+* [FIX] Identity texture transform now correctly generated.
+
+--------
+v0.143.1
+--------
+* Optimizations in the script system, obb shapes and materials
+
+--------
+v0.143.0
+--------
+* Call onEnable / onDisable methods on script instances when their script component is enabled / disbled
+
+--------
+v0.142.0
+--------
+* Added enabling / disabling of Entities and Components
 
 --------
 v0.141.1
@@ -249,7 +406,7 @@ v0.126.6
 --------
 v0.126.5
 --------
-* Changed trigger documentation. 
+* Changed trigger documentation.
 * Added particle system support - only static emitters are supported for now.
 
 --------
@@ -363,7 +520,7 @@ v0.119.1
 --------
 v0.119.0
 --------
-* No longer caching scripts when running from the designer 
+* No longer caching scripts when running from the designer
 
 --------
 v0.118.0
@@ -391,7 +548,7 @@ v0.115.1
 v0.115.0
 --------
 * Changed setLinearVelocity and setAngularVelocity methods to linearVelocity and angularVelocity properties
-* Add applyTorque and applyTorqueImpulse to Rigidbody Component 
+* Add applyTorque and applyTorqueImpulse to Rigidbody Component
 * Changed setLinearFactor and setAngularFactor methods to linearFactor and angularFactor properties
 * Add linearDamping and angularDamping properties to Rigidbody Component
 
@@ -1083,7 +1240,7 @@ v0.77.0
 * [BREAKING] All pc.math library functions take degrees instead of radians
 * [BREAKING] Removed GraphNode methods setParent() and setChildren()
 * [BREAKING] Update binary model format to use new transform components
-* [BREAKING] Update animation format to use eulers instead of quaternions for rotations 
+* [BREAKING] Update animation format to use eulers instead of quaternions for rotations
 * Split LTM out into distinct position, rotation, scale components, generate LTM/WTM only when dirty
 * Added methods to quaternion invert(), setFromEulers(), transformVector()
 * Change Pack format to use position, rotation, scale instead of translate, rotate, scale
@@ -1213,8 +1370,8 @@ v0.67.2
 -------
 v0.67.1
 -------
-* [FIX] Body2d Component rotates correctly in designer. 
-* Added setPositionAndAngle() to Body2d component 
+* [FIX] Body2d Component rotates correctly in designer.
+* Added setPositionAndAngle() to Body2d component
 
 -------
 v0.67.0
@@ -1229,7 +1386,7 @@ v0.66.0
 -------
 v0.65.0
 -------
-* Added optional ignore value to Body2dComponentSystem.raycastFirst 
+* Added optional ignore value to Body2dComponentSystem.raycastFirst
 
 -------
 v0.64.1
@@ -1272,7 +1429,7 @@ v0.61.0
 -------
 v0.60.0
 -------
-* Added caching for downloaded files to pc.resources.ResourceLoader. 
+* Added caching for downloaded files to pc.resources.ResourceLoader.
     Anything store as a Asset on the server can be cached and multiple instances are cloned (models) or shared.
 * Added canonical identifiers internally to pc.resources.ResourceLoader.
     Files in different assets with matches hashes will be loaded from a single source
@@ -1516,7 +1673,7 @@ v0.36.0
 * All ComponentSystems can implement an initialize() method which is passed the root entity of a loaded Pack after the Pack is loaded, but before any updates are called
 * Exposed both inner and outer spotlight cone angles in Designer
 * Moved light management into pc.scene.Scene. Lighting requires a Scene object to work now
-* Removed functions pc.scene.LightNode#getNumEnabled() and pc.scene.LightNode#dispatch. 
+* Removed functions pc.scene.LightNode#getNumEnabled() and pc.scene.LightNode#dispatch.
 * Moved static global lighting functions onto Scene instance
 
 -------
@@ -1531,7 +1688,7 @@ v0.35.0
 * Optimized animation addTime function by caching keyframe indices
 * Enable PCF filtering of shadow maps
 * Added spotlight component
-* Update the orientation of listener in audiolistener components so that supported platforms have correct panning.  
+* Update the orientation of listener in audiolistener components so that supported platforms have correct panning.
 
 -------
 v0.34.0
@@ -1762,8 +1919,8 @@ v0.14.1
 -------
 * Fix for pc.fw.Application still referencing old _camera variable
 * Fix for Bloom Component still referencing old _camera variable
-* Fix for SkyBox Component still referencing old _camera variable 
- 
+* Fix for SkyBox Component still referencing old _camera variable
+
 -------
 v0.14.0
 -------
@@ -1772,7 +1929,7 @@ v0.14.0
 -------
 v0.13.1
 -------
-* Fix mouse down event for left mouse button. 
+* Fix mouse down event for left mouse button.
 
 -------
 v0.13.0

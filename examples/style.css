@@ -1,0 +1,197 @@
+body {
+    font-family: Helvetica, arial, sans-serif;
+    font-size: 12px;
+    margin: 0;
+    color: #cccfcf;
+    background-color: #324447;
+}
+
+#header {
+    position: relative;
+    font-weight: 100;
+    text-transform: uppercase;
+    margin: 0;
+    line-height: 48px;
+    background-color: #263538;
+    border-bottom: 1px solid #1a1a1a;
+    z-index: 101;
+}
+#header > .logo {
+    float: left;
+    width: 48px;
+    height: 48px;
+    margin-right: 16px;
+}
+#header > .back {
+    display: none;
+    float: left;
+    width: 48px;
+    height: 48px;
+    margin-right: 16px;
+    text-align: center;
+    font-size: 32px;
+    color: #fff;
+    background-color: #F26524;
+    cursor: pointer;
+}
+body.preview #header > .logo {
+    display: none;
+}
+body.preview #header > .back {
+    display: block;
+}
+
+body.preview #examples {
+    display: none;
+}
+
+.example {
+    display: inline-block;
+    width: 288px;
+    margin: 16px;
+    color: #cccfcf;
+    text-decoration: none;
+    cursor: pointer;
+
+    -webkit-transition: color 300ms;
+    -moz-transition: color 300ms;
+    -o-transition: color 300ms;
+    transition: color 300ms;
+}
+.example > .inner {
+    position: relative;
+    overflow: hidden;
+    padding: 8px;
+    background-color: #263538;
+}
+.example > .inner > img {
+    width: 100%;
+    display: block;
+    -webkit-transition: -webkit-transform 300ms;
+       -moz-transition: -moz-transform 300ms;
+         -o-transition: -o-transform 300ms;
+            transition: transform 300ms;
+}
+.example > .inner > .overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: auto;
+    opacity: 0;
+
+    background: -moz-linear-gradient(top, rgba(247,125,49,0.7) 0%, rgba(255,25,25,0.7) 100%);
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(247,125,49,0.7)), color-stop(100%,rgba(255,25,25,0.7)));
+    background: -webkit-linear-gradient(top, rgba(247,125,49,0.7) 0%,rgba(255,25,25,0.7) 100%);
+    background: -o-linear-gradient(top, rgba(247,125,49,0.7) 0%,rgba(255,25,25,0.7) 100%);
+    background: -ms-linear-gradient(top, rgba(247,125,49,0.7) 0%,rgba(255,25,25,0.7) 100%);
+    background: linear-gradient(to bottom, rgba(247,125,49,0.7) 0%,rgba(255,25,25,0.7) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3f77d31', endColorstr='#b3ff1919',GradientType=0 );
+
+    -webkit-transition: opacity 300ms;
+    -moz-transition: opacity 300ms;
+    -o-transition: opacity 300ms;
+    transition: opacity 300ms;
+}
+.example > .inner > .overlay > .play {
+    display: block;
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    width: 42px;
+    height: 56px;
+    margin-top: -29px;
+    margin-left: -21px;
+    background-image: url('https://s3.amazonaws.com/uploads.hipchat.com/62366/603105/EHpg35DImCMp33I/PlayIcon.png');
+    background-repeat: no-repeat;
+
+    -webkit-transition: top 300ms;
+    -moz-transition: top 300ms;
+    -o-transition: top 300ms;
+    transition: top 300ms;
+}
+.example > h2 {
+    margin: 8px 0 0;
+    font-weight: 100;
+    font-size: 14px;
+    padding-left: 8px;
+}
+
+.example:hover {
+    color: #fff;
+}
+.example:hover > .inner > img {
+    -webkit-transform: scale(1.07, 1.07);
+       -moz-transform: scale(1.07, 1.07);
+        -ms-transform: scale(1.07, 1.07);
+         -o-transform: scale(1.07, 1.07);
+            transform: scale(1.07, 1.07);
+}
+.example:hover > .inner > .overlay {
+    opacity: 1;
+}
+.example:hover > .inner > .overlay > .play {
+    top: 50%;
+}
+
+
+#example {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #324447;
+    overflow: hidden;
+}
+body.preview #example {
+    display: block;
+}
+
+.no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+body.preview {
+    overflow: hidden;
+}
+canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+#footer {
+    font-family: Helvetica, Arial, sans-serif;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding-right: 8px;
+    background-color: #324447;
+    font-size: 14px;
+    font-weight: 100;
+    line-height: 32px;
+}
+#footer > img {
+    width: 32px;
+    height: 32px;
+    display: block;
+    float: left;
+    padding-right: 8px;
+}
+
+
+@media (max-width: 1280px) {
+    #header {
+        font-size: 14px;
+    }
+    #examples {
+        text-align: center;
+    }
+}

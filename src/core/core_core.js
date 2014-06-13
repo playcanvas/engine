@@ -4,7 +4,7 @@
  * @description Root namespace for the PlayCanvas Engine
  * @preserve PlayCanvas Engine v__CURRENT_SDK_VERSION__ revision __MERCURIAL_REVISION__
  * http://playcanvas.com
- * Copyright 2011-2013 PlayCanvas Ltd. All rights reserved.
+ * Copyright 2011-2014 PlayCanvas Ltd. All rights reserved.
  * Do not distribute.
  * Contains: https://github.com/tildeio/rsvp.js - see page for license information
  */
@@ -14,7 +14,7 @@ var pc = {
         * @description Configuration data made available to the application from the server
         * @param bootstrap
         * @param frame Options set from the containing frame
-        * @param frame.url The URL of the containing frame 
+        * @param frame.url The URL of the containing frame
         * @param api_url
         * @param corazon
         * @param username
@@ -32,7 +32,7 @@ var pc = {
          * Storage for exported entity data
          */
         data: {},
-                
+
         /**
          * @private
          * @function
@@ -42,27 +42,27 @@ var pc = {
         unpack: function () {
             console.warn("pc.unpack has been deprecated and will be removed shortly. Please update your code.");
         },
-             
+
         /**
          * Convert an array-like object into a normal array.
-         * For example, this is useful for converting the arguments object into an array. 
+         * For example, this is useful for converting the arguments object into an array.
          * @param {Object} arr The array to convert
          * @return {Array} An array
          * @function
          * @name pc.makeArray
          */
         makeArray: function (arr) {
-            var i, 
+            var i,
             ret = [],
             length = arr.length;
-            
+
             for(i = 0; i < length; ++i) {
                 ret.push(arr[i]);
             }
-            
+
             return ret;
         },
-        
+
         /**
          * Extended typeof() function, returns the type of the object.
          * @param {Object} obj The object to get the type of
@@ -74,13 +74,13 @@ var pc = {
             if (obj === null) {
                 return "null";
             }
-            
+
             var type = typeof(obj);
-            
+
             if (type == "undefined" || type == "number" || type == "string" || type == "boolean") {
                 return type;
             }
-            
+
             return _typeLookup[Object.prototype.toString.call(obj)];
         },
 
@@ -89,7 +89,7 @@ var pc = {
          * <pre lang="javascript"><code>
          * var A = {a: function() {console.log(this.a}};
          * var B = {b: function() {console.log(this.b}};
-         * 
+         *
          * pc.extend(A,B);
          * A.a();
          * // logs "a"
@@ -105,7 +105,7 @@ var pc = {
         extend: function(target, ex) {
             var prop,
             copy;
-            
+
             for(prop in ex) {
                 copy = ex[prop];
                 if(pc.type(copy) == "object") {
@@ -113,13 +113,14 @@ var pc = {
                 } else if(pc.type(copy) == "array") {
                     target[prop] = pc.extend([], copy);
                 } else {
-                    target[prop] = copy;        
+                    target[prop] = copy;
                 }
             }
-            
+
             return target;
         },
-        
+
+
         /**
          * Return true if the Object is not undefined
          * @param {Object} o The Object to test
@@ -139,14 +140,14 @@ var pc = {
      * @description Create look up table for types
      */
     var _typeLookup = function () {
-        var result = {}, 
-        index, 
+        var result = {},
+        index,
         names = ["Array", "Object", "Function", "Date", "RegExp", "Float32Array"];
-        
+
         for(index = 0; index < names.length; ++index) {
             result["[object " + names[index] + "]"] = names[index].toLowerCase();
         }
-        
+
         return result;
     } ();
 

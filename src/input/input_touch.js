@@ -93,7 +93,7 @@ pc.extend(pc.input, function () {
         
         this.attach(element);
         
-        pc.extend(this, pc.events);
+        pc.events.attach(this);
     };
 
     TouchDevice.prototype = {
@@ -141,6 +141,9 @@ pc.extend(pc.input, function () {
         },
 
         _handleTouchMove: function (e) {
+            // call preventDefault to avoid issues in Chrome Android: 
+            // http://wilsonpage.co.uk/touch-events-in-chrome-android/
+            e.preventDefault();
             this.fire('touchmove', new TouchEvent(this, e));
         },
 

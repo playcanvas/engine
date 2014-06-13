@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.CameraComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
-    * @property {Boolean} enabled If true the {@link pc.fw.CameraComponentSystem} will set {@link pc.fw.CameraComponentSystem#current} to this camera. Otherwise if there is another enabled {@link pc.fw.CameraComponentSystem} then that will become the current camera.
+    * @property {Boolean} enabled If true the camera will be added to the active cameras of the {@link pc.fw.CameraComponentSystem} and rendered with all the other active cameras.
     * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
     * @property {pc.scene.Camera} camera The {@link pc.scene.CameraNode} used to render the scene
     * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render
@@ -17,7 +17,12 @@ pc.extend(pc.fw, function () {
     * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.scene.Projection.ORTHOGRAPHIC} cameras only. Defaults to 10.
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
     * @property {pc.scene.Projection} projection The type of projection used to render the camera.
+    * @property {Number} priority Controls which camera will be rendered first. Smaller numbers are rendered first.
+    * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
+    * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
+    * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates. The order of the values is [x, y, width, height]
     * @property {pc.gfx.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
+    * @property {pc.posteffect.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add / remove post effects from the camera.
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
     * effects).
@@ -32,8 +37,11 @@ pc.extend(pc.fw, function () {
         this.on("set_nearClip", this.onSetNearClip, this);
         this.on("set_farClip", this.onSetFarClip, this);
         this.on("set_projection", this.onSetProjection, this);
+        this.on("set_priority", this.onSetPriority, this);
+        this.on("set_clearColorBuffer", this.updateClearFlags, this);
+        this.on("set_clearDepthBuffer", this.updateClearFlags, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
-        this.on("set_enabled", this.onSetEnabled, this);
+        this.on("set_rect", this.onSetRect, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
 
@@ -50,7 +58,7 @@ pc.extend(pc.fw, function () {
 
     pc.extend(CameraComponent.prototype, {
         /**
-         * @function 
+         * @function
          * @name pc.fw.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
          * @param {Number} x x coordinate on PlayCanvas' canvas element.
@@ -69,52 +77,116 @@ pc.extend(pc.fw, function () {
         onSetAspectRatio: function (name, oldValue, newValue) {
             this.data.camera.setAspectRatio(newValue);
         },
+
         onSetCamera: function (name, oldValue, newValue) {
             // remove old camera node from hierarchy and add new one
             if (oldValue) {
                 this.entity.removeChild(oldValue);
-            }        
+            }
             this.entity.addChild(newValue);
         },
+
         onSetClearColor: function (name, oldValue, newValue) {
             var clearOptions = this.data.camera.getClearOptions();
             clearOptions.color[0] = newValue.r;
             clearOptions.color[1] = newValue.g;
             clearOptions.color[2] = newValue.b;
         },
+
         onSetFov: function (name, oldValue, newValue) {
             this.data.camera.setFov(newValue);
         },
+
         onSetOrthoHeight: function (name, oldValue, newValue) {
             this.data.camera.setOrthoHeight(newValue);
         },
+
         onSetNearClip: function (name, oldValue, newValue) {
             this.data.camera.setNearClip(newValue);
         },
+
         onSetFarClip: function (name, oldValue, newValue) {
             this.data.camera.setFarClip(newValue);
         },
+
         onSetProjection: function (name, oldValue, newValue) {
             this.data.camera.setProjection(newValue);
         },
+
+        onSetPriority: function (name, oldValue, newValue) {
+            this.system.sortCamerasByPriority();
+        },
+
+        updateClearFlags: function () {
+            var clearOptions = this.data.camera.getClearOptions();
+            var flags = 0;
+            if (this.clearColorBuffer) {
+                flags = flags | pc.gfx.CLEARFLAG_COLOR;
+            }
+
+            if (this.clearDepthBuffer) {
+                flags = flags | pc.gfx.CLEARFLAG_DEPTH;
+            }
+
+            clearOptions.flags = flags;
+        },
+
         onSetRenderTarget: function (name, oldValue, newValue) {
             this.data.camera.setRenderTarget(newValue);
         },
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (newValue) {
-                    this.system.current = this.entity;
-                } else {
-                    if (this.system.current === this.entity) {
-                        this.system.current = null;
-                        this.system.onCameraDisabled(this);
-                    }
+
+        onSetRect: function (name, oldValue, newValue) {
+            this.data.camera.setRect(newValue.data[0], newValue.data[1], newValue.data[2], newValue.data[3]);
+            this._resetAspectRatio();
+        },
+
+        onEnable: function () {
+            CameraComponent._super.onEnable.call(this);
+            this.system.addCamera(this);
+            this.postEffects.enable();
+        },
+
+        onDisable: function () {
+            CameraComponent._super.onDisable.call(this);
+            this.postEffects.disable();
+            this.system.removeCamera(this);
+        },
+
+        _resetAspectRatio: function () {
+            var camera = this.camera;
+            if (camera) {
+                var device = this.system.context.graphicsDevice;
+                var rect = this.rect;
+                var aspect = (device.width * rect.z) / (device.height * rect.w);
+                if (aspect !== camera.getAspectRatio()) {
+                    camera.setAspectRatio(aspect);
                 }
             }
-        }
+        },
+
+        /**
+         * Start rendering the frame for this camera
+         * @function
+         * @private
+         * @name pc.fw.CameraComponent#frameBegin
+         */
+        frameBegin: function () {
+            this._resetAspectRatio();
+            this.data.isRendering = true;
+        },
+
+        /**
+         * End rendering the frame for this camera
+         * @function
+         * @private
+         * @name pc.fw.CameraComponent#frameEnd
+         */
+        frameEnd: function () {
+            this.data.isRendering = false;
+        },
     });
 
     return {
         CameraComponent: CameraComponent
-    }; 
+    };
 }());

@@ -20,8 +20,6 @@ pc.extend(pc.fw, function () {
         this.on('set_assets', this.onSetAssets, this);
         // Handle changes to the 'loop' value
         this.on('set_loop', this.onSetLoop, this);
-        // Handle changes to the 'enabled' value
-        this.on('set_enabled', this.onSetEnabled, this);
     };
     AnimationComponent = pc.inherits(AnimationComponent, pc.fw.Component);
 
@@ -40,7 +38,7 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            if (!this.data.enabled) {
+            if (!this.enabled || !this.entity.enabled) {
                 return;
             }
 
@@ -145,7 +143,7 @@ pc.extend(pc.fw, function () {
 
             for (var animName in data.animations) {
                 // Set the first loaded animation as the current
-                if (data.enabled && data.activate) {
+                if (data.activate && data.enabled && this.entity.enabled) {
                     this.play(animName, 0);
                 }
                 break;
@@ -159,30 +157,33 @@ pc.extend(pc.fw, function () {
             if (this.data.skeleton) {
                 this.data.skeleton.setLooping(this.data.loop);
             }
-        },
-
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                if (newValue && 
-                    this.data.activate && 
-                    !this.data.currAnim) {
-
-                    for (var animName in this.data.animations) {
-                        this.play(animName, 0);
-                        break;
-                    }
-                }
-            }
-        },
+        }, 
 
         onSetCurrentTime: function (name, oldValue, newValue) {
             this.data.skeleton.setCurrentTime(newValue);
             this.data.skeleton.addTime(0); // update
             this.data.skeleton.updateGraph();
+        },
+
+        onEnable: function () {
+            AnimationComponent._super.onEnable.call(this);
+            if ( this.data.activate && 
+                 !this.data.currAnim) {
+
+                for (var animName in this.data.animations) {
+                    this.play(animName, 0);
+                    break;
+                }
+            }
         }
     });
 
     Object.defineProperties(AnimationComponent.prototype, {
+        /**
+        * @property
+        * @name pc.fw.AnimationComponent#currentTime
+        * @description Get or Set the current time position (in seconds) of the animation
+        */
         currentTime: {
             get: function () {
                 return this.data.skeleton.getCurrentTime();
@@ -193,6 +194,12 @@ pc.extend(pc.fw, function () {
                 this.data.skeleton.updateGraph();                
             }
         },
+
+        /**
+        * @property
+        * @name pc.fw.AnimationComponent#duration
+        * @description Get the duration in seconds of the current animation.
+        */
         duration: {
             get: function () {
                 return this.data.animations[this.data.currAnim].getDuration();

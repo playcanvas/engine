@@ -34,6 +34,9 @@ pc.extend(pc.scene, function () {
 
         this._parent = null;
         this._children = [];
+
+        this._enabled = true;
+        this._enabledInHierarchy = true;
     };
 
     Object.defineProperty(GraphNode.prototype, 'right', {
@@ -61,7 +64,60 @@ pc.extend(pc.scene, function () {
         }
     });
 
+
+    Object.defineProperty(GraphNode.prototype, 'enabled', {
+        /**
+        * @private
+        * Returns true if the GraphNode and all its parents are enabled.
+        * @return {Boolean} True if enabled false otherwise
+        */
+        get: function () {
+            // make sure to check this._enabled too because if that
+            // was false when a parent was updated the _enabledInHierarchy
+            // flag may not have been updated for optimization purposes
+            return this._enabled && this._enabledInHierarchy;
+        },
+
+        /**
+        * @private
+        * Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
+        * there will be no other side effects. If all the parents are enabled then
+        * the new value will activate / deactivate all the enabled children of the GraphNode.
+        */
+        set: function (enabled) {
+            if (this._enabled !== enabled) {
+                this._enabled = enabled;
+
+                if (!this._parent || this._parent.enabled) {
+                    this._notifyHierarchyStateChanged(this, enabled);
+                }
+
+            }
+        }
+    });
+
     pc.extend(GraphNode.prototype, {
+        _notifyHierarchyStateChanged: function (node, enabled) {
+            node._onHierarchyStateChanged(enabled);
+
+            var c = node._children;
+            for (var i=0, len=c.length; i<len; i++) {
+                if (c[i]._enabled) {
+                    this._notifyHierarchyStateChanged(c[i], enabled);
+                }
+            }
+        },
+
+        /**
+        * @private
+        * @function
+        * Called when the enabled flag of the entity or one of its
+        * parents changes
+        */
+        _onHierarchyStateChanged: function (enabled) {
+            // Override in derived classes
+            this._enabledInHierarchy = enabled;
+        },
 
         _cloneInternal: function (clone) {
             clone.name = this.name;
@@ -81,6 +137,9 @@ pc.extend(pc.scene, function () {
 
             clone.worldTransform.copy(this.worldTransform);
             clone.dirtyWorld = this.dirtyWorld;
+
+            clone._enabled = this._enabled;
+            clone._enabledInHierarchy = this._enabledInHierarchy;
         },
 
         clone: function () {
@@ -97,7 +156,7 @@ pc.extend(pc.scene, function () {
          * @param {String} value The value of the attr to look for
          * @returns {Array} An array of GraphNodes
          * @example
-         * var graph = ... // Get a pc.fw.Entity hierarchy from somewhere 
+         * var graph = ... // Get a pc.fw.Entity hierarchy from somewhere
          * var results = graph.find("getGuid", "1234");
          */
         find: function (attr, value) {
@@ -108,19 +167,19 @@ pc.extend(pc.scene, function () {
             var testValue;
             if(this[attr]) {
                 if(this[attr] instanceof Function) {
-                    testValue = this[attr]();    
+                    testValue = this[attr]();
                 } else {
                     testValue = this[attr];
                 }
                 if(testValue === value) {
                     results.push(this);
-                }            
+                }
             }
-            
+
             for(i = 0; i < length; ++i) {
                 results = results.concat(children[i].find(attr, value));
             }
-            
+
             return results;
         },
 
@@ -141,7 +200,7 @@ pc.extend(pc.scene, function () {
             var testValue;
             if(this[attr]) {
                 if(this[attr] instanceof Function) {
-                    testValue = this[attr]();    
+                    testValue = this[attr]();
                 } else {
                     testValue = this[attr];
                 }
@@ -149,14 +208,14 @@ pc.extend(pc.scene, function () {
                     return this;
                 }
             }
-            
+
             for(i = 0; i < length; ++i) {
                  result = children[i].findOne(attr, value);
                  if(result !== null) {
                      return result;
                  }
             }
-            
+
             return null;
         },
 
@@ -229,8 +288,8 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#getEulerAngles
          * @description Get the world space rotation for the specified GraphNode in Euler angle
-         * form. The order of the returned Euler angles is XYZ. The value returned by this function 
-         * should be considered read-only. In order to set the world-space rotation of the graph 
+         * form. The order of the returned Euler angles is XYZ. The value returned by this function
+         * should be considered read-only. In order to set the world-space rotation of the graph
          * node, use {@link pc.scene.GraphNode#setEulerAngles}.
          * @returns {pc.Vec3} The world space rotation of the graph node in Euler angle form.
          * @example
@@ -247,8 +306,8 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#getLocalEulerAngles
          * @description Get the rotation in local space for the specified GraphNode. The rotation
-         * is returned as eurler angles in a 3-dimensional vector where the order is XYZ. The 
-         * returned vector should be considered read-only. To update the local rotation, use 
+         * is returned as eurler angles in a 3-dimensional vector where the order is XYZ. The
+         * returned vector should be considered read-only. To update the local rotation, use
          * {@link pc.scene.GraphNode#setLocalEulerAngles}.
          * @returns {pc.Vec3} The local space rotation of the graph node as euler angles in XYZ order.
          * @example
@@ -348,7 +407,7 @@ pc.extend(pc.scene, function () {
          * value returned by this function should be considered read-only. In order to set
          * the world-space position of the graph node, use {@link pc.scene.GraphNode#setPosition}.
          * @returns {pc.Vec3} The world space position of the graph node.
-         * @example 
+         * @example
          * var position = this.entity.getPosition();
          * position.x = 10;
          * this.entity.setPosition(position);
@@ -362,7 +421,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.GraphNode#getRotation
          * @description Get the world space rotation for the specified GraphNode in quaternion
-         * form. The value returned by this function should be considered read-only. In order 
+         * form. The value returned by this function should be considered read-only. In order
          * to set the world-space rotation of the graph node, use {@link pc.scene.GraphNode#setRotation}.
          * @returns {pc.Quat} The world space rotation of the graph node as a quaternion.
          * @example
@@ -400,6 +459,22 @@ pc.extend(pc.scene, function () {
                 return this.worldTransform;
             }
         }(),
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#reparent
+         * @description Remove graph node from current parent and add as child to new parent
+         * @param {pc.scene.GraphNode} parent New parent to attach graph node to
+         */
+        reparent: function (parent) {
+            var current = this.getParent();
+            if (current) {
+                current.removeChild(this);
+            }
+            if (parent) {
+                parent.addChild(this);
+            }
+        },
 
         /**
          * @function
@@ -673,7 +748,7 @@ pc.extend(pc.scene, function () {
         }(),
 
         /**
-         * @function 
+         * @function
          * @name pc.scene.GraphNode#addChild
          * @description Add a new child to the child list and update the parent value of the child node
          * @param {pc.scene.GraphNode} node The new child to add
@@ -688,6 +763,19 @@ pc.extend(pc.scene, function () {
 
             this._children.push(node);
             node._parent = this;
+
+            // the child node should be enabled in the hierarchy only if itself is enabled and if
+            // this parent is enabled
+            var enabledInHierarchy = (node._enabled && this.enabled);
+            if (node._enabledInHierarchy !== enabledInHierarchy) {
+                node._enabledInHierarchy = enabledInHierarchy;
+
+                // propagate the change to the children - necessary if we reparent a node
+                // under a parent with a different enabled state (if we reparent a node that is
+                // not active in the hierarchy under a parent who is active in the hierarchy then
+                // we want our node to be activated)
+                node._notifyHierarchyStateChanged(node, enabledInHierarchy);
+            }
 
             // The child (plus subhierarchy) will need world transforms to be recalculated
             node.dirtyWorld = true;
@@ -708,7 +796,7 @@ pc.extend(pc.scene, function () {
 
             // Clear parent
             child._parent = null;
-            
+
             // Remove from child list
             for(i = 0; i < length; ++i) {
                 if(this._children[i] === child) {
@@ -719,7 +807,7 @@ pc.extend(pc.scene, function () {
         },
 
         /**
-         * @function 
+         * @function
          * @name pc.scene.GraphNode#addLabel
          * @description Add a string label to this graph node, labels can be used to group
          * and filter nodes. For example, the 'enemies' label could be applied to a group of NPCs
@@ -746,7 +834,7 @@ pc.extend(pc.scene, function () {
          * @description Test if a label has been applied to this graph node.
          * @param {String} label The label to test for.
          * @returns {Boolean} True if the label has been added to this GraphNode.
-         * 
+         *
          */
         hasLabel: function (label) {
             return !!this._labels[label];
@@ -773,7 +861,7 @@ pc.extend(pc.scene, function () {
         findByLabel: function (label, results) {
             var i, length = this._children.length;
             results = results || [];
-            
+
             if(this.hasLabel(label)) {
                 results.push(this);
             }
@@ -781,7 +869,7 @@ pc.extend(pc.scene, function () {
             for(i = 0; i < length; ++i) {
                 results = this._children[i].findByLabel(label, results);
             }
-            
+
             return results;
         },
 
@@ -794,7 +882,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.dirtyWorld) {
-                if (this._parent === null) { 
+                if (this._parent === null) {
                     this.worldTransform.copy(this.localTransform);
                 } else {
                     this.worldTransform.mul2(this._parent.worldTransform, this.localTransform);
@@ -813,14 +901,25 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#syncHierarchy
          * @description Updates the world transformation matrices at this node and all of its descendants.
          */
-        syncHierarchy: function () {
-            this.sync();
+        syncHierarchy: (function () {
+            // cache this._children and the syncHierarchy method itself
+            // for optimization purposes
+            var F = function () {
+                if (!this._enabled) {
+                    return;
+                }
 
-            // Sync subhierarchy
-            for (var i = 0, len = this._children.length; i < len; i++) {
-                this._children[i].syncHierarchy();
-            }
-        },
+                // sync this object
+                this.sync();
+
+                // sync the children
+                var c = this._children;
+                for(var i = 0, len = c.length;i < len;i++) {
+                    F.call(c[i]);
+                }
+            };
+           return F;
+       })(),
 
         /**
          * @function
@@ -1065,10 +1164,10 @@ pc.extend(pc.scene, function () {
                 this.localRotation.mul(quaternion);
                 this.dirtyLocal = true;
             }
-        }()
+        }(),
     });
 
     return {
         GraphNode: GraphNode
-    }; 
+    };
 }());

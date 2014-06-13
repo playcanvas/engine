@@ -9,22 +9,22 @@ pc.extend(pc.resources, function () {
      */
     var ScriptResourceHandler = function (context, prefix) {
         this._context = context;
-        
+
         this._prefix = prefix || ""; // prefix for script urls, allows running from script resources on localhost
         this._queue = []; // queue of urls waiting to load
         this._pending = []; // queue of scripts which have been executed but are waiting to be instanciated
-        this._loaded = {}; // Script objects that have loaded 
+        this._loaded = {}; // Script objects that have loaded
         this._loading = null; // script element that has been created but is waiting for script to load
-                
+
         pc.script.on("created", this._onScriptCreated, this);
     };
     ScriptResourceHandler = pc.inherits(ScriptResourceHandler, pc.resources.ResourceHandler);
-    
+
     /**
      * @name pc.resources.ScriptResourceHandler#load
      * @description Load a new javascript resource
      * @param {ScriptResourceRequest} request The request for the script
-     * @param {Object} [options] Optional parameters 
+     * @param {Object} [options] Optional parameters
      * @param {Number} [options.timeout] A timeout value in milliseconds before the error callback is fired if the script loading has failed, defaults to 10000
      */
     ScriptResourceHandler.prototype.load = function (request, options) {
@@ -32,7 +32,7 @@ pc.extend(pc.resources, function () {
         options.timeout = options.timeout || 60000; // default 10 second timeout
         options.cache = true; // For cache-busting off, so that script debugging works
 
-        var promise = new RSVP.Promise(function (resolve, reject) {
+        var promise = new pc.promise.Promise(function (resolve, reject) {
             var processedUrl = request.canonical;
             if( !options.cache ) {
                 processedUrl = this._appendTimestampToUrl(processedUrl);
@@ -41,7 +41,7 @@ pc.extend(pc.resources, function () {
             var url = new pc.URI(processedUrl);
             url.path = pc.path.join(this._prefix, url.path);
             url = url.toString();
-            
+
             if(this._loaded[url]) {
                 if (this._loaded[url] !== true) {
                     resolve(this._loaded[url]);
@@ -60,7 +60,7 @@ pc.extend(pc.resources, function () {
                     this._addScriptTag(url.toString(), resolve, reject);
                 }
             }
-            
+
             if(options.timeout) {
                 (function () {
                     setTimeout(function () {
@@ -74,7 +74,7 @@ pc.extend(pc.resources, function () {
 
         return promise;
     };
-    
+
     ScriptResourceHandler.prototype.open = function (data, request, options) {
         return data;
     };
@@ -82,7 +82,7 @@ pc.extend(pc.resources, function () {
     /**
     * @private
     * Adds a timestamp to the specified URL to prevent it from being cached.
-    * @url The url to append the timestamp to 
+    * @url The url to append the timestamp to
     * @returns The new url
     */
     ScriptResourceHandler.prototype._appendTimestampToUrl = function( url ) {
@@ -95,10 +95,10 @@ pc.extend(pc.resources, function () {
         else {
             uri.query = uri.query + "&ts=" + timestamp;
         }
-        url = uri.toString(); 
+        url = uri.toString();
         return url;
     }
-    
+
     /**
      * @private
      * @name pc.resources.ScriptResourceHandler#_onScriptCreated
@@ -112,23 +112,23 @@ pc.extend(pc.resources, function () {
             callback: callback
         });
     };
-    
+
     /**
      * @private
      * @name pc.resources.ScriptResourceHandler#_addScriptTag
      * @description Add a new script tag to the document.head and set it's src to load a new script.
-     * Handle success and errors and load the next in the queue 
+     * Handle success and errors and load the next in the queue
      */
     ScriptResourceHandler.prototype._addScriptTag = function (url, success, error) {
         var self = this;
         var head = document.getElementsByTagName("head")[0];
         var element = document.createElement("script");
         this._loading = element;
-        
+
         element.addEventListener("error", function (e) {
-            error(pc.string.format("Error loading script from '{0}'", e.target.src));    
+            error(pc.string.format("Error loading script from '{0}'", e.target.src));
         });
-        
+
         var done = false;
         element.onload = element.onreadystatechange = function () {
             if(!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
@@ -153,7 +153,7 @@ pc.extend(pc.resources, function () {
                 if (self._queue.length) {
                    var loadable = self._queue.shift();
                    self._addScriptTag(loadable.url, loadable.success, loadable.error);
-                }                    
+                }
             }
         };
         // set the src attribute after the onload callback is set, to avoid an instant loading failing to fire the callback
@@ -161,12 +161,12 @@ pc.extend(pc.resources, function () {
 
         head.appendChild(element);
     };
-    
+
     var ScriptRequest = function ScriptRequest() {
     };
     ScriptRequest = pc.inherits(ScriptRequest, pc.resources.ResourceRequest);
     ScriptRequest.prototype.type = "script";
-    
+
     return {
         ScriptResourceHandler: ScriptResourceHandler,
         ScriptRequest: ScriptRequest

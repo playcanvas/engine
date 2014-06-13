@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <link href="../../style.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="application-canvas"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("application-canvas");
+
+        // Create the application and start the update loop
+        var application = new pc.fw.Application(canvas);
+        application.start();
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
+        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+
+        application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+        var entity, light, camera;
+
+        // Create an Entity with a camera component
+        var camera = new pc.fw.Entity();
+        application.context.systems.camera.addComponent(camera, {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 7, 25);
+
+        // Create an Entity with a point light component and a sphere model component.
+        var light = new pc.fw.Entity();
+        application.context.systems.light.addComponent(light, {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100
+        });
+        light.translate(5, 5, 10);
+
+        application.context.root.addChild(camera);
+        application.context.root.addChild(light);
+
+        var url = "../../assets/statue/Statue_1.json";
+        application.context.assets.loadFromUrl(url, "model").then(function (results) {
+            var model = results.resource;
+            var asset = results.asset;
+
+            entity = new pc.fw.Entity();
+
+            application.context.systems.model.addComponent(entity, {
+                type: "asset",
+                asset: asset
+            });
+
+            application.context.root.addChild(entity);
+        });
+
+
+        var mouse = new pc.input.Mouse(document);
+
+        var x = 0;
+        var y = 0;
+
+        mouse.on('mousemove', function (event) {
+            if (event.buttons[pc.input.MOUSEBUTTON_LEFT]) {
+                x += event.dx;
+
+                entity.setLocalEulerAngles(0, 0.2*x, 0);
+            }
+        });
+
+    </script>
+</body>
+</html>

@@ -6,14 +6,15 @@ pc.extend(pc.fw, function () {
 
         // not serialized
         this.instances = {};
-        this._scripts = [];
+        this._instances = {};
         this.runInTools = false;
         this.attributes = {};
         this.initialized = false;
         this.postInitialized = false;
+        this.areScriptsLoaded = false;
     };
     ScriptComponentData = pc.inherits(ScriptComponentData, pc.fw.ComponentData);
-    
+
     return {
         ScriptComponentData: ScriptComponentData
     };

@@ -134,14 +134,16 @@ pc.extend(pc.fw, function () {
             properties = ['enabled', 'assets', 'volume', 'pitch', 'loop', 'activate', 'positional', 'refDistance', 'maxDistance', 'rollOffFactor'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         
-            component.paused = !(data.enabled && data.activate);
+            component.paused = !(component.enabled && data.activate);
         },
 
         onInitialize: function(root) {
-            if (root.audiosource) {
-                if (root.audiosource.enabled && root.audiosource.activate) {
-                    root.audiosource.play(root.audiosource.currentSource);
-                }
+            if (root.audiosource && 
+                root.enabled &&
+                root.audiosource.enabled &&
+                root.audiosource.activate) {
+                
+                root.audiosource.play(root.audiosource.currentSource);
             }
             
             var children = root.getChildren();
@@ -158,11 +160,12 @@ pc.extend(pc.fw, function () {
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
-                    var entity = components[id].entity;
-                    var componentData = components[id].data;
+                    var component = components[id];
+                    var entity = component.entity;
+                    var componentData = component.data;
                     
                     // Update channel position if this is a 3d sound
-                    if (componentData.enabled && componentData.channel instanceof pc.audio.Channel3d) {
+                    if (componentData.enabled && entity.enabled && componentData.channel instanceof pc.audio.Channel3d) {
                         var pos = entity.getPosition();
                         componentData.channel.setPosition(pos);
                     }

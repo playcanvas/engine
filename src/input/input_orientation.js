@@ -1,7 +1,7 @@
 pc.extend(pc.input, function () {
 
     var Orientation = function () {
-        pc.extend(this, pc.events);
+        pc.events.attach(this);
     };
     
     Orientation.prototype.attach = function (window) {

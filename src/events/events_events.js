@@ -2,16 +2,16 @@
  * @name pc.events
  * @namespace
  * @description Extend any normal object with events
- * 
+ *
  * @example
  * var o = {};
  * o = pc.extend(o, pc.events);
- * 
+ *
  * // attach event
  * o.on("event_name", function() {
  *   alert('event_name fired');
  * }, this);
- * 
+ *
  * // fire event
  * o.fire("event_name");
  *
@@ -19,8 +19,26 @@
  * o.off('event_name');
  */
 pc.events = function () {
-    
+
     var Events = {
+        /**
+        * @function
+        * @name pc.events.attach
+        * @description Attach event methods 'on', 'off', 'fire' and 'hasEvent' to the target object
+        * @param  {Object} target The object to add events to.
+        * @return {Object} The target object
+        */
+        attach: function (target) {
+            var ev = pc.events;
+            target.on = ev.on;
+            target.off = ev.off;
+            target.fire = ev.fire;
+            target.hasEvent = ev.hasEvent;
+            target.bind = ev.on;
+            target.unbind = ev.off;
+            return target;
+        },
+
         /**
          * @function
          * @name pc.events.on
@@ -30,7 +48,7 @@ pc.events = function () {
          * @param {Object} [scope] Object to use as 'this' when the event is fired, defaults to current this
          * @example
          * var o = {};
-         * o = pc.extend(o, pc.events);
+         * pc.events.attach(o);
          * o.on('event_name', function (a, b) {
          *   console.log(a + b);
          * });
@@ -46,14 +64,14 @@ pc.events = function () {
                 callback: callback,
                 scope: scope || this
             });
-            
+
             return this;
         },
-        
+
         /**
          * @function
          * @name pc.events.off
-         * @description Detach an event handler from an event. If callback is not provided then all callbacks are unbound from the event, 
+         * @description Detach an event handler from an event. If callback is not provided then all callbacks are unbound from the event,
          * if scope is not provided then all events with the callback will be unbound.
          * @param {String} name Name of the event to unbind
          * @param {Function} [callback] Function to be unbound
@@ -62,11 +80,11 @@ pc.events = function () {
          * var handler = function () {
          * };
          * var o = {};
-         * o = pc.extend(o, pc.events);
+         * pc.events.attach(o);
          * o.on('event_name', handler);
-         * 
+         *
          * o.off('event_name'); // Remove all events called 'event_name'
-         * o.off('event_name', handler); // Remove all handler functions, called 'event_name' 
+         * o.off('event_name', handler); // Remove all handler functions, called 'event_name'
          * o.off('event_name', handler, this); // Remove all hander functions, called 'event_name' with scope this
          */
         off: function (name, callback, scope) {
@@ -86,7 +104,7 @@ pc.events = function () {
                 if (!events) {
                     return this;
                 }
-                
+
                 for(index = 0; index < events.length; index++) {
                     if(events[index].callback === callback) {
                         if (!scope || (scope === events[index].scope)) {
@@ -96,7 +114,7 @@ pc.events = function () {
                     }
                 }
             }
-            
+
             return this;
         },
 
@@ -108,7 +126,7 @@ pc.events = function () {
          * @param {*} [...] Arguments that are passed to the event handler
          * @example
          * var o = {};
-         * o = pc.extend(o, pc.events);
+         * pc.events.attach(o);
          * o.on('event_name', function (msg) {
          *   alert('event_name fired: ' + msg);
          * });
@@ -117,19 +135,21 @@ pc.events = function () {
         fire: function (name) {
             var index;
             var length;
-            var args = pc.makeArray(arguments);
+            var args;
             var callbacks;
-            args.shift();
-            
+
             if(this._callbacks && this._callbacks[name]) {
+                args = pc.makeArray(arguments);
+                args.shift();
+
                 callbacks = this._callbacks[name].slice(); // clone list so that deleting inside callbacks works
                 length = callbacks.length;
                 for(index = 0; index < length; ++index) {
                     var scope = callbacks[index].scope;
                     callbacks[index].callback.apply(scope, args);
-                }            
+                }
             }
-            
+
             return this;
         },
 
@@ -140,7 +160,7 @@ pc.events = function () {
         * @param {String} name The name of the event to test
         * @example
         * var o = {};
-        * pc.extend(o, pc.events); // add events to o
+        * pc.events.attach(o); // add events to o
         * o.on('event_name', function () {}); // bind an event to 'event_name'
         * o.hasEvent('event_name'); // returns true
         */

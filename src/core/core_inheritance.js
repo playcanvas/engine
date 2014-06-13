@@ -13,7 +13,7 @@ Function.prototype.extendsFrom = function (Super) {
     var Self;
     var Func;
 	var Temp = function () {};
-    
+
 	Self = this;
     Func = function () {
         Super.apply(this, arguments);
@@ -39,17 +39,17 @@ pc.extend(pc, function () {
          * @returns {Function} New instance of Self which inherits from Super
          * @example
          * Base = function () {};
-         * Base.prototype.fn = function () { 
-         *   console.log('base'); 
+         * Base.prototype.fn = function () {
+         *   console.log('base');
          * };
          * Class = function () {}
          * Class = pc.inherits(Class, Base);
-         * Class.prototype.fn = function () { 
+         * Class.prototype.fn = function () {
          *   // Call overridden method
-         *   Class._super.fn(); 
-         *   console.log('class'); 
+         *   Class._super.fn();
+         *   console.log('class');
          * };
-         * 
+         *
          * var c = new Class();
          * c.fn(); // prints 'base' then 'class'
          */
@@ -58,7 +58,7 @@ pc.extend(pc, function () {
             var Func = function () {
                 Super.apply(this, arguments);
                 Self.apply(this, arguments);
-                this.constructor = Self;
+                // this.constructor = Self;
             };
             Func._super = Super.prototype;
             Temp.prototype = Super.prototype;

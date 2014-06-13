@@ -9,10 +9,10 @@ pc.extend(pc.fw, function () {
         this.id = "audiolistener";
         this.description = "Specifies the location of the listener for 3D audio playback.";
         context.systems.add(this.id, this);
-    
+
         this.ComponentType = pc.fw.AudioListenerComponent;
         this.DataType = pc.fw.AudioListenerComponentData;
-        
+
         this.schema = [{
             name: "enabled",
             displayName: "Enabled",
@@ -22,21 +22,21 @@ pc.extend(pc.fw, function () {
         }];
 
         this.exposeProperties();
-        
+
         this.manager = manager;
         this.current = null;
 
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-    };        
+    };
     AudioListenerComponentSystem = pc.inherits(AudioListenerComponentSystem, pc.fw.ComponentSystem);
-    
+
     pc.extend(AudioListenerComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['enabled'];
-            
+
             AudioListenerComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-            component.setCurrentListener();
         },
+
         onUpdate: function (dt) {
             if (this.current) {
                 var position = this.current.getPosition();
@@ -49,6 +49,6 @@ pc.extend(pc.fw, function () {
     });
 
     return {
-        AudioListenerComponentSystem : AudioListenerComponentSystem 
+        AudioListenerComponentSystem : AudioListenerComponentSystem
     };
 }());

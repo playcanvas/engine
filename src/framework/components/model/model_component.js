@@ -29,7 +29,7 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_model", this.onSetModel, this);
         this.on("set_receiveShadows", this.onSetReceiveShadows, this);
-        this.on("set_enabled", this.onSetEnabled, this);
+        this.on("set_material", this.onSetMaterial, this);
 
         // override materialAsset property to return a pc.Asset instead
         Object.defineProperty(this, 'materialAsset', {
@@ -40,7 +40,7 @@ pc.extend(pc.fw, function () {
         this.materialLoader = new pc.resources.MaterialResourceLoader(system.context.graphicsDevice, system.context.assets);
     };
     ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
-    
+
     pc.extend(ModelComponent.prototype, {
 
         setVisible: function (visible) {
@@ -52,26 +52,34 @@ pc.extend(pc.fw, function () {
             var options = {
                 parent: this.entity.getRequest()
             };
-            
+
             var asset = this.system.context.assets.getAssetByResourceId(guid);
             if (!asset) {
                 logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
                 return;
             }
 
-            this.system.context.assets.load(asset, [], options).then(function (resources) {
+            function _onLoad(resources) {
                 var model = resources[0];
-
                 if (this.system.context.designer) {
                     model.generateWireframe();
-                
-                    asset.on('change', this.onAssetChange, this);
                 }
+
+                asset.on('change', this.onAssetChange, this);
 
                 if (this.data.type === 'asset') {
                     this.model = model;
                 }
-            }.bind(this));
+            }
+
+            if (asset.resource) {
+                setTimeout(function () {
+                    var model = asset.resource.clone();
+                    _onLoad.call(this, [model]);
+                }.bind(this), 0);
+            } else {
+                this.system.context.assets.load(asset, [], options).then(_onLoad.bind(this));
+            }
         },
 
         /**
@@ -94,7 +102,7 @@ pc.extend(pc.fw, function () {
                     }
                 } else {
                     switch (newValue) {
-                        case 'box': 
+                        case 'box':
                             mesh = this.system.box;
                             break;
                         case 'capsule':
@@ -108,7 +116,7 @@ pc.extend(pc.fw, function () {
                             break;
                         case 'cylinder':
                             mesh = this.system.cylinder;
-                            break;                    
+                            break;
                         default:
                             throw new Error("Invalid model type: " + newValue);
                     }
@@ -134,13 +142,18 @@ pc.extend(pc.fw, function () {
                 // Remove old listener
                 var asset = this.system.context.assets.getAssetByResourceId(oldValue);
                 if (asset) {
-                    asset.off('change', this.onAssetChange, this);    
+                    asset.off('change', this.onAssetChange, this);
                 }
             }
 
             if (this.data.type === 'asset') {
                 if (newValue) {
-                    this.loadModelAsset(newValue);
+                    if (newValue instanceof pc.asset.Asset) {
+                        this.data.asset = newValue.resourceId;
+                        this.loadModelAsset(newValue.resourceId);
+                    } else {
+                        this.loadModelAsset(newValue);
+                    }
                 } else {
                     this.model = null;
                 }
@@ -164,7 +177,7 @@ pc.extend(pc.fw, function () {
                 if (inScene) {
                     scene.addModel(model);
                 }
-            }        
+            }
         },
 
         onSetModel: function (name, oldValue, newValue) {
@@ -182,8 +195,9 @@ pc.extend(pc.fw, function () {
                     meshInstances[i].receiveShadow = componentData.receiveShadows;
                 }
 
-                if (this.enabled) {
-                    this.entity.addChild(newValue.graph);
+                this.entity.addChild(newValue.graph);
+
+                if (this.enabled && this.entity.enabled) {
                     this.system.context.scene.addModel(newValue);
                 }
 
@@ -194,29 +208,46 @@ pc.extend(pc.fw, function () {
                 if (this.entity.animation) {
                     this.entity.animation.setModel(newValue);
                 }
-            }        
+            }
         },
 
         setMaterialAsset: function (newValue) {
             // if the type of the value is not a string assume it is an pc.Asset
             var guid = typeof newValue === 'string' || !newValue ? newValue : newValue.resourceId;
 
-            material = guid ? this.materialLoader.load(guid) : this.system.defaultMaterial;
-            this.data.material = material;
-            if (this.data.model && this.data.type !== 'asset') {
-                var meshInstances = this.data.model.meshInstances;
-                for (var i=0; i<meshInstances.length; i++) {
-                    meshInstances[i].material = material;
-                }
+            var material;
+
+            // try to load the material asset
+            if (guid) {
+                material = this.materialLoader.load(guid);
             }
+
+            // if no material asset was loaded then use the default material
+            if (!material) {
+                material = this.system.defaultMaterial;
+            }
+
+            this.material = material;
 
             var oldValue = this.data.materialAsset;
             this.data.materialAsset = guid;
-            this.fire('set', 'materialAsset', oldValue, guid);                            
+            this.fire('set', 'materialAsset', oldValue, guid);
         },
 
         getMaterialAsset: function () {
             return this.system.context.assets.getAssetByResourceId(this.data.materialAsset);
+        },
+
+        onSetMaterial: function (name, oldValue, newValue) {
+            if (newValue !== oldValue) {
+                this.data.material = newValue;
+                if (this.data.model && this.data.type !== 'asset') {
+                    var meshInstances = this.data.model.meshInstances;
+                    for (var i=0; i<meshInstances.length; i++) {
+                        meshInstances[i].material = newValue;
+                    }
+                }
+            }
         },
 
         onSetReceiveShadows: function (name, oldValue, newValue) {
@@ -231,18 +262,26 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        onSetEnabled: function (name, oldValue, newValue) {
-            if (oldValue !== newValue) {
-                var visible = newValue;
+        onEnable: function () {
+            ModelComponent._super.onEnable.call(this);
 
-                if (this.data.model) {
-                    var inScene = this.system.context.scene.containsModel(this.data.model);
-                    
-                    if (visible && !inScene) {
-                        this.system.context.scene.addModel(this.data.model);
-                    } else if (!visible && inScene) {
-                        this.system.context.scene.removeModel(this.data.model);
-                    }
+            var model = this.data.model;
+            if (model) {
+                var inScene = this.system.context.scene.containsModel(model);
+                if (!inScene) {
+                    this.system.context.scene.addModel(model);
+                }
+            }
+        },
+
+        onDisable: function () {
+            ModelComponent._super.onDisable.call(this);
+
+            var model = this.data.model;
+            if (model) {
+                var inScene = this.system.context.scene.containsModel(model);
+                if (inScene) {
+                    this.system.context.scene.removeModel(model);
                 }
             }
         },
@@ -254,6 +293,7 @@ pc.extend(pc.fw, function () {
         */
         onAssetChange: function (asset) {
             // Remove the asset from the cache and reload it
+            asset.resource = null;
             this.system.context.loader.removeFromCache(asset.getFileUrl());
             this.asset = null;
             this.asset = asset.resourceId;

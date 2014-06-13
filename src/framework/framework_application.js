@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
      * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
      * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
      * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
-     * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading 
+     * @param {String} [options.scriptPrefix] Prefix to apply to script urls before loading
      *
      * @example
      * // Create application
@@ -23,10 +23,12 @@ pc.extend(pc.fw, function () {
      * app.start()
      */
     var Application = function (canvas, options) {
+        options = options || {};
+
         this._inTools = false;
 
         // Add event support
-        pc.extend(this, pc.events);
+        pc.events.attach(this);
 
         this.content = options.content;
         this.canvas = canvas;
@@ -45,30 +47,32 @@ pc.extend(pc.fw, function () {
         this.graphicsDevice = new pc.gfx.Device(canvas);
 
         // Enable validation of each WebGL command
-        this.graphicsDevice.enableValidation(false);            
+        this.graphicsDevice.enableValidation(false);
 
         var registry = new pc.fw.ComponentSystemRegistry();
-    
+
         this.audioManager = new pc.audio.AudioManager();
-        
+
         // Create resource loader
         var loader = new pc.resources.ResourceLoader();
         if( options.cache === false )
             loader.cache = false;
-            
+
         // Display shows debug loading information. Only really fit for debug display at the moment.
         if (options.displayLoader) {
             var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, loader);
         }
-        
+
         // The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
-        
+
         // Enable new texture bank feature to cache textures
         var textureCache = new pc.resources.TextureCache(loader);
-        
+
         loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
+        loader.registerHandler(pc.resources.TextRequest, new pc.resources.TextResourceHandler());
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
+        loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(this.context.assets));
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
@@ -77,7 +81,7 @@ pc.extend(pc.fw, function () {
 
         this.renderer = new pc.scene.ForwardRenderer(this.graphicsDevice);
 
-        // Register the ScriptResourceHandler late as we need the context        
+        // Register the ScriptResourceHandler late as we need the context
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
         var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);
@@ -119,13 +123,13 @@ pc.extend(pc.fw, function () {
         if (typeof document.hidden !== 'undefined') {
             this._hiddenAttr = 'hidden';
             document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.mozHidden !== 'undefined') {  
+        } else if (typeof document.mozHidden !== 'undefined') {
             this._hiddenAttr = 'mozHidden';
             document.addEventListener('mozvisibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.msHidden !== 'undefined') {  
+        } else if (typeof document.msHidden !== 'undefined') {
             this._hiddenAttr = 'msHidden';
             document.addEventListener('msvisibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.webkitHidden !== 'undefined') {  
+        } else if (typeof document.webkitHidden !== 'undefined') {
             this._hiddenAttr = 'webkitHidden';
             document.addEventListener('webkitvisibilitychange', this.onVisibilityChange.bind(this), false);
         }
@@ -154,22 +158,22 @@ pc.extend(pc.fw, function () {
             success = success || function () {};
             error = error || function () {};
             progress = progress || function () {};
-            
+
             var requests = [];
 
             // Populate the AssetRegistry and register hashes
             this.context.assets.update(toc);
 
             var onLoaded = function (resources) {
-                // load pack 
+                // load pack
                 guid = toc.packs[0];
-                
+
                 this.context.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
                     var pack = resources[0];
                     this.context.root.addChild(pack.hierarchy);
                     pc.fw.ComponentSystem.initialize(pack.hierarchy);
                     pc.fw.ComponentSystem.postInitialize(pack.hierarchy);
-                    
+
                     // Initialise pack settings
                     if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
                         var gravity = pack.settings.physics.gravity;
@@ -193,7 +197,7 @@ pc.extend(pc.fw, function () {
                 }).then(null, function (error) {
                     // Re-throw any exceptions from the script's initialize method to stop them being swallowed by the Promises lib
                     setTimeout(function () {
-                        throw error;    
+                        throw error;
                     }, 0);
                 });
             }.bind(this);
@@ -201,7 +205,7 @@ pc.extend(pc.fw, function () {
             var load = function () {
                 // Get a list of all assets
                 var assets = this.context.assets.all();
-                
+
                 // start recording loading progress from here
                 this.context.loader.on('progress', progress);
 
@@ -214,7 +218,7 @@ pc.extend(pc.fw, function () {
                     setTimeout(function () {
                         onLoaded([]);
                     }, 0);
-                }       
+                }
             }.bind(this);
 
             if (!this.librariesLoaded) {
@@ -234,10 +238,10 @@ pc.extend(pc.fw, function () {
 
         //             // add to hierarchy
         //             this.context.root.addChild(pack.hierarchy);
-                    
+
         //             // Initialise any systems with an initialize() method after pack is loaded
         //             pc.fw.ComponentSystem.initialize(pack.hierarchy);
-                    
+
         //             // callback
         //             if (success) {
         //                 success(pack);
@@ -275,10 +279,10 @@ pc.extend(pc.fw, function () {
                     this.tick();
                 }, this);
             } else {
-                this.tick();    
+                this.tick();
             }
         },
-        
+
         /**
          * @function
          * @name pc.fw.Application#update
@@ -310,27 +314,29 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        /** 
+        /**
          * @function
          * @name pc.fw.Application#render
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
             var context = this.context;
+            var cameras = context.systems.camera.cameras;
+            var camera = null;
+            var renderer = this.renderer;
 
             context.root.syncHierarchy();
 
-            var cameraEntity = context.systems.camera.current;
-            if (cameraEntity) {
-                context.systems.camera.frameBegin();
-
-                this.renderer.render(context.scene, cameraEntity.camera.camera);
-
-                context.systems.camera.frameEnd();            
+            // render the scene from each camera
+            for (var i=0,len=cameras.length; i<len; i++) {
+                camera = cameras[i];
+                camera.frameBegin();
+                renderer.render(context.scene, camera.camera);
+                camera.frameEnd();
             }
         },
 
-        /** 
+        /**
          * @function
          * @name pc.fw.Application#tick
          * @description Application specific tick method that calls update and render and queues
@@ -342,18 +348,18 @@ pc.extend(pc.fw, function () {
 
             var now = (window.performance && window.performance.now) ? performance.now() : Date.now();
             var dt = (now - (time || now)) / 1000.0;
- 
+
             time = now;
 
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
-            
+
             this.update(dt);
             this.render();
         },
 
         /**
         * @function
-        * @name pc.fw.Application#setCanvasFillMode()
+        * @name pc.fw.Application#setCanvasFillMode
         * @description Change the way the canvas fills the window and resizes when the window changes
         * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
         * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
@@ -369,25 +375,24 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#setCanvasResolution()
+        * @name pc.fw.Application#setCanvasResolution
         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
         * In AUTO mode, the resolution is change to match the size of the canvas when the canvas resizes
         * In FIXED mode, the resolution remains until another call to setCanvasResolution()
         * @param {pc.fw.ResolutionMode} mode The mode to use when setting the resolution
-        * @param {Number} [width] The horizontal resolution, only used in FIXED mode
-        * @param {Number} [height] The vertical resolution, only used in FIXED mode
-        */ 
+        * @param {Number} [width] The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
+        * @param {Number} [height] The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
+        */
         setCanvasResolution: function (mode, width, height) {
             this.resolutionMode = mode;
 
-            // In AUTO mode the resolution is the same as the canvas size
-            if (mode === pc.fw.ResolutionMode.AUTO) {
+            // In AUTO mode the resolution is the same as the canvas size, unless specified
+            if (mode === pc.fw.ResolutionMode.AUTO && (width === undefined)) {
                 width = this.canvas.clientWidth;
                 height = this.canvas.clientHeight;
             }
 
-            this.canvas.width = width;
-            this.canvas.height = height;
+            this.graphicsDevice.resizeCanvas(width, height);
         },
 
         /**
@@ -422,7 +427,7 @@ pc.extend(pc.fw, function () {
         */
         enableFullscreen: function (element, success, error) {
             element = element || this.canvas;
-                
+
             // success callback
             var s = function () {
                 success();
@@ -436,7 +441,7 @@ pc.extend(pc.fw, function () {
             };
 
             if (success) {
-                document.addEventListener('fullscreenchange', s, false);    
+                document.addEventListener('fullscreenchange', s, false);
             }
 
             if (error) {
@@ -459,7 +464,7 @@ pc.extend(pc.fw, function () {
             };
 
             if (success) {
-                document.addEventListener('fullscreenchange', s, false);    
+                document.addEventListener('fullscreenchange', s, false);
             }
 
             document.exitFullscreen();
@@ -469,7 +474,7 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.Application#isHidden
         * @description Returns true if the window or tab in which the application is running in is not visible to the user.
-        */ 
+        */
         isHidden: function () {
             return document[this._hiddenAttr];
         },
@@ -508,8 +513,7 @@ pc.extend(pc.fw, function () {
                 height = windowHeight;
 
                 var ratio = window.devicePixelRatio;
-                this.canvas.width = width * ratio;
-                this.canvas.height = height * ratio;
+                this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
             } else {
                 if (this.fillMode === pc.fw.FillMode.KEEP_ASPECT) {
                     var r = this.canvas.width/this.canvas.height;
@@ -518,14 +522,9 @@ pc.extend(pc.fw, function () {
                     if (r > winR) {
                         width = windowWidth;
                         height = width / r ;
-
-                        //var marginTop = (windowHeight - height) / 2;
-                        //this.container.style.margin = marginTop + "px auto";
                     } else {
                         height = windowHeight;
                         width = height * r;
-
-                        //this.container.style.margin = "auto auto";
                     }
                 } else if (this.fillMode === pc.fw.FillMode.FILL_WINDOW) {
                     width = windowWidth;
@@ -559,7 +558,7 @@ pc.extend(pc.fw, function () {
         */
         onLibrariesLoaded: function () {
             // Create systems that may require external libraries
-            // var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);    
+            // var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);
             // var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
             // var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
 
@@ -600,7 +599,7 @@ pc.extend(pc.fw, function () {
                 case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
                     entity = this.context.root.findOne("getGuid", msg.content.id);
                     if(entity) {
-                        logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid())); 
+                        logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid()));
                         entity.destroy();
                     }
                     break;
@@ -642,6 +641,10 @@ pc.extend(pc.fw, function () {
                     this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
                     break;
 
+                case pc.fw.LiveLinkMessageType.UPDATE_ASSETCACHE:
+                    this.context.assets.update(msg.content, this.context.loader);
+                    break;
+
                 case pc.fw.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
                     this._linkUpdatePackSettings(msg.content.settings);
                     break;
@@ -651,7 +654,7 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @name pc.fw.Application#_linkUpdateComponent
-         * @description Update a value on a component, 
+         * @description Update a value on a component,
          * @param {String} guid GUID for the entity
          * @param {String} componentName name of the component to update
          * @param {String} attributeName name of the attribute on the component
@@ -660,7 +663,7 @@ pc.extend(pc.fw, function () {
         _linkUpdateComponent: function(guid, componentName, attributeName, value) {
             var entity = this.context.root.findOne("getGuid", guid);
             var attribute;
-                
+
             if (entity) {
                 if(componentName) {
                     if(entity[componentName]) {
@@ -670,6 +673,10 @@ pc.extend(pc.fw, function () {
                             if (attribute.RuntimeType) {
                                     if (attribute.RuntimeType === pc.Vec3) {
                                         entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
+                                    } else if (attribute.RuntimeType === pc.Vec4) {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
+                                    } else if (attribute.RuntimeType === pc.Vec2) {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1]);
                                     } else if (attribute.RuntimeType === pc.Color) {
                                         if (value.length === 3) {
                                             entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
@@ -680,13 +687,13 @@ pc.extend(pc.fw, function () {
                                         entity[componentName][attributeName] = new attribute.RuntimeType(value);
                                     }
                             } else {
-                                entity[componentName][attributeName] = value;        
+                                entity[componentName][attributeName] = value;
                             }
                         } else {
                             entity[componentName][attributeName] = value;
                         }
 
-                        
+
                     } else {
                         logWARNING(pc.string.format("No component system called '{0}' exists", componentName));
                     }
@@ -708,14 +715,14 @@ pc.extend(pc.fw, function () {
                 entity.fire('livelink:updatetransform', position, rotation, scale);
             }
         },
-        
+
         _linkReparentEntity: function (guid, parentId, index) {
             var entity = this.context.root.findByGuid(guid);
             var parent = this.context.root.findByGuid(parentId);
             // TODO: use index to insert child into child list
-            entity.reparent(parent);    
+            entity.reparent(parent);
         },
-        
+
         /**
          * @function
          * @name pc.fw.Application#_updateEntity
@@ -727,9 +734,9 @@ pc.extend(pc.fw, function () {
         _linkUpdateEntity: function (guid, components) {
             var type;
             var entity = this.context.root.findOne("getGuid", guid);
-            
+
             if(entity) {
-                var order = this.context.systems.getComponentSystemOrder(); 
+                var order = this.context.systems.getComponentSystemOrder();
 
                 var i, len = order.length;
                 for(i = 0; i < len; i++) {
@@ -740,7 +747,7 @@ pc.extend(pc.fw, function () {
                         }
                     }
                 }
-                
+
                 for(type in this.context.systems) {
                     if(type === "gizmo" || type === "pick") {
                         continue;
@@ -784,12 +791,37 @@ pc.extend(pc.fw, function () {
 
     return {
         FillMode: {
+            /**
+            * @enum pc.fw.FillMode
+            * @name pc.fw.FillMode.NONE
+            * @description When resizing the window the size of the canvas will not change.
+            */
             NONE: 'NONE',
+            /**
+            * @enum pc.fw.FillMode
+            * @name pc.fw.FillMode.FILL_WINDOW
+            * @description When resizing the window the size of the canvas will change to fill the window exactly.
+            */
             FILL_WINDOW: 'FILL_WINDOW',
+            /**
+            * @enum pc.fw.FillMode
+            * @name pc.fw.FillMode.KEEP_ASPECT
+            * @description When resizing the window the size of the canvas will change to fill the window as best it can, while maintaining the same aspect ratio.
+            */
             KEEP_ASPECT: 'KEEP_ASPECT'
         },
         ResolutionMode: {
+            /**
+            * @enum pc.fw.ResolutionMode
+            * @name pc.fw.ResolutionMode.AUTO
+            * @description When the canvas is resized the resolution of the canvas will change to match the size of the canvas.
+            */
             AUTO: 'AUTO',
+            /**
+            * @enum pc.fw.ResolutionMode
+            * @name pc.fw.ResolutionMode.FIXED
+            * @description When the canvas is resized the resolution of the canvas will remain at the same value and the output will just be scaled to fit the canvas.
+            */
             FIXED: 'FIXED'
         },
         Application: Application

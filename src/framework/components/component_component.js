@@ -11,13 +11,15 @@ pc.extend(pc.fw, function () {
         this.system = system;
         this.entity = entity;
 
-        pc.extend(this, pc.events);
+        pc.events.attach(this);
 
         this.buildAccessors(this.system.schema);
 
         this.on("set", function (name, oldValue, newValue) {
             this.fire("set_" + name, name, oldValue, newValue);
         });
+
+        this.on('set_enabled', this.onSetEnabled, this);
     };
 
     Component.prototype = {
@@ -55,14 +57,33 @@ pc.extend(pc.fw, function () {
                             return this.data[prop.name];
                         },
                         set: function (value) {
-                            var oldValue = this.data[prop.name];
-                            this.data[prop.name] = value;
+                            var data = this.data;
+                            var oldValue = data[prop.name];
+                            data[prop.name] = value;
                             this.fire('set', prop.name, oldValue, value);                            
                         },
                         configurable: true
                     });
                 }
             }.bind(this));
+        },
+
+        onSetEnabled: function (name, oldValue, newValue) {
+            if (oldValue !== newValue) {
+                if (this.entity.enabled) {
+                    if (newValue) {
+                        this.onEnable();
+                    } else {
+                        this.onDisable();
+                    }
+                }
+            }
+        },
+
+        onEnable: function () {
+        },
+
+        onDisable: function () {
         }
     };
 

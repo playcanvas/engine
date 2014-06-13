@@ -156,6 +156,7 @@ pc.extend(pc.scene, function () {
         material.setParameter('particle_frameDuration', this.frameDuration);
         material.setParameter('particle_timeRange', this.timeRange);
         material.setParameter('particle_timeOffset', 0);
+        material.setParameter('particle_time', 0);
         material.setParameter('texture_colorMap', this.colorMap);
         material.setParameter('texture_opacityMap', this.opacityMap);
         material.setParameter('texture_rampMap', this.rampMap);
@@ -168,7 +169,7 @@ pc.extend(pc.scene, function () {
         this.meshInstance = new pc.scene.MeshInstance(null, mesh, material);
         this.meshInstance.layer = pc.scene.LAYER_FX;
         this.meshInstance.updateKey();
-        
+
         this.time = 0;
     };
 
@@ -312,5 +313,5 @@ pc.extend(pc.scene, function () {
 
     return {
         ParticleEmitter: ParticleEmitter
-    }; 
+    };
 }());

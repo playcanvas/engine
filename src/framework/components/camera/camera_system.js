@@ -4,8 +4,8 @@ pc.extend(pc.fw, function () {
 
     /**
      * @name pc.fw.CameraComponentSystem
-     * @class Used to add and remove {@link pc.fw.CameraComponent}s from Entities.
-     * It also manages the currently active camera and controls the rendering part of the frame with beginFrame()/endFrame().
+     * @class Used to add and remove {@link pc.fw.CameraComponent}s from Entities. It also holds an
+     * array of all active cameras.
      * @constructor Create a new CameraComponentSystem
      * @param {Object} context
      * @extends pc.fw.ComponentSystem
@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
         this.id = 'camera';
         this.description = "Renders the scene from the location of the Entity.";
         context.systems.add(this.id, this);
-        
+
         this.ComponentType = pc.fw.CameraComponent;
         this.DataType = pc.fw.CameraComponentData;
 
@@ -24,12 +24,27 @@ pc.extend(pc.fw, function () {
             description: "Disabled cameras do not render anything",
             type: "boolean",
             defaultValue: true
-        },{
+        }, {
+            name: "clearColorBuffer",
+            displayName: "Clear Color Buffer",
+            description: "Clear color buffer",
+            type: "boolean",
+            defaultValue: true
+        }, {
             name: "clearColor",
             displayName: "Clear Color",
             description: "Clear Color",
             type: "rgba",
-            defaultValue: [0.7294117647058823, 0.7294117647058823, 0.6941176470588235, 1.0]
+            defaultValue: [0.7294117647058823, 0.7294117647058823, 0.6941176470588235, 1.0],
+            filter: {
+                clearColorBuffer: true
+            }
+        }, {
+            name: 'clearDepthBuffer',
+            displayName: "Clear Depth Buffer",
+            description: "Clear depth buffer",
+            type: "boolean",
+            defaultValue: true
         }, {
             name: "projection",
             displayName: "Projection",
@@ -74,7 +89,8 @@ pc.extend(pc.fw, function () {
             type: "number",
             defaultValue: 0.3,
             options: {
-                min: 0
+                min: 0.0001,
+                decimalPrecision: 3
             }
         }, {
             name: "farClip",
@@ -83,9 +99,22 @@ pc.extend(pc.fw, function () {
             type: "number",
             defaultValue: 1000,
             options: {
-                min: 0
+                min: 0.0001,
+                decimalPrecision: 3
             }
         }, {
+            name: "priority",
+            displayName: "Priority",
+            description: "Controls which camera will be rendered first. Smaller numbers are rendered first.",
+            type: "number",
+            defaultValue: 0
+        }, {
+            name: "rect",
+            displayName: "Viewport",
+            description: "Controls where on the screen the camera will be rendered in normalized coordinates.",
+            type: "vector",
+            defaultValue: [0,0,1,1]
+        },{
             name: "camera",
             exposed: false
         }, {
@@ -101,43 +130,14 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this._currentEntity = null;
-        this._currentNode = null;
+        // holds all the active camera components
+        this.cameras = [];
 
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
 
     };
     CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
-    
-    /**
-    * @property
-    * @name pc.fw.CameraComponentSystem#current
-    * @description Get or set the current camera. Use this property to set which Camera Entity is used to render the scene. This must be set to an Entity with a {@link pc.fw.CameraComponent}.
-    * @type pc.fw.Entity 
-    * @example 
-    * var e = context.root.findByName('A Camera');
-    * context.systems.camera.current = e;
-    */
-    Object.defineProperty(CameraComponentSystem.prototype, 'current', {
-        get: function () {
-            return this._currentEntity;
-        },
-        set: function (entity) {
-            if (entity === null) {
-                this._currentEntity = null;
-                this._currentNode = null;
-                return;
-            }
-
-            if (!entity.camera) {
-                throw Error("Entity must have camera Component");
-            }
-            
-            this._currentEntity = entity;
-            this._currentNode = entity.camera.data.camera;
-        }
-    });
 
     pc.extend(CameraComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
@@ -148,12 +148,19 @@ pc.extend(pc.fw, function () {
                 data.clearColor = new pc.Color(c[0], c[1], c[2], c[3]);
             }
 
+            if (data.rect && pc.type(data.rect) === 'array') {
+                var rect = data.rect;
+                data.rect = new pc.Vec4(rect[0], rect[1], rect[2], rect[3]);
+            }
+
             if (data.activate) {
                 console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
                 data.enabled = data.activate;
             }
 
             data.camera = new pc.scene.CameraNode();
+
+            data.postEffects = new pc.posteffect.PostEffectQueue(this.context, component);
 
             if (this.context.designer && this.displayInTools(component.entity)) {
                 var material = new pc.scene.BasicMaterial();
@@ -190,50 +197,30 @@ pc.extend(pc.fw, function () {
                 data.model = model;
             }
 
-            properties = ['enabled', 'model', 'camera', 'aspectRatio', 'renderTarget', 'clearColor', 'fov', 'orthoHeight', 'nearClip', 'farClip', 'projection'];
-    
+            properties = [
+                'postEffects',
+                'enabled',
+                'model',
+                'camera',
+                'aspectRatio',
+                'renderTarget',
+                'clearColor',
+                'fov',
+                'orthoHeight',
+                'nearClip',
+                'farClip',
+                'projection',
+                'priority',
+                'clearColorBuffer',
+                'clearDepthBuffer',
+                'rect'
+            ];
+
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
-
-            if (!window.pc.apps.designer && 
-                component.enabled && 
-                !component.entity.hasLabel("pc:designer")) {
-
-                this.current = component.entity;
-            }
-        },
-        
-        /**
-         * Start rendering the frame for the current camera
-         * @function
-         * @name pc.fw.CameraComponentSystem#frameBegin
-         */
-        frameBegin: function () {
-            var camera = this._currentNode;
-            if (!camera) {
-                return;
-            }
-
-            var device = this.context.graphicsDevice;
-            var aspect = device.width / device.height;
-            if (aspect !== camera.getAspectRatio()) {
-                camera.setAspectRatio(aspect);
-            }
         },
 
-        /**
-         * End rendering the frame for the current camera
-         * @function
-         * @name pc.fw.CameraComponentSystem#frameEnd
-         */
-        frameEnd: function () {
-        },
 
         onRemove: function (entity, data) {
-            // If this is the current camera then clear it
-            if (this._currentEntity === entity) {
-                this.current = null;
-            }
-
             if (this.context.designer && this.displayInTools(entity)) {
                 if (this.context.scene.containsModel(data.model)) {
                     this.context.scene.removeModel(data.model);
@@ -243,7 +230,7 @@ pc.extend(pc.fw, function () {
             entity.removeChild(data.camera);
             data.camera = null;
         },
-    
+
         toolsUpdate: function (fn) {
             var components = this.store;
             for (var id in components) {
@@ -306,23 +293,28 @@ pc.extend(pc.fw, function () {
                 positions[20] = -farClip;
                 positions[21] = -x;
                 positions[22] = -y;
-                positions[23] = -farClip;                
+                positions[23] = -farClip;
                 vertexBuffer.unlock();
             }
         },
 
-        onCameraDisabled: function (cameraComponent) {
-            var components = this.store;
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var entity = components[id].entity;
-                    var data = components[id].data;
-                    if (data.enabled) {
-                        this.current = entity;
-                        break;
-                    }
-                }
+        addCamera: function (camera) {
+            this.cameras.push(camera);
+            this.sortCamerasByPriority();
+        },
+
+        removeCamera: function (camera) {
+            var index = this.cameras.indexOf(camera);
+            if (index >= 0) {
+                this.cameras.splice(index, 1);
+                this.sortCamerasByPriority();
             }
+        },
+
+        sortCamerasByPriority: function () {
+            this.cameras.sort(function (a, b) {
+                return a.priority - b.priority;
+            });
         },
 
         isToolsCamera: function (entity) {
@@ -331,7 +323,7 @@ pc.extend(pc.fw, function () {
 
         displayInTools: function (entity) {
             return (!this.isToolsCamera(entity) || (entity.getName() === "Perspective"));
-        } 
+        }
     });
 
     return {

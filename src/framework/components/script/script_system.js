@@ -6,6 +6,8 @@ pc.extend(pc.fw, function () {
     var POST_UPDATE = "postUpdate";
     var FIXED_UPDATE = "fixedUpdate";
     var TOOLS_UPDATE = "toolsUpdate";
+    var ON_ENABLE = 'onEnable';
+    var ON_DISABLE = 'onDisable';
 
     /**
      * @name pc.fw.ScriptComponentSystem
@@ -18,7 +20,7 @@ pc.extend(pc.fw, function () {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         context.systems.add(this.id, this);
-        
+
         this.ComponentType = pc.fw.ScriptComponent;
         this.DataType = pc.fw.ScriptComponentData;
 
@@ -46,7 +48,13 @@ pc.extend(pc.fw, function () {
 
         this.exposeProperties();
 
-        this.on('remove', this.onRemove, this);
+        // arrays to cache script instances for fast iteration
+        this.instancesWithUpdate = [];
+        this.instancesWithFixedUpdate = [];
+        this.instancesWithPostUpdate = [];
+        this.instancesWithToolsUpdate = [];
+
+        this.on('beforeremove', this.onBeforeRemove, this);
         pc.fw.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
         pc.fw.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
         pc.fw.ComponentSystem.on(UPDATE, this.onUpdate, this);
@@ -76,22 +84,20 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.ScriptComponentSystem#onRemove
-        * @description Handler for 'remove' event which is fired when a script component is removed from an entity;
-        * @param {pc.fw.Entity} entity The entity that the component was removed from
-        * @param {pc.fw.ComponentData} data The data object for the removed component
+        * @name pc.fw.ScriptComponentSystem#onBeforeRemove
+        * @description Handler for 'beforeremove' event which is fired when a script component is about to be removed from an entity;
+        * @param {pc.fw.Entity} entity The entity that the component will be removed from
+        * @param {pc.fw.Component} component The component about to be removed
         */
-        onRemove: function (entity, data) {
-            for (var name in data.instances) {
-                if (data.instances.hasOwnProperty(name)) {
-                    
-                    if(data.instances[name].instance.destroy) {
-                        data.instances[name].instance.destroy();
-                    }
-
-                    delete data.instances[name];
-                }
+        onBeforeRemove: function (entity, component) {
+            // if the script component is enabled
+            // call onDisable on all its instances first
+            if (component.enabled) {
+                this._disableScriptComponent(component);
             }
+
+            // then call destroy on all the script instances
+            this._destroyScriptComponent(component);
         },
 
         /**
@@ -103,30 +109,20 @@ pc.extend(pc.fw, function () {
          */
         onInitialize: function (root) {
             this._registerInstances(root);
-                
-            if (root.script && root.script.enabled) {
-                this._initializeScriptComponent(root.script);
+
+            if (root.enabled) {
+                if (root.script && root.script.enabled) {
+                    this._initializeScriptComponent(root.script);
+                }
+
+                var children = root.getChildren();
+                var i, len = children.length;
+                for (i = 0; i < len; i++) {
+                    if (children[i] instanceof pc.fw.Entity) {
+                        this.onInitialize(children[i]);
+                    }
+                }
             }
-            
-            var children = root.getChildren();
-            var i, len = children.length;
-            for (i = 0; i < len; i++) {
-                if (children[i] instanceof pc.fw.Entity) {
-                    this.onInitialize(children[i]);    
-                }
-            } 
-        },
-
-        _initializeScriptComponent: function (script) {
-            for (var name in script.data.instances) {
-                if (script.data.instances.hasOwnProperty(name)) {
-                    if (script.data.instances[name].instance.initialize) {
-                        script.data.instances[name].instance.initialize();
-                    }                        
-                }
-            }                
-
-            script.data.initialized = true;
         },
 
         /**
@@ -137,50 +133,111 @@ pc.extend(pc.fw, function () {
          * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
          */
         onPostInitialize: function (root) {
-            if (root.script && root.script.enabled) {
-                this._postInitializeScriptComponent(root.script);
-            }
-            
-            var children = root.getChildren();
-            var i, len = children.length;
-            for (i = 0; i < len; i++) {
-                if (children[i] instanceof pc.fw.Entity) {
-                    this.onPostInitialize(children[i]);    
+            if (root.enabled) {
+                if (root.script && root.script.enabled) {
+                    this._postInitializeScriptComponent(root.script);
                 }
-            } ;
+
+                var children = root.getChildren();
+                var i, len = children.length;
+                for (i = 0; i < len; i++) {
+                    if (children[i] instanceof pc.fw.Entity) {
+                        this.onPostInitialize(children[i]);
+                    }
+                };
+            }
+        },
+
+        _callInstancesMethod: function (script, method) {
+            var instances = script.data.instances;
+            for (var name in instances) {
+                if (instances.hasOwnProperty(name)) {
+                    var instance = instances[name].instance;
+                    if (instance[method]) {
+                        instance[method].call(instance);
+                    }
+                }
+            }
+        },
+
+        _initializeScriptComponent: function (script) {
+            this._callInstancesMethod(script, INITIALIZE);
+            script.data.initialized = true;
+
+            // check again if the script and the entity are enabled
+            // in case they got disabled during initialize
+            if (script.enabled && script.entity.enabled) {
+                this._enableScriptComponent(script);
+            }
+        },
+
+        _enableScriptComponent: function (script) {
+            this._callInstancesMethod(script, ON_ENABLE);
+        },
+
+        _disableScriptComponent: function (script) {
+            this._callInstancesMethod(script, ON_DISABLE);
+        },
+
+        _destroyScriptComponent: function (script) {
+            var index;
+            var instances = script.data.instances;
+            for (var name in instances) {
+                if (instances.hasOwnProperty(name)) {
+                    var instance = instances[name].instance;
+                    if(instance.destroy) {
+                        instance.destroy();
+                    }
+
+                    if (instance.update) {
+                        index = this.instancesWithUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.fixedUpdate) {
+                        index = this.instancesWithFixedUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithFixedUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.postUpdate) {
+                        index = this.instancesWithPostUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithPostUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (instance.toolsUpdate) {
+                        index = this.instancesWithToolsUpdate.indexOf(instance);
+                        if (index >= 0) {
+                            this.instancesWithToolsUpdate.splice(index, 1);
+                        }
+                    }
+
+                    if (script.instances[name].instance === script[name]) {
+                        delete script[name];
+                    }
+                    delete script.instances[name];
+                }
+            }
         },
 
         _postInitializeScriptComponent: function (script) {
-            for (var name in script.data.instances) {
-                if (script.data.instances.hasOwnProperty(name)) {
-                    if (script.data.instances[name].instance.postInitialize) {
-                        script.data.instances[name].instance.postInitialize();
-                    }                        
-                }
-            }   
-
+            this._callInstancesMethod(script, POST_INITIALIZE);
             script.data.postInitialized = true;
         },
 
-        _updateInstances: function (updateMethod, dt) {            
-            var components = this.store;
-
-            for (var id in components) {
-                if (components.hasOwnProperty(id)) {
-                    var componentData = components[id].data;
-                    if (componentData.enabled) {
-                        var instances = componentData.instances;
-                        for (var key in instances) {
-                            if (instances.hasOwnProperty(key)) {
-                                var instance = instances[key].instance;
-                                if (instance[updateMethod]) {
-                                    instance[updateMethod](dt);
-                                }
-                            }
-                        }
-                    }
+        _updateInstances: function (method, updateList, dt) {
+            var item;
+            for (var i=0, len=updateList.length; i<len; i++) {
+                item = updateList[i];
+                if (item && item.entity.script.enabled && item.entity.enabled) {
+                    item[method].call(item, dt);
                 }
-            }        
+            }
         },
 
         /**
@@ -191,7 +248,7 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt The time delta since the last update in seconds
         */
         onUpdate: function (dt) {
-            this._updateInstances(UPDATE, dt);
+            this._updateInstances(UPDATE, this.instancesWithUpdate, dt);
         },
 
         /**
@@ -202,7 +259,7 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt A fixed timestep of 1/60 seconds
         */
         onFixedUpdate: function (dt) {
-            this._updateInstances(FIXED_UPDATE, dt);
+            this._updateInstances(FIXED_UPDATE, this.instancesWithFixedUpdate, dt);
         },
 
         /**
@@ -213,11 +270,11 @@ pc.extend(pc.fw, function () {
         * @param {Number} dt The time delta since the last update in seconds
         */
         onPostUpdate: function (dt) {
-           this._updateInstances(POST_UPDATE, dt);
+            this._updateInstances(POST_UPDATE, this.instancesWithPostUpdate, dt);
         },
 
         onToolsUpdate: function (dt) {
-            this._updateInstances(TOOLS_UPDATE, dt);
+            this._updateInstances(TOOLS_UPDATE, this.instancesWithToolsUpdate, dt);
         },
 
         /**
@@ -233,11 +290,11 @@ pc.extend(pc.fw, function () {
          */
         broadcast: function (name, functionName) {
             var args = pc.makeArray(arguments).slice(2);
-            
+
             var id, data, fn;
             var dataStore = this.store;
             // var results = [];
-            
+
             for (id in dataStore) {
                 if (dataStore.hasOwnProperty(id)) {
                     data = dataStore[id].data;
@@ -256,7 +313,7 @@ pc.extend(pc.fw, function () {
         * @function
         * @name pc.fw.ScriptComponentSystem#_preRegisterInstance
         * @description Internal method used to store a instance of a script created while loading. Instances are preregistered while loadeding
-        * and then all registered at the same time once loading is complete 
+        * and then all registered at the same time once loading is complete
         * @param {pc.fw.Entity} entity The Entity the script instance is attached to
         * @param {String} url The url of the script
         * @param {String} name The name of the script
@@ -275,7 +332,7 @@ pc.extend(pc.fw, function () {
                 };
             }
         },
-    
+
         /**
         * @private
         * @function
@@ -284,44 +341,61 @@ pc.extend(pc.fw, function () {
         * and binding events for the update, fixedUpdate, postUpdate and toolsUpdate methods.
         * This function is recursive and calls itself for the complete hierarchy down from the supplied Entity
         * @param {pc.fw.Entity} entity The Entity the instances are attached to
-        */        
+        */
         _registerInstances: function (entity) {
-            var instance, instanceName;
+            var preRegistered, instance, instanceName;
 
             if (entity.script) {
                 if (entity.script.data._instances) {
                     entity.script.instances = entity.script.data._instances;
 
                     for (instanceName in entity.script.instances) {
-                        instance = entity.script.instances[instanceName];
+                        preRegistered = entity.script.instances[instanceName];
+                        instance = preRegistered.instance;
 
-                        pc.extend(instance.instance, pc.events);
+                        pc.events.attach(instance);
+
+                        if (instance.update) {
+                            this.instancesWithUpdate.push(instance);
+                        }
+
+                        if (instance.fixedUpdate) {
+                            this.instancesWithFixedUpdate.push(instance);
+                        }
+
+                        if (instance.postUpdate) {
+                            this.instancesWithPostUpdate.push(instance);
+                        }
+
+                        if (instance.toolsUpdate) {
+                            this.instancesWithToolsUpdate.push(instance);
+                        }
 
                         if (entity.script.scripts) {
-                            this._createAccessors(entity, instance);
+                            this._createAccessors(entity, preRegistered);
                         }
 
                         // Make instance accessible from the script component of the Entity
                         if (entity.script[instanceName]) {
                             throw Error(pc.string.format("Script with name '{0}' is already attached to Script Component", instanceName));
                         } else {
-                            entity.script[instanceName] = instance.instance;
+                            entity.script[instanceName] = instance;
                         }
                     }
 
                     // Remove temp storage
                     delete entity.script.data._instances;
                 }
-                
+
             }
 
             var children = entity.getChildren();
             var i, len = children.length;
             for (i = 0; i < len; i++) {
                 if (children[i] instanceof pc.fw.Entity) {
-                    this._registerInstances(children[i]);    
+                    this._registerInstances(children[i]);
                 }
-            }    
+            }
         },
 
         _createAccessors: function (entity, instance) {
@@ -387,7 +461,7 @@ pc.extend(pc.fw, function () {
                             attributes.forEach(function (attribute, index) {
                                 self._createAccessor(attribute, instance);
                             });
-                        } 
+                        }
 
                         // delete accessors for attributes that no longer exist
                         // and fire onAttributeChange when an attribute value changed
@@ -434,8 +508,8 @@ pc.extend(pc.fw, function () {
         _convertAttributeValue: function (attribute) {
             if (attribute.type === 'rgb' || attribute.type === 'rgba') {
                 if (pc.type(attribute.value) === 'array') {
-                    attribute.value = attribute.value.length === 3 ? 
-                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) : 
+                    attribute.value = attribute.value.length === 3 ?
+                                      new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
                                       new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
                 }
             }
