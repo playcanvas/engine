@@ -98,12 +98,16 @@ pc.extend(pc.scene, function () {
 
     pc.extend(GraphNode.prototype, {
         _notifyHierarchyStateChanged: function (node, enabled) {
+             node._recurseNotifyHierarchyStateChanged(node, enabled);
+        },
+
+        _recurseNotifyHierarchyStateChanged: function (node, enabled) {
             node._onHierarchyStateChanged(enabled);
 
             var c = node._children;
             for (var i=0, len=c.length; i<len; i++) {
                 if (c[i]._enabled) {
-                    this._notifyHierarchyStateChanged(c[i], enabled);
+                    this._recurseNotifyHierarchyStateChanged(c[i], enabled);
                 }
             }
         },
