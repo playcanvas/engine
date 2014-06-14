@@ -137,18 +137,30 @@ pc.extend(pc.scene, function () {
             this._viewProjMat.mul2(projMat, this._viewMat);
             var invViewProjMat = this._viewProjMat.clone().invert();
 
-            var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
-            var farW = invViewProjMat.transformPoint(far);
+            if (this._projection === pc.scene.Projection.PERSPECTIVE) {
+                // Calculate the screen click as a point on the far plane of the
+                // normalized device coordinate 'box' (z=1)
+                var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
+                // Transform to world space
+                var farW = invViewProjMat.transformPoint(far);
 
-            var w = far.x * invViewProjMat.data[3] +
-                    far.y * invViewProjMat.data[7] +
-                    far.z * invViewProjMat.data[11] +
-                    invViewProjMat.data[15];
+                var w = far.x * invViewProjMat.data[3] +
+                        far.y * invViewProjMat.data[7] +
+                        far.z * invViewProjMat.data[11] +
+                        invViewProjMat.data[15];
 
-            farW.scale(1 / w);
+                farW.scale(1 / w);
 
-            var alpha = z / this._farClip;
-            worldCoord.lerp(this.getPosition(), farW, alpha);
+                var alpha = z / this._farClip;
+                worldCoord.lerp(this.getPosition(), farW, alpha);
+            } else {
+                // Calculate the screen click as a point on the far plane of the
+                // normalized device coordinate 'box' (z=1)
+                var range = this._farClip - this._nearClip;
+                var deviceCoord = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, (this._farClip - z) / range * 2 - 1);
+                // Transform to world space
+                invViewProjMat.transformPoint(deviceCoord, worldCoord);
+            }
 
             return worldCoord;
         },

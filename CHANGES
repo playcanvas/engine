@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.8
+--------
+* [FIX] screenToWorld now works for orthographic cameras.
+
+--------
 v0.147.7
 --------
 * Added 'resizecanvas' event fired from the pc.gfx.Device
