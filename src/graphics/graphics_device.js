@@ -149,7 +149,7 @@ pc.extend(pc.gfx, function () {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
-                flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_COLOR
+                flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
             };
 
             this.glPrimitive = [
