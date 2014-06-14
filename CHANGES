@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.147.9
+--------
+* [FIX] Typo in default clear options.
+
+--------
 v0.147.8
 --------
 * [FIX] screenToWorld now works for orthographic cameras.
