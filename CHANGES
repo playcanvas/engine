@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.149.0
+--------
+* Added shadowDistance property to the scene, beyond which shadows are not rendered.
+* [FIX] Update the scene's shaders when shadows are toggled.
+
+--------
 v0.148.0
 --------
 * Updated ammo.js to latest kripken master branch
