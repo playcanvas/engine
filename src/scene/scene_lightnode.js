@@ -233,6 +233,9 @@ pc.extend(pc.scene, function () {
          */
         setCastShadows: function (castShadows) {
             this._castShadows = castShadows;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
         },
 
         /**
@@ -386,5 +389,5 @@ pc.extend(pc.scene, function () {
         LIGHTTYPE_SPOT: 2,
 
         LightNode: LightNode
-    }; 
+    };
 }());

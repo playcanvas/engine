@@ -38,10 +38,15 @@ pc.extend(pc.scene, function () {
         }
     }
 
-    function _getFrustumPoints(camera, points) {
+    function _getFrustumCentroid(scene, camera, centroid) {
+        centroid.set(0, 0, -(scene.shadowDistance + camera._nearClip) * 0.5);
+        camera.getWorldTransform().transformPoint(centroid, centroid);
+    }
+
+    function _getFrustumPoints(scene, camera, points) {
         var cam = camera;
         var nearClip   = cam.getNearClip();
-        var farClip    = cam.getFarClip();
+        var farClip    = scene.shadowDistance;
         var fov        = cam.getFov() * Math.PI / 180.0;
         var aspect     = cam.getAspectRatio();
         var projection = cam.getProjection();
@@ -200,6 +205,7 @@ pc.extend(pc.scene, function () {
         this._shadowState = {
             blend: false
         };
+        this.centroid = new pc.Vec3();
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
@@ -466,8 +472,8 @@ pc.extend(pc.scene, function () {
                         // 1. Starting at the centroid of the view frustum, back up in the opposite
                         // direction of the light by a certain amount. This will be our temporary 
                         // working position.
-                        var centroid = camera.getFrustumCentroid();
-                        shadowCam.setPosition(centroid);
+                        _getFrustumCentroid(scene, camera, this.centroid);
+                        shadowCam.setPosition(this.centroid);
                         var lightDir = new pc.Vec3();
                         light.worldTransform.getY(lightDir);
                         shadowCam.translate(lightDir);
@@ -475,11 +481,11 @@ pc.extend(pc.scene, function () {
                         // 2. Come up with a LookAt matrix using the light direction, and the 
                         // temporary working position. This will be the view matrix that is used
                         // when generating the shadow map.
-                        shadowCam.lookAt(centroid);
+                        shadowCam.lookAt(this.centroid);
                         shadowCamWtm.copy(shadowCam.getWorldTransform());
 
                         // 3. Transform the 8 corners of the frustum by the LookAt Matrix
-                        _getFrustumPoints(camera, frustumPoints);
+                        _getFrustumPoints(scene, camera, frustumPoints);
                         var worldToShadowCam = shadowCamWtm.invert();
                         var camToWorld = camera.worldTransform;
                         var c2sc = new pc.Mat4();
@@ -505,24 +511,7 @@ pc.extend(pc.scene, function () {
                             if (p.z < minz) minz = p.z;
                             if (p.z > maxz) maxz = p.z;
                         }
-    /*
-                        var worldUnitsPerTexelX = (maxx - minx) / light._shadowWidth;
-                        var worldUnitsPerTexelY = (maxy - miny) / light._shadowHeight;
 
-                        minx /= worldUnitsPerTexelX;
-                        minx = Math.floor(minx);
-                        minx *= worldUnitsPerTexelX;
-                        maxx /= worldUnitsPerTexelX;
-                        maxx = Math.floor(maxx);
-                        maxx *= worldUnitsPerTexelX;
-
-                        miny /= worldUnitsPerTexelY;
-                        miny = Math.floor(miny);
-                        miny *= worldUnitsPerTexelY;
-                        maxy /= worldUnitsPerTexelY;
-                        maxy = Math.floor(maxy);
-                        maxy *= worldUnitsPerTexelY;
-    */
                         // 5. Use your min and max values to create an off-center orthographic projection.
                         shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
                         shadowCamWtm.copy(shadowCam.getWorldTransform());
