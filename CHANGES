@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.148.0
+--------
+* Updated ammo.js to latest kripken master branch
+
+--------
 v0.147.9
 --------
 * [FIX] Typo in default clear options.
