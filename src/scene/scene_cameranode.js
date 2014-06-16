@@ -79,12 +79,6 @@ pc.extend(pc.scene, function () {
             return clone;
         },
 
-        getFrustumCentroid: function () {
-            var centroid = new pc.Vec3(0, 0, -(this._farClip + this._nearClip) * 0.5);
-            this.getWorldTransform().transformPoint(centroid, centroid);
-            return centroid;
-        },
-
         /**
          * Convert a point in 3D world space to a point in 2D screen space.
          * (0,0) is top-left

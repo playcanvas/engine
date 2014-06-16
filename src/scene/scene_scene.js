@@ -59,6 +59,8 @@ pc.extend(pc.scene, function () {
      * property is only valid if the fog property is set to pc.scene.FOG_LINEAR.
      * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
      * only valid if the fog property is set to pc.scene.FOG_LINEAR.
+     * @property {Number} shadowDistance The distance from the viewpoint beyond which shadows are no longer
+     * rendered.
      */
     var Scene = function Scene() {
         this.drawCalls = [];     // All mesh instances and commands
@@ -71,6 +73,8 @@ pc.extend(pc.scene, function () {
         this.fogDensity = 0;
 
         this.ambientLight = new pc.Color(0, 0, 0);
+
+        this.shadowDistance = 40;
 
         // Models
         this._models = [];
