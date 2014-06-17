@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.149.2
+--------
+* [FIX] Backout last change and use last version of ammo because raycasting works differently in latest version
+
+--------
 v0.149.1
 --------
 * [FIX] Bug with casting collision object to a btRigidBody in raycastFirst.
