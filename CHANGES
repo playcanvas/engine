@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.149.1
+--------
+* [FIX] Bug with casting collision object to a btRigidBody in raycastFirst.
+
+--------
 v0.149.0
 --------
 * Added shadowDistance property to the scene, beyond which shadows are not rendered.
