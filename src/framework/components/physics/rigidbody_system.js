@@ -418,7 +418,7 @@ pc.extend(pc.fw, function () {
             if (rayCallback.hasHit()) {
                 var collisionObjPtr = rayCallback.get_m_collisionObject();
                 var collisionObj = Ammo.wrapPointer(collisionObjPtr, Ammo.btCollisionObject);
-                var body = btRigidBody.prototype.upcast(collisionObj);
+                var body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
                 var point = rayCallback.get_m_hitPointWorld();
                 var normal = rayCallback.get_m_hitNormalWorld();
 
@@ -687,8 +687,8 @@ pc.extend(pc.fw, function () {
                 var manifold = dispatcher.getManifoldByIndexInternal(i);
                 var body0 = manifold.getBody0();
                 var body1 = manifold.getBody1();
-                var wb0 = btRigidBody.prototype['upcast'](body0);
-                var wb1 = btRigidBody.prototype['upcast'](body1);
+                var wb0 = Ammo.castObject(body0, Ammo.btRigidBody);
+                var wb1 = Ammo.castObject(body1, Ammo.btRigidBody);
                 var e0 = wb0.entity;
                 var e1 = wb1.entity;
 

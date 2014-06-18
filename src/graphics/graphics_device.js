@@ -1,6 +1,9 @@
 pc.gfx.precalculatedTangents = true;
 
 pc.extend(pc.gfx, function () {
+
+    var EVENT_RESIZE = 'resizecanvas';
+
     // Exceptions
     function UnsupportedBrowserError(message) {
         this.name = "UnsupportedBrowserError";
@@ -48,6 +51,14 @@ pc.extend(pc.gfx, function () {
      * @property {Number} height Height of the back buffer in pixels (read-only).
      * is attached is fullscreen or not.
      */
+
+     /**
+     * @event
+     * @name pc.gfx.Device#resizecanvas
+     * @description The 'resizecanvas' event is fired when the canvas is resized
+     * @param {Number} width The new width of the canvas in pixels
+     * @param {Number} height The new height of the canvas in pixels
+    */
     var Device = function (canvas) {
         this.gl = undefined;
         this.canvas = canvas;
@@ -138,7 +149,7 @@ pc.extend(pc.gfx, function () {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
-                flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_COLOR
+                flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
             };
 
             this.glPrimitive = [
@@ -939,6 +950,18 @@ pc.extend(pc.gfx, function () {
             }
 
             return true;
+        },
+
+        /**
+        * @function
+        * @name pc.gfx.Device#resizeCanvas
+        * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
+        */
+        resizeCanvas: function (width, height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+
+            this.fire(EVENT_RESIZE, width, height);
         }
     };
 

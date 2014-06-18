@@ -3,6 +3,44 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.149.2
+--------
+* [FIX] Backout last change and use last version of ammo because raycasting works differently in latest version
+
+--------
+v0.149.1
+--------
+* [FIX] Bug with casting collision object to a btRigidBody in raycastFirst.
+
+--------
+v0.149.0
+--------
+* Added shadowDistance property to the scene, beyond which shadows are not rendered.
+* [FIX] Update the scene's shaders when shadows are toggled.
+
+--------
+v0.148.0
+--------
+* Updated ammo.js to latest kripken master branch
+
+--------
+v0.147.9
+--------
+* [FIX] Typo in default clear options.
+
+--------
+v0.147.8
+--------
+* [FIX] screenToWorld now works for orthographic cameras.
+
+--------
+v0.147.7
+--------
+* Added 'resizecanvas' event fired from the pc.gfx.Device
+* [FIX] Render targets of post effects are now resized when necessary
+* Added optimization for events#fire method
+
+--------
 v0.147.6
 --------
 * [FIX] Only add material to material cache if its asset is found in the asset registry

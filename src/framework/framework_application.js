@@ -189,6 +189,7 @@ pc.extend(pc.fw, function () {
                     this.context.scene.fogStart = pack.settings.render.fog_start;
                     this.context.scene.fogEnd = pack.settings.render.fog_end;
                     this.context.scene.fogDensity = pack.settings.render.fog_density;
+                    this.context.scene.shadowDistance = pack.settings.render.shadow_distance;
 
                     success(pack);
                     this.context.loader.off('progress', progress);
@@ -392,8 +393,7 @@ pc.extend(pc.fw, function () {
                 height = this.canvas.clientHeight;
             }
 
-            this.canvas.width = width;
-            this.canvas.height = height;
+            this.graphicsDevice.resizeCanvas(width, height);
         },
 
         /**
@@ -514,8 +514,7 @@ pc.extend(pc.fw, function () {
                 height = windowHeight;
 
                 var ratio = window.devicePixelRatio;
-                this.canvas.width = width * ratio;
-                this.canvas.height = height * ratio;
+                this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
             } else {
                 if (this.fillMode === pc.fw.FillMode.KEEP_ASPECT) {
                     var r = this.canvas.width/this.canvas.height;
@@ -788,6 +787,8 @@ pc.extend(pc.fw, function () {
             var fog = settings.render.fog_color;
             this.context.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
             this.context.scene.fogDensity = settings.render.fog_density;
+
+            this.context.scene.shadowDistance = settings.render.shadow_distance;
         }
     };
 
