@@ -18,6 +18,7 @@ pc.extend(pc.posteffect, function () {
         // require a depth buffer
         this.depthTarget = null;
 
+        this.renderTargetScale = 1;
         this.resizeTimeout = null;
 
         camera.on('set_rect', this.onCameraRectChanged, this);
@@ -36,8 +37,9 @@ pc.extend(pc.posteffect, function () {
          */
         _createOffscreenTarget: function (useDepth) {
             var rect = this.camera.rect;
-            var width = Math.floor(rect.z * this.context.graphicsDevice.width);
-            var height = Math.floor(rect.w * this.context.graphicsDevice.height);
+
+            var width = Math.floor(rect.z * this.context.graphicsDevice.width * this.renderTargetScale);
+            var height = Math.floor(rect.w * this.context.graphicsDevice.height * this.renderTargetScale);
 
             var colorBuffer = new pc.gfx.Texture(this.context.graphicsDevice, {
                 format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
@@ -67,6 +69,11 @@ pc.extend(pc.posteffect, function () {
             // used by the forward renderer to render the scene with
             // a depth shader on the depth target
             this.camera.camera._depthTarget = depthTarget;
+        },
+
+        setRenderTargetScale: function (scale) {
+            this.renderTargetScale = scale;
+            this.resizeRenderTargets();
         },
 
         /**
@@ -274,8 +281,8 @@ pc.extend(pc.posteffect, function () {
 
         resizeRenderTargets: function () {
             var rect = this.camera.rect;
-            var desiredWidth = Math.floor(rect.z * this.context.graphicsDevice.width);
-            var desiredHeight = Math.floor(rect.w * this.context.graphicsDevice.height);
+            var desiredWidth = Math.floor(rect.z * this.context.graphicsDevice.width * this.renderTargetScale);
+            var desiredHeight = Math.floor(rect.w * this.context.graphicsDevice.height * this.renderTargetScale);
 
             var effects = this.effects;
 

@@ -5,18 +5,18 @@ function buildGraph() {
     var g1 = new pc.scene.GraphNode("g1");
     var g2 = new pc.scene.GraphNode("g2");
     var g3 = new pc.scene.GraphNode("g3");
-    
+
     g1.addChild(g2);
     g2.addChild(g3);
-    
+
     return g1;
 }
 
 test('GraphNode: addLabel', function () {
     var node = buildGraph();
-    
+
     node.addLabel("new label");
-    
+
     ok(node.hasLabel("new label"));
     equal(node.getLabels().length, 1);
     equal(node.getLabels()[0], "new label");
@@ -24,26 +24,102 @@ test('GraphNode: addLabel', function () {
 
 test('GraphNode: removeLabel', function () {
     var node = buildGraph();
-    
+
     node.addLabel("new label");
     node.removeLabel("new label");
-    
+
     equal(node.hasLabel("new label"), false);
     equal(node.getLabels().length, 0);
-      
+
 });
 
 test('GraphNode: findByLabel', function () {
     var node = buildGraph();
-    
+
     var child = node.getChildren()[0];
     var grandchild = child.getChildren()[0]
     child.addLabel("new label");
-    
+
     var found = node.findByLabel("new label");
-    
+
     equal(found.length, 1);
-    equal(found[0].getName(), child.getName());    
+    equal(found[0].getName(), child.getName());
+});
+
+test('GraphNode: findByName same entity', function () {
+    var node = buildGraph();
+    var child = node.getChildren()[0];
+    var grandchild = child.getChildren()[0];
+
+    var found = node.findByName('g1');
+    equal(found, node);
+});
+
+test('GraphNode: findByName grandchild', function () {
+    var node = buildGraph();
+    var child = node.getChildren()[0];
+    var grandchild = child.getChildren()[0];
+
+    var found = node.findByName('g3');
+    equal(found, grandchild);
+});
+
+test('GraphNode: findByName when entity does not exist', function () {
+    var node = buildGraph();
+    var child = node.getChildren()[0];
+    var grandchild = child.getChildren()[0];
+
+    var found = node.findByName('g4');
+    equal(found, null);
+});
+
+test('GraphNode: findByPath without slashes', function () {
+    var node = buildGraph();
+    var child = node.getChildren()[0];
+    var grandchild = child.getChildren()[0];
+
+    var found = node.findByPath('g2');
+    equal(found, child);
+});
+
+test('GraphNode: findByPath with slashes', function () {
+    var node = buildGraph();
+    var child = node.getChildren()[0];
+    var grandchild = child.getChildren()[0];
+
+    var found = node.findByPath('g2/g3');
+    equal(found, grandchild);
+});
+
+test('GraphNode: findByPath does not include same entity', function () {
+    var node = buildGraph();
+    var child = node.getChildren()[0];
+    var grandchild = child.getChildren()[0];
+
+    var found = node.findByPath('g1/g2/g3');
+    equal(found, null);
+});
+
+test('GraphNode: findByPath when entity does not exist', function () {
+    var node = buildGraph();
+    var child = node.getChildren()[0];
+    var grandchild = child.getChildren()[0];
+
+    var found = node.findByPath('g4');
+    equal(found, null);
+});
+
+test('GraphNode: getPath', function () {
+    var node = buildGraph();
+    var child = node.getChildren()[0];
+    var grandchild = child.getChildren()[0];
+
+    equal(grandchild.getPath(), 'g2/g3');
+});
+
+test('GraphNode: getPath of root entity', function () {
+    var node = buildGraph();
+    equal(node.getPath(), '');
 });
 
 test('GraphNode: addChild', function () {
@@ -84,10 +160,10 @@ test('GraphNode: g/setEulerAngles', function () {
 
     g1.setEulerAngles(1,2,3);
 
-    var angles = pc.makeArray(g1.getEulerAngles());
-    QUnit.close(angles[0], 1, 0.0001);
-    QUnit.close(angles[1], 2, 0.0001);
-    QUnit.close(angles[2], 3, 0.0001);
+    var angles = g1.getEulerAngles();
+    QUnit.close(angles.x, 1, 0.0001);
+    QUnit.close(angles.y, 2, 0.0001);
+    QUnit.close(angles.z, 3, 0.0001);
 });
 
 test('GraphNode: rotate', function () {
@@ -97,30 +173,30 @@ test('GraphNode: rotate', function () {
     g = new pc.scene.GraphNode('g1');
     g.rotate(10, 0, 0);
     angles = g.getEulerAngles();
-    QUnit.close(angles[0], 10, 0.0001);
-    QUnit.close(angles[1], 0, 0.0001);
-    QUnit.close(angles[2], 0, 0.0001);
+    QUnit.close(angles.x, 10, 0.0001);
+    QUnit.close(angles.y, 0, 0.0001);
+    QUnit.close(angles.z, 0, 0.0001);
 
     g = new pc.scene.GraphNode('g1');
     g.rotate(0, 10, 0);
     angles = g.getEulerAngles();
-    QUnit.close(angles[0], 0, 0.0001);
-    QUnit.close(angles[1], 10, 0.0001);
-    QUnit.close(angles[2], 0, 0.0001);
+    QUnit.close(angles.x, 0, 0.0001);
+    QUnit.close(angles.y, 10, 0.0001);
+    QUnit.close(angles.z, 0, 0.0001);
 
     g = new pc.scene.GraphNode('g1');
     g.rotate(0, 0, 10);
     angles = g.getEulerAngles();
-    QUnit.close(angles[0], 0, 0.0001);
-    QUnit.close(angles[1], 0, 0.0001);
-    QUnit.close(angles[2], 10, 0.0001);
+    QUnit.close(angles.x, 0, 0.0001);
+    QUnit.close(angles.y, 0, 0.0001);
+    QUnit.close(angles.z, 10, 0.0001);
 
     g = new pc.scene.GraphNode('g1');
     g.rotate(10, 20, 30);
     angles = g.getEulerAngles();
-    QUnit.close(angles[0], 10, 0.0001);
-    QUnit.close(angles[1], 20, 0.0001);
-    QUnit.close(angles[2], 30, 0.0001);
+    QUnit.close(angles.x, 10, 0.0001);
+    QUnit.close(angles.y, 20, 0.0001);
+    QUnit.close(angles.z, 30, 0.0001);
 });
 
 test('GraphNode: rotate in hierarchy', function () {
@@ -129,39 +205,33 @@ test('GraphNode: rotate in hierarchy', function () {
     var angles;
 
     g = new pc.scene.GraphNode('g1');
+    p.setEulerAngles(10,0,0);
     p.addChild(g);
     g.rotate(10, 0, 0);
-    angles = pc.makeArray(g.getEulerAngles());
-    QUnit.close(angles[0], 20, 0.0001);
-    QUnit.close(angles[1], 0, 0.0001);
-    QUnit.close(angles[2], 0, 0.0001);
+    angles = g.getEulerAngles();
+    QUnit.close(angles.x, 20, 0.0001);
+    QUnit.close(angles.y, 0, 0.0001);
+    QUnit.close(angles.z, 0, 0.0001);
     p.removeChild(g);
 
     g = new pc.scene.GraphNode('g1');
+    p.setEulerAngles(0,10,0);
     p.addChild(g);
     g.rotate(0, 10, 0);
-    angles = pc.makeArray(g.getEulerAngles());
-    QUnit.close(angles[0], 0, 0.0001);
-    QUnit.close(angles[1], 20, 0.0001);
-    QUnit.close(angles[2], 0, 0.0001);
+    angles = g.getEulerAngles();
+    QUnit.close(angles.x, 0, 0.0001);
+    QUnit.close(angles.y, 20, 0.0001);
+    QUnit.close(angles.z, 0, 0.0001);
     p.removeChild(g);
 
     g = new pc.scene.GraphNode('g1');
+    p.setEulerAngles(0,0,10);
     p.addChild(g);
     g.rotate(0, 0, 10);
-    angles = pc.makeArray(g.getEulerAngles());
-    QUnit.close(angles[0], 0, 0.0001);
-    QUnit.close(angles[1], 0, 0.0001);
-    QUnit.close(angles[2], 20, 0.0001);
-    p.removeChild(g);
-
-    g = new pc.scene.GraphNode('g1');
-    p.addChild(g);
-    g.rotate(10, 20, 30);
-    angles = pc.makeArray(g.getEulerAngles());
-    QUnit.close(angles[0], 20, 0.0001);
-    QUnit.close(angles[1], 30, 0.0001);
-    QUnit.close(angles[2], 40, 0.0001);
+    angles = g.getEulerAngles();
+    QUnit.close(angles.x, 0, 0.0001);
+    QUnit.close(angles.y, 0, 0.0001);
+    QUnit.close(angles.z, 20, 0.0001);
     p.removeChild(g);
 });
 
@@ -173,14 +243,14 @@ test('GraphNode: rotateLocal', function () {
 
     g.rotateLocal(10, 0, 0);
     angles = g.getLocalEulerAngles();
-    QUnit.close(angles[0], 10, 0.001);
-    QUnit.close(angles[1], 0, 0.001);
-    QUnit.close(angles[2], 0, 0.001);
+    QUnit.close(angles.x, 10, 0.001);
+    QUnit.close(angles.y, 0, 0.001);
+    QUnit.close(angles.z, 0, 0.001);
 
     angles = g.getEulerAngles();
-    QUnit.close(angles[0], 10, 0.001);
-    QUnit.close(angles[1], 0, 0.001);
-    QUnit.close(angles[2], 0, 0.001);
+    QUnit.close(angles.x, 10, 0.001);
+    QUnit.close(angles.y, 0, 0.001);
+    QUnit.close(angles.z, 0, 0.001);
 });
 
 
@@ -196,14 +266,14 @@ test('GraphNode: rotateLocal in hierarchy', function () {
 
     g.rotateLocal(10, 0, 0);
     angles = g.getLocalEulerAngles();
-    QUnit.close(angles[0], 10, 0.001);
-    QUnit.close(angles[1], 0, 0.001);
-    QUnit.close(angles[2], 0, 0.001);
+    QUnit.close(angles.x, 10, 0.001);
+    QUnit.close(angles.y, 0, 0.001);
+    QUnit.close(angles.z, 0, 0.001);
 
     angles = g.getEulerAngles();
-    QUnit.close(angles[0], 11, 0.001);
-    QUnit.close(angles[1], 2, 0.001);
-    QUnit.close(angles[2], 3, 0.001);
+    QUnit.close(angles.x, 11, 0.001);
+    QUnit.close(angles.y, 2, 0.001);
+    QUnit.close(angles.z, 3, 0.001);
 });
 
 test('GraphNode: translate in hierarchy', function () {
@@ -218,14 +288,14 @@ test('GraphNode: translate in hierarchy', function () {
 
     g.translate(10, 20, 30);
     pos = g.getPosition();
-    QUnit.close(pos[0], 20, 0.001);
-    QUnit.close(pos[1], 40, 0.001);
-    QUnit.close(pos[2], 60, 0.001);
+    QUnit.close(pos.x, 20, 0.001);
+    QUnit.close(pos.y, 40, 0.001);
+    QUnit.close(pos.z, 60, 0.001);
 
     pos = g.getLocalPosition();
-    QUnit.close(pos[0], 10, 0.001);
-    QUnit.close(pos[1], 20, 0.001);
-    QUnit.close(pos[2], 30, 0.001);
+    QUnit.close(pos.x, 10, 0.001);
+    QUnit.close(pos.y, 20, 0.001);
+    QUnit.close(pos.z, 30, 0.001);
 });
 
 test('GraphNode: translateLocal in hierarchy', function () {
@@ -242,14 +312,14 @@ test('GraphNode: translateLocal in hierarchy', function () {
     g.translateLocal(10, 20, 30);
 
     pos = g.getPosition();
-    QUnit.close(pos[0], 0, 0.001);
-    QUnit.close(pos[1], 40, 0.001);
-    QUnit.close(pos[2], 0, 0.001);
+    QUnit.close(pos.x, 0, 0.001);
+    QUnit.close(pos.y, 40, 0.001);
+    QUnit.close(pos.z, 0, 0.001);
 
     pos = g.getLocalPosition();
-    QUnit.close(pos[0], -10, 0.001);
-    QUnit.close(pos[1], 20, 0.001);
-    QUnit.close(pos[2], -30, 0.001);
+    QUnit.close(pos.x, -10, 0.001);
+    QUnit.close(pos.y, 20, 0.001);
+    QUnit.close(pos.z, -30, 0.001);
 
 });
 

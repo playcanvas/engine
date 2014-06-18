@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.150.0
+--------
+* Added PostEffectQueue#setRenderTargetScale which means post effects can use buffers larger or smaller than the canvas
+* Added GraphNode#findByPath and GraphNode#getPath for querying scene hierarchy.
+
+--------
 v0.149.2
 --------
 * [FIX] Backout last change and use last version of ammo because raycasting works differently in latest version
