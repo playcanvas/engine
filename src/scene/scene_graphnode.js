@@ -238,6 +238,68 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
+         * @name  pc.scene.GraphNode#findByPath
+         * @description Get the first node found in the graph by its full path in the graph.
+         * The full path has this form 'parent/child/sub-child'. The search is depth first.
+         * @returns {pc.scene.GraphNode} The first node to be found matching the supplied path.
+         * @example
+         * var path = this.entity.findByPath('child/another_child');
+         */
+        findByPath: function (path) {
+            // split the paths in parts. Each part represents a deeper hierarchy level
+            var parts = path.split('/');
+            var currentParent = this;
+            var result = null;
+
+            for (var i = 0, imax=parts.length; i < imax && currentParent; i++) {
+                var part = parts[i];
+
+                result = null;
+
+                // check all the children
+                var children = currentParent._children;
+                for (var j = 0, jmax = children.length; j < jmax; j++) {
+                    if (children[j].name == part) {
+                        result = children[j];
+                        break;
+                    }
+                }
+
+                // keep going deeper in the hierarchy
+                currentParent = result;
+            }
+
+            return result;
+        },
+
+        /**
+         * @function
+         * @name  pc.scene.GraphNode#getPath
+         * @description Gets the path of the entity relative to the root of the hierarchy
+         * @return {String} The path
+         * @example
+         * var path = this.entity.getPath();
+         */
+        getPath: function () {
+            var parent = this._parent;
+            if (parent) {
+                var path = this.name;
+                var format = "{0}/{1}";
+
+                while (parent && parent._parent) {
+                    path = pc.string.format(format, parent.name, path);
+                    parent = parent._parent;
+                }
+
+                return path;
+            } else {
+                return '';
+            }
+        },
+
+
+        /**
+         * @function
          * @name pc.scene.GraphNode#getRoot
          * @description Get the highest ancestor node from this graph node.
          * @return {pc.scene.GraphNode} The root node of the hierarchy to which this node belongs.
