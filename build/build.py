@@ -31,8 +31,8 @@ COMP_LEVELS = [
 
 def get_revision():
     """
-    Try and write the mercurial revision out to the file 'revision.py'.
-    This will silence errors from mercurial, so beware of weird cases. If
+    Try and write the git revision out to the file 'revision.py'.
+    This will silence errors from git, so beware of weird cases. If
     you want to read stderr eventually, read out[1]
     """
     try:
