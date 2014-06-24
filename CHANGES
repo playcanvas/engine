@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.150.1
+--------
+* Increased decimal precision of camera clip planes to 5.
+* Show 3 arrows for directional light gizmo.
+
+--------
 v0.150.0
 --------
 * Added PostEffectQueue#setRenderTargetScale which means post effects can use buffers larger or smaller than the canvas
