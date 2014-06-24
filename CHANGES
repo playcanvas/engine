@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.151.2
+--------
+* Removed some parameters from bloom post effect.
+
+--------
 v0.151.1
 --------
 * Merged pull request by b1naryth1ef: Cleaned up build script.
