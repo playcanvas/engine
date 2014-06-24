@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.151.0
+--------
+* Updated build.py for Git
+
+--------
 v0.150.1
 --------
 * Increased decimal precision of camera clip planes to 5.
