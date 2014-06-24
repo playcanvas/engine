@@ -13,17 +13,16 @@ def get_revision():
     # Try and write the mercurial revision out to the file 'revision.py'
     try:
         import subprocess
-        process = subprocess.Popen(['hg', 'id', '-in'], shell=False, stdout=subprocess.PIPE)
+        process = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], shell=False, stdout=subprocess.PIPE)
         output = process.communicate()
 
-        (revision, id) = output[0].split()
-        if revision and id:
-            return (revision, id)
+        revision = output[0]
+        if revision:
+            return revision
         else:
             raise Exception("No revision number found")
-        return output[0].split()
     except Exception, e:
-        return ("-", "-")
+        return ""
 
 def get_version():
     try:
@@ -114,7 +113,7 @@ def insert_versions(path):
     sf = open(path, 'r')
     text = sf.read()
     text = text.replace("__CURRENT_SDK_VERSION__", get_version())
-    text = text.replace("__MERCURIAL_REVISION__", get_revision()[0])
+    text = text.replace("__REVISION__", get_revision())
 
     # Open a temporary destination file
     dst = path + '.tmp'
@@ -138,7 +137,7 @@ def create_package_json():
       "description": "PlayCanvas Engine",
       "version": "__VERSION__",
       "homepage": "https://playcanvas.com",
-      "repository": "https://bitbucket.org/playcanvas/engine",
+      "repository": "https://github.com/playcanvas/engine",
       "author": "PlayCanvas <support@playcanvas.com>",
       "main": "build/output/playcanvas-latest.js",
       "engines": {
