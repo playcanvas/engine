@@ -1,28 +1,59 @@
+"""\
+Build playcanvas sdk using Google Closure compiler
+Options:
+    -h : Display this help
+    -l [1|2|3] : Compilation level.
+        1: WHITESPACE_ONLY (default)
+        2: SIMPLE_OPTIMIZATIONS
+        3: ADVANCED_OPTIMIZATIONS
+    -d [dirname] : Set root directory (default '.')
+    -o [filepath] : Set output file (default 'output/playcanvas-latest.dev.js')
+"""
+
 import sys
 import os
 import getopt
 import subprocess
 import shutil
+import json
+import time
 
-root = "."
-output = "output/playcanvas-%s.js" % ('latest')
-compilation_level = "WHITESPACE_ONLY"
-COMP_LEVELS = ["WHITESPACE_ONLY", "WHITESPACE_ONLY", "SIMPLE_OPTIMIZATIONS", "ADVANCED_OPTIMIZATIONS"];
+ROOT = "."
+OUTPUT = "output/playcanvas-%s.js" % ('latest')
+COMPILATION_LEVEL = "WHITESPACE_ONLY"
+
+COMP_LEVELS = [
+    "WHITESPACE_ONLY",
+    "WHITESPACE_ONLY",
+    "SIMPLE_OPTIMIZATIONS",
+    "ADVANCED_OPTIMIZATIONS"
+]
 
 def get_revision():
-    # Try and write the mercurial revision out to the file 'revision.py'
+    """
+    Try and write the mercurial revision out to the file 'revision.py'.
+    This will silence errors from mercurial, so beware of weird cases. If
+    you want to read stderr eventually, read out[1]
+    """
     try:
-        import subprocess
-        process = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], shell=False, stdout=subprocess.PIPE)
-        output = process.communicate()
+        process = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], shell=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        out = process.communicate()
 
-        revision = output[0]
+        if not out[0]:
+            print("WARNING: error occured extracting revision: %s" % out[1].strip())
+            return "-"
+
+        revision = out[0]
         if revision:
             return revision
         else:
-            raise Exception("No revision number found")
-    except Exception, e:
-        return ""
+            print("WARINING: Something went wrong trying to extract revision!")
+            return "-"
+    except Exception as e:
+        print("WARNING: Failed to extract revision: (%s)!" % e)
+        return "-"
 
 def get_version():
     try:
@@ -36,73 +67,64 @@ def get_version():
     return version
 
 def build(dst):
-    global compilation_level
-    formatting = None
-    # Set options
-    if compilation_level == COMP_LEVELS[0]:
-        formatting = "pretty_print"
+    dependency_file = os.path.join(ROOT, "dependencies.txt")
+    compiler_path = os.path.join(ROOT, "closure/compiler.jar")
+    temp_path = os.path.join(ROOT, "out.js")
 
-    dependency_file = os.path.join(root, "dependencies.txt")
-    compiler_path = os.path.join(root, "closure/compiler.jar")
-    temp_path = os.path.join(root, "out.js")
-
-    dependencies = open(dependency_file, "r");
+    dependencies = open(dependency_file, "r")
 
     # Build and call command
-    cmd = ["java", "-jar", compiler_path, "--compilation_level", compilation_level, "--js_output_file=" + temp_path, "--manage_closure_dependencies", "true"]
-    if formatting:
-        cmd.append("--formatting")
-        cmd.append(formatting)
+    cmd = [
+        "java",
+        "-jar", compiler_path,
+        "--compilation_level", COMPILATION_LEVEL,
+        "--js_output_file=" + temp_path,
+        "--manage_closure_dependencies", "true"
+    ]
+
+    if COMPILATION_LEVEL == COMP_LEVELS[0]:
+        cmd += ["--formatting", 'pretty_print']
 
     # Use ECMA script 5 which supports getters and setters
     cmd.append("--language_in=ECMASCRIPT5")
 
     for file in dependencies:
-        cmd.append( "--js=" + os.path.join(root, file.strip()))
+        cmd.append("--js=" + os.path.join(ROOT, file.strip()))
 
     retcode = subprocess.call(cmd)
 
-    # Copy output to build directory
+    # Copy OUTPUT to build directory
     if not os.path.exists(os.path.dirname(dst)):
-       os.mkdir(os.path.dirname(dst))
+        os.mkdir(os.path.dirname(dst))
     shutil.move(temp_path, dst)
 
     return retcode
 
 def usage():
-    print("""
-    Build playcanvas sdk using Google Closure compiler
-    Options:
-    \t-h : Display this help
-    \t-l [1|2|3] : Compilation level. 1: WHITESPACE_ONLY, 2: SIMPLE_OPTIMIZATIONS, 3: ADVANCED_OPTIMIZATIONS (default 1)
-    \t-d [dirname] : Set root directory (default '.')
-    \t-o [filepath] : Set output file (default 'output/playcanvas-latest.dev.js')
-    """)
+    print(__doc__)
 
 def setup():
+    global ROOT, OUTPUT, COMPILATION_LEVEL
     try:
         opts, args = getopt.getopt(sys.argv[1:], "d:o:hl:")
     except getopt.GetoptError, err:
         print(str(err))
         sys.exit(2)
 
-    global root
-    global output
-    global compilation_level
-    for o,a in opts:
+    for o, a in opts:
         if(o == "-h"):
             usage()
             sys.exit(0)
         if o == "-d":
-            root = a
+            ROOT = a
         if o == "-o":
-            output = a
+            OUTPUT = a
         if o == '-l':
             try:
-                compilation_level = COMP_LEVELS[int(a)]
-            except Exception, e:
+                COMPILATION_LEVEL = COMP_LEVELS[int(a)]
+            except Exception as e:
                 print(e)
-                compilation_level = "WHITESPACE_ONLY"
+                COMPILATION_LEVEL = "WHITESPACE_ONLY"
 
 def insert_versions(path):
     '''.. ::insert_versions(path)
@@ -132,29 +154,30 @@ def create_package_json():
     '''.. ::create_package_json()
     Create the package.json file needed to create a nodejs package.
     '''
-    base = '''{
-      "name": "playcanvas",
-      "description": "PlayCanvas Engine",
-      "version": "__VERSION__",
-      "homepage": "https://playcanvas.com",
-      "repository": "https://github.com/playcanvas/engine",
-      "author": "PlayCanvas <support@playcanvas.com>",
-      "main": "build/output/playcanvas-latest.js",
-      "engines": {
-        "node": ">= 0.6.12"
-      },
-      "files": [
-        "build/output/playcanvas-latest.js"
-      ]
-    }'''
+    base = {
+        "name": "playcanvas",
+        "description": "PlayCanvas Engine",
+        "version": get_version().strip(),
+        "homepage": "https://playcanvas.com",
+        "repository": "https://github.com/playcanvas/engine",
+        "author": "PlayCanvas <support@playcanvas.com>",
+        "main": "build/output/playcanvas-latest.js",
+        "engines": {
+            "node": ">= 0.6.12"
+        },
+        "files": [
+            "build/output/playcanvas-latest.js"
+        ]
+    }
 
     with open('../package.json', 'w') as f:
-        f.write(base.replace('__VERSION__', get_version().strip()))
+        json.dump(base, f, indent=2, sort_keys=True)
 
 
 if __name__ == "__main__":
+    start = time.time()
     setup()
-    output_path =  os.path.join(root, output)
+    output_path = os.path.join(ROOT, OUTPUT)
 
     retcode = build(output_path)
     if retcode:
@@ -162,3 +185,4 @@ if __name__ == "__main__":
 
     insert_versions(output_path)
     create_package_json()
+    print("Build completed in %s seconds!" % (time.time() - start))
