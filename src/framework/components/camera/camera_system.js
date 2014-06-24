@@ -90,7 +90,7 @@ pc.extend(pc.fw, function () {
             defaultValue: 0.3,
             options: {
                 min: 0.0001,
-                decimalPrecision: 3
+                decimalPrecision: 5
             }
         }, {
             name: "farClip",
@@ -100,7 +100,7 @@ pc.extend(pc.fw, function () {
             defaultValue: 1000,
             options: {
                 min: 0.0001,
-                decimalPrecision: 3
+                decimalPrecision: 5
             }
         }, {
             name: "priority",
