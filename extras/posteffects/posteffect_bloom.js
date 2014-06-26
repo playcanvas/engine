@@ -246,17 +246,20 @@ pc.extend(pc.posteffect, function () {
 
 pc.script.attribute('bloomIntensity', 'number', 1, {
     min: 0,
-    step: 0.5
+    step: 0.5,
+    displayName: 'Bloom Intensity'
 });
 
 pc.script.attribute('bloomThreshold', 'number', 0.25, {
     min: 0,
     step: 0.01,
-    max: 1
+    max: 1,
+    displayName: 'Bloom Threshold'
 });
 
 pc.script.attribute('blurAmount', 'number', 4, {
-    min: 1
+    min: 1,
+    displayName: 'Blur Amount'
 });
 
 //--------------- SCRIPT DEFINITION------------------------//

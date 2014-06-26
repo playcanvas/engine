@@ -81,14 +81,16 @@ pc.script.attribute('brightness', 'number', 0, {
     min: -1,
     max: 1,
     step: 0.05,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Brightness'
 });
 
 pc.script.attribute('contrast', 'number', 0, {
     min: -1,
     max: 1,
     step: 0.05,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Contrast'
 });
 
 //--------------------------------- SCRIPT DEFINITION -----------------------------------//

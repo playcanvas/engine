@@ -100,10 +100,13 @@ pc.extend(pc.posteffect, function () {
 //----------------------------- SCRIPT ATTRIBUTES -----------------------------//
 pc.script.attribute('intensity', 'number', 1, {
     min: 0,
-    max: 2
+    max: 2,
+    displayName: 'Intensity'
 });
 
-pc.script.attribute('color', 'rgba', [0.5, 0.5, 0.5, 1]);
+pc.script.attribute('color', 'rgba', [0.5, 0.5, 0.5, 1], {
+    displayName: 'Color'
+});
 
 //----------------------------- SCRIPT DEFINITION -----------------------------//
 pc.script.create('edgedetect', function (context) {

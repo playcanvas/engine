@@ -91,14 +91,16 @@ pc.script.attribute('hue', 'number', 0, {
     min: -1,
     max: 1,
     step: 0.05,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Hue'
 });
 
 pc.script.attribute('saturation', 'number', 0, {
     min: -1,
     max: 1,
     step: 0.05,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Saturation'
 });
 
 //--------------- SCRIPT DEFINITION------------------------//

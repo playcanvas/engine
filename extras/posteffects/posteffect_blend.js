@@ -72,12 +72,14 @@ pc.script.attribute('mixRatio', 'number', 1, {
     min: 0,
     max: 1,
     step: 0.05,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Mix Ratio'
 });
 
 pc.script.attribute('blendMap', 'asset', [], {
     type: 'texture',
-    max: 1
+    max: 1,
+    displayName: 'Blend Map'
 });
 
 //--------------- SCRIPT DEFINITION ------------------------//
@@ -92,10 +94,10 @@ pc.script.create('blend', function (context) {
         initialize: function () {
             this.on('set', this.onAttributeChanged, this);
             this.effect.mixRatio = this.mixRatio;
-            
+
             this.loadBlendMap();
         },
-        
+
         loadBlendMap: function () {
             if (this.blendMap) {
                 var asset = context.assets.getAssetByResourceId(this.blendMap);
@@ -104,7 +106,7 @@ pc.script.create('blend', function (context) {
                 }.bind(this));
             }
         },
-        
+
         onAttributeChanged: function (name, oldValue, newValue) {
             if (name === 'blendMap') {
                 this.loadBlendMap();
@@ -116,7 +118,7 @@ pc.script.create('blend', function (context) {
         onEnable: function () {
             this.entity.camera.postEffects.addEffect(this.effect);
         },
-        
+
         onDisable: function () {
             this.entity.camera.postEffects.removeEffect(this.effect);
         }
