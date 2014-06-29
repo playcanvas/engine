@@ -18,41 +18,57 @@ pc.extend(pc.asset, function () {
         this._cache = {}; // main asset cache, keyed by resourceId
         this._names = {}; // index for looking up assets by name
         this._urls = {}; // index for looking up assets by url
+
+        this._groups = {};
     };
 
     AssetRegistry.prototype = {
-        update: function (toc) {
+        /**
+        * @private
+        * @function
+        * @name pc.asset.AssetRegistry#addGroup
+        * @description Take a set of asset data (usually from the content file (data.js) or the API)
+        * and create pc.asset.Asset instance for each entry. Group these Assets by name so they can be
+        * loaded in a batch later.
+        * @param {String} name The name of the group to store Assets under
+        * @param {Object} toc The data source for getting the asset data. Should be an object keyed on asset resource ids.
+        */
+        addGroup: function (name, toc) {
+            if (!this._groups[name]) {
+                this._groups[name] = [];
+            }
+
             for (var resourceId in toc.assets) {
                 var asset = this.getAssetByResourceId(resourceId);
 
                 if (!asset) {
-                    // Create assets for every entry in TOC and add to AssetCache
+                    // Create assets for every entry in TOC and add to AssetRegistry
                     var assetData = toc.assets[resourceId];
-                    asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
-                    asset.resourceId = resourceId; // override default resourceId
-                    this.addAsset(asset);
-
-                    // Register hashes with the resource loader
-                    if (asset.file) {
-                        this.loader.registerHash(asset.file.hash, asset.getFileUrl());
-                    }
+                    asset = this.createAndAddAsset(resourceId, assetData);
                 } else {
                     // Update asset data
                     pc.extend(asset, toc.assets[resourceId]);
                 }
-            }
 
-            if (toc.deleted) {
-                for (var resourceId in toc.deleted) {
-                    var asset = this.getAssetByResourceId(resourceId);
-                    if (asset) {
-                        this.removeAsset(asset);
-                    }
-                }
+                this._groups[name].push(asset.resourceId);
             }
         },
 
+        createAndAddAsset: function (resourceId, assetData) {
+            var asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
+            asset.resourceId = resourceId; // override default resourceId
+            this.addAsset(asset);
+
+            if (asset.file) {
+                this.loader.registerHash(asset.file.hash, asset.getFileUrl());
+            }
+
+            return asset;
+        },
+
         /**
+        * @private
+        * @deprecated
         * @function
         * @name pc.asset.AssetRegistry#all
         * @description Return a list of all assets in the registry
@@ -62,6 +78,29 @@ pc.extend(pc.asset, function () {
             return Object.keys(this._cache).map(function (resourceId) {
                 return this.getAssetByResourceId(resourceId);
             }, this);
+        },
+
+        /**
+        * @function
+        * @name pc.asset.AssetRegisty#list
+        * @description Generate a list of all assets in a group (or all assets if no group name is supplied)
+        * @param {String} groupName The name of the group to get the asset list from
+        * @returns [pc.asset.Asset] List of all assets in the group
+        */
+        list: function (groupName) {
+            if (groupName) {
+                // return assets from the group
+                if (this._groups[groupName]) {
+                    return this._groups[groupName].map(function (resourceId) {
+                        return this.getAssetByResourceId(resourceId);
+                    }, this);
+                }
+            } else {
+                // Return all assets
+                return Object.keys(this._cache).map(function (resourceId) {
+                    return this.getAssetByResourceId(resourceId);
+                }, this);
+            }
         },
 
         /**

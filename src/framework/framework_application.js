@@ -30,7 +30,6 @@ pc.extend(pc.fw, function () {
         // Add event support
         pc.events.attach(this);
 
-        this.content = options.content;
         this.canvas = canvas;
         this.fillMode = pc.fw.FillMode.KEEP_ASPECT;
         this.resolutionMode = pc.fw.ResolutionMode.FIXED;
@@ -65,6 +64,14 @@ pc.extend(pc.fw, function () {
 
         // The ApplicationContext is passed to new Components and user scripts
         this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
+
+        if (options.content) {
+            this.content = options.content;
+            // Add the assets from all TOCs to the
+            Object.keys(this.content.toc).forEach(function (key) {
+                this.context.assets.addGroup(key, this.content.toc[key]);
+            }.bind(this));
+        }
 
         // Enable new texture bank feature to cache textures
         var textureCache = new pc.resources.TextureCache(loader);
@@ -161,13 +168,10 @@ pc.extend(pc.fw, function () {
 
             var requests = [];
 
-            // Populate the AssetRegistry and register hashes
-            this.context.assets.update(toc);
+            var guid = toc.packs[0];
 
             var onLoaded = function (resources) {
                 // load pack
-                guid = toc.packs[0];
-
                 this.context.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
                     var pack = resources[0];
                     this.context.root.addChild(pack.hierarchy);
@@ -204,8 +208,8 @@ pc.extend(pc.fw, function () {
             }.bind(this);
 
             var load = function () {
-                // Get a list of all assets
-                var assets = this.context.assets.all();
+                // Get a list of asset for the first Pack
+                var assets = this.context.assets.list(guid);
 
                 // start recording loading progress from here
                 this.context.loader.on('progress', progress);
@@ -230,44 +234,6 @@ pc.extend(pc.fw, function () {
                 load();
             }
         },
-
-        // loadPack: function (guid, success, error, progress) {
-        //     var load = function() {
-        //         var request = new pc.resources.PackRequest(guid);
-        //         this.context.loader.request(request, function (resources) {
-        //             var pack = resources[guid];
-
-        //             // add to hierarchy
-        //             this.context.root.addChild(pack.hierarchy);
-
-        //             // Initialise any systems with an initialize() method after pack is loaded
-        //             pc.fw.ComponentSystem.initialize(pack.hierarchy);
-
-        //             // callback
-        //             if (success) {
-        //                 success(pack);
-        //             }
-        //         }.bind(this), function (errors) {
-        //             // error
-        //             if (error) {
-        //                 error(errors);
-        //             }
-        //         }.bind(this), function (value) {
-        //             // progress
-        //             if (progress) {
-        //                 progress(value);
-        //             }
-        //         }.bind(this));
-        //     }.bind(this);
-
-        //     if (!this.librariesLoaded) {
-        //         this.on('librariesloaded', function () {
-        //             load();
-        //         });
-        //     } else {
-        //         load();
-        //     }
-        // },
 
         /**
          * @function
@@ -643,7 +609,26 @@ pc.extend(pc.fw, function () {
                     break;
 
                 case pc.fw.LiveLinkMessageType.UPDATE_ASSETCACHE:
-                    this.context.assets.update(msg.content, this.context.loader);
+                    var resourceId;
+
+                    // Add new and Update existing assets
+                    for (resourceId in msg.content.assets) {
+                        var asset = this.context.assets.getAssetByResourceId(resourceId);
+                        if (!asset) {
+                            var assetData = msg.content.assets[resourceId];
+                            this.context.assets.createAndAddAsset(resourceId, assetData);
+                        } else {
+                            pc.extend(asset, msg.content.assets[resourceId]);
+                        }
+                    }
+
+                    // Delete removed assets
+                    for (resourceId in msg.content.deleted) {
+                        var asset = this.context.assets.getAssetByResourceId(resourceId);
+                        if (asset) {
+                            this.context.assets.removeAsset(asset);
+                        }
+                    }
                     break;
 
                 case pc.fw.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
