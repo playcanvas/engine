@@ -91,7 +91,7 @@
         * var promise = loader.request(requests);
         * promise.then(function(resources) {
         *   var img1 = resources[0];
-        *   var img2 = resources[2];
+        *   var img2 = resources[1];
         * });
         */
         request: function (requests, options) {
