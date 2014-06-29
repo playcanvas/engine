@@ -76,12 +76,14 @@ pc.extend(pc.posteffect, function () {
 pc.script.attribute('offset', 'number', 1, {
     min: 0,
     step: 0.05,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Offset'
 });
 
 pc.script.attribute('darkness', 'number', 1, {
     step: 0.05,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Darkness'
 });
 
 //--------------- SCRIPT DEFINITION------------------------//

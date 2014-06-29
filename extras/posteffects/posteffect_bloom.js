@@ -60,9 +60,6 @@ pc.extend(pc.posteffect, function () {
      * @property {Number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1
      * @property {Number} blurAmount Controls the amount of blurring.
      * @property {Number} bloomIntensity The intensity of the effect.
-     * @property {Number} baseIntensity The intensity of the entire screen.
-     * @property {Number} bloomSaturation The saturation of the effect.
-     * @property {Number} baseSaturation The saturation of the scene.
      */
     var Bloom = function (graphicsDevice) {
         // Shaders
@@ -130,40 +127,22 @@ pc.extend(pc.posteffect, function () {
         ].join("\n");
 
         // Pixel shader combines the bloom image with the original
-        // scene, using tweakable intensity levels and saturation.
+        // scene, using tweakable intensity levels.
         // This is the final step in applying a bloom postprocess.
         var bloomCombineFrag = [
             "precision " + graphicsDevice.precision + " float;",
             "",
             "varying vec2 vUv0;",
             "",
-            "#define uBloomIntensity uCombineParams.x",
-            "#define uBaseIntensity uCombineParams.y",
-            "#define uBloomSaturation uCombineParams.z",
-            "#define uBaseSaturation uCombineParams.w",
-            "uniform vec4 uCombineParams;",
+            "uniform float uBloomIntensity;",
             "uniform sampler2D uBaseTexture;",
             "uniform sampler2D uBloomTexture;",
-            "",
-            // Helper for modifying the saturation of a color.
-            "vec4 adjust_saturation(vec4 color, float saturation)",
-            "{",
-                 // The constants 0.3, 0.59, and 0.11 are chosen because the
-                 // human eye is more sensitive to green light, and less to blue.
-            "    float grey = dot(color.rgb, vec3(0.3, 0.59, 0.11));",
-            "",
-            "    return mix(vec4(grey), color, saturation);",
-            "}",
             "",
             "void main(void)",
             "{",
                  // Look up the bloom and original base image colors.
-            "    vec4 bloom = texture2D(uBloomTexture, vUv0);",
+            "    vec4 bloom = texture2D(uBloomTexture, vUv0) * uBloomIntensity;",
             "    vec4 base = texture2D(uBaseTexture, vUv0);",
-            "",
-                 // Adjust color saturation and intensity.
-            "    bloom = adjust_saturation(bloom, uBloomSaturation) * uBloomIntensity;",
-            "    base = adjust_saturation(base, uBaseSaturation) * uBaseIntensity;",
             "",
                  // Darken down the base image in areas where there is a lot of bloom,
                  // to prevent things looking excessively burned-out.
@@ -213,12 +192,8 @@ pc.extend(pc.posteffect, function () {
         this.bloomThreshold = 0.25;
         this.blurAmount = 4;
         this.bloomIntensity = 1.25;
-        this.baseIntensity = 1;
-        this.bloomSaturation = 1;
-        this.baseSaturation = 1;
 
         // Uniforms
-        this.combineParams = new Float32Array(4);
         this.sampleWeights = new Float32Array(SAMPLE_COUNT);
         this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
     }
@@ -255,11 +230,7 @@ pc.extend(pc.posteffect, function () {
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
-            this.combineParams[0] = this.bloomIntensity;
-            this.combineParams[1] = this.baseIntensity;
-            this.combineParams[2] = this.bloomSaturation;
-            this.combineParams[3] = this.baseSaturation;
-            scope.resolve("uCombineParams").setValue(this.combineParams);
+            scope.resolve("uBloomIntensity").setValue(this.bloomIntensity);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
             pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader, rect);
@@ -275,30 +246,20 @@ pc.extend(pc.posteffect, function () {
 
 pc.script.attribute('bloomIntensity', 'number', 1, {
     min: 0,
-    step: 0.5
-});
-
-pc.script.attribute('baseIntensity', 'number', 1, {
-    min: 0,
-    step: 0.5
+    step: 0.5,
+    displayName: 'Bloom Intensity'
 });
 
 pc.script.attribute('bloomThreshold', 'number', 0.25, {
     min: 0,
     step: 0.01,
-    max: 1
+    max: 1,
+    displayName: 'Bloom Threshold'
 });
 
 pc.script.attribute('blurAmount', 'number', 4, {
-    min: 1
-});
-
-pc.script.attribute('bloomSaturation', 'number', 1, {
-    min: 0
-});
-
-pc.script.attribute('baseSaturation', 'number', 1, {
-    min: 0
+    min: 1,
+    displayName: 'Blur Amount'
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
@@ -316,9 +277,6 @@ pc.script.create('bloom', function (context) {
             this.effect.bloomThreshold = this.bloomThreshold;
             this.effect.blurAmount = this.blurAmount;
             this.effect.bloomIntensity = this.bloomIntensity;
-            this.effect.baseIntensity = this.baseIntensity;
-            this.effect.bloomSaturation = this.bloomSaturation;
-            this.effect.baseSaturation = this.baseSaturation;
         },
 
         onAttributeChanged: function (name, oldValue, newValue) {

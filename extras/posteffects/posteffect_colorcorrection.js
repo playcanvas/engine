@@ -69,8 +69,12 @@ pc.extend(pc.posteffect, function () {
 }());
 
 //----------------------------- SCRIPT ATTRIBUTES -----------------------------//
-pc.script.attribute('powerRgb', 'vector', [1,1,1]);
-pc.script.attribute('mulRgb', 'vector', [1,1,1]);
+pc.script.attribute('powerRgb', 'vector', [1,1,1], {
+    displayName: 'RGB Power'
+});
+pc.script.attribute('mulRgb', 'vector', [1,1,1], {
+    displayName: 'RGB Mul'
+});
 
 //----------------------------- SCRIPT DEFINITION -----------------------------//
 pc.script.create('colorcorrection', function (context) {

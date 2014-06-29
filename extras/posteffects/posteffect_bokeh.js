@@ -152,15 +152,21 @@ pc.script.attribute('maxBlur', 'number', 1, {
     step: 0.001,
     min: 0,
     max: 1,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Max Blur'
 });
 pc.script.attribute('aperture', 'number', 0.025, {
     decimalPrecision: 5,
     step: 0.01,
-    min: 0
+    min: 0,
+    displayName: 'Aperture'
 });
-pc.script.attribute('focus', 'number', 1);
-pc.script.attribute('aspect', 'number', 1);
+pc.script.attribute('focus', 'number', 1, {
+    displayName: 'Focus'
+});
+pc.script.attribute('aspect', 'number', 1, {
+    displayName: 'Aspect'
+});
 
 
 //------------------------------ SCRIPT DEFINITION----------------------------//

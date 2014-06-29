@@ -72,7 +72,8 @@ pc.extend(pc.posteffect, function () {
 pc.script.attribute('amount', 'number', 1, {
     min: 0,
     step: 0.01,
-    max: 1
+    max: 1,
+    displayName: 'Amount'
 });
 
 //--------------- SCRIPT DEFINITION------------------------//

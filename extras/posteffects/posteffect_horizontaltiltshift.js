@@ -86,7 +86,8 @@ pc.script.attribute('focus', 'number', 0.35, {
     min: 0,
     max: 1,
     step: 0.05,
-    decimalPrecision: 5
+    decimalPrecision: 5,
+    displayName: 'Focus'
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
