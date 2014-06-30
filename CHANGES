@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.152.0
+--------
+* Re-factor AssetRegistry
+* [BREAKING] AssetRegistry#update() is replace with AssetRegistry#addGroup() and AssetRegistry#createAndAddAsset()
+* [BREAKING] AssetRegistry#all() is replaced with AssetRegistry#list([groupName])
+* Added displayNames to all post effect scripts
+
+--------
 v0.151.2
 --------
 * Removed some parameters from bloom post effect.
