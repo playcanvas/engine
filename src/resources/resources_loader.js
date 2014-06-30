@@ -8,7 +8,7 @@
     * a new instance of a resource. The ResourceLoader contains a built in cache, that uses file hashes to ensure that
     * resources are not fetched multiple times. Hashes must be registered against an identifier prior to making requests.
     * @example
-    * var loader = new pc.resources.Loader();
+    * var loader = new pc.resources.ResourceLoader();
     * loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
     * var promise = loader.request(new pc.resources.ImageRequest("http://example.com/image.png"));
     * promise.then(function (resources) {
@@ -91,7 +91,7 @@
         * var promise = loader.request(requests);
         * promise.then(function(resources) {
         *   var img1 = resources[0];
-        *   var img2 = resources[2];
+        *   var img2 = resources[1];
         * });
         */
         request: function (requests, options) {
