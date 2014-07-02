@@ -365,19 +365,27 @@ pc.extend(pc.asset, function () {
                         }));
                     });
 
-                    var promise = self.load(materialAssets)
+                    if (materialAssets.length) {
+                        var promise = self.load(materialAssets)
 
-                    promise.then(function (materials) {
-                        for(var i = 0, n = model.meshInstances.length; i < n; i++) {
-                            model.meshInstances[i].material = materials[i];
-                        }
+                        promise.then(function (materials) {
+                            for(var i = 0, n = model.meshInstances.length; i < n; i++) {
+                                model.meshInstances[i].material = materials[i];
+                            }
+                            resolve({
+                                resource: model,
+                                asset: modelAsset
+                            });
+                        });
+
+                        return promise;
+                    } else {
                         resolve({
                             resource: model,
                             asset: modelAsset
                         });
-                    });
+                    }
 
-                    return promise;
                 });
             });
 
