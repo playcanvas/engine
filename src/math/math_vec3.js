@@ -24,6 +24,29 @@ pc.extend(pc, (function () {
     Vec3.prototype = {
         /**
          * @function
+         * @name pc.Vec3#addScalar
+         * @description Adds a single number to each component of the vector
+         * @param {pc.Vec3} number The scalar to add to the specified vector.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(5, 5, 5);
+         * a.addScalar(10);
+         *
+         * // Should output [15, 15, 15]
+         * console.log("The result of the addition is: " + a.toString());
+         */
+        addScalar: function (number) {
+            var a = this.data;
+
+            a[0] += number;
+            a[1] += number;
+            a[2] += number;
+
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec3#add
          * @description Adds a 3-dimensional vector to another in place.
          * @param {pc.Vec3} rhs The vector to add to the specified vector.
@@ -75,6 +98,50 @@ pc.extend(pc, (function () {
             r[2] = a[2] + b[2];
 
             return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#add2Scalar
+         * @description Adds a number to a 3-dimensional vector and returns the result.
+         * @param {pc.Vec3} lhs The first vector operand for the addition.
+         * @param {Number} number The scalar operand for the addition.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(5, 10, 15);
+         * var n = 4;
+         * var r = new pc.Vec3();
+         *
+         * r.add2Scalar(a, n);
+         * // Should output [9, 14, 19]
+         *
+         * console.log("The result of the addition is: " + r.toString());
+         */
+        add2Scalar: function (lhs, number) {
+            var a = lhs.data,
+                r = this.data;
+
+            r[0] = a[0] + number;
+            r[1] = a[1] + number;
+            r[2] = a[2] + number;
+
+            return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#angle
+         * @description Returns the angle of the specified 3-dimensional vector.
+         * @returns {Number} The angle of the specified 3-dimensional vector in degrees.
+         * @example
+         * var vec = new pc.Vec3(1, 1, 0);
+         * var angle = vec.angle();
+         * // Should output 45
+         * console.log("The angle of the vector is: " + angle);
+         */
+        angle: function () {
+            var v = this.data;
+            return Math.atan2(v[1], v[0]);
         },
 
         /**
@@ -148,6 +215,44 @@ pc.extend(pc, (function () {
             r[2] = ax * by - bx * ay;
 
             return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#distanceTo
+         * @description Returns the distance to another vector.
+         * @param {pc.Vec3} rhs The 3-dimensional vector operand.
+         * @returns {Number} The result of the distance calculation.
+         * @example
+         * var v1 = new pc.Vec3(5, 0, 0);
+         * var v2 = new pc.Vec3(-5, 0, 0);
+         *
+         * var distance = v1.distanceTo(v2);
+         * console.log("The distance between the vectors: " + distance); // 10
+         */
+        distanceTo: function (rhs) {
+            var difference = rhs.sub(this);
+            return difference.length();
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#distanceTo2
+         * @description Returns the distance between two arbitrary vectors.
+         * @param {pc.Vec3} lhs The first 3-dimensional vector operand.
+         * @param {pc.Vec3} rhs The second 3-dimensional vector operand.
+         * @returns {Number} The result of the distance calculation.
+         * @example
+         * var v1 = new pc.Vec3(5, 0, 0);
+         * var v2 = new pc.Vec3(-5, 0, 0);
+         * var r = new pc.Vec3();
+         *
+         * var distance = r.distanceTo2(v1, v2);
+         * console.log("The distance between the vectors: " + distance); // 10
+         */
+        distanceTo2: function (lhs, rhs) {
+            var difference = rhs.sub(lhs);
+            return difference.length();
         },
 
         /**
@@ -279,6 +384,31 @@ pc.extend(pc, (function () {
 
         /**
          * @function
+         * @name pc.Vec3#mulScalar
+         * @description Returns the result of multiplying a scalar with each component of the specified 3-dimensional vector.
+         * @param {Number} number The scalar used as the second multiplicand of the operation.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(2, 3, 4);
+         * var n = 4;
+         *
+         * a.mulScalar(n);
+         *
+         * // Should output 8, 12, 16
+         * console.log("The result of the multiplication is: " + a.toString());
+         */
+        mulScalar: function (number) {
+            var a = this.data;
+
+            a[0] *= number;
+            a[1] *= number;
+            a[2] *= number;
+
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec3#mul2
          * @description Returns the result of multiplying the specified 3-dimensional vectors together.
          * @param {pc.Vec3} lhs The 3-dimensional vector used as the first multiplicand of the operation.
@@ -308,6 +438,34 @@ pc.extend(pc, (function () {
 
         /**
          * @function
+         * @name pc.Vec3#mul2Scalar
+         * @description Returns the result of multiplying a specified 3-dimensional vector with a scalar.
+         * @param {pc.Vec3} lhs The 3-dimensional vector used as the first multiplicand of the operation.
+         * @param {Number} number The scalar used as the second multiplicand of the operation.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(2, 3, 4);
+         * var n = 5;
+         * var r = new pc.Vec3();
+         *
+         * r.mul2Scalar(a, n);
+         *
+         * // Should output 10, 15, 12
+         * console.log("The result of the multiplication is: " + r.toString());
+         */
+        mul2Scalar: function (lhs, number) {
+            var a = lhs.data,
+                r = this.data;
+
+            r[0] = a[0] * number;
+            r[1] = a[1] * number;
+            r[2] = a[2] * number;
+
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec3#normalize
          * @description Returns the specified 3-dimensional vector copied and converted to a unit vector.
          * @returns {pc.Vec3} The result of the normalization.
@@ -321,6 +479,20 @@ pc.extend(pc, (function () {
          */
         normalize: function () {
             return this.scale(1 / this.length());
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#perpendicularTo
+         * @description Tests whether the two vectors are perpedicular.
+         * @returns {boolean} A boolean value indicating if the vectors are perpedicular
+         * @example
+         * var v1 = new pc.Vec3(0, 1, 0);
+         * var v2 = new pc.Vec3(0, 1, 1);
+         * console.log("Perpendicular? " + v1.perpendicularTo(v2)); // false
+         */
+        perpendicularTo: function (rhs) {
+            return (this.dot(rhs) === 0);
         },
 
         /**
@@ -380,7 +552,7 @@ pc.extend(pc, (function () {
          * @function
          * @name pc.Vec3#sub
          * @description Subtracts a 3-dimensional vector from another in place.
-         * @param {pc.Vec3} rhs The vector to add to the specified vector.
+         * @param {pc.Vec3} rhs The vector to subtract from the specified vector.
          * @returns {pc.Vec3} Self for chaining.
          * @example
          * var a = new pc.Vec3(10, 10, 10);
@@ -389,7 +561,7 @@ pc.extend(pc, (function () {
          * a.sub(b);
          *
          * // Should output [-10, -10, -10]
-         * console.log("The result of the addition is: " + a.toString());
+         * console.log("The result of the subtraction is: " + a.toString());
          */
         sub: function (rhs) {
             var a = this.data,
@@ -404,10 +576,35 @@ pc.extend(pc, (function () {
 
         /**
          * @function
+         * @name pc.Vec3#subScalar
+         * @description Subtracts a number from a 3-dimensional vector in place.
+         * @param {Number} number The number to subtract from each component of the vector.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(10, 15, 20);
+         * var n = 5;
+         *
+         * a.subScalar(n);
+         *
+         * // Should output [5, 10, 15]
+         * console.log("The result of the subtraction is: " + a.toString());
+         */
+        subScalar: function (number) {
+            var a = this.data;
+
+            a[0] -= number;
+            a[1] -= number;
+            a[2] -= number;
+
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec3#sub2
          * @description Subtracts two 3-dimensional vectors from one another and returns the result.
-         * @param {pc.Vec3} lhs The first vector operand for the addition.
-         * @param {pc.Vec3} rhs The second vector operand for the addition.
+         * @param {pc.Vec3} lhs The first vector operand for the subtraction.
+         * @param {pc.Vec3} rhs The second vector operand for the subtraction.
          * @returns {pc.Vec3} Self for chaining.
          * @example
          * var a = new pc.Vec3(10, 10, 10);
@@ -417,7 +614,7 @@ pc.extend(pc, (function () {
          * r.sub2(a, b);
          *
          * // Should output [-10, -10, -10]
-         * console.log("The result of the addition is: " + r.toString());
+         * console.log("The result of the subtraction is: " + r.toString());
          */
         sub2: function (lhs, rhs) {
             var a = lhs.data,
@@ -427,6 +624,34 @@ pc.extend(pc, (function () {
             r[0] = a[0] - b[0];
             r[1] = a[1] - b[1];
             r[2] = a[2] - b[2];
+
+            return this;
+        },
+
+        /**
+         * @function
+         * @name pc.Vec3#sub2Scalar
+         * @description Subtracts a number from a 3-dimensional vector and returns the result.
+         * @param {pc.Vec3} lhs The first vector operand for the subtraction.
+         * @param {Number} number The scalar number operand for the subtraction.
+         * @returns {pc.Vec3} Self for chaining.
+         * @example
+         * var a = new pc.Vec3(10, 12, 14);
+         * var n = 5;
+         * var r = new pc.Vec3();
+         *
+         * r.sub2Scalar(a, n);
+         *
+         * // Should output [5, 7, 9]
+         * console.log("The result of the subtraction is: " + r.toString());
+         */
+        sub2Scalar: function (lhs, number) {
+            var a = lhs.data,
+                r = this.data;
+
+            r[0] = a[0] - number;
+            r[1] = a[1] - number;
+            r[2] = a[2] - number;
 
             return this;
         },
