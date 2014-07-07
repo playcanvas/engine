@@ -301,6 +301,18 @@ pc.extend(pc.fw, function () {
         addCamera: function (camera) {
             this.cameras.push(camera);
             this.sortCamerasByPriority();
+
+            // add debug shape to designer
+            if (this.context.designer) {
+                var model = camera.data.model;
+
+                if (model) {
+                    var scene = this.context.scene;
+                    if (!scene.containsModel(model)) {
+                        scene.addModel(model)
+                    }
+                }
+            }
         },
 
         removeCamera: function (camera) {
@@ -308,6 +320,14 @@ pc.extend(pc.fw, function () {
             if (index >= 0) {
                 this.cameras.splice(index, 1);
                 this.sortCamerasByPriority();
+
+                // remove debug shape from designer
+                if (this.context.designer) {
+                    var model = camera.data.model;
+                    if (model) {
+                        this.context.scene.removeModel(model);
+                    }
+                }
             }
         },
 
