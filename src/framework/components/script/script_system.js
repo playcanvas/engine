@@ -409,11 +409,11 @@ pc.extend(pc.fw, function () {
                 if (script.url === url) {
                     var attributes = script.attributes;
                     if (script.name && attributes) {
-                        entity.script.data.attributes[script.name] = pc.extend([], attributes);
-
                         attributes.forEach(function (attribute, index) {
                             self._createAccessor(attribute, instance);
                         });
+
+                        entity.script.data.attributes[script.name] = pc.extend([], attributes);
                     }
                     break;
                 }
@@ -511,6 +511,10 @@ pc.extend(pc.fw, function () {
                     attribute.value = attribute.value.length === 3 ?
                                       new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2]) :
                                       new pc.Color(attribute.value[0], attribute.value[1], attribute.value[2], attribute.value[3]);
+                }
+            } else if (attribute.type === 'vector') {
+                if (pc.type(attribute.value) === 'array') {
+                    attribute.value = new pc.Vec3(attribute.value[0], attribute.value[1], attribute.value[2]);
                 }
             }
         }

@@ -263,6 +263,50 @@ test("onAttributeChanged called", function () {
     stop();
 });
 
+test("script attribute types get converted", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        scripts: [{
+            url: 'scripts/events.js',
+            name: 'events',
+            attributes: [{
+                type: 'vector',
+                name: 'vector',
+                value: [3,3,3]
+            }, {
+                type: 'rgb',
+                name: 'color3',
+                value: [1,1,1]
+            }, {
+                type: 'rgba',
+                name: 'color4',
+                value: [1,1,1,0.5]
+            }]
+        }]
+    });
+
+    setTimeout(function () {
+        QUnit.close(e.script.events.vector.x, 3, 0.01);
+        QUnit.close(e.script.events.vector.y, 3, 0.01);
+        QUnit.close(e.script.events.vector.z, 3, 0.01);
+
+        QUnit.close(e.script.events.color3.r, 1, 0.01);
+        QUnit.close(e.script.events.color3.g, 1, 0.01);
+        QUnit.close(e.script.events.color3.b, 1, 0.01);
+
+        QUnit.close(e.script.events.color4.r, 1, 0.01);
+        QUnit.close(e.script.events.color4.g, 1, 0.01);
+        QUnit.close(e.script.events.color4.b, 1, 0.01);
+        QUnit.close(e.script.events.color4.a, 0.5, 0.01);
+
+        start();
+    }, 500);
+
+    stop();
+});
+
 test("'set' event fired", function () {
     var e = new pc.fw.Entity();
     var sc = new pc.fw.ScriptComponentSystem(context);
