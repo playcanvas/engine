@@ -2,7 +2,7 @@ pc.extend(pc.fw, function () {
     /**
      * @component
      * @name pc.fw.LightComponent
-     * @class The Light Component enables the Entity to light the scene. The light can be one of the 
+     * @class The Light Component enables the Entity to light the scene. The light can be one of the
      * following types:
      * <ul>
      * <li><strong>directional</strong>: A directional light. The position of the attached entity has no effect. </li>
@@ -57,7 +57,7 @@ pc.extend(pc.fw, function () {
             if (oldValue !== newValue) {
                 this.system.changeType(this, oldValue, newValue);
 
-                // refresh light properties because changing the type does not reset the 
+                // refresh light properties because changing the type does not reset the
                 // light properties
                 this.refreshProperties();
             }
@@ -106,7 +106,7 @@ pc.extend(pc.fw, function () {
                 var light = this.data.model.lights[0];
                 light.setAttenuationEnd(newValue);
             }
-        }, 
+        },
 
         onSetInnerConeAngle: function (name, oldValue, newValue) {
             if (this.data.type === 'spot') {
@@ -124,18 +124,32 @@ pc.extend(pc.fw, function () {
 
         onEnable: function () {
             LightComponent._super.onEnable.call(this);
-            var light = this.data.model.lights[0];
+
+            var model = this.data.model;
+
+            var light = model.lights[0];
             light.setEnabled(true);
+
+            var scene = this.system.context.scene;
+
+            if (!scene.containsModel(model)) {
+                scene.addModel(model);
+            }
         },
 
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
-            var light = this.data.model.lights[0];
+
+            var model = this.data.model;
+
+            var light = model.lights[0];
             light.setEnabled(false);
-        } 
+
+            this.system.context.scene.removeModel(model);
+        }
     });
 
     return {
         LightComponent: LightComponent
-    }; 
+    };
 }());
