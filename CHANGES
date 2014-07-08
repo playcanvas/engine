@@ -3,6 +3,15 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.152.1
+--------
+* [FIX] Typo in the example for pc.resources.ResourceLoader.request
+* [FIX] Load model even when no material mappings for a model have been found
+* [FIX] Remove camera and lights debug shapes when a camera gets disabled
+* Removed color correction post effect
+* Convert script attributes of type 'vector' to pc.Vec3
+
+--------
 v0.152.0
 --------
 * Re-factor AssetRegistry
