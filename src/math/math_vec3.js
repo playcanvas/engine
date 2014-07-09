@@ -327,6 +327,7 @@ pc.extend(pc, (function () {
          * @function
          * @name  pc.Vec3#project
          * @description Projects this 3-dimensional vector onto the specified vector.
+         * @param {pc.Vec3} rhs The vector onto which the original vector will be projected on.
          * @returns {pc.Vec3} The result of the projection.
          * @example
          * var v = new pc.Vec3(5, 5, 5);
