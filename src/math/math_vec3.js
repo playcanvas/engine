@@ -325,6 +325,32 @@ pc.extend(pc, (function () {
 
         /**
          * @function
+         * @name  pc.Vec3#project
+         * @description Projects this 3-dimensional vector onto the specified vector.
+         * @returns {pc.Vec3} The result of the projection.
+         * @example
+         * var v = new pc.Vec3(5, 5, 5);
+         * var normal = new pc.Vec3(1, 0, 0);
+         *
+         * v.project(normal);
+         *
+         * // Should output 5, 0, 0
+         * console.log("The result of the vector projection is: " + v.toString());
+         */
+        project: function (rhs) {
+            var a = this.data;
+            var b = rhs.data;
+            var a_dot_b = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+            var b_dot_b = b[0] * b[0] + b[1] * b[1] + b[2] * b[2];
+            var s = a_dot_b / b_dot_b;
+            a[0] = b[0] * s;
+            a[1] = b[1] * s;
+            a[2] = b[2] * s;
+            return this;
+        },
+
+        /**
+         * @function
          * @name pc.Vec3#scale
          * @description Scales each dimension of the specified 3-dimensional vector by the supplied
          * scalar value.
@@ -332,13 +358,13 @@ pc.extend(pc, (function () {
          * @returns {pc.Vec3} Self for chaining.
          * @example
          * var v = new pc.Vec3(2, 4, 8);
-         * 
+         *
          * // Multiply by 2
          * v.scale(2);
-         * 
+         *
          * // Negate
          * v.scale(-1);
-         * 
+         *
          * // Divide by 2
          * v.scale(0.5);
          */

@@ -26,7 +26,7 @@ test("add2", function() {
     QUnit.equal(6, r.y);
     QUnit.equal(9, r.z);
 });
- 
+
 test("clone", function () {
     var v1 = new pc.Vec3();
     var v2 = v1.clone();
@@ -37,7 +37,7 @@ test("clone", function () {
     QUnit.equal(v1.y, v2.y);
     QUnit.equal(v1.z, v2.z);
 });
-    
+
 test("copy", function () {
     var v1 = new pc.Vec3(2, 4, 6);
     var v2 = new pc.Vec3();
@@ -49,7 +49,7 @@ test("copy", function () {
     QUnit.equal(6, v2.z);
 });
 
-test("constructor: no args", function () { 
+test("constructor: no args", function () {
     var v = new pc.Vec3();
 
     QUnit.equal(3, v.data.length);
@@ -61,7 +61,7 @@ test("constructor: no args", function () {
 
 test("constructor: args", function() {
     var v = new pc.Vec3(1, 2, 3);
-    
+
     QUnit.equal(3, v.data.length);
     QUnit.equal(1, v.x);
     QUnit.equal(2, v.y);
@@ -77,7 +77,7 @@ test("cross", function() {
 
     QUnit.equal(0, r.x);
     QUnit.equal(0, r.y);
-    QUnit.equal(1, r.z);        
+    QUnit.equal(1, r.z);
 });
 
 test("dot", function() {
@@ -92,18 +92,18 @@ test("dot", function() {
 test("dot: parallel", function() {
     var v1 = new pc.Vec3(0, 1, 0);
     var v2 = new pc.Vec3(0, 1, 0);
-    
+
     var r = v1.dot(v2);
-    
+
     QUnit.equal(r, 1);
 });
 
 test("dot: perpendicular", function() {
     var v1 = new pc.Vec3(1, 0, 0);
     var v2 = new pc.Vec3(0, 1, 0);
-    
+
     var r = v1.dot(v2);
-    
+
     QUnit.equal(r, 0);
 });
 
@@ -139,13 +139,13 @@ test("lerp", function() {
 
     QUnit.equal(v0.x, r.x);
     QUnit.equal(v0.y, r.y);
-    QUnit.equal(v0.z, r.z);        
+    QUnit.equal(v0.z, r.z);
 
     r.lerp(v0, v1, 1);
 
     QUnit.equal(v1.x, r.x);
     QUnit.equal(v1.y, r.y);
-    QUnit.equal(v1.z, r.z);        
+    QUnit.equal(v1.z, r.z);
 });
 
 test("mul", function() {
@@ -163,7 +163,7 @@ test("mul2", function() {
     var v2 = new pc.Vec3(1, 2, 3);
     var r = new pc.Vec3();
     r.mul2(v1, v2);
-    
+
     QUnit.equal(1, r.x);
     QUnit.equal(4, r.y);
     QUnit.equal(9, r.z);
@@ -183,11 +183,21 @@ test("normalize", function(){
     QUnit.equal(0, y.x);
     QUnit.equal(1, y.y);
     QUnit.equal(0, y.z);
-    
+
     z.normalize()
     QUnit.equal(0, z.x);
     QUnit.equal(0, z.y);
     QUnit.equal(1, z.z);
+});
+
+test("project", function () {
+
+    var v = new pc.Vec3(1,0,0);
+    var p = new pc.Vec3(5,5,5);
+    p.project(v);
+    QUnit.equal(p.x, 5);
+    QUnit.equal(p.y, 0);
+    QUnit.equal(p.z, 0);
 });
 
 test("scale", function() {
