@@ -6,13 +6,13 @@ pc.extend(pc.scene, function () {
 
     /**
      * @name pc.scene.PhongMaterial
-     * @class A Phong material is the main, general purpose material that is most often used for rendering. 
+     * @class A Phong material is the main, general purpose material that is most often used for rendering.
      * It can approximate a wide variety of surface types and can simlulate dynamic reflected light.
      * @property {pc.Color} ambient The ambient color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.gfx.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather 
+     * @property {pc.gfx.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for diffuse
      * color in preference to the 'diffuse' property.
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
@@ -25,7 +25,7 @@ pc.extend(pc.scene, function () {
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
      * @property {pc.Vec3} specularMapRotation Controls the rotation of the specular map. The value represents U,V,W angles in degrees.
-     * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128. 
+     * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128.
      * A higher shininess value results in a more focussed specular highlight.
      * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
@@ -35,7 +35,7 @@ pc.extend(pc.scene, function () {
      * @property {pc.Vec3} glossMapRotation Controls the rotation of the gloss map. The value represents U,V,W angles in degrees.
      * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather 
+     * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
      * color in preference to the 'emissive' property.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
@@ -43,18 +43,18 @@ pc.extend(pc.scene, function () {
      * @property {pc.Vec3} emissiveMapRotation Controls the rotation of the emissive map. The value represents U,V,W angles in degrees.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque.
-     * @property {pc.gfx.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather 
+     * @property {pc.gfx.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
      * in preference to the 'opacity' property.
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
      * @property {pc.Vec3} opacityMapRotation Controls the rotation of the opacity map. The value represents U,V,W angles in degrees.
-     * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather 
+     * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
      * @property {pc.Vec3} normalMapRotation Controls the rotation of the normal map. The value represents U,V,W angles in degrees.
-     * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather 
+     * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather
      * than a cube map. The texture contain values defining the height of the surface at that point where darker
      * pixels are lower and lighter pixels are higher.
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
@@ -65,9 +65,9 @@ pc.extend(pc.scene, function () {
      * the bump map and 1 results in a full contribution.
      * @property {pc.gfx.Texture} sphereMap The spherical environment map of the material.
      * @property {pc.gfx.Texture} cubeMap The cubic environment map of the material.
-     * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and 
+     * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and
      * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
-     * @property {pc.gfx.Texture} lightMap The light map of the material. This must be a 2D texture rather 
+     * @property {pc.gfx.Texture} lightMap The light map of the material. This must be a 2D texture rather
      * than a cube map.
      * @author Will Eastcott
      */
@@ -102,8 +102,8 @@ pc.extend(pc.scene, function () {
         this.emissiveMapRotation = new pc.Vec3(0, 0, 0);
         this.emissiveMapTransform = null;
 
-        this.opacity = 1;
-        this.opacityMap = null;
+        this._opacity = 1;
+        this._opacityMap = null;
         this.opacityMapTiling = new pc.Vec2(1, 1);
         this.opacityMapOffset = new pc.Vec2(0, 0);
         this.opacityMapRotation = new pc.Vec3(0, 0, 0);
@@ -162,6 +162,46 @@ pc.extend(pc.scene, function () {
 
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.scene.Material);
+
+    Object.defineProperty(PhongMaterial.prototype, 'opacity', {
+        get: function () {
+            return this._opacity;
+        },
+        set: function (value) {
+            if (this._opacity !== value) {
+                this._opacity = value;
+                if (value < 1) {
+                    if (!this.blendType || this.blendType == pc.scene.BLEND_NONE) {
+                        this.blendType = pc.scene.BLEND_NORMAL;
+                    }
+                } else {
+                    if (!this._opacityMap) {
+                        this.blendType = pc.scene.BLEND_NONE;
+                    }
+                }
+            }
+        }
+    });
+
+    Object.defineProperty(PhongMaterial.prototype, 'opacityMap', {
+        get: function () {
+            return this._opacityMap;
+        },
+        set: function (value) {
+            if (this._opacityMap !== value) {
+                this._opacityMap = value;
+                if (value) {
+                    if (!this.blendType || this.blendType == pc.scene.BLEND_NONE) {
+                        this.blendType = pc.scene.BLEND_NORMAL;
+                    }
+                } else {
+                    if (this._opacity >= 1) {
+                        this.blendType = pc.scene.BLEND_NONE;
+                    }
+                }
+            }
+        }
+    });
 
     pc.extend(PhongMaterial.prototype, {
         /**
@@ -244,7 +284,7 @@ pc.extend(pc.scene, function () {
         init: function (data) {
             // Initialise material from data
             this.name = data.name;
-             
+
             // Read each shader parameter
             for (var i = 0; i < data.parameters.length; i++) {
                 var param = data.parameters[i];
@@ -377,15 +417,8 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'blendType':
                         this.blendType = param.data;
-                        break;                    
+                        break;
                 }
-            }
-
-            // Set an appropriate blend mode based on opacity of material
-            if (this.opacityMap || this.opacity < 1) {
-                this.blendType = this.blendType || pc.scene.BLEND_NORMAL;
-            } else {
-                this.blendType = pc.scene.BLEND_NONE;
             }
 
             this.update();
@@ -433,7 +466,7 @@ pc.extend(pc.scene, function () {
 
                 this.diffuseMapTransform = this._updateMapTransform(
                     this.diffuseMapTransform,
-                    this.diffuseMapTiling, 
+                    this.diffuseMapTiling,
                     this.diffuseMapOffset,
                     this.diffuseMapRotation
                 );
@@ -454,7 +487,7 @@ pc.extend(pc.scene, function () {
 
                 this.specularMapTransform = this._updateMapTransform(
                     this.specularMapTransform,
-                    this.specularMapTiling, 
+                    this.specularMapTiling,
                     this.specularMapOffset,
                     this.specularMapRotation
                 );
@@ -475,7 +508,7 @@ pc.extend(pc.scene, function () {
 
                 this.glossMapTransform = this._updateMapTransform(
                     this.glossMapTransform,
-                    this.glossMapTiling, 
+                    this.glossMapTiling,
                     this.glossMapOffset,
                     this.glossMapRotation
                 );
@@ -493,11 +526,11 @@ pc.extend(pc.scene, function () {
 
                 this.emissiveMapTransform = this._updateMapTransform(
                     this.emissiveMapTransform,
-                    this.emissiveMapTiling, 
+                    this.emissiveMapTiling,
                     this.emissiveMapOffset,
                     this.emissiveMapRotation
                 );
-                
+
                 if (this.emissiveMapTransform) {
                     this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform.data);
                 }
@@ -514,7 +547,7 @@ pc.extend(pc.scene, function () {
 
                 this.opacityMapTransform = this._updateMapTransform(
                     this.opacityMapTransform,
-                    this.opacityMapTiling, 
+                    this.opacityMapTiling,
                     this.opacityMapOffset,
                     this.opacityMapRotation
                 );
@@ -532,7 +565,7 @@ pc.extend(pc.scene, function () {
 
                 this.normalMapTransform = this._updateMapTransform(
                     this.normalMapTransform,
-                    this.normalMapTiling, 
+                    this.normalMapTiling,
                     this.normalMapOffset,
                     this.normalMapRotation
                 );
@@ -549,7 +582,7 @@ pc.extend(pc.scene, function () {
 
                 this.heightMapTransform = this._updateMapTransform(
                     this.heightMapTransform,
-                    this.heightMapTiling, 
+                    this.heightMapTiling,
                     this.heightMapOffset,
                     this.heightMapRotation
                 );
@@ -646,5 +679,5 @@ pc.extend(pc.scene, function () {
 
     return {
         PhongMaterial: PhongMaterial
-    }; 
+    };
 }());
