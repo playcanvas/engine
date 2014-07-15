@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.152.2
+--------
+* Added pc.Vec3#project
+* Added pc.shape.Sphere#intersectRay
+* [FIX] Bug where materials with opacity 1 would not become transparent if their opacity changed to less than 1 at runtime
+
+--------
 v0.152.1
 --------
 * [FIX] Typo in the example for pc.resources.ResourceLoader.request
