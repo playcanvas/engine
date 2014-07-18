@@ -264,8 +264,6 @@ pc.extend(pc.asset, function () {
                     requests.forEach(function (r, i) {
                         if (r) {
                             assets[i].resource = resources[index++];
-                        } else {
-                            assets[i].resource = null;
                         }
                     });
                     resolve(resources);

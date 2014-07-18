@@ -41,6 +41,9 @@ pc.extend(pc.resources, function () {
                     }
                 }, this);
 
+                // store resource on asset
+                asset.resource = material;
+
                 materialCache[materialId] = material;
             }
         }
