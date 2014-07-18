@@ -73,6 +73,30 @@ pc.extend(pc.shape, function () {
         this.radius = Math.sqrt(maxDistSq);
     };
 
+    Sphere.prototype.intersectRay = function (start, direction) {
+        var m = start.clone().sub(this.center);
+        var b = m.dot(direction);
+        var c = m.dot(m) - this.radius * this.radius;
+
+        // exit if ray's origin outside of sphere (c > 0) and ray pointing away from s (b > 0)
+        if (c > 0 && b > 0) {
+            return null;
+        }
+
+        var discr = b * b - c;
+        // a negative discriminant corresponds to ray missing sphere
+        if (discr < 0) {
+            return null;
+        }
+
+        // ray intersects sphere, compute smallest t value of intersection
+        t = Math.abs(-b - Math.sqrt(discr));
+
+        // if t is negative, ray started inside sphere so clamp t to zero
+
+        return direction.clone().scale(t).add(start);
+    };
+
     return {
         Sphere: Sphere
     };

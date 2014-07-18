@@ -191,8 +191,16 @@ test("normalize", function(){
 });
 
 test("project", function () {
-
     var v = new pc.Vec3(1,0,0);
+    var p = new pc.Vec3(5,5,5);
+    p.project(v);
+    QUnit.equal(p.x, 5);
+    QUnit.equal(p.y, 0);
+    QUnit.equal(p.z, 0);
+});
+
+test("project negative", function () {
+    var v = new pc.Vec3(-1,0,0);
     var p = new pc.Vec3(5,5,5);
     p.project(v);
     QUnit.equal(p.x, 5);
