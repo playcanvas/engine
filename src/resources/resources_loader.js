@@ -43,17 +43,14 @@
         * @function
         * @name pc.resources.ResourceLoader#createFileRequest
         * @description Return a new {@link pc.resources.ResourceRequest} from the types that have been registered.
-        * @param {Object} file A file entry like that from a {@link pc.fw.Asset}
+        * @param {String} identifier The identifier (usually URL) used to uniquely identify the asset to load
+        * @param {String} type The asset type to create a ResourceRequest for ()
         * @returns {pc.resources.ResourceRequest} A new ResourceRequest instance
         * @example
-        * var request = loader.createRequest({
-        *    url: 'assets/12/12341234-1234-1234-123412341234/image.jpg',
-        *    type: 'image'
-        * });
-        * request; // pc.resources.ImageRequest
+        * var request = loader.createFileRequest('assets/12/12341234-1234-1234-123412341234/image.jpg', 'image'); // pc.resources.ImageRequest
         */
-        createFileRequest: function (url, type) {
-            return new this._types[type](url);
+        createFileRequest: function (identifier, type) {
+            return new this._types[type](identifier);
         },
 
         /**
@@ -287,7 +284,6 @@
                 // If the request has already been made, then wait for the result to come in
                 request.promises.push(new pc.promise.Promise(function (resolve, reject) {
                     request.promises[0].then(function (resource) {
-
                         var resource = self._postOpen(resource, request);
                         resolve(resource);
                     });

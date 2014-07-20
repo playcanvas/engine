@@ -42,7 +42,7 @@
         var assets = new pc.asset.AssetRegistry(loader);
 
         // Register loaders for models, textures and materials
-        loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(assets));
+        loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(device, assets));
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(device));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(device, assets));
         loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());

@@ -249,6 +249,9 @@ pc.extend(pc.asset, function () {
                     case pc.asset.ASSET_TEXTURE:
                         requests.push(this._createTextureRequest(asset, results[index]));
                         break;
+                    case pc.asset.ASSET_MATERIAL:
+                        requests.push(this._createMaterialRequest(asset));
+                        break;
                     default: {
                         requests.push(this._createAssetRequest(asset));
                         break;
@@ -258,7 +261,6 @@ pc.extend(pc.asset, function () {
 
             // request all assets, then attach loaded resources onto asset
             return this.loader.request(requests.filter(function (r) { return r !== null; }), options).then(function (resources) {
-
                 var promise = new pc.promise.Promise(function (resolve, reject) {
                     var index = 0;
                     requests.forEach(function (r, i) {
@@ -409,6 +411,16 @@ pc.extend(pc.asset, function () {
 
         _createTextureRequest: function (asset, texture) {
             return new pc.resources.TextureRequest(asset.getFileUrl(), null, texture);
+        },
+
+        _createMaterialRequest: function (asset) {
+            var url = asset.getFileUrl();
+            if (url) {
+                return new pc.resources.MaterialRequest(url);
+            } else {
+                return new pc.resources.MaterialRequest("asset://" + asset.resourceId);
+            }
+
         }
     };
 
