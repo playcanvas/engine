@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.153.0
+--------
+* User must now explicitly set the blendType of a material as opacity and opacityMap are no longer doing this automatically.
+* Removed MaterialResourceLoader, now use MaterialResourceHandler everywhere.
+* Add nicer error messages if model tries to load material asset which isn't present.
+
+--------
 v0.152.2
 --------
 * Added pc.Vec3#project
