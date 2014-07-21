@@ -390,8 +390,12 @@ pc.extend(pc.resources, function () {
         if (mapping && mapping.length > meshInstanceIndex) {
             if (mapping[meshInstanceIndex].material) { // resource id mapping
                 var asset = this._assets.getAssetByResourceId(mapping[meshInstanceIndex].material);
-                if (!asset || !asset.resource) {
-                    console.error("Loading model before material asset is loaded")
+                if (!asset) {
+                    console.error("Reference to material not in asset list. Try reloading.")
+                    return null;
+                } else if (!asset.resource) {
+                    console.error(pc.string("Material asset '{0}' is not loaded.", asset.name));
+                    return null;
                 }
                 material = asset.resource;
             } else if (mapping[meshInstanceIndex].path) { // path mapping
