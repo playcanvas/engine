@@ -42,13 +42,16 @@ pc.extend(pc.scene, function () {
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
      * @property {pc.Vec3} emissiveMapRotation Controls the rotation of the emissive map. The value represents U,V,W angles in degrees.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
-     * transparent and 1 is fully opaque.
+     * transparent and 1 is fully opaque. If you want the material to be transparent you also need to
+     * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
      * @property {pc.gfx.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
-     * in preference to the 'opacity' property.
+     * in preference to the 'opacity' property. If you want the material to be transparent you also need to
+     * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
      * @property {pc.Vec3} opacityMapRotation Controls the rotation of the opacity map. The value represents U,V,W angles in degrees.
+     * @property {Number} blendType The type of blending for this material. Can be one of the following valus: pc.scene.BLEND_NONE, pc.scene.BLEND_NORMAL, pc.scene.BLEND_ADDITIVE.
      * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
@@ -102,12 +105,13 @@ pc.extend(pc.scene, function () {
         this.emissiveMapRotation = new pc.Vec3(0, 0, 0);
         this.emissiveMapTransform = null;
 
-        this._opacity = 1;
-        this._opacityMap = null;
+        this.opacity = 1;
+        this.opacityMap = null;
         this.opacityMapTiling = new pc.Vec2(1, 1);
         this.opacityMapOffset = new pc.Vec2(0, 0);
         this.opacityMapRotation = new pc.Vec3(0, 0, 0);
         this.opacityMapTransform = null;
+        this.blendType = pc.scene.BLEND_NONE;
 
         this.normalMap = null;
         this.normalMapTransform = null;
@@ -163,46 +167,6 @@ pc.extend(pc.scene, function () {
 
     PhongMaterial = pc.inherits(PhongMaterial, pc.scene.Material);
 
-    Object.defineProperty(PhongMaterial.prototype, 'opacity', {
-        get: function () {
-            return this._opacity;
-        },
-        set: function (value) {
-            if (this._opacity !== value) {
-                this._opacity = value;
-                if (value < 1) {
-                    if (!this.blendType || this.blendType == pc.scene.BLEND_NONE) {
-                        this.blendType = pc.scene.BLEND_NORMAL;
-                    }
-                } else {
-                    if (!this._opacityMap) {
-                        this.blendType = pc.scene.BLEND_NONE;
-                    }
-                }
-            }
-        }
-    });
-
-    Object.defineProperty(PhongMaterial.prototype, 'opacityMap', {
-        get: function () {
-            return this._opacityMap;
-        },
-        set: function (value) {
-            if (this._opacityMap !== value) {
-                this._opacityMap = value;
-                if (value) {
-                    if (!this.blendType || this.blendType == pc.scene.BLEND_NONE) {
-                        this.blendType = pc.scene.BLEND_NORMAL;
-                    }
-                } else {
-                    if (this._opacity >= 1) {
-                        this.blendType = pc.scene.BLEND_NONE;
-                    }
-                }
-            }
-        }
-    });
-
     pc.extend(PhongMaterial.prototype, {
         /**
          * @function
@@ -252,6 +216,7 @@ pc.extend(pc.scene, function () {
             clone.opacityMapOffset = this.opacityMapOffset ? this.opacityMapOffset.clone() : new pc.Vec2(0, 0);
             clone.opacityMapRotation = this.opacityMapRotation ? this.opacityMapRotation.clone() : new pc.Vec3();
             clone.opacityMapTransform = this.opacityMapTransform ? this.opacityMapTransform.clone() : null;
+            clone.blendType = this.blendType;
 
             clone.normalMap = this.normalMap;
             clone.normalMapTransform = this.normalMapTransform ? this.normalMapTransform.clone() : null;
