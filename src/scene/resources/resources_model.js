@@ -32,11 +32,13 @@ pc.extend(pc.resources, function () {
     /**
      * @name pc.resources.ModelResourceHandler
      * @class Resource Handler for creating pc.scene.Model resources
+     * @description {@link pc.resources.ResourceHandler} use to load 3D model resources
+     * @param {pc.gfx.Device} device The graphics device that will be rendering
+     * @param {pc.asset.AssetRegistry} assetRegistry The AssetRegistry that is being used by the current application
      */
     var ModelResourceHandler = function (device, assetRegistry) {
         this._device = device;
         this._assets = assetRegistry;
-        this._materialLoader = new pc.resources.MaterialResourceLoader(device, assetRegistry);
     };
     ModelResourceHandler = pc.inherits(ModelResourceHandler, pc.resources.ResourceHandler);
 
@@ -49,21 +51,38 @@ pc.extend(pc.resources, function () {
      * @param {Function} error The callback used when there is an error loading the resource. Passed a list of error messages
      * @param {Function} progress The callback used to indicate loading progress. Passed a percentage number.
      * @param {Object} [options]
-     * @param {Number} [options.priority] The priority to load the model textures at.
      */
     ModelResourceHandler.prototype.load = function (request, options) {
         var self = this;
+
+        if (request.data) {
+            var asset;
+            var materials = [];
+            var mapping = request.data;
+            for (var i = 0; i < mapping.length; i++) {
+                if (mapping[i].material) {
+                    asset = this._assets.getAssetByResourceId(mapping[i].material);
+                    if (asset) {
+                        materials.push(asset);
+                    }
+                }
+            }
+        }
 
         var promise = new pc.promise.Promise(function (resolve, reject) {
             var url = request.canonical;
             options = options || {};
             options.directory = pc.path.getDirectory(url);
 
-            var uri = new pc.URI(url);
-            var ext = pc.path.getExtension(uri.path);
-
             pc.net.http.get(url, function (response) {
-                resolve(response);
+                // load all required materials before resolving
+                if (materials.length) {
+                    self._assets.load(materials).then(function () {
+                        resolve(response);
+                    });
+                } else {
+                    resolve(response);
+                }
             }, {
                 cache: options.cache,
                 error: function (status, xhr, e) {
@@ -81,7 +100,6 @@ pc.extend(pc.resources, function () {
 	 * @description Process data in deserialized format into a pc.scene.Model object
 	 * @param {Object} data The data from model file deserialized into a Javascript Object
 	 * @param {Object} [options]
-	 * @param {Number} [options.priority] The priority to load the textures at
 	 * @param {String} [options.directory] The directory to load textures from
 	 */
     ModelResourceHandler.prototype.open = function (data, request, options) {
@@ -371,7 +389,15 @@ pc.extend(pc.resources, function () {
 
         if (mapping && mapping.length > meshInstanceIndex) {
             if (mapping[meshInstanceIndex].material) { // resource id mapping
-                material = this._materialLoader.load(mapping[meshInstanceIndex].material);
+                var asset = this._assets.getAssetByResourceId(mapping[meshInstanceIndex].material);
+                if (!asset) {
+                    console.error("Reference to material not in asset list. Try reloading.")
+                    return null;
+                } else if (!asset.resource) {
+                    console.error(pc.string("Material asset '{0}' is not loaded.", asset.name));
+                    return null;
+                }
+                material = asset.resource;
             } else if (mapping[meshInstanceIndex].path) { // path mapping
                 // get directory of model
                 var path = pc.path.split(options.parent.canonical)[0];
