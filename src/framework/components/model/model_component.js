@@ -230,7 +230,7 @@ pc.extend(pc.fw, function () {
                         }.bind(this))
                     }
                 } else {
-                    console.error(pc.string.format("Set materialAsset to asset %s which doesn't exist.", guid));
+                    console.error(pc.string.format("Set materialAsset to asset {0} isn't in asset list. Try reloading.", guid));
                 }
 
 
