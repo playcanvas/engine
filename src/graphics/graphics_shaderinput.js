@@ -31,50 +31,6 @@ pc.gfx.ShaderInput = function (graphicsDevice, name, type, locationId) {
     // Set the data type
     this.dataType = type;
 
-/*
-    var gl = graphicsDevice.gl;
-    this.isMatrix = false;
-    switch (type) {
-        case pc.gfx.ShaderInputType.BOOL:
-        case pc.gfx.ShaderInputType.INT:
-            this.commitFunc = gl['uniform1i'];
-            break;
-        case pc.gfx.ShaderInputType.FLOAT:
-            this.commitFunc = gl['uniform1f'];
-            break;
-        case pc.gfx.ShaderInputType.BVEC2:
-        case pc.gfx.ShaderInputType.IVEC2:
-            this.commitFunc = gl['uniform2iv'];
-            break;
-        case pc.gfx.ShaderInputType.VEC2:
-            this.commitFunc = gl['uniform2fv'];
-            break;
-        case pc.gfx.ShaderInputType.BVEC3:
-        case pc.gfx.ShaderInputType.IVEC3:
-            this.commitFunc = gl['uniform3iv'];
-            break;
-        case pc.gfx.ShaderInputType.VEC3:
-            this.commitFunc = gl['uniform3fv'];
-            break;
-        case pc.gfx.ShaderInputType.BVEC4:
-        case pc.gfx.ShaderInputType.IVEC4:
-            this.commitFunc = gl['uniform4iv'];
-            break;
-        case pc.gfx.ShaderInputType.VEC4:
-            this.commitFunc = gl['uniform4fv'];
-            break;
-        case pc.gfx.ShaderInputType.MAT2:
-            this.commitFunc = gl['uniformMatrix2fv'];
-            this.isMatrix = true;
-            break;
-        case pc.gfx.ShaderInputType.MAT3:
-            this.commitFunc = gl['uniformMatrix3fv'];
-            this.isMatrix = true;
-            break;
-        case pc.gfx.ShaderInputType.MAT4:
-            this.commitFunc = gl['uniformMatrix4fv'];
-            this.isMatrix = true;
-            break;
-    }
-*/
+    // Array to hold texture unit ids
+    this.array = [];
 };

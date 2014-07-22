@@ -13,13 +13,12 @@ pc.gfx.programlib.phong = {
                 key += "_foge";
                 break;
         }
-        if (options.numDirs > 0)         key += "_" + options.numDirs + "dir";
-        if (options.numPnts > 0)         key += "_" + options.numPnts + "pnt";
-        if (options.numSpts > 0)         key += "_" + options.numSpts + "spt";
-        if (options.numSDirs > 0)        key += "_" + options.numSDirs + "sdir";
-        if (options.numSPnts > 0)        key += "_" + options.numSPnts + "spnt";
-        if (options.numSSpts > 0)        key += "_" + options.numSSpts + "sspt";
-        if (options.vertexColors)        key += "_vcol";
+        if (options.numDirectionalLights > 0) key += "_" + options.numDirectionalLights + "dir";
+        if (options.numPointLights > 0)       key += "_" + options.numPointLights + "pnt";
+        if (options.numSpotLights > 0)        key += "_" + options.numSpotLights + "spt";
+        if (options.numShadows > 0)           key += "_" + options.numShadows + "shw";
+
+        if (options.vertexColors)   key += "_vcol";
 
         if (options.diffuseMapTransform) {
             key += "_difx"; // Diffuse map with texture transform
@@ -69,22 +68,17 @@ pc.gfx.programlib.phong = {
             key += "_hgtm"; // Height map
         }
 
-        if (options.sphereMap)           key += "_sphr";
-        if (options.cubeMap)             key += "_cube";
-        if (options.lightMap)            key += "_lght";
+        if (options.sphereMap) key += "_sphr";
+        if (options.cubeMap)   key += "_cube";
+        if (options.lightMap)  key += "_lght";
 
         return key;
     },
 
     createShaderDefinition: function (device, options) {
         var i;
-        var numNormalLights = options.numDirs + options.numPnts + options.numSpts;
-        var numShadowLights = options.numSDirs + options.numSPnts + options.numSSpts;
-        var totalDirs = options.numDirs + options.numSDirs;
-        var totalPnts = options.numPnts + options.numSPnts;
-        var totalSpts = options.numSpts + options.numSSpts;
-        var totalLights = numNormalLights + numShadowLights;
-        var lighting = totalLights > 0;
+        var numLights = options.numDirectionalLights + options.numPointLights + options.numSpotLights;
+        var lighting = numLights > 0;
         var mapWithoutTransform =
            ((options.diffuseMap && !options.diffuseMapTransform) ||
             (options.specularMap && !options.specularMapTransform) ||
@@ -128,6 +122,20 @@ pc.gfx.programlib.phong = {
         var getSnippet = pc.gfx.programlib.getSnippet;
         var code = '';
 
+        // VERTEX SHADER INPUTS: DEFINES
+        if (options.numDirectionalLights > 0) {
+            code += "#define NUM_DIRECTIONALS " + options.numDirectionalLights + "\n";
+        }
+        if (options.numPointLights > 0) {
+            code += "#define NUM_POINTS " + options.numPointLights + "\n";
+        }
+        if (options.numSpotLights > 0) {
+            code += "#define NUM_SPOTS " + options.numSpotLights + "\n";
+        }
+        if (options.numShadows > 0) {
+            code += "#define NUM_SHADOWS " + options.numShadows + "\n";
+        }
+
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec3 vertex_position;\n";
         if (lighting || options.cubeMap || options.sphereMap) {
@@ -162,22 +170,21 @@ pc.gfx.programlib.phong = {
             var numBones = device.getBoneLimit();
             code += "uniform mat4 matrix_pose[" + numBones + "];\n";
         }
-        for (i = 0; i < totalLights; i++) {
-            if (i < totalDirs) {
-                code += "uniform vec3 light" + i + "_direction;\n";
-            }
-            if (i >= totalDirs) {
-                code += "uniform vec3 light" + i + "_position;\n";
-            }
-            if (i >= totalDirs + totalPnts) {
-                code += "uniform vec3 light" + i + "_spotDirection;\n";
-            }
-            if ((i >= options.numDirs && i < totalDirs) || 
-                (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                code += "uniform mat4 light" + i + "_shadowMatrix;\n";
-            }
+
+        if (options.numDirectionalLights > 0) {
+            code += "uniform vec3 lightDirectional_direction[NUM_DIRECTIONALS];\n";
         }
+        if (options.numPointLights > 0) {
+            code += "uniform vec3 lightPoint_position[NUM_POINTS];\n";
+        }
+        if (options.numSpotLights > 0) {
+            code += "uniform vec3 lightSpot_position[NUM_SPOTS];\n";
+            code += "uniform vec3 lightSpot_direction[NUM_SPOTS];\n";
+        }
+        if (options.numShadows > 0) {
+            code += "uniform mat4 matrix_shadow[NUM_SHADOWS];\n";
+        }
+
         if (lighting) {
             code += "uniform vec3 view_position;\n";
         }
@@ -210,18 +217,20 @@ pc.gfx.programlib.phong = {
                 code += "varying vec3 vNormalW;\n";
             }
             code += "varying vec3 vViewDirW;\n";
-
-            for (i = 0; i < totalLights; i++) {
-                code += "varying vec3 vLight" + i + "DirW;\n";
-                if (i >= totalDirs + totalPnts) {
-                    code += "varying vec3 vLight" + i + "SpotDirW;\n";
-                }
-                if ((i >= options.numDirs && i < totalDirs) || 
-                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                    code += "varying vec4 vLight" + i + "ShadowCoord;\n";
-                }
+            if (options.numDirectionalLights > 0) {
+                code += "varying vec3 vLightDirectionalLightDirW[NUM_DIRECTIONALS];\n";
             }
+            if (options.numPointLights > 0) {
+                code += "varying vec3 vLightPointLightDirW[NUM_POINTS];\n";
+            }
+            if (options.numSpotLights > 0) {
+                code += "varying vec3 vLightSpotLightDirW[NUM_SPOTS];\n";
+                code += "varying vec3 vLightSpotDirW[NUM_SPOTS];\n";
+            }
+        }
+
+        if (options.numShadows > 0) {
+            code += "varying vec4 vShadowCoord[NUM_SHADOWS];\n";
         }
 
         if (mapWithoutTransform) {
@@ -317,40 +326,59 @@ pc.gfx.programlib.phong = {
                 code += "                          tangentW.z, binormalW.z, normalW.z);\n";
                 code += "    vViewDirW = tbnMatrix * (view_position - positionW.xyz);\n";
 
-                for (i = 0; i < totalLights; i++) {
-                    if (i < totalDirs) {
-                        code += "    vLight" + i + "DirW = -(tbnMatrix * light" + i + "_direction);\n";
-                    }
-                    if (i >= totalDirs) {
-                        code += "    vLight" + i + "DirW = tbnMatrix * (light" + i + "_position - positionW.xyz);\n";
-                    }
-                    if (i >= totalDirs + totalPnts) {
-                        code += "    vLight" + i + "SpotDirW = tbnMatrix * light" + i + "_spotDirection;\n";
-                    }
+                if (options.numDirectionalLights > 0) {
+                    code += "    for (int i = 0; i < NUM_DIRECTIONALS; i++)\n";
+                    code += "    {\n";
+                    code += "        vLightDirectionalLightDirW[i] = -(tbnMatrix * lightDirectional_direction[i]);\n";
+                    code += "    }\n";
+                }
+
+                if (options.numPointLights > 0) {
+                    code += "    for (int i = 0; i < NUM_POINTS; i++)\n";
+                    code += "    {\n";
+                    code += "        vLightPointLightDirW[i] = tbnMatrix * (lightPoint_position[i] - positionW.xyz);\n";
+                    code += "    }\n";
+                }
+
+                if (options.numSpotLights > 0) {
+                    code += "    for (int i = 0; i < NUM_SPOTS; i++)\n";
+                    code += "    {\n";
+                    code += "        vLightSpotLightDirW[i] = tbnMatrix * (lightSpot_position[i] - positionW.xyz);\n";
+                    code += "        vLightSpotDirW[i] = tbnMatrix * lightSpot_direction[i];\n";
+                    code += "    }\n";
                 }
             } else {
                 code += "    vNormalW = normalW;\n";
                 code += "    vViewDirW = view_position - positionW.xyz;\n";
 
-                for (i = 0; i < totalLights; i++) {
-                    if (i < totalDirs) {
-                        code += "    vLight" + i + "DirW = -light" + i + "_direction;\n";
-                    }
-                    if (i >= totalDirs) {
-                        code += "    vLight" + i + "DirW = light" + i + "_position - positionW.xyz;\n";
-                    }
-                    if (i >= totalDirs + totalPnts) {
-                        code += "    vLight" + i + "SpotDirW = light" + i + "_spotDirection;\n";
-                    }
+                if (options.numDirectionalLights > 0) {
+                    code += "    for (int i = 0; i < NUM_DIRECTIONALS; i++)\n";
+                    code += "    {\n";
+                    code += "        vLightDirectionalLightDirW[i] = -lightDirectional_direction[i];\n";
+                    code += "    }\n";
+                }
+
+                if (options.numPointLights > 0) {
+                    code += "    for (int i = 0; i < NUM_POINTS; i++)\n";
+                    code += "    {\n";
+                    code += "        vLightPointLightDirW[i] = lightPoint_position[i] - positionW.xyz;\n";
+                    code += "    }\n";
+                }
+
+                if (options.numSpotLights > 0) {
+                    code += "    for (int i = 0; i < NUM_SPOTS; i++)\n";
+                    code += "    {\n";
+                    code += "        vLightSpotLightDirW[i] = lightSpot_position[i] - positionW.xyz;\n";
+                    code += "        vLightSpotDirW[i] = lightSpot_direction[i];\n";
+                    code += "    }\n";
                 }
             }
 
-            for (i = 0; i < totalLights; i++) {
-                if ((i >= options.numDirs && i < totalDirs) || 
-                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                    code += "    vLight" + i + "ShadowCoord = light" + i + "_shadowMatrix * positionW;\n";
-                }
+            if (options.numShadows > 0) {
+                code += "    for (int i = 0; i < NUM_SHADOWS; i++)\n";
+                code += "    {\n";
+                code += "        vShadowCoord[i] = matrix_shadow[i] * positionW;\n";
+                code += "    }\n";
             }
 
             code += "\n";
@@ -392,11 +420,27 @@ pc.gfx.programlib.phong = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
-        code = getSnippet(device, 'fs_precision');
+        code = "";
+
+        // FRAGMENT SHADER INPUTS: DEFINES
+        if (options.numDirectionalLights > 0) {
+            code += "#define NUM_DIRECTIONALS " + options.numDirectionalLights + "\n";
+        }
+        if (options.numPointLights > 0) {
+            code += "#define NUM_POINTS " + options.numPointLights + "\n";
+        }
+        if (options.numSpotLights > 0) {
+            code += "#define NUM_SPOTS " + options.numSpotLights + "\n";
+        }
+        if (options.numShadows > 0) {
+            code += "#define NUM_SHADOWS " + options.numShadows + "\n";
+        }
 
         if ((options.normalMap && !useTangents) || options.heightMap) {
             code += "#extension GL_OES_standard_derivatives : enable\n\n";
         }
+
+        code += getSnippet(device, 'fs_precision');
 
         // FRAGMENT SHADER INPUTS: VARYINGS
         if (lighting) {
@@ -404,18 +448,20 @@ pc.gfx.programlib.phong = {
                 code += "varying vec3 vNormalW;\n";
             }
             code += "varying vec3 vViewDirW;\n";
-
-            for (i = 0; i < totalLights; i++) {
-                code += "varying vec3 vLight" + i + "DirW;\n";
-                if (i >= totalDirs + totalPnts) {
-                    code += "varying vec3 vLight" + i + "SpotDirW;\n";
-                }
-                if ((i >= options.numDirs && i < totalDirs) || 
-                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                    code += "varying vec4 vLight" + i + "ShadowCoord;\n";
-                }
+            if (options.numDirectionalLights > 0) {
+                code += "varying vec3 vLightDirectionalLightDirW[NUM_DIRECTIONALS];\n";
             }
+            if (options.numPointLights > 0) {
+                code += "varying vec3 vLightPointLightDirW[NUM_POINTS];\n";
+            }
+            if (options.numSpotLights > 0) {
+                code += "varying vec3 vLightSpotLightDirW[NUM_SPOTS];\n";
+                code += "varying vec3 vLightSpotDirW[NUM_SPOTS];\n";
+            }
+        }
+
+        if (options.numShadows > 0) {
+            code += "varying vec4 vShadowCoord[NUM_SHADOWS];\n";
         }
 
         if (mapWithoutTransform) {
@@ -500,23 +546,30 @@ pc.gfx.programlib.phong = {
         } else {
             code += "uniform float material_opacity;\n";
         }
-        code += "uniform vec3 light_globalAmbient;\n";
-        for (i = 0; i < totalLights; i++) {
-            code += "uniform vec3 light" + i + "_color;\n";
-            if (i >= totalDirs) {
-                code += "uniform float light" + i + "_radius;\n";
-                if (i >= totalDirs + totalPnts) {
-                    code += "uniform float light" + i + "_innerConeAngle;\n";
-                    code += "uniform float light" + i + "_outerConeAngle;\n";
-                }
-            }
-            if ((i >= options.numDirs && i < totalDirs) || 
-                (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                (i >= totalDirs + totalPnts + options.numSpts && i < totalLights)) {
-                code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
-                code += "uniform sampler2D light" + i + "_shadowMap;\n";
-            }
+
+        // LIGHTING UNIFORMS
+        code += "uniform vec3 lightAmbient_color;\n";
+        if (options.numDirectionalLights > 0) {
+            code += "uniform vec3 lightDirectional_color[NUM_DIRECTIONALS];\n";
         }
+        if (options.numPointLights > 0) {
+            code += "uniform vec3 lightPoint_color[NUM_POINTS];\n";
+            code += "uniform float lightPoint_radius[NUM_POINTS];\n";
+        }
+        if (options.numSpotLights > 0) {
+            code += "uniform vec3 lightSpot_color[NUM_SPOTS];\n";
+            code += "uniform float lightSpot_radius[NUM_SPOTS];\n";
+            code += "uniform float lightSpot_innerConeAngle[NUM_SPOTS];\n";
+            code += "uniform float lightSpot_outerConeAngle[NUM_SPOTS];\n";
+        }
+
+        // SHADOW UNIFORMS
+        if (options.numShadows > 0) {
+            code += "uniform vec3 shadow_parameters[NUM_SHADOWS];\n"; // Width, height, bias
+            code += "uniform sampler2D texture_shadowMap[NUM_SHADOWS];\n";
+        }
+
+        // FOG UNIFORMS
         switch (options.fog) {
             case 'linear':
                 code += getSnippet(device, 'fs_fog_linear_decl');
@@ -528,6 +581,7 @@ pc.gfx.programlib.phong = {
                 code += getSnippet(device, 'fs_fog_exp2_decl');
                 break;
         }
+
         code += getSnippet(device, 'fs_alpha_test_decl');
 
         if (options.normalMap) {
@@ -538,7 +592,7 @@ pc.gfx.programlib.phong = {
 
         code += "\n"; // End of uniform declarations
 
-        if (numShadowLights > 0) {
+        if (options.numShadows > 0) {
             code += 'float unpackFloat(vec4 rgbaDepth)\n';
             code += '{\n';
             code += '    const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);\n';
@@ -787,47 +841,65 @@ pc.gfx.programlib.phong = {
                 code += "    vec3 N = normalW;\n";
             }
 
-            code += "    vec3 L, R;\n";
-            code += "    float diffuseLight, specularLight;\n";
-            if (totalPnts + totalSpts > 0) {
-                code += "    float d, attenuation;\n";
-            }
-            if (totalSpts > 0) {
-                code += "    float cosAngle, spotEffect;\n";
-            }
-            if (numShadowLights > 0) {
-                code += "    float shadowFactor;\n";
-            }
-            code += "\n";
+            if (options.numDirectionalLights > 0) {
+                code += "    for (int i = 0; i < NUM_DIRECTIONALS; i++)\n";
+                code += "    {\n";
+                code += "        vec3 L = normalize(vLightDirectionalLightDirW[i]);\n";
+                code += "        float diffuseLight = max(dot(N, L), 0.0);\n";
+                code += "        vec3 R = normalize(-reflect(L, N));\n";
+                code += "        float specularLight = pow(max(dot(R, viewDirW), 0.0), shininess);\n";
 
-            for (i = 0; i < totalLights; i++) {
-                var positionalLight = i >= totalDirs;
-                var spotLight = i >= totalDirs + totalPnts;
-                var shadowLight =
-                   ((i >= options.numDirs && i < totalDirs) || 
-                    (i >= totalDirs + options.numPnts && i < totalDirs + totalPnts) || 
-                    (i >= totalDirs + totalPnts + options.numSpts && i < totalLights));
+                code += "        vec3 lightColor = lightDirectional_color[i];\n"
+                code += "        diffuseContrib += lightColor * diffuseLight;\n";
+                code += "        if (diffuseLight <= 0.0) specularLight = 0.0;\n";
+                code += "        specularContrib += lightColor * specularLight;\n";
+                code += "    }\n\n";
+            }
 
-                code += "    L = normalize(vLight" + i + "DirW);\n";
-                code += "    diffuseLight = max(dot(N, L), 0.0);\n";
-                code += "    R = normalize(-reflect(L, N));\n";
-                code += "    specularLight = pow(max(dot(R, viewDirW), 0.0), shininess);\n";
-                if (positionalLight) {
-                    // Linear attenuation
-                    code += "    d = length(vLight" + i + "DirW);\n";
-                    code += "    attenuation = max(((light" + i + "_radius - d) / light" + i + "_radius), 0.0);\n";
-                }
-                if (spotLight) {
-                    // Spotlight inner cone -> outer cone
-                    code += "    cosAngle = dot(-L, vLight" + i + "SpotDirW);\n";
-                    code += "    spotEffect = smoothstep(light" + i + "_outerConeAngle, light" + i + "_innerConeAngle, cosAngle);\n";
-                }
-                if (shadowLight) {
-                    code += "    shadowFactor = calculateShadowFactor(vLight" + i + "ShadowCoord, light" + i + "_shadowParams, light" + i + "_shadowMap);\n";
-                }
-                code += "    diffuseContrib += light" + i + "_color * diffuseLight" + (positionalLight ? " * attenuation" : "") + (spotLight ? " * spotEffect" : "") + (shadowLight ? " * shadowFactor" : "") + ";\n";
-                code += "    if (diffuseLight <= 0.0) specularLight = 0.0;\n";
-                code += "    specularContrib += light" + i + "_color * specularLight" + (positionalLight ? " * attenuation" : "") + (spotLight ? " * spotEffect" : "") + (shadowLight ? " * shadowFactor" : "") + ";\n\n";
+            if (options.numPointLights > 0) {
+                code += "    for (int i = 0; i < NUM_POINTS; i++)\n";
+                code += "    {\n";
+                code += "        vec3 L = normalize(vLightPointLightDirW[i]);\n";
+                code += "        float diffuseLight = max(dot(N, L), 0.0);\n";
+                code += "        vec3 R = normalize(-reflect(L, N));\n";
+                code += "        float specularLight = pow(max(dot(R, viewDirW), 0.0), shininess);\n";
+
+                // Linear attenuation
+                code += "        float radius = lightPoint_radius[i];\n";
+                code += "        float dist = length(vLightPointLightDirW[i]);\n";
+                code += "        float attenuation = max(((radius - dist) / radius), 0.0);\n";
+
+                code += "        vec3 lightColor = lightPoint_color[i];\n"
+                code += "        diffuseContrib += lightColor * diffuseLight * attenuation;\n";
+                code += "        if (diffuseLight <= 0.0) specularLight = 0.0;\n";
+                code += "        specularContrib += lightColor * specularLight * attenuation;\n";
+                code += "    }\n\n";
+            }
+
+            if (options.numSpotLights > 0) {
+                code += "    for (int i = 0; i < NUM_SPOTS; i++)\n";
+                code += "    {\n";
+                code += "        vec3 L = normalize(vLightSpotLightDirW[i]);\n";
+                code += "        float diffuseLight = max(dot(N, L), 0.0);\n";
+                code += "        vec3 R = normalize(-reflect(L, N));\n";
+                code += "        float specularLight = pow(max(dot(R, viewDirW), 0.0), shininess);\n";
+
+                // Linear attenuation
+                code += "        float radius = lightSpot_radius[i];\n";
+                code += "        float dist = length(vLightSpotDirW[i]);\n";
+                code += "        float attenuation = max(((radius - dist) / radius), 0.0);\n";
+
+                // Spotlight inner cone -> outer cone
+                code += "        float cosAngle = dot(-L, vLightSpotDirW[i]);\n";
+                code += "        float innerAngle = lightSpot_innerConeAngle[i];\n";
+                code += "        float outerAngle = lightSpot_outerConeAngle[i];\n";
+                code += "        float spotEffect = smoothstep(outerAngle, innerAngle, cosAngle);\n";
+
+                code += "        vec3 lightColor = lightSpot_color[i];\n"
+                code += "        diffuseContrib += lightColor * diffuseLight * attenuation * spotEffect;\n";
+                code += "        if (diffuseLight <= 0.0) specularLight = 0.0;\n";
+                code += "        specularContrib += lightColor * specularLight * attenuation * spotEffect;\n";
+                code += "    }\n\n";
             }
         }
 
@@ -855,7 +927,7 @@ pc.gfx.programlib.phong = {
         }
 
         // Calculate final lighting contributions
-        code += "    vec3 ambient  = ambientColor * light_globalAmbient;\n";
+        code += "    vec3 ambient  = ambientColor * lightAmbient_color;\n";
         if (lighting || options.lightMap) {
             code += "    vec3 diffuse  = diffuseColor * diffuseContrib;\n";
         }
@@ -876,6 +948,16 @@ pc.gfx.programlib.phong = {
         code += "    gl_FragColor.a    = opacity;\n\n";
 
         code += getSnippet(device, 'fs_alpha_test');
+
+        // Apply shadows
+        if (options.numShadows > 0) {
+            code += "    float shadowFactor = 1.0;\n";
+            code += "    for (int i = 0; i < NUM_SHADOWS; i++)\n";
+            code += "    {\n";
+            code += "        shadowFactor -= calculateShadowFactor(vShadowCoord[i], shadow_parameters[i], texture_shadowMap[i]);\n";
+            code += "    }\n\n";
+            code += "    gl_FragColor.rgb *= shadowFactor;\n";
+        }
 
         // Make sure all components are between 0 and 1
         code += getSnippet(device, 'fs_clamp');
