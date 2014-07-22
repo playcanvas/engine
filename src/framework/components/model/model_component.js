@@ -230,7 +230,7 @@ pc.extend(pc.fw, function () {
                         }.bind(this))
                     }
                 } else {
-                    console.error(pc.string.format("Set materialAsset to asset {0} isn't in asset list. Try reloading.", guid));
+                    console.error(pc.string.format("Entity '{0}' is trying to load Material Asset {1} which no longer exists. Maybe this model was once a primitive shape?", this.entity.getName(), guid));
                 }
 
 
