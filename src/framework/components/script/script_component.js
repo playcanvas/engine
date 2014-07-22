@@ -81,7 +81,7 @@ pc.extend(pc.fw, function () {
                     return;
                 }
 
-                // disabled the script first
+                // disable the script first
                 if (this.enabled) {
                     this.system._disableScriptComponent(this);
                 }
