@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {    
+pc.extend(pc.fw, function () {
     /**
      * @component
      * @name pc.fw.SkyboxComponent
@@ -28,10 +28,10 @@ pc.extend(pc.fw, function () {
 
                 var index = CUBE_MAP_NAMES.indexOf(name);
                 var assets = this.entity.skybox.assets;
-                
+
                 // clear existing skybox
                 this.data.model = null;
-                
+
                 if(guid) {
                     assets[index] = this.system.context.assets.getAssetByResourceId(guid);
                     if (!assets[index]) {
@@ -42,10 +42,7 @@ pc.extend(pc.fw, function () {
 
                     // Once all assets are loaded create the skybox
                     if (assets[0] && assets[1] && assets[2] && assets[3] && assets[4] && assets[5]) {
-                        var urls = assets.map(function (asset) { 
-                            return asset.getFileUrl();
-                        });
-                        this.data.model = _createSkybox(this.entity, this.system.context, urls);
+                        this.data.model = _createSkybox(this.entity, this.system.context, assets);
 
                         if (this.enabled && this.entity.enabled) {
                             this.system.context.scene.addModel(this.data.model);
@@ -57,24 +54,24 @@ pc.extend(pc.fw, function () {
                     delete assets[index];
                 }
             }
-            
+
             var functions = {
-                "posx": function (entity, name, oldValue, newValue) { 
+                "posx": function (entity, name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "negx": function (entity, name, oldValue, newValue) { 
+                "negx": function (entity, name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "posy": function (entity, name, oldValue, newValue) { 
+                "posy": function (entity, name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "negy": function (entity, name, oldValue, newValue) { 
+                "negy": function (entity, name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "posz": function (entity, name, oldValue, newValue) { 
+                "posz": function (entity, name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "negz": function (entity, name, oldValue, newValue) { 
+                "negz": function (entity, name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     }
                 };
@@ -102,12 +99,32 @@ pc.extend(pc.fw, function () {
                     this.system.context.scene.removeModel(this.data.model);
                 }
             }
-        },     
+        },
     });
 
-    // Private    
-    var _createSkybox = function (entity, context, urls) {
+    // Private
+    var _createSkybox = function (entity, context, assets) {
         var gd = context.graphicsDevice;
+
+        var sources = [];
+        var requests = [];
+        var indexes = [];
+
+        // find cached assets or create async requests if they are not in the cache
+        for (var i=0; i<assets.length; i++) {
+            var asset = assets[i];
+            if (!asset) {
+                logERROR(pc.string.format('Trying to load skybox component before assets are loaded'));
+                return;
+            } else {
+                if (asset.resource) {
+                    sources.push(asset.resource);
+                } else {
+                    indexes.push(i);
+                    requests.push(new pc.resources.ImageRequest(asset.getFileUrl()));
+                }
+            }
+        }
 
         var texture = new pc.gfx.Texture(gd, {
             format: pc.gfx.PIXELFORMAT_R8_G8_B8,
@@ -118,16 +135,21 @@ pc.extend(pc.fw, function () {
         texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
 
-        var options = {
-            parent: entity.getRequest()
-        };
-        var requests = urls.map(function (url) {
-            return new pc.resources.ImageRequest(url);
-        });
-        
-        context.loader.request(requests, options).then(function (resources) {
-            texture.setSource(resources);
-        });
+        if (requests.length) {
+            var options = {
+                parent: entity.getRequest()
+            };
+
+            context.loader.request(requests, options).then(function (resources) {
+                for (var i=0; i<resources.length; i++) {
+                    sources[indexes[i]] = resources[i];
+                }
+
+                texture.setSource(sources);
+            });
+        } else {
+            texture.setSource(sources);
+        }
 
         var library = gd.getProgramLibrary();
         var shader = library.getProgram('skybox');
