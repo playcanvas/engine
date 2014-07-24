@@ -1,5 +1,5 @@
 pc.extend(pc.input, function(){
-    
+
     /**
     * @name pc.input.KeyboardEvent
     * @class The KeyboardEvent is passed into all event callbacks from the {@link pc.input.Keyboard}. It corresponds to a key press or release.
@@ -9,6 +9,14 @@ pc.extend(pc.input, function(){
     * @property {pc.input.KEY} key The keyCode of the key that has changed.
     * @property {DOMElement} element The element that fired the keyboard event.
     * @property {KeyboardEvent} event The original browser event which was fired.
+    * @example
+    * var onKeyDown = function (e) {
+    *     if (e.key === pc.input.KEY_SPACE) {
+    *         // space key pressed
+    *     }
+    *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+    * };
+    * context.keyboard.on("keydown", onKeyDown, this);
     */
     var KeyboardEvent = function (keyboard, event) {
         this.key = event.keyCode;
@@ -31,7 +39,7 @@ pc.extend(pc.input, function(){
             return s;
         }
     }
-    
+
     var _keyCodeToKeyIdentifier = {
         '9': 'Tab',
         '13': 'Enter',
@@ -39,14 +47,14 @@ pc.extend(pc.input, function(){
         '17': 'Control',
         '18': 'Alt',
         '27': 'Escape',
-        
+
         '37': 'Left',
         '38': 'Up',
         '39': 'Right',
         '40': 'Down',
-        
+
         '46': 'Delete',
-        
+
         '91': 'Win'
     };
 
@@ -55,6 +63,14 @@ pc.extend(pc.input, function(){
     * @name pc.input.Keyboard#keydown
     * @description Event fired when a key is pressed.
     * @param {pc.input.KeyboardEvent} event The Keyboard event object
+    * @example
+    * var onKeyDown = function (e) {
+    *     if (e.key === pc.input.KEY_SPACE) {
+    *         // space key pressed
+    *     }
+    *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+    * };
+    * context.keyboard.on("keydown", onKeyDown, this);
     */
 
     /**
@@ -62,39 +78,49 @@ pc.extend(pc.input, function(){
     * @name pc.input.Keyboard#keyup
     * @description Event fired when a key is released.
     * @param {pc.input.KeyboardEvent} event The Keyboard event object
+    * @example
+    * var onKeyUp = function (e) {
+    *     if (e.key === pc.input.KEY_SPACE) {
+    *         // space key released
+    *     }
+    *     e.event.preventDefault(); // Use original browser event to prevent browser action.
+    * };
+    * context.keyboard.on("keyup", onKeyUp, this);
     */
 
     /**
      * @name pc.input.Keyboard
-     * @class A Keyboard device bound to a DOMElement. Allows you to detect the state of the key presses. 
-     * Note, Keyboard object must be attached to a DOMElement before it can detect any key presses. 
+     * @class A Keyboard device bound to a DOMElement. Allows you to detect the state of the key presses.
+     * Note, Keyboard object must be attached to a DOMElement before it can detect any key presses.
      * @constructor Create a new Keyboard object
-     * @param {DOMElement} [element] Element to attach Keyboard to. <br />Note: Elements like <div> can't accept focus by default. To use keyboard events on an element like this it must have a value of 'tabindex' e.g. tabindex="0". For more details: <a href="http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html">http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html</a>
+     * @param {DOMElement} [element] Element to attach Keyboard to. <br />Note: Elements like &lt;div&gt; can't accept focus by default. To use keyboard events on an element like this it must have a value of 'tabindex' e.g. tabindex="0". For more details: <a href="http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html">http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html</a>
      * @param {Object} [options]
      * @param {Boolean} [options.preventDefault] Call preventDefault() in key event handlers. This stops the default action of the event occuring. e.g. Ctrl+T will not open a new browser tab
      * @param {Boolean} [options.stopPropagation] Call stopPropagation() in key event handlers. This stops the event bubbling up the DOM so no parent handlers will be notified of the event
+     * @example
+     * var keyboard = new pc.input.Keyboard(window); // attach keyboard listeners to the window
      */
     var Keyboard = function(element, options) {
         options = options || {};
         this._element = null;
-        
+
         this._keyDownHandler = this._handleKeyDown.bind(this);
         this._keyUpHandler = this._handleKeyUp.bind(this);
         this._keyPressHandler = this._handleKeyPress.bind(this);
-        
+
         pc.events.attach(this);
 
         this._keymap = {};
         this._lastmap = {};
-        
+
         if(element) {
             this.attach(element);
         }
-        
+
         this.preventDefault = options.preventDefault || false;
         this.stopPropagation = options.stopPropagation || false;
     };
-    
+
     /**
     * @function
     * @name pc.input.Keyboard#attach
@@ -109,9 +135,9 @@ pc.extend(pc.input, function(){
         this._element = element;
         this._element.addEventListener("keydown", this._keyDownHandler, false);
         this._element.addEventListener("keypress", this._keyPressHandler, false);
-        this._element.addEventListener("keyup", this._keyUpHandler, false);        
+        this._element.addEventListener("keyup", this._keyUpHandler, false);
     };
-    
+
     /**
     * @function
     * @name pc.input.Keyboard#detach
@@ -123,7 +149,7 @@ pc.extend(pc.input, function(){
         this._element.removeEventListener("keyup", this._keyUpHandler);
         this._element = null;
     };
-    
+
     /**
      * @private
      * @function
@@ -137,32 +163,32 @@ pc.extend(pc.input, function(){
         var hex;
         var length;
         var id = _keyCodeToKeyIdentifier[keyCode.toString()];
-        
+
         if (id) {
             return id;
         }
-        
+
         // Convert to hex and add leading 0's
         hex = keyCode.toString(16).toUpperCase();
         length = hex.length;
         for (count = 0; count < (4 - length); count++) {
             hex = '0' + hex;
         }
-        
+
         return 'U+' + hex;
     };
-    
+
     Keyboard.prototype._handleKeyDown = function(event) {
         var code = event.keyCode || event.charCode;
         var id = event.keyIdentifier || this.toKeyIdentifier(code);
 
         this._keymap[id] = true;
-            
+
         // Patch on the keyIdentifier property in non-webkit browsers
         //event.keyIdentifier = event.keyIdentifier || id;
-        
+
         this.fire("keydown", new KeyboardEvent(this, event));
-        
+
         if (this.preventDefault) {
             event.preventDefault();
         }
@@ -170,16 +196,16 @@ pc.extend(pc.input, function(){
             event.stopPropagation();
         }
     };
-    
+
     Keyboard.prototype._handleKeyUp = function(event){
         var code = event.keyCode || event.charCode;
         var id = event.keyIdentifier || this.toKeyIdentifier(code);
-        
+
         delete this._keymap[id];
 
         // Patch on the keyIdentifier property in non-webkit browsers
         //event.keyIdentifier = event.keyIdentifier || id;
-        
+
         this.fire("keyup", new KeyboardEvent(this, event));
 
         if (this.preventDefault) {
@@ -189,14 +215,14 @@ pc.extend(pc.input, function(){
             event.stopPropagation();
         }
     };
-    
+
     Keyboard.prototype._handleKeyPress = function(event){
         var code = event.keyCode || event.charCode;
         var id = event.keyIdentifier || this.toKeyIdentifier(code);
-        
+
         // Patch on the keyIdentifier property in non-webkit browsers
         //event.keyIdentifier = event.keyIdentifier || id;
-        
+
         this.fire("keypress", new KeyboardEvent(this, event));
 
         if (this.preventDefault) {
@@ -207,7 +233,7 @@ pc.extend(pc.input, function(){
         }
 
     };
-    
+
     /**
      * @function
      * @name pc.input.Keyboard#update
@@ -220,9 +246,9 @@ pc.extend(pc.input, function(){
             if(this._keymap.hasOwnProperty(prop)) {
                 this._lastmap[prop] = this._keymap[prop];
             }
-        }             
+        }
     };
-    
+
     /**
      * @function
      * @name pc.input.Keyboard#isPressed
@@ -233,10 +259,10 @@ pc.extend(pc.input, function(){
     Keyboard.prototype.isPressed = function (key) {
         var keyCode = toKeyCode(key);
         var id = this.toKeyIdentifier(keyCode);
-        
+
         return !!(this._keymap[id]);
     };
-    
+
     /**
      * @function
      * @name pc.input.Keyboard#wasPressed
@@ -247,7 +273,7 @@ pc.extend(pc.input, function(){
     Keyboard.prototype.wasPressed = function (key) {
         var keyCode = toKeyCode(key);
         var id = this.toKeyIdentifier(keyCode);
-        
+
         return (!!(this._keymap[id]) && !!!(this._lastmap[id]));
     };
 
@@ -261,7 +287,7 @@ pc.extend(pc.input, function(){
     Keyboard.prototype.wasReleased = function (key) {
         var keyCode = toKeyCode(key);
         var id = this.toKeyIdentifier(keyCode);
-        
+
         return (!!!(this._keymap[id]) && !!(this._lastmap[id]));
     };
 
@@ -283,7 +309,7 @@ pc.extend(pc.input, function(){
         /**
          * @enum pc.input.KEY
          * @name pc.input.KEY_BACKSPACE
-         */        
+         */
         KEY_BACKSPACE: 8,
         /**
          * @enum pc.input.KEY
@@ -582,7 +608,7 @@ pc.extend(pc.input, function(){
          * @name pc.input.KEY_Z
          */
         KEY_Z: 90,
-        
+
         /**
          * @enum pc.input.KEY
          * @name pc.input.KEY_WINDOWS
@@ -594,7 +620,7 @@ pc.extend(pc.input, function(){
          * @name pc.input.KEY_CONTEXT_MENU
          */
         KEY_CONTEXT_MENU: 93,
-        
+
         /**
          * @enum pc.input.KEY
          * @name pc.input.KEY_NUMPAD_0
@@ -645,7 +671,7 @@ pc.extend(pc.input, function(){
          * @name pc.input.KEY_NUMPAD_9
          */
         KEY_NUMPAD_9: 105,
-        
+
         /**
          * @enum pc.input.KEY
          * @name pc.input.KEY_MULTIPLY
@@ -676,7 +702,7 @@ pc.extend(pc.input, function(){
          * @name pc.input.KEY_DIVIDE
          */
         KEY_DIVIDE: 111,
-        
+
         /**
          * @enum pc.input.KEY
          * @name pc.input.KEY_F1
@@ -737,7 +763,7 @@ pc.extend(pc.input, function(){
          * @name pc.input.KEY_F12
          */
         KEY_F12: 123,
-        
+
         /**
          * @enum pc.input.KEY
          * @name pc.input.KEY_COMMA
@@ -768,7 +794,7 @@ pc.extend(pc.input, function(){
          * @name pc.input.KEY_CLOSE_BRACKET
          */
         KEY_CLOSE_BRACKET: 221,
-        
+
         /**
          * @enum pc.input.KEY
          * @name pc.input.KEY_META
