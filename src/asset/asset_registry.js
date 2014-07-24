@@ -54,6 +54,9 @@ pc.extend(pc.asset, function () {
             }
         },
 
+        /**
+        * @private
+        */
         createAndAddAsset: function (resourceId, assetData) {
             var asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
             asset.resourceId = resourceId; // override default resourceId
@@ -135,7 +138,6 @@ pc.extend(pc.asset, function () {
         },
 
         /**
-        * @private
         * @function
         * @name pc.asset.AssetRegistry#findAll
         * @description Return all Assets with the specified name and type found in the registry
@@ -168,7 +170,6 @@ pc.extend(pc.asset, function () {
         },
 
         /**
-        * @private
         * @function
         * @name pc.asset.AssetRegistry#find
         * @description Return the first Asset with the specified name and type found in the registry
