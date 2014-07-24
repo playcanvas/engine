@@ -394,7 +394,7 @@ pc.extend(pc.resources, function () {
                     console.error("Reference to material not in asset list. Try reloading.")
                     return null;
                 } else if (!asset.resource) {
-                    console.error(pc.string("Material asset '{0}' is not loaded.", asset.name));
+                    console.error(pc.string.format("Material asset '{0}' is not loaded.", asset.name));
                     return null;
                 }
                 material = asset.resource;
