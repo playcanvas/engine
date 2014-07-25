@@ -886,7 +886,7 @@ pc.gfx.programlib.phong = {
 
                 // Linear attenuation
                 code += "        float radius = lightSpot_radius[i];\n";
-                code += "        float dist = length(vLightSpotDirW[i]);\n";
+                code += "        float dist = length(vLightSpotLightDirW[i]);\n";
                 code += "        float attenuation = max(((radius - dist) / radius), 0.0);\n";
 
                 // Spotlight inner cone -> outer cone
@@ -926,6 +926,21 @@ pc.gfx.programlib.phong = {
             }
         }
 
+        // Apply shadows
+        if (options.numShadows > 0) {
+            code += "    float shadowFactor = 1.0;\n";
+            code += "    for (int i = 0; i < NUM_SHADOWS; i++)\n";
+            code += "    {\n";
+            code += "        shadowFactor = min(calculateShadowFactor(vShadowCoord[i], shadow_parameters[i], texture_shadowMap[i]), shadowFactor);\n";
+            code += "    }\n\n";
+            if (lighting || options.lightMap) {
+                code += "    diffuseContrib *= shadowFactor;\n";
+            }
+            if (lighting) {
+                code += "    specularContrib *= shadowFactor;\n";
+            }
+        }
+
         // Calculate final lighting contributions
         code += "    vec3 ambient  = ambientColor * lightAmbient_color;\n";
         if (lighting || options.lightMap) {
@@ -948,16 +963,6 @@ pc.gfx.programlib.phong = {
         code += "    gl_FragColor.a    = opacity;\n\n";
 
         code += getSnippet(device, 'fs_alpha_test');
-
-        // Apply shadows
-        if (options.numShadows > 0) {
-            code += "    float shadowFactor = 1.0;\n";
-            code += "    for (int i = 0; i < NUM_SHADOWS; i++)\n";
-            code += "    {\n";
-            code += "        shadowFactor -= calculateShadowFactor(vShadowCoord[i], shadow_parameters[i], texture_shadowMap[i]);\n";
-            code += "    }\n\n";
-            code += "    gl_FragColor.rgb *= shadowFactor;\n";
-        }
 
         // Make sure all components are between 0 and 1
         code += getSnippet(device, 'fs_clamp');
