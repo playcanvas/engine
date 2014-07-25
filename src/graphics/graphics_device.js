@@ -451,7 +451,7 @@ pc.extend(pc.gfx, function () {
         draw: function (primitive) {
             var gl = this.gl;
 
-            var i, len, sampler, uniform, scopeId, uniformVersion, programVersion;
+            var i, j, len, sampler, samplerValue, texture, numTextures, uniform, scopeId, uniformVersion, programVersion;
             var shader = this.shader;
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
@@ -496,17 +496,37 @@ pc.extend(pc.gfx, function () {
             }
 
             // Commit the shader program variables
+            textureUnit = 0;
             for (i = 0, len = samplers.length; i < len; i++) {
                 sampler = samplers[i];
-                texture = sampler.scopeId.value;
-                if (this.textureUnits[i] !== texture) {
-                    gl.activeTexture(gl.TEXTURE0 + i);
-                    texture.bind();
-                    this.textureUnits[i] = texture;
-                }
-                if (sampler.slot !== i) {
-                    gl.uniform1i(sampler.locationId, i);
-                    sampler.slot = i;
+                samplerValue = sampler.scopeId.value;
+
+                if (samplerValue instanceof pc.gfx.Texture) {
+                    texture = samplerValue;
+                    if (this.textureUnits[textureUnit] !== texture) {
+                        gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                        texture.bind();
+                        this.textureUnits[textureUnit] = texture;
+                    }
+                    if (sampler.slot !== textureUnit) {
+                        gl.uniform1i(sampler.locationId, textureUnit);
+                        sampler.slot = textureUnit;
+                    }
+                    textureUnit++;
+                } else { // Array
+                    sampler.array.length = 0;
+                    numTexures = samplerValue.length;
+                    for (j = 0; j < numTexures; j++) {
+                        texture = samplerValue[j];
+                        if (this.textureUnits[textureUnit] !== texture) {
+                            gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                            texture.bind();
+                            this.textureUnits[textureUnit] = texture;
+                        }
+                        sampler.array[j] = textureUnit;
+                        textureUnit++;
+                    }
+                    gl.uniform1iv(sampler.locationId, sampler.array);
                 }
             }
 
@@ -524,13 +544,6 @@ pc.extend(pc.gfx, function () {
 
                     // Call the function to commit the uniform value
                     this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
-/*
-                    if (uniform.isMatrix) {
-                        uniform.commitFunc.call(gl, uniform.locationId, false, scopeId.value);
-                    } else {
-                        uniform.commitFunc.call(gl, uniform.locationId, scopeId.value);
-                    }
-*/
                 }
             }
 

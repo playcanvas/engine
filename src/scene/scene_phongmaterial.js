@@ -583,28 +583,22 @@ pc.extend(pc.scene, function () {
         updateShader: function (device, scene) {
             var lights = scene._lights;
 
-            var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
-            var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
+            var numDirs = 0, numPnts = 0, numSpts = 0, numShadows = 0;
             for (var i = 0; i < lights.length; i++) {
                 var light = lights[i];
                 if (light.getEnabled()) {
+                    if (light.getCastShadows()) {
+                        numShadows++;
+                    }
                     switch (light.getType()) {
                         case pc.scene.LIGHTTYPE_DIRECTIONAL:
-                            if (light.getCastShadows()) {
-                                numSDirs++;
-                            } else {
-                                numDirs++;
-                            }
+                            numDirs++;
                             break;
                         case pc.scene.LIGHTTYPE_POINT:
                             numPnts++;
                             break;
                         case pc.scene.LIGHTTYPE_SPOT:
-                            if (light.getCastShadows()) {
-                                numSSpts++;
-                            } else {
-                                numSpts++;
-                            }
+                            numSpts++;
                             break;
                     }
                 }
@@ -613,12 +607,10 @@ pc.extend(pc.scene, function () {
             var options = {
                 fog: scene.fog,
                 skin: !!this.meshInstances[0].skinInstance,
-                numDirs: numDirs,
-                numSDirs: numSDirs,
-                numPnts: numPnts,
-                numSPnts: numSPnts,
-                numSpts: numSpts,
-                numSSpts: numSSpts,
+                numDirectionalLights: numDirs,
+                numPointLights: numPnts,
+                numSpotLights: numSpts,
+                numShadows: numShadows,
                 diffuseMap: !!this.diffuseMap,
                 diffuseMapTransform: !!this.diffuseMapTransform,
                 specularMap: !!this.specularMap,

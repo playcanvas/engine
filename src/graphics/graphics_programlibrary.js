@@ -34,8 +34,6 @@ pc.extend(pc.gfx, function () {
         if (!shader) {
             var gd = this._device;
             var shaderDefinition = generator.createShaderDefinition(gd, options);
-            logDEBUG("\n" + key + ": vertex shader\n" + shaderDefinition.vshader);
-            logDEBUG("\n" + key + ": fragment shader\n" + shaderDefinition.fshader);
             shader = this._cache[key] = new pc.gfx.Shader(gd, shaderDefinition);
         }
         return shader;
