@@ -565,6 +565,7 @@ pc.gfx.programlib.phong = {
 
         // SHADOW UNIFORMS
         if (options.numShadows > 0) {
+            code += "uniform bool shadow_enable;\n";
             code += "uniform vec3 shadow_parameters[NUM_SHADOWS];\n"; // Width, height, bias
             code += "uniform sampler2D texture_shadowMap[NUM_SHADOWS];\n";
         }
@@ -928,17 +929,20 @@ pc.gfx.programlib.phong = {
 
         // Apply shadows
         if (options.numShadows > 0) {
-            code += "    float shadowFactor = 1.0;\n";
-            code += "    for (int i = 0; i < NUM_SHADOWS; i++)\n";
+            code += "    if (shadow_enable)\n";
             code += "    {\n";
-            code += "        shadowFactor = min(calculateShadowFactor(vShadowCoord[i], shadow_parameters[i], texture_shadowMap[i]), shadowFactor);\n";
-            code += "    }\n\n";
+            code += "        float shadowFactor = 1.0;\n";
+            code += "        for (int i = 0; i < NUM_SHADOWS; i++)\n";
+            code += "        {\n";
+            code += "            shadowFactor = min(calculateShadowFactor(vShadowCoord[i], shadow_parameters[i], texture_shadowMap[i]), shadowFactor);\n";
+            code += "        }\n";
             if (lighting || options.lightMap) {
-                code += "    diffuseContrib *= shadowFactor;\n";
+                code += "        diffuseContrib *= shadowFactor;\n";
             }
             if (lighting) {
-                code += "    specularContrib *= shadowFactor;\n";
+                code += "        specularContrib *= shadowFactor;\n";
             }
+            code += "    }\n\n";
         }
 
         // Calculate final lighting contributions

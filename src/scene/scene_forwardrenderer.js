@@ -198,6 +198,7 @@ pc.extend(pc.scene, function () {
         this.poseMatrixId = scope.resolve('matrix_pose[0]');
 
         this.alphaTestId = scope.resolve('alpha_ref');
+        this.shadowEnableId = scope.resolve('shadow_enable');
 
         // Shadows
         this._shadowAabb = new pc.shape.Aabb();
@@ -673,6 +674,8 @@ pc.extend(pc.scene, function () {
                     if (meshInstance.skinInstance) {
                         this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                     }
+
+                    this.shadowEnableId.setValue(meshInstance.receiveShadow);
 
                     if (material !== prevMaterial) {
                         if (!material.shader) {
