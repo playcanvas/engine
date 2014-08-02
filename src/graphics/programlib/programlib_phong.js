@@ -130,7 +130,7 @@ pc.gfx.programlib.phong = {
 
         // VERTEX SHADER INPUTS: ATTRIBUTES
         code += "attribute vec3 vertex_position;\n";
-        if (lighting || options.cubeMap || options.sphereMap) {
+        if (lighting) {
             code += "attribute vec3 vertex_normal;\n";
             if (options.normalMap && useTangents) {
                 code += "attribute vec4 vertex_tangent;\n";
@@ -261,7 +261,7 @@ pc.gfx.programlib.phong = {
         code += "{\n";
         // Prepare attribute values into the right formats for the vertex shader
         code += "    vec4 position = vec4(vertex_position, 1.0);\n";
-        if (lighting || options.cubeMap || options.sphereMap) {
+        if (lighting) {
             code += "    vec4 normal = vec4(vertex_normal, 0.0);\n";
             if (options.normalMap && useTangents) {
                 code += "    vec4 tangent = vec4(vertex_tangent.xyz, 0.0);\n";
@@ -287,7 +287,7 @@ pc.gfx.programlib.phong = {
             }
         } else {
             code += "    vec4 positionW = matrix_model * position;\n";
-            if (lighting || options.cubeMap || options.sphereMap) {
+            if (lighting) {
                 code += "    vec3 normalW = matrix_normal * normal.xyz;\n";
                 if (options.normalMap && useTangents) {
                     code += "    vec3 tangentW = matrix_normal * tangent.xyz;\n";
@@ -296,7 +296,7 @@ pc.gfx.programlib.phong = {
             code += "\n";
         }
 
-        if (lighting || options.cubeMap || options.sphereMap) {
+        if (lighting) {
             code += "    normalW = normalize(normalW);\n";
             if (options.normalMap && useTangents) {
                 code += "    tangentW  = normalize(tangentW);\n";
