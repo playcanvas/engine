@@ -196,6 +196,8 @@ pc.extend(pc.scene, function () {
         this.modelMatrixId = scope.resolve('matrix_model');
         this.normalMatrixId = scope.resolve('matrix_normal');
         this.poseMatrixId = scope.resolve('matrix_pose[0]');
+        this.boneTextureId = scope.resolve('texture_poseMap');
+        this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.shadowEnableId = scope.resolve('shadow_enable');
@@ -358,8 +360,6 @@ pc.extend(pc.scene, function () {
                 scene.updateShaders = false;
             }
 
-            pc.scene.Scene.current = scene;
-
             // Fish out all the uniforms we need to render the scene
             var lights = scene._lights;
             var models = scene._models;
@@ -437,7 +437,14 @@ pc.extend(pc.scene, function () {
 
                             this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (meshInstance.skinInstance) {
-                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
+                                if (device.supportsBoneTextures) {
+                                    this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
+                                    var w = meshInstance.skinInstance.boneTexture.width;
+                                    var h = meshInstance.skinInstance.boneTexture.height;
+                                    this.boneTextureSizeId.setValue([w, h])
+                                } else {
+                                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                                }
                                 device.setShader(this._depthShaderSkin);
                             } else {
                                 device.setShader(this._depthShaderStatic);
@@ -562,7 +569,14 @@ pc.extend(pc.scene, function () {
                             scope.resolve('texture_opacityMap').setValue(material.opacityMap);
                         }
                         if (meshInstance.skinInstance) {
-                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
+                            if (device.supportsBoneTextures) {
+                                this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
+                                var w = meshInstance.skinInstance.boneTexture.width;
+                                var h = meshInstance.skinInstance.boneTexture.height;
+                                this.boneTextureSizeId.setValue([w, h])
+                            } else {
+                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                            }
                             device.setShader(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                         } else {
                             device.setShader(material.opacityMap ? this._depthProgStaticOp : this._depthProgStatic);
@@ -619,7 +633,14 @@ pc.extend(pc.scene, function () {
                     this.modelMatrixId.setValue(modelMatrix.data);
                     this.normalMatrixId.setValue(normalMatrix.data);
                     if (meshInstance.skinInstance) {
-                        this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
+                        if (device.supportsBoneTextures) {
+                            this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
+                            var w = meshInstance.skinInstance.boneTexture.width;
+                            var h = meshInstance.skinInstance.boneTexture.height;
+                            this.boneTextureSizeId.setValue([w, h])
+                        } else {
+                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                        }
                     }
                     this.shadowEnableId.setValue(meshInstance.receiveShadow);
 

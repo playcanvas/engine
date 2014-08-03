@@ -1,7 +1,8 @@
 pc.extend(pc.scene, function () {
 
-    var Skin = function (ibp, boneNames) {
+    var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
+        this.device = graphicsDevice;
         this.inverseBindPose = ibp;
         this.boneNames = boneNames;
     };
@@ -13,7 +14,42 @@ pc.extend(pc.scene, function () {
         this.bones = [];
 
         var numBones = skin.inverseBindPose.length;
-        this.matrixPalette = new Float32Array(numBones * 16);
+
+        var device = skin.device;
+        if (device.supportsBoneTextures) {
+            // Caculate a square texture dimension to hold bone matrices
+            // where a matrix takes up 4 texels:
+            //   RGBA (Row 1), RGBA (Row 2), RGBA (Row 3), RGBA (Row 4)
+            // So:
+            //   8x8   holds: 64 / 4   = Up to 16 bones
+            //   16x16 holds: 256 / 4  = Up to 64 bones
+            //   32x32 holds: 1024 / 4 = Up to 256 bones
+            //   64x64 holds: 4096 / 4 = Up to 1024 bones
+            // Let's assume for now noone will create a hierarchy of more
+            // than 1024 bones!
+            var size;
+            if (numBones > 256)
+                size = 64;
+            else if (numBones > 64)
+                size = 32;
+            else if (numBones > 16)
+                size = 16;
+            else
+                size = 8;
+
+            this.matrixPalette = new Float32Array(size * size * 4);
+            this.boneTexture = new pc.gfx.Texture(device, {
+                width: size, 
+                height: size,
+                format: pc.gfx.PIXELFORMAT_RGBA32F,
+                autoMipmap: false
+            });
+            this.boneTexture.minFilter = pc.gfx.FILTER_NEAREST;
+            this.boneTexture.magFilter = pc.gfx.FILTER_NEAREST;
+            this.matrixPalette = this.boneTexture.lock();
+        } else {
+            this.matrixPalette = new Float32Array(numBones * 16);
+        }
     };
 
     SkinInstance.prototype = {
@@ -47,6 +83,12 @@ pc.extend(pc.scene, function () {
                     mp[base + 13] = pe[13];
                     mp[base + 14] = pe[14];
                     mp[base + 15] = pe[15];
+                }
+
+                // TODO: this is a bit strange looking. Change the Texture API to do a reupload
+                if (this.skin.device.supportsBoneTextures) {
+                    this.boneTexture.lock();
+                    this.boneTexture.unlock();
                 }
             }
         }())

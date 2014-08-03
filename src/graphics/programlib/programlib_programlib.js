@@ -129,54 +129,58 @@ pc.gfx.programlib = {
             ////////////////////////////
             // VERTEX SHADER SNIPPETS //
             ////////////////////////////
-            case 'vs_skin_position_decl':
-                var numBones = device.getBoneLimit();
-                code += 'attribute vec3 vertex_position;\n';
-                code += 'attribute vec4 vertex_boneWeights;\n';
-                code += 'attribute vec4 vertex_boneIndices;\n';
-                code += 'uniform mat4 matrix_pose[' + numBones + '];\n';
-                code += 'uniform mat4 matrix_viewProjection;\n\n';
+            case 'vs_skin_decl':
+                if (device.supportsBoneTextures) {
+                    code += [
+                        'attribute vec4 vertex_boneWeights;',
+                        'attribute vec4 vertex_boneIndices;',
+                        '',
+                        'uniform sampler2D texture_poseMap;',
+                        'uniform vec2 texture_poseMapSize;',
+                        '',
+                        'mat4 getBoneMatrix(const in float i)',
+                        '{',
+                        '    float j = i * 4.0;',
+                        '    float x = mod(j, float(texture_poseMapSize.x));',
+                        '    float y = floor(j / float(texture_poseMapSize.x));',
+                        '',
+                        '    float dx = 1.0 / float(texture_poseMapSize.x);',
+                        '    float dy = 1.0 / float(texture_poseMapSize.y);',
+                        '',
+                        '    y = dy * (y + 0.5);',
+                        '',
+                        '    vec4 v1 = texture2D(texture_poseMap, vec2(dx * (x + 0.5), y));',
+                        '    vec4 v2 = texture2D(texture_poseMap, vec2(dx * (x + 1.5), y));',
+                        '    vec4 v3 = texture2D(texture_poseMap, vec2(dx * (x + 2.5), y));',
+                        '    vec4 v4 = texture2D(texture_poseMap, vec2(dx * (x + 3.5), y));',
+                        '',
+                        '    mat4 bone = mat4(v1, v2, v3, v4);',
+                        '',
+                        '    return bone;',
+                        '}'
+                    ].join('\n');
+                } else {
+                    code += [
+                        'attribute vec4 vertex_boneWeights;',
+                        'attribute vec4 vertex_boneIndices;',
+                        '',
+                        'uniform mat4 matrix_pose[' + device.getBoneLimit() + '];',
+                        '',
+                        'mat4 getBoneMatrix(const in float i)',
+                        '{',
+                        '    mat4 bone = matrix_pose[int(i)];',
+                        '',
+                        '    return bone;',
+                        '}'
+                    ].join('\n');
+                }
+                code += '\n\n';
                 break;
 
-            case 'vs_skin_position':
-                code += '    vec4 position, positionW;\n';
-                code += '    position = vec4(vertex_position, 1.0);\n';
-                code += '    positionW  = vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * position;\n';
-                code += '    positionW += vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * position;\n';
-                code += '    positionW += vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * position;\n';
-                code += '    positionW += vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * position;\n';
-                code += '    gl_Position = matrix_viewProjection * positionW;\n';
-                break;
-
-            case 'vs_skin_normal':
-                code += '    vec3 normalW, normalE;\n';
-                code += '    vec4 normal = vec4(vertex_normal, 0.0);\n';
-                code += '    normalW  = (vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * normal).xyz;\n';
-                code += '    normalW += (vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * normal).xyz;\n';
-                code += '    normalW += (vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * normal).xyz;\n';
-                code += '    normalW += (vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * normal).xyz;\n';
-                code += '    normalE = normalize((matrix_view * normalW).xyz);\n';
-                break;
-
-            case 'vs_skin_tangent':
-                code += '    vec3 tangentW, tangentE;\n';
-                code += '    vec4 tangent = vec4(vertex_tangent, 0.0);\n';
-                code += '    tangentW  = (vertex_boneWeights[0] * matrix_pose[int(vertex_boneIndices[0])] * tangent).xyz;\n';
-                code += '    tangentW += (vertex_boneWeights[1] * matrix_pose[int(vertex_boneIndices[1])] * tangent).xyz;\n';
-                code += '    tangentW += (vertex_boneWeights[2] * matrix_pose[int(vertex_boneIndices[2])] * tangent).xyz;\n';
-                code += '    tangentW += (vertex_boneWeights[3] * matrix_pose[int(vertex_boneIndices[3])] * tangent).xyz;\n';
-                code += '    tangentE = normalize((matrix_view * tangentW).xyz);\n';
-                break;
-
-            case 'vs_static_position_decl':
+            case 'vs_transform_decl':
                 code += 'attribute vec3 vertex_position;\n';
                 code += 'uniform mat4 matrix_model;\n';
                 code += 'uniform mat4 matrix_viewProjection;\n\n';
-                break;
-
-            case 'vs_static_position':
-                code += '    vec4 positionW = matrix_model * vec4(vertex_position, 1.0);\n';
-                code += '    gl_Position = matrix_viewProjection * positionW;\n';
                 break;
         }
 

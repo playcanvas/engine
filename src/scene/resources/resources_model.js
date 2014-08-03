@@ -155,7 +155,7 @@ pc.extend(pc.resources, function () {
         ///////////
         // SKINS //
         ///////////
-        if (modelData.skins.length > 0) {
+        if (!this._device.supportsBoneTextures && modelData.skins.length > 0) {
             var boneLimit = this._device.getBoneLimit();
             pc.scene.partitionSkin(modelData, mapping, boneLimit);
         }
@@ -174,7 +174,7 @@ pc.extend(pc.resources, function () {
                                                      ibm[12], ibm[13], ibm[14], ibm[15]);
             }
 
-            var skin = new pc.scene.Skin(inverseBindMatrices, skinData.boneNames);
+            var skin = new pc.scene.Skin(this._device, inverseBindMatrices, skinData.boneNames);
             skins.push(skin);
 
             var skinInstance = new pc.scene.SkinInstance(skin);

@@ -24,21 +24,29 @@ pc.gfx.programlib.pick = {
         var code = '';
 
         // VERTEX SHADER DECLARATIONS
+        code += getSnippet(device, 'vs_transform_decl');
+
         if (options.skin) {
-            code += getSnippet(device, 'vs_skin_position_decl');
-        } else {
-            code += getSnippet(device, 'vs_static_position_decl');
+            code += getSnippet(device, 'vs_skin_decl');
         }
 
         // VERTEX SHADER BODY
         code += getSnippet(device, 'common_main_begin');
 
-        // Skinning is performed in world space
+        // SKINNING
         if (options.skin) {
-            code += getSnippet(device, 'vs_skin_position');
+            code += "    mat4 modelMatrix = vertex_boneWeights.x * getBoneMatrix(vertex_boneIndices.x) +\n";
+            code += "                       vertex_boneWeights.y * getBoneMatrix(vertex_boneIndices.y) +\n";
+            code += "                       vertex_boneWeights.z * getBoneMatrix(vertex_boneIndices.z) +\n";
+            code += "                       vertex_boneWeights.w * getBoneMatrix(vertex_boneIndices.w);\n";
         } else {
-            code += getSnippet(device, 'vs_static_position');
+            code += "    mat4 modelMatrix = matrix_model;\n";
         }
+        code += "\n";
+
+        // TRANSFORM
+        code += "    vec4 positionW = modelMatrix * vec4(vertex_position, 1.0);\n";
+        code += "    gl_Position = matrix_viewProjection * positionW;\n\n";
 
         code += getSnippet(device, 'common_main_end');
         

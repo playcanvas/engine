@@ -146,10 +146,6 @@ pc.gfx.programlib.phong = {
         if (options.vertexColors) {
             code += "attribute vec4 vertex_color;\n";
         }
-        if (options.skin) {
-            code += "attribute vec4 vertex_boneWeights;\n";
-            code += "attribute vec4 vertex_boneIndices;\n";
-        }
         code += "\n";
 
         // VERTEX SHADER INPUTS: UNIFORMS
@@ -157,10 +153,6 @@ pc.gfx.programlib.phong = {
         code += "uniform mat4 matrix_model;\n";
         if (lighting) {
             code += "uniform mat3 matrix_normal;\n";
-        }
-        if (options.skin) {
-            var numBones = device.getBoneLimit();
-            code += "uniform mat4 matrix_pose[" + numBones + "];\n";
         }
         for (i = 0; i < totalLights; i++) {
             if (i < totalDirs) {
@@ -256,58 +248,40 @@ pc.gfx.programlib.phong = {
         }
         code += "\n";
 
+        if (options.skin) {
+            code += getSnippet(device, 'vs_skin_decl');
+        }
+
         // VERTEX SHADER BODY
         code += "void main(void)\n";
         code += "{\n";
-        // Prepare attribute values into the right formats for the vertex shader
-        code += "    vec4 position = vec4(vertex_position, 1.0);\n";
+        // SKINNING
+        if (options.skin) {
+            code += "    mat4 modelMatrix = vertex_boneWeights.x * getBoneMatrix(vertex_boneIndices.x) +\n";
+            code += "                       vertex_boneWeights.y * getBoneMatrix(vertex_boneIndices.y) +\n";
+            code += "                       vertex_boneWeights.z * getBoneMatrix(vertex_boneIndices.z) +\n";
+            code += "                       vertex_boneWeights.w * getBoneMatrix(vertex_boneIndices.w);\n";
+            code += "    mat3 normalMatrix = mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);\n";
+        } else {
+            code += "    mat4 modelMatrix = matrix_model;\n";
+            code += "    mat3 normalMatrix = matrix_normal;\n";
+        }
+        code += "\n";
+
+        // TRANSFORM
+        code += "    vec4 positionW = modelMatrix * vec4(vertex_position, 1.0);\n";
+        code += "    gl_Position = matrix_viewProjection * positionW;\n\n";
         if (lighting) {
-            code += "    vec4 normal = vec4(vertex_normal, 0.0);\n";
+            code += "    vec3 normalW = normalMatrix * vertex_normal;\n";
+            code += "    normalW = normalize(normalW);\n";
             if (options.normalMap && useTangents) {
-                code += "    vec4 tangent = vec4(vertex_tangent.xyz, 0.0);\n";
+                code += "    vec3 tangentW = normalMatrix * vertex_tangent.xyz;\n";
+                code += "    tangentW  = normalize(tangentW);\n";
             }
         }
         code += "\n";
 
-        // Skinning is performed in world space
-        if (options.skin) {
-            // Skin the necessary vertex attributes
-            code += "    mat4 model = vertex_boneWeights.x * matrix_pose[int(vertex_boneIndices.x)] +\n";
-            code += "                 vertex_boneWeights.y * matrix_pose[int(vertex_boneIndices.y)] +\n";
-            code += "                 vertex_boneWeights.z * matrix_pose[int(vertex_boneIndices.z)] +\n";
-            code += "                 vertex_boneWeights.w * matrix_pose[int(vertex_boneIndices.w)];\n";
-            code += "    vec4 positionW = model * position;\n";
-
-            if (lighting || options.cubeMap || options.sphereMap) {
-                code += "    vec3 normalW = (model * normal).xyz;\n";
-
-                if (options.normalMap && useTangents) {
-                    code += "    vec3 tangentW = (model * tangent).xyz;\n";
-                }
-            }
-        } else {
-            code += "    vec4 positionW = matrix_model * position;\n";
-            if (lighting) {
-                code += "    vec3 normalW = matrix_normal * normal.xyz;\n";
-                if (options.normalMap && useTangents) {
-                    code += "    vec3 tangentW = matrix_normal * tangent.xyz;\n";
-                }
-            }
-            code += "\n";
-        }
-
-        if (lighting) {
-            code += "    normalW = normalize(normalW);\n";
-            if (options.normalMap && useTangents) {
-                code += "    tangentW  = normalize(tangentW);\n";
-            }
-            code += "\n";
-        }
-
-        // Transform to vertex position to screen
-        code += "    gl_Position = matrix_viewProjection * positionW;\n\n";
-
-        // Transform vectors required for lighting to eye space
+        // LIGHTING
         if (lighting) {
             if (options.normalMap && useTangents) {
                 // Calculate the tangent space basis vectors
