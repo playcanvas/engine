@@ -104,6 +104,7 @@ pc.extend(pc.gfx, function () {
             logINFO("WebGL vendor:                 " + gl.getParameter(gl.VENDOR));
             logINFO("WebGL renderer:               " + gl.getParameter(gl.RENDERER));
             logINFO("WebGL extensions:             " + gl.getSupportedExtensions());
+
             logINFO("WebGL max vertex attribs:     " + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
             logINFO("WebGL max vshader vectors:    " + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
             logINFO("WebGL max varying vectors:    " + gl.getParameter(gl.MAX_VARYING_VECTORS));
@@ -203,6 +204,11 @@ pc.extend(pc.gfx, function () {
 
             // Initialize extensions
             this.extTextureFloat = gl.getExtension("OES_texture_float");
+            this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
+
+            this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+            this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
+
             this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
             if (this.extStandardDerivatives) {

@@ -104,6 +104,28 @@ pc.extend(pc.gfx, function () {
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
                 break;
+            case pc.gfx.PIXELFORMAT_RGB16F:
+                ext = this.device.extTextureHalfFloat;
+                this._glFormat = gl.RGB;
+                this._glInternalFormat = gl.RGB;
+                this._glPixelType = ext.HALF_FLOAT_OES;
+                break;
+            case pc.gfx.PIXELFORMAT_RGBA16F:
+                ext = this.device.extTextureHalfFloat;
+                this._glFormat = gl.RGBA;
+                this._glInternalFormat = gl.RGBA;
+                this._glPixelType = ext.HALF_FLOAT_OES;
+                break;
+            case pc.gfx.PIXELFORMAT_RGB32F:
+                this._glFormat = gl.RGB;
+                this._glInternalFormat = gl.RGB;
+                this._glPixelType = gl.FLOAT;
+                break;
+            case pc.gfx.PIXELFORMAT_RGBA32F:
+                this._glFormat = gl.RGBA;
+                this._glInternalFormat = gl.RGBA;
+                this._glPixelType = gl.FLOAT;
+                break;
         }
         this._compressed = ((format === pc.gfx.PIXELFORMAT_DXT1) ||
                             (format === pc.gfx.PIXELFORMAT_DXT3) ||
@@ -286,6 +308,14 @@ pc.extend(pc.gfx, function () {
                     case pc.gfx.PIXELFORMAT_DXT3:
                     case pc.gfx.PIXELFORMAT_DXT5:
                         this._levels[options.level] = new Uint8Array(Math.floor((this._width + 3) / 4) * Math.floor((this._height + 3) / 4) * 16);
+                        break;
+                    case pc.gfx.PIXELFORMAT_RGB16F:
+                    case pc.gfx.PIXELFORMAT_RGB32F:
+                        this._levels[options.level] = new Float32Array(this._width * this._height * 3);
+                        break;
+                    case pc.gfx.PIXELFORMAT_RGBA16F:
+                    case pc.gfx.PIXELFORMAT_RGBA32F:
+                        this._levels[options.level] = new Float32Array(this._width * this._height * 4);
                         break;
                 }
             }

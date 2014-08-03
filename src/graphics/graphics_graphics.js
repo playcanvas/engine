@@ -338,6 +338,30 @@ pc.gfx = {
      * @description Block compressed format, storing 16 input pixels into 128 bits of output, consisting of 64 bits of alpha channel data (two 8 bit alpha values and a 4x4 3 bit lookup table) followed by 64 bits of color data (encoded the same way as DXT1).
      */
     PIXELFORMAT_DXT5: 10,
+    /**
+     * @enum pc.gfx.PIXELFORMAT
+     * @name pc.gfx.PIXELFORMAT_RGB16F
+     * @description 16-bit floating point RGB (16-bit float for each red, green and blue channels).
+     */
+    PIXELFORMAT_RGB16F: 11,
+    /**
+     * @enum pc.gfx.PIXELFORMAT
+     * @name pc.gfx.PIXELFORMAT_RGBA16F
+     * @description 16-bit floating point RGBA (16-bit float for each red, green, blue and alpha channels).
+     */
+    PIXELFORMAT_RGBA16F: 12,
+    /**
+     * @enum pc.gfx.PIXELFORMAT
+     * @name pc.gfx.PIXELFORMAT_RGB32F
+     * @description 32-bit floating point RGB (32-bit float for each red, green and blue channels).
+     */
+    PIXELFORMAT_RGB32F: 13,
+    /**
+     * @enum pc.gfx.PIXELFORMAT
+     * @name pc.gfx.PIXELFORMAT_RGB32F
+     * @description 32-bit floating point RGBA (32-bit float for each red, green, blue and alpha channels).
+     */
+    PIXELFORMAT_RGBA32F: 14,
 
     /**
      * @enum pc.gfx.PRIMITIVE
