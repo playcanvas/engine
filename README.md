@@ -42,7 +42,7 @@ The PlayCanvas Engine is a fully feature 3D game engine.
 
 Here's a super-simple Hello World example - a spinning cube!
 
-```javascript
+```html
 <script>
     // Create a PlayCanvas application
     var canvas = document.getElementById("application-canvas");
