@@ -94,7 +94,7 @@ See all the [examples](http://playcanvas.github.io) here or browse them locally 
 
 ## How to build
 
-The PlayCanvas Engine uses the python and the Closure Compiler to build which requires Java.
+The PlayCanvas Engine uses the Python 2.7 and the Closure Compiler to build which requires Java.
 
     cd build
     python build.py
