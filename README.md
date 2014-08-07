@@ -56,7 +56,7 @@ Here's a super-simple Hello World example - a spinning cube!
     // Create box entity
     var cube = new pc.fw.Entity();
     app.context.systems.model.addComponent(cube, {
-        type: "box",
+        type: "box"
     });
 
     // Create camera entity
