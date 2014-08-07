@@ -17,26 +17,76 @@ You can see more games on the [PlayCanvas website](https://playcanvas.com/play).
 The PlayCanvas Engine is a fully feature 3D game engine.
 
 * **Graphics**
-	* WebGL-based 3D renderer
-	* Ambient, directional, point and spot lights
-	* Static and Skinned Meshes
-	* Skinned animation support
-	* Shadows
-	* Seamless default material support from Maya, 3DS Max, Blender, etc.
-	* Full model export pipeline from Maya, 3DS Max, Blender, etc via [PlayCanvas Tools](https://playcanvas.com)
-	* PostFX library, bloom, bokah, edge detect, fxaa, vignette, etc
+    * WebGL-based 3D renderer
+    * Ambient, directional, point and spot lights
+    * Static and Skinned Meshes
+    * Skinned animation support
+    * Shadows
+    * Seamless default material support from Maya, 3DS Max, Blender, etc.
+    * Full model export pipeline from Maya, 3DS Max, Blender, etc via [PlayCanvas Tools](https://playcanvas.com)
+    * PostFX library, bloom, bokah, edge detect, fxaa, vignette, etc
 * **Collision & Physics**
-	* Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
+    * Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
 * **Audio**
-	* 3D Positional audio via Web Audio API
+    * 3D Positional audio via Web Audio API
 * **Resource Loading**
-	* Simple and powerful resource loading
+    * Simple and powerful resource loading
 * **Entity / Component System**
-	* Built-in components for model rendering, animation, audio sources, rigidbodies, collision, trigger volumes
+    * Built-in components for model rendering, animation, audio sources, rigidbodies, collision, trigger volumes
 * **Scripting system**
- 	* Write game behaviours by attaching Javascript to game entities.
+    * Write game behaviours by attaching Javascript to game entities.
 * **Input**
- 	* Mouse, Keyboard, Touch, Gamepad support
+    * Mouse, Keyboard, Touch, Gamepad support
+
+## Usage
+
+Here's a super-simple Hello World example - a spinning cube!
+
+```javascript
+<script>
+    // Create a PlayCanvas application
+    var canvas = document.getElementById("application-canvas");
+    var app = new pc.fw.Application(canvas, {});
+    app.start();
+
+    // Fill the available space at full resolution
+    app.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
+    app.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+
+    // Create box entity
+    var e = new pc.fw.Entity();
+    app.context.systems.model.addComponent(e, {
+      type: "box",
+    });
+
+    // Create camera entity
+    var cam = new pc.fw.Entity();
+    app.context.systems.camera.addComponent(cam, {
+      clearColor: [0.1, 0.1, 0.1]
+    });
+
+    // Create directional light entity
+    var light = new pc.fw.Entity();
+    app.context.systems.light.addComponent(light);
+
+    // Add to hierarchy
+    app.context.root.addChild(e);
+    app.context.root.addChild(cam);
+    app.context.root.addChild(light);
+
+    // Set up position and orientation
+    cam.setLocalPosition(0, 0, 3);
+    light.setEulerAngles(45, 0, 0);
+
+    // Register an update event
+    app.on("update", function (dt) {
+      var angles = e.getEulerAngles();
+      e.setEulerAngles(angles.x + 10 * dt, angles.y + 20 * dt, angles.z + 30 * dt);
+    });
+</script>
+```
+
+Want to play with the code yourself? Edit it on [CodePen](http://codepen.io/daredevildave/pen/mkazy).
 
 ## Examples
 
