@@ -79,9 +79,8 @@ Here's a super-simple Hello World example - a spinning cube!
     light.setEulerAngles(45, 0, 0);
 
     // Register an update event
-    app.on("update", function (dt) {
-      var angles = e.getEulerAngles();
-      e.setEulerAngles(angles.x + 10 * dt, angles.y + 20 * dt, angles.z + 30 * dt);
+    app.on("update", function (deltaTime) {
+    	e.rotate(10 * deltaTime, 20 * deltaTime, 30 * deltaTime);
     });
 </script>
 ```
