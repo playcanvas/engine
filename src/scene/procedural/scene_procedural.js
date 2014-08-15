@@ -124,6 +124,7 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
  * @function
  * @name pc.scene.procedural.createMesh
  * @description Creates a pc.scene.Mesh object from the supplied vertex information and topology.
+ * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
  * @param {Array} positions An array of 3-dimensional vertex positions.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Array} opts.normals An array of 3-dimensional vertex normals.
@@ -133,7 +134,10 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
  * @returns {pc.scene.Mesh} A new Geometry constructed from the supplied vertex and triangle data.
  * @example
  * // Create a new mesh supplying optional parameters using object literal notation
- * var mesh = pc.scene.procedural.createMesh(positions, {
+ * var mesh = pc.scene.procedural.createMesh(
+ *     graphicsDevice,
+ *     positions,
+ *     {
  *         normals: treeNormals,
  *         uvs: treeUvs,
  *         indices: treeIndices
@@ -217,6 +221,7 @@ pc.scene.procedural.createMesh = function (device, positions, opts) {
  * of 0.3, 20 segments and 30 sides.</p>
  * <p>Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the torus's mesh.</p>
+ * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.tubeRadius The radius of the tube forming the body of the torus (defaults to 0.2).
  * @param {Number} opts.ringRadius The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
@@ -468,6 +473,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
  * of 0.5, a height of 1.0, 1 height segment and 20 cap segments.</p>
  * <p>Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the cylinder's mesh.</p>
+ * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.radius The radius of the tube forming the body of the cylinder (defaults to 0.5).
  * @param {Number} opts.height The length of the body of the cylinder (defaults to 1.0).
@@ -502,6 +508,7 @@ pc.scene.procedural.createCylinder = function (device, opts) {
  * of 0.25, a height of 1.0, 1 height segment and 10 cap segments.</p>
  * <p>Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the capsule's mesh.</p>
+ * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.radius The radius of the tube forming the body of the capsule (defaults to 0.3).
  * @param {Number} opts.height The length of the body of the capsule from tip to tip (defaults to 1.0).
@@ -536,6 +543,7 @@ pc.scene.procedural.createCapsule = function (device, opts) {
  * of 0.5, a height of 1.0, 5 height segments and 20 cap segments.</p>
  * <p>Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the cone's mesh.</p>
+ * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.baseRadius The base radius of the cone (defaults to 0.5).
  * @param {Number} opts.peakRadius The peak radius of the cone (defaults to 0.0).
@@ -571,6 +579,7 @@ pc.scene.procedural.createCone = function (device, opts) {
  * and 16 segments in both longitude and latitude.</p>
  * <p>Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the sphere's mesh.</p>
+ * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.radius The radius of the sphere (defaults to 0.5).
  * @param {Number} opts.segments The number of divisions along the longitudinal and latitudinal axes of the sphere (defaults to 16).
@@ -649,6 +658,7 @@ pc.scene.procedural.createSphere = function (device, opts) {
  * along the positive Y axis.</p>
  * <p>Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the plane's mesh.</p>
+ * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {pc.Vec2} opts.halfExtents The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the plane (defaults to 5).
@@ -720,6 +730,7 @@ pc.scene.procedural.createPlane = function (device, opts) {
  * height of 1.0 unit and 10 segments in either axis (50 triangles per face).</p>
  * <p>Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent 
  * information is generated into the vertex buffer of the box's mesh.</p>
+ * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {pc.Vec3} opts.halfExtents The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the box (defaults to 1).
