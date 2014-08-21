@@ -78,8 +78,10 @@ pc.extend(pc.posteffect, function () {
         device.setViewport(x, y, w, h);
         device.setScissor(x, y, w, h);
 
+        var oldBlending = device.getBlending();
         var oldDepthTest = device.getDepthTest();
         var oldDepthWrite = device.getDepthWrite();
+        device.setBlending(false);
         device.setDepthTest(false);
         device.setDepthWrite(false);
         device.setVertexBuffer(vertexBuffer, 0);
@@ -90,6 +92,7 @@ pc.extend(pc.posteffect, function () {
             count: 4,
             indexed: false
         });
+        device.setBlending(oldBlending);
         device.setDepthTest(oldDepthTest);
         device.setDepthWrite(oldDepthWrite);
         device.updateEnd();
