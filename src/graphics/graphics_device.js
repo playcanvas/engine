@@ -156,9 +156,11 @@ pc.extend(pc.gfx, function () {
             this.glPrimitive = [
                 gl.POINTS,
                 gl.LINES,
+                gl.LINE_LOOP,
                 gl.LINE_STRIP,
                 gl.TRIANGLES,
-                gl.TRIANGLE_STRIP
+                gl.TRIANGLE_STRIP,
+                gl.TRIANGLE_FAN
             ];
 
             this.glBlendEquation = [
