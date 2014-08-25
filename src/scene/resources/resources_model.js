@@ -3,9 +3,11 @@ pc.extend(pc.resources, function () {
     var jsonToPrimitiveType = {
         "points":        pc.gfx.PRIMITIVE_POINTS,
         "lines":         pc.gfx.PRIMITIVE_LINES,
+        "lineloop":      pc.gfx.PRIMITIVE_LINELOOP,
         "linestrip":     pc.gfx.PRIMITIVE_LINESTRIP,
         "triangles":     pc.gfx.PRIMITIVE_TRIANGLES,
-        "trianglestrip": pc.gfx.PRIMITIVE_TRISTRIP
+        "trianglestrip": pc.gfx.PRIMITIVE_TRISTRIP,
+        "trianglefan":   pc.gfx.PRIMITIVE_TRIFAN
     };
 
     var jsonToVertexElementType = {

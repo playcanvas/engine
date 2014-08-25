@@ -377,22 +377,34 @@ pc.gfx = {
     PRIMITIVE_LINES: 1,
     /**
      * @enum pc.gfx.PRIMITIVE
+     * @name pc.gfx.PRIMITIVE_LINELOOP
+     * @description List of points that are linked sequentially by line segments, with a closing line segment between the last and first points.
+     */
+    PRIMITIVE_LINELOOP: 2,
+    /**
+     * @enum pc.gfx.PRIMITIVE
      * @name pc.gfx.PRIMITIVE_LINESTRIP
      * @description List of points that are linked sequentially by line segments.
      */
-    PRIMITIVE_LINESTRIP: 2,
+    PRIMITIVE_LINESTRIP: 3,
     /**
      * @enum pc.gfx.PRIMITIVE
      * @name pc.gfx.PRIMITIVE_TRIANGLES
      * @description Discrete list of triangles.
      */
-    PRIMITIVE_TRIANGLES: 3,
+    PRIMITIVE_TRIANGLES: 4,
     /**
      * @enum pc.gfx.PRIMITIVE
      * @name pc.gfx.PRIMITIVE_TRISTRIP
      * @description Connected strip of triangles where a specified vertex forms a triangle using the previous two.
      */
-    PRIMITIVE_TRISTRIP: 4,
+    PRIMITIVE_TRISTRIP: 5,
+    /**
+     * @enum pc.gfx.PRIMITIVE
+     * @name pc.gfx.PRIMITIVE_TRIFAN
+     * @description Connected fan of triangles where the first vertex forms triangles with the following pairs of vertices.
+     */
+    PRIMITIVE_TRIFAN: 6,
 
     /**
      * @enum pc.gfx.SEMANTIC

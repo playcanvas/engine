@@ -141,7 +141,7 @@ pc.extend(pc.scene, function () {
                 mesh = meshInstance.mesh;
 
                 type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type; 
-                if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP)) {
+                if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP) || (type === pc.gfx.PRIMITIVE_TRIFAN)) {
                     modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                     if (meshInstance.skinInstance) {
                         poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
