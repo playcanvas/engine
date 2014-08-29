@@ -27,11 +27,11 @@ test("addComponent: no data", function () {
     ok(comp);
     equal(0, comp['assets'].length);
     equal(true, comp['activate']);
-    equal(true, comp['3d']);
+    equal(true, comp['positional']);
     equal(1, comp['volume']);
     equal(false, comp['loop'])
     equal(1, comp['rollOffFactor']);
-    equal(1, comp['minDistance']);
+    equal(1, comp['refDistance']);
     equal(10000, comp['maxDistance']);
 });
 
@@ -41,7 +41,7 @@ test("addComponent: data", function () {
     var data = {
         volume: 0.5,
         loop: true,
-        '3d': false,
+        'positional': false,
         activate: false
     }    
     var comp = asc.addComponent(e, data);
@@ -49,7 +49,7 @@ test("addComponent: data", function () {
     ok(comp);
     equal(null, comp['channel'])
     equal(data['activate'],  e.audiosource.activate);
-    equal(data['3d'], e.audiosource['3d']);
+    equal(data['positional'], e.audiosource['positional']);
     equal(data['volume'], e.audiosource.volume);
     equal(data['loop'], e.audiosource.loop);
 });

@@ -90,8 +90,8 @@ pc.audio = function () {
                 if (options.maxDistance) {
                     channel.setMaxDistance(options.maxDistance);
                 }
-                if (options.minDistance) {
-                    channel.setMinDistance(options.minDistance);
+                if (options.refDistance) {
+                    channel.setRefDistance(options.refDistance);
                 }
                 if (options.rollOffFactor) {
                     channel.setRollOffFactor(options.rollOffFactor);

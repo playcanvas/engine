@@ -64,14 +64,14 @@ pc.extend(pc.fw, function () {
             type: "boolean",
             defaultValue: true
         }, {
-            name: "3d",
-            displayName: "3d",
-            description: "3d sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-3d sounds are uniform aross space",
+            name: "positional",
+            displayName: "Positional",
+            description: "Positional sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-positional sounds are uniform aross space",
             type: "boolean",
             defaultValue: true
         }, {
-            name: "minDistance",
-            displayName: "Min Distance",
+            name: "refDistance",
+            displayName: "Ref Distance",
             description: "Distance from listener under which the sound is at full volume",
             type: "number",
             defaultValue: 1,
@@ -121,7 +121,17 @@ pc.extend(pc.fw, function () {
     
     pc.extend(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            properties = ['enabled', 'assets', 'volume', 'pitch', 'loop', 'activate', '3d', 'minDistance', 'maxDistance', 'rollOffFactor'];
+            if (data.minDistance) {
+                console.warn("WARNING: minDistance: Property is deprecated. Set refDistance property instead.");
+                data.refDistance = data.minDistance;
+            }
+
+            if (data['3d']) {
+                console.warn("WARNING: 3d: Property is deprecated. Set positional property instead.");
+                data.positional = data['3d'];
+            }
+
+            properties = ['enabled', 'assets', 'volume', 'pitch', 'loop', 'activate', 'positional', 'refDistance', 'maxDistance', 'rollOffFactor'];
             AudioSourceComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         
             component.paused = !(component.enabled && data.activate);
