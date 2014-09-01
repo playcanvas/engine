@@ -22,6 +22,8 @@ pc.extend(pc.scene, function () {
     var viewMat = new pc.Mat4();
     var viewProjMat = new pc.Mat4();
 
+    var c2sc = new pc.Mat4();
+
     // The 8 points of the camera frustum transformed to light space
     var frustumPoints = [];
     for (i = 0; i < 8; i++) {
@@ -55,7 +57,7 @@ pc.extend(pc.scene, function () {
         if (projection === pc.scene.Projection.PERSPECTIVE) {
             y = Math.tan(fov / 2.0) * nearClip;
         } else {
-            y = this._orthoHeight;
+            y = camera._orthoHeight;
         }
         x = y * aspect;
 
@@ -482,34 +484,26 @@ pc.extend(pc.scene, function () {
                         // working position.
                         _getFrustumCentroid(scene, camera, this.centroid);
                         shadowCam.setPosition(this.centroid);
-                        var lightDir = new pc.Vec3();
-                        light.worldTransform.getY(lightDir);
-                        shadowCam.translate(lightDir);
+                        shadowCam.setRotation(light.getRotation());
+                        // Camera's look down negative Z, and directional lights point down negative Y
+                        shadowCam.rotateLocal(-90, 0, 0);
 
-                        // 2. Come up with a LookAt matrix using the light direction, and the 
-                        // temporary working position. This will be the view matrix that is used
-                        // when generating the shadow map.
-                        shadowCam.lookAt(this.centroid);
-                        shadowCamWtm.copy(shadowCam.getWorldTransform());
-
-                        // 3. Transform the 8 corners of the frustum by the LookAt Matrix
+                        // 2. Transform the 8 corners of the camera frustum into the shadow camera's
+                        // view space
                         _getFrustumPoints(scene, camera, frustumPoints);
+                        shadowCamWtm.copy(shadowCam.getWorldTransform());
                         var worldToShadowCam = shadowCamWtm.invert();
                         var camToWorld = camera.worldTransform;
-                        var c2sc = new pc.Mat4();
                         c2sc.mul2(worldToShadowCam, camToWorld);
                         for (j = 0; j < 8; j++) {
                             c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
                         }
 
-                        // 4. Come up with a bounding box (in light-space) by calculating the min
+                        // 3. Come up with a bounding box (in light-space) by calculating the min
                         // and max X, Y, and Z values from your 8 light-space frustum coordinates.
-                        var minx = 1000000;
-                        var maxx = -1000000;
-                        var miny = 1000000;
-                        var maxy = -1000000;
-                        var minz = 1000000;
-                        var maxz = -1000000;
+                        var minx, miny, minz, maxx, maxy, maxz;
+                        minx = miny = minz = 1000000;
+                        maxx = maxy = maxz = -1000000;
                         for (j = 0; j < 8; j++) {
                             var p = frustumPoints[j];
                             if (p.x < minx) minx = p.x;
@@ -520,7 +514,7 @@ pc.extend(pc.scene, function () {
                             if (p.z > maxz) maxz = p.z;
                         }
 
-                        // 5. Use your min and max values to create an off-center orthographic projection.
+                        // 4. Use your min and max values to create an off-center orthographic projection.
                         shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
                         shadowCamWtm.copy(shadowCam.getWorldTransform());
 
