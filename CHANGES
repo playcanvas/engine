@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.154.1
+--------
+* [FIX] Phong shader generation where there are no lights enabled.
+
+--------
 v0.154.0
 --------
 * [FIX] Shadows for orthographic cameras. 
