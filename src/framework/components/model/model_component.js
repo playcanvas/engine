@@ -71,10 +71,8 @@ pc.extend(pc.fw, function () {
             }
 
             if (asset.resource) {
-                setTimeout(function () {
-                    var model = asset.resource.clone();
-                    _onLoad.call(this, [model]);
-                }.bind(this), 0);
+                var model = asset.resource.clone();
+                _onLoad.call(this, [model]);
             } else {
                 this.system.context.assets.load(asset, [], options).then(_onLoad.bind(this));
             }
