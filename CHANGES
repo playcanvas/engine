@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.154.0
+--------
+* [FIX] Shadows for orthographic cameras. 
+* Removed all dynamic allocations for directional shadow casting lights.
+* Added LINELOOP and TRIFAN graphics primitives.
+* Disable blending for post effect quad rendering.
+* Use a texture for passing bone matrices to vertex shaders if GPU supports it. This avoids having to split the skin up. Performance seems more or less similar.
+* [FIX] Models with a reflection map now render if no lights are present.
+* [FIX] Respect a mesh instance's receiveShadow property.
+* Unprivate the docs for AssetRegistry#find and AssetRegistry#findAll
+
+--------
 v0.153.0
 --------
 * User must now explicitly set the blendType of a material as opacity and opacityMap are no longer doing this automatically.
