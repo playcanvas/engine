@@ -261,10 +261,14 @@ pc.gfx.programlib.phong = {
             code += "                       vertex_boneWeights.y * getBoneMatrix(vertex_boneIndices.y) +\n";
             code += "                       vertex_boneWeights.z * getBoneMatrix(vertex_boneIndices.z) +\n";
             code += "                       vertex_boneWeights.w * getBoneMatrix(vertex_boneIndices.w);\n";
-            code += "    mat3 normalMatrix = mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);\n";
+            if (lighting) {
+                code += "    mat3 normalMatrix = mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);\n";
+            }
         } else {
             code += "    mat4 modelMatrix = matrix_model;\n";
-            code += "    mat3 normalMatrix = matrix_normal;\n";
+            if (lighting) {
+                code += "    mat3 normalMatrix = matrix_normal;\n";
+            }
         }
         code += "\n";
 
