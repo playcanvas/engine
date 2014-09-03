@@ -131,6 +131,18 @@ test('GraphNode: addChild', function () {
     equal(g1.getChildren()[0], g2);
 });
 
+test('GraphNode: insertChild', function () {
+    var g1 = new pc.scene.GraphNode('g1');
+    var g2 = new pc.scene.GraphNode('g2');
+    var g3 = new pc.scene.GraphNode('g3');
+
+    g1.addChild(g2);
+    g1.insertChild(g3, 0);
+
+    equal(g1.getChildren()[0], g3);
+    equal(g1.getChildren()[1], g2);
+});
+
 test('GraphNode: removeChild', function () {
     var g1 = new pc.scene.GraphNode('g1');
     var g2 = new pc.scene.GraphNode('g2');
@@ -140,6 +152,41 @@ test('GraphNode: removeChild', function () {
     g1.removeChild(g2);
 
     equal(g1.getChildren().length, 0);
+});
+
+test('GraphNode: reparent', function () {
+    var g1 = new pc.scene.GraphNode('g1');
+    var g2 = new pc.scene.GraphNode('g2');
+    var g3 = new pc.scene.GraphNode('g3');
+
+    g1.addChild(g2);
+    g2.reparent(g3);
+
+    equal(g3.getChildren().length, 1);
+    equal(g3.getChildren()[0], g2);
+    equal(g1.getChildren().length, 0);
+});
+
+test('GraphNode: reparent at specific index', function () {
+    var g1 = new pc.scene.GraphNode('g1');
+    var g2 = new pc.scene.GraphNode('g2');
+    var g3 = new pc.scene.GraphNode('g3');
+    var g4 = new pc.scene.GraphNode('g4');
+
+    g1.addChild(g2);
+
+    g3.addChild(g4);
+
+    g2.reparent(g3, 0);
+
+    equal(g3.getChildren().length, 2);
+    equal(g3.getChildren()[0], g2);
+    equal(g1.getChildren().length, 0);
+
+    g2.reparent(g3, 1);
+    equal(g3.getChildren().length, 2);
+    equal(g3.getChildren()[0], g4);
+    equal(g3.getChildren()[1], g2);
 });
 
 test('GraphNode: getChildren', function () {
