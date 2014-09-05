@@ -82,17 +82,16 @@
 
         var url = "../../assets/statue/Statue_1.json";
         application.context.assets.loadFromUrl(url, "model").then(function (results) {
+            var model = results.resource;
             var asset = results.asset;
 
             entity = new pc.fw.Entity();
 
-            var modelComponent = application.context.systems.model.addComponent(entity, {
+            application.context.systems.model.addComponent(entity, {
                 type: "asset",
                 asset: asset
             });
             application.context.root.addChild(entity);
-
-            var model = modelComponent.model;
 
             var gd = application.context.graphicsDevice;
 

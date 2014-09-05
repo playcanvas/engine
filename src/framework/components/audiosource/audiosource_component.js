@@ -28,7 +28,7 @@ pc.extend(pc.fw, function () {
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
     };
     AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.fw.Component);
-
+        
     pc.extend(AudioSourceComponent.prototype, {
        /**
         * @function
@@ -47,7 +47,7 @@ pc.extend(pc.fw, function () {
             }
 
             var channel;
-            var componentData = this.data;
+            var componentData = this.data;            
             if(componentData.sources[name]) {
                 if (!componentData.sources[name].isLoaded) {
                     logWARNING(pc.string.format("Audio asset '{0}' is not loaded (probably an unsupported format) and will not be played", name));
@@ -65,7 +65,7 @@ pc.extend(pc.fw, function () {
                 }
             }
         },
-
+        
         /**
         * @function
         * @name pc.fw.AudioSourceComponent#pause
@@ -73,7 +73,7 @@ pc.extend(pc.fw, function () {
         */
         pause: function() {
             if (this.channel) {
-                this.channel.pause();
+                this.channel.pause();    
             }
         },
 
@@ -99,12 +99,12 @@ pc.extend(pc.fw, function () {
                 this.channel = null;
             }
         },
-
+            
         onSetAssets: function (name, oldValue, newValue) {
             var componentData = this.data;
             var newAssets = [];
             var i, len = newValue.length;
-
+            
             if (len) {
                 for(i = 0; i < len; i++) {
                     if (oldValue.indexOf(newValue[i]) < 0) {
@@ -112,12 +112,12 @@ pc.extend(pc.fw, function () {
                     }
                 }
             }
-
+            
             if(!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
                 this.loadAudioSourceAssets(newAssets);
             }
         },
-
+        
         onSetLoop: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
                 if (this.channel) {
@@ -149,7 +149,7 @@ pc.extend(pc.fw, function () {
                 }
             }
         },
-
+        
         onSetMinDistance: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
                 if (this.channel instanceof pc.audio.Channel3d) {
@@ -179,60 +179,43 @@ pc.extend(pc.fw, function () {
             AudioSourceComponent._super.onDisable.call(this);
             this.pause();
         },
-
+         
         loadAudioSourceAssets: function (guids) {
             var options = {
                 parent: this.entity.getRequest()
             };
-
+            
             var assets = guids.map(function (guid) {
                 return this.system.context.assets.getAssetByResourceId(guid);
             }, this);
 
             var requests = [];
             var names = [];
-            var sources = {};
-
-            var currentSource = null;
-
+            
             assets.forEach(function (asset) {
                 if (!asset) {
                     logERROR(pc.string.format('Trying to load audiosource component before assets {0} are loaded', guids));
                 } else {
-                    // set the current source to the first entry (before calling set, so that it can play if needed)
-                    currentSource = currentSource || asset.name;
-
-                    if (asset.resource) {
-                        sources[asset.name] = asset.resource;
-                    } else {
-                        requests.push(new pc.resources.AudioRequest(asset.getFileUrl()));
-                        names.push(asset.name);
-                    }
+                    requests.push(new pc.resources.AudioRequest(asset.getFileUrl()));
+                    names.push(asset.name);                    
                 }
             });
 
-            if (requests.length) {
-                this.system.context.loader.request(requests, options).then(function (audioResources) {
-                    for (var i = 0; i < requests.length; i++) {
-                        sources[names[i]] = audioResources[i];
-                    }
-
-                    this.data.sources = sources;
-                    this.data.currentSource = currentSource;
-
-                    if (!options.parent && this.activate && currentSource) {
-                        this.play(currentSource);
-                    }
-                }.bind(this));
-            } else {
-                this.data.sources = sources;
-                this.data.currentSource = currentSource;
-
-                if (this.activate && currentSource) {
-                    this.play(currentSource);
+            this.system.context.loader.request(requests, options).then(function (audioResources) {
+                var sources = {};
+                for (var i = 0; i < requests.length; i++) {
+                    sources[names[i]] = audioResources[i];
                 }
-            }
+                // set the current source to the first entry (before calling set, so that it can play if needed)
+                if(names.length) {
+                    this.data.currentSource = names[0];
+                }
+                this.data.sources = sources;
 
+                if (!options.parent && this.activate) {
+                    this.play(names[0]);
+                }
+            }.bind(this));
         }
     });
 
