@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.154.2
+--------
+* [FIX] Picking for skinned meshes.
+* [FIX] pc.fw.Entity#clone is now synchronous.
+
+--------
 v0.154.1
 --------
 * [FIX] Phong shader generation where there are no lights enabled.
