@@ -121,6 +121,8 @@ pc.extend(pc.scene, function () {
         var device = this.device;
         var scope = device.scope;
         var modelMatrixId = scope.resolve('matrix_model');
+        var boneTextureId = scope.resolve('texture_poseMap');
+        var boneTextureSizeId = scope.resolve('texture_poseMapSize');
         var poseMatrixId = scope.resolve('matrix_pose[0]');
         var pickColorId = scope.resolve('uColor');
         var projId = scope.resolve('matrix_projection');
@@ -144,7 +146,14 @@ pc.extend(pc.scene, function () {
                 if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP) || (type === pc.gfx.PRIMITIVE_TRIFAN)) {
                     modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                     if (meshInstance.skinInstance) {
-                        poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
+                        if (device.supportsBoneTextures) {
+                            boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
+                            var w = meshInstance.skinInstance.boneTexture.width;
+                            var h = meshInstance.skinInstance.boneTexture.height;
+                            boneTextureSizeId.setValue([w, h])
+                        } else {
+                            poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                        }
                     }
 
                     this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;
