@@ -1044,12 +1044,18 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            this.system.context.assets.load(asset, [], options).then(function (resources) {
-                var model = resources[0];
-                data.model = model;
+            // check if asset is cached
+            if (asset.resource) {
+                data.model = asset.resource;
                 this.doRecreatePhysicalShape(component);
-
-            }.bind(this));
+            } else {
+                // load asset asynchronously
+                this.system.context.assets.load(asset, [], options).then(function (resources) {
+                    var model = resources[0];
+                    data.model = model;
+                    this.doRecreatePhysicalShape(component);
+                }.bind(this));
+            }
         },
 
         doRecreatePhysicalShape: function (component) {

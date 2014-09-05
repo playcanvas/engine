@@ -351,17 +351,17 @@ test("set new scripts reinitializes instances", function () {
 
         // check that script methods were called
         // in the right order
-        function test1 (array) {
-            equal(array.length, 5);
-            equal(array[0], 'initialize');
-            equal(array[1], 'onEnable');
-            equal(array[2], 'postInitialize');
-            equal(array[3], 'update');
-            equal(array[4], 'postUpdate');
+        function test1 (array, length, startIndex) {
+            equal(array.length, length);
+            equal(array[startIndex], 'initialize');
+            equal(array[startIndex + 1], 'onEnable');
+            equal(array[startIndex + 2], 'postInitialize');
+            equal(array[startIndex + 3], 'update');
+            equal(array[startIndex + 4], 'postUpdate');
         }
 
-        test1(e.methodsByA);
-        test1(e.methodsByB);
+        test1(e.methodsByA, 5, 0);
+        test1(e.methodsByB, 5, 0);
 
         // change order
         e.script.scripts = [{
@@ -377,19 +377,45 @@ test("set new scripts reinitializes instances", function () {
         equal(e.methodsByB[5], 'onDisable');
         equal(e.methodsByB[6], 'destroy');
 
-        // reset test arrays
-        e.methodsByA.length = 0;
-        e.methodsByB.length = 0;
+        pc.fw.ComponentSystem.update(0.1, context);
+        pc.fw.ComponentSystem.postUpdate(0.1, context);
 
-        setTimeout(function () {
-            pc.fw.ComponentSystem.update(0.1, context);
-            pc.fw.ComponentSystem.postUpdate(0.1, context);
+        test1(e.methodsByB, 12, 7);
+        test1(e.methodsByA, 12, 7);
+        start();
 
-            test1(e.methodsByB);
-            test1(e.methodsByA);
-            start();
-        }, 500);
+    }, 500);
 
+    stop();
+});
+
+test("Clone entity initializes scripts synchronously", function () {
+    var e = new pc.fw.Entity();
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    sc.addComponent(e, {
+        scripts: [{
+            url: 'scripts/events.js',
+            name: 'events',
+            attributes: [{
+                type: 'number',
+                name: 'attr',
+                value: 1
+            }]
+        },
+        // add a regular URL as well to make sure that this also works synchronously
+        {
+            url: 'http://localhost/engine/tests/framework/scripts/regular.js'
+        }]
+    })
+
+    setTimeout(function () {
+        equal(!!e.script.events, true)
+
+        var clone = e.clone();
+        equal(!!clone.script.events, true)
+
+        start();
     }, 500);
 
     stop();

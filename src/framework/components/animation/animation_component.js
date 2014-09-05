@@ -25,11 +25,11 @@ pc.extend(pc.fw, function () {
 
     pc.extend(AnimationComponent.prototype, {
         /**
-         * @function 
+         * @function
          * @name pc.fw.AnimationComponent#play
          * @description Start playing an animation
          * @param {String} name The name of the animation asset to begin playing.
-         * @param {Number} [blendTime] The time in seconds to blend from the current 
+         * @param {Number} [blendTime] The time in seconds to blend from the current
          * animation state to the start of the animation being set.
          */
         play: function (name, blendTime) {
@@ -43,7 +43,7 @@ pc.extend(pc.fw, function () {
             }
 
             blendTime = blendTime || 0;
-            
+
             var data = this.data;
 
             data.prevAnim = data.currAnim;
@@ -52,7 +52,7 @@ pc.extend(pc.fw, function () {
             if (data.model) {
                 data.blending = blendTime > 0;
                 if (data.blending) {
-                    // Blend from the current time of the current animation to the start of 
+                    // Blend from the current time of the current animation to the start of
                     // the newly specified animation over the specified blend time period.
                     data.blendTime = blendTime;
                     data.blendTimeRemaining = blendTime;
@@ -77,7 +77,7 @@ pc.extend(pc.fw, function () {
         getAnimation: function (name) {
             return this.data.animations[name];
         },
-        
+
         setModel: function (model) {
             var data = this.data;
             if (model) {
@@ -101,7 +101,7 @@ pc.extend(pc.fw, function () {
             if (!guids || !guids.length) {
                 return;
             }
-            
+
             var options = {
                 parent: this.entity.getRequest()
             };
@@ -110,23 +110,37 @@ pc.extend(pc.fw, function () {
                 return this.system.context.assets.getAssetByResourceId(guid);
             }, this);
 
+            var animations = {};
+
             var names = [];
-            var requests = assets.map(function (asset) {
+            var requests = [];
+
+            for (var i=0, len=assets.length; i<len; i++) {
+                var asset = assets[i];
                 if (!asset) {
                     logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', guids));
                 } else {
-                    names.push(asset.name);
-                    return new pc.resources.AnimationRequest(asset.getFileUrl());    
+                    // if the asset is in the cache try to load it synchronously
+                    if (asset.resource) {
+                        animations[asset.name] = asset.resource;
+                    } else {
+                        // otherwise create an async request
+                        names.push(asset.name);
+                        requests.push(new pc.resources.AnimationRequest(asset.getFileUrl()));
+                    }
                 }
-            });
+            }
 
-            this.system.context.loader.request(requests, options).then(function (animResources) {
-                var animations = {};
-                for (var i = 0; i < requests.length; i++) {
-                    animations[names[i]] = animResources[i];
-                }
+            if (requests.length) {
+                this.system.context.loader.request(requests, options).then(function (animResources) {
+                    for (var i = 0; i < requests.length; i++) {
+                        animations[names[i]] = animResources[i];
+                    }
+                    this.animations = animations;
+                }.bind(this));
+            } else {
                 this.animations = animations;
-            }.bind(this));
+            }
         },
 
         onSetAnimations: function (name, oldValue, newValue) {
@@ -152,12 +166,12 @@ pc.extend(pc.fw, function () {
         onSetAssets: function (name, oldValue, newValue) {
             this.loadAnimationAssets(newValue);
         },
-        
+
         onSetLoop: function (name, oldValue, newValue) {
             if (this.data.skeleton) {
                 this.data.skeleton.setLooping(this.data.loop);
             }
-        }, 
+        },
 
         onSetCurrentTime: function (name, oldValue, newValue) {
             this.data.skeleton.setCurrentTime(newValue);
@@ -167,7 +181,7 @@ pc.extend(pc.fw, function () {
 
         onEnable: function () {
             AnimationComponent._super.onEnable.call(this);
-            if ( this.data.activate && 
+            if ( this.data.activate &&
                  !this.data.currAnim) {
 
                 for (var animName in this.data.animations) {
@@ -191,7 +205,7 @@ pc.extend(pc.fw, function () {
             set: function (currentTime) {
                 this.data.skeleton.setCurrentTime(currentTime);
                 this.data.skeleton.addTime(0);
-                this.data.skeleton.updateGraph();                
+                this.data.skeleton.updateGraph();
             }
         },
 
