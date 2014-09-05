@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.154.3
+--------
+* [FIX] Backed out synchronous-clone branch until we fix a bug related to skyboxes.
+
+--------
 v0.154.2
 --------
 * [FIX] Picking for skinned meshes.
@@ -16,7 +21,7 @@ v0.154.1
 --------
 v0.154.0
 --------
-* [FIX] Shadows for orthographic cameras. 
+* [FIX] Shadows for orthographic cameras.
 * Removed all dynamic allocations for directional shadow casting lights.
 * Added LINELOOP and TRIFAN graphics primitives.
 * Disable blending for post effect quad rendering.
