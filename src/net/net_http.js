@@ -5,12 +5,12 @@
 pc.extend(pc.net, function () {
     var Http = function Http() {
     };
-    
+
     /**
      * @private
      * @enum {String}
      * @name pc.net.http.ContentType
-     * @description An enum of the most common content types 
+     * @description An enum of the most common content types
      */
      Http.ContentType = {
         FORM_URLENCODED : "application/x-www-form-urlencoded",
@@ -25,27 +25,27 @@ pc.extend(pc.net, function () {
         MP3 : "audio/mpeg",
         BIN : "application/octet-stream"
     };
-    
+
     Http.ResponseType = {
         TEXT: 'text',
         ARRAY_BUFFER: 'arraybuffer',
         BLOB: 'blob',
         DOCUMENT: 'document'
     };
-    
+
     Http.binaryExtensions = [
         '.model',
         '.wav',
         '.ogg',
         '.mp3'
     ];
-    
+
     Http.prototype = {
-        
+
         ContentType: Http.ContentType,
         ResponseType: Http.ResponseType,
         binaryExtensions: Http.binaryExtensions,
-        
+
         /**
          * @function
          * @name pc.net.http.get
@@ -67,7 +67,7 @@ pc.extend(pc.net, function () {
                 q = u.getQuery();
                 q = pc.extend(q, options.params);
                 u.setQuery(q);
-                url = u.toString();                
+                url = u.toString();
             }*/
             return this.request("GET", url, options, xhr);
         },
@@ -111,7 +111,7 @@ pc.extend(pc.net, function () {
             options.postdata = data;
             return this.request("PUT", url, options, xhr);
         },
-        
+
         /**
          * @function
          * @name pc.net.http.del
@@ -144,9 +144,9 @@ pc.extend(pc.net, function () {
         request: function (method, url, options, xhr) {
             var uri, query, timestamp, postdata;
             var errored = false;
-            
+
             options = options || {};
-            
+
             // fill in dummy implementations of success, error to simplify callbacks later
             if (options.success == null) {
                 options.success = function (){};
@@ -160,7 +160,7 @@ pc.extend(pc.net, function () {
             if (options.headers == null) {
                 options.headers = {};
             }
-            
+
             if (options.postdata != null) {
                 if (options.postdata instanceof Document) {
                     // It's an XML document, so we can send it directly.
@@ -180,10 +180,10 @@ pc.extend(pc.net, function () {
                     }
                     switch(contentType) {
                         case Http.ContentType.FORM_URLENCODED:
-                            // Normal URL encoded form data 
+                            // Normal URL encoded form data
                             postdata = "";
                             var bFirstItem = true;
-                            
+
                             // Loop round each entry in the map and encode them into the post data
                             for (var key in options.postdata) {
                                 if (options.postdata.hasOwnProperty(key)) {
@@ -210,11 +210,11 @@ pc.extend(pc.net, function () {
                     postdata = options.postdata;
                 }
             }
-            
+
             if (!xhr) {
                 xhr = new XMLHttpRequest();
             }
-                
+
             if (options.cache === false) {
                 // Add timestamp to url to prevent browser caching file
                 timestamp = pc.time.now();
@@ -228,18 +228,18 @@ pc.extend(pc.net, function () {
                 }
                 url = uri.toString();
             }
-            
+
             if (options.query) {
                 uri = new pc.URI(url);
                 query = pc.extend(uri.getQuery(), options.query);
                 uri.setQuery(query);
                 url = uri.toString();
             }
-            
+
             xhr.open(method, url, options.async);
             xhr.withCredentials = true;
             xhr.responseType = options.responseType || this.guessResponseType(url);
-            
+
             // Set the http headers
             for (var header in options.headers) {
                 if (options.headers.hasOwnProperty(header)) {
@@ -250,12 +250,12 @@ pc.extend(pc.net, function () {
             xhr.onreadystatechange = function () {
                 this.onReadyStateChange(method, url, options, xhr);
             }.bind(this);
-            
+
             xhr.onerror = function () {
                 this.onError(method, url, options, xhr);
                 errored = true;
             }.bind(this);
-            
+
             try {
                 xhr.send(postdata);
             }
@@ -266,36 +266,41 @@ pc.extend(pc.net, function () {
                     options.error(xhr.status, xhr, e);
                 }
             }
-            
+
             // Return the request object as it can be handy for blocking calls
             return xhr;
         },
-        
+
         guessResponseType: function (url) {
             var uri = new pc.URI(url);
             var ext = pc.path.getExtension(uri.path);
-            
+
             if(Http.binaryExtensions.indexOf(ext) >= 0) {
                 return Http.ResponseType.ARRAY_BUFFER;
             }
-            
+
             return Http.ResponseType.TEXT;
         },
-        
+
         isBinaryContentType: function (contentType) {
             var binTypes = [Http.ContentType.WAV, Http.ContentType.OGG, Http.ContentType.MP3, Http.ContentType.BIN];
             if (binTypes.indexOf(contentType) >= 0) {
                 return true;
             }
 
-            return false;            
+            return false;
         },
-        
+
         onReadyStateChange: function (method, url, options, xhr) {
             if (xhr.readyState === 4) {
                 switch (xhr.status) {
                     case 0: {
-                        // Request didn't complete, possibly an exception or attempt to do cross-domain request
+                        // If this is a local resource then continue (IOS) otherwise the request
+                        // didn't complete, possibly an exception or attempt to do cross-domain request
+                        if (url[0] != '/') {
+                            this.onSuccess(method, url, options, xhr);
+                        }
+
                         break;
                     }
                     case 200:
@@ -313,7 +318,7 @@ pc.extend(pc.net, function () {
                 }
             }
         },
-        
+
         onSuccess: function (method, url, options, xhr) {
             var response;
             var header;
@@ -321,7 +326,7 @@ pc.extend(pc.net, function () {
             var parameter;
             var parts;
             header = xhr.getResponseHeader("Content-Type");
-            if (header) { 
+            if (header) {
                 // Split up header into content type and parameter
                 parts = header.split(";");
                 contentType = parts[0].trim();
@@ -351,12 +356,12 @@ pc.extend(pc.net, function () {
             }
             options.success(response, xhr.status, xhr);
         },
-        
+
         onError: function (method, url, options, xhr) {
             options.error(xhr.status, xhr, null);
         }
     };
-    
+
     Http.prototype.delete_ = Http.prototype.del;
 
     return {
