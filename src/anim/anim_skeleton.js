@@ -39,7 +39,7 @@ pc.extend(pc.anim, function () {
         this.graph = null;
 
         var self = this;
-        
+
         function addInterpolatedKeys(node) {
             var name = node.getName();
             var interpKey = new InterpolatedKey();
@@ -60,9 +60,9 @@ pc.extend(pc.anim, function () {
     /**
      * @function
      * @name pc.anim.Skeleton#addTime
-     * @description Progresses the animation assigned to the specified skeleton by the 
-     * supplied time delta. If the delta takes the animation passed its end point, if 
-     * the skeleton is set to loop, the animation will continue from the beginning. 
+     * @description Progresses the animation assigned to the specified skeleton by the
+     * supplied time delta. If the delta takes the animation passed its end point, if
+     * the skeleton is set to loop, the animation will continue from the beginning.
      * Otherwise, the animation's current time will remain at its duration (i.e. the
      * end).
      * @param {Number} delta The time in seconds to progress the skeleton's animation.
@@ -91,9 +91,21 @@ pc.extend(pc.anim, function () {
                     nodeName = node._name;
                     this._currKeyIndices[nodeName] = 0;
                 }
+            } else if (this._time < 0) {
+                this._time = this.looping ? duration : 0.0;
+                for (i = 0; i < nodes.length; i++) {
+                    node = nodes[i];
+                    nodeName = node._name;
+                    this._currKeyIndices[nodeName] = node._keys.length - 2;
+                }
             }
 
+
             // For each animated node...
+
+            // keys index offset
+            var offset = (delta > 0 ? 1 : -1);
+
             for (i = 0; i < nodes.length; i++) {
                 node = nodes[i];
                 nodeName = node._name;
@@ -109,7 +121,7 @@ pc.extend(pc.anim, function () {
                     interpKey._scale(keys[0].scale);
                 } else {
                     // Otherwise, find the keyframe pair for this node
-                    for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1; currKeyIndex++) {
+                    for (var currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length-1 && currKeyIndex >= 0; currKeyIndex += offset) {
                         k1 = keys[currKeyIndex];
                         k2 = keys[currKeyIndex + 1];
 
@@ -122,7 +134,7 @@ pc.extend(pc.anim, function () {
                             interpKey._written = true;
 
                             this._currKeyIndices[nodeName] = currKeyIndex;
-                            continue;
+                            break;
                         }
                     }
                 }
@@ -166,7 +178,7 @@ pc.extend(pc.anim, function () {
             }
         }
     };
-    
+
     /**
      * @function
      * @name pc.anim.Skeleton#getAnimation
@@ -182,7 +194,7 @@ pc.extend(pc.anim, function () {
      * @function
      * @name pc.anim.Skeleton#getCurrentTime
      * @description Returns the current time of the currently active animation as set on
-     * the specified skeleton. This value will be between zero and the duration of the 
+     * the specified skeleton. This value will be between zero and the duration of the
      * animation.
      * @returns {Number} The current time of the animation set on the skeleton.
      * @author Will Eastcott
@@ -195,7 +207,7 @@ pc.extend(pc.anim, function () {
      * @function
      * @name pc.anim.Skeleton#setCurrentTime
      * @description Sets the current time of the currently active animation as set on
-     * the specified skeleton. This value must be between zero and the duration of the 
+     * the specified skeleton. This value must be between zero and the duration of the
      * animation.
      * @param {Number} time The current time of the animation set on the skeleton.
      * @author Will Eastcott
@@ -223,7 +235,7 @@ pc.extend(pc.anim, function () {
     Skeleton.prototype.getNumNodes = function () {
         return this._interpolatedKeys.length;
     };
-    
+
     /**
      * @function
      * @name pc.anim.Skeleton#setAnimation
@@ -235,7 +247,7 @@ pc.extend(pc.anim, function () {
         this._animation = animation;
         this.setCurrentTime(0);
     };
-    
+
     /**
      * @function
      * @name pc.anim.Skeleton#setGraph
@@ -316,5 +328,5 @@ pc.extend(pc.anim, function () {
 
     return {
         Skeleton: Skeleton
-    }; 
+    };
 }());
