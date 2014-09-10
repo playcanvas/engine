@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.154.5
+--------
+* [FIX] Negative speed for animations now works as expected.
+
+--------
 v0.154.4
 --------
 * [FIX] Do not abort XHR requests with status 0 when downloading local files.
