@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.154.6
+--------
+* Can now reorder Entities or insert them at specific indices in a parent's child list.
+
+--------
 v0.154.5
 --------
 * [FIX] Negative speed for animations now works as expected.
