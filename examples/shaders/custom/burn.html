@@ -90,6 +90,7 @@
         var model, asset, heightMap;
         var url = "../../assets/statue/Statue_1.json";
         application.context.assets.loadFromUrl(url, "model").then(function (results) {
+            model = results.resource;
             asset = results.asset;
             return application.context.assets.loadFromUrl('../../assets/clouds.jpg', 'texture');
         }).then(function (results) {
@@ -97,13 +98,11 @@
 
             entity = new pc.fw.Entity();
             entity.rotateLocal(0,0,0);
-            var modelComponent = application.context.systems.model.addComponent(entity, {
+            application.context.systems.model.addComponent(entity, {
                 type: "asset",
                 asset: asset
             });
             application.context.root.addChild(entity);
-
-            model = modelComponent.model;
 
             var gd = application.context.graphicsDevice;
             gd.setBlending(true);

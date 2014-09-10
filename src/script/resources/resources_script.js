@@ -33,16 +33,14 @@ pc.extend(pc.resources, function () {
         options.cache = true; // For cache-busting off, so that script debugging works
 
         var promise = new pc.promise.Promise(function (resolve, reject) {
-            var url = request.canonical;
-
-            var processedUrl = url;
+            var processedUrl = request.canonical;
             if( !options.cache ) {
                 processedUrl = this._appendTimestampToUrl(processedUrl);
             }
 
-            var processedUrl = new pc.URI(processedUrl);
-            processedUrl.path = pc.path.join(this._prefix, processedUrl.path);
-            processedUrl = processedUrl.toString();
+            var url = new pc.URI(processedUrl);
+            url.path = pc.path.join(this._prefix, url.path);
+            url = url.toString();
 
             if(this._loaded[url]) {
                 if (this._loaded[url] !== true) {
@@ -54,13 +52,12 @@ pc.extend(pc.resources, function () {
             } else {
                 if (this._loading) {
                     this._queue.push({
-                        url: processedUrl,
-                        canonicalUrl: url,
+                        url: url.toString(),
                         success: resolve,
                         error: reject
                     });
                 } else {
-                    this._addScriptTag(processedUrl, url, resolve, reject);
+                    this._addScriptTag(url.toString(), resolve, reject);
                 }
             }
 
@@ -89,7 +86,7 @@ pc.extend(pc.resources, function () {
     * @returns The new url
     */
     ScriptResourceHandler.prototype._appendTimestampToUrl = function( url ) {
-        timestamp = Date.now();
+        timestamp = pc.time.now();
 
         uri = new pc.URI(url);
         if (!uri.query) {
@@ -122,7 +119,7 @@ pc.extend(pc.resources, function () {
      * @description Add a new script tag to the document.head and set it's src to load a new script.
      * Handle success and errors and load the next in the queue
      */
-    ScriptResourceHandler.prototype._addScriptTag = function (url, canonicalUrl, success, error) {
+    ScriptResourceHandler.prototype._addScriptTag = function (url, success, error) {
         var self = this;
         var head = document.getElementsByTagName("head")[0];
         var element = document.createElement("script");
@@ -143,25 +140,19 @@ pc.extend(pc.resources, function () {
                         throw Error("Attribute _pcScriptName is reserved on ScriptTypes for ResourceLoader use");
                     }
                     ScriptType._pcScriptName = script.name; // sotre name in script object
-                    self._loaded[canonicalUrl] = ScriptType; //{name: script.name, ScriptType: ScriptType};
-                    // add the script to the resource loader's cache
-                    self._loader.registerHash(canonicalUrl, canonicalUrl);
-                    self._loader.addToCache(canonicalUrl, ScriptType);
+                    self._loaded[url] = ScriptType; //{name: script.name, ScriptType: ScriptType};
                     success(ScriptType);
                 } else {
-                    // loaded a regular javascript script, so no ScriptType to instantiate.
+                    // loaded a regular javascript script, so no ScriptType to instanciate.
                     // However, we still need to register that we've loaded it in case there is a timeout
-                    self._loaded[canonicalUrl] = true;
-                    // add 'true' to the resource loader's cache
-                    self._loader.registerHash(canonicalUrl, canonicalUrl);
-                    self._loader.addToCache(canonicalUrl, true);
+                    self._loaded[url] = true;
                     success(null);
                 }
                 self._loading = null;
                 // Load next one in the queue
                 if (self._queue.length) {
                    var loadable = self._queue.shift();
-                   self._addScriptTag(loadable.url, loadable.canonicalUrl, loadable.success, loadable.error);
+                   self._addScriptTag(loadable.url, loadable.success, loadable.error);
                 }
             }
         };
