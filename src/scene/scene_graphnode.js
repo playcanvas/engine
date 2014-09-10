@@ -527,14 +527,19 @@ pc.extend(pc.scene, function () {
          * @name pc.scene.GraphNode#reparent
          * @description Remove graph node from current parent and add as child to new parent
          * @param {pc.scene.GraphNode} parent New parent to attach graph node to
+         * @param {Number} index (optional) The child index where the child node should be placed.
          */
-        reparent: function (parent) {
+        reparent: function (parent, index) {
             var current = this.getParent();
             if (current) {
                 current.removeChild(this);
             }
             if (parent) {
-                parent.addChild(this);
+                if (index >= 0) {
+                    parent.insertChild(this, index);
+                } else {
+                    parent.addChild(this);
+                }
             }
         },
 
@@ -824,6 +829,29 @@ pc.extend(pc.scene, function () {
             }
 
             this._children.push(node);
+            this._onInsertChild(node);
+        },
+
+        /**
+         * @function
+         * @name pc.scene.GraphNode#insertChild
+         * @description Insert a new child to the child list at the specified index and update the parent value of the child node
+         * @param {pc.scene.GraphNode} node The new child to insert
+         * @param {Number} index The index in the child list of the parent where the new node will be inserted
+         * @example
+         * var e = new pc.fw.Entity();
+         * this.entity.insertChild(e, 1);
+         */
+        insertChild: function (node, index) {
+            if (node.getParent() !== null) {
+                throw new Error("GraphNode is already parented");
+            }
+
+            this._children.splice(index, 0, node);
+            this._onInsertChild(node);
+        },
+
+        _onInsertChild: function (node) {
             node._parent = this;
 
             // the child node should be enabled in the hierarchy only if itself is enabled and if

@@ -705,8 +705,7 @@ pc.extend(pc.fw, function () {
         _linkReparentEntity: function (guid, parentId, index) {
             var entity = this.context.root.findByGuid(guid);
             var parent = this.context.root.findByGuid(parentId);
-            // TODO: use index to insert child into child list
-            entity.reparent(parent);
+            entity.reparent(parent, index);
         },
 
         /**
