@@ -10,7 +10,7 @@ pc.extend(pc.gfx, function () {
      * @property {Number} magFilter The magnification filter to be applied to the texture (see pc.gfx.FILTER_*).
      * @property {Number} addressU The addressing mode to be applied to the texture (see pc.gfx.ADDRESS_*).
      * @property {Number} addressV The addressing mode to be applied to the texture (see pc.gfx.ADDRESS_*).
-     * @property {Number} maxAnisotropy Integer value specifying the level of anisotropic to apply to the texture 
+     * @property {Number} maxAnisotropy Integer value specifying the level of anisotropic to apply to the texture
      * ranging from 1 (no anisotropic filtering) to the pc.gfx.Device property maxSupportedMaxAnisotropy.
      * @property {Number} width [Read only] The width of the based mip level in pixels.
      * @property {Number} height [Read only] The height of the based mip level in pixels.
@@ -169,7 +169,7 @@ pc.extend(pc.gfx, function () {
 
     Object.defineProperty(Texture.prototype, 'magFilter', {
         get: function() { return this._magFilter; },
-        set: function(magFilter) { 
+        set: function(magFilter) {
             if (!((magFilter === pc.gfx.FILTER_NEAREST) || (magFilter === pc.gfx.FILTER_LINEAR)))  {
                 logWARNING("Invalid maginication filter mode. Must be set to FILTER_NEAREST or FILTER_LINEAR.");
             }
@@ -357,7 +357,7 @@ pc.extend(pc.gfx, function () {
                 var requests = src.map(function (url) {
                     return new pc.resources.ImageRequest(url);
                 });
-                
+
                 loader.request(requests).then(function (resources) {
                     this.setSource(resources);
                 }.bind(this));
@@ -388,8 +388,8 @@ pc.extend(pc.gfx, function () {
                 var width = source[0].width;
                 var height = source[0].height;
                 for (var i = 0; i < 6; i++) {
-                    if ((source[i] instanceof HTMLCanvasElement) || 
-                        (source[i] instanceof HTMLImageElement) || 
+                    if ((source[i] instanceof HTMLCanvasElement) ||
+                        (source[i] instanceof HTMLImageElement) ||
                         (source[i] instanceof HTMLVideoElement)) {
                         validTypes++;
                     }
@@ -405,7 +405,7 @@ pc.extend(pc.gfx, function () {
                 this._levels[0] = source;
             } else {
                 // Check a valid source has been passed in
-                logASSERT((source instanceof HTMLCanvasElement) || (source instanceof HTMLImageElement) || (source instanceof HTMLVideoElement), 
+                logASSERT((source instanceof HTMLCanvasElement) || (source instanceof HTMLImageElement) || (source instanceof HTMLVideoElement),
                     "pc.gfx.Texture: setSource: supplied source is not an instance of HTMLCanvasElement, HTMLImageElement or HTMLVideoElement.");
 
                 this._width  = source.width;
@@ -419,6 +419,17 @@ pc.extend(pc.gfx, function () {
             this.magFilter = this._magFilter;
             this.addressu = this._addressu;
             this.addressv = this._addressv;
+        },
+
+        /**
+         * @function
+         * @name pc.gfx.Texture#getSource
+         * @description Get the pixel data of the texture. If this is a cubemap then an array of 6 images will be returned otherwise
+         * a single image.
+         * @return {Image} The source image of this texture.
+         */
+        getSource: function () {
+            return this._levels[0];
         },
 
         /**
@@ -439,7 +450,7 @@ pc.extend(pc.gfx, function () {
          * @name pc.gfx.Texture#upload
          * @description Forces a reupload of the textures pixel data to graphics memory. Ordinarily, this function
          * is called by internally by pc.gfx.Texture#setSource and pc.gfx.Texture#unlock. However, it still needs to
-         * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally, 
+         * be called explicitly in the case where an HTMLVideoElement is set as the source of the texture.  Normally,
          * this is done once every frame before video textured geometry is rendered.
          */
         upload: function () {

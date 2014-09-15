@@ -1,7 +1,9 @@
 pc.script.create("test_order_b", function(context) {
     var Test_order_b = function (entity) {
         this.entity = entity;
-        this.entity.methodsByB = [];
+        if (!this.entity.methodsByB) {
+            this.entity.methodsByB = [];
+        }
     };
 
     Test_order_b.prototype = {
