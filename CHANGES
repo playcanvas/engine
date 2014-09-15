@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.155.0
+--------
+* pc.fw.Entity#clone is now synchronous
+
+--------
 v0.154.6
 --------
 * Can now reorder Entities or insert them at specific indices in a parent's child list.
