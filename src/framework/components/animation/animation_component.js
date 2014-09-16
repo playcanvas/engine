@@ -11,7 +11,7 @@ pc.extend(pc.fw, function () {
     * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
     * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
     * @property {Boolean} activate If true the first animation asset will begin playing when the Pack is loaded
-    * @property {String[]} assets The array of animation assets
+    * @property {Number[]} assets The array of animation assets
     */
     var AnimationComponent = function (system, entity) {
         // Handle changes to the 'animations' value
@@ -97,8 +97,8 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        loadAnimationAssets: function (guids) {
-            if (!guids || !guids.length) {
+        loadAnimationAssets: function (ids) {
+            if (!ids || !ids.length) {
                 return;
             }
 
@@ -106,8 +106,8 @@ pc.extend(pc.fw, function () {
                 parent: this.entity.getRequest()
             };
 
-            var assets = guids.map(function (guid) {
-                return this.system.context.assets.getAssetByResourceId(guid);
+            var assets = ids.map(function (id) {
+                return this.system.context.assets.getAssetById(id);
             }, this);
 
             var animations = {};
@@ -118,7 +118,7 @@ pc.extend(pc.fw, function () {
             for (var i=0, len=assets.length; i<len; i++) {
                 var asset = assets[i];
                 if (!asset) {
-                    logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', guids));
+                    logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', ids));
                 } else {
                     // if the asset is in the cache try to load it synchronously
                     if (asset.resource) {

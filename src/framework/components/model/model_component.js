@@ -17,10 +17,10 @@ pc.extend(pc.fw, function () {
      *     <li>sphere: The component will render a sphere</li>
      * </ul>
      * @property {Boolean} enabled Enable or disable rendering of the Model
-     * @property {String} asset The GUID of the asset for the model (only applies to models of type 'asset')
+     * @property {Number} asset The id of the asset for the model (only applies to models of type 'asset')
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
-     * @property {String} materialAsset The material {@link pc.Asset.Asset} that will be used to render the model (not used on models of type 'asset')
+     * @property {Number} materialAsset The material {@link pc.Asset.Asset} that will be used to render the model (not used on models of type 'asset')
      * @property {pc.scene.Model} model The model that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity)   {
@@ -46,14 +46,14 @@ pc.extend(pc.fw, function () {
             this.enabled = visible;
         },
 
-        loadModelAsset: function (guid) {
+        loadModelAsset: function (id) {
             var options = {
                 parent: this.entity.getRequest()
             };
 
-            var asset = this.system.context.assets.getAssetByResourceId(guid);
+            var asset = this.system.context.assets.getAssetById(id);
             if (!asset) {
-                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
+                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', id));
                 return;
             }
 
@@ -91,7 +91,7 @@ pc.extend(pc.fw, function () {
                 var mesh = null;
 
                 if (newValue === 'asset') {
-                    if (this.data.asset) {
+                    if (this.data.asset != null) {
                         this.loadModelAsset(this.data.asset);
                     } else {
                         this.model = null;
@@ -136,7 +136,7 @@ pc.extend(pc.fw, function () {
         onSetAsset: function (name, oldValue, newValue) {
             if (oldValue) {
                 // Remove old listener
-                var asset = this.system.context.assets.getAssetByResourceId(oldValue);
+                var asset = this.system.context.assets.getAssetById(oldValue);
                 if (asset) {
                     asset.off('change', this.onAssetChange, this);
                 }
@@ -145,8 +145,8 @@ pc.extend(pc.fw, function () {
             if (this.data.type === 'asset') {
                 if (newValue) {
                     if (newValue instanceof pc.asset.Asset) {
-                        this.data.asset = newValue.resourceId;
-                        this.loadModelAsset(newValue.resourceId);
+                        this.data.asset = newValue.id;
+                        this.loadModelAsset(newValue.id);
                     } else {
                         this.loadModelAsset(newValue);
                     }
@@ -208,14 +208,14 @@ pc.extend(pc.fw, function () {
         },
 
         setMaterialAsset: function (newValue) {
-            // if the type of the value is not a string assume it is an pc.Asset
-            var guid = typeof newValue === 'string' || !newValue ? newValue : newValue.resourceId;
+            // if the type of the value is not a number assume it is an pc.Asset
+            var id = typeof newValue === 'number' || !newValue ? newValue : newValue.id;
 
             var material;
 
             // try to load the material asset
-            if (guid) {
-                var asset = this.system.context.assets.getAssetByResourceId(guid);
+            if (id !== undefined && id !== null) {
+                var asset = this.system.context.assets.getAssetById(id);
                 if (asset) {
                     if (asset.resource) {
                         material = asset.resource;
@@ -228,11 +228,9 @@ pc.extend(pc.fw, function () {
                         }.bind(this))
                     }
                 } else {
-                    console.error(pc.string.format("Entity '{0}' is trying to load Material Asset {1} which no longer exists. Maybe this model was once a primitive shape?", this.entity.getName(), guid));
+                    console.error(pc.string.format("Entity '{0}' is trying to load Material Asset {1} which no longer exists. Maybe this model was once a primitive shape?", this.entity.getName(), id));
                 }
-
-
-            }
+                }
 
             // if no material asset was loaded then use the default material
             if (!material) {
@@ -242,12 +240,12 @@ pc.extend(pc.fw, function () {
             this.material = material;
 
             var oldValue = this.data.materialAsset;
-            this.data.materialAsset = guid;
-            this.fire('set', 'materialAsset', oldValue, guid);
+            this.data.materialAsset = id;
+            this.fire('set', 'materialAsset', oldValue, id);
         },
 
         getMaterialAsset: function () {
-            return this.system.context.assets.getAssetByResourceId(this.data.materialAsset);
+            return this.system.context.assets.getAssetById(this.data.materialAsset);
         },
 
         onSetMaterial: function (name, oldValue, newValue) {
@@ -308,7 +306,7 @@ pc.extend(pc.fw, function () {
             asset.resource = null;
             this.system.context.loader.removeFromCache(asset.getFileUrl());
             this.asset = null;
-            this.asset = asset.resourceId;
+            this.asset = asset.id;
         }
     });
 

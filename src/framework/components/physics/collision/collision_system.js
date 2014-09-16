@@ -1021,7 +1021,7 @@ pc.extend(pc.fw, function () {
         recreatePhysicalShapes: function (component) {
             var data = component.data;
 
-            if (data.asset) {
+            if (data.asset !== null) {
                 this.loadModelAsset(component);
             } else {
                 data.model = null;
@@ -1030,7 +1030,7 @@ pc.extend(pc.fw, function () {
         },
 
         loadModelAsset: function (component) {
-            var guid = component.data.asset;
+            var id = component.data.asset;
             var entity = component.entity;
             var data = component.data;
 
@@ -1038,9 +1038,9 @@ pc.extend(pc.fw, function () {
                 parent: entity.getRequest()
             };
 
-            var asset = this.system.context.assets.getAssetByResourceId(guid);
+            var asset = this.system.context.assets.getAssetById(id);
             if (!asset) {
-                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', guid));
+                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', id));
                 return;
             }
 

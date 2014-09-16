@@ -4,6 +4,10 @@
 */
 pc.asset = {};
 pc.extend(pc.asset, function () {
+
+    // auto incrementing number for asset ids
+    var assetIdCounter = -1;
+
     /**
     * @name pc.asset.Asset
     * @class An asset record of a file or data resource that can be loaded by the engine.
@@ -42,7 +46,7 @@ pc.extend(pc.asset, function () {
     var Asset = function (name, type, file, data, prefix) {
         var file, data, prefix; // optional arguments
 
-        this.resourceId = pc.guid.create();
+        this._id = ++assetIdCounter;
 
         this.name = arguments[0];
         this.type = arguments[1];
@@ -90,6 +94,20 @@ pc.extend(pc.asset, function () {
             return pc.path.join(prefix, url);
         }
     };
+
+
+    Object.defineProperty(Asset.prototype, 'id', {
+        get: function() {
+            return this._id;
+        },
+
+        set: function (value) {
+            this._id = value;
+            if (value > assetIdCounter) {
+                assetIdCounter = value;
+            }
+        }
+    });
 
     return {
         Asset: Asset,
