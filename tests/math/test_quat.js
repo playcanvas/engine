@@ -338,3 +338,33 @@ test("getEulerAngles", function () {
     QUnit.equal(e.y, 0);
     QUnit.equal(e.z, -90);
 });
+
+test("slerp: identical input quaternions", function () {
+    qr = new pc.Quat();
+    q1 = new pc.Quat();
+    q2 = new pc.Quat();
+
+    qr.slerp(q1, q2, 0);
+    QUnit.equal(qr.x, q1.x);
+    QUnit.equal(qr.y, q1.y);
+    QUnit.equal(qr.z, q1.z);
+    QUnit.equal(qr.w, q1.w);
+});
+
+test("slerp: different input quaternions", function () {
+    qr = new pc.Quat();
+    q1 = new pc.Quat().setFromEulerAngles(10, 20, 30);
+    q2 = new pc.Quat().setFromEulerAngles(40, 50, 60);
+
+    qr.slerp(q1, q2, 0);
+    QUnit.close(qr.x, q1.x, 0.0001);
+    QUnit.close(qr.y, q1.y, 0.0001);
+    QUnit.close(qr.z, q1.z, 0.0001);
+    QUnit.close(qr.w, q1.w, 0.0001);
+
+    qr.slerp(q1, q2, 1);
+    QUnit.close(qr.x, q2.x, 0.0001);
+    QUnit.close(qr.y, q2.y, 0.0001);
+    QUnit.close(qr.z, q2.z, 0.0001);
+    QUnit.close(qr.w, q2.w, 0.0001);
+});

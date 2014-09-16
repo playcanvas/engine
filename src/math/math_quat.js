@@ -541,47 +541,50 @@ pc.extend(pc, (function () {
          * result = new pc.Quat().slerp(q1, q2, 1);   // Return q2
          */
         slerp: function (lhs, rhs, alpha) {
-            var q1x, q1y, q1z, q1w, q2x, q2y, q2z, q2w,
-                omega, cosOmega, invSinOmega, flip, beta;
+            // Algorithm sourced from:
+            // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+            var lx, ly, lz, lw, rx, ry, rz, rw;
+            lx = lhs.x;
+            ly = lhs.y;
+            lz = lhs.z;
+            lw = lhs.w;
+            rx = rhs.x;
+            ry = rhs.y;
+            rz = rhs.z;
+            rw = rhs.w;
 
-            q1x = lhs.x;
-            q1y = lhs.y;
-            q1z = lhs.z;
-            q1w = lhs.w;
+            // Calculate angle between them.
+            var cosHalfTheta = lw * rw + lx * rx + ly * ry + lz * rz;
+            // If lhs == rhs or lhs == -rhs then theta == 0 and we can return lhs
+            if (Math.abs(cosHalfTheta) >= 1){
+                this.w = lw;
+                this.x = lx;
+                this.y = ly;
+                this.z = lz;
+                return this;
+            }
+            // Calculate temporary values.
+            var halfTheta = Math.acos(cosHalfTheta);
+            var sinHalfTheta = Math.sqrt(1 - cosHalfTheta * cosHalfTheta);
 
-            q2x = rhs.x;
-            q2y = rhs.y;
-            q2z = rhs.z;
-            q2w = rhs.w;
-
-            cosOmega = q1x * q2x + q1y * q2y + q1z * q2z + q1w * q2w;
-
-            // If B is on opposite hemisphere from A, use -B instead
-            flip = cosOmega < 0;
-            if (flip) {
-                cosOmega *= -1;
+            // If theta = 180 degrees then result is not fully defined
+            // we could rotate around any axis normal to qa or qb
+            if (Math.abs(sinHalfTheta) < 0.001) {
+                this.w = (lw * 0.5 + rw * 0.5);
+                this.x = (lx * 0.5 + rx * 0.5);
+                this.y = (ly * 0.5 + ry * 0.5);
+                this.z = (lz * 0.5 + rz * 0.5);
+                return this;
             }
 
-            // Complementary interpolation parameter
-            beta = 1 - alpha;
+            var ratioA = Math.sin((1 - alpha) * halfTheta) / sinHalfTheta;
+            var ratioB = Math.sin(alpha * halfTheta) / sinHalfTheta;
 
-            if (cosOmega < 1) {
-                omega = Math.acos(cosOmega);
-                invSinOmega = 1 / Math.sin(omega);
-
-                beta = Math.sin(omega * beta) * invSinOmega;
-                alpha = Math.sin(omega * alpha) * invSinOmega;
-
-                if (flip) {
-                    alpha = -alpha;
-                }
-            }
-
-            this.x = beta * q1x + alpha * q2x;
-            this.y = beta * q1y + alpha * q2y;
-            this.z = beta * q1z + alpha * q2z;
-            this.w = beta * q1w + alpha * q2w;
-
+            // Calculate Quaternion.
+            this.w = (lw * ratioA + rw * ratioB);
+            this.x = (lx * ratioA + rx * ratioB);
+            this.y = (ly * ratioA + ry * ratioB);
+            this.z = (lz * ratioA + rz * ratioB);
             return this;
         },
 
