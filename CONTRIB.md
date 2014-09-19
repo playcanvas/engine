@@ -1,10 +1,16 @@
 # CONTRIBUTING
 
-#
+# HOW TO CONTRIBUTE
 
-# CONTRIBUTORS
+1. Complete the [Contributor License Agreement](https://docs.google.com/a/playcanvas.com/forms/d/1Ih69zQfJG-QDLIEpHr6CsaAs6fPORNOVnMv5nuo0cjk/viewform).
+1. Read the coding standards below
+1. Make a pull request
 
-# Coding Standards
+#### Tips
+
+Feel free to contribute bug fixes or documentation fixes directly into a pull request. If you are making major changes to the engine or adding significant new features. It would be best to create an github issue before starting work to begin a conversation about how best to implement it.
+
+# CODING STANDARDS
 
 ## General
 
