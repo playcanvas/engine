@@ -49,10 +49,10 @@ def get_revision():
         if revision:
             return revision
         else:
-            print("WARINING: Something went wrong trying to extract revision!")
+            print("WARNING: Something went wrong trying to extract revision")
             return "-"
     except Exception as e:
-        print("WARNING: Failed to extract revision: (%s)!" % e)
+        print("WARNING: Failed to extract revision: (%s)" % e)
         return "-"
 
 def get_version():
