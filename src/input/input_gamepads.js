@@ -4,7 +4,7 @@ pc.extend(pc.input, function () {
     * @class Input handler for accessing GamePad input
     */ 
     var GamePads = function () {
-        this.gamepadsSupported = !!navigator.webkitGetGamepads;
+        this.gamepadsSupported = !!navigator.getGamepads || !!navigator.webkitGetGamepads;
 
         this.current = [];
         this.previous = [];
@@ -125,7 +125,7 @@ pc.extend(pc.input, function () {
         poll: function () {
             var pads = [];
             if (this.gamepadsSupported) {
-                var padDevices = navigator.webkitGetGamepads();
+                var padDevices = navigator.getGamepads ? navigator.getGamepads() : navigator.webkitGetGamepads();
                 var i, len = padDevices.length;
                 for (i = 0; i < len; i++) {
                     if (padDevices[i]) {
