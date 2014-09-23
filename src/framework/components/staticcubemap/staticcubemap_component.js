@@ -12,53 +12,51 @@ pc.extend(pc.fw, function () {
         this.on("set", this.onSet, this);
     };
     StaticCubeMapComponent = pc.inherits(StaticCubeMapComponent, pc.fw.Component);
-    
+
     pc.extend(StaticCubeMapComponent.prototype, {
         onSet: function (name, oldValue, newValue) {
-            function _loadTextureAsset(name, guid) {
-                if(!guid)
+            function _loadTextureAsset(name, id) {
+                if(id === undefined || id === null)
                     return;
 
                 var index = CUBE_MAP_NAMES.indexOf(name);
                 var assets = this.assets;
-                
+
                 // clear existing cubemap
                 this.cubemap = null;
 
-                if (guid) {
-                    assets[index] = this.system.context.assets.getAssetByResourceId(guid);
-                    
+                if (id) {
+                    assets[index] = this.system.context.assets.getAssetById(id);
+
                     this.assets = assets;
 
                     if (assets[0] && assets[1] && assets[2] && assets[3] && assets[4] && assets[5]) {
-                        var urls = assets.map(function (asset) { 
-                            return asset.getFileUrl(); 
+                        var urls = assets.map(function (asset) {
+                            return asset.getFileUrl();
                         });
                         var cubemap = _createCubemap(this.entity, this.system.context, urls);
                         this.cubemap = cubemap;
                     }
-                } else {
-                    delete assets[index];                
                 }
             }
 
             var functions = {
-                "posx": function (name, oldValue, newValue) { 
+                "posx": function (name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "negx": function (name, oldValue, newValue) { 
+                "negx": function (name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "posy": function (name, oldValue, newValue) { 
+                "posy": function (name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "negy": function (name, oldValue, newValue) { 
+                "negy": function (name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "posz": function (name, oldValue, newValue) { 
+                "posz": function (name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     },
-                "negz": function (name, oldValue, newValue) { 
+                "negz": function (name, oldValue, newValue) {
                         _loadTextureAsset.call(this, name, newValue);
                     }
             };
@@ -78,7 +76,7 @@ pc.extend(pc.fw, function () {
         'negz'
     ];
 
-    // Private    
+    // Private
     var _createCubemap = function (entity, context, urls) {
         var texture = new pc.gfx.Texture(context.graphicsDevice, {
             format: pc.gfx.PIXELFORMAT_R8_G8_B8,
@@ -88,7 +86,7 @@ pc.extend(pc.fw, function () {
         texture.magFilter = pc.gfx.FILTER_LINEAR;
         texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        
+
         var requests = urls.map(function (url) {
             return new pc.resources.ImageRequest(url);
         });
@@ -98,7 +96,7 @@ pc.extend(pc.fw, function () {
         context.loader.request(requests, options).then(function (resources) {
             texture.setSource(resources);
         });
-        
+
         return texture;
     };
 

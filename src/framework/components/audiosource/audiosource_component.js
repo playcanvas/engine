@@ -181,13 +181,13 @@ pc.extend(pc.fw, function () {
             this.pause();
         },
 
-        loadAudioSourceAssets: function (guids) {
+        loadAudioSourceAssets: function (ids) {
             var options = {
                 parent: this.entity.getRequest()
             };
 
-            var assets = guids.map(function (guid) {
-                return this.system.context.assets.getAssetByResourceId(guid);
+            var assets = ids.map(function (id) {
+                return this.system.context.assets.getAssetById(id);
             }, this);
 
             var requests = [];
@@ -198,7 +198,7 @@ pc.extend(pc.fw, function () {
 
             assets.forEach(function (asset) {
                 if (!asset) {
-                    logERROR(pc.string.format('Trying to load audiosource component before assets {0} are loaded', guids));
+                    logERROR(pc.string.format('Trying to load audiosource component before assets {0} are loaded', ids));
                 } else {
                     // set the current source to the first entry (before calling set, so that it can play if needed)
                     currentSource = currentSource || asset.name;

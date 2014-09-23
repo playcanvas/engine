@@ -15,7 +15,7 @@ pc.extend(pc.asset, function () {
         this.loader = loader;
         this._prefix = prefix || "";
 
-        this._cache = {}; // main asset cache, keyed by resourceId
+        this._cache = {}; // main asset cache, keyed by id
         this._names = {}; // index for looking up assets by name
         this._urls = {}; // index for looking up assets by url
 
@@ -38,28 +38,29 @@ pc.extend(pc.asset, function () {
                 this._groups[name] = [];
             }
 
-            for (var resourceId in toc.assets) {
-                var asset = this.getAssetByResourceId(resourceId);
+            for (var id in toc.assets) {
+                var asset = this.getAssetById(id);
 
                 if (!asset) {
                     // Create assets for every entry in TOC and add to AssetRegistry
-                    var assetData = toc.assets[resourceId];
-                    asset = this.createAndAddAsset(resourceId, assetData);
+                    var assetData = toc.assets[id];
+                    asset = this.createAndAddAsset(id, assetData);
                 } else {
                     // Update asset data
-                    pc.extend(asset, toc.assets[resourceId]);
+                    pc.extend(asset, toc.assets[id]);
                 }
 
-                this._groups[name].push(asset.resourceId);
+                this._groups[name].push(asset.id);
             }
         },
 
         /**
         * @private
         */
-        createAndAddAsset: function (resourceId, assetData) {
+        createAndAddAsset: function (id, assetData) {
             var asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
-            asset.resourceId = resourceId; // override default resourceId
+            asset.id = id;
+
             this.addAsset(asset);
 
             if (asset.file) {
@@ -78,8 +79,8 @@ pc.extend(pc.asset, function () {
         * @returns [pc.asset.Asset] List of all assets in the registry
         */
         all: function () {
-            return Object.keys(this._cache).map(function (resourceId) {
-                return this.getAssetByResourceId(resourceId);
+            return Object.keys(this._cache).map(function (id) {
+                return this.getAssetById(id);
             }, this);
         },
 
@@ -94,14 +95,14 @@ pc.extend(pc.asset, function () {
             if (groupName) {
                 // return assets from the group
                 if (this._groups[groupName]) {
-                    return this._groups[groupName].map(function (resourceId) {
-                        return this.getAssetByResourceId(resourceId);
+                    return this._groups[groupName].map(function (id) {
+                        return this.getAssetById(id);
                     }, this);
                 }
             } else {
                 // Return all assets
-                return Object.keys(this._cache).map(function (resourceId) {
-                    return this.getAssetByResourceId(resourceId);
+                return Object.keys(this._cache).map(function (id) {
+                    return this.getAssetById(id);
                 }, this);
             }
         },
@@ -113,13 +114,13 @@ pc.extend(pc.asset, function () {
         * @param {pc.asset.Asset} asset The asset to add to the registry
         */
         addAsset: function (asset) {
-            this._cache[asset.resourceId] = asset;
+            this._cache[asset.id] = asset;
             if (!this._names[asset.name]) {
                 this._names[asset.name] = [];
             }
-            this._names[asset.name].push(asset.resourceId);
+            this._names[asset.name].push(asset.id);
             if (asset.file) {
-                this._urls[asset.file.url] = asset.resourceId;
+                this._urls[asset.file.url] = asset.id;
             }
         },
 
@@ -130,7 +131,7 @@ pc.extend(pc.asset, function () {
         * @param {pc.asset.Asset} asset The asset to remove
         */
         removeAsset: function (asset) {
-            delete this._cache[asset.resourceId];
+            delete this._cache[asset.id];
             delete this._names[asset.name];
             if (asset.file) {
                 delete this._urls[asset.file.url];
@@ -184,20 +185,25 @@ pc.extend(pc.asset, function () {
             return asset ? asset[0] : null;
         },
 
+        getAssetByResourceId: function (id) {
+            console.warn("WARNING: getAssetByResourceId: Function is deprecated. Use getAssetById() instead.");
+            return this._cache[id];
+        },
+
         /**
         * @function
-        * @name pc.asset.AssetRegistry#getAssetByResourceId
-        * @description Return the {@link pc.asset.Asset} object in the AssetRegistry with the resourceId provided
-        * @param {String} resourceId The resourceId of the Asset to return
+        * @name pc.asset.AssetRegistry#getAssetById
+        * @description Return the {@link pc.asset.Asset} object in the AssetRegistry with the id provided
+        * @param {Number} id The id of the Asset to return
         * @returns {pc.asset.Asset} The Asset or null if no Asset is found.
         */
-        getAssetByResourceId: function (resourceId) {
-            return this._cache[resourceId];
+        getAssetById: function (id) {
+            return this._cache[id];
         },
 
         getAssetByUrl: function (url) {
-            var resourceId = this._urls[url];
-            return this._cache[resourceId];
+            var id = this._urls[url];
+            return this._cache[id];
         },
 
         /**
@@ -237,7 +243,7 @@ pc.extend(pc.asset, function () {
 
             var requests = [];
             assets.forEach(function (asset, index) {
-                var existing = this.getAssetByResourceId(asset.resourceId);
+                var existing = this.getAssetById(asset.id);
                 if (!existing) {
                     // If the asset isn't in the registry then add it.
                     this.addAsset(asset);
@@ -419,7 +425,7 @@ pc.extend(pc.asset, function () {
             if (url) {
                 return new pc.resources.MaterialRequest(url);
             } else {
-                return new pc.resources.MaterialRequest("asset://" + asset.resourceId);
+                return new pc.resources.MaterialRequest("asset://" + asset.id);
             }
 
         }
