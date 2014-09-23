@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.155.1
+--------
+* Added CONTRIB file with CLA details and tips
+* Use the current Gamepad API
+* [FIX] Audiosources with 'activate' false no longer play on startup
+
+--------
 v0.155.0
 --------
 * pc.fw.Entity#clone is now synchronous
