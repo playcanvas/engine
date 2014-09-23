@@ -18,6 +18,7 @@ pc.extend(pc.fw, function () {
      * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore
      * @property {Number} rollOffFactor The factor used in the falloff equation.
      */
+
     var AudioSourceComponent = function (system, entity) {
         this.on("set_assets", this.onSetAssets, this);
         this.on("set_loop", this.onSetLoop, this);
@@ -220,7 +221,7 @@ pc.extend(pc.fw, function () {
                     this.data.sources = sources;
                     this.data.currentSource = currentSource;
 
-                    if (!options.parent && this.activate && currentSource) {
+                    if (!options.parent && this.enabled && this.activate && currentSource) {
                         this.play(currentSource);
                     }
                 }.bind(this));
@@ -228,7 +229,7 @@ pc.extend(pc.fw, function () {
                 this.data.sources = sources;
                 this.data.currentSource = currentSource;
 
-                if (this.activate && currentSource) {
+                if (this.enabled && this.activate && currentSource) {
                     this.play(currentSource);
                 }
             }
