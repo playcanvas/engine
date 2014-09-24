@@ -832,6 +832,43 @@ pc.extend(pc.scene, function () {
             this._onInsertChild(node);
         },
 
+        addChildAndSaveTransform: function(node) {
+            var wPos = node.getPosition();
+            var wRot = node.getRotation();
+
+            var current = node.getParent();
+            if (current) {
+                current.removeChild(node);
+            }
+
+            if (this.tmpMat4 == undefined) {
+                this.tmpMat4 = new pc.Mat4();
+                this.tmpQuat = new pc.Quat();
+            }
+
+            node.setPosition(this.tmpMat4.copy(this.worldTransform).invert().transformPoint(wPos));
+            node.setRotation(this.tmpQuat.copy(this.getRotation()).invert().mul(wRot));
+
+            this._children.push(node);
+            node._parent = this;
+
+            // the child node should be enabled in the hierarchy only if itself is enabled and if
+            // this parent is enabled
+            var enabledInHierarchy = (node._enabled && this.enabled);
+            if (node._enabledInHierarchy !== enabledInHierarchy) {
+                node._enabledInHierarchy = enabledInHierarchy;
+
+                // propagate the change to the children - necessary if we reparent a node
+                // under a parent with a different enabled state (if we reparent a node that is
+                // not active in the hierarchy under a parent who is active in the hierarchy then
+                // we want our node to be activated)
+                node._notifyHierarchyStateChanged(node, enabledInHierarchy);
+            }
+
+            // The child (plus subhierarchy) will need world transforms to be recalculated
+            node.dirtyWorld = true;
+        },
+
         /**
          * @function
          * @name pc.scene.GraphNode#insertChild
@@ -1073,6 +1110,37 @@ pc.extend(pc.scene, function () {
                 }
 
                 matrix.setLookAt(this.getPosition(), target, up);
+                rotation.setFromMat4(matrix);
+                this.setRotation(rotation);
+            }
+        }(),
+
+        setLookVector: function() {
+            var matrix = new pc.Mat4();
+            var lookVec = new pc.Vec3();
+            var up = new pc.Vec3();
+            var rotation = new pc.Quat();
+
+            return function() {
+                switch (arguments.length) {
+                    case 1:
+                        lookVec.copy(arguments[0]);
+                        if ((arguments[0] > arguments[1]) && (arguments[0] > arguments[2])) {
+                            up.copy(pc.Vec3.UP);
+                        } else if ((arguments[1] > arguments[0]) && (arguments[1] > arguments[2])) {
+                            up.copy(pc.Vec3.FORWARD);
+                        } else {
+                            up.copy(pc.Vec3.UP);
+                        }
+                        //up.copy(Math.abs(arguments[1]) < Math.abs(arguments[0])? pc.Vec3.UP : pc.Vec3.FORWARD);
+                        break;
+                    case 2:
+                        lookVec.copy(arguments[0]);
+                        up.copy(arguments[1]);
+                        break;
+                }
+
+                matrix.setLookVector(lookVec, up);
                 rotation.setFromMat4(matrix);
                 this.setRotation(rotation);
             }

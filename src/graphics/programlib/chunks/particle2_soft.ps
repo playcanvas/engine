@@ -1,0 +1,9 @@
+	
+	vec2 screenTC = gl_FragCoord.xy / screenSize.xy;
+	float depth = unpackFloat( texture2D(uDepthMap, screenTC) ) * camera_far;
+	float particleDepth = gl_FragCoord.z / gl_FragCoord.w;
+	//float softening = 0.25;
+	float depthDiff = saturate(abs(particleDepth - depth) * softening);
+	//rgb = vec3(depthDiff);
+	a *= depthDiff;
+	

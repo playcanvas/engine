@@ -1,0 +1,10 @@
+
+	vec3 normalMap 		= normalize( texture2D(normalTexture, TexCoordsAlphaLife.xy).xyz * 2.0 - 1.0 );
+	vec3 normal = ParticleMat * normalMap;
+	
+	//vec3 normalMap2 		= normalize( texture2D(normalTexture, WorldTC).xyz * 2.0 - 1.0 );
+	//vec3 normal2 = ParticleMat * normalMap2;
+	
+	//normal = normalize(normal + normal2*(1.0-tex.a));
+	
+	
