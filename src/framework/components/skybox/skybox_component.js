@@ -125,7 +125,7 @@ pc.extend(pc.fw, function () {
                     sources.push(image);
                 } else {
                     indexes.push(i);
-                    requests.push(new pc.resources.ImageRequest(asset.getFileUrl()));
+                    requests.push(new pc.resources.TextureRequest(asset.getFileUrl()));
                 }
             }
         }
@@ -146,7 +146,7 @@ pc.extend(pc.fw, function () {
 
             context.loader.request(requests, options).then(function (resources) {
                 for (var i=0; i<resources.length; i++) {
-                    sources[indexes[i]] = resources[i];
+                    sources[indexes[i]] = resources[i].getSource();
                 }
 
                 texture.setSource(sources);
