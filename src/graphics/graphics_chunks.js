@@ -1,7 +1,7 @@
-var shaderChunks = {}
-var shaderCache = {}
+pc.gfx.shaderChunks = {}
+pc.gfx.shaderCache = {}
 
-function collectAttribs(VScode) {
+pc.gfx.collectAttribs = function (VScode) {
     var attribs = {}
     var attrs = 0;
 
@@ -24,7 +24,7 @@ function collectAttribs(VScode) {
 }
 
 
-shaderChunks.CreateShader = function(device, vsName, psName) {
+pc.gfx.shaderChunks.CreateShader = function(device, vsName, psName) {
     var VScode = shaderChunks[vsName];
     var PScode = pc.gfx.programlib.getSnippet(device, 'fs_precision') + "\n" + shaderChunks[psName];
     attribs = collectAttribs(VScode);
@@ -36,16 +36,16 @@ shaderChunks.CreateShader = function(device, vsName, psName) {
     });
 }
 
-shaderChunks.CreateShaderFromCode = function(device, VScode, PScode, uName) {
-    var cached = shaderCache[uName];
+pc.gfx.shaderChunks.CreateShaderFromCode = function(device, VScode, PScode, uName) {
+    var cached = pc.gfx.shaderCache[uName];
     if (cached != undefined) return cached;
 
     PScode = pc.gfx.programlib.getSnippet(device, 'fs_precision') + "\n" + PScode;
-    attribs = collectAttribs(VScode);
-    shaderCache[uName] = new pc.gfx.Shader(device, {
+    attribs = pc.gfx.collectAttribs(VScode);
+    pc.gfx.shaderCache[uName] = new pc.gfx.Shader(device, {
         attributes: attribs,
         vshader: VScode,
         fshader: PScode
     });
-    return shaderCache[uName];
+    return pc.gfx.shaderCache[uName];
 }

@@ -398,15 +398,16 @@ pc.extend(pc.scene, function() {
             this.swapTex = false;
         }
 
-        var shaderCodeRespawn = shaderChunks.particleUpdaterStartPS;
-        shaderCodeRespawn += shaderChunks.particleUpdaterRespawnPS;
-        shaderCodeRespawn += shaderChunks.particleUpdaterEndPS;
+        var chunks = pc.gfx.shaderChunks;
+        var shaderCodeRespawn = chunks.particleUpdaterStartPS;
+        shaderCodeRespawn += chunks.particleUpdaterRespawnPS;
+        shaderCodeRespawn += chunks.particleUpdaterEndPS;
 
-        var shaderCodeNoRespawn = shaderChunks.particleUpdaterStartPS;
-        shaderCodeNoRespawn += shaderChunks.particleUpdaterEndPS;
+        var shaderCodeNoRespawn = chunks.particleUpdaterStartPS;
+        shaderCodeNoRespawn += chunks.particleUpdaterEndPS;
 
-        this.shaderParticleUpdateRespawn = shaderChunks.CreateShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad" + false);
-        this.shaderParticleUpdateNoRespawn = shaderChunks.CreateShaderFromCode(gd, shaderChunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad" + true);
+        this.shaderParticleUpdateRespawn = chunks.CreateShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad" + false);
+        this.shaderParticleUpdateNoRespawn = chunks.CreateShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad" + true);
 
         // Particle updater constants
         this.constantTexLifeAndSourcePosIN = gd.scope.resolve("texLifeAndSourcePosIN");

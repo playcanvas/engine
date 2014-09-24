@@ -9,7 +9,7 @@ pc.gfx.programlib.particle2 = {
         var modeCPU = 1;
 
         var getSnippet = pc.gfx.programlib.getSnippet;
-        var chunk = shaderChunks;
+        var chunk = pc.gfx.shaderChunks;
 
         var vshader = "";
         var fshader = getSnippet(device, 'fs_precision') + "\n";
@@ -51,7 +51,7 @@ pc.gfx.programlib.particle2 = {
         if (options.normal > 0) fshader +=          chunk.particle2_lightingPS;
         fshader +=                                  options.srgb? chunk.particle2_end_srgbPS : chunk.particle2_endPS;
 
-        var attributes = collectAttribs(vshader);
+        var attributes = pc.gfx.collectAttribs(vshader);
 
         return {
             attributes: attributes,
