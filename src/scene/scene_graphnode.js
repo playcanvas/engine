@@ -850,23 +850,8 @@ pc.extend(pc.scene, function () {
             node.setRotation(this.tmpQuat.copy(this.getRotation()).invert().mul(wRot));
 
             this._children.push(node);
-            node._parent = this;
 
-            // the child node should be enabled in the hierarchy only if itself is enabled and if
-            // this parent is enabled
-            var enabledInHierarchy = (node._enabled && this.enabled);
-            if (node._enabledInHierarchy !== enabledInHierarchy) {
-                node._enabledInHierarchy = enabledInHierarchy;
-
-                // propagate the change to the children - necessary if we reparent a node
-                // under a parent with a different enabled state (if we reparent a node that is
-                // not active in the hierarchy under a parent who is active in the hierarchy then
-                // we want our node to be activated)
-                node._notifyHierarchyStateChanged(node, enabledInHierarchy);
-            }
-
-            // The child (plus subhierarchy) will need world transforms to be recalculated
-            node.dirtyWorld = true;
+            this._onInsertChild(node);
         },
 
         /**
