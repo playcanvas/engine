@@ -1,5 +1,3 @@
-// Mr F
-
 varying vec2 vUv0;
 
 uniform sampler2D texLifeAndSourcePosIN;
@@ -8,25 +6,25 @@ uniform float delta, rate, lifetime, deltaRandomness, deltaRandomnessStatic;
 
 float saturate(float x)
 {
-	return clamp(x, 0.0, 1.0);
+    return clamp(x, 0.0, 1.0);
 }
 
 void main(void)
 {
-	vec4 tex = texture2D(texLifeAndSourcePosIN, vec2(vUv0.x, 0));
-	
-	float x = vUv0.x * (tex.w+emitterPos.x+emitterPos.y+emitterPos.z+1.0) * 1000.0;
-	x = mod(x, 13.0) * mod(x, 123.0);
-	float dx = mod(x, 0.01);
-	float noize = saturate(0.1 + dx * 100.0);
-	
-	x = vUv0.x * (emitterPos.x+emitterPos.y+emitterPos.z+1.0) * 1000.0;
-	x = mod(x, 13.0) * mod(x, 123.0);
-	dx = mod(x, 0.01);
-	float noize2 = saturate(0.1 + dx * 100.0);
-	
+    vec4 tex = texture2D(texLifeAndSourcePosIN, vec2(vUv0.x, 0));
 
-	if (tex.w<=0.0) tex.xyz = emitterPos + birthBounds * mod( vec3(noize, fract(noize*10.0), fract(noize*100.0))  + frameRandom, vec3(1.0) );
+    float x = vUv0.x * (tex.w+emitterPos.x+emitterPos.y+emitterPos.z+1.0) * 1000.0;
+    x = mod(x, 13.0) * mod(x, 123.0);
+    float dx = mod(x, 0.01);
+    float noize = saturate(0.1 + dx * 100.0);
 
-	tex.w += delta * mix(1.0 - deltaRandomness, 1.0, noize) * mix(1.0 - deltaRandomnessStatic, 1.0, noize2);
+    x = vUv0.x * (emitterPos.x+emitterPos.y+emitterPos.z+1.0) * 1000.0;
+    x = mod(x, 13.0) * mod(x, 123.0);
+    dx = mod(x, 0.01);
+    float noize2 = saturate(0.1 + dx * 100.0);
+
+
+    if (tex.w<=0.0) tex.xyz = emitterPos + birthBounds * mod( vec3(noize, fract(noize*10.0), fract(noize*100.0))  + frameRandom, vec3(1.0) );
+
+    tex.w += delta * mix(1.0 - deltaRandomness, 1.0, noize) * mix(1.0 - deltaRandomnessStatic, 1.0, noize2);
 

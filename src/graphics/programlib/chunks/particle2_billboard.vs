@@ -1,4 +1,4 @@
 
-	quadXY = Rotate(quadXY, angle, rotMatrix);
-	vec3 localPos = Billboard(particlePos, quadXY, localMat);
+    quadXY = rotate(quadXY, angle, rotMatrix);
+    vec3 localPos = billboard(particlePos, quadXY, localMat);
 

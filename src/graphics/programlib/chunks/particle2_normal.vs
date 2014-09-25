@@ -1,4 +1,4 @@
 
-	Normal = normalize(localPos - localMat[2]);
+    Normal = normalize(localPos - localMat[2]);
 
-	
+

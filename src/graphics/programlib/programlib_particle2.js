@@ -51,7 +51,7 @@ pc.gfx.programlib.particle2 = {
         if (options.normal > 0) fshader +=          chunk.particle2_lightingPS;
         fshader +=                                  options.srgb? chunk.particle2_end_srgbPS : chunk.particle2_endPS;
 
-        var attributes = pc.gfx.collectAttribs(vshader);
+        var attributes = pc.gfx.shaderChunks.collectAttribs(vshader);
 
         return {
             attributes: attributes,

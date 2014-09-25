@@ -1,5 +1,3 @@
-// Mr F
-
 varying vec4 TexCoordsAlphaLife;
 
 uniform sampler2D texLifeAndSourcePosOUT, particleTexture, normalTexture, uDepthMap;
@@ -13,29 +11,29 @@ uniform float colorMult;
 
 vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc)
 {
-	return mix( texture2D(tex,tc), texture2D(tex,tc + graphSampleSize), fract(tc.x*graphNumSamples) );
+    return mix( texture2D(tex,tc), texture2D(tex,tc + graphSampleSize), fract(tc.x*graphNumSamples) );
 }
 
 float saturate(float x)
 {
-	return clamp(x, 0.0, 1.0);
+    return clamp(x, 0.0, 1.0);
 }
 
 float unpackFloat(vec4 rgbaDepth)
 {
-	const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
-	float depth = dot(rgbaDepth, bitShift);
-	return depth;
+    const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
+    float depth = dot(rgbaDepth, bitShift);
+    return depth;
 }
 
 void main(void)
 {
-	vec4 tex 		= texture2D(particleTexture, TexCoordsAlphaLife.xy);
-	float alphaDivergence = TexCoordsAlphaLife.z;
-	vec4 ramp 	= tex1Dlod_lerp(internalTex3, vec2(TexCoordsAlphaLife.w + alphaDivergence, 0.0));
-	ramp *= colorMult;
-	
-	vec3 rgb = 	tex.rgb * ramp.rgb;
-	
-	float a = 		tex.a * ramp.a;
-	
+    vec4 tex         = texture2D(particleTexture, TexCoordsAlphaLife.xy);
+    float alphaDivergence = TexCoordsAlphaLife.z;
+    vec4 ramp     = tex1Dlod_lerp(internalTex3, vec2(TexCoordsAlphaLife.w + alphaDivergence, 0.0));
+    ramp *= colorMult;
+
+    vec3 rgb =     tex.rgb * ramp.rgb;
+
+    float a =         tex.a * ramp.a;
+

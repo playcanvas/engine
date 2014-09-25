@@ -325,7 +325,7 @@ pc.extend(pc.fw, function() {
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
 
-                    if (components[id].data.enabled) {
+                    if ((components[id].data.enabled) && (components[id].entity.enabled)) {
                         components[id].data.model.emitter.addTime(dt);
                     }
 

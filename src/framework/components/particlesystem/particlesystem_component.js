@@ -1,20 +1,33 @@
 pc.extend(pc.fw, function() {
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
-        this.on("set_oneShot", this.onSetParam, this);
+        this.on("set", this.onSetParam, this);
     };
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.fw.Component);
 
     pc.extend(ParticleSystemComponent.prototype, {
 
         onSetParam: function(name, oldValue, newValue) {
-            if (this.emitter != undefined) {
-                this.emitter[name] = newValue;
+            if (name=="enabled") return;
+
+            if (this.emitter) {
+                this.emitter[name] = newValue; // some parameters can apply immediately
+
+                if (name!="oneShot") {
+                    this.emitter.resetMaterial(); // some may require resetting shader constants
+
+                    if ((name!="birthBounds") && (name!="deltaRandomness") // && (name!="rate") && (name!="lifetime") // these params are better reflected after rebuild
+                        && (name!="deltaRandomnessStatic")) { // && (name!="stretch") && (name!="wrapBounds")) { // stretch and wrapBounds can be changed realtime, but not turned on/off, so let's just rebuild
+                        this.rebuild();
+                    }
+                } else {
+                    this.emitter.resetTime();
+                }
             }
         },
 
         onEnable: function() {
 
-            if (this.emitter == undefined) {
+            if (!this.emitter) {
                 this.emitter = new pc.scene.ParticleEmitter2(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     birthBounds: this.data.birthBounds,
@@ -62,21 +75,17 @@ pc.extend(pc.fw, function() {
                 this.emitter.psys = this.psys;
 
                 var comp = this;
-                //if (this.emitter.oneShot)
-                {
-                    this.emitter.onFinished = function() {
-                        //comp.onDisable();
-                        comp.enabled = false;
-                        comp.data.enabled = false;
-                    };
-                }
+				this.emitter.onFinished = function() { // called after oneShot emitter is finished. As you can dynamically change oneShot parameter, it should be always initialized
+					comp.enabled = false; // should call onDisable internally
+					comp.data.enabled = false;
+				};
             }
 
 
             ParticleSystemComponent._super.onEnable.call(this);
             if (this.data.model) {
                 if (!this.system.context.scene.containsModel(this.data.model)) {
-                    if (this.emitter.texture != undefined) {
+                    if (this.emitter.texture) {
                         this.system.context.scene.addModel(this.data.model);
                     }
                     //this.entity.addChild(this.data.model.graph);
@@ -94,10 +103,17 @@ pc.extend(pc.fw, function() {
             }
         },
 
-        Reset: function() {
-            this.emitter.Reset();
+        reset: function() {
+            this.emitter.reset();
         },
 
+        rebuild: function() {
+            this.enabled = false;
+            this.emitter.rebuild(); // worst case: required to rebuild buffers/shaders
+            this.emitter.meshInstance.node = this.entity;
+            this.data.model.meshInstances = [this.emitter.meshInstance];
+            this.enabled = true;
+        },
     });
 
 

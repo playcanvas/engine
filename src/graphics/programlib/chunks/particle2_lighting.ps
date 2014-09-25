@@ -1,17 +1,9 @@
 
-// Mr F
-	
-	vec3 light = negNormal.x*lightCube[0] + posNormal.x*lightCube[1] + 
-						negNormal.y*lightCube[2] + posNormal.y*lightCube[3] + 
-						negNormal.z*lightCube[4] + posNormal.z*lightCube[5];
-	
-	//vec3 lightMixed = (lightCube[0] + lightCube[1] + lightCube[2] + lightCube[3] + lightCube[4] + lightCube[5]) / 6.0;
-	
-	//float thickMask = tex.a;//1.0-normalMap.z;
-	//light = mix(light, lightMixed, (thickMask+normalMap.z)*0.5);
-	
-	//a *= saturate(1.0 - saturate(length(light*0.5)) + 0.05);
-	
-	rgb *= light;
-	
-	
+    vec3 light = negNormal.x*lightCube[0] + posNormal.x*lightCube[1] +
+                        negNormal.y*lightCube[2] + posNormal.y*lightCube[3] +
+                        negNormal.z*lightCube[4] + posNormal.z*lightCube[5];
+
+
+    rgb *= light;
+
+

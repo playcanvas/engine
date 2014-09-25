@@ -5,12 +5,12 @@
     size = (percentLife < 0.0 || percentLife > 1.0) ? 0.0 : size;
     float s = sin(spinStart + spinSpeed * localTime);
     float c = cos(spinStart + spinSpeed * localTime);
-    vec2 rotatedPoint = vec2(uv.x * c + uv.y * s, 
+    vec2 rotatedPoint = vec2(uv.x * c + uv.y * s,
                              -uv.x * s + uv.y * c);
     vec3 localPosition = vec3(basisX * rotatedPoint.x +
                               basisZ * rotatedPoint.y) * size +
                               velocity * localTime +
-                              acceleration * localTime * localTime + 
+                              acceleration * localTime * localTime +
                               position;
     vAge = percentLife;
     gl_Position = matrix_viewProjection * vec4(localPosition + matrix_model[3].xyz, 1.0);

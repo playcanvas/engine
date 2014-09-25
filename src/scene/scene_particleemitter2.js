@@ -61,7 +61,7 @@ pc.extend(pc.scene, function() {
         }
 
         u *= arr.length / chans - 1;
-        if (outArr == undefined) outArr = [];
+        if (!outArr) outArr = [];
         for (var i = 0; i < chans; i++) {
             var A = arr[Math.floor(u) * chans + i];
             var B = arr[Math.ceil(u) * chans + i];
@@ -71,103 +71,13 @@ pc.extend(pc.scene, function() {
         return outArr;
     }
 
+    var defaultCurve = new pc.Curve();
+    defaultCurve.addKey(0, 0);
+    defaultCurve.addKey(1, 0);
 
-    // Linearly interpolated values container
-    var LinearGraph = function LinearGraph(numValues) {
-        this.keys = [];
-        this.dirty = true;
-        this.numVals = numValues == undefined ? 1 : numValues;
-        this.smoothstep = true;
-
-        this.AddKey = function(time, value) { // time is supposed to be normalized
-            this.keys.push([time, value]);
-            this.dirty = true;
-        }
-
-        this.prepare = function() {
-            this.keys.sort(function(a, b) {
-                return a[0] - b[0];
-            });
-            this.dirty = false;
-        }
-
-        this.GetValue = function(time) {
-            if (this.dirty) this.prepare();
-            for (var i = 0; i < this.keys.length; i++) {
-                var keyTime = this.keys[i][0];
-                if (keyTime == time) {
-                    return this.keys[i][1];
-                } else if (keyTime < time) {
-                    var keyTimeNext = this.keys[i + 1][0];
-                    if (keyTimeNext > time) {
-                        var keyValA = this.keys[i][1];
-                        var keyValB = this.keys[i + 1][1];
-                        var interpolation = (time - keyTime) / (keyTimeNext - keyTime);
-
-                        if (this.smoothstep) interpolation = ((interpolation) * (interpolation) * (3 - 2 * (interpolation))); // smoothstep
-
-                        if (keyValA instanceof Array) {
-                            var interpolated = new Array(keyValA.length);
-                            for (var v = 0; v < keyValA.length; v++) interpolated[v] = pc.math.lerp(keyValA[v], keyValB[v], interpolation);
-                            return interpolated;
-                        } else {
-                            return pc.math.lerp(keyValA, keyValB, interpolation);
-                        }
-
-                    }
-                }
-            }
-            return null;
-        }
-
-        this.Quantize = function(precision, blur) {
-            precision = Math.max(precision, 2);
-            var colors = new Float32Array(precision * this.numVals);
-            var step = 1.0 / (precision - 1);
-            for (var i = 0; i < precision; i++) // quantize graph to table of interpolated values
-            {
-                var color = this.GetValue(step * i);
-                if (this.numVals == 1) {
-                    colors[i] = color;
-                } else {
-                    for (var j = 0; j < this.numVals; j++) colors[i * this.numVals + j] = color[j]
-                }
-            }
-
-            if (blur > 0) {
-                var colors2 = new Float32Array(precision * this.numVals);
-                var numSamples = blur * 2 + 1;
-                for (var i = 0; i < precision; i++) {
-                    if (this.numVals == 1) {
-                        colors2[i] = 0;
-                        for (var sample = -blur; sample <= blur; sample++) {
-                            var sampleAddr = Math.max(Math.min(i + sample, precision - 1), 0);
-                            colors2[i] += colors[sampleAddr];
-                        }
-                        colors2[i] /= numSamples;
-                    } else {
-                        for (var chan = 0; chan < this.numVals; chan++) colors2[i * this.numVals + chan] = 0;
-                        for (var sample = -blur; sample <= blur; sample++) {
-                            var sampleAddr = Math.max(Math.min(i + sample, precision - 1), 0);
-                            for (var chan = 0; chan < this.numVals; chan++) colors2[i * this.numVals + chan] += colors[sampleAddr * this.numVals + chan];
-                        }
-                        for (var chan = 0; chan < this.numVals; chan++) colors2[i * this.numVals + chan] /= numSamples;
-                    }
-                }
-                colors = colors2;
-            }
-
-            return colors;
-        }
-    };
-
-    var defaultLinearGraph = new LinearGraph();
-    defaultLinearGraph.AddKey(0, 0);
-    defaultLinearGraph.AddKey(1, 0);
-
-    var defaultLinearGraph3 = new LinearGraph(3);
-    defaultLinearGraph3.AddKey(0, [0, 0, 0]);
-    defaultLinearGraph3.AddKey(1, [0, 0, 0]);
+    var defaultCurve3 = new pc.Curve(3);
+    defaultCurve3.addKey(0, [0, 0, 0]);
+    defaultCurve3.addKey(1, [0, 0, 0]);
 
     var defaultParamTex = null;
 
@@ -179,27 +89,27 @@ pc.extend(pc.scene, function() {
     var setPropertyOptions;
 
     function setProperty(pName, defaultVal) {
-        setPropertyTarget[pName] = typeof setPropertyOptions[pName] !== 'undefined' ? setPropertyOptions[pName] : defaultVal;
+        setPropertyTarget[pName] = setPropertyOptions[pName]? setPropertyOptions[pName] : defaultVal;
     }
 
-    function Pack3NFloats(a, b, c) {
+    function pack3NFloats(a, b, c) {
         var packed = ((a * 255) << 16) | ((b * 255) << 8) | (c * 255);
         return (packed) / (1 << 24);
     }
 
-    function PackTextureXYZ_N3(qXYZ, qA, qB, qC) {
+    function packTextureXYZ_N3(qXYZ, qA, qB, qC) {
         var colors = new Array(qA.length * 4);
         for (var i = 0; i < qA.length; i++) {
             colors[i * 4] = qXYZ[i * 3];
             colors[i * 4 + 1] = qXYZ[i * 3 + 1];
             colors[i * 4 + 2] = qXYZ[i * 3 + 2];
 
-            colors[i * 4 + 3] = Pack3NFloats(qA[i], qB[i], qC[i]);
+            colors[i * 4 + 3] = pack3NFloats(qA[i], qB[i], qC[i]);
         }
         return colors;
     }
 
-    function PackTextureXYZ_N3_Array(qXYZ, qXYZ2) {
+    function packTextureXYZ_N3_Array(qXYZ, qXYZ2) {
         var num = qXYZ.length / 3;
         var colors = new Array(num * 4);
         for (var i = 0; i < num; i++) {
@@ -207,12 +117,12 @@ pc.extend(pc.scene, function() {
             colors[i * 4 + 1] = qXYZ[i * 3 + 1];
             colors[i * 4 + 2] = qXYZ[i * 3 + 2];
 
-            colors[i * 4 + 3] = Pack3NFloats(qXYZ2[i * 3], qXYZ2[i * 3 + 1], qXYZ2[i * 3 + 2]);
+            colors[i * 4 + 3] = pack3NFloats(qXYZ2[i * 3], qXYZ2[i * 3 + 1], qXYZ2[i * 3 + 2]);
         }
         return colors;
     }
 
-    function PackTextureRGBA(qRGB, qA) {
+    function packTextureRGBA(qRGB, qA) {
         var colors = new Array(qA.length * 4);
         for (var i = 0; i < qA.length; i++) {
             colors[i * 4] = qRGB[i * 3];
@@ -224,14 +134,14 @@ pc.extend(pc.scene, function() {
         return colors;
     }
 
-    function PackTexture2_N3_Array(qA, qB, qXYZ) {
+    function packTexture2_N3_Array(qA, qB, qXYZ) {
         var colors = new Array(qA.length * 4);
         for (var i = 0; i < qA.length; i++) {
             colors[i * 4] = qA[i];
             colors[i * 4 + 1] = qB[i];
             colors[i * 4 + 2] = 0;
 
-            colors[i * 4 + 3] = Pack3NFloats(qXYZ[i * 3], qXYZ[i * 3 + 1], qXYZ[i * 3 + 2]);
+            colors[i * 4 + 3] = pack3NFloats(qXYZ[i * 3], qXYZ[i * 3 + 1], qXYZ[i * 3 + 2]);
         }
         return colors;
     }
@@ -260,7 +170,7 @@ pc.extend(pc.scene, function() {
     }
 
 
-    var ParticleEmitter2 = function ParticleEmitter2(graphicsDevice, options) {
+    var ParticleEmitter2 = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
         var gd = graphicsDevice;
         var precision = 32;
@@ -273,7 +183,7 @@ pc.extend(pc.scene, function() {
         setProperty("rate", 1);                                  // Emission rate
         setProperty("lifetime", 50);                             // Particle lifetime
         setProperty("birthBounds", new pc.Vec3(0, 0, 0));        // Spawn point divergence
-        setProperty("wrapBounds", undefined);
+        setProperty("wrapBounds", null);
         setProperty("wind", new pc.Vec3(0, 0, 0));               // Wind velocity
         setProperty("smoothness", 4);                            // Blurring width for graphs
         setProperty("texture", null);
@@ -285,14 +195,14 @@ pc.extend(pc.scene, function() {
         setProperty("deltaRandomnessStatic", 0.0);                     // Randomizes particle simulation speed [0-1] (one value during whole particle life)
         setProperty("sort", 0);                                  // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
         setProperty("mode", this.sort>0? "CPU" : "GPU");
-        setProperty("camera", undefined);
-        setProperty("scene", undefined);
+        setProperty("camera", null);
+        setProperty("scene", null);
         setProperty("lighting", false);
         setProperty("softerLighting", false);
         setProperty("stretch", 0.0);
         setProperty("depthSoftening", 0);
         setProperty("maxEmissionTime", 15);
-        setProperty("mesh", undefined);                          // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
+        setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
         setProperty("srgb", true);
         setProperty("ztest", false);
@@ -302,112 +212,18 @@ pc.extend(pc.scene, function() {
 
         this.frameRandom = new pc.Vec3(0, 0, 0);
 
-        if (this.depthSoftening > 0) {
-            if (this.camera != undefined) {
-                if ((this.camera.camera.camera._depthTarget == undefined) || (this.camera.camera.camera._depthTarget == null)) {
-                    this.camera.camera.camera._depthTarget = createOffscreenTarget(this.graphicsDevice, this.camera.camera);
-                    this.camera.camera._depthTarget = this.camera.camera.camera._depthTarget;
-                    this.camera._depthTarget = this.camera.camera.camera._depthTarget;
-                }
-            }
-        }
-
-        if (this.lighting) {
-            this.lightCube = new Float32Array(6 * 3);
-
-            this.lightCubeDir = new Array(6);
-            this.lightCubeDir[0] = new pc.Vec3(-1, 0, 0);
-            this.lightCubeDir[1] = new pc.Vec3(1, 0, 0);
-            this.lightCubeDir[2] = new pc.Vec3(0, -1, 0);
-            this.lightCubeDir[3] = new pc.Vec3(0, 1, 0);
-            this.lightCubeDir[4] = new pc.Vec3(0, 0, -1);
-            this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
-        }
-
         // Time-dependent parameters
-        setProperty("graphLocalOffset", defaultLinearGraph3);
-        setProperty("graphWorldOffset", defaultLinearGraph3);
-        setProperty("graphColor", defaultLinearGraph3);
-        setProperty("graphPosDiv", defaultLinearGraph3);
-        setProperty("graphPosWorldDiv", defaultLinearGraph3);
-        setProperty("graphAngle", defaultLinearGraph);
-        setProperty("graphScale", defaultLinearGraph);
-        setProperty("graphAlpha", defaultLinearGraph);
-        setProperty("graphScaleDiv", defaultLinearGraph);
-        setProperty("graphAngleDiv", defaultLinearGraph);
-        setProperty("graphAlphaDiv", defaultLinearGraph);
-
-        this.qLocalOffset = this.graphLocalOffset.Quantize(precision, this.smoothness);
-        this.qWorldOffset = this.graphWorldOffset.Quantize(precision, this.smoothness);
-        this.qColor = this.graphColor.Quantize(precision, this.smoothness);
-        this.qPosDiv = this.graphPosDiv.Quantize(precision, this.smoothness);
-        this.qPosWorldDiv = this.graphPosWorldDiv.Quantize(precision, this.smoothness);
-
-        this.qAngle = this.graphAngle.Quantize(precision, this.smoothness);
-        this.qScale = this.graphScale.Quantize(precision, this.smoothness);
-        this.qAlpha = this.graphAlpha.Quantize(precision, this.smoothness);
-        this.qScaleDiv = this.graphScaleDiv.Quantize(precision, this.smoothness);
-        this.qAngleDiv = this.graphAngleDiv.Quantize(precision, this.smoothness);
-        this.qAlphaDiv = this.graphAlphaDiv.Quantize(precision, this.smoothness);
-
-        this.colorMult = 1;
-        for (var i = 0; i < this.qColor.length; i++) {
-            this.colorMult = Math.max(this.colorMult, this.qColor[i]);
-        }
-
-        if (this.mode == modeGPU) {
-            this.internalTex0 = _createTexture(gd, precision, 1, PackTextureXYZ_N3(this.qLocalOffset, this.qScaleDiv, this.qAngleDiv, this.qAlphaDiv));
-            this.internalTex1 = _createTexture(gd, precision, 1, PackTextureXYZ_N3_Array(this.qWorldOffset, this.qPosDiv));
-            this.internalTex2 = _createTexture(gd, precision, 1, PackTexture2_N3_Array(this.qAngle, this.qScale, this.qPosWorldDiv));
-        }
-        this.internalTex3 = _createTexture(gd, precision, 1, PackTextureRGBA(this.qColor, this.qAlpha), true, 1.0 / this.colorMult);
-
-
-        // Dynamic simulation data
-        this.lifeAndSourcePos = new Float32Array(this.numParticles * 4);
-        for (var i = 0; i < this.numParticles; i++) {
-            this.lifeAndSourcePos[i * 4] = this.birthBounds.x * (Math.random() * 2 - 1);
-            this.lifeAndSourcePos[i * 4 + 1] = this.birthBounds.y * (Math.random() * 2 - 1);
-            this.lifeAndSourcePos[i * 4 + 2] = this.birthBounds.z * (Math.random() * 2 - 1);
-            this.lifeAndSourcePos[i * 4 + 3] = -this.rate * i;
-        }
-        this.lifeAndSourcePosStart = new Float32Array(this.numParticles * 4);
-        for (var i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePosStart[i] = this.lifeAndSourcePos[i];
-
-        if (this.mode == modeCPU) {
-            this.vbToSort = new Array(this.numParticles);
-            this.vbOld = new Float32Array(this.numParticles * 4 * 4);
-            this.particleDistance = new Float32Array(this.numParticles);
-            this.particleNoize = new Float32Array(this.numParticles);
-            for (var i = 0; i < this.numParticles; i++) {
-                this.particleNoize[i] = Math.random();
-            }
-        }
-
-        if (this.mode == modeGPU) {
-            this.texLifeAndSourcePosIN = _createTexture(gd, this.numParticles, 1, this.lifeAndSourcePos);
-            this.texLifeAndSourcePosOUT = _createTexture(gd, this.numParticles, 1, this.lifeAndSourcePos);
-            this.texLifeAndSourcePosStart = _createTexture(gd, this.numParticles, 1, this.lifeAndSourcePosStart);
-
-            this.rtLifeAndSourcePosIN = new pc.gfx.RenderTarget(gd, this.texLifeAndSourcePosIN, {
-                depth: false
-            });
-            this.rtLifeAndSourcePosOUT = new pc.gfx.RenderTarget(gd, this.texLifeAndSourcePosOUT, {
-                depth: false
-            });
-            this.swapTex = false;
-        }
-
-        var chunks = pc.gfx.shaderChunks;
-        var shaderCodeRespawn = chunks.particleUpdaterStartPS;
-        shaderCodeRespawn += chunks.particleUpdaterRespawnPS;
-        shaderCodeRespawn += chunks.particleUpdaterEndPS;
-
-        var shaderCodeNoRespawn = chunks.particleUpdaterStartPS;
-        shaderCodeNoRespawn += chunks.particleUpdaterEndPS;
-
-        this.shaderParticleUpdateRespawn = chunks.CreateShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad" + false);
-        this.shaderParticleUpdateNoRespawn = chunks.CreateShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad" + true);
+        setProperty("graphLocalOffset", defaultCurve3);
+        setProperty("graphWorldOffset", defaultCurve3);
+        setProperty("graphColor", defaultCurve3);
+        setProperty("graphPosDiv", defaultCurve3);
+        setProperty("graphPosWorldDiv", defaultCurve3);
+        setProperty("graphAngle", defaultCurve);
+        setProperty("graphScale", defaultCurve);
+        setProperty("graphAlpha", defaultCurve);
+        setProperty("graphScaleDiv", defaultCurve);
+        setProperty("graphAngleDiv", defaultCurve);
+        setProperty("graphAlphaDiv", defaultCurve);
 
         // Particle updater constants
         this.constantTexLifeAndSourcePosIN = gd.scope.resolve("texLifeAndSourcePosIN");
@@ -420,98 +236,203 @@ pc.extend(pc.scene, function() {
         this.constantLifetime = gd.scope.resolve("lifetime");
         this.constantDeltaRnd = gd.scope.resolve("deltaRandomness");
         this.constantDeltaRndStatic = gd.scope.resolve("deltaRandomnessStatic");
+        this.constantLightCube = gd.scope.resolve("lightCube[0]");
 
-        if (this.lighting) {
-            this.constantLightCube = gd.scope.resolve("lightCube[0]");
-        }
-
-        this.numParticleVerts = this.mesh == undefined ? 4 : this.mesh.vertexBuffer.numVertices;
-        this.numParticleIndices = this.mesh == undefined ? 6 : this.mesh.indexBuffer[0].numIndices;
-        this.allocate(this.numParticles);
-
-        var mesh = new pc.scene.Mesh();
-        mesh.vertexBuffer = this.vertexBuffer;
-        mesh.indexBuffer[0] = this.indexBuffer;
-        mesh.primitive[0].type = pc.gfx.PRIMITIVE_TRIANGLES;
-        mesh.primitive[0].base = 0;
-        mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
-        mesh.primitive[0].indexed = true;
-
-        var hasNormal = ((this.textureNormal != null) || (this.textureNormalAsset != null));
-
-        var programLib = this.graphicsDevice.getProgramLibrary();
-        var normalOption = 0;
-        if (this.lighting) {
-            normalOption = hasNormal ? 2 : 1;
-        }
-        var isMesh = this.mesh != undefined;
-        var shader = programLib.getProgram("particle2", {
-            mode: this.mode,
-            normal: normalOption,
-            halflambert: this.softerLighting,
-            stretch: this.stretch,
-            soft: this.depthSoftening,
-            mesh: isMesh,
-            srgb: this.srgb,
-            wrap: (this.wrapBounds != undefined)
-        });
-        var material = new pc.scene.Material();
-
-        material.setShader(shader);
-        material.setParameter('stretch', this.stretch);
-        material.setParameter('colorMult', this.colorMult);
-        if (this.mode == modeGPU) {
-            material.setParameter('internalTex0', this.internalTex0);
-            material.setParameter('internalTex1', this.internalTex1);
-            material.setParameter('internalTex2', this.internalTex2);
-            material.setParameter('texLifeAndSourcePosOUT', this.texLifeAndSourcePosOUT);
-        }
-        material.setParameter('internalTex3', this.internalTex3);
-
-        material.setParameter('numParticles', this.numParticles);
-        material.setParameter('lifetime', this.lifetime);
-        material.setParameter('graphSampleSize', 1.0 / precision);
-        material.setParameter('graphNumSamples', precision);
-        if (this.wrapBounds != undefined) material.setParameter('wrapBounds', this.wrapBounds.data);
-        //console.log(new pc.Vec3(this.birthBounds.x*0.5, this.birthBounds.y*0.5, this.birthBounds.z*0.5]);
-        if (this.texture != null) material.setParameter('particleTexture', this.texture);
-        if (this.lighting) {
-            if (this.textureNormal != null) material.setParameter('normalTexture', this.textureNormal);
-        }
-        if (this.depthSoftening > 0) {
-            material.setParameter('uDepthMap', this.camera.camera._depthTarget.colorBuffer);
-            material.setParameter('screenSize', new pc.Vec4(gd.width, gd.height, 1.0 / gd.width, 1.0 / gd.height).data);
-            material.setParameter('softening', this.depthSoftening);
-        }
-
-        material.cullMode = pc.gfx.CULLFACE_NONE;
-        material.blend = true;
-
-        // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
-        material.blendSrc = pc.gfx.BLENDMODE_ONE;
-        material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
-
-        if (this.stretch > 0.0) material.cull = pc.gfx.CULLFACE_NONE;
-
-        material.depthWrite = this.ztest; //false;
-        this.material = material;
-
-        this.meshInstance = new pc.scene.MeshInstance(null, mesh, material);
-        this.meshInstance.layer = pc.scene.LAYER_SKYBOX; //LAYER_FX;
-        this.meshInstance.updateKey(); // shouldn't be here?
-
-        this.addTime(0); // fill dynamic textures and constants with initial data
-
-        this.endTime = CalcEndTime(this);
+        this.rebuild();
     };
 
-    function CalcEndTime(emitter) {
+    function calcEndTime(emitter) {
         var interval = (emitter.rate * emitter.numParticles + emitter.lifetime + emitter.lifetime / (1 - emitter.deltaRandomnessStatic));
         interval = Math.min(interval, emitter.maxEmissionTime);
         return Date.now() + interval * 1000;
     }
 
     ParticleEmitter2.prototype = {
+
+        rebuild: function() {
+            var precision = this.precision;
+            var gd = this.graphicsDevice;
+
+            if (this.depthSoftening > 0) {
+                if (this.camera) {
+                    if ((this.camera.camera.camera._depthTarget == undefined) || (this.camera.camera.camera._depthTarget == null)) {
+                        this.camera.camera.camera._depthTarget = createOffscreenTarget(this.graphicsDevice, this.camera.camera);
+                        this.camera.camera._depthTarget = this.camera.camera.camera._depthTarget;
+                        this.camera._depthTarget = this.camera.camera.camera._depthTarget;
+                    }
+                }
+            }
+
+            if (this.lighting) {
+                this.lightCube = new Float32Array(6 * 3);
+
+                this.lightCubeDir = new Array(6);
+                this.lightCubeDir[0] = new pc.Vec3(-1, 0, 0);
+                this.lightCubeDir[1] = new pc.Vec3(1, 0, 0);
+                this.lightCubeDir[2] = new pc.Vec3(0, -1, 0);
+                this.lightCubeDir[3] = new pc.Vec3(0, 1, 0);
+                this.lightCubeDir[4] = new pc.Vec3(0, 0, -1);
+                this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
+            }
+
+            this.qLocalOffset = this.graphLocalOffset.quantize(precision, this.smoothness);
+            this.qWorldOffset = this.graphWorldOffset.quantize(precision, this.smoothness);
+            this.qColor = this.graphColor.quantize(precision, this.smoothness);
+            this.qPosDiv = this.graphPosDiv.quantize(precision, this.smoothness);
+            this.qPosWorldDiv = this.graphPosWorldDiv.quantize(precision, this.smoothness);
+
+            this.qAngle = this.graphAngle.quantize(precision, this.smoothness);
+            this.qScale = this.graphScale.quantize(precision, this.smoothness);
+            this.qAlpha = this.graphAlpha.quantize(precision, this.smoothness);
+            this.qScaleDiv = this.graphScaleDiv.quantize(precision, this.smoothness);
+            this.qAngleDiv = this.graphAngleDiv.quantize(precision, this.smoothness);
+            this.qAlphaDiv = this.graphAlphaDiv.quantize(precision, this.smoothness);
+
+            this.colorMult = 1;
+            for (var i = 0; i < this.qColor.length; i++) {
+                this.colorMult = Math.max(this.colorMult, this.qColor[i]);
+            }
+
+            if (this.mode == modeGPU) {
+                this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_N3(this.qLocalOffset, this.qScaleDiv, this.qAngleDiv, this.qAlphaDiv));
+                this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_N3_Array(this.qWorldOffset, this.qPosDiv));
+                this.internalTex2 = _createTexture(gd, precision, 1, packTexture2_N3_Array(this.qAngle, this.qScale, this.qPosWorldDiv));
+            }
+            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), true, 1.0 / this.colorMult);
+
+
+            // Dynamic simulation data
+            this.lifeAndSourcePos = new Float32Array(this.numParticles * 4);
+            for (var i = 0; i < this.numParticles; i++) {
+                this.lifeAndSourcePos[i * 4] = this.birthBounds.x * (Math.random() * 2 - 1);
+                this.lifeAndSourcePos[i * 4 + 1] = this.birthBounds.y * (Math.random() * 2 - 1);
+                this.lifeAndSourcePos[i * 4 + 2] = this.birthBounds.z * (Math.random() * 2 - 1);
+                this.lifeAndSourcePos[i * 4 + 3] = -this.rate * i;
+            }
+            this.lifeAndSourcePosStart = new Float32Array(this.numParticles * 4);
+            for (var i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePosStart[i] = this.lifeAndSourcePos[i];
+
+            if (this.mode == modeCPU) {
+                this.vbToSort = new Array(this.numParticles);
+                this.vbOld = new Float32Array(this.numParticles * 4 * 4);
+                this.particleDistance = new Float32Array(this.numParticles);
+                this.particleNoize = new Float32Array(this.numParticles);
+                for (var i = 0; i < this.numParticles; i++) {
+                    this.particleNoize[i] = Math.random();
+                }
+            }
+
+            if (this.mode == modeGPU) {
+                this.texLifeAndSourcePosIN = _createTexture(gd, this.numParticles, 1, this.lifeAndSourcePos);
+                this.texLifeAndSourcePosOUT = _createTexture(gd, this.numParticles, 1, this.lifeAndSourcePos);
+                this.texLifeAndSourcePosStart = _createTexture(gd, this.numParticles, 1, this.lifeAndSourcePosStart);
+
+                this.rtLifeAndSourcePosIN = new pc.gfx.RenderTarget(gd, this.texLifeAndSourcePosIN, {
+                    depth: false
+                });
+                this.rtLifeAndSourcePosOUT = new pc.gfx.RenderTarget(gd, this.texLifeAndSourcePosOUT, {
+                    depth: false
+                });
+                this.swapTex = false;
+            }
+
+            var chunks = pc.gfx.shaderChunks;
+            var shaderCodeRespawn = chunks.particleUpdaterStartPS;
+            shaderCodeRespawn += chunks.particleUpdaterRespawnPS;
+            shaderCodeRespawn += chunks.particleUpdaterEndPS;
+
+            var shaderCodeNoRespawn = chunks.particleUpdaterStartPS;
+            shaderCodeNoRespawn += chunks.particleUpdaterEndPS;
+
+            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad" + false);
+            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad" + true);
+
+            this.numParticleVerts = this.mesh == undefined ? 4 : this.mesh.vertexBuffer.numVertices;
+            this.numParticleIndices = this.mesh == undefined ? 6 : this.mesh.indexBuffer[0].numIndices;
+            this.allocate(this.numParticles);
+
+            var mesh = new pc.scene.Mesh();
+            mesh.vertexBuffer = this.vertexBuffer;
+            mesh.indexBuffer[0] = this.indexBuffer;
+            mesh.primitive[0].type = pc.gfx.PRIMITIVE_TRIANGLES;
+            mesh.primitive[0].base = 0;
+            mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
+            mesh.primitive[0].indexed = true;
+
+            var hasNormal = ((this.textureNormal != null) || (this.textureNormalAsset != null));
+
+            var programLib = this.graphicsDevice.getProgramLibrary();
+            var normalOption = 0;
+            if (this.lighting) {
+                normalOption = hasNormal ? 2 : 1;
+            }
+            var isMesh = this.mesh != undefined;
+            var shader = programLib.getProgram("particle2", {
+                mode: this.mode,
+                normal: normalOption,
+                halflambert: this.softerLighting,
+                stretch: this.stretch,
+                soft: this.depthSoftening,
+                mesh: isMesh,
+                srgb: this.srgb,
+                wrap: (this.wrapBounds != undefined)
+            });
+            this.material = new pc.scene.Material();
+            this.material.setShader(shader);
+
+            this.material.cullMode = pc.gfx.CULLFACE_NONE;
+            this.material.blend = true;
+
+            // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
+            this.material.blendSrc = pc.gfx.BLENDMODE_ONE;
+            this.material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+
+            this.material.depthWrite = this.ztest;
+
+            this.resetMaterial();
+
+
+            this.meshInstance = new pc.scene.MeshInstance(null, mesh, this.material);
+            this.meshInstance.layer = pc.scene.LAYER_SKYBOX; //LAYER_FX;
+            this.meshInstance.updateKey(); // shouldn't be here?
+
+            this.addTime(0); // fill dynamic textures and constants with initial data
+
+            this.resetTime();
+        },
+
+
+        resetMaterial: function() {
+            var material = this.material;
+            var gd = this.graphicsDevice;
+
+            material.setParameter('stretch', this.stretch);
+            material.setParameter('colorMult', this.colorMult);
+            if (this.mode == modeGPU) {
+                material.setParameter('internalTex0', this.internalTex0);
+                material.setParameter('internalTex1', this.internalTex1);
+                material.setParameter('internalTex2', this.internalTex2);
+                material.setParameter('texLifeAndSourcePosOUT', this.texLifeAndSourcePosOUT);
+            }
+            material.setParameter('internalTex3', this.internalTex3);
+
+            material.setParameter('numParticles', this.numParticles);
+            material.setParameter('lifetime', this.lifetime);
+            material.setParameter('graphSampleSize', 1.0 / this.precision);
+            material.setParameter('graphNumSamples', this.precision);
+            if (this.wrapBounds) material.setParameter('wrapBounds', this.wrapBounds.data);
+            if (this.texture) material.setParameter('particleTexture', this.texture);
+            if (this.lighting) {
+                if (this.textureNormal) material.setParameter('normalTexture', this.textureNormal);
+            }
+            if (this.depthSoftening > 0) {
+                material.setParameter('uDepthMap', this.camera.camera._depthTarget.colorBuffer);
+                material.setParameter('screenSize', new pc.Vec4(gd.width, gd.height, 1.0 / gd.width, 1.0 / gd.height).data);
+                material.setParameter('softening', this.depthSoftening);
+            }
+            if (this.stretch > 0.0) material.cull = pc.gfx.CULLFACE_NONE;
+        },
+
 
         // Declares vertex format, creates VB and IB
         allocate: function(numParticles) {
@@ -554,7 +475,7 @@ pc.extend(pc.scene, function() {
                 // Fill the vertex buffer
                 var data = new Float32Array(this.vertexBuffer.lock());
                 var meshData, stride;
-                if (this.mesh != undefined) {
+                if (this.mesh) {
                     meshData = new Float32Array(this.mesh.vertexBuffer.lock());
                     stride = meshData.length / this.mesh.vertexBuffer.numVertices;
                 }
@@ -564,7 +485,7 @@ pc.extend(pc.scene, function() {
                     if (i % this.numParticleVerts == 0) rnd = Math.random();
                     var id = Math.floor(i / this.numParticleVerts);
 
-                    if (this.mesh == undefined) {
+                    if (!this.mesh) {
                         var vertID = i % 4;
                         data[i * 4] = particleVerts[vertID][0];
                         data[i * 4 + 1] = particleVerts[vertID][1];
@@ -581,15 +502,15 @@ pc.extend(pc.scene, function() {
 
                 if (this.mode == modeCPU) this.vbCPU = new Float32Array(data);
                 this.vertexBuffer.unlock();
-                if (this.mesh != undefined) this.mesh.vertexBuffer.unlock();
+                if (this.mesh) this.mesh.vertexBuffer.unlock();
 
 
                 // Fill the index buffer
                 var dst = 0;
                 var indices = new Uint16Array(this.indexBuffer.lock());
-                if (this.mesh != undefined) meshData = new Uint16Array(this.mesh.indexBuffer[0].lock());
+                if (this.mesh) meshData = new Uint16Array(this.mesh.indexBuffer[0].lock());
                 for (var i = 0; i < numParticles; i++) {
-                    if (this.mesh == undefined) {
+                    if (!this.mesh) {
                         var baseIndex = i * 4;
                         indices[dst++] = baseIndex;
                         indices[dst++] = baseIndex + 1;
@@ -604,11 +525,11 @@ pc.extend(pc.scene, function() {
                     }
                 }
                 this.indexBuffer.unlock();
-                if (this.mesh != undefined) this.mesh.indexBuffer[0].unlock();
+                if (this.mesh) this.mesh.indexBuffer[0].unlock();
             }
         },
 
-        Reset: function() {
+        reset: function() {
             if (this.mode == modeCPU) {
                 for (var i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePos[i] = this.lifeAndSourcePosStart[i];
             } else {
@@ -618,9 +539,12 @@ pc.extend(pc.scene, function() {
                 this.addTime(0);
                 this.texLifeAndSourcePosIN = oldTexIN;
             }
-            this.endTime = CalcEndTime(this);
+            this.resetTime();
         },
 
+        resetTime: function() {
+            this.endTime = calcEndTime(this);
+        },
 
         addTime: function(delta) {
             var device = this.graphicsDevice;
@@ -630,20 +554,20 @@ pc.extend(pc.scene, function() {
             device.setDepthTest(false);
             device.setDepthWrite(false);
 
-            if ((this.texture == undefined) && (this.textureAsset != undefined)) {
+            if ((!this.texture) && (this.textureAsset)) {
                 this.texture = this.textureAsset.resource;
-                if (this.texture != undefined) {
+                if (this.texture) {
                     this.material.setParameter('particleTexture', this.texture);
-                    if ((!this.lighting) || (this.lighting && (this.textureNormal != undefined)) || (this.textureNormalAsset == undefined)) this.scene.addModel(this.psys);
+                    if ((!this.lighting) || (this.lighting && (this.textureNormal)) || (!this.textureNormalAsset)) this.scene.addModel(this.psys);
                 }
             }
 
             if (this.lighting) {
-                if ((this.textureNormal == undefined) && (this.textureNormalAsset != undefined)) {
+                if ((!this.textureNormal) && (this.textureNormalAsset)) {
                     this.textureNormal = this.textureNormalAsset.resource;
-                    if (this.textureNormal != undefined) {
+                    if (this.textureNormal) {
                         this.material.setParameter('normalTexture', this.textureNormal);
-                        if (this.texture != undefined) this.scene.addModel(this.psys);
+                        if (this.texture) this.scene.addModel(this.psys);
                     }
                 }
             }
@@ -652,7 +576,7 @@ pc.extend(pc.scene, function() {
             // Bake ambient and directional lighting into one ambient cube
             // TODO: only do if lighting changed
             if (this.lighting) {
-                if (this.scene == undefined) {
+                if (!this.scene) {
                     console.error("There is no scene defined for lighting particles");
                     return;
                 }
@@ -691,7 +615,7 @@ pc.extend(pc.scene, function() {
                 this.constantDeltaRndStatic.setValue(this.deltaRandomnessStatic);
 
                 this.constantTexLifeAndSourcePosIN.setValue(this.swapTex ? this.texLifeAndSourcePosOUT : this.texLifeAndSourcePosIN);
-                DrawQuadWithShader(device, this.swapTex ? this.rtLifeAndSourcePosIN : this.rtLifeAndSourcePosOUT, this.oneShot ? this.shaderParticleUpdateNoRespawn : this.shaderParticleUpdateRespawn);
+                pc.gfx.drawQuadWithShader(device, this.swapTex ? this.rtLifeAndSourcePosIN : this.rtLifeAndSourcePosOUT, this.oneShot ? this.shaderParticleUpdateNoRespawn : this.shaderParticleUpdateRespawn);
 
                 this.constantTexLifeAndSourcePosOUT.setValue(this.swapTex ? this.texLifeAndSourcePosIN : this.texLifeAndSourcePosOUT);
                 this.swapTex = !this.swapTex;
@@ -718,7 +642,7 @@ pc.extend(pc.scene, function() {
                 }
 
                 var data = new Float32Array(this.vertexBuffer.lock());
-                if (this.meshInstance.node != undefined) {
+                if (this.meshInstance.node) {
                     var fullMat = this.meshInstance.node.worldTransform;
                     for (var j = 0; j < 12; j++) rotMat.data[j] = fullMat.data[j];
                 }
@@ -729,7 +653,7 @@ pc.extend(pc.scene, function() {
                 var posCam;
                 posCam = camera.position.data;
                 if (this.sort > 0) {
-                    if (this.camera == undefined) {
+                    if (!this.camera) {
                         console.error("There is no camera for particle sorting");
                         return;
                     }
@@ -826,7 +750,7 @@ pc.extend(pc.scene, function() {
                         angle = pc.math.lerp(angle, angle + 90 * rndFactor, angleRnd);
                         scale = pc.math.lerp(scale, scale * rndFactor, scaleRnd);
 
-                        if (this.meshInstance.node != undefined) {
+                        if (this.meshInstance.node) {
                             rotMat.transformPoint(localOffsetVec, localOffsetVec);
                         }
 
@@ -834,7 +758,7 @@ pc.extend(pc.scene, function() {
                         particlePosY = sourcePosY + localOffset[1] + worldOffset[1];
                         particlePosZ = sourcePosZ + localOffset[2] + worldOffset[2];
 
-                        if (this.wrapBounds != undefined) {
+                        if (this.wrapBounds) {
                             origParticlePosX = particlePosX;
                             origParticlePosY = particlePosY;
                             origParticlePosZ = particlePosZ;
@@ -885,7 +809,7 @@ pc.extend(pc.scene, function() {
                             worldOffset[1] = pc.math.lerp(worldOffset[1], divergentWorldOffsetY, posWorldDivergence[1]);
                             worldOffset[2] = pc.math.lerp(worldOffset[2], divergentWorldOffsetZ, posWorldDivergence[2]);
 
-                            if (this.meshInstance.node != undefined) {
+                            if (this.meshInstance.node) {
                                 rotMat.transformPoint(localOffsetVec, localOffsetVec);
                             }
 
@@ -944,7 +868,7 @@ pc.extend(pc.scene, function() {
             }
 
             if (this.oneShot) {
-                if (this.onFinished != undefined) {
+                if (this.onFinished) {
                     if (Date.now() > this.endTime) {
                         this.onFinished();
                     }
@@ -958,6 +882,5 @@ pc.extend(pc.scene, function() {
 
     return {
         ParticleEmitter2: ParticleEmitter2,
-        LinearGraph: LinearGraph
     };
 }());
