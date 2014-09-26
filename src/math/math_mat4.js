@@ -422,43 +422,7 @@ pc.extend(pc, (function () {
 
                 return this;
             };
-        }()),
-		
-		
-        setLookVector: (function () {
-            var x, y;
-
-            x = new pc.Vec3();
-            y = new pc.Vec3();
-
-            return function (z, up) {
-                y.copy(up).normalize();
-                x.cross(y, z).normalize();
-                y.cross(z, x);
-
-                var r = this.data;
-
-                r[0]  = x.x;
-                r[1]  = x.y;
-                r[2]  = x.z;
-                r[3]  = 0;
-                r[4]  = y.x;
-                r[5]  = y.y;
-                r[6]  = y.z;
-                r[7]  = 0;
-                r[8]  = z.x;
-                r[9]  = z.y;
-                r[10] = z.z;
-                r[11] = 0;
-                r[12] = 0;
-                r[13] = 0;
-                r[14] = 0;
-                r[15] = 1;
-
-                return this;
-            };
-        }()),
-		
+        }()),	
 
         /**
          * @private

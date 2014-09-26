@@ -1100,37 +1100,6 @@ pc.extend(pc.scene, function () {
             }
         }(),
 
-        setLookVector: function() {
-            var matrix = new pc.Mat4();
-            var lookVec = new pc.Vec3();
-            var up = new pc.Vec3();
-            var rotation = new pc.Quat();
-
-            return function() {
-                switch (arguments.length) {
-                    case 1:
-                        lookVec.copy(arguments[0]);
-                        if ((arguments[0] > arguments[1]) && (arguments[0] > arguments[2])) {
-                            up.copy(pc.Vec3.UP);
-                        } else if ((arguments[1] > arguments[0]) && (arguments[1] > arguments[2])) {
-                            up.copy(pc.Vec3.FORWARD);
-                        } else {
-                            up.copy(pc.Vec3.UP);
-                        }
-                        //up.copy(Math.abs(arguments[1]) < Math.abs(arguments[0])? pc.Vec3.UP : pc.Vec3.FORWARD);
-                        break;
-                    case 2:
-                        lookVec.copy(arguments[0]);
-                        up.copy(arguments[1]);
-                        break;
-                }
-
-                matrix.setLookVector(lookVec, up);
-                rotation.setFromMat4(matrix);
-                this.setRotation(rotation);
-            }
-        }(),
-
         /**
          * @function
          * @name pc.scene.GraphNode#translate
