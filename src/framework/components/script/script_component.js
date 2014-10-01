@@ -90,19 +90,34 @@ pc.extend(pc.fw, function () {
 
                 this.data.areScriptsLoaded = false;
 
-                // get the urls
+                // get the urls and names to be loaded
                 var scripts = newValue;
-                var urls = scripts.map(function (s) {
-                    return s.url;
-                });
+
+                // grab a unique set of urls and names so we don't load the same scripts multiple times if they are in the same url
+                var urlsDict = {};
+                var namesDict = {};
+                for(var i = 0; i < scripts.length; ++i) {
+                    urlsDict[scripts[i].url] = true;
+                    namesDict[scripts[i].name] = true;
+                }
+
+                var urls = [];
+                for(var key in urlsDict) {
+                    urls.push(key);
+                }
+
+                var names = [];
+                for(var key in namesDict) {
+                    names.push(key);
+                }
 
                 // try to load the scripts synchronously first
-                if (this._loadFromCache(urls)) {
+                if (this._loadFromCache(urls, names)) {
                     return;
                 }
 
                 // not all scripts are in the cache so load them asynchronously
-                this._loadScripts(urls);
+                this._loadScripts(urls, names);
             }
         },
 
@@ -136,7 +151,7 @@ pc.extend(pc.fw, function () {
 
         // Load each url from the cache synchronously. If one of the urls is not in the cache
         // then stop and return false.
-        _loadFromCache: function (urls) {
+        _loadFromCache: function (urls, names) {
             var cached = [];
 
             for (var i=0, len=urls.length; i<len; i++) {
@@ -161,7 +176,8 @@ pc.extend(pc.fw, function () {
 
                 // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
                 // Make sure that script component hasn't been removed since we started loading
-                if (ScriptType && this.entity.script) {
+                // Also make sure to not load this if this script was in the same file as other scripts and it is not actually required
+                if (ScriptType && this.entity.script && names.indexOf(ScriptType._pcScriptName) >= 0) {
                     // Make sure that we haven't already instaciated another identical script while loading
                     // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
                     if (!this.entity.script.instances[ScriptType._pcScriptName]) {
@@ -184,7 +200,7 @@ pc.extend(pc.fw, function () {
         },
 
         // Load each script url asynchronously using the resource loader
-        _loadScripts: function (urls) {
+        _loadScripts: function (urls, names) {
             // Load and register new scripts and instances
             var requests = urls.map(function (url) {
                 return new pc.resources.ScriptRequest(url);
@@ -196,16 +212,21 @@ pc.extend(pc.fw, function () {
 
             var promise = this.system.context.loader.request(requests, options);
             promise.then(function (resources) {
-                resources.forEach(function (ScriptType, index) {
-                    // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
-                    // Make sure that script component hasn't been removed since we started loading
-                    if (ScriptType && this.entity.script) {
-                        // Make sure that we haven't already instaciated another identical script while loading
-                        // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
-                        if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-                            var instance = new ScriptType(this.entity);
-                            this.system._preRegisterInstance(this.entity, urls[index], ScriptType._pcScriptName, instance);
-                        }
+                resources.forEach(function (loadResult, resultsIndex) {
+                    // loadResult may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
+                    if(loadResult) {
+                        loadResult.scripts.forEach(function (ScriptType, index) {
+                            // Make sure that script component hasn't been removed since we started loading
+                            // Also make sure to not load this if this script was in the same file as other scripts and it is not actually required
+                            if (ScriptType && this.entity.script && names.indexOf(ScriptType._pcScriptName) >= 0) {
+                                // Make sure that we haven't already instaciated another identical script while loading
+                                // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
+                                if (!this.entity.script.instances[ScriptType._pcScriptName]) {
+                                    var instance = new ScriptType(this.entity);
+                                    this.system._preRegisterInstance(this.entity, loadResult.url, ScriptType._pcScriptName, instance);
+                                }
+                            }
+                        }, this);
                     }
                 }, this);
 

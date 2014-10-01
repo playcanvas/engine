@@ -136,18 +136,30 @@ pc.extend(pc.resources, function () {
         element.onload = element.onreadystatechange = function () {
             if(!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
                 done = true; // prevent double event firing
-                var script = self._pending.shift();
-                if (script) {
-                    var ScriptType = script.callback(self._context);
-                    if (ScriptType._pcScriptName) {
-                        throw Error("Attribute _pcScriptName is reserved on ScriptTypes for ResourceLoader use");
+
+                var pendingScripts = [];
+                while(self._pending.length) {
+                    pendingScripts.push(self._pending.pop());
+                }
+
+                if (pendingScripts.length) {
+                    var scriptTypes = [];
+
+                    for(var i = 0; i < pendingScripts.length; ++i) {
+                        var script = pendingScripts[i];
+                        var ScriptType = script.callback(self._context);
+                        if (ScriptType._pcScriptName) {
+                            throw Error("Attribute _pcScriptName is reserved on ScriptTypes for ResourceLoader use");
+                        }
+                        ScriptType._pcScriptName = script.name; // sotre name in script object
+                        scriptTypes.push(ScriptType);
                     }
-                    ScriptType._pcScriptName = script.name; // sotre name in script object
-                    self._loaded[canonicalUrl] = ScriptType; //{name: script.name, ScriptType: ScriptType};
+
+                    self._loaded[canonicalUrl] = scriptTypes;
                     // add the script to the resource loader's cache
                     self._loader.registerHash(canonicalUrl, canonicalUrl);
                     self._loader.addToCache(canonicalUrl, ScriptType);
-                    success(ScriptType);
+                    success({url: url, scripts: scriptTypes});
                 } else {
                     // loaded a regular javascript script, so no ScriptType to instantiate.
                     // However, we still need to register that we've loaded it in case there is a timeout
