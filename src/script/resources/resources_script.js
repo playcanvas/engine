@@ -158,8 +158,9 @@ pc.extend(pc.resources, function () {
                     self._loaded[canonicalUrl] = scriptTypes;
                     // add the script to the resource loader's cache
                     self._loader.registerHash(canonicalUrl, canonicalUrl);
-                    self._loader.addToCache(canonicalUrl, ScriptType);
-                    success({url: url, scripts: scriptTypes});
+                    var resource = {url: url, scripts: scriptTypes};
+                    self._loader.addToCache(canonicalUrl, resource);
+                    success(resource);
                 } else {
                     // loaded a regular javascript script, so no ScriptType to instantiate.
                     // However, we still need to register that we've loaded it in case there is a timeout

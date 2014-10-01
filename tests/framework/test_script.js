@@ -421,6 +421,23 @@ test("Clone entity initializes scripts synchronously", function () {
     stop();
 });
 
+asyncTest("Load multiple scripts from the same URL", function () {
+    var sc = new pc.fw.ScriptComponentSystem(context);
+
+    var e = new pc.fw.Entity();
+    var c = sc.addComponent(e);
+    e.script.scripts = [{name: 'test_mult_1', url: 'scripts/multiple_scripts.js'}, {name: 'test_mult_2', url: 'scripts/multiple_scripts.js'}];
+
+    var str = "";
+    setTimeout(function () {
+        str = e.script.send("test_mult_1", "concat", str);
+        equal(str, "foo");
+        str = e.script.send("test_mult_2", "concat", str);
+        equal(str, "foobar");
+        start();
+    }, 500);
+});
+
 /*
 test("Scripts Initialize called in correct order", function () {
     window.script = {};

@@ -98,7 +98,10 @@ pc.extend(pc.fw, function () {
                 var namesDict = {};
                 for(var i = 0; i < scripts.length; ++i) {
                     urlsDict[scripts[i].url] = true;
-                    namesDict[scripts[i].name] = true;
+
+                    if(scripts[i].name !== undefined) {
+                        namesDict[scripts[i].name] = true;
+                    }
                 }
 
                 var urls = [];
@@ -167,24 +170,25 @@ pc.extend(pc.fw, function () {
             }
 
             for (var i=0, len=cached.length; i<len; i++) {
-                var ScriptType = cached[i];
+                var cachedResource = cached[i];
 
                 // check if this is a regular JS file
-                if (ScriptType == true) {
+                if (cachedResource == true) {
                     continue;
                 }
 
-                // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script
-                // Make sure that script component hasn't been removed since we started loading
-                // Also make sure to not load this if this script was in the same file as other scripts and it is not actually required
-                if (ScriptType && this.entity.script && names.indexOf(ScriptType._pcScriptName) >= 0) {
-                    // Make sure that we haven't already instaciated another identical script while loading
-                    // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
-                    if (!this.entity.script.instances[ScriptType._pcScriptName]) {
-                        var instance = new ScriptType(this.entity);
-                        this.system._preRegisterInstance(this.entity, urls[i], ScriptType._pcScriptName, instance);
+                cachedResource.scripts.forEach(function (ScriptType, index) {
+                    // Make sure that script component hasn't been removed since we started loading
+                    // Also make sure to not load this if this script was in the same file as other scripts and it is not actually required
+                    if (ScriptType && this.entity.script && (!names.length || names.indexOf(ScriptType._pcScriptName) >= 0)) {
+                        // Make sure that we haven't already instaciated another identical script while loading
+                        // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
+                        if (!this.entity.script.instances[ScriptType._pcScriptName]) {
+                            var instance = new ScriptType(this.entity);
+                            this.system._preRegisterInstance(this.entity, urls[i], ScriptType._pcScriptName, instance);
+                        }
                     }
-                }
+                }, this); 
             }
 
             if (this.data) {
@@ -218,7 +222,7 @@ pc.extend(pc.fw, function () {
                         loadResult.scripts.forEach(function (ScriptType, index) {
                             // Make sure that script component hasn't been removed since we started loading
                             // Also make sure to not load this if this script was in the same file as other scripts and it is not actually required
-                            if (ScriptType && this.entity.script && names.indexOf(ScriptType._pcScriptName) >= 0) {
+                            if (ScriptType && this.entity.script && (!names.length || names.indexOf(ScriptType._pcScriptName) >= 0)) {
                                 // Make sure that we haven't already instaciated another identical script while loading
                                 // e.g. if you do addComponent, removeComponent, addComponent, in quick succession
                                 if (!this.entity.script.instances[ScriptType._pcScriptName]) {
