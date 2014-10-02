@@ -114,6 +114,8 @@ pc.extend(pc.fw, function () {
 
         this.manager = manager;
 
+        this.initialized = false;
+
         pc.fw.ComponentSystem.on('initialize', this.onInitialize, this);
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
     };
@@ -143,6 +145,8 @@ pc.extend(pc.fw, function () {
                     this.onInitialize(children[i]);
                 }
             }
+
+            this.initialized = true;
         },
 
         onUpdate: function(dt) {
