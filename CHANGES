@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.156.2
+--------
+* [FIX] A mesh instance's bounding box is now guaranteed to be correct when it is queried.
+* [FIX] pc.input.GamePad#is/wasPressed now respects the latest GamePad API spec.
+
+--------
 v0.156.1
 --------
 * [FIX] Issue where sounds sometimes play twice in the beginning
