@@ -609,22 +609,22 @@ pc.extend(pc.fw, function () {
                     break;
 
                 case pc.fw.LiveLinkMessageType.UPDATE_ASSETCACHE:
-                    var resourceId;
+                    var id;
 
                     // Add new and Update existing assets
-                    for (resourceId in msg.content.assets) {
-                        var asset = this.context.assets.getAssetByResourceId(resourceId);
+                    for (id in msg.content.assets) {
+                        var asset = this.context.assets.getAssetById(id);
                         if (!asset) {
-                            var assetData = msg.content.assets[resourceId];
-                            this.context.assets.createAndAddAsset(resourceId, assetData);
+                            var assetData = msg.content.assets[id];
+                            this.context.assets.createAndAddAsset(id, assetData);
                         } else {
-                            pc.extend(asset, msg.content.assets[resourceId]);
+                            pc.extend(asset, msg.content.assets[id]);
                         }
                     }
 
                     // Delete removed assets
-                    for (resourceId in msg.content.deleted) {
-                        var asset = this.context.assets.getAssetByResourceId(resourceId);
+                    for (id in msg.content.deleted) {
+                        var asset = this.context.assets.getAssetById(id);
                         if (asset) {
                             this.context.assets.removeAsset(asset);
                         }
@@ -747,8 +747,8 @@ pc.extend(pc.fw, function () {
             }
         },
 
-        _linkUpdateAsset: function (guid, attribute, value) {
-            var asset = this.context.assets.getAssetByResourceId(guid);
+        _linkUpdateAsset: function (id, attribute, value) {
+            var asset = this.context.assets.getAssetById(id);
             if (asset) {
                 asset[attribute] = value;
                 asset.fire('change', asset, attribute, value);

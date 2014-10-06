@@ -100,7 +100,7 @@ pc.script.create('blend', function (context) {
 
         loadBlendMap: function () {
             if (this.blendMap) {
-                var asset = context.assets.getAssetByResourceId(this.blendMap);
+                var asset = context.assets.getAssetById(this.blendMap);
                 context.assets.load([asset]).then(function (resources) {
                     this.effect.blendMap = resources[0];
                 }.bind(this));

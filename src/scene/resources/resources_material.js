@@ -118,7 +118,7 @@ pc.extend(pc.resources, function () {
     };
 
     MaterialResourceHandler.prototype._loadTexture = function(textureId, request) {
-        var asset = this._assets.getAssetByResourceId(textureId);
+        var asset = this._assets.getAssetById(textureId);
         if (!asset) {
             var url = pc.path.join(pc.path.split(request.canonical)[0], textureId);
             asset = this._assets.getAssetByUrl(url);
@@ -159,7 +159,7 @@ pc.extend(pc.resources, function () {
 
     MaterialResourceHandler.prototype._getAssetFromRequest = function (request) {
         if (pc.string.startsWith(request.canonical, "asset://")) {
-            return this._assets.getAssetByResourceId(request.canonical.slice(8))
+            return this._assets.getAssetById(parseInt(request.canonical.slice(8)))
         } else {
             return this._assets.getAssetByUrl(request.canonical);
         }

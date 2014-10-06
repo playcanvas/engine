@@ -63,7 +63,7 @@ pc.extend(pc.resources, function () {
             var mapping = request.data;
             for (var i = 0; i < mapping.length; i++) {
                 if (mapping[i].material) {
-                    asset = this._assets.getAssetByResourceId(mapping[i].material);
+                    asset = this._assets.getAssetById(mapping[i].material);
                     if (asset) {
                         materials.push(asset);
                     }
@@ -385,8 +385,8 @@ pc.extend(pc.resources, function () {
         var material;
 
         if (mapping && mapping.length > meshInstanceIndex) {
-            if (mapping[meshInstanceIndex].material) { // resource id mapping
-                var asset = this._assets.getAssetByResourceId(mapping[meshInstanceIndex].material);
+            if (mapping[meshInstanceIndex].material) { // id mapping
+                var asset = this._assets.getAssetById(mapping[meshInstanceIndex].material);
                 if (!asset) {
                     console.error("Reference to material not in asset list. Try reloading.")
                     return null;

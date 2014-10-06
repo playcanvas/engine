@@ -18,6 +18,7 @@ pc.extend(pc.fw, function () {
      * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore
      * @property {Number} rollOffFactor The factor used in the falloff equation.
      */
+
     var AudioSourceComponent = function (system, entity) {
         this.on("set_assets", this.onSetAssets, this);
         this.on("set_loop", this.onSetLoop, this);
@@ -168,10 +169,12 @@ pc.extend(pc.fw, function () {
 
         onEnable: function () {
             AudioSourceComponent._super.onEnable.call(this);
-            if (this.data.activate && !this.channel) {
-                this.play(this.currentSource);
-            } else {
-                this.unpause();
+            if (this.system.initialized) {
+                if (this.data.activate && !this.channel) {
+                    this.play(this.currentSource);
+                } else {
+                    this.unpause();
+                }
             }
         },
 
@@ -180,13 +183,13 @@ pc.extend(pc.fw, function () {
             this.pause();
         },
 
-        loadAudioSourceAssets: function (guids) {
+        loadAudioSourceAssets: function (ids) {
             var options = {
                 parent: this.entity.getRequest()
             };
 
-            var assets = guids.map(function (guid) {
-                return this.system.context.assets.getAssetByResourceId(guid);
+            var assets = ids.map(function (id) {
+                return this.system.context.assets.getAssetById(id);
             }, this);
 
             var requests = [];
@@ -197,7 +200,7 @@ pc.extend(pc.fw, function () {
 
             assets.forEach(function (asset) {
                 if (!asset) {
-                    logERROR(pc.string.format('Trying to load audiosource component before assets {0} are loaded', guids));
+                    logERROR(pc.string.format('Trying to load audiosource component before assets {0} are loaded', ids));
                 } else {
                     // set the current source to the first entry (before calling set, so that it can play if needed)
                     currentSource = currentSource || asset.name;
@@ -220,16 +223,16 @@ pc.extend(pc.fw, function () {
                     this.data.sources = sources;
                     this.data.currentSource = currentSource;
 
-                    if (!options.parent && this.activate && currentSource) {
-                        this.play(currentSource);
+                    if (!options.parent && this.enabled && this.activate && currentSource) {
+                        this.onEnable();
                     }
                 }.bind(this));
             } else {
                 this.data.sources = sources;
                 this.data.currentSource = currentSource;
 
-                if (this.activate && currentSource) {
-                    this.play(currentSource);
+                if (this.enabled && this.activate && currentSource) {
+                    this.onEnable();
                 }
             }
 

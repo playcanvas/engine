@@ -8,12 +8,12 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.ApplicationContext} context
      * @extends pc.fw.Component
      * @property {Boolean} enabled Enables or disables rendering of the skybox
-     * @property {String} negx Asset GUID of texture that is used for negative x face
-     * @property {String} posx Asset GUID of texture that is used for positive x face
-     * @property {String} negy Asset GUID of texture that is used for negative y face
-     * @property {String} posy Asset GUID of texture that is used for positive y face
-     * @property {String} negz Asset GUID of texture that is used for negative z face
-     * @property {String} posz Asset GUID of texture that is used for positive z face
+     * @property {Number} negx Asset id of texture that is used for negative x face
+     * @property {Number} posx Asset id of texture that is used for positive x face
+     * @property {Number} negy Asset id of texture that is used for negative y face
+     * @property {Number} posy Asset id of texture that is used for positive y face
+     * @property {Number} negz Asset id of texture that is used for negative z face
+     * @property {Number} posz Asset id of texture that is used for positive z face
      */
     var SkyboxComponent = function SkyboxComponent (system, entity) {
         this.on("set", this.onSet, this);
@@ -22,9 +22,10 @@ pc.extend(pc.fw, function () {
 
     pc.extend(SkyboxComponent.prototype, {
         onSet: function (name, oldValue, newValue) {
-            function _loadTextureAsset(name, guid) {
-                if(!guid)
+            function _loadTextureAsset(name, id) {
+                if (id === undefined || id === null) {
                     return;
+                }
 
                 var index = CUBE_MAP_NAMES.indexOf(name);
                 var assets = this.entity.skybox.assets;
@@ -32,26 +33,21 @@ pc.extend(pc.fw, function () {
                 // clear existing skybox
                 this.data.model = null;
 
-                if(guid) {
-                    assets[index] = this.system.context.assets.getAssetByResourceId(guid);
-                    if (!assets[index]) {
-                        logERROR(pc.string.format("Trying to load skybox component before asset {0} has loaded", guid));
-                        return;
+                assets[index] = this.system.context.assets.getAssetById(id);
+                if (!assets[index]) {
+                    logERROR(pc.string.format("Trying to load skybox component before asset {0} has loaded", id));
+                    return;
+                }
+                this.data.assets = assets;
+
+                // Once all assets are loaded create the skybox
+                if (assets[0] && assets[1] && assets[2] && assets[3] && assets[4] && assets[5]) {
+                    this.data.model = _createSkybox(this.entity, this.system.context, assets);
+
+                    if (this.enabled && this.entity.enabled) {
+                        this.system.context.scene.addModel(this.data.model);
+                        this.entity.addChild(this.data.model.graph);
                     }
-                    this.data.assets = assets;
-
-                    // Once all assets are loaded create the skybox
-                    if (assets[0] && assets[1] && assets[2] && assets[3] && assets[4] && assets[5]) {
-                        this.data.model = _createSkybox(this.entity, this.system.context, assets);
-
-                        if (this.enabled && this.entity.enabled) {
-                            this.system.context.scene.addModel(this.data.model);
-                            this.entity.addChild(this.data.model.graph);
-                        }
-
-                    }
-                } else {
-                    delete assets[index];
                 }
             }
 
@@ -129,7 +125,7 @@ pc.extend(pc.fw, function () {
                     sources.push(image);
                 } else {
                     indexes.push(i);
-                    requests.push(new pc.resources.ImageRequest(asset.getFileUrl()));
+                    requests.push(new pc.resources.TextureRequest(asset.getFileUrl()));
                 }
             }
         }
@@ -150,7 +146,7 @@ pc.extend(pc.fw, function () {
 
             context.loader.request(requests, options).then(function (resources) {
                 for (var i=0; i<resources.length; i++) {
-                    sources[indexes[i]] = resources[i];
+                    sources[indexes[i]] = resources[i].getSource();
                 }
 
                 texture.setSource(sources);

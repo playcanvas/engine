@@ -93,7 +93,7 @@
             });
             // add animation component to entity
             application.context.systems.animation.addComponent(entity, {
-                assets: [idleAnim.resourceId, runAnim.resourceId],
+                assets: [idleAnim.id, runAnim.id],
                 speed: 1
             });
             application.context.root.addChild(entity);
