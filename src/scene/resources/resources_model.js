@@ -375,11 +375,6 @@ pc.extend(pc.resources, function () {
         model.skinInstances = skinInstances;
         model.getGraph().syncHierarchy();
 
-        var meshInstances = model.meshInstances;
-        for (i = 0; i < meshInstances.length; i++) {
-            meshInstances[i].syncAabb();
-        }
-
         return model;
     };
 
