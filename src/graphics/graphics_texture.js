@@ -37,7 +37,7 @@ pc.extend(pc.gfx, function () {
 
         // PUBLIC
         this.name = null;
-        this.autoMipmap = true;
+        this.autoMipmap = autoMipmap;
 
         // PRIVATE
         var gl = this.device.gl;

@@ -832,6 +832,28 @@ pc.extend(pc.scene, function () {
             this._onInsertChild(node);
         },
 
+        addChildAndSaveTransform: function(node) {
+            var wPos = node.getPosition();
+            var wRot = node.getRotation();
+
+            var current = node.getParent();
+            if (current) {
+                current.removeChild(node);
+            }
+
+            if (this.tmpMat4 == undefined) {
+                this.tmpMat4 = new pc.Mat4();
+                this.tmpQuat = new pc.Quat();
+            }
+
+            node.setPosition(this.tmpMat4.copy(this.worldTransform).invert().transformPoint(wPos));
+            node.setRotation(this.tmpQuat.copy(this.getRotation()).invert().mul(wRot));
+
+            this._children.push(node);
+
+            this._onInsertChild(node);
+        },
+
         /**
          * @function
          * @name pc.scene.GraphNode#insertChild
