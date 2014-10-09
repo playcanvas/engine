@@ -7,63 +7,62 @@ pc.extend(pc.fw, function() {
     pc.extend(ParticleSystemComponent.prototype, {
 
         onSetParam: function(name, oldValue, newValue) {
-            if (name === "enabled") {
-                return;
-            }
+            if (name=="enabled") return;
 
             if (this.emitter) {
                 this.emitter[name] = newValue; // some parameters can apply immediately
 
-                if (name === "oneShot") {
-                    this.emitter.resetTime();
-                } else {
+                if (name!="oneShot") {
                     this.emitter.resetMaterial(); // some may require resetting shader constants
 
-                    if ((name !== "spawnBounds") && (name !== "speedDiv") // && (name!="rate") && (name!="lifetime") // these params are better reflected after rebuild
-                        && (name !== "constantSpeedDiv")) { // && (name!="stretch") && (name!="wrapBounds")) { // stretch and wrapBounds can be changed realtime, but not turned on/off, so let's just rebuild
+                    if ((name!="birthBounds") && (name!="deltaRandomness") // && (name!="rate") && (name!="lifetime") // these params are better reflected after rebuild
+                        && (name!="deltaRandomnessStatic")) { // && (name!="stretch") && (name!="wrapBounds")) { // stretch and wrapBounds can be changed realtime, but not turned on/off, so let's just rebuild
                         this.rebuild();
                     }
+                } else {
+                    this.emitter.resetTime();
                 }
             }
         },
 
         onEnable: function() {
+
             if (!this.emitter) {
                 this.emitter = new pc.scene.ParticleEmitter2(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
-                    spawnBounds: this.data.spawnBounds,
+                    birthBounds: this.data.birthBounds,
                     wrapBounds: this.data.wrapBounds,
                     lifetime: this.data.lifetime,
                     rate: this.data.rate,
-                    localOffsetGraph: this.data.localOffsetGraph,
-                    offsetGraph: this.data.offsetGraph,
-                    angleGraph: this.data.angleGraph,
-                    scaleGraph: this.data.scaleGraph,
-                    colorGraph: this.data.colorGraph,
-                    alphaGraph: this.data.alphaGraph,
-                    localPosDivGraph: this.data.localPosDivGraph,
-                    posDivGraph: this.data.posDivGraph,
-                    scaleDiv: this.data.scaleDiv,
-                    angleDivGraph: this.data.angleDivGraph,
-                    alphaDivGraph: this.data.alphaDivGraph,
+                    graphLocalOffset: this.data.graphLocalOffset,
+                    graphWorldOffset: this.data.graphWorldOffset,
+                    graphAngle: this.data.graphAngle,
+                    graphScale: this.data.graphScale,
+                    graphColor: this.data.graphColor,
+                    graphAlpha: this.data.graphAlpha,
+                    graphPosDiv: this.data.graphPosDiv,
+                    graphPosWorldDiv: this.data.graphPosWorldDiv,
+                    graphScaleDiv: this.data.graphScaleDiv,
+                    graphAngleDiv: this.data.graphAngleDiv,
+                    graphAlphaDiv: this.data.graphAlphaDiv,
                     texture: this.data.texture,
-                    normalTexture: this.data.normalTexture,
+                    textureNormal: this.data.textureNormal,
                     textureAsset: this.data.textureAsset,
-                    normalTextureAsset: this.data.normalTextureAsset,
+                    textureNormalAsset: this.data.textureNormalAsset,
                     oneShot: this.data.oneShot,
-                    speedDiv: this.data.speedDiv,
-                    constantSpeedDiv: this.data.constantSpeedDiv,
+                    deltaRandomness: this.data.deltaRandomness,
+                    deltaRandomnessStatic: this.data.deltaRandomnessStatic,
                     sort: this.data.sort,
                     stretch: this.data.stretch,
                     lighting: this.data.lighting,
-                    halfLambert: this.data.halfLambert,
+                    softerLighting: this.data.softerLighting,
                     maxEmissionTime: this.data.maxEmissionTime,
                     depthSoftening: this.data.depthSoftening,
                     camera: this.data.camera,
                     scene: this.system.context.scene,
                     mesh: this.data.mesh,
-                    depthTest: this.data.depthTest,
-                    gammaCorrect: this.data.gammaCorrect,
+                    ztest: this.data.ztest,
+                    srgb: this.data.srgb,
                     smoothness: this.data.smoothness
                 });
                 this.emitter.meshInstance.node = this.entity;
@@ -89,6 +88,7 @@ pc.extend(pc.fw, function() {
                     if (this.emitter.texture) {
                         this.system.context.scene.addModel(this.data.model);
                     }
+                    //this.entity.addChild(this.data.model.graph);
                 }
             }
         },
@@ -97,6 +97,7 @@ pc.extend(pc.fw, function() {
             ParticleSystemComponent._super.onDisable.call(this);
             if (this.data.model) {
                 if (this.system.context.scene.containsModel(this.data.model)) {
+                    //this.entity.removeChild(this.data.model.graph);
                     this.system.context.scene.removeModel(this.data.model);
                 }
             }
