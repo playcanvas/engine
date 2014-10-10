@@ -1,0 +1,8 @@
+
+float getLightSpecular(inout psInternalData data) {
+    //vec3 R = normalize(-reflect(-data.lightDirNormW, data.normalW));
+    //return pow(max(dot(R, data.viewDirW), 0.0), 32.0);//data.glossiness);
+
+    return pow(max(dot(data.reflDirW, -data.lightDirNormW), 0.0), data.glossiness);
+}
+

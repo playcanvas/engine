@@ -1,0 +1,5 @@
+
+void getSpecularity(inout psInternalData data) {
+    vec4 tex = texture2D(texture_specularMap, $LAYER);
+    data.specularity = tex.rgb * material_specular;
+}

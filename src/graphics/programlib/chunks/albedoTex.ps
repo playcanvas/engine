@@ -1,0 +1,6 @@
+
+void getAlbedo(inout psInternalData data) {
+    vec4 tex = texture2DAlbedo(texture_diffuseMap, $LAYER);
+    data.albedo = tex.rgb;
+    //data.alpha = tex.a;
+}

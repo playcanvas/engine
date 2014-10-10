@@ -1,0 +1,5 @@
+
+void getAlpha(inout psInternalData data) {
+    vec4 tex = texture2D(texture_opacityMap, $LAYER);
+    data.alpha = tex.r;
+}

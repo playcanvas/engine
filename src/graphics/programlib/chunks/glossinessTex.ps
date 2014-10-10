@@ -1,0 +1,6 @@
+
+void getGlossiness(inout psInternalData data) {
+    // Hack: On Mac OS X, calling pow with zero for the exponent generates hideous artifacts so bias up a little
+    vec4 tex = texture2D(texture_glossMap, $LAYER);
+    data.glossiness = tex.r * 100.0 + 0.0001;
+}

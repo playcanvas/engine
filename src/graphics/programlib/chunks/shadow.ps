@@ -1,0 +1,77 @@
+
+float unpackFloat(vec4 rgbaDepth) {
+    const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
+    return dot(rgbaDepth, bitShift);
+}
+
+void getShadowCoord(inout psInternalData data, mat4 shadowMatrix, vec3 shadowParams) {
+    vec4 projPos = shadowMatrix * vec4(vPositionW, 1.0);
+    projPos.xyz /= projPos.w;
+    projPos.z += shadowParams.z;
+    data.shadowCoord = projPos.xyz;
+}
+
+bool shadowContained(psInternalData data) {
+    bvec4 containedVec = bvec4(data.shadowCoord.x >= 0.0, data.shadowCoord.x <= 1.0, data.shadowCoord.y >= 0.0, data.shadowCoord.y <= 1.0);
+    return all(bvec2(all(containedVec), data.shadowCoord.z <= 1.0));
+}
+
+float getShadow(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
+    if (shadowContained(data)) {
+        float depth = unpackFloat(texture2D(shadowMap, data.shadowCoord.xy));
+        return (depth < data.shadowCoord.z) ? 0.0 : 1.0;
+    }
+    return 1.0;
+}
+
+float getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
+    if (shadowContained(data)) {
+        float shadowAccum = 0.0;
+        vec3 shadowCoord = data.shadowCoord;
+
+        float xoffset = 1.0 / shadowParams.x; // 1/shadow map width
+        float yoffset = 1.0 / shadowParams.y; // 1/shadow map height
+        float dx0 = -xoffset;
+        float dy0 = -yoffset;
+        float dx1 = xoffset;
+        float dy1 = yoffset;
+
+        mat3 shadowKernel;
+        mat3 depthKernel;
+
+        depthKernel[0][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, dy0)));
+        depthKernel[0][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, 0.0)));
+        depthKernel[0][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx0, dy1)));
+        depthKernel[1][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, dy0)));
+        depthKernel[1][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy));
+        depthKernel[1][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(0.0, dy1)));
+        depthKernel[2][0] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dy0)));
+        depthKernel[2][1] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, 0.0)));
+        depthKernel[2][2] = unpackFloat(texture2D(shadowMap, shadowCoord.xy + vec2(dx1, dy1)));
+
+        vec3 shadowZ = vec3(shadowCoord.z);
+        shadowKernel[0] = vec3(lessThan(depthKernel[0], shadowZ));
+        shadowKernel[0] *= vec3(0.25);
+        shadowKernel[1] = vec3(lessThan(depthKernel[1], shadowZ));
+        shadowKernel[1] *= vec3(0.25);
+        shadowKernel[2] = vec3(lessThan(depthKernel[2], shadowZ));
+        shadowKernel[2] *= vec3(0.25);
+
+        vec2 fractionalCoord = 1.0 - fract( shadowCoord.xy * shadowParams.xy );
+
+        shadowKernel[0] = mix(shadowKernel[1], shadowKernel[0], fractionalCoord.x);
+        shadowKernel[1] = mix(shadowKernel[2], shadowKernel[1], fractionalCoord.x);
+
+        vec4 shadowValues;
+        shadowValues.x = mix(shadowKernel[0][1], shadowKernel[0][0], fractionalCoord.y);
+        shadowValues.y = mix(shadowKernel[0][2], shadowKernel[0][1], fractionalCoord.y);
+        shadowValues.z = mix(shadowKernel[1][1], shadowKernel[1][0], fractionalCoord.y);
+        shadowValues.w = mix(shadowKernel[1][2], shadowKernel[1][1], fractionalCoord.y);
+
+        shadowAccum = 1.0 - dot( shadowValues, vec4( 1.0 ) );
+
+        return shadowAccum;
+    }
+    return 1.0;
+}
+
