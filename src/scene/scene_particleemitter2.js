@@ -95,7 +95,7 @@ pc.extend(pc.scene, function() {
 
     function setProperty(pName, defaultVal) {
         if (setPropertyOptions[pName] !== undefined && setPropertyOptions[pName] !== null) {
-                setPropertyTarget[pName] = setPropertyOptions[pName];
+            setPropertyTarget[pName] = setPropertyOptions[pName];
         } else {
             setPropertyTarget[pName] = defaultVal;
         }
@@ -197,8 +197,6 @@ pc.extend(pc.scene, function() {
         setProperty("smoothness", 4);                            // Blurring width for graphs
         setProperty("texture", null);
         setProperty("normalTexture", null);
-        setProperty("textureAsset", null);
-        setProperty("normalTextureAsset", null);
         setProperty("oneShot", false);
         setProperty("speedDiv", 0.0); // Randomizes particle simulation speed [0-1] per frame
         setProperty("constantSpeedDiv", 0.0); // Randomizes particle simulation speed [0-1] (one value during whole particle life)
@@ -414,7 +412,7 @@ pc.extend(pc.scene, function() {
             mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
             mesh.primitive[0].indexed = true;
 
-            var hasNormal = ((this.normalTexture != null) || (this.normalTextureAsset != null));
+            var hasNormal = (this.normalTexture != null);
 
             var programLib = this.graphicsDevice.getProgramLibrary();
             var normalOption = 0;
@@ -451,11 +449,36 @@ pc.extend(pc.scene, function() {
             this.meshInstance.layer = pc.scene.LAYER_SKYBOX; //LAYER_FX;
             this.meshInstance.updateKey(); // shouldn't be here?
 
+            this._initializeTextures();
+
             this.addTime(0); // fill dynamic textures and constants with initial data
 
             this.resetTime();
         },
 
+        _initializeTextures: function () {
+            var addToScene = false;
+
+            if (this.texture) {
+                this.material.setParameter('particleTexture', this.texture);
+                if (!this.lighting) {
+                    addToScene = true;
+                }
+                else if (this.normalTexture) {
+                    this.material.setParameter('normalTexture', this.normalTexture);
+                    addToScene = true;
+                }
+            }
+
+            if (addToScene && this.psys) {
+                if (!this.scene) {
+                    console.error("There is no scene defined for lighting particles");
+                    return;
+                }
+
+                this.scene.addModel(this.psys);
+            }
+        },
 
         resetMaterial: function() {
             var material = this.material;
@@ -592,6 +615,7 @@ pc.extend(pc.scene, function() {
             if (this.mode === pc.scene.PARTICLES_MODE_CPU) {
                 for (var i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePos[i] = this.lifeAndSourcePosStart[i];
             } else {
+                this._initializeTextures();
                 this.swapTex = false;
                 var oldTexIN = this.texLifeAndSourcePosIN;
                 this.texLifeAndSourcePosIN = this.texLifeAndSourcePosStart;
@@ -612,25 +636,6 @@ pc.extend(pc.scene, function() {
             device.setCullMode(pc.gfx.CULLFACE_NONE);
             device.setDepthTest(false);
             device.setDepthWrite(false);
-
-            if ((!this.texture) && (this.textureAsset) && (this.psys)) {
-                this.texture = this.textureAsset.resource;
-                if (this.texture) {
-                    this.material.setParameter('particleTexture', this.texture);
-                    if ((!this.lighting) || (this.lighting && (this.normalTexture)) || (!this.normalTextureAsset)) this.scene.addModel(this.psys);
-                }
-            }
-
-            if (this.lighting) {
-                if ((!this.normalTexture) && (this.normalTextureAsset) && (this.psys)) {
-                    this.normalTexture = this.normalTextureAsset.resource;
-                    if (this.normalTexture) {
-                        this.material.setParameter('normalTexture', this.normalTexture);
-                        if (this.texture) this.scene.addModel(this.psys);
-                    }
-                }
-            }
-
 
             // Bake ambient and directional lighting into one ambient cube
             // TODO: only do if lighting changed
