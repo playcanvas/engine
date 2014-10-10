@@ -62,7 +62,7 @@ pc.gfx.programlib.depth = {
         }
 
         code += getSnippet(device, 'common_main_end');
-        
+
         var vshader = code;
 
         //////////////////////////////
@@ -73,15 +73,30 @@ pc.gfx.programlib.depth = {
         code += 'uniform float camera_near;\n';
         code += 'uniform float camera_far;\n';
 
+
+        // Packing a float in GLSL with multiplication and mod
+        // http://blog.gradientstudios.com/2012/08/23/shadow-map-improvement
+        code += 'vec4 packFloat(float depth)\n';
+        code += '{\n';
+        code += '    const vec4 bit_shift = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);\n';
+        code += '    const vec4 bit_mask  = vec4(0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);\n';
+                     // combination of mod and multiplication and division works better
+        code += '    vec4 res = mod(depth * bit_shift * vec4(255), vec4(256) ) / vec4(255);\n';
+        code += '    res -= res.xxyz * bit_mask;\n';
+        code += '    return res;\n';
+        code += '}\n\n';
+
+
         // FRAGMENT SHADER BODY
         code += getSnippet(device, 'common_main_begin');
 
-        code += "float depth = gl_FragCoord.z / gl_FragCoord.w;";
-        code += "float color = 1.0 - smoothstep(camera_near, camera_far, depth);";
-        code += "gl_FragColor = vec4(vec3(color), 1.0);";
+        code += "float depth = gl_FragCoord.z / gl_FragCoord.w;\n";
+        code += "gl_FragColor = packFloat(depth / camera_far);\n"
+
+        //code += "float color = 1.0 - smoothstep(camera_near, camera_far, depth);";
+        //code += "gl_FragColor = vec4(vec3(color), 1.0);";
 
         code += getSnippet(device, 'common_main_end');
-
         var fshader = code;
 
         return {

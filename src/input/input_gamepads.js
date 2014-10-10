@@ -163,7 +163,7 @@ pc.extend(pc.input, function () {
             }
 
             var key = this.current[index].map.buttons[button];
-            return this.current[index].pad.buttons[pc.input[key]];
+            return this.current[index].pad.buttons[pc.input[key]].pressed;
         },
 
         /**
@@ -181,7 +181,7 @@ pc.extend(pc.input, function () {
 
             var key = this.current[index].map.buttons[button];
             var i = pc.input[key];
-            return this.current[index].pad.buttons[i] && !this.previous[index].pad.buttons[i];
+            return this.current[index].pad.buttons[i].pressed && !this.previous[index].pad.buttons[i].pressed;
         },
 
         /**

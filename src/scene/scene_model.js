@@ -135,11 +135,6 @@ pc.extend(pc.scene, function () {
 
             clone.getGraph().syncHierarchy();
 
-            var meshInstances = clone.meshInstances;
-            for (i = 0; i < meshInstances.length; i++) {
-                meshInstances[i].syncAabb();
-            }
-
             return clone;
         },
 

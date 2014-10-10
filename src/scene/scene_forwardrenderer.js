@@ -406,7 +406,6 @@ pc.extend(pc.scene, function () {
                     meshInstance = drawCall;
 
                     if (meshInstance.material.blendType === pc.scene.BLEND_NORMAL) {
-                        meshInstance.syncAabb();
                         var meshPos = meshInstance.aabb.center;
                         var tempx = meshPos.x - camPos.x;
                         var tempy = meshPos.y - camPos.y;

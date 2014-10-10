@@ -3,6 +3,24 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.156.2
+--------
+* [FIX] A mesh instance's bounding box is now guaranteed to be correct when it is queried.
+* [FIX] pc.input.GamePad#is/wasPressed now respects the latest GamePad API spec.
+
+--------
+v0.156.1
+--------
+* [FIX] Issue where sounds sometimes play twice in the beginning
+
+--------
+v0.156.0
+--------
+* Assets no longer have resource ids, Fixed examples for the new asset format
+* Use a TextureRequest for skybox textures instead of ImageRequests so that they can be cached correctly and used by other assets like materials without issues
+* Added textured cube to examples.
+
+--------
 v0.155.1
 --------
 * Added CONTRIB file with CLA details and tips

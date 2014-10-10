@@ -422,7 +422,7 @@ pc.extend(pc, (function () {
 
                 return this;
             };
-        }()),
+        }()),	
 
         /**
          * @private

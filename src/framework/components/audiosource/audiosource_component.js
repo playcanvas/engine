@@ -169,10 +169,12 @@ pc.extend(pc.fw, function () {
 
         onEnable: function () {
             AudioSourceComponent._super.onEnable.call(this);
-            if (this.data.activate && !this.channel) {
-                this.play(this.currentSource);
-            } else {
-                this.unpause();
+            if (this.system.initialized) {
+                if (this.data.activate && !this.channel) {
+                    this.play(this.currentSource);
+                } else {
+                    this.unpause();
+                }
             }
         },
 
@@ -222,7 +224,7 @@ pc.extend(pc.fw, function () {
                     this.data.currentSource = currentSource;
 
                     if (!options.parent && this.enabled && this.activate && currentSource) {
-                        this.play(currentSource);
+                        this.onEnable();
                     }
                 }.bind(this));
             } else {
@@ -230,7 +232,7 @@ pc.extend(pc.fw, function () {
                 this.data.currentSource = currentSource;
 
                 if (this.enabled && this.activate && currentSource) {
-                    this.play(currentSource);
+                    this.onEnable();
                 }
             }
 
