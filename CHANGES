@@ -3,10 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.157.2
+--------
+
+* [FIX] Mouse tests.
+
+--------
 v0.157.0
 --------
 
-* [FIX] Fix fullscreen in Chrome - lack of keyboard input.
+* [FIX] Fullscreen in Chrome - ignored keyboard input.
 * [FIX] Mouse now attach events on window but data is related to target.
 
 --------
