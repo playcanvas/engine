@@ -113,7 +113,9 @@ pc.extend(pc.input, function(){
         this._keymap = {};
         this._lastmap = {};
 
-        this.attach(window);
+        if (element) {
+            this.attach(element);
+        }
 
         this.preventDefault = options.preventDefault || false;
         this.stopPropagation = options.stopPropagation || false;
