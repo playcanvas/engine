@@ -3,6 +3,13 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.157.0
+--------
+
+* [FIX] Fix fullscreen in Chrome - lack of keyboard input.
+* [FIX] Mouse now attach events on window but data is related to target.
+
+--------
 v0.156.2
 --------
 * [FIX] A mesh instance's bounding box is now guaranteed to be correct when it is queried.
