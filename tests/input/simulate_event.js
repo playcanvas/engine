@@ -1,11 +1,11 @@
-function simulate(element, eventName)
-{
+function simulate(element, eventName) {
     var defaults = extend({}, defaultOptions);
     var options = extend(defaults, arguments[2] || {});
     var oEvent, eventType = null;
 
-    for (var name in eventMatchers)
-    {
+    console.log(options, arguments[2]);
+
+    for (var name in eventMatchers) {
         if (eventMatchers[name].test(eventName)) { eventType = name; break; }
     }
 
@@ -13,8 +13,7 @@ function simulate(element, eventName)
         throw new SyntaxError('Only HTMLEvents and MouseEvents interfaces are supported');
     }
 
-    if (document.createEvent)
-    {
+    if (document.createEvent) {
         oEvent = document.createEvent(eventType);
         if (eventType == 'HTMLEvents') {
             oEvent.initEvent(eventName, options.bubbles, options.cancelable);
@@ -25,7 +24,7 @@ function simulate(element, eventName)
             defaults = extend({}, defaultKeyboardOptions);
             options = extend(defaults, arguments[2] || {});
             if (oEvent.initKeyEvent) {
-                oEvent.initKeyEvent(eventName, options.bubbles, options.cancelable, document.defaultView, options.ctrl, options.shift, options.alt, options.meta, options.keyCode, options.charCode);    
+                oEvent.initKeyEvent(eventName, options.bubbles, options.cancelable, document.defaultView, options.ctrl, options.shift, options.alt, options.meta, options.keyCode, options.charCode);
             } else {
                 oEvent = document.createEvent("Events");
                 // initKeyboardEvent doesn't work property in Chrome, fudge it using plain event
@@ -33,13 +32,10 @@ function simulate(element, eventName)
                 oEvent.keyCode = options.keyCode;
                 oEvent.which = options.keyCode;
             }
-            
         }
 
         element.dispatchEvent(oEvent);
-    }
-    else
-    {
+    } else {
         options.clientX = options.pointerX;
         options.clientY = options.pointerY;
         var evt = document.createEventObject();
@@ -59,11 +55,11 @@ var eventMatchers = {
     'HTMLEvents': /^(?:load|unload|abort|error|select|change|submit|reset|focus|blur|resize|scroll)$/,
     'MouseEvents': /^(?:click|dblclick|mouse(?:down|up|over|move|out|wheel))$/,
     'KeyboardEvent': /^(?:keydown|keypress|keyup)$/
-}
+};
 
 var defaultOptions = {
-    pointerX: 0,
-    pointerY: 0,
+    pointerX: 16,
+    pointerY: 16,
     detail: 0,
     button: 0,
     ctrlKey: false,
