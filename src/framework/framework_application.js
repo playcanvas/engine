@@ -414,7 +414,7 @@ pc.extend(pc.fw, function () {
             if (error) {
                 document.addEventListener('fullscreenerror', e, false);
             }
-            element.requestFullscreen();
+            element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
         },
 
         /**
