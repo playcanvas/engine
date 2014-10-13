@@ -238,7 +238,7 @@ pc.extend(pc.scene, function() {
         this.constantTexLifeAndSourcePosIN = gd.scope.resolve("texLifeAndSourcePosIN");
         this.constantTexLifeAndSourcePosOUT = gd.scope.resolve("texLifeAndSourcePosOUT");
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
-        this.constantSpawnBounds = gd.scope.resolve("birthBounds");
+        this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
         this.constantRate = gd.scope.resolve("rate");
@@ -683,9 +683,9 @@ pc.extend(pc.scene, function() {
                 var emitterPos = this.meshInstance.node === null ? (new pc.Vec3(0, 0, 0)).data : this.meshInstance.node.getPosition().data;
                 for (var i = 0; i < this.numParticles; i++) {
                     if (this.lifeAndSourcePos[i * 4 + 3] <= 0) {
-                        this.lifeAndSourcePos[i * 4] = emitterPos[0] + this.spawnBounds.x * this.particleNoize[i];
-                        this.lifeAndSourcePos[i * 4 + 1] = emitterPos[1] + this.spawnBounds.y * ((this.particleNoize[i] * 10) % 1);
-                        this.lifeAndSourcePos[i * 4 + 2] = emitterPos[2] + this.spawnBounds.z * ((this.particleNoize[i] * 100) % 1);
+                        this.lifeAndSourcePos[i * 4] = emitterPos[0] + this.spawnBounds.x * (this.particleNoize[i]-0.5);
+                        this.lifeAndSourcePos[i * 4 + 1] = emitterPos[1] + this.spawnBounds.y * (((this.particleNoize[i] * 10) % 1)-0.5);
+                        this.lifeAndSourcePos[i * 4 + 2] = emitterPos[2] + this.spawnBounds.z * (((this.particleNoize[i] * 100) % 1)-0.5);
                     }
                     var x = i * (this.lifeAndSourcePos[i * 4 + 3] + this.lifeAndSourcePos[i * 4 + 0] + this.lifeAndSourcePos[i * 4 + 1] + this.lifeAndSourcePos[i * 4 + 2] + 1.0) * 1000.0;
                     x = (x % 13.0) * (x % 123.0);

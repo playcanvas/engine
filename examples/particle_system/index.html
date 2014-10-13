@@ -54,7 +54,7 @@
         // Offset position down 5 metres
         var posCurve = new pc.Curve(3);
         posCurve.addKey(0, [0, 0, 0]);
-        posCurve.addKey(1, [0, -5, 0]);
+        posCurve.addKey(1, [0, -3, 0]);
         posCurve.smoothstep = false;
 
         // scale is constant at 0.1
@@ -74,7 +74,7 @@
 
         // Create entity for particle system
         var entity = new pc.fw.Entity();
-        entity.setLocalPosition(0, 3, 0);
+        entity.setLocalPosition(0, 2, 0);
 
         // load snowflake texture
         application.context.assets.loadFromUrl('../assets/snowflake.png', 'texture').then(function (result) {
@@ -84,14 +84,18 @@
                 numParticles: 100,
                 lifetime: 10,
                 rate: 0.1,
-                deltaRandomnessStatic: 1,
-                spawnBounds: new pc.Vec3(5, 0, 0),
+                constantSpeedDiv: 0.5,
+                spawnBounds: new pc.Vec3(5, 0, 5),
                 offsetGraph: posCurve,
                 scaleGraph: scaleCurve,
                 angleGraph: angleCurve,
                 colorGraph: colorCurve,
                 textureAsset: result.asset
             });
+
+            // application.context.systems.model.addComponent(entity, {
+            //     type: "box"
+            // });
         });
 
     </script>
