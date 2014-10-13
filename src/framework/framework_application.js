@@ -107,6 +107,7 @@ pc.extend(pc.fw, function () {
         var picksys = new pc.fw.PickComponentSystem(this.context);
         var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
         var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
+        var particlesystemsys = new pc.fw.ParticleSystemComponentSystem(this.context);
 
         var designersys = new pc.fw.DesignerComponentSystem(this.context);
 

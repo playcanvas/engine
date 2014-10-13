@@ -61,6 +61,16 @@ pc.extend(pc.scene, function () {
         this.normalMatrix = new pc.Mat3();
     };
 
+    Object.defineProperty(MeshInstance.prototype, 'aabb', {
+        get: function () {
+            this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+            return this._aabb;
+        },
+        set: function (aabb) {
+            this._aabb = aabb;
+        }
+    });
+
     Object.defineProperty(MeshInstance.prototype, 'material', {
         get: function () {
             return this._material;
@@ -96,7 +106,7 @@ pc.extend(pc.scene, function () {
 
     pc.extend(MeshInstance.prototype, {
         syncAabb: function () {
-            this.aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+            // Deprecated
         },
 
         updateKey: function () {
