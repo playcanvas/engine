@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.157.4
+--------
+* [FIX] pc.math.Quat#slerp now works for opposite quaternions.
+
+--------
 v0.157.3
 --------
 * [FIX] Replace canvas.style.width with canvas.style.clientWidth.
