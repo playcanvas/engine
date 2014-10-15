@@ -390,7 +390,7 @@ pc.extend(pc.scene, function () {
         },
 
         _updateMapTransform: function (transform, tiling, offset, rotation) {
-            if (tiling) {
+            /*if (tiling) {
                 _tempTiling.set(tiling.x, tiling.y, 1);
             } else {
                 _tempTiling.set(1, 1, 1);
@@ -415,7 +415,25 @@ pc.extend(pc.scene, function () {
             // then just return null so that it is not included
             // in the shader due to limited number of shader
             // parameters
-            return transform.isIdentity() ? null : transform;
+            return transform.isIdentity() ? null : transform;*/
+
+            transform = transform || new pc.Vec4();
+            transform.set(tiling.x, tiling.y, offset.x, offset.y);
+
+            if ((transform.x==1) && (transform.y==1) && (transform.z==0) && (transform.w==0)) return null;
+            return transform;
+        },
+
+        _collectLights: function(lType, lights, typeArray, shadowArray) {
+            for (var i = 0; i < lights.length; i++) {
+                if (lights[i].getEnabled()) {
+                    var lightType = lights[i].getType();
+                    if (lightType==lType) {
+                        typeArray.push(lightType);
+                        shadowArray.push(lights[i].getCastShadows());
+                    }
+                }
+            }
         },
 
         update: function () {
@@ -426,8 +444,10 @@ pc.extend(pc.scene, function () {
             this.ambientUniform[2] = this.ambient.b;
             this.setParameter('material_ambient', this.ambientUniform);
 
+            var i = 0;
+
             if (this.diffuseMap) {
-                this.setParameter('texture_diffuseMap', this.diffuseMap);
+                this.setParameter("texture_diffuseMap", this.diffuseMap);
 
                 this.diffuseMapTransform = this._updateMapTransform(
                     this.diffuseMapTransform,
@@ -448,7 +468,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.specularMap) {
-                this.setParameter('texture_specularMap', this.specularMap);
+                this.setParameter("texture_specularMap", this.specularMap);
 
                 this.specularMapTransform = this._updateMapTransform(
                     this.specularMapTransform,
@@ -469,7 +489,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.glossMap) {
-                this.setParameter('texture_glossMap', this.glossMap);
+                this.setParameter("texture_glossMap", this.glossMap);
 
                 this.glossMapTransform = this._updateMapTransform(
                     this.glossMapTransform,
@@ -487,7 +507,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.emissiveMap) {
-                this.setParameter('texture_emissiveMap', this.emissiveMap);
+                this.setParameter("texture_emissiveMap", this.emissiveMap);
 
                 this.emissiveMapTransform = this._updateMapTransform(
                     this.emissiveMapTransform,
@@ -508,7 +528,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.opacityMap) {
-                this.setParameter('texture_opacityMap', this.opacityMap);
+                this.setParameter("texture_opacityMap", this.opacityMap);
 
                 this.opacityMapTransform = this._updateMapTransform(
                     this.opacityMapTransform,
@@ -526,7 +546,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.normalMap) {
-                this.setParameter('texture_normalMap', this.normalMap);
+                this.setParameter("texture_normalMap", this.normalMap);
 
                 this.normalMapTransform = this._updateMapTransform(
                     this.normalMapTransform,
@@ -543,7 +563,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.heightMap) {
-                this.setParameter('texture_heightMap', this.heightMap);
+                this.setParameter("texture_heightMap", this.heightMap);
 
                 this.heightMapTransform = this._updateMapTransform(
                     this.heightMapTransform,
@@ -583,60 +603,40 @@ pc.extend(pc.scene, function () {
         updateShader: function (device, scene) {
             var lights = scene._lights;
 
-            var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
-            var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
-            for (var i = 0; i < lights.length; i++) {
-                var light = lights[i];
-                if (light.getEnabled()) {
-                    switch (light.getType()) {
-                        case pc.scene.LIGHTTYPE_DIRECTIONAL:
-                            if (light.getCastShadows()) {
-                                numSDirs++;
-                            } else {
-                                numDirs++;
-                            }
-                            break;
-                        case pc.scene.LIGHTTYPE_POINT:
-                            numPnts++;
-                            break;
-                        case pc.scene.LIGHTTYPE_SPOT:
-                            if (light.getCastShadows()) {
-                                numSSpts++;
-                            } else {
-                                numSpts++;
-                            }
-                            break;
-                    }
-                }
-            }
-
             var options = {
                 fog: scene.fog,
                 skin: !!this.meshInstances[0].skinInstance,
-                numDirs: numDirs,
-                numSDirs: numSDirs,
-                numPnts: numPnts,
-                numSPnts: numSPnts,
-                numSpts: numSpts,
-                numSSpts: numSSpts,
                 diffuseMap: !!this.diffuseMap,
-                diffuseMapTransform: this.diffuseMapTransform,
+                diffuseMapTransform: !!this.diffuseMapTransform,
                 specularMap: !!this.specularMap,
-                specularMapTransform: this.specularMapTransform,
+                specularMapTransform: !!this.specularMapTransform,
                 glossMap: !!this.glossMap,
-                glossMapTransform: this.glossMapTransform,
+                glossMapTransform: !!this.glossMapTransform,
                 emissiveMap: !!this.emissiveMap,
-                emissiveMapTransform: this.emissiveMapTransform,
+                emissiveMapTransform: !!this.emissiveMapTransform,
                 opacityMap: !!this.opacityMap,
-                opacityMapTransform: this.opacityMapTransform,
+                opacityMapTransform: !!this.opacityMapTransform,
                 normalMap: !!this.normalMap,
-                normalMapTransform: this.normalMapTransform,
+                normalMapTransform: !!this.normalMapTransform,
                 heightMap: !!this.heightMap,
-                heightMapTransform: this.heightMapTransform,
+                heightMapTransform: !!this.heightMapTransform,
                 sphereMap: !!this.sphereMap,
                 cubeMap: !!this.cubeMap,
                 lightMap: !!this.lightMap
             };
+
+
+            var lightType = [];
+            var lightShadow = [];
+            this._collectLights(pc.scene.LIGHTTYPE_DIRECTIONAL, lights, lightType, lightShadow);
+            this._collectLights(pc.scene.LIGHTTYPE_POINT,       lights, lightType, lightShadow);
+            this._collectLights(pc.scene.LIGHTTYPE_SPOT,        lights, lightType, lightShadow);
+
+
+            options.numLights = lightType.length;
+            options.lightType = lightType;
+            options.lightShadow = lightShadow;
+
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);
         }

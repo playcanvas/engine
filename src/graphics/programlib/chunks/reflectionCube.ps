@@ -1,4 +1,4 @@
-
+uniform samplerCube texture_cubeMap;
 void addCubemapReflection(inout psInternalData data) {
     data.specularLight += textureCube(texture_cubeMap, data.reflDirW).rgb;
 }

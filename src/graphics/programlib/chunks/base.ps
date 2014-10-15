@@ -2,33 +2,13 @@
 // Compiler should remove unneeded stuff
 uniform vec3 view_position;
 
-uniform sampler2D texture_diffuseMap;
-uniform sampler2D texture_specularMap;
-uniform sampler2D texture_glossMap;
-uniform sampler2D texture_emissiveMap;
-uniform sampler2D texture_lightMap;
-uniform sampler2D texture_normalMap;
-uniform sampler2D texture_heightMap;
-uniform sampler2D texture_sphereMap;
-uniform samplerCube texture_cubeMap;
-uniform sampler2D texture_opacityMap;
-uniform vec3 material_ambient;
-uniform vec3 material_diffuse;
-uniform vec3 material_specular;
-uniform float material_shininess;
-uniform vec3 material_emissive;
-uniform float material_bumpMapFactor;
-uniform float material_reflectionFactor;
-uniform float material_opacity;
 uniform vec3 light_globalAmbient;
 
 varying vec3 vPositionW;
 varying vec3 vNormalW;
 varying vec3 vTangentW;
 varying vec3 vBinormalW;
-varying vec2 vUvLayer0;
-varying vec2 vUvLayer1;
-varying vec2 vUvLayer2;
+varying vec2 vUv0;
 varying vec2 vUv1;
 varying vec4 vVertexColor;
 varying vec3 vNormalV;
@@ -49,9 +29,7 @@ struct psInternalData {
     vec3 lightDirW;
     float atten;
     vec3 shadowCoord;
-    vec2 uvLayer0;
-    vec2 uvLayer1;
-    vec2 uvLayer2;
+    vec2 uvOffset;
 };
 
 void getViewDir(inout psInternalData data) {

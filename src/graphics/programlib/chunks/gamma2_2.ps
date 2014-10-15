@@ -1,4 +1,3 @@
-
 vec4 texture2DAlbedo(sampler2D tex, vec2 uv) {
     vec4 rgba = texture2D(tex, uv);
     rgba.rgb = pow(rgba.rgb, vec3(2.2));
@@ -8,3 +7,4 @@ vec4 texture2DAlbedo(sampler2D tex, vec2 uv) {
 vec3 gammaCorrectOutput(vec3 color) {
     return pow(color, vec3(0.45));
 }
+

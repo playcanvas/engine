@@ -1,4 +1,5 @@
-
-void addLightmap(inout psInternalData data, vec3 lightDirW, vec3 lightColor) {
+uniform sampler2D texture_lightMap;
+void addLightmap(inout psInternalData data) {
     data.diffuseLight += texture2D(texture_lightMap, vUv1).rgb;
 }
+

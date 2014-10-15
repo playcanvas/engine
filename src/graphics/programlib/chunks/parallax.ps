@@ -1,8 +1,11 @@
-
+uniform sampler2D texture_heightMap;
 void getParallax(inout psInternalData data) {
     const float parallaxScale = 0.025;
     const float parallaxBias = 0.01;
 
-    float height = texture2D(texture_heightMap, $LAYER).r * parallaxScale - parallaxBias;
+    float height = texture2D(texture_heightMap, $UV).r * parallaxScale - parallaxBias;
     vec3 viewDirT = data.viewDirW * data.TBN;
+
+    data.uvOffset = min(height * viewDirT.xy, vec2(parallaxBias));
+}
 
