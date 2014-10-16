@@ -131,6 +131,8 @@ pc.extend(pc.scene, function () {
 
         this.lightMap = null;
 
+        this.fresnelFactor = 0;
+
         // Array to pass uniforms to renderer
         this.ambientUniform = new Float32Array(3);
         this.diffuseUniform = new Float32Array(3);
@@ -235,6 +237,8 @@ pc.extend(pc.scene, function () {
             clone.reflectivity = this.reflectivity;
 
             clone.lightMap = this.lightMap;
+
+            clone.fresnelFactor = this.fresnelFactor;
 
             clone.update();
             return clone;
@@ -383,6 +387,8 @@ pc.extend(pc.scene, function () {
                     case 'blendType':
                         this.blendType = param.data;
                         break;
+                    case 'fresnelFactor':
+                        this.fresnelFactor = param.data;
                 }
             }
 
@@ -566,6 +572,10 @@ pc.extend(pc.scene, function () {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             }
 
+            if (this.fresnelFactor > 0) {
+                this.setParameter('material_fresnelFactor', this.fresnelFactor);
+            }
+
             if (this.lightMap) {
                 this.setParameter('texture_lightMap', this.lightMap);
             }
@@ -595,7 +605,10 @@ pc.extend(pc.scene, function () {
                 heightMapTransform: !!this.heightMapTransform,
                 sphereMap: !!this.sphereMap,
                 cubeMap: !!this.cubeMap,
-                lightMap: !!this.lightMap
+                lightMap: !!this.lightMap,
+                useSpecular: (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
+                            || (!!this.sphereMap) || (!!this.cubeMap),
+                useFresnel: (this.fresnelFactor > 0)
             };
 
 
