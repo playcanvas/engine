@@ -86,8 +86,10 @@ pc.gfx.programlib.phong = {
             if (options.normalMapTransform)     this._setMapTransform(codes, "normal");
             if (options.heightMapTransform)     this._setMapTransform(codes, "height");
             if (options.opacityMapTransform)    this._setMapTransform(codes, "opacity");
-            if (options.specularMapTransform)   this._setMapTransform(codes, "specular");
-            if (options.glossMapTransform)      this._setMapTransform(codes, "gloss");
+            if (options.useSpecular) {
+                if (options.specularMapTransform)   this._setMapTransform(codes, "specular");
+                if (options.glossMapTransform)      this._setMapTransform(codes, "gloss");
+            }
             if (options.emissiveMapTransform)   this._setMapTransform(codes, "emissive");
             code = codes[0] + codes[1];
             varyings = codes[1];
@@ -189,10 +191,15 @@ pc.gfx.programlib.phong = {
             code += chunks.albedoColorPS;
         }
 
-        if (options.specularMap) {
-            code += chunks.specularityTexPS.replace(/\$UV/g, this._uvSource("specular")+uvOffset);
-        } else {
-            code += chunks.specularityColorPS;
+        if (options.useSpecular) {
+            if (options.specularMap) {
+                code += chunks.specularityTexPS.replace(/\$UV/g, this._uvSource("specular")+uvOffset);
+            } else {
+                code += chunks.specularityColorPS;
+            }
+            if (options.useFresnel) {
+                code += chunks.defaultFresnel;
+            }
         }
 
         if (options.glossMap) {
@@ -236,15 +243,23 @@ pc.gfx.programlib.phong = {
         }
 
         code += chunks.lightDiffuseLambertPS;
-        code += chunks.defaultSpecular;
-        if (options.sphereMap || options.cubeMap) {
-            code += chunks.combineDiffuseSpecularPS;
-        } else {
-            if (options.diffuseMap) {
-                code += chunks.combineDiffuseSpecularNoReflPS;
+        if (options.useSpecular) {
+            code += chunks.defaultSpecular;
+            if (options.sphereMap || options.cubeMap || options.useFresnel) {
+                if (options.useFresnel > 0) {
+                    code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
+                } else {
+                    code += chunks.combineDiffuseSpecularOldPS;
+                }
             } else {
-                code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
+                if (options.diffuseMap) {
+                    code += chunks.combineDiffuseSpecularNoReflPS;
+                } else {
+                    code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
+                }
             }
+        } else {
+            code += chunks.combineDiffusePS;
         }
 
         // FRAGMENT SHADER BODY
@@ -264,8 +279,9 @@ pc.gfx.programlib.phong = {
 
         code += "   getAlbedo(data);\n";
 
-        if (lighting) { // should we probably have separate option for specular?
+        if (lighting && options.useSpecular) {
             code += "   getSpecularity(data);\n";
+            if ((chunks.defaultFresnel!="") && options.useFresnel) code += "   getFresnel(data);\n";
             code += "   getGlossiness(data);\n";
         }
 
@@ -315,8 +331,10 @@ pc.gfx.programlib.phong = {
 
                 code += "   data.diffuseLight += data.atten * light"+i+"_color;\n";
 
-                code += "   data.atten *= getLightSpecular(data);\n"
-                code += "   data.specularLight += data.atten * light"+i+"_color;\n";
+                if (options.useSpecular) {
+                    code += "   data.atten *= getLightSpecular(data);\n"
+                    code += "   data.specularLight += data.atten * light"+i+"_color;\n";
+                }
                 code += "\n";
             }
         }
