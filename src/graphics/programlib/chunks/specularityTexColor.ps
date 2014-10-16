@@ -1,0 +1,7 @@
+uniform sampler2D texture_specularMap;
+uniform vec3 material_specular;
+void getSpecularity(inout psInternalData data) {
+    vec4 tex = texture2D(texture_specularMap, $UV);
+    data.specularity = tex.rgb * material_specular;
+}
+

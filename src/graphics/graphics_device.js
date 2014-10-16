@@ -211,6 +211,8 @@ pc.extend(pc.gfx, function () {
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
+            this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+
             this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
             if (this.extStandardDerivatives) {
@@ -551,6 +553,7 @@ pc.extend(pc.gfx, function () {
                     uniformVersion.revision = programVersion.revision;
 
                     // Call the function to commit the uniform value
+                    if (scopeId.value==null) console.log(scopeId.name+" is null");
                     this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
                 }
             }

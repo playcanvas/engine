@@ -20,6 +20,7 @@ pc.extend(pc.scene, function () {
     var shadowCamViewProj = new pc.Mat4();
 
     var viewMat = new pc.Mat4();
+    var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
 
     var c2sc = new pc.Mat4();
@@ -184,6 +185,7 @@ pc.extend(pc.scene, function () {
         var scope = this.device.scope;
         this.projId = scope.resolve('matrix_projection');
         this.viewId = scope.resolve('matrix_view');
+        this.viewId3 = scope.resolve('matrix_view3');
         this.viewInvId = scope.resolve('matrix_viewInverse');
         this.viewProjId = scope.resolve('matrix_viewProjection');
         this.viewPosId = scope.resolve('view_position');
@@ -229,6 +231,22 @@ pc.extend(pc.scene, function () {
             // View Matrix
             viewMat.copy(wtm).invert();
             this.viewId.setValue(viewMat.data);
+
+
+            viewMat3.data[0] = viewMat.data[0];
+            viewMat3.data[1] = viewMat.data[1];
+            viewMat3.data[2] = viewMat.data[2];
+
+            viewMat3.data[3] = viewMat.data[4];
+            viewMat3.data[4] = viewMat.data[5];
+            viewMat3.data[5] = viewMat.data[6];
+
+            viewMat3.data[6] = viewMat.data[8];
+            viewMat3.data[7] = viewMat.data[9];
+            viewMat3.data[8] = viewMat.data[10];
+
+            this.viewId3.setValue(viewMat3.data);
+
 
             // ViewProjection Matrix
             viewProjMat.mul2(projMat, viewMat);
@@ -281,10 +299,10 @@ pc.extend(pc.scene, function () {
 
                 // Directionals shine down the negative Y axis
                 wtm.getY(directional._direction).scale(-1);
-                scope.resolve(light + "_direction").setValue(directional._direction.data);
+                scope.resolve(light + "_direction").setValue(directional._direction.normalize().data);
 
                 if (directional.getCastShadows()) {
-                    var shadowMap = this.device.extDepthTexture ? 
+                    var shadowMap = this.device.extDepthTexture ?
                             directional._shadowCamera._renderTarget._depthTexture :
                             directional._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
@@ -336,7 +354,7 @@ pc.extend(pc.scene, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
 
                 if (spot.getCastShadows()) {
-                    var shadowMap = this.device.extDepthTexture ? 
+                    var shadowMap = this.device.extDepthTexture ?
                             spot._shadowCamera._renderTarget._depthTexture :
                             spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
@@ -406,6 +424,7 @@ pc.extend(pc.scene, function () {
                     meshInstance = drawCall;
 
                     if (meshInstance.material.blendType === pc.scene.BLEND_NORMAL) {
+                        meshInstance.syncAabb();
                         var meshPos = meshInstance.aabb.center;
                         var tempx = meshPos.x - camPos.x;
                         var tempy = meshPos.y - camPos.y;
@@ -444,7 +463,7 @@ pc.extend(pc.scene, function () {
                                     var h = meshInstance.skinInstance.boneTexture.height;
                                     this.boneTextureSizeId.setValue([w, h])
                                 } else {
-                                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 }
                                 device.setShader(this._depthShaderSkin);
                             } else {
@@ -479,7 +498,7 @@ pc.extend(pc.scene, function () {
 
                     if (type === pc.scene.LIGHTTYPE_DIRECTIONAL) {
                         // 1. Starting at the centroid of the view frustum, back up in the opposite
-                        // direction of the light by a certain amount. This will be our temporary 
+                        // direction of the light by a certain amount. This will be our temporary
                         // working position.
                         _getFrustumCentroid(scene, camera, this.centroid);
                         shadowCam.setPosition(this.centroid);
@@ -568,7 +587,7 @@ pc.extend(pc.scene, function () {
                                 var h = meshInstance.skinInstance.boneTexture.height;
                                 this.boneTextureSizeId.setValue([w, h])
                             } else {
-                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             }
                             device.setShader(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                         } else {
@@ -632,7 +651,7 @@ pc.extend(pc.scene, function () {
                             var h = meshInstance.skinInstance.boneTexture.height;
                             this.boneTextureSizeId.setValue([w, h])
                         } else {
-                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                         }
                     }
                     this.shadowEnableId.setValue(meshInstance.receiveShadow);
@@ -677,5 +696,5 @@ pc.extend(pc.scene, function () {
 
     return {
         ForwardRenderer: ForwardRenderer
-    }; 
+    };
 }());
