@@ -1,4 +1,19 @@
 pc.extend(pc.fw, function() {
+
+    // if a property name is in this array then when that property changes
+    // we don't need to rebuild the emitter.
+    //
+    // 'rate' and 'lifetime' properties are better reflected after rebuild
+    // 'stretch' and 'wrapBounds' properties can be changed in realtime but not turned on/off, so let's just rebuild
+
+    var NO_REBUILD_PROPERTIES = [
+        'spawnBounds',
+        'speedDiv',
+        'constantSpeedDiv',
+        'texture',
+        'normalTexture'
+    ];
+
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
         this.on("set", this.onSetParam, this);
     };
@@ -11,17 +26,69 @@ pc.extend(pc.fw, function() {
                 return;
             }
 
-            if (this.emitter) {
-                this.emitter[name] = newValue; // some parameters can apply immediately
+            var texturePropertyName;
 
-                if (name === "oneShot") {
-                    this.emitter.resetTime();
+            if (name === 'textureAsset') {
+                texturePropertyName = 'texture';
+            } else if (name === 'normalTextureAsset') {
+                texturePropertyName = 'normalTexture';
+            }
+
+            if (texturePropertyName) {
+                if (newValue) {
+                    var asset = (newValue instanceof pc.asset.Asset ? newValue : this.system.context.assets.getAssetById(newValue));
+                    if (!asset) {
+                        logERROR(pc.string.format('Trying to load particle system before asset {0} is loaded.', newValue));
+                        return;
+                    }
+
+                    // try to load the cached asset first
+                    var texture;
+                    if (asset.resource) {
+                        texture = asset.resource;
+                        this.data[texturePropertyName] = texture;
+
+                        if (this.emitter) {
+                            this.emitter[texturePropertyName] = texture;
+                            this.emitter.resetMaterial();
+                        }
+                    } else {
+                        // texture is not in cache so load it dynamically
+                        var options = {
+                            parent: this.entity.getRequest()
+                        };
+
+                        this.system.context.assets.load(newValue, [], options).then(function (resources) {
+                            texture = resources[0].resource;
+                            this.data[texturePropertyName] = texture;
+                            if (this.emitter) {
+                                this.emitter[texturePropertyName] = texture;
+                                this.emitter.resetMaterial();
+                            }
+                        }.bind(this));
+                    }
                 } else {
-                    this.emitter.resetMaterial(); // some may require resetting shader constants
+                    // no asset so clear texture property
+                    this.data[texturePropertyName] = null;
+                    if (this.emitter) {
+                        this.emitter[texturePropertyName] = null;
+                        this.emitter.resetMaterial();
+                    }
+                }
 
-                    if ((name !== "spawnBounds") && (name !== "speedDiv") // && (name!="rate") && (name!="lifetime") // these params are better reflected after rebuild
-                        && (name !== "constantSpeedDiv")) { // && (name!="stretch") && (name!="wrapBounds")) { // stretch and wrapBounds can be changed realtime, but not turned on/off, so let's just rebuild
-                        this.rebuild();
+            } else {
+
+                if (this.emitter) {
+                    this.emitter[name] = newValue;
+
+                    if (name === "oneShot") {
+                        this.emitter.resetTime();
+                    } else {
+                        this.emitter.resetMaterial(); // some may require resetting shader constants
+
+                        if (NO_REBUILD_PROPERTIES.indexOf(name) < 0) {
+                            this.rebuild();
+                        }
                     }
                 }
             }
@@ -48,8 +115,6 @@ pc.extend(pc.fw, function() {
                     alphaDivGraph: this.data.alphaDivGraph,
                     texture: this.data.texture,
                     normalTexture: this.data.normalTexture,
-                    textureAsset: this.data.textureAsset,
-                    normalTextureAsset: this.data.normalTextureAsset,
                     oneShot: this.data.oneShot,
                     speedDiv: this.data.speedDiv,
                     constantSpeedDiv: this.data.constantSpeedDiv,
@@ -75,11 +140,10 @@ pc.extend(pc.fw, function() {
                 this.data.model = this.psys;
                 this.emitter.psys = this.psys;
 
-                var comp = this;
-				this.emitter.onFinished = function() { // called after oneShot emitter is finished. As you can dynamically change oneShot parameter, it should be always initialized
-					comp.enabled = false; // should call onDisable internally
-					comp.data.enabled = false;
-				};
+                // called after oneShot emitter is finished. As you can dynamically change oneShot parameter, it should be always initialized
+				this.emitter.onFinished = function() {
+					this.enabled = false;
+				}.bind(this);
             }
 
 
@@ -107,11 +171,12 @@ pc.extend(pc.fw, function() {
         },
 
         rebuild: function() {
+            var enabled = this.enabled;
             this.enabled = false;
             this.emitter.rebuild(); // worst case: required to rebuild buffers/shaders
             this.emitter.meshInstance.node = this.entity;
             this.data.model.meshInstances = [this.emitter.meshInstance];
-            this.enabled = true;
+            this.enabled = enabled;
         },
     });
 
