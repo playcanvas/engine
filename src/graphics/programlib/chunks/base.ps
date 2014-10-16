@@ -37,7 +37,7 @@ void getViewDir(inout psInternalData data) {
 }
 
 void getReflDir(inout psInternalData data) {
-    data.reflDirW = -reflect(data.viewDirW, data.normalW);
+    data.reflDirW = normalize(-reflect(data.viewDirW, data.normalW));
 }
 
 void addAmbientConstant(inout psInternalData data) {

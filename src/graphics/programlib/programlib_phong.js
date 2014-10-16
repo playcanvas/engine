@@ -11,7 +11,6 @@ pc.gfx.programlib.phong = {
          // However, it frees us from managing key generation after adding each new parameter.
          // We don't create new shaders real-time anyway... so string comparison shouldn't have huge impact.
         for(prop in props) key += "_" + props[prop];
-        //console.log(key);
 
         /* We shouldn't specify numbers of lights in options!
            Instead we should specify each light as separate option, because we have compilation-time per-light parameters like shadows on/off
@@ -123,7 +122,6 @@ pc.gfx.programlib.phong = {
 
         var vshader = code;
 
-
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
@@ -183,7 +181,7 @@ pc.gfx.programlib.phong = {
             code += chunks.normalVertexPS
         }
 
-        code += chunks.gamma1_0PS;
+        code += chunks.defaultGamma;
 
         if (options.diffuseMap) {
             code += chunks.albedoTexPS.replace(/\$UV/g, this._uvSource("diffuse")+uvOffset);
@@ -238,7 +236,7 @@ pc.gfx.programlib.phong = {
         }
 
         code += chunks.lightDiffuseLambertPS;
-        code += chunks.lightSpecularPhongPS;
+        code += chunks.defaultSpecular;
         if (options.sphereMap || options.cubeMap) {
             code += chunks.combineDiffuseSpecularPS;
         } else {
