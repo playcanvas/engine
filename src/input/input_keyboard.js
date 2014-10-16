@@ -113,7 +113,7 @@ pc.extend(pc.input, function(){
         this._keymap = {};
         this._lastmap = {};
 
-        if(element) {
+        if (element) {
             this.attach(element);
         }
 
