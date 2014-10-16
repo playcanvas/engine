@@ -390,33 +390,6 @@ pc.extend(pc.scene, function () {
         },
 
         _updateMapTransform: function (transform, tiling, offset, rotation) {
-            /*if (tiling) {
-                _tempTiling.set(tiling.x, tiling.y, 1);
-            } else {
-                _tempTiling.set(1, 1, 1);
-            }
-
-            if (offset) {
-                _tempOffset.set(offset.x, offset.y, 0);
-            } else {
-                _tempOffset.set(0, 0, 0);
-            }
-
-            if (rotation) {
-                _tempRotation.setFromEulerAngles(rotation.x, rotation.y, rotation.z);
-            } else {
-                _tempRotation.copy(pc.Quat.IDENTITY);
-            }
-
-            transform = transform || new pc.Mat4();
-            transform.setTRS(_tempOffset, _tempRotation, _tempTiling);
-
-            // if the transform is the identity matrix
-            // then just return null so that it is not included
-            // in the shader due to limited number of shader
-            // parameters
-            return transform.isIdentity() ? null : transform;*/
-
             transform = transform || new pc.Vec4();
             transform.set(tiling.x, tiling.y, offset.x, offset.y);
 
