@@ -138,7 +138,8 @@ pc.extend(pc.gfx, function () {
         // These values are the defaults as specified by the WebGL spec
         this._addressu = pc.gfx.ADDRESS_REPEAT;
         this._addressv = pc.gfx.ADDRESS_REPEAT;
-        this._minFilter = pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR;
+        //this._minFilter = pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR;
+        this.minFilter = pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR;
         this._magFilter = pc.gfx.FILTER_LINEAR;
         this._maxAnisotropy = 1;
 
