@@ -1,4 +1,4 @@
 vec3 combineColor(inout psInternalData data) {
-    return data.albedo * data.diffuseLight + data.specularLight * max(data.specularity, material_reflectionFactor);
+    return mix(data.albedo * data.diffuseLight, data.specularLight, max(data.specularity, material_reflectionFactor));
 }
 
