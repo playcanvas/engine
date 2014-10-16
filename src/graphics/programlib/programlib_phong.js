@@ -274,7 +274,7 @@ pc.gfx.programlib.phong = {
                 code += "   getParallax(data);\n"
             }
             code += "   getNormal(data);\n";
-            code += "   getReflDir(data);\n";
+            if (options.useSpecular) code += "   getReflDir(data);\n";
         }
 
         code += "   getAlbedo(data);\n";
