@@ -108,14 +108,14 @@ pc.gfx.programlib = {
                     code += '    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;\n';
                     code += '    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;\n\n';
 
-                                 // construct a scale-invariant frame 
+                                 // construct a scale-invariant frame
                     code += '    float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );\n';
                     code += '    return mat3( T * invmax, B * invmax, N );\n';
                     code += '}\n\n';
 
                     code += 'vec3 perturb_normal( vec3 N, vec3 V, vec2 uv )\n';
                     code += '{\n';
-                                 // assume N, the interpolated vertex normal and 
+                                 // assume N, the interpolated vertex normal and
                                  // V, the view vector (vertex to eye)
                     code += '    vec3 map = texture2D( texture_normalMap, uv ).xyz;\n';
                     code += '    map = map * 255./127. - 128./127.;\n';
