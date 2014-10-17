@@ -35,6 +35,7 @@ pc.extend(pc.fw, function () {
         this.on("set_castShadows", this.onSetCastShadows, this);
         this.on("set_shadowResolution", this.onSetShadowResolution, this);
         this.on("set_range", this.onSetRange, this);
+        this.on("set_falloffMode", this.onSetFalloffMode, this);
         this.on("set_innerConeAngle", this.onSetInnerConeAngle, this);
         this.on("set_outerConeAngle", this.onSetOuterConeAngle, this);
     };
@@ -69,6 +70,7 @@ pc.extend(pc.fw, function () {
             this.onSetIntensity("intensity", this.intensity, this.intensity);
             this.onSetShadowResolution("shadowResolution", this.shadowResolution, this.shadowResolution);
             this.onSetRange("range", this.range, this.range);
+            this.onSetFalloffMode("falloffMode", this.falloffMode, this.falloffMode);
             this.onSetInnerConeAngle("innerConeAngle", this.innerConeAngle, this.innerConeAngle);
             this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
 
@@ -78,10 +80,10 @@ pc.extend(pc.fw, function () {
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
-            if (this.data.type === 'directional' || this.data.type === 'spot') {
+            //if (this.data.type === 'directional' || this.data.type === 'spot') {
                 var light = this.data.model.lights[0];
                 light.setCastShadows(newValue);
-            }
+            //}
         },
 
         onSetColor: function (name, oldValue, newValue) {
@@ -105,6 +107,13 @@ pc.extend(pc.fw, function () {
             if (this.data.type === 'point' || this.data.type === 'spot') {
                 var light = this.data.model.lights[0];
                 light.setAttenuationEnd(newValue);
+            }
+        },
+
+        onSetFalloffMode: function (name, oldValue, newValue) {
+            if (this.data.type === 'point' || this.data.type === 'spot') {
+                var light = this.data.model.lights[0];
+                light.setFalloffMode(newValue);
             }
         },
 
