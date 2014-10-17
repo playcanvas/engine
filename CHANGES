@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.1
+--------
+* [FIX] Non-fresnel reflections.
+
+--------
 v0.158.0
 --------
 * New shader system. Supports far more lights, fresnel, parallax mapping and better specular reflectance.
