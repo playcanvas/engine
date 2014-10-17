@@ -58,7 +58,7 @@ pc.gfx.programlib.phong = {
         }
         codeBody += "   vPositionW    = getWorldPosition(data);\n";
 
-        if (lighting || options.cubeMap || options.sphereMap) {
+        if (lighting) {
             attributes.vertex_normal = pc.gfx.SEMANTIC_NORMAL;
             codeBody += "   vNormalW    = getNormal(data);\n";
 
@@ -111,8 +111,10 @@ pc.gfx.programlib.phong = {
             attributes.vertex_boneIndices = pc.gfx.SEMANTIC_BLENDINDICES;
             code += getSnippet(device, 'vs_skin_decl');
             code += chunks.transformSkinnedVS;
+            if (lighting) code += chunks.normalSkinnedVS;
         } else {
             code += chunks.transformVS;
+            if (lighting) code += chunks.normalVS;
         }
 
         code += "\n";

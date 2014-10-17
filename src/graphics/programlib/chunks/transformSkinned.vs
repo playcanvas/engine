@@ -5,12 +5,6 @@ mat4 getModelMatrix(inout vsInternalData data) {
                        vertex_boneWeights.w * getBoneMatrix(vertex_boneIndices.w);
 }
 
-vec3 getNormal(inout vsInternalData data) {
-    data.normalMatrix = mat3(data.modelMatrix[0].xyz, data.modelMatrix[1].xyz, data.modelMatrix[2].xyz);
-    return normalize(data.normalMatrix * vertex_normal);
-}
-
-
 vec4 getPosition(inout vsInternalData data) {
     data.modelMatrix = getModelMatrix(data);
     vec4 posW = data.modelMatrix * vec4(vertex_position, 1.0);
