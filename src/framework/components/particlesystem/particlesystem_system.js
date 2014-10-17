@@ -206,37 +206,108 @@ pc.extend(pc.fw, function() {
                 }
             }, {
                 name: 'localOffsetGraph',
-                exposed: false
+                displayName: "Local Offset",
+                description: "A graph that defines the local position of particles over time.",
+                type: "lineargraph",
+                defaultValue: [[
+                ]],
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
             }, {
                 name: 'offsetGraph',
-                exposed: false
+                displayName: "Offset",
+                description: "A graph that defines the world position of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
             }, {
                 name: 'angleGraph',
-                exposed: false
+                displayName: "Angle",
+                description: "A graph that defines the rotation of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['X', 'Y', 'Z'],
+                    max: 180
+                }
             }, {
                 name: 'scaleGraph',
-                exposed: false
+                displayName: "Scale",
+                description: "A graph that defines the scale of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['Scale']
+                }
             }, {
                 name: 'colorGraph',
-                exposed: false
+                displayName: "Color",
+                description: "A graph that defines the color of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['R', 'G', 'B']
+                }
             }, {
                 name: 'alphaGraph',
-                exposed: false
+                displayName: "Opacity",
+                description: "A graph that defines the opacity of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['Opacity'],
+                    max: 1
+                }
             }, {
                 name: 'localPosDivGraph',
-                exposed: false
+                displayName: "Local Position Divergence",
+                description: "A graph that defines the local position divergence of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
             }, {
                 name: 'posDivGraph',
-                exposed: false
+                displayName: "Position Divergence",
+                description: "A graph that defines the world position of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
             }, {
                 name: 'scaleDivGraph',
-                exposed: false
+                displayName: "Scale Divergence",
+                description: "A graph that defines the scaling divergence of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['Scale']
+                }
             }, {
                 name: 'angleDivGraph',
-                exposed: false
+                displayName: "Angle Divergence",
+                description: "A graph that defines the rotation divergence of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['X', 'Y', 'Z'],
+                    max: 180
+                }
             }, {
                 name: 'alphaDivGraph',
-                exposed: false
+                displayName: "Opacity Divergence",
+                description: "A graph that defines the opacity divergence of particles over time.",
+                type: "lineargraph",
+                defaultValue: [],
+                options: {
+                    curveNames: ['Opacity'],
+                    max: 1
+                }
             }, {
                 name: 'camera',
                 exposed: false

@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
 <head>
-    <script src="../../build/output/playcanvas-latest.js"></script>
-    <link href="../style.css" rel="stylesheet" />
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <link href="../../style.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -32,7 +32,7 @@
         // Create an Entity with a camera component
         var cameraEntity = new pc.fw.Entity();
         application.context.systems.camera.addComponent(cameraEntity, {
-            clearColor: new pc.Color(0,0,0)
+            clearColor: new pc.Color(0,0,0.05)
         });
         cameraEntity.rotateLocal(0, 0, 0);
         cameraEntity.translateLocal(0, 0, 10);
@@ -50,43 +50,62 @@
         application.context.root.addChild(cameraEntity);
         application.context.root.addChild(lightDirEntity);
 
-        // Offset position down 5 metres
-        var posCurve = new pc.Curve(
-            [0, 0, 1, 0],  // x
-            [0, 0, 1, -5], // y
-            [0, 0,1, 0] // z
+
+        // Offset position
+        var localPosCurve = new pc.CurveSet(
+            [0, 0, 1, 4],
+            [0, 0, 1, 3],
+            [0, 0, 1, 0]
+        );
+        localPosCurve.smoothstep = false;
+
+        // local position divergence
+        var localPosDivCurve = new pc.CurveSet(
+            [0, 1, 1, 1],
+            [0, 1, 1, 1],
+            [0, 0, 1, 0]
         );
 
-        posCurve.smoothstep = false;
+        // world position graph
+        var worldPosCurve = new pc.CurveSet(
+            [0, 0, 1, 0],
+            [0, 0, 0.2, 3, 1, -3],
+            [0, 0, 1, 0]
+        );
 
-        // scale is constant at 0.1
-        var scaleCurve = new pc.Curve([0, 0.1, 1, 0.1]);
+        // gradually make sparks bigger
+        var scaleCurve = new pc.Curve(
+            [0, 0, 0.5, 0.2, 1, 0]
+        );
 
-        // rotate snowflakes
-        var angleCurve = new pc.Curve([0, 0, 1, 4 * Math.PI]);
+        // rotate sparks
+        var angleCurve = new pc.Curve(
+            [0, 0, 1, 10]
+        );
 
-        // color is constant white
-        var colorCurve = new pc.Curve(
-            [0, 1, 1, 1], // red channel
-            [0, 1, 1, 1], // green channel
-            [0, 1, 1, 1] // blue channel
+        // color changes throughout lifetime
+        var colorCurve = new pc.CurveSet(
+            [0, 1, 0.5, 1, 0.75, 0.5, 1, 0],
+            [0, 0, 0.25, 0.25, 0.5, 0.5, 0.75, 0.75, 1, 1],
+            [0, 0, 1, 0]
         );
 
         // Create entity for particle system
         var entity = new pc.fw.Entity();
-        entity.setLocalPosition(0, 3, 0);
+        entity.setLocalPosition(0, 0, 0);
 
         // load snowflake texture
-        application.context.assets.loadFromUrl('../assets/snowflake.png', 'texture').then(function (result) {
+        application.context.assets.loadFromUrl('../../assets/spark.png', 'texture').then(function (result) {
 
             // when texture is loaded add particlesystem component to entity
             application.context.systems.particlesystem.addComponent(entity, {
-                numParticles: 100,
-                lifetime: 10,
-                rate: 0.1,
+                numParticles: 200,
+                lifetime: 2,
+                rate: 0.01,
                 deltaRandomnessStatic: 1,
-                spawnBounds: new pc.Vec3(5, 0, 0),
-                offsetGraph: posCurve,
+                localOffsetGraph: localPosCurve,
+                offsetGraph: worldPosCurve,
+                localPosDivGraph: localPosDivCurve,
                 scaleGraph: scaleCurve,
                 angleGraph: angleCurve,
                 colorGraph: colorCurve,

@@ -68,21 +68,10 @@ pc.extend(pc.scene, function() {
         return outArr;
     }
 
-    var default0Curve = new pc.Curve();
-    default0Curve.addKey(0, 0);
-    default0Curve.addKey(1, 0);
-
-    var default1Curve = new pc.Curve();
-    default1Curve.addKey(0, 1);
-    default1Curve.addKey(1, 1);
-
-    var default0Curve3 = new pc.Curve(3);
-    default0Curve3.addKey(0, [0, 0, 0]);
-    default0Curve3.addKey(1, [0, 0, 0]);
-
-    var default1Curve3 = new pc.Curve(3);
-    default1Curve3.addKey(0, [1, 1, 1]);
-    default1Curve3.addKey(1, [1, 1, 1]);
+    var default0Curve = new pc.Curve([0, 0, 1, 0]);
+    var default1Curve = new pc.Curve([0, 1, 1, 1]);
+    var default0Curve3 = new pc.CurveSet([0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]);
+    var default1Curve3 = new pc.CurveSet([0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]);
 
     var defaultParamTex = null;
 

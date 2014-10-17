@@ -25,6 +25,7 @@
 ../src/math/math_mat4.js
 ../src/math/math_quat.js
 ../src/math/math_curve.js
+../src/math/math_curveset.js
 ../src/shape/shape_shape.js
 ../src/shape/shape_intersection.js
 ../src/shape/shape_aabb.js

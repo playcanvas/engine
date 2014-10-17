@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
 <head>
-    <script src="../../build/output/playcanvas-latest.js"></script>
-    <link href="../style.css" rel="stylesheet" />
+    <script src="../../../build/output/playcanvas-latest.js"></script>
+    <link href="../../style.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -50,11 +50,12 @@
         application.context.root.addChild(cameraEntity);
         application.context.root.addChild(lightDirEntity);
 
+
         // Offset position down 5 metres
-        var posCurve = new pc.Curve(
+        var posCurve = new pc.CurveSet(
             [0, 0, 1, 0],  // x
             [0, 0, 1, -5], // y
-            [0, 0,1, 0] // z
+            [0, 0, 1, 0] // z
         );
 
         posCurve.smoothstep = false;
@@ -66,7 +67,7 @@
         var angleCurve = new pc.Curve([0, 0, 1, 4 * Math.PI]);
 
         // color is constant white
-        var colorCurve = new pc.Curve(
+        var colorCurve = new pc.CurveSet(
             [0, 1, 1, 1], // red channel
             [0, 1, 1, 1], // green channel
             [0, 1, 1, 1] // blue channel
@@ -77,7 +78,7 @@
         entity.setLocalPosition(0, 3, 0);
 
         // load snowflake texture
-        application.context.assets.loadFromUrl('../assets/snowflake.png', 'texture').then(function (result) {
+        application.context.assets.loadFromUrl('../../assets/snowflake.png', 'texture').then(function (result) {
 
             // when texture is loaded add particlesystem component to entity
             application.context.systems.particlesystem.addComponent(entity, {

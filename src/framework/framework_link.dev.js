@@ -67,12 +67,17 @@ pc.extend(editor, function () {
             }
         }
 
-        if (details.type === 'rgb' ||
+        else if (details.type === 'rgb' ||
             details.type === 'rgba') {
             // indicate that this is an array type (and therefore is a reference type and needs copying)
             details.array = true;
             // Provide an RuntimeType which is instatiated after passing an object over livelink
             details.RuntimeType = pc.Color;
+        }
+
+        else if (details.type === 'lineargraph') {
+            details.array = true;
+            details.RuntimeType = pc.Curve;
         }
 
         if (!this.exposed[system][details.name]) {
