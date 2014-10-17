@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.2
+--------
+* [FIX] Errors when there are no lights in the scene.
+
+--------
 v0.158.1
 --------
 * [FIX] Non-fresnel reflections.
