@@ -8,7 +8,7 @@ void addSpheremapReflection(inout psInternalData data) {
     float m = 2.0 * sqrt( dot(reflDirV.xy, reflDirV.xy) + (reflDirV.z+1.0)*(reflDirV.z+1.0) );
     vec2 sphereMapUv = reflDirV.xy / m + 0.5;
 
-    data.specularLight += texture2D(texture_sphereMap, sphereMapUv).rgb * material_reflectionFactor;
+    data.reflection += vec4(texture2D(texture_sphereMap, sphereMapUv).rgb, material_reflectionFactor);
 }
 
 
