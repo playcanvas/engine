@@ -71,6 +71,9 @@ pc.extend(pc.fw, function () {
             type: "enumeration",
             options: {
                 enumerations: [{
+                    name: '128',
+                    value: 128
+                }, {
                     name: '256',
                     value: 256
                 }, {
@@ -97,6 +100,24 @@ pc.extend(pc.fw, function () {
             options: {
                 min: 0
             },
+            filter: {
+                type: ['point', 'spot']
+            }
+        }, {
+            name: "falloffMode",
+            displayName: "Falloff mode",
+            description: "",
+            type: "enumeration",
+            options: {
+                enumerations: [{
+                    name: 'Linear',
+                    value: 0
+                }, {
+                    name: 'Inverse squared',
+                    value: 1
+                }]
+            },
+            defaultValue: 0,
             filter: {
                 type: ['point', 'spot']
             }
@@ -159,7 +180,7 @@ pc.extend(pc.fw, function () {
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
+            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -198,6 +219,7 @@ pc.extend(pc.fw, function () {
                 color: [entity.light.color.r, entity.light.color.g, entity.light.color.b],
                 intensity: entity.light.intensity,
                 range: entity.light.range,
+                falloffMode: entity.light.falloffMode,
                 innerConeAngle: entity.light.innerConeAngle,
                 outerConeAngle: entity.light.outerConeAngle,
                 castShadows: entity.light.castShadows,

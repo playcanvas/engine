@@ -16,6 +16,8 @@ pc.extend(pc.scene, function () {
         this._attenuationStart = 10;
         this._attenuationEnd = 10;
 
+        this._falloffMode = 0;
+
         // Spot properties
         this._innerConeAngle = 40;
         this._outerConeAngle = 45;
@@ -63,6 +65,8 @@ pc.extend(pc.scene, function () {
             clone.setAttenuationStart(this.getAttenuationStart());
             clone.setAttenuationEnd(this.getAttenuationEnd());
 
+            clone.setFalloffMode(this.getFalloffMode());
+
             // Spot properties
             clone.setInnerConeAngle(this.getInnerConeAngle());
             clone.setOuterConeAngle(this.getOuterConeAngle());
@@ -93,6 +97,10 @@ pc.extend(pc.scene, function () {
          */
         getAttenuationEnd: function () {
             return this._attenuationEnd;
+        },
+
+        getFalloffMode: function () {
+            return this._falloffMode;
         },
 
         /**
@@ -212,6 +220,10 @@ pc.extend(pc.scene, function () {
          */
         setAttenuationEnd: function (radius) {
             this._attenuationEnd = radius;
+        },
+
+        setFalloffMode: function (mode) {
+            this._falloffMode = mode;
         },
 
         /**
