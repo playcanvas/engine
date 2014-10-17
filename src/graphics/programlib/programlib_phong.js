@@ -116,7 +116,6 @@ pc.gfx.programlib.phong = {
         }
 
         code += "\n";
-        code += chunks.positionWorldSpaceVS;
 
         code += chunks.startVS;
         code += codeBody;
@@ -246,7 +245,7 @@ pc.gfx.programlib.phong = {
         if (options.useSpecular) {
             code += chunks.defaultSpecular;
             if (options.sphereMap || options.cubeMap || options.useFresnel) {
-                if (options.useFresnel > 0) {
+                if (options.useFresnel) {
                     code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                 } else {
                     code += chunks.combineDiffuseSpecularOldPS;
@@ -281,7 +280,7 @@ pc.gfx.programlib.phong = {
 
         if (lighting && options.useSpecular) {
             code += "   getSpecularity(data);\n";
-            if ((chunks.defaultFresnel!="") && options.useFresnel) code += "   getFresnel(data);\n";
+            if (options.useFresnel) code += "   getFresnel(data);\n";
             code += "   getGlossiness(data);\n";
         }
 
