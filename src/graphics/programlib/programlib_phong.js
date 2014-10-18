@@ -295,9 +295,8 @@ pc.gfx.programlib.phong = {
                 code += "    addLightmap(data);\n";
          }
 
+        code += "   addAmbientConstant(data);\n";
         if (lighting) {
-            code += "   addAmbientConstant(data);\n";
-
             if (options.cubeMap) {
                 code += "   addCubemapReflection(data);\n";
             } else if (options.sphereMap) {
