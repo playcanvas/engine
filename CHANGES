@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.3
+--------
+* [FIX] Ambient lighting is now respected when there are no lights enabled.
+
+--------
 v0.158.2
 --------
 * [FIX] Errors when there are no lights in the scene.
