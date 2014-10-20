@@ -43,8 +43,6 @@ pc.extend(pc, (function () {
             var rightTime = 1;
             var rightValue = 0;
 
-            var found = false;
-
             var keys = this.keys;
 
             for (var i = 0, len = keys.length; i < len; i++) {
@@ -66,11 +64,8 @@ pc.extend(pc, (function () {
             }
 
             var div = rightTime - leftTime;
-            if (div === 0) {
-                div = 1;
-            }
 
-            var interpolation = (time - leftTime) / div;
+            var interpolation = (div === 0 ? 0 : (time - leftTime) / div);
 
             if (this.smoothstep) {
                 interpolation *= interpolation * (3 - 2 * interpolation);
