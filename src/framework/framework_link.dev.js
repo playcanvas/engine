@@ -75,9 +75,12 @@ pc.extend(editor, function () {
             details.RuntimeType = pc.Color;
         }
 
-        else if (details.type === 'lineargraph') {
+        else if (details.type === 'curve') {
             details.array = true;
             details.RuntimeType = pc.Curve;
+        } else if (details.type === 'curveset') {
+            details.array = true;
+            details.RuntimeType = pc.CurveSet;
         }
 
         if (!this.exposed[system][details.name]) {

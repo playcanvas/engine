@@ -30,13 +30,22 @@ pc.extend(pc.fw, function() {
                 displayName: "Spawn Bounds",
                 description: "Defines an AABB in which particles are allowed to spawn",
                 type: "vector",
-                defaultValue: [0, 0, 0, 1]
+                defaultValue: [0, 0, 0]
             }, {
+                name: "wrap",
+                displayName: "Wrap",
+                description: "Set to true to wrap particles around the camera. Used for infinite atmospheric effect like rain or mist.",
+                type: 'boolean',
+                defaultValue: false
+            },{
                 name: "wrapBounds",
                 displayName: "Wrap Bounds",
-                description: "AABB around to camera to wrap particles. Used for infinite atmospheric effect like rain or mist",
+                description: "AABB around to camera to wrap particles. Used for infinite atmospheric effect like rain or mist.",
                 type: "vector",
-                defaultValue: null
+                filter: {
+                    wrap: true
+                },
+                defaultValue: [0, 0, 0]
             }, {
                 name: "lifetime",
                 displayName: "Lifetime",
@@ -208,9 +217,8 @@ pc.extend(pc.fw, function() {
                 name: 'localOffsetGraph',
                 displayName: "Local Offset",
                 description: "A graph that defines the local position of particles over time.",
-                type: "lineargraph",
-                defaultValue: [[
-                ]],
+                type: "curveset",
+                defaultValue: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
@@ -218,8 +226,8 @@ pc.extend(pc.fw, function() {
                 name: 'offsetGraph',
                 displayName: "Offset",
                 description: "A graph that defines the world position of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curveset",
+                defaultValue: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
@@ -227,36 +235,38 @@ pc.extend(pc.fw, function() {
                 name: 'angleGraph',
                 displayName: "Angle",
                 description: "A graph that defines the rotation of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curve",
+                defaultValue: [0, 0, 1, 0],
                 options: {
-                    curveNames: ['X', 'Y', 'Z'],
-                    max: 180
+                    curveNames: ['Angle'],
+                    max: 360
                 }
             }, {
                 name: 'scaleGraph',
                 displayName: "Scale",
                 description: "A graph that defines the scale of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curve",
+                defaultValue: [0, 1, 1, 1],
                 options: {
-                    curveNames: ['Scale']
+                    curveNames: ['Scale'],
+                    verticalAxisValue: 1
                 }
             }, {
                 name: 'colorGraph',
                 displayName: "Color",
                 description: "A graph that defines the color of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curveset",
+                defaultValue: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
                 options: {
-                    curveNames: ['R', 'G', 'B']
+                    curveNames: ['R', 'G', 'B'],
+                    max: 1
                 }
             }, {
                 name: 'alphaGraph',
                 displayName: "Opacity",
                 description: "A graph that defines the opacity of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curve",
+                defaultValue: [0, 1, 1, 1],
                 options: {
                     curveNames: ['Opacity'],
                     max: 1
@@ -265,8 +275,8 @@ pc.extend(pc.fw, function() {
                 name: 'localPosDivGraph',
                 displayName: "Local Position Divergence",
                 description: "A graph that defines the local position divergence of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curveset",
+                defaultValue: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
@@ -274,8 +284,8 @@ pc.extend(pc.fw, function() {
                 name: 'posDivGraph',
                 displayName: "Position Divergence",
                 description: "A graph that defines the world position of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curveset",
+                defaultValue: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
@@ -283,27 +293,28 @@ pc.extend(pc.fw, function() {
                 name: 'scaleDivGraph',
                 displayName: "Scale Divergence",
                 description: "A graph that defines the scaling divergence of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curve",
+                defaultValue: [0, 1, 1, 1],
                 options: {
-                    curveNames: ['Scale']
+                    curveNames: ['Scale'],
+                    verticalAxisValue: 1
                 }
             }, {
                 name: 'angleDivGraph',
                 displayName: "Angle Divergence",
                 description: "A graph that defines the rotation divergence of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curve",
+                defaultValue: [0, 0, 1, 0],
                 options: {
-                    curveNames: ['X', 'Y', 'Z'],
-                    max: 180
+                    curveNames: ['Angle'],
+                    max: 360
                 }
             }, {
                 name: 'alphaDivGraph',
                 displayName: "Opacity Divergence",
                 description: "A graph that defines the opacity divergence of particles over time.",
-                type: "lineargraph",
-                defaultValue: [],
+                type: "curve",
+                defaultValue: [0, 1, 1, 1],
                 options: {
                     curveNames: ['Opacity'],
                     max: 1
@@ -322,6 +333,12 @@ pc.extend(pc.fw, function() {
 
         this.exposeProperties();
 
+        this.propertyTypes = {};
+        for (var i=0; i<this.schema.length; i++) {
+            var s = this.schema[i];
+            this.propertyTypes[s.name] = s.type;
+        }
+
         this.on('remove', this.onRemove, this);
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
     };
@@ -332,12 +349,73 @@ pc.extend(pc.fw, function() {
         initializeComponentData: function(component, data, properties) {
 
             properties = [];
+            var types = this.propertyTypes;
+
             for (var prop in data) {
                 if (data.hasOwnProperty(prop)) {
                     properties.push(prop);
                 }
+
+                if (pc.type(data[prop]) === 'array') {
+                    if (types[prop] === 'curve') {
+                        data[prop] = new pc.Curve(data[prop]);
+                        data[prop].smoothstep = false;
+                    } else if (types[prop] === 'curveset') {
+                        data[prop] = new pc.CurveSet(data[prop]);
+                        data[prop].smoothstep = false;
+                    } else if (types[prop] === 'vector') {
+                        data[prop] = new pc.Vec3(data[prop]);
+                    }
+                }
+
             }
+
             ParticleSystemComponentSystem._super.initializeComponentData.call(this, component, data, properties);
+        },
+
+        cloneComponent: function (entity, clone) {
+            var source = entity.particlesystem.data;
+
+            var component = this.addComponent(clone, {
+                numParticles: source.numParticles,
+                rate: source.rate,
+                lifetime: source.lifetime,
+                spawnBounds: source.spawnBounds ? source.spawnBounds.clone() : null,
+                wrapBounds: source.wrapBounds ? source.wrapBounds.clone() : null,
+                wind: source.wind ? source.wind.clone() : null,
+                smoothness: source.smoothness,
+                texture: source.texture,
+                textureAsset: source.textureAsset,
+                normalTexture: source.normalTexture,
+                normalTextureAsset: source.normalTextureAsset,
+                oneShot: source.oneShot,
+                speedDiv: source.speedDiv,
+                constantSpeedDiv: source.constantSpeedDiv,
+                sort: source.sort,
+                mode: source.mode,
+                camera: source.camera,
+                scene: source.scene,
+                lighting: source.lighting,
+                halfLambert: source.halfLambert,
+                maxEmissionTime: source.maxEmissionTime,
+                stretch: source.stretch,
+                depthSoftening: source.depthSoftening,
+                mesh: source.mesh,
+                depthTest: source.depthTest,
+                gammaCorrect: source.gammaCorrect,
+                localOffsetGraph: source.localOffsetGraph ? source.localOffsetGraph.clone() : null,
+                offsetGraph: source.offsetGraph ? source.offsetGraph.clone() : null,
+                angleGraph: source.angleGraph ? source.angleGraph.clone() : null,
+                scaleGraph: source.scaleGraph ? source.scaleGraph.clone() : null,
+                colorGraph: source.colorGraph ? source.colorGraph.clone() : null,
+                alphaGraph: source.alphaGraph ? source.alphaGraph.clone() : null,
+                localPosDivGraph: source.localPosDivGraph ? source.localPosDivGraph.clone() : null,
+                posDivGraph: source.posDivGraph ? source.posDivGraph.clone() : null,
+                scaleDivGraph: source.scaleDivGraph ? source.scaleDivGraph.clone() : null,
+                angleDivGraph: source.angleDivGraph ? source.angleDivGraph.clone() : null,
+                alphaDivGraph: source.alphaDivGraph ? source.alphaDivGraph.clone() : null,
+                enabled: source.enabled
+            });
         },
 
         onUpdate: function(dt) {
@@ -345,9 +423,11 @@ pc.extend(pc.fw, function() {
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
+                    var c = components[id];
+                    var data = c.data;
 
-                    if ((components[id].data.enabled) && (components[id].entity.enabled)) {
-                        components[id].data.model.emitter.addTime(dt);
+                    if (data.enabled && c.entity.enabled) {
+                        data.model.emitter.addTime(dt);
                     }
 
                 }
