@@ -93,6 +93,13 @@ pc.extend(pc, (function () {
             return result;
         },
 
+        clone: function () {
+            var result = new pc.Curve();
+            result.keys = pc.extend(result.keys, this.keys);
+            result.smoothstep = this.smoothstep;
+            return result;
+        },
+
         quantize: function(precision, blur) {
             precision = Math.max(precision, 2);
 

@@ -52,6 +52,17 @@ pc.extend(pc, (function () {
             return result;
         },
 
+        clone: function () {
+            var result = new pc.CurveSet();
+            this.curves.forEach(function (c) {
+                result.push(c.clone());
+            })
+
+            result._smoothstep = this._smoothstep;
+
+            return result;
+        },
+
         quantize: function(precision, blur) {
             precision = Math.max(precision, 2);
 
