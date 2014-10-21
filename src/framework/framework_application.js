@@ -673,7 +673,7 @@ pc.extend(pc.fw, function () {
                                         }
                                     } else if (attribute.RuntimeType === pc.Curve || attribute.RuntimeType === pc.CurveSet) {
                                         entity[componentName][attributeName] = new attribute.RuntimeType(value.keys);
-                                        entity[componentName][attributeName].smoothsteph = value.smoothsteph;
+                                        entity[componentName][attributeName].type = value.type;
                                     } else {
                                         entity[componentName][attributeName] = new attribute.RuntimeType(value);
                                     }

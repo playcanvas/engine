@@ -1,8 +1,11 @@
 pc.extend(pc, (function () {
 
+    var CURVE_LINEAR = 0;
+    var CURVE_SMOOTHSTEP = 1;
+
     var Curve = function (data) {
-        this.smoothstep = true;
         this.keys = [];
+        this.type = CURVE_SMOOTHSTEP;
 
         if (data) {
             for (var i = 0; i < data.length - 1; i += 2) {
@@ -24,9 +27,7 @@ pc.extend(pc, (function () {
             }
 
             var key = [time, value];
-
             this.keys.splice(i, 0, key);
-
             return key;
         },
 
@@ -37,7 +38,7 @@ pc.extend(pc, (function () {
         sort: function () {
             this.keys.sort(function (a, b) {
                 return a[0] - b[0];
-            })
+            });
         },
 
         value: function (time) {
@@ -71,7 +72,7 @@ pc.extend(pc, (function () {
 
             var interpolation = (div === 0 ? 0 : (time - leftTime) / div);
 
-            if (this.smoothstep) {
+            if (this.type === CURVE_SMOOTHSTEP) {
                 interpolation *= interpolation * (3 - 2 * interpolation);
             }
 
@@ -100,7 +101,7 @@ pc.extend(pc, (function () {
         clone: function () {
             var result = new pc.Curve();
             result.keys = pc.extend(result.keys, this.keys);
-            result.smoothstep = this.smoothstep;
+            result.type = this.type;
             return result;
         },
 
@@ -141,6 +142,8 @@ pc.extend(pc, (function () {
     });
 
     return {
-        Curve: Curve
+        Curve: Curve,
+        CURVE_LINEAR: CURVE_LINEAR,
+        CURVE_SMOOTHSTEP: CURVE_SMOOTHSTEP
     };
 }()));

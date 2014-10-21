@@ -12,13 +12,13 @@ test("constructor: no args", function () {
 
 test("value", function () {
     var c = new pc.Curve([0, 0, 1, 1]);
-    c.smoothstep = false;
+    c.type = pc.CURVE_LINEAR;
     QUnit.equal(c.value(0.5), 0.5);
 });
 
 test("value - same keys", function () {
     var c = new pc.Curve([0, 1, 1, 1]);
-    c.smoothstep = false;
+    c.type = pc.CURVE_LINEAR;
     QUnit.equal(c.value(0), 1);
     QUnit.equal(c.value(0.5), 1);
     QUnit.equal(c.value(1), 1);
@@ -26,7 +26,7 @@ test("value - same keys", function () {
 
 test("value - one key", function () {
     var c = new pc.Curve([0.5, 1]);
-    c.smoothstep = false;
+    c.type = pc.CURVE_LINEAR;
     QUnit.equal(c.value(0), 1);
     QUnit.equal(c.value(0.5), 1);
     QUnit.equal(c.value(1), 1);
@@ -34,7 +34,7 @@ test("value - one key", function () {
 
 test("value - two keys", function () {
     var c = new pc.Curve([0.3, 1, 0.6, -1]);
-    c.smoothstep = false;
+    c.type = pc.CURVE_LINEAR;
     QUnit.equal(c.value(0), 1);
     QUnit.equal(c.value(0.3), 1);
     QUnit.close(c.value(0.45), 0, 0.001);

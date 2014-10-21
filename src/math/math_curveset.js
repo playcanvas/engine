@@ -2,7 +2,7 @@ pc.extend(pc, (function () {
 
     var CurveSet = function () {
         this.curves = [];
-        this._smoothstep = true;
+        this._type = pc.CURVE_SMOOTHSTEP;
 
         if (arguments.length > 1) {
             for (var i = 0; i < arguments.length; i++) {
@@ -58,7 +58,7 @@ pc.extend(pc, (function () {
                 result.push(c.clone());
             })
 
-            result._smoothstep = this._smoothstep;
+            result._type = this._type;
 
             return result;
         },
@@ -124,15 +124,15 @@ pc.extend(pc, (function () {
         }
     });
 
-    Object.defineProperty(CurveSet.prototype, 'smoothstep', {
+    Object.defineProperty(CurveSet.prototype, 'type', {
         get: function() {
-            return this._smoothstep;
+            return this._type;
         },
 
         set: function(value) {
-            this._smoothstep = value;
+            this._type = value;
             for (var i = 0; i < this.curves.length; i++) {
-                this.curves[i].smoothstep = value;
+                this.curves[i].type = value;
             }
         },
     });

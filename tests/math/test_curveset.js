@@ -27,7 +27,7 @@ test("constructor: no args", function () {
 
 test("value", function () {
     var c = new pc.CurveSet([0, 0, 1, 1], [0, 0, 1, 1]);
-    c.smoothstep = false;
+    c.type = pc.CURVE_LINEAR;
     QUnit.equal(c.value(0.5)[0], 0.5);
     QUnit.equal(c.value(0.5)[1], 0.5);
 });

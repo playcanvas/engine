@@ -58,7 +58,7 @@
             [0, 0, 1, 0] // z
         );
 
-        posCurve.smoothstep = false;
+        posCurve.type = pc.CURVE_LINEAR;
 
         // scale is constant at 0.1
         var scaleCurve = new pc.Curve([0, 0.1, 1, 0.1]);
@@ -85,7 +85,7 @@
                 numParticles: 100,
                 lifetime: 10,
                 rate: 0.1,
-                deltaRandomnessStatic: 1,
+                constantSpeedDiv: 0.5,
                 spawnBounds: new pc.Vec3(5, 0, 0),
                 offsetGraph: posCurve,
                 scaleGraph: scaleCurve,

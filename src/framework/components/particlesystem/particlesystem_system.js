@@ -219,7 +219,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the local position of particles over time.",
                 type: "curveset",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
                 },
                 options: {
@@ -231,7 +231,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the world position of particles over time.",
                 type: "curveset",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
                 },
                 options: {
@@ -243,7 +243,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the rotation of particles over time.",
                 type: "curve",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [0, 0, 1, 0]
                 },
                 options: {
@@ -257,7 +257,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the scale of particles over time.",
                 type: "curve",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [0, 1, 1, 1]
                 },
                 options: {
@@ -270,7 +270,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the color of particles over time.",
                 type: "curveset",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
                 },
                 options: {
@@ -284,7 +284,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the opacity of particles over time.",
                 type: "curve",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [0, 1, 1, 1],
                 },
                 options: {
@@ -298,7 +298,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the local position divergence of particles over time.",
                 type: "curveset",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
                 },
                 options: {
@@ -310,7 +310,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the world position of particles over time.",
                 type: "curveset",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
                 },
                 options: {
@@ -322,7 +322,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the scaling divergence of particles over time.",
                 type: "curve",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [0, 0, 1, 0]
                 },
                 options: {
@@ -335,7 +335,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the rotation divergence of particles over time.",
                 type: "curve",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [0, 0, 1, 0]
                 },
                 options: {
@@ -348,7 +348,7 @@ pc.extend(pc.fw, function() {
                 description: "A graph that defines the opacity divergence of particles over time.",
                 type: "curve",
                 defaultValue: {
-                    smoothstep: true,
+                    type: pc.CURVE_SMOOTHSTEP,
                     keys: [0, 0, 1, 0]
                 },
                 options: {
@@ -394,16 +394,18 @@ pc.extend(pc.fw, function() {
                 }
 
                 if (types[prop] === 'vector') {
-                    data[prop] = new pc.Vec3(data[prop]);
+                    if (pc.type(data[prop]) === 'array') {
+                        data[prop] = new pc.Vec3(data[prop]);
+                    }
                 } else if (types[prop] === 'curve') {
                     if (!(data[prop] instanceof pc.Curve)) {
                         data[prop] = new pc.Curve(data[prop].keys);
-                        data[prop].smoothstep = data[prop].smoothstep;
+                        data[prop].type = data[prop].type;
                     }
                 } else if (types[prop] === 'curveset') {
                     if (!(data[prop] instanceof pc.CurveSet)) {
                         data[prop] = new pc.CurveSet(data[prop].keys);
-                        data[prop].smoothstep = data[prop].smoothstep;
+                        data[prop].type = data[prop].type;
                     }
                 }
             }
