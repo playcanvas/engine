@@ -218,7 +218,10 @@ pc.extend(pc.fw, function() {
                 displayName: "Local Offset",
                 description: "A graph that defines the local position of particles over time.",
                 type: "curveset",
-                defaultValue: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
@@ -227,7 +230,10 @@ pc.extend(pc.fw, function() {
                 displayName: "Offset",
                 description: "A graph that defines the world position of particles over time.",
                 type: "curveset",
-                defaultValue: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
@@ -236,17 +242,24 @@ pc.extend(pc.fw, function() {
                 displayName: "Angle",
                 description: "A graph that defines the rotation of particles over time.",
                 type: "curve",
-                defaultValue: [0, 0, 1, 0],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [0, 0, 1, 0]
+                },
                 options: {
                     curveNames: ['Angle'],
-                    max: 360
+                    max: 360,
+                    verticalAxisValue: 360
                 }
             }, {
                 name: 'scaleGraph',
                 displayName: "Scale",
                 description: "A graph that defines the scale of particles over time.",
                 type: "curve",
-                defaultValue: [0, 1, 1, 1],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [0, 1, 1, 1]
+                },
                 options: {
                     curveNames: ['Scale'],
                     verticalAxisValue: 1
@@ -256,27 +269,38 @@ pc.extend(pc.fw, function() {
                 displayName: "Color",
                 description: "A graph that defines the color of particles over time.",
                 type: "curveset",
-                defaultValue: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
+                },
                 options: {
                     curveNames: ['R', 'G', 'B'],
-                    max: 1
+                    max: 1,
+                    min: 0
                 }
             }, {
                 name: 'alphaGraph',
                 displayName: "Opacity",
                 description: "A graph that defines the opacity of particles over time.",
                 type: "curve",
-                defaultValue: [0, 1, 1, 1],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [0, 1, 1, 1],
+                },
                 options: {
                     curveNames: ['Opacity'],
-                    max: 1
+                    max: 1,
+                    min: 0
                 }
             }, {
                 name: 'localPosDivGraph',
                 displayName: "Local Position Divergence",
                 description: "A graph that defines the local position divergence of particles over time.",
                 type: "curveset",
-                defaultValue: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
@@ -285,7 +309,10 @@ pc.extend(pc.fw, function() {
                 displayName: "Position Divergence",
                 description: "A graph that defines the world position of particles over time.",
                 type: "curveset",
-                defaultValue: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
@@ -294,7 +321,10 @@ pc.extend(pc.fw, function() {
                 displayName: "Scale Divergence",
                 description: "A graph that defines the scaling divergence of particles over time.",
                 type: "curve",
-                defaultValue: [0, 1, 1, 1],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [0, 0, 1, 0]
+                },
                 options: {
                     curveNames: ['Scale'],
                     verticalAxisValue: 1
@@ -304,7 +334,10 @@ pc.extend(pc.fw, function() {
                 displayName: "Angle Divergence",
                 description: "A graph that defines the rotation divergence of particles over time.",
                 type: "curve",
-                defaultValue: [0, 0, 1, 0],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [0, 0, 1, 0]
+                },
                 options: {
                     curveNames: ['Angle'],
                     max: 360
@@ -314,10 +347,14 @@ pc.extend(pc.fw, function() {
                 displayName: "Opacity Divergence",
                 description: "A graph that defines the opacity divergence of particles over time.",
                 type: "curve",
-                defaultValue: [0, 1, 1, 1],
+                defaultValue: {
+                    smoothstep: true,
+                    keys: [0, 0, 1, 0]
+                },
                 options: {
                     curveNames: ['Opacity'],
-                    max: 1
+                    max: 1,
+                    min: 0
                 }
             }, {
                 name: 'camera',
@@ -356,18 +393,19 @@ pc.extend(pc.fw, function() {
                     properties.push(prop);
                 }
 
-                if (pc.type(data[prop]) === 'array') {
-                    if (types[prop] === 'curve') {
-                        data[prop] = new pc.Curve(data[prop]);
-                        data[prop].smoothstep = false;
-                    } else if (types[prop] === 'curveset') {
-                        data[prop] = new pc.CurveSet(data[prop]);
-                        data[prop].smoothstep = false;
-                    } else if (types[prop] === 'vector') {
-                        data[prop] = new pc.Vec3(data[prop]);
+                if (types[prop] === 'vector') {
+                    data[prop] = new pc.Vec3(data[prop]);
+                } else if (types[prop] === 'curve') {
+                    if (!(data[prop] instanceof pc.Curve)) {
+                        data[prop] = new pc.Curve(data[prop].keys);
+                        data[prop].smoothstep = data[prop].smoothstep;
+                    }
+                } else if (types[prop] === 'curveset') {
+                    if (!(data[prop] instanceof pc.CurveSet)) {
+                        data[prop] = new pc.CurveSet(data[prop].keys);
+                        data[prop].smoothstep = data[prop].smoothstep;
                     }
                 }
-
             }
 
             ParticleSystemComponentSystem._super.initializeComponentData.call(this, component, data, properties);

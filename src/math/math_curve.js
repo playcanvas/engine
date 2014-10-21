@@ -23,7 +23,11 @@ pc.extend(pc, (function () {
                 }
             }
 
-            this.keys.splice(i, 0, [time, value]);
+            var key = [time, value];
+
+            this.keys.splice(i, 0, key);
+
+            return key;
         },
 
         get: function (index) {
@@ -37,13 +41,13 @@ pc.extend(pc, (function () {
         },
 
         value: function (time) {
+            var keys = this.keys;
+
             var leftTime = 0;
-            var leftValue = 0;
+            var leftValue = keys.length ? keys[0][1] : 0;
 
             var rightTime = 1;
             var rightValue = 0;
-
-            var keys = this.keys;
 
             for (var i = 0, len = keys.length; i < len; i++) {
 

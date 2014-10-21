@@ -61,7 +61,7 @@ pc.extend(pc.fw, function() {
             if (newValue) {
                 this._loadAsset(newValue, function (resource) {
                     this.texture = resource;
-                }.bind(this))
+                }.bind(this));
             } else {
                 this.texture = null;
             }
@@ -71,7 +71,7 @@ pc.extend(pc.fw, function() {
             if (newValue) {
                 this._loadAsset(newValue, function (resource) {
                     this.normalTexture = resource;
-                }.bind(this))
+                }.bind(this));
             } else {
                 this.normalTexture = null;
             }
@@ -159,11 +159,14 @@ pc.extend(pc.fw, function() {
         },
 
         onEnable: function() {
-            if (!this.emitter) {
+            if (!this.emitter && !this.system._inTools) {
 
-                var camera = this.system.context.systems.camera.cameras[0];
-                if (camera) {
-                    camera = camera.entity;
+                var camera = this.data.camera;
+                if (!camera) {
+                    camera = this.system.context.systems.camera.cameras[0];
+                    if (camera) {
+                        camera = camera.entity;
+                    }
                 }
 
                 this.emitter = new pc.scene.ParticleEmitter2(this.system.context.graphicsDevice, {
@@ -195,13 +198,12 @@ pc.extend(pc.fw, function() {
                     halfLambert: this.data.halfLambert,
                     maxEmissionTime: this.data.maxEmissionTime,
                     depthSoftening: this.data.depthSoftening,
-                    camera: this.data.camera,
+                    camera: camera,
                     scene: this.system.context.scene,
                     mesh: this.data.mesh,
                     depthTest: this.data.depthTest,
                     gammaCorrect: this.data.gammaCorrect,
-                    smoothness: this.data.smoothness,
-                    camera: camera
+                    smoothness: this.data.smoothness
                 });
                 this.emitter.meshInstance.node = this.entity;
 

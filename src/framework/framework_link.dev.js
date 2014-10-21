@@ -76,10 +76,10 @@ pc.extend(editor, function () {
         }
 
         else if (details.type === 'curve') {
-            details.array = true;
+            details.object = true;
             details.RuntimeType = pc.Curve;
         } else if (details.type === 'curveset') {
-            details.array = true;
+            details.object = true;
             details.RuntimeType = pc.CurveSet;
         }
 

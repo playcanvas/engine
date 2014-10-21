@@ -27,10 +27,18 @@ test("value - same keys", function () {
 test("value - one key", function () {
     var c = new pc.Curve([0.5, 1]);
     c.smoothstep = false;
-    QUnit.equal(c.value(0), 0);
-    QUnit.equal(c.value(0.25), 0.5);
+    QUnit.equal(c.value(0), 1);
     QUnit.equal(c.value(0.5), 1);
     QUnit.equal(c.value(1), 1);
+});
+
+test("value - two keys", function () {
+    var c = new pc.Curve([0.3, 1, 0.6, -1]);
+    c.smoothstep = false;
+    QUnit.equal(c.value(0), 1);
+    QUnit.equal(c.value(0.3), 1);
+    QUnit.close(c.value(0.45), 0, 0.001);
+    QUnit.equal(c.value(0.6), -1);
 });
 
 test("value - smoothstep", function () {
@@ -43,7 +51,7 @@ test("add", function () {
     c.add(1, 1);
 
     QUnit.equal(c.length, 1);
-    QUnit.equal(c.value(0.5), 0.5);
+    QUnit.equal(c.value(0.5), 1);
 });
 
 test("add - with existing value", function () {
