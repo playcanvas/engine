@@ -161,14 +161,6 @@ pc.extend(pc.fw, function() {
         onEnable: function() {
             if (!this.emitter && !this.system._inTools) {
 
-                var camera = this.data.camera;
-                if (!camera) {
-                    camera = this.system.context.systems.camera.cameras[0];
-                    if (camera) {
-                        camera = camera.entity;
-                    }
-                }
-
                 this.emitter = new pc.scene.ParticleEmitter2(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     spawnBounds: this.data.spawnBounds,
@@ -198,7 +190,7 @@ pc.extend(pc.fw, function() {
                     halfLambert: this.data.halfLambert,
                     maxEmissionTime: this.data.maxEmissionTime,
                     depthSoftening: this.data.depthSoftening,
-                    camera: camera,
+                    camera: this.data.camera,
                     scene: this.system.context.scene,
                     mesh: this.data.mesh,
                     depthTest: this.data.depthTest,

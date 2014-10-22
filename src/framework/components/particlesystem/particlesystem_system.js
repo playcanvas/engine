@@ -467,16 +467,36 @@ pc.extend(pc.fw, function() {
 
         onUpdate: function(dt) {
             var components = this.store;
+            var currentCamera;
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
                     var c = components[id];
                     var data = c.data;
+                    var emitter = data.model.emitter;
 
                     if (data.enabled && c.entity.enabled) {
-                        data.model.emitter.addTime(dt);
-                    }
+                        // check if the emitter has no camera set or if the
+                        // camera is disabled
+                        var cameraEntity = data.camera;
+                        var camera = cameraEntity ? cameraEntity.camera : null;
+                        if (!cameraEntity || !camera || !camera.enabled) {
 
+                            // if there is no valid camera then get the first enabled camera
+                            if (!currentCamera) {
+                                currentCamera = this.context.systems.camera.cameras[0];
+                                if (currentCamera) {
+                                    currentCamera = currentCamera.entity;
+                                }
+                            }
+
+                            // set the camera to the component and the emitter
+                            data.camera = currentCamera;
+                            emitter.camera = currentCamera;
+                        }
+
+                        emitter.addTime(dt);
+                    }
                 }
             }
         },

@@ -503,7 +503,7 @@ pc.extend(pc.scene, function() {
                     material.setParameter('normalMap', this.normalMap);
                 }
             }
-            if (this.depthSoftening > 0) {
+            if (this.depthSoftening > 0 && this.camera) {
                 material.setParameter('uDepthMap', this.camera.camera._depthTarget.colorBuffer);
                 material.setParameter('screenSize', new pc.Vec4(gd.width, gd.height, 1.0 / gd.width, 1.0 / gd.height).data);
                 material.setParameter('softening', this.depthSoftening);
@@ -714,14 +714,9 @@ pc.extend(pc.scene, function() {
 
                 // Particle sorting
                 // TODO: optimize
-                var posCam;
-                posCam = this.camera.position.data;
-                if (this.sort > pc.scene.PARTICLES_SORT_NONE) {
-                    if (!this.camera) {
-                        console.error("There is no camera for particle sorting");
-                        return;
-                    }
+                var posCam = this.camera ? this.camera.position.data : pc.Vec3.ZERO;
 
+                if (this.sort > pc.scene.PARTICLES_SORT_NONE && this.camera) {
                     for (var i = 0; i < this.numParticles; i++) {
                         this.vbToSort[i] = [i, Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]; // particle id
                     }
