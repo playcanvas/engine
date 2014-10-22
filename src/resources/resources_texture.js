@@ -55,7 +55,7 @@ pc.extend(pc.resources, function () {
     TextureResourceHandler.prototype.open = function (data, request, options) {
         var texture;
 
-        if (data instanceof Image) { // PNG, JPG or GIF
+        if ((data instanceof Image) || (data instanceof HTMLImageElement)) { // PNG, JPG or GIF
             var img = data;
             if (request.result) {
                 texture = request.result;
