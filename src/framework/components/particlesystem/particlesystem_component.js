@@ -1,104 +1,178 @@
 pc.extend(pc.fw, function() {
 
-    // if a property name is in this array then when that property changes
-    // we don't need to rebuild the emitter.
-    //
-    // 'rate' and 'lifetime' properties are better reflected after rebuild
-    // 'stretch' and 'wrapBounds' properties can be changed in realtime but not turned on/off, so let's just rebuild
-
-    var NO_REBUILD_PROPERTIES = [
+    // properties that do not need rebuilding the particle system
+    var SIMPLE_PROPERTIES = [
         'spawnBounds',
         'speedDiv',
         'constantSpeedDiv',
-        'texture',
-        'normalTexture'
+        'colorMap',
+        'normalMap'
+    ];
+
+    // properties that need rebuilding the particle system
+    var COMPLEX_PROPERTIES = [
+        'numParticles',
+        'lifetime',
+        'rate',
+        'smoothness',
+        'lighting',
+        'halfLambert',
+        'wrap',
+        'wrapBounds',
+        'depthTest',
+        'depthSoftening',
+        'gammaCorrect',
+        'sort',
+        'stretch',
+        'maxEmissionTime',
+        'localOffsetGraph',
+        'offsetGraph',
+        'angleGraph',
+        'scaleGraph',
+        'colorGraph',
+        'alphaGraph',
+        'localPosDivGraph',
+        'posDivGraph',
+        'scaleDivGraph',
+        'angleDivGraph',
+        'alphaDivGraph'
     ];
 
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
-        this.on("set", this.onSetParam, this);
+        this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
+        this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
+        this.on("set_mesh", this.onSetMesh, this);
+        this.on("set_oneShot", this.onSetOneShot, this);
+
+        SIMPLE_PROPERTIES.forEach(function (prop) {
+            this.on('set_' + prop, this.onSetSimpleProperty, this);
+        }.bind(this));
+
+        COMPLEX_PROPERTIES.forEach(function (prop) {
+            this.on('set_' + prop, this.onSetComplexProperty, this);
+        }.bind(this));
     };
+
     ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.fw.Component);
 
     pc.extend(ParticleSystemComponent.prototype, {
 
-        onSetParam: function(name, oldValue, newValue) {
-            if (name === "enabled") {
+        onSetColorMapAsset: function (name, oldValue, newValue) {
+            if (newValue) {
+                this._loadAsset(newValue, function (resource) {
+                    this.colorMap = resource;
+                }.bind(this));
+            } else {
+                this.colorMap = null;
+            }
+        },
+
+        onSetNormalMapAsset: function (name, oldValue, newValue) {
+            if (newValue) {
+                this._loadAsset(newValue, function (resource) {
+                    this.normalMap = resource;
+                }.bind(this));
+            } else {
+                this.normalMap = null;
+            }
+        },
+
+        _loadAsset: function (assetId, callback) {
+            var asset = (assetId instanceof pc.asset.Asset ? assetId : this.system.context.assets.getAssetById(assetId));
+            if (!asset) {
+                logERROR(pc.string.format('Trying to load particle system before asset {0} is loaded.', assetId));
                 return;
             }
 
-            var texturePropertyName;
-
-            if (name === 'textureAsset') {
-                texturePropertyName = 'texture';
-            } else if (name === 'normalTextureAsset') {
-                texturePropertyName = 'normalTexture';
-            }
-
-            if (texturePropertyName) {
-                if (newValue) {
-                    var asset = (newValue instanceof pc.asset.Asset ? newValue : this.system.context.assets.getAssetById(newValue));
-                    if (!asset) {
-                        logERROR(pc.string.format('Trying to load particle system before asset {0} is loaded.', newValue));
-                        return;
-                    }
-
-                    // try to load the cached asset first
-                    var texture;
-                    if (asset.resource) {
-                        texture = asset.resource;
-                        this.data[texturePropertyName] = texture;
-
-                        if (this.emitter) {
-                            this.emitter[texturePropertyName] = texture;
-                            this.emitter.resetMaterial();
-                        }
-                    } else {
-                        // texture is not in cache so load it dynamically
-                        var options = {
-                            parent: this.entity.getRequest()
-                        };
-
-                        this.system.context.assets.load(newValue, [], options).then(function (resources) {
-                            texture = resources[0].resource;
-                            this.data[texturePropertyName] = texture;
-                            if (this.emitter) {
-                                this.emitter[texturePropertyName] = texture;
-                                this.emitter.resetMaterial();
-                            }
-                        }.bind(this));
-                    }
-                } else {
-                    // no asset so clear texture property
-                    this.data[texturePropertyName] = null;
-                    if (this.emitter) {
-                        this.emitter[texturePropertyName] = null;
-                        this.emitter.resetMaterial();
-                    }
-                }
+            // try to load the cached asset first
+            var resource;
+            if (asset.resource) {
+                callback(asset.resource);
 
             } else {
+                // resource is not in cache so load it dynamically
+                var options = {
+                    parent: this.entity.getRequest()
+                };
 
-                if (this.emitter) {
-                    this.emitter[name] = newValue;
+                this.system.context.assets.load(asset, [], options).then(function (resources) {
+                    callback(resources[0]);
+                });
+            }
+        },
 
-                    if (name === "oneShot") {
-                        this.emitter.resetTime();
-                    } else {
-                        this.emitter.resetMaterial(); // some may require resetting shader constants
-
-                        if (NO_REBUILD_PROPERTIES.indexOf(name) < 0) {
-                            this.rebuild();
-                        }
-                    }
+        onSetMesh: function (name, oldValue, newValue) {
+            if (newValue) {
+                if (newValue instanceof pc.asset.Asset || pc.type(newValue) === 'number') {
+                    // asset
+                    this._loadAsset(newValue, function (model) {
+                        this._onMeshChanged(model);
+                    }.bind(this));
+                } else {
+                    // model resource
+                    this._onMeshChanged(newValue);
                 }
+            } else {
+                // null model
+                this._onMeshChanged(null);
+            }
+        },
+
+        _onMeshChanged: function (mesh) {
+            if (mesh) {
+                if (mesh.meshInstances[0]) {
+                    mesh = mesh.meshInstances[0].mesh;
+                } else {
+                    mesh = null;
+                }
+            }
+
+            this.data.mesh = mesh;
+
+            if (this.emitter) {
+                this.emitter.mesh = mesh;
+                this.emitter.resetMaterial();
+                this.rebuild();
+            }
+        },
+
+        onSetOneShot: function (name, oldValue, newValue) {
+            if (this.emitter) {
+                this.emitter[name] = newValue;
+                this.emitter.resetTime();
+            }
+        },
+
+        onSetSimpleProperty: function (name, oldValue, newValue) {
+            if (this.emitter) {
+                this.emitter[name] = newValue;
+                this.emitter.resetMaterial();
+            }
+        },
+
+        onSetComplexProperty: function (name, oldValue, newValue) {
+            if (this.emitter) {
+                this.emitter[name] = newValue;
+                this.emitter.resetMaterial();
+                this.rebuild();
             }
         },
 
         onEnable: function() {
-            if (!this.emitter) {
+            if (!this.emitter && !this.system._inTools) {
+
+                var camera = this.data.camera;
+                if (!camera) {
+                    camera = this.system.context.systems.camera.cameras[0];
+                    if (camera) {
+                        camera = camera.entity;
+                    }
+                }
+
                 this.emitter = new pc.scene.ParticleEmitter2(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     spawnBounds: this.data.spawnBounds,
+                    wrap: this.data.wrap,
                     wrapBounds: this.data.wrapBounds,
                     lifetime: this.data.lifetime,
                     rate: this.data.rate,
@@ -113,8 +187,8 @@ pc.extend(pc.fw, function() {
                     scaleDiv: this.data.scaleDiv,
                     angleDivGraph: this.data.angleDivGraph,
                     alphaDivGraph: this.data.alphaDivGraph,
-                    texture: this.data.texture,
-                    normalTexture: this.data.normalTexture,
+                    colorMap: this.data.colorMap,
+                    normalMap: this.data.normalMap,
                     oneShot: this.data.oneShot,
                     speedDiv: this.data.speedDiv,
                     constantSpeedDiv: this.data.constantSpeedDiv,
@@ -124,7 +198,7 @@ pc.extend(pc.fw, function() {
                     halfLambert: this.data.halfLambert,
                     maxEmissionTime: this.data.maxEmissionTime,
                     depthSoftening: this.data.depthSoftening,
-                    camera: this.data.camera,
+                    camera: camera,
                     scene: this.system.context.scene,
                     mesh: this.data.mesh,
                     depthTest: this.data.depthTest,
@@ -150,7 +224,7 @@ pc.extend(pc.fw, function() {
             ParticleSystemComponent._super.onEnable.call(this);
             if (this.data.model) {
                 if (!this.system.context.scene.containsModel(this.data.model)) {
-                    if (this.emitter.texture) {
+                    if (this.emitter.colorMap) {
                         this.system.context.scene.addModel(this.data.model);
                     }
                 }

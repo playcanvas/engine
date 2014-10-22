@@ -68,21 +68,10 @@ pc.extend(pc.scene, function() {
         return outArr;
     }
 
-    var default0Curve = new pc.Curve();
-    default0Curve.addKey(0, 0);
-    default0Curve.addKey(1, 0);
-
-    var default1Curve = new pc.Curve();
-    default1Curve.addKey(0, 1);
-    default1Curve.addKey(1, 1);
-
-    var default0Curve3 = new pc.Curve(3);
-    default0Curve3.addKey(0, [0, 0, 0]);
-    default0Curve3.addKey(1, [0, 0, 0]);
-
-    var default1Curve3 = new pc.Curve(3);
-    default1Curve3.addKey(0, [1, 1, 1]);
-    default1Curve3.addKey(1, [1, 1, 1]);
+    var default0Curve = new pc.Curve([0, 0, 1, 0]);
+    var default1Curve = new pc.Curve([0, 1, 1, 1]);
+    var default0Curve3 = new pc.CurveSet([0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]);
+    var default1Curve3 = new pc.CurveSet([0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]);
 
     var defaultParamTex = null;
 
@@ -192,11 +181,12 @@ pc.extend(pc.scene, function() {
         setProperty("rate", 1);                                  // Emission rate
         setProperty("lifetime", 50);                             // Particle lifetime
         setProperty("spawnBounds", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("wrap", false);
         setProperty("wrapBounds", null);
         // setProperty("wind", new pc.Vec3(0, 0, 0));               // Wind velocity
         setProperty("smoothness", 4);                            // Blurring width for graphs
-        setProperty("texture", null);
-        setProperty("normalTexture", null);
+        setProperty("colorMap", null);
+        setProperty("normalMap", null);
         setProperty("oneShot", false);
         setProperty("speedDiv", 0.0); // Randomizes particle simulation speed [0-1] per frame
         setProperty("constantSpeedDiv", 0.0); // Randomizes particle simulation speed [0-1] (one value during whole particle life)
@@ -215,7 +205,9 @@ pc.extend(pc.scene, function() {
         setProperty("depthTest", false);
         this.mode = (this.mode === "CPU" ? pc.scene.PARTICLES_MODE_CPU : pc.scene.PARTICLES_MODE_GPU);
 
-        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) this.mode = pc.scene.PARTICLES_MODE_CPU;
+        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) {
+            this.mode = pc.scene.PARTICLES_MODE_CPU;
+        }
 
         this.frameRandom = new pc.Vec3(0, 0, 0);
 
@@ -236,7 +228,7 @@ pc.extend(pc.scene, function() {
         this.constantTexLifeAndSourcePosIN = gd.scope.resolve("texLifeAndSourcePosIN");
         this.constantTexLifeAndSourcePosOUT = gd.scope.resolve("texLifeAndSourcePosOUT");
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
-        this.constantSpawnBounds = gd.scope.resolve("birthBounds");
+        this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
         this.constantRate = gd.scope.resolve("rate");
@@ -335,10 +327,24 @@ pc.extend(pc.scene, function() {
             this.qPosWorldDiv = this.posDivGraph.quantize(precision, this.smoothness);
 
             this.qAngle = this.angleGraph.quantize(precision, this.smoothness);
+
+            // convert to radians
+            for (var i=0, len = this.qAngle.length, qAngle = this.qAngle; i<len; i++) {
+                qAngle[i] *= pc.math.DEG_TO_RAD;
+            }
+
+            this.qAngleDiv = this.angleDivGraph.quantize(precision, this.smoothness);
+
+            // convert to radians
+            for (var i=0, len = this.qAngleDiv.length, qAngleDiv = this.qAngleDiv; i<len; i++) {
+                qAngleDiv[i] *= pc.math.DEG_TO_RAD;
+            }
+
             this.qScale = this.scaleGraph.quantize(precision, this.smoothness);
             this.qAlpha = this.alphaGraph.quantize(precision, this.smoothness);
             this.qScaleDiv = this.scaleDivGraph.quantize(precision, this.smoothness);
-            this.qAngleDiv = this.angleDivGraph.quantize(precision, this.smoothness);
+
+
             this.qAlphaDiv = this.alphaDivGraph.quantize(precision, this.smoothness);
 
             this.colorMult = 1;
@@ -412,7 +418,7 @@ pc.extend(pc.scene, function() {
             mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
             mesh.primitive[0].indexed = true;
 
-            var hasNormal = (this.normalTexture != null);
+            var hasNormal = (this.normalMap != null);
 
             var programLib = this.graphicsDevice.getProgramLibrary();
             var normalOption = 0;
@@ -428,7 +434,7 @@ pc.extend(pc.scene, function() {
                 soft: this.depthSoftening,
                 mesh: isMesh,
                 srgb: this.gammaCorrect,
-                wrap: (this.wrapBounds != undefined)
+                wrap: this.wrap && this.wrapBounds
             });
             this.material = new pc.scene.Material();
             this.material.setShader(shader);
@@ -457,26 +463,11 @@ pc.extend(pc.scene, function() {
         },
 
         _initializeTextures: function () {
-            var addToScene = false;
-
-            if (this.texture) {
-                this.material.setParameter('particleTexture', this.texture);
-                if (!this.lighting) {
-                    addToScene = true;
+            if (this.colorMap) {
+                this.material.setParameter('colorMap', this.colorMap);
+                if (this.lighting && this.normalMap) {
+                    this.material.setParameter('normalMap', this.normalMap);
                 }
-                else if (this.normalTexture) {
-                    this.material.setParameter('normalTexture', this.normalTexture);
-                    addToScene = true;
-                }
-            }
-
-            if (addToScene && this.psys) {
-                if (!this.scene) {
-                    console.error("There is no scene defined for lighting particles");
-                    return;
-                }
-
-                this.scene.addModel(this.psys);
             }
         },
 
@@ -498,10 +489,19 @@ pc.extend(pc.scene, function() {
             material.setParameter('lifetime', this.lifetime);
             material.setParameter('graphSampleSize', 1.0 / this.precision);
             material.setParameter('graphNumSamples', this.precision);
-            if (this.wrapBounds) material.setParameter('wrapBounds', this.wrapBounds.data);
-            if (this.texture) material.setParameter('particleTexture', this.texture);
+
+            if (this.wrap && this.wrapBounds) {
+                material.setParameter('wrapBounds', this.wrapBounds.data);
+            }
+
+            if (this.colorMap) {
+                material.setParameter('colorMap', this.colorMap);
+            }
+
             if (this.lighting) {
-                if (this.normalTexture) material.setParameter('normalTexture', this.normalTexture);
+                if (this.normalMap) {
+                    material.setParameter('normalMap', this.normalMap);
+                }
             }
             if (this.depthSoftening > 0) {
                 material.setParameter('uDepthMap', this.camera.camera._depthTarget.colorBuffer);
@@ -822,7 +822,7 @@ pc.extend(pc.scene, function() {
                         particlePosY = sourcePosY + localOffset[1] + worldOffset[1];
                         particlePosZ = sourcePosZ + localOffset[2] + worldOffset[2];
 
-                        if (this.wrapBounds) {
+                        if (this.wrap && this.wrapBounds) {
                             origParticlePosX = particlePosX;
                             origParticlePosY = particlePosY;
                             origParticlePosZ = particlePosZ;

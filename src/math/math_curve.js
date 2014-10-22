@@ -1,97 +1,149 @@
 pc.extend(pc, (function () {
 
-    var Curve = function (numValues) {
+    var CURVE_LINEAR = 0;
+    var CURVE_SMOOTHSTEP = 1;
+
+    var Curve = function (data) {
         this.keys = [];
-        this.dirty = true;
-        this.numVals = numValues == undefined ? 1 : numValues;
-        this.smoothstep = true;
+        this.type = CURVE_SMOOTHSTEP;
+
+        if (data) {
+            for (var i = 0; i < data.length - 1; i += 2) {
+                this.keys.push([data[i], data[i+1]]);
+            }
+        }
     };
 
     Curve.prototype = {
+        add: function (time, value) {
+            var keys = this.keys;
+            var len = keys.length;
+            var i = 0;
 
-        addKey: function(time, value) { // time is supposed to be normalized
-            this.keys.push([time, value]);
-            this.dirty = true;
-        },
-
-        prepare: function() {
-            this.keys.sort(function(a, b) {
-                return a[0] - b[0];
-            });
-            this.dirty = false;
-        },
-
-        getValue: function(time) {
-            if (this.dirty) this.prepare();
-            for (var i = 0; i < this.keys.length; i++) {
-                var keyTime = this.keys[i][0];
-                if (keyTime == time) {
-                    return this.keys[i][1];
-                } else if (keyTime < time) {
-                    var keyTimeNext = this.keys[i + 1][0];
-                    if (keyTimeNext > time) {
-                        var keyValA = this.keys[i][1];
-                        var keyValB = this.keys[i + 1][1];
-                        var interpolation = (time - keyTime) / (keyTimeNext - keyTime);
-
-                        if (this.smoothstep) interpolation = ((interpolation) * (interpolation) * (3 - 2 * (interpolation))); // smoothstep
-
-                        if (keyValA instanceof Array) {
-                            var interpolated = new Array(keyValA.length);
-                            for (var v = 0; v < keyValA.length; v++) interpolated[v] = pc.math.lerp(keyValA[v], keyValB[v], interpolation);
-                            return interpolated;
-                        } else {
-                            return pc.math.lerp(keyValA, keyValB, interpolation);
-                        }
-
-                    }
+            for (; i < len; i++) {
+                if (keys[i][0] > time) {
+                    break;
                 }
             }
-            return null;
+
+            var key = [time, value];
+            this.keys.splice(i, 0, key);
+            return key;
+        },
+
+        get: function (index) {
+            return this.keys[index];
+        },
+
+        sort: function () {
+            this.keys.sort(function (a, b) {
+                return a[0] - b[0];
+            });
+        },
+
+        value: function (time) {
+            var keys = this.keys;
+
+            var leftTime = 0;
+            var leftValue = keys.length ? keys[0][1] : 0;
+
+            var rightTime = 1;
+            var rightValue = 0;
+
+            for (var i = 0, len = keys.length; i < len; i++) {
+
+                // early exit check
+                if (keys[i][0] === time) {
+                    return keys[i][1];
+                }
+
+                rightValue = keys[i][1];
+
+                if (time < keys[i][0]) {
+                    rightTime = keys[i][0];
+                    break;
+                }
+
+                leftTime = keys[i][0];
+                leftValue = keys[i][1];
+            }
+
+            var div = rightTime - leftTime;
+
+            var interpolation = (div === 0 ? 0 : (time - leftTime) / div);
+
+            if (this.type === CURVE_SMOOTHSTEP) {
+                interpolation *= interpolation * (3 - 2 * interpolation);
+            }
+
+            return pc.math.lerp(leftValue, rightValue, interpolation);
+        },
+
+        closest: function (time) {
+            var keys = this.keys;
+            var length = keys.length;
+            var min = 2;
+            var result = null;
+
+            for (var i = 0; i < length; i++) {
+                var diff = Math.abs(time - keys[i][0]);
+                if (min >= diff) {
+                    min = diff;
+                    result = keys[i];
+                } else {
+                    break;
+                }
+            }
+
+            return result;
+        },
+
+        clone: function () {
+            var result = new pc.Curve();
+            result.keys = pc.extend(result.keys, this.keys);
+            result.type = this.type;
+            return result;
         },
 
         quantize: function(precision, blur) {
             precision = Math.max(precision, 2);
-            var colors = new Float32Array(precision * this.numVals);
+
+            var values = new Float32Array(precision);
             var step = 1.0 / (precision - 1);
-            for (var i = 0; i < precision; i++) // quantize graph to table of interpolated values
-            {
-                var color = this.getValue(step * i);
-                if (this.numVals == 1) {
-                    colors[i] = color;
-                } else {
-                    for (var j = 0; j < this.numVals; j++) colors[i * this.numVals + j] = color[j]
-                }
+
+            // quantize graph to table of interpolated values
+            for (var i = 0; i < precision; i++) {
+                var value = this.value(step * i);
+                values[i] = value;
             }
 
             if (blur > 0) {
-                var colors2 = new Float32Array(precision * this.numVals);
+                var values2 = new Float32Array(precision);
                 var numSamples = blur * 2 + 1;
                 for (var i = 0; i < precision; i++) {
-                    if (this.numVals == 1) {
-                        colors2[i] = 0;
-                        for (var sample = -blur; sample <= blur; sample++) {
-                            var sampleAddr = Math.max(Math.min(i + sample, precision - 1), 0);
-                            colors2[i] += colors[sampleAddr];
-                        }
-                        colors2[i] /= numSamples;
-                    } else {
-                        for (var chan = 0; chan < this.numVals; chan++) colors2[i * this.numVals + chan] = 0;
-                        for (var sample = -blur; sample <= blur; sample++) {
-                            var sampleAddr = Math.max(Math.min(i + sample, precision - 1), 0);
-                            for (var chan = 0; chan < this.numVals; chan++) colors2[i * this.numVals + chan] += colors[sampleAddr * this.numVals + chan];
-                        }
-                        for (var chan = 0; chan < this.numVals; chan++) colors2[i * this.numVals + chan] /= numSamples;
+                    values2[i] = 0;
+                    for (var sample = -blur; sample <= blur; sample++) {
+                        var sampleAddr = Math.max(Math.min(i + sample, precision - 1), 0);
+                        values2[i] += values[sampleAddr];
                     }
+                    values2[i] /= numSamples;
                 }
-                colors = colors2;
+                values = values2;
             }
 
-            return colors;
+            return values;
         }
     };
 
+    Object.defineProperty(Curve.prototype, 'length', {
+        get: function() {
+            return this.keys.length;
+        }
+    });
+
     return {
-        Curve: Curve
+        Curve: Curve,
+        CURVE_LINEAR: CURVE_LINEAR,
+        CURVE_SMOOTHSTEP: CURVE_SMOOTHSTEP
     };
 }()));

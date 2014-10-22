@@ -236,6 +236,7 @@ pc.extend(pc.fw, function () {
             }
         },
 
+
         /**
          * @function
          * @name pc.fw.Application#start
@@ -670,6 +671,9 @@ pc.extend(pc.fw, function () {
                                         } else {
                                             entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
                                         }
+                                    } else if (attribute.RuntimeType === pc.Curve || attribute.RuntimeType === pc.CurveSet) {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value.keys);
+                                        entity[componentName][attributeName].type = value.type;
                                     } else {
                                         entity[componentName][attributeName] = new attribute.RuntimeType(value);
                                     }
