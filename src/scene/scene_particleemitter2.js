@@ -185,8 +185,8 @@ pc.extend(pc.scene, function() {
         setProperty("wrapBounds", null);
         // setProperty("wind", new pc.Vec3(0, 0, 0));               // Wind velocity
         setProperty("smoothness", 4);                            // Blurring width for graphs
-        setProperty("texture", null);
-        setProperty("normalTexture", null);
+        setProperty("colorMap", null);
+        setProperty("normalMap", null);
         setProperty("oneShot", false);
         setProperty("speedDiv", 0.0); // Randomizes particle simulation speed [0-1] per frame
         setProperty("constantSpeedDiv", 0.0); // Randomizes particle simulation speed [0-1] (one value during whole particle life)
@@ -205,7 +205,9 @@ pc.extend(pc.scene, function() {
         setProperty("depthTest", false);
         this.mode = (this.mode === "CPU" ? pc.scene.PARTICLES_MODE_CPU : pc.scene.PARTICLES_MODE_GPU);
 
-        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) this.mode = pc.scene.PARTICLES_MODE_CPU;
+        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) {
+            this.mode = pc.scene.PARTICLES_MODE_CPU;
+        }
 
         this.frameRandom = new pc.Vec3(0, 0, 0);
 
@@ -416,7 +418,7 @@ pc.extend(pc.scene, function() {
             mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
             mesh.primitive[0].indexed = true;
 
-            var hasNormal = (this.normalTexture != null);
+            var hasNormal = (this.normalMap != null);
 
             var programLib = this.graphicsDevice.getProgramLibrary();
             var normalOption = 0;
@@ -461,10 +463,10 @@ pc.extend(pc.scene, function() {
         },
 
         _initializeTextures: function () {
-            if (this.texture) {
-                this.material.setParameter('particleTexture', this.texture);
-                if (this.lighting && this.normalTexture) {
-                    this.material.setParameter('normalTexture', this.normalTexture);
+            if (this.colorMap) {
+                this.material.setParameter('colorMap', this.colorMap);
+                if (this.lighting && this.normalMap) {
+                    this.material.setParameter('normalMap', this.normalMap);
                 }
             }
         },
@@ -492,12 +494,14 @@ pc.extend(pc.scene, function() {
                 material.setParameter('wrapBounds', this.wrapBounds.data);
             }
 
-            if (this.texture) {
-                material.setParameter('particleTexture', this.texture);
+            if (this.colorMap) {
+                material.setParameter('colorMap', this.colorMap);
             }
 
             if (this.lighting) {
-                if (this.normalTexture) material.setParameter('normalTexture', this.normalTexture);
+                if (this.normalMap) {
+                    material.setParameter('normalMap', this.normalMap);
+                }
             }
             if (this.depthSoftening > 0) {
                 material.setParameter('uDepthMap', this.camera.camera._depthTarget.colorBuffer);

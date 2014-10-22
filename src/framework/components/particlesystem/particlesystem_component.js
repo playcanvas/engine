@@ -5,8 +5,8 @@ pc.extend(pc.fw, function() {
         'spawnBounds',
         'speedDiv',
         'constantSpeedDiv',
-        'texture',
-        'normalTexture'
+        'colorMap',
+        'normalMap'
     ];
 
     // properties that need rebuilding the particle system
@@ -39,8 +39,8 @@ pc.extend(pc.fw, function() {
     ];
 
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
-        this.on("set_textureAsset", this.onSetTextureAsset, this);
-        this.on("set_normalTextureAsset", this.onSetNormalTextureAsset, this);
+        this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
+        this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
         this.on("set_oneShot", this.onSetOneShot, this);
 
@@ -57,23 +57,23 @@ pc.extend(pc.fw, function() {
 
     pc.extend(ParticleSystemComponent.prototype, {
 
-        onSetTextureAsset: function (name, oldValue, newValue) {
+        onSetColorMapAsset: function (name, oldValue, newValue) {
             if (newValue) {
                 this._loadAsset(newValue, function (resource) {
-                    this.texture = resource;
+                    this.colorMap = resource;
                 }.bind(this));
             } else {
-                this.texture = null;
+                this.colorMap = null;
             }
         },
 
-        onSetNormalTextureAsset: function (name, oldValue, newValue) {
+        onSetNormalMapAsset: function (name, oldValue, newValue) {
             if (newValue) {
                 this._loadAsset(newValue, function (resource) {
-                    this.normalTexture = resource;
+                    this.normalMap = resource;
                 }.bind(this));
             } else {
-                this.normalTexture = null;
+                this.normalMap = null;
             }
         },
 
@@ -187,8 +187,8 @@ pc.extend(pc.fw, function() {
                     scaleDiv: this.data.scaleDiv,
                     angleDivGraph: this.data.angleDivGraph,
                     alphaDivGraph: this.data.alphaDivGraph,
-                    texture: this.data.texture,
-                    normalTexture: this.data.normalTexture,
+                    colorMap: this.data.colorMap,
+                    normalMap: this.data.normalMap,
                     oneShot: this.data.oneShot,
                     speedDiv: this.data.speedDiv,
                     constantSpeedDiv: this.data.constantSpeedDiv,
@@ -224,7 +224,7 @@ pc.extend(pc.fw, function() {
             ParticleSystemComponent._super.onEnable.call(this);
             if (this.data.model) {
                 if (!this.system.context.scene.containsModel(this.data.model)) {
-                    if (this.emitter.texture) {
+                    if (this.emitter.colorMap) {
                         this.system.context.scene.addModel(this.data.model);
                     }
                 }

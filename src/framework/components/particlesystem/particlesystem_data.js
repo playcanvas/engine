@@ -8,10 +8,10 @@ pc.extend(pc.fw, function() {
         this.wrapBounds = new pc.Vec3();
         this.wind = new pc.Vec3(0, 0, 0);       // Wind velocity
         this.smoothness = 4;                    // Blurring width for graphs
-        this.texture = null;
-        this.textureAsset = null;
-        this.normalTexture = null;
-        this.normalTextureAsset = null;
+        this.colorMap = null;
+        this.colorMapAsset = null;
+        this.normalMap = null;
+        this.normalMapAsset = null;
         this.oneShot = false;
         this.speedDiv = 0.0;             // Randomizes particle simulation speed [0-1] per frame
         this.constantSpeedDiv = 0.0;       // Randomizes particle simulation speed   [0-1]

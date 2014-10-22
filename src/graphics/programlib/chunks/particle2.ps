@@ -1,6 +1,6 @@
 varying vec4 TexCoordsAlphaLife;
 
-uniform sampler2D texLifeAndSourcePosOUT, particleTexture, normalTexture, uDepthMap;
+uniform sampler2D texLifeAndSourcePosOUT, colorMap, normalMap, uDepthMap;
 uniform sampler2D internalTex3;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
@@ -28,7 +28,7 @@ float unpackFloat(vec4 rgbaDepth)
 
 void main(void)
 {
-    vec4 tex         = texture2D(particleTexture, TexCoordsAlphaLife.xy);
+    vec4 tex         = texture2D(colorMap, TexCoordsAlphaLife.xy);
     float alphaDivergence = TexCoordsAlphaLife.z;
     vec4 ramp     = tex1Dlod_lerp(internalTex3, vec2(TexCoordsAlphaLife.w + alphaDivergence, 0.0));
     ramp *= colorMult;

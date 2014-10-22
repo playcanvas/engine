@@ -108,9 +108,9 @@ pc.extend(pc.fw, function() {
                 type: "boolean",
                 defaultValue: true,
             }, {
-                name: "textureAsset",
-                displayName: "Texture",
-                description: "Particle texture, possibly with alpha channel",
+                name: "colorMapAsset",
+                displayName: "Color Map",
+                description: "Color map used for each particle, with alpha channel",
                 type: "asset",
                 options: {
                     max: 1,
@@ -118,7 +118,7 @@ pc.extend(pc.fw, function() {
                 },
                 defaultValue: null
             }, {
-                name: "normalTextureAsset",
+                name: "normalMapAsset",
                 displayName: "Normal map",
                 description: "Normal map used for each particle",
                 type: "asset",
@@ -367,10 +367,10 @@ pc.extend(pc.fw, function() {
                 name: 'camera',
                 exposed: false
             }, {
-                name: 'texture',
+                name: 'colorMap',
                 exposed: false
             }, {
-                name: 'normalTexture',
+                name: 'normalMap',
                 exposed: false
             }
         ];
@@ -431,10 +431,10 @@ pc.extend(pc.fw, function() {
                 wrapBounds: source.wrapBounds ? source.wrapBounds.clone() : null,
                 wind: source.wind ? source.wind.clone() : null,
                 smoothness: source.smoothness,
-                texture: source.texture,
-                textureAsset: source.textureAsset,
-                normalTexture: source.normalTexture,
-                normalTextureAsset: source.normalTextureAsset,
+                colorMap: source.colorMap,
+                colorMapAsset: source.colorMapAsset,
+                normalMap: source.normalMap,
+                normalMapAsset: source.normalMapAsset,
                 oneShot: source.oneShot,
                 speedDiv: source.speedDiv,
                 constantSpeedDiv: source.constantSpeedDiv,
