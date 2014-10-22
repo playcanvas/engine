@@ -302,7 +302,9 @@ pc.extend(pc.fw, function() {
                     keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
                 },
                 options: {
-                    curveNames: ['X', 'Y', 'Z']
+                    curveNames: ['X', 'Y', 'Z'],
+                    min: 0,
+                    max: 1
                 }
             }, {
                 name: 'posDivGraph',
@@ -314,7 +316,9 @@ pc.extend(pc.fw, function() {
                     keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
                 },
                 options: {
-                    curveNames: ['X', 'Y', 'Z']
+                    curveNames: ['X', 'Y', 'Z'],
+                    min: 0,
+                    max: 1
                 }
             }, {
                 name: 'scaleDivGraph',
@@ -327,7 +331,9 @@ pc.extend(pc.fw, function() {
                 },
                 options: {
                     curveNames: ['Scale'],
-                    verticalAxisValue: 1
+                    verticalAxisValue: 1,
+                    min: 0,
+                    max: 1
                 }
             }, {
                 name: 'angleDivGraph',
@@ -340,7 +346,8 @@ pc.extend(pc.fw, function() {
                 },
                 options: {
                     curveNames: ['Angle'],
-                    max: 360
+                    min: 0,
+                    max: 1
                 }
             }, {
                 name: 'alphaDivGraph',
