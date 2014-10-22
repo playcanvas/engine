@@ -52,11 +52,11 @@
 
 
         // Offset position down 5 metres
-        var posCurve = new pc.CurveSet(
+        var posCurve = new pc.CurveSet([
             [0, 0, 1, 0],  // x
             [0, 0, 1, -5], // y
             [0, 0, 1, 0] // z
-        );
+        ]);
 
         posCurve.type = pc.CURVE_LINEAR;
 
@@ -67,11 +67,11 @@
         var angleCurve = new pc.Curve([0, 0, 1, 360 * 2]);
 
         // color is constant white
-        var colorCurve = new pc.CurveSet(
+        var colorCurve = new pc.CurveSet([
             [0, 1, 1, 1], // red channel
             [0, 1, 1, 1], // green channel
             [0, 1, 1, 1] // blue channel
-        );
+        ]);
 
         // Create entity for particle system
         var entity = new pc.fw.Entity();

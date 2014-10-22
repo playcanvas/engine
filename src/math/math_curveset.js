@@ -1,36 +1,29 @@
 pc.extend(pc, (function () {
 
     var CurveSet = function () {
+        var i;
+
         this.curves = [];
         this._type = pc.CURVE_SMOOTHSTEP;
 
         if (arguments.length > 1) {
-            for (var i = 0; i < arguments.length; i++) {
+            for (i = 0; i < arguments.length; i++) {
                 this.curves.push(new pc.Curve(arguments[i]));
             }
         } else {
-            if (arguments.length === 1) {
+            if (arguments.length === 0) {
+                this.curves.push(new pc.Curve());
+            } else {
                 var arg = arguments[0];
                 if (pc.type(arg) === 'number') {
-                    for (var i = 0; i < arg; i++) {
+                    for (i = 0; i < arg; i++) {
                         this.curves.push(new pc.Curve());
                     }
                 } else {
-                    if (arg.length) {
-                        if (pc.type(arg[0]) === 'array') {
-                            for (var i = 0; i < arg.length; i++) {
-                                this.curves.push(new pc.Curve(arg[i]));
-                            }
-                        } else {
-                            this.curves.push(new pc.Curve(arg));
-                        }
-
-                    } else {
-                        this.curves.push(new pc.Curve());
+                    for (i = 0; i < arg.length; i++) {
+                        this.curves.push(new pc.Curve(arg[i]));
                     }
                 }
-            } else {
-                this.curves.push(new pc.Curve());
             }
         }
     };
@@ -42,7 +35,7 @@ pc.extend(pc, (function () {
 
         value: function (time, result) {
             var length = this.curves.length;
-            var result = result || [];
+            result = result || [];
             result.length = length;
 
             for (var i = 0; i < length; i++) {

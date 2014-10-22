@@ -1,15 +1,5 @@
 module("pc.CurveSet");
 
-test("constructor: with 1 array", function () {
-    var c = new pc.CurveSet([0, 0, 1, 1]);
-    QUnit.equal(c.length, 1);
-});
-
-test("constructor: with 2 arrays", function () {
-    var c = new pc.CurveSet([0, 0, 1, 1], [0,0]);
-    QUnit.equal(c.length, 2);
-});
-
 test("constructor: array of arrays", function () {
     var c = new pc.CurveSet([[0, 0, 1, 1], [0,0]]);
     QUnit.equal(c.length, 2);
