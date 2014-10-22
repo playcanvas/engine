@@ -73,7 +73,7 @@ pc.extend(pc.fw, function() {
                 type: "number",
                 defaultValue: 4,
                 options: {
-                    min: 1,
+                    min: 0,
                     max: 32,
                     step: 1
                 }
