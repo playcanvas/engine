@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.4
+--------
+* [FIX] Intel XDK now loads textures properly.
+
+--------
 v0.158.3
 --------
 * [FIX] Ambient lighting is now respected when there are no lights enabled.
