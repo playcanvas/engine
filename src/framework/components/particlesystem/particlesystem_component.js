@@ -35,7 +35,8 @@ pc.extend(pc.fw, function() {
         'posDivGraph',
         'scaleDivGraph',
         'angleDivGraph',
-        'alphaDivGraph'
+        'alphaDivGraph',
+        'camera'
     ];
 
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
