@@ -95,6 +95,9 @@ pc.extend(pc.fw, function() {
                 description: "Uses Half-Lambert shading instead of Lambert, for softer lighting.",
                 type: "boolean",
                 defaultValue: false,
+                filter: {
+                    lighting: true
+                }
             }, {
                 name: "depthTest",
                 displayName: "Depth Test",
@@ -394,6 +397,7 @@ pc.extend(pc.fw, function() {
 
             properties = [];
             var types = this.propertyTypes;
+            var type;
 
             for (var prop in data) {
                 if (data.hasOwnProperty(prop)) {
@@ -406,13 +410,15 @@ pc.extend(pc.fw, function() {
                     }
                 } else if (types[prop] === 'curve') {
                     if (!(data[prop] instanceof pc.Curve)) {
+                        type = data[prop].type;
                         data[prop] = new pc.Curve(data[prop].keys);
-                        data[prop].type = data[prop].type;
+                        data[prop].type = type;
                     }
                 } else if (types[prop] === 'curveset') {
                     if (!(data[prop] instanceof pc.CurveSet)) {
+                        type = data[prop].type;
                         data[prop] = new pc.CurveSet(data[prop].keys);
-                        data[prop].type = data[prop].type;
+                        data[prop].type = type;
                     }
                 }
             }
