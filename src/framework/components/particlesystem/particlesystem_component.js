@@ -162,6 +162,14 @@ pc.extend(pc.fw, function() {
         onEnable: function() {
             if (!this.emitter && !this.system._inTools) {
 
+                // try to get a valid camera
+                if (!this.data.camera) {
+                    var camera = this.system.context.systems.camera.cameras[0];
+                    if (camera) {
+                        this.data.camera = camera.entity;
+                    }
+                }
+
                 this.emitter = new pc.scene.ParticleEmitter2(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     spawnBounds: this.data.spawnBounds,
