@@ -654,7 +654,7 @@ pc.extend(pc.scene, function() {
                 var dirs = this.scene._globalLights;
                 for (var i = 0; i < dirs.length; i++) {
                     for (var c = 0; c < 6; c++) {
-                        var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0);
+                        var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
                         this.lightCube[c * 3] += dirs[i]._color.r * weight;
                         this.lightCube[c * 3 + 1] += dirs[i]._color.g * weight;
                         this.lightCube[c * 3 + 2] += dirs[i]._color.b * weight;
