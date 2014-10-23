@@ -499,6 +499,7 @@ pc.extend(pc.fw, function() {
                             // set the camera to the component and the emitter
                             data.camera = currentCamera;
                             emitter.camera = currentCamera;
+                            emitter.rebuild();
                         }
 
                         emitter.addTime(dt);

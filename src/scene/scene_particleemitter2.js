@@ -300,7 +300,7 @@ pc.extend(pc.scene, function() {
 
             if (this.depthSoftening > 0) {
                 if (this.camera) {
-                    if ((this.camera.camera.camera._depthTarget === undefined) || (this.camera.camera.camera._depthTarget === null)) {
+                    if (!this.camera.camera.camera._depthTarget) {
                         this.camera.camera.camera._depthTarget = createOffscreenTarget(this.graphicsDevice, this.camera.camera);
                         this.camera.camera._depthTarget = this.camera.camera.camera._depthTarget;
                         this.camera._depthTarget = this.camera.camera.camera._depthTarget;
@@ -431,7 +431,7 @@ pc.extend(pc.scene, function() {
                 normal: normalOption,
                 halflambert: this.halfLambert,
                 stretch: this.stretch,
-                soft: this.depthSoftening,
+                soft: this.depthSoftening && this._hasDepthTarget(),
                 mesh: isMesh,
                 srgb: this.gammaCorrect,
                 wrap: this.wrap && this.wrapBounds
@@ -471,6 +471,14 @@ pc.extend(pc.scene, function() {
             }
         },
 
+        _hasDepthTarget: function () {
+            if (this.camera) {
+                return !!this.camera.camera._depthTarget;
+            }
+
+            return false;
+        },
+
         resetMaterial: function() {
             var material = this.material;
             var gd = this.graphicsDevice;
@@ -503,7 +511,7 @@ pc.extend(pc.scene, function() {
                     material.setParameter('normalMap', this.normalMap);
                 }
             }
-            if (this.depthSoftening > 0 && this.camera) {
+            if (this.depthSoftening > 0 && this._hasDepthTarget()) {
                 material.setParameter('uDepthMap', this.camera.camera._depthTarget.colorBuffer);
                 material.setParameter('screenSize', new pc.Vec4(gd.width, gd.height, 1.0 / gd.width, 1.0 / gd.height).data);
                 material.setParameter('softening', this.depthSoftening);
