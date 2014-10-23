@@ -12,6 +12,8 @@ pc.extend(pc, (function () {
                 this.keys.push([data[i], data[i+1]]);
             }
         }
+
+        this.sort();
     };
 
     Curve.prototype = {
