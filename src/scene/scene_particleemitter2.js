@@ -188,6 +188,7 @@ pc.extend(pc.scene, function() {
         setProperty("colorMap", null);
         setProperty("normalMap", null);
         setProperty("oneShot", false);
+        setProperty("preWarm", false);
         setProperty("speedDiv", 0.0); // Randomizes particle simulation speed [0-1] per frame
         setProperty("constantSpeedDiv", 0.0); // Randomizes particle simulation speed [0-1] (one value during whole particle life)
         setProperty("sort", pc.scene.PARTICLES_SORT_NONE); // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
@@ -203,6 +204,8 @@ pc.extend(pc.scene, function() {
                                                                  // Leave undefined to use simple quads
         setProperty("gammaCorrect", true);
         setProperty("depthTest", false);
+        setProperty("node", null);
+
         this.mode = (this.mode === "CPU" ? pc.scene.PARTICLES_MODE_CPU : pc.scene.PARTICLES_MODE_GPU);
 
         if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) {
@@ -451,13 +454,13 @@ pc.extend(pc.scene, function() {
             this.resetMaterial();
 
 
-            this.meshInstance = new pc.scene.MeshInstance(null, mesh, this.material);
+            this.meshInstance = new pc.scene.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.layer = pc.scene.LAYER_SKYBOX; //LAYER_FX;
             this.meshInstance.updateKey(); // shouldn't be here?
 
             this._initializeTextures();
 
-            this.addTime(0); // fill dynamic textures and constants with initial data
+            this.addTime(this._getStartTime()); // fill dynamic textures and constants with initial data
 
             this.resetTime();
         },
@@ -477,6 +480,10 @@ pc.extend(pc.scene, function() {
             }
 
             return false;
+        },
+
+        _getStartTime: function () {
+            return this.preWarm && !this.oneShot ? this.lifetime : 0;
         },
 
         resetMaterial: function() {
@@ -627,7 +634,7 @@ pc.extend(pc.scene, function() {
                 this.swapTex = false;
                 var oldTexIN = this.texLifeAndSourcePosIN;
                 this.texLifeAndSourcePosIN = this.texLifeAndSourcePosStart;
-                this.addTime(0);
+                this.addTime(this._getStartTime());
                 this.texLifeAndSourcePosIN = oldTexIN;
             }
             this.resetTime();
@@ -638,7 +645,10 @@ pc.extend(pc.scene, function() {
         },
 
         addTime: function(delta) {
+            var i, j;
+            var localOffset, posDivergence;
             var device = this.graphicsDevice;
+
             device.setBlending(false);
             device.setColorWrite(true, true, true, true);
             device.setCullMode(pc.gfx.CULLFACE_NONE);
@@ -653,14 +663,14 @@ pc.extend(pc.scene, function() {
                     return;
                 }
 
-                for (var i = 0; i < 6; i++) {
+                for (i = 0; i < 6; i++) {
                     this.lightCube[i * 3] = this.scene.ambientLight.r;
                     this.lightCube[i * 3 + 1] = this.scene.ambientLight.g;
                     this.lightCube[i * 3 + 2] = this.scene.ambientLight.b;
                 }
 
                 var dirs = this.scene._globalLights;
-                for (var i = 0; i < dirs.length; i++) {
+                for (i = 0; i < dirs.length; i++) {
                     for (var c = 0; c < 6; c++) {
                         var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
                         this.lightCube[c * 3] += dirs[i]._color.r * weight;
@@ -694,7 +704,7 @@ pc.extend(pc.scene, function() {
             } else {
                 // Particle updater emulation
                 var emitterPos = this.meshInstance.node === null ? (new pc.Vec3(0, 0, 0)).data : this.meshInstance.node.getPosition().data;
-                for (var i = 0; i < this.numParticles; i++) {
+                for (i = 0; i < this.numParticles; i++) {
                     if (this.lifeAndSourcePos[i * 4 + 3] <= 0) {
                         this.lifeAndSourcePos[i * 4] = emitterPos[0] + this.spawnBounds.x * this.particleNoize[i];
                         this.lifeAndSourcePos[i * 4 + 1] = emitterPos[1] + this.spawnBounds.y * ((this.particleNoize[i] * 10) % 1);
@@ -716,7 +726,9 @@ pc.extend(pc.scene, function() {
                 var data = new Float32Array(this.vertexBuffer.lock());
                 if (this.meshInstance.node) {
                     var fullMat = this.meshInstance.node.worldTransform;
-                    for (var j = 0; j < 12; j++) rotMat.data[j] = fullMat.data[j];
+                    for (j = 0; j < 12; j++) {
+                        rotMat.data[j] = fullMat.data[j];
+                    }
                 }
 
 
@@ -725,10 +737,10 @@ pc.extend(pc.scene, function() {
                 var posCam = this.camera ? this.camera.position.data : pc.Vec3.ZERO;
 
                 if (this.sort > pc.scene.PARTICLES_SORT_NONE && this.camera) {
-                    for (var i = 0; i < this.numParticles; i++) {
+                    for (i = 0; i < this.numParticles; i++) {
                         this.vbToSort[i] = [i, Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]; // particle id
                     }
-                    for (var i = 0; i < this.numParticles * this.numParticleVerts * 4; i++) {
+                    for (i = 0; i < this.numParticles * this.numParticleVerts * 4; i++) {
                         this.vbOld[i] = this.vbCPU[i];
                     }
 
@@ -737,10 +749,10 @@ pc.extend(pc.scene, function() {
                         return particleDistance[a[1]] - particleDistance[b[1]];
                     });
 
-                    for (var i = 0; i < this.numParticles; i++) {
+                    for (i = 0; i < this.numParticles; i++) {
                         var start = this.vbToSort[i][0];
                         for (var corner = 0; corner < this.numParticleVerts; corner++) {
-                            for (var j = 0; j < 4; j++) {
+                            for (j = 0; j < 4; j++) {
                                 this.vbCPU[i * this.numParticleVerts * 4 + corner * 4 + j] = this.vbOld[start * this.numParticleVerts * 4 + corner * 4 + j];
                             }
                         }
@@ -749,7 +761,7 @@ pc.extend(pc.scene, function() {
 
 
                 // Particle VS emulation
-                for (var i = 0; i < this.numParticles; i++) {
+                for (i = 0; i < this.numParticles; i++) {
                     var particleEnabled = true;
                     var particlePosX = 0.0;
                     var particlePosY = 0.0;
@@ -788,8 +800,8 @@ pc.extend(pc.scene, function() {
 
 
                         localOffsetVec.data = tex1D(this.qLocalOffset, life, 3, localOffsetVec.data);
-                        var localOffset = localOffsetVec.data;
-                        var posDivergence = tex1D(this.qPosDiv, life, 3);
+                        localOffset = localOffsetVec.data;
+                        posDivergence = tex1D(this.qPosDiv, life, 3);
                         var scaleRnd = tex1D(this.qScaleDiv, life);
                         var angleRnd = tex1D(this.qAngleDiv, life);
                         alphaRnd = tex1D(this.qAlphaDiv, life);
@@ -855,10 +867,10 @@ pc.extend(pc.scene, function() {
                         if (this.stretch > 0.0) {
                             life = Math.max(life - (1.0 / this.precision) * this.stretch, 0.0);
                             localOffsetVec.data = tex1D(this.qLocalOffset, life, 3, localOffsetVec.data);
-                            var localOffset = localOffsetVec.data;
-                            var posDivergence = tex1D(this.qPosDiv, life, 3);
+                            localOffset = localOffsetVec.data;
+                            posDivergence = tex1D(this.qPosDiv, life, 3);
 
-                            worldOffsetVec.data = tex1D(this.qWorldOffset, life, 3, worldOffsetVec.data, i == 0 ? 1 : 0);
+                            worldOffsetVec.data = tex1D(this.qWorldOffset, life, 3, worldOffsetVec.data, i === 0 ? 1 : 0);
                             worldOffset = worldOffsetVec.data;
                             posWorldDivergence = tex1D(this.qPosWorldDiv, life, 3);
 

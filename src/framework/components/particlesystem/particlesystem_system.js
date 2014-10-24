@@ -26,27 +26,6 @@ pc.extend(pc.fw, function() {
                     step: 1
                 }
             }, {
-                name: "spawnBounds",
-                displayName: "Spawn Bounds",
-                description: "Defines an AABB in which particles are allowed to spawn",
-                type: "vector",
-                defaultValue: [0, 0, 0]
-            }, {
-                name: "wrap",
-                displayName: "Wrap",
-                description: "Set to true to wrap particles around the camera. Used for infinite atmospheric effect like rain or mist.",
-                type: 'boolean',
-                defaultValue: false
-            },{
-                name: "wrapBounds",
-                displayName: "Wrap Bounds",
-                description: "AABB around to camera to wrap particles. Used for infinite atmospheric effect like rain or mist.",
-                type: "vector",
-                filter: {
-                    wrap: true
-                },
-                defaultValue: [0, 0, 0]
-            }, {
                 name: "lifetime",
                 displayName: "Lifetime",
                 description: "The lifetime of each particle in seconds",
@@ -67,22 +46,34 @@ pc.extend(pc.fw, function() {
                     step: 0.01
                 }
             }, {
-                name: "smoothness",
-                displayName: "Smoothness",
-                description: "Graph interpolation smoothness",
-                type: "number",
-                defaultValue: 4,
-                options: {
-                    min: 0,
-                    max: 32,
-                    step: 1
-                }
-            }, {
                 name: "oneShot",
                 displayName: "One Shot",
                 description: "Disables looping",
                 type: "boolean",
                 defaultValue: false,
+            }, {
+                name: "maxEmissionTime",
+                displayName: "Max emission time",
+                description: "Limits time for one-shot emission. Should be only used in case of high Speed Divergence",
+                type: "number",
+                defaultValue: 15.0,
+                options: {
+                    min: 0,
+                    max: 600,
+                    step: 0.5
+                },
+                filter: {
+                    oneShot: true
+                }
+            }, {
+                name: "preWarm",
+                displayName: "Pre Warm",
+                description: "Starts particles in the middle of simulation",
+                type: "boolean",
+                defaultValue: false,
+                filter: {
+                    oneShot: false
+                }
             }, {
                 name: "lighting",
                 displayName: "Lighting",
@@ -99,17 +90,81 @@ pc.extend(pc.fw, function() {
                     lighting: true
                 }
             }, {
+                name: "gammaCorrect",
+                displayName: "Enabled gamma correction",
+                description: "",
+                type: "boolean",
+                defaultValue: true,
+            }, {
                 name: "depthTest",
                 displayName: "Depth Test",
                 description: "Enables hardware depth testing; don't use it for semi-transparent particles",
                 type: "boolean",
                 defaultValue: false,
             }, {
-                name: "gammaCorrect",
-                displayName: "Enabled gamma correction",
-                description: "",
-                type: "boolean",
-                defaultValue: true,
+                name: "depthSoftening",
+                displayName: "Depth Softening",
+                description: "Softens particle intersections with scene geometry",
+                type: "number",
+                defaultValue: 0,
+                options: {
+                    min: 0,
+                    max: 1,
+                    step: 0.01
+                }
+            }, {
+                name: "sort",
+                displayName: "Sorting Mode",
+                description: "How to sort particles; Only works in CPU mode",
+                type: "enumeration",
+                options: {
+                    enumerations: [{
+                        name: 'None',
+                        value: pc.scene.PARTICLES_SORT_NONE
+                    }, {
+                        name: 'Camera Distance',
+                        value: pc.scene.PARTICLES_SORT_DISTANCE
+                    }, {
+                        name: 'Newer First',
+                        value: pc.scene.PARTICLES_SORT_NEWER_FIRST
+                    }, {
+                        name: 'Older First',
+                        value: pc.scene.PARTICLES_SORT_OLDER_FIRST
+                    }]
+                },
+                defaultValue: 0,
+            }, {
+                name: "stretch",
+                displayName: "Stretch",
+                description: "Stretch particles in the direction of motion",
+                type: "number",
+                defaultValue: 0,
+                options: {
+                    min: 0,
+                    max: 32,
+                    step: 0.25
+                }
+            }, {
+                name: "spawnBounds",
+                displayName: "Spawn Bounds",
+                description: "Defines an AABB in which particles are allowed to spawn",
+                type: "vector",
+                defaultValue: [0, 0, 0]
+            }, {
+                name: "wrap",
+                displayName: "Wrap",
+                description: "Set to true to wrap particles around the camera. Used for infinite atmospheric effect like rain or mist.",
+                type: 'boolean',
+                defaultValue: false
+            }, {
+                name: "wrapBounds",
+                displayName: "Wrap Bounds",
+                description: "AABB around to camera to wrap particles. Used for infinite atmospheric effect like rain or mist.",
+                type: "vector",
+                filter: {
+                    wrap: true
+                },
+                defaultValue: [0, 0, 0]
             }, {
                 name: "colorMapAsset",
                 displayName: "Color Map",
@@ -163,62 +218,8 @@ pc.extend(pc.fw, function() {
                     step: 0.01
                 }
             }, {
-                name: "maxEmissionTime",
-                displayName: "Max emission time",
-                description: "Limits time for one-shot emission. Should be only used in case of high Speed Divergence",
-                type: "number",
-                defaultValue: 15.0,
-                options: {
-                    min: 0,
-                    max: 600,
-                    step: 0.5
-                }
-            }, {
-                name: "sort",
-                displayName: "Sorting Mode",
-                description: "How to sort particles; Only works in CPU mode",
-                type: "enumeration",
-                options: {
-                    enumerations: [{
-                        name: 'None',
-                        value: pc.scene.PARTICLES_SORT_NONE
-                    }, {
-                        name: 'Camera Distance',
-                        value: pc.scene.PARTICLES_SORT_DISTANCE
-                    }, {
-                        name: 'Newer First',
-                        value: pc.scene.PARTICLES_SORT_NEWER_FIRST
-                    }, {
-                        name: 'Older First',
-                        value: pc.scene.PARTICLES_SORT_OLDER_FIRST
-                    }]
-                },
-                defaultValue: 0,
-            }, {
-                name: "stretch",
-                displayName: "Stretch",
-                description: "Stretch particles in the direction of motion",
-                type: "number",
-                defaultValue: 0,
-                options: {
-                    min: 0,
-                    max: 32,
-                    step: 0.25
-                }
-            }, {
-                name: "depthSoftening",
-                displayName: "Depth Softening",
-                description: "Softens particle intersections with scene geometry",
-                type: "number",
-                defaultValue: 0,
-                options: {
-                    min: 0,
-                    max: 1,
-                    step: 0.01
-                }
-            }, {
                 name: 'localOffsetGraph',
-                displayName: "Local Offset",
+                displayName: "Local Position",
                 description: "A graph that defines the local position of particles over time.",
                 type: "curveset",
                 defaultValue: {
@@ -229,8 +230,22 @@ pc.extend(pc.fw, function() {
                     curveNames: ['X', 'Y', 'Z']
                 }
             }, {
+                name: 'localPosDivGraph',
+                displayName: "Local Position Divergence",
+                description: "A graph that defines the local position divergence of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
+                options: {
+                    curveNames: ['X', 'Y', 'Z'],
+                    min: 0,
+                    max: 1
+                }
+            }, {
                 name: 'offsetGraph',
-                displayName: "Offset",
+                displayName: "Position",
                 description: "A graph that defines the world position of particles over time.",
                 type: "curveset",
                 defaultValue: {
@@ -239,6 +254,20 @@ pc.extend(pc.fw, function() {
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
+                }
+            }, {
+                name: 'posDivGraph',
+                displayName: "Position Divergence",
+                description: "A graph that defines the world position of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
+                options: {
+                    curveNames: ['X', 'Y', 'Z'],
+                    min: 0,
+                    max: 1
                 }
             }, {
                 name: 'angleGraph',
@@ -255,6 +284,20 @@ pc.extend(pc.fw, function() {
                     verticalAxisValue: 360
                 }
             }, {
+                name: 'angleDivGraph',
+                displayName: "Angle Divergence",
+                description: "A graph that defines the rotation divergence of particles over time.",
+                type: "curve",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [0, 0, 1, 0]
+                },
+                options: {
+                    curveNames: ['Angle'],
+                    min: 0,
+                    max: 1
+                }
+            }, {
                 name: 'scaleGraph',
                 displayName: "Scale",
                 description: "A graph that defines the scale of particles over time.",
@@ -266,6 +309,21 @@ pc.extend(pc.fw, function() {
                 options: {
                     curveNames: ['Scale'],
                     verticalAxisValue: 1
+                }
+            }, {
+                name: 'scaleDivGraph',
+                displayName: "Scale Divergence",
+                description: "A graph that defines the scaling divergence of particles over time.",
+                type: "curve",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [0, 0, 1, 0]
+                },
+                options: {
+                    curveNames: ['Scale'],
+                    verticalAxisValue: 1,
+                    min: 0,
+                    max: 1
                 }
             }, {
                 name: 'colorGraph',
@@ -296,63 +354,6 @@ pc.extend(pc.fw, function() {
                     min: 0
                 }
             }, {
-                name: 'localPosDivGraph',
-                displayName: "Local Position Divergence",
-                description: "A graph that defines the local position divergence of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z'],
-                    min: 0,
-                    max: 1
-                }
-            }, {
-                name: 'posDivGraph',
-                displayName: "Position Divergence",
-                description: "A graph that defines the world position of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z'],
-                    min: 0,
-                    max: 1
-                }
-            }, {
-                name: 'scaleDivGraph',
-                displayName: "Scale Divergence",
-                description: "A graph that defines the scaling divergence of particles over time.",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
-                },
-                options: {
-                    curveNames: ['Scale'],
-                    verticalAxisValue: 1,
-                    min: 0,
-                    max: 1
-                }
-            }, {
-                name: 'angleDivGraph',
-                displayName: "Angle Divergence",
-                description: "A graph that defines the rotation divergence of particles over time.",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
-                },
-                options: {
-                    curveNames: ['Angle'],
-                    min: 0,
-                    max: 1
-                }
-            }, {
                 name: 'alphaDivGraph',
                 displayName: "Opacity Divergence",
                 description: "A graph that defines the opacity divergence of particles over time.",
@@ -365,6 +366,17 @@ pc.extend(pc.fw, function() {
                     curveNames: ['Opacity'],
                     max: 1,
                     min: 0
+                }
+            }, {
+                name: "smoothness",
+                displayName: "Smoothness",
+                description: "Graph interpolation smoothness",
+                type: "number",
+                defaultValue: 4,
+                options: {
+                    min: 0,
+                    max: 32,
+                    step: 1
                 }
             }, {
                 name: 'camera',

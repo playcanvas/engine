@@ -24,6 +24,8 @@ pc.extend(pc.fw, function() {
         'gammaCorrect',
         'sort',
         'stretch',
+        'oneShot',
+        'preWarm',
         'maxEmissionTime',
         'localOffsetGraph',
         'offsetGraph',
@@ -191,6 +193,7 @@ pc.extend(pc.fw, function() {
                     colorMap: this.data.colorMap,
                     normalMap: this.data.normalMap,
                     oneShot: this.data.oneShot,
+                    preWarm: this.data.preWarm,
                     speedDiv: this.data.speedDiv,
                     constantSpeedDiv: this.data.constantSpeedDiv,
                     sort: this.data.sort,
@@ -204,8 +207,10 @@ pc.extend(pc.fw, function() {
                     mesh: this.data.mesh,
                     depthTest: this.data.depthTest,
                     gammaCorrect: this.data.gammaCorrect,
-                    smoothness: this.data.smoothness
+                    smoothness: this.data.smoothness,
+                    node: this.entity
                 });
+
                 this.emitter.meshInstance.node = this.entity;
 
                 this.psys = new pc.scene.Model();
