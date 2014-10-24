@@ -49,21 +49,23 @@ pc.extend(pc.scene, function() {
     }
 
     function tex1D(arr, u, chans, outArr, test) {
+        var a, b, c;
+
         if ((chans === undefined) || (chans < 2)) {
             u *= arr.length - 1;
-            var A = arr[Math.floor(u)];
-            var B = arr[Math.ceil(u)];
-            var C = u % 1;
-            return pc.math.lerp(A, B, C);
+            a = arr[Math.floor(u)];
+            b = arr[Math.ceil(u)];
+            c = u % 1;
+            return pc.math.lerp(a, b, c);
         }
 
         u *= arr.length / chans - 1;
         if (!outArr) outArr = [];
         for (var i = 0; i < chans; i++) {
-            var A = arr[Math.floor(u) * chans + i];
-            var B = arr[Math.ceil(u) * chans + i];
-            var C = u % 1;
-            outArr[i] = pc.math.lerp(A, B, C);
+            a = arr[Math.floor(u) * chans + i];
+            b = arr[Math.ceil(u) * chans + i];
+            c = u % 1;
+            outArr[i] = pc.math.lerp(a, b, c);
         }
         return outArr;
     }
@@ -88,7 +90,7 @@ pc.extend(pc.scene, function() {
         } else {
             setPropertyTarget[pName] = defaultVal;
         }
-    };
+    }
 
     function pack3NFloats(a, b, c) {
         var packed = ((a * 255) << 16) | ((b * 255) << 8) | (c * 255);
@@ -266,7 +268,7 @@ pc.extend(pc.scene, function() {
         this.lifeAndSourcePos = null;
 
         this.vbToSort = null;
-        this.vbOld = null
+        this.vbOld = null;
         this.particleDistance = null;
         this.particleNoize = null;
 
@@ -298,6 +300,8 @@ pc.extend(pc.scene, function() {
 
     ParticleEmitter2.prototype = {
         rebuild: function() {
+            var i, len;
+
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
@@ -332,14 +336,14 @@ pc.extend(pc.scene, function() {
             this.qAngle = this.angleGraph.quantize(precision, this.smoothness);
 
             // convert to radians
-            for (var i=0, len = this.qAngle.length, qAngle = this.qAngle; i<len; i++) {
+            for (i=0, len = this.qAngle.length, qAngle = this.qAngle; i<len; i++) {
                 qAngle[i] *= pc.math.DEG_TO_RAD;
             }
 
             this.qAngleDiv = this.angleDivGraph.quantize(precision, this.smoothness);
 
             // convert to radians
-            for (var i=0, len = this.qAngleDiv.length, qAngleDiv = this.qAngleDiv; i<len; i++) {
+            for (i=0, len = this.qAngleDiv.length, qAngleDiv = this.qAngleDiv; i<len; i++) {
                 qAngleDiv[i] *= pc.math.DEG_TO_RAD;
             }
 
@@ -351,7 +355,7 @@ pc.extend(pc.scene, function() {
             this.qAlphaDiv = this.alphaDivGraph.quantize(precision, this.smoothness);
 
             this.colorMult = 1;
-            for (var i = 0; i < this.qColor.length; i++) {
+            for (i = 0; i < this.qColor.length; i++) {
                 this.colorMult = Math.max(this.colorMult, this.qColor[i]);
             }
 
@@ -365,21 +369,21 @@ pc.extend(pc.scene, function() {
 
             // Dynamic simulation data
             this.lifeAndSourcePos = new Float32Array(this.numParticles * 4);
-            for (var i = 0; i < this.numParticles; i++) {
+            for (i = 0; i < this.numParticles; i++) {
                 this.lifeAndSourcePos[i * 4] = this.spawnBounds.x * (Math.random() * 2 - 1);
                 this.lifeAndSourcePos[i * 4 + 1] = this.spawnBounds.y * (Math.random() * 2 - 1);
                 this.lifeAndSourcePos[i * 4 + 2] = this.spawnBounds.z * (Math.random() * 2 - 1);
                 this.lifeAndSourcePos[i * 4 + 3] = -this.rate * i;
             }
             this.lifeAndSourcePosStart = new Float32Array(this.numParticles * 4);
-            for (var i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePosStart[i] = this.lifeAndSourcePos[i];
+            for (i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePosStart[i] = this.lifeAndSourcePos[i];
 
             if (this.mode === pc.scene.PARTICLES_MODE_CPU) {
                 this.vbToSort = new Array(this.numParticles);
                 this.vbOld = new Float32Array(this.numParticles * 4 * 4);
                 this.particleDistance = new Float32Array(this.numParticles);
                 this.particleNoize = new Float32Array(this.numParticles);
-                for (var i = 0; i < this.numParticles; i++) {
+                for (i = 0; i < this.numParticles; i++) {
                     this.particleNoize[i] = Math.random();
                 }
             }
@@ -428,7 +432,7 @@ pc.extend(pc.scene, function() {
             if (this.lighting) {
                 normalOption = hasNormal ? 2 : 1;
             }
-            var isMesh = this.mesh != null;
+            isMesh = this.mesh != null;
             var shader = programLib.getProgram("particle2", {
                 mode: this.mode,
                 normal: normalOption,
@@ -531,22 +535,24 @@ pc.extend(pc.scene, function() {
         _allocate: function(numParticles) {
             var psysVertCount = numParticles * this.numParticleVerts;
             var psysIndexCount = numParticles * this.numParticleIndices;
+            var elements, particleFormat;
+            var i;
 
             if ((this.vertexBuffer === undefined) || (this.vertexBuffer.getNumVertices() !== psysVertCount)) {
                 // Create the particle vertex format
                 if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
-                    var elements = [{
+                    elements = [{
                             semantic: pc.gfx.SEMANTIC_ATTR0,
                             components: 4,
                             type: pc.gfx.ELEMENTTYPE_FLOAT32
                         } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
                     ];
-                    var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
+                    particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
 
                     this.vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.gfx.BUFFER_DYNAMIC);
                     this.indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, psysIndexCount);
                 } else {
-                    var elements = [{
+                    elements = [{
                         semantic: pc.gfx.SEMANTIC_ATTR0,
                         components: 4,
                         type: pc.gfx.ELEMENTTYPE_FLOAT32
@@ -559,7 +565,7 @@ pc.extend(pc.scene, function() {
                         components: 4,
                         type: pc.gfx.ELEMENTTYPE_FLOAT32
                     }];
-                    var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
+                    particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
 
                     this.vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.gfx.BUFFER_DYNAMIC);
                     this.indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, psysIndexCount);
@@ -574,9 +580,9 @@ pc.extend(pc.scene, function() {
                 }
 
                 var rnd;
-                for (var i = 0; i < psysVertCount; i++) {
+                for (i = 0; i < psysVertCount; i++) {
                     if (i % this.numParticleVerts === 0) rnd = Math.random();
-                    var id = Math.floor(i / this.numParticleVerts);
+                    id = Math.floor(i / this.numParticleVerts);
 
                     if (!this.mesh) {
                         var vertID = i % 4;
@@ -604,9 +610,9 @@ pc.extend(pc.scene, function() {
 
                 // Fill the index buffer
                 var dst = 0;
-                var indices = new Uint16Array(this.indexBuffer.lock());
+                indices = new Uint16Array(this.indexBuffer.lock());
                 if (this.mesh) meshData = new Uint16Array(this.mesh.indexBuffer[0].lock());
-                for (var i = 0; i < numParticles; i++) {
+                for (i = 0; i < numParticles; i++) {
                     if (!this.mesh) {
                         var baseIndex = i * 4;
                         indices[dst++] = baseIndex;
@@ -617,7 +623,7 @@ pc.extend(pc.scene, function() {
                         indices[dst++] = baseIndex + 3;
                     } else {
                         for (var j = 0; j < this.numParticleIndices; j++) {
-                            indices[i * this.numParticleIndices + j] = meshData[j] + i * this.numParticleVerts
+                            indices[i * this.numParticleIndices + j] = meshData[j] + i * this.numParticleVerts;
                         }
                     }
                 }
@@ -634,6 +640,7 @@ pc.extend(pc.scene, function() {
                 this.swapTex = false;
                 var oldTexIN = this.texLifeAndSourcePosIN;
                 this.texLifeAndSourcePosIN = this.texLifeAndSourcePosStart;
+                var startTime = this.preWarm ? this.lifetime : 0;
                 this.addTime(this._getStartTime());
                 this.texLifeAndSourcePosIN = oldTexIN;
             }
