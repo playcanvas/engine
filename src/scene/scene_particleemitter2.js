@@ -204,7 +204,6 @@ pc.extend(pc.scene, function() {
         setProperty("maxEmissionTime", 15);
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
-        setProperty("gammaCorrect", true);
         setProperty("depthTest", false);
         setProperty("node", null);
 
@@ -440,7 +439,7 @@ pc.extend(pc.scene, function() {
                 stretch: this.stretch,
                 soft: this.depthSoftening && this._hasDepthTarget(),
                 mesh: isMesh,
-                srgb: this.gammaCorrect,
+                srgb: this.scene ? this.scene.gammaCorrection : false,
                 wrap: this.wrap && this.wrapBounds
             });
             this.material = new pc.scene.Material();

@@ -13,6 +13,7 @@ pc.extend(pc.fw, function() {
         this.normalMap = null;
         this.normalMapAsset = null;
         this.oneShot = false;
+        this.preWarm = false;
         this.speedDiv = 0.0;             // Randomizes particle simulation speed [0-1] per frame
         this.constantSpeedDiv = 0.0;       // Randomizes particle simulation speed   [0-1]
         this.sort = 0;                          // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;   Forces CPU mode if not 0
@@ -27,7 +28,6 @@ pc.extend(pc.fw, function() {
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                 // Leave undefined to use simple quads
         this.depthTest = false;
-        this.gammaCorrect = true;
 
         // Time-dependent parameters
         this.localOffsetGraph = null;

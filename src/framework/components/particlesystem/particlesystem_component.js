@@ -21,7 +21,6 @@ pc.extend(pc.fw, function() {
         'wrapBounds',
         'depthTest',
         'depthSoftening',
-        'gammaCorrect',
         'sort',
         'stretch',
         'oneShot',
@@ -206,7 +205,6 @@ pc.extend(pc.fw, function() {
                     scene: this.system.context.scene,
                     mesh: this.data.mesh,
                     depthTest: this.data.depthTest,
-                    gammaCorrect: this.data.gammaCorrect,
                     smoothness: this.data.smoothness,
                     node: this.entity
                 });
