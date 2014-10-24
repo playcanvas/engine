@@ -22,6 +22,7 @@ pc.extend(pc.fw, function() {
         this.scene = null;
         this.lighting = false;
         this.halfLambert = false;            // Uses half-lambert lighting instead of Lambert
+        this.intensity = 1;
         this.maxEmissionTime = 15;
         this.stretch = 0.0;
         this.depthSoftening = 0;

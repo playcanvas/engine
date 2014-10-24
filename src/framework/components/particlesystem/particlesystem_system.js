@@ -90,6 +90,17 @@ pc.extend(pc.fw, function() {
                     lighting: true
                 }
             }, {
+                name: "intensity",
+                displayName: "Color intensity",
+                description: "Controls the intensity of the colors for each particle",
+                type: "number",
+                defaultValue: 1,
+                options: {
+                    min: 0,
+                    max: 10,
+                    step: 0.1
+                }
+            }, {
                 name: "depthTest",
                 displayName: "Depth Test",
                 description: "Enables hardware depth testing; don't use it for semi-transparent particles",
@@ -449,7 +460,6 @@ pc.extend(pc.fw, function() {
                     data[prop.name] = sourceProp;
                 }
             }
-
             return this.addComponent(clone, data);
         },
 
