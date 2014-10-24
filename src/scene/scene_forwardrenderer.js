@@ -405,11 +405,7 @@ pc.extend(pc.scene, function () {
                 var light = lights[i];
                 if (light.getEnabled()) {
                     if (light.getType() === pc.scene.LIGHTTYPE_DIRECTIONAL) {
-                        if (light.getCastShadows()) {
-                            scene._globalLights.push(light);
-                        } else {
-                            scene._globalLights.unshift(light);
-                        }
+                        scene._globalLights.push(light);
                     } else {
                         scene._localLights[light.getType() === pc.scene.LIGHTTYPE_POINT ? 0 : 1].push(light);
                     }
