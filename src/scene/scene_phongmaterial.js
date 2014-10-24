@@ -588,6 +588,7 @@ pc.extend(pc.scene, function () {
 
             var options = {
                 fog: scene.fog,
+                gamma: scene.gammaCorrection,
                 skin: !!this.meshInstances[0].skinInstance,
                 diffuseMap: !!this.diffuseMap,
                 diffuseMapTransform: !!this.diffuseMapTransform,
