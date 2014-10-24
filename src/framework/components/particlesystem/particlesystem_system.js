@@ -90,6 +90,17 @@ pc.extend(pc.fw, function() {
                     lighting: true
                 }
             }, {
+                name: "intensity",
+                displayName: "Color intensity",
+                description: "Controls the intensity of the colors for each particle",
+                type: "number",
+                defaultValue: 1,
+                options: {
+                    min: 0,
+                    max: 10,
+                    step: 0.1
+                }
+            }, {
                 name: "gammaCorrect",
                 displayName: "Enabled gamma correction",
                 description: "",
@@ -462,6 +473,7 @@ pc.extend(pc.fw, function() {
                 scene: source.scene,
                 lighting: source.lighting,
                 halfLambert: source.halfLambert,
+                intensity: source.intensity,
                 maxEmissionTime: source.maxEmissionTime,
                 stretch: source.stretch,
                 depthSoftening: source.depthSoftening,

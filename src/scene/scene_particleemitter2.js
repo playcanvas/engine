@@ -199,6 +199,7 @@ pc.extend(pc.scene, function() {
         setProperty("scene", null);
         setProperty("lighting", false);
         setProperty("halfLambert", false);
+        setProperty("intensity", 1.0);
         setProperty("stretch", 0.0);
         setProperty("depthSoftening", 0);
         setProperty("maxEmissionTime", 15);
@@ -330,6 +331,12 @@ pc.extend(pc.scene, function() {
             this.qLocalOffset = this.localOffsetGraph.quantize(precision, this.smoothness);
             this.qWorldOffset = this.offsetGraph.quantize(precision, this.smoothness);
             this.qColor = this.colorGraph.quantize(precision, this.smoothness);
+
+            // multiply color values with intensity
+            for (i=0, len = this.qColor.length, qColor = this.qColor; i<len; i++) {
+                qColor[i] *= this.intensity;
+            }
+
             this.qPosDiv = this.localPosDivGraph.quantize(precision, this.smoothness);
             this.qPosWorldDiv = this.posDivGraph.quantize(precision, this.smoothness);
 
