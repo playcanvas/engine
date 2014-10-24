@@ -113,7 +113,7 @@ void main(void)
     vec3 divergentWorldOffset =     mix(worldOffset.xyz, -worldOffset.xyz, rndFactor3);
     worldOffset.xyz =                     mix(worldOffset.xyz, divergentWorldOffset, posWorldDivergence);
 
-    angle = mix(angle, angle + 90.0*rndFactor, angleRnd);
+    angle = mix(angle, -angle, rndFactor * angleRnd);
     scale = mix(scale, scale*rndFactor, scaleRnd);
 
     TexCoordsAlphaLife = vec4(quadXY*0.5+0.5,    alphaRnd * (fract(rndFactor*1000.0) * 2.0 - 1.0),    life);

@@ -349,11 +349,6 @@ pc.extend(pc.scene, function() {
 
             this.qAngleDiv = this.angleDivGraph.quantize(precision, this.smoothness);
 
-            // convert to radians
-            for (i=0, len = this.qAngleDiv.length, qAngleDiv = this.qAngleDiv; i<len; i++) {
-                qAngleDiv[i] *= pc.math.DEG_TO_RAD;
-            }
-
             this.qScale = this.scaleGraph.quantize(precision, this.smoothness);
             this.qAlpha = this.alphaGraph.quantize(precision, this.smoothness);
             this.qScaleDiv = this.scaleDivGraph.quantize(precision, this.smoothness);
@@ -840,7 +835,7 @@ pc.extend(pc.scene, function() {
                         worldOffset[1] = pc.math.lerp(worldOffset[1], divergentWorldOffsetY, posWorldDivergence[1]);
                         worldOffset[2] = pc.math.lerp(worldOffset[2], divergentWorldOffsetZ, posWorldDivergence[2]);
 
-                        angle = pc.math.lerp(angle, angle + 90 * rndFactor, angleRnd);
+                        angle = pc.math.lerp(angle, -angle, rndFactor * angleRnd);
                         scale = pc.math.lerp(scale, scale * rndFactor, scaleRnd);
 
                         if (this.meshInstance.node) {
