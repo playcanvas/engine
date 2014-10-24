@@ -427,24 +427,13 @@ pc.extend(pc.scene, function() {
             var hasNormal = (this.normalMap != null);
 
             var programLib = this.graphicsDevice.getProgramLibrary();
-            var normalOption = 0;
+            this.normalOption = 0;
             if (this.lighting) {
-                normalOption = hasNormal ? 2 : 1;
+                this.normalOption = hasNormal ? 2 : 1;
             }
-            isMesh = this.mesh != null;
-            var shader = programLib.getProgram("particle2", {
-                mode: this.mode,
-                normal: normalOption,
-                halflambert: this.halfLambert,
-                stretch: this.stretch,
-                soft: this.depthSoftening && this._hasDepthTarget(),
-                mesh: isMesh,
-                srgb: this.scene ? this.scene.gammaCorrection : false,
-                wrap: this.wrap && this.wrapBounds
-            });
-            this.material = new pc.scene.Material();
-            this.material.setShader(shader);
+            this.isMesh = this.mesh != null;
 
+            this.material = new pc.scene.Material();
             this.material.cullMode = pc.gfx.CULLFACE_NONE;
             this.material.blend = true;
 
@@ -453,9 +442,25 @@ pc.extend(pc.scene, function() {
             this.material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
 
             this.material.depthWrite = this.depthTest;
+            this.material.emitter = this;
 
+            // updateShader is also called by pc.scene.Scene when all shaders need to be updated
+            this.material.updateShader = function() {
+                var shader = programLib.getProgram("particle2", {
+                    mode: this.emitter.mode,
+                    normal: this.emitter.normalOption,
+                    halflambert: this.emitter.halfLambert,
+                    stretch: this.emitter.stretch,
+                    soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
+                    mesh: this.emitter.isMesh,
+                    srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
+                    wrap: this.emitter.wrap && this.emitter.wrapBounds
+                });
+                this.setShader(shader);
+            };
+
+            this.material.updateShader();
             this.resetMaterial();
-
 
             this.meshInstance = new pc.scene.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.layer = pc.scene.LAYER_SKYBOX; //LAYER_FX;
