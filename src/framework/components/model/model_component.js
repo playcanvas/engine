@@ -113,6 +113,9 @@ pc.extend(pc.fw, function () {
                         case 'cylinder':
                             mesh = this.system.cylinder;
                             break;
+                        case 'plane':
+                            mesh = this.system.plane;
+                            break;
                         default:
                             throw new Error("Invalid model type: " + newValue);
                     }
