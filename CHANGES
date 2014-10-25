@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.5
+--------
+* [FIX] Multiple lights, 1 or more are shadow casting and 1 or more are not, could cause exception on render.
+
+--------
 v0.158.4
 --------
 * [FIX] Intel XDK now loads textures properly.
