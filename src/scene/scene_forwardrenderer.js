@@ -380,7 +380,6 @@ pc.extend(pc.scene, function () {
                 scene.updateShaders = false;
             }
 
-            // Fish out all the uniforms we need to render the scene
             var lights = scene._lights;
             var models = scene._models;
             var drawCalls = scene.drawCalls;
@@ -397,6 +396,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
+            // Sort lights by type
             scene._globalLights.length = 0;
             scene._localLights[0].length = 0;
             scene._localLights[1].length = 0;
@@ -426,7 +426,7 @@ pc.extend(pc.scene, function () {
                         var tempy = meshPos.y - camPos.y;
                         var tempz = meshPos.z - camPos.z;
                         meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
-                    } else if (typeof meshInstance.distSqr !== 'undefined') {
+                    } else if (meshInstance.distSqr !== undefined) {
                         delete meshInstance.distSqr;
                     }
                 }
@@ -435,6 +435,7 @@ pc.extend(pc.scene, function () {
             // Sort meshes into the correct render order
             drawCalls.sort(sortDrawCalls);
 
+            // Render a depth target if the camera has one assigned
             if (camera._depthTarget) {
                 var oldTarget = camera.getRenderTarget();
                 camera.setRenderTarget(camera._depthTarget);
@@ -621,6 +622,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
+            // Render the scene
             for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
