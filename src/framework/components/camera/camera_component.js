@@ -69,8 +69,8 @@ pc.extend(pc.fw, function () {
          */
         screenToWorld: function (x, y, z, worldCoord) {
             var device = this.system.context.graphicsDevice;
-            var width = parseInt(device.canvas.style.width);
-            var height = parseInt(device.canvas.style.height);
+            var width = parseInt(device.canvas.clientWidth);
+            var height = parseInt(device.canvas.clientHeight);
             return this.data.camera.screenToWorld(x, y, z, width, height, worldCoord);
         },
 

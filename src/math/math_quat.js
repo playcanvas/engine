@@ -555,14 +555,24 @@ pc.extend(pc, (function () {
 
             // Calculate angle between them.
             var cosHalfTheta = lw * rw + lx * rx + ly * ry + lz * rz;
+
+            if (cosHalfTheta < 0) {
+                rw = -rw;
+                rx = -rx;
+                ry = -ry;
+                rz = -rz;
+                cosHalfTheta = -cosHalfTheta;
+            }
+
             // If lhs == rhs or lhs == -rhs then theta == 0 and we can return lhs
-            if (Math.abs(cosHalfTheta) >= 1){
+            if (Math.abs(cosHalfTheta) >= 1) {
                 this.w = lw;
                 this.x = lx;
                 this.y = ly;
                 this.z = lz;
                 return this;
             }
+
             // Calculate temporary values.
             var halfTheta = Math.acos(cosHalfTheta);
             var sinHalfTheta = Math.sqrt(1 - cosHalfTheta * cosHalfTheta);

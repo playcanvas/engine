@@ -45,6 +45,9 @@ pc.extend(pc.fw, function () {
                 }, {
                     name: 'Cone',
                     value: 'cone'
+                }, {
+                    name: 'Plane',
+                    value: 'plane'
                 }]
             },
             defaultValue: "asset"
@@ -118,8 +121,13 @@ pc.extend(pc.fw, function () {
             radius: 0.5,
             height: 1
         });
+        this.plane = pc.scene.procedural.createPlane(gd, {
+            halfExtents: new pc.Vec2(0.5, 0.5),
+            widthSegments: 1,
+            lengthSegments: 1
+        });
 
-        this.defaultMaterial = new pc.scene.PhongMaterial()
+        this.defaultMaterial = new pc.scene.PhongMaterial();
     };
     ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.fw.ComponentSystem);
 

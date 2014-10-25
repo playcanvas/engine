@@ -1,0 +1,67 @@
+
+// Compiler should remove unneeded stuff
+uniform vec3 view_position;
+
+uniform vec3 light_globalAmbient;
+
+varying vec3 vPositionW;
+varying vec3 vNormalW;
+varying vec3 vTangentW;
+varying vec3 vBinormalW;
+varying vec2 vUv0;
+varying vec2 vUv1;
+varying vec4 vVertexColor;
+varying vec3 vNormalV;
+
+struct psInternalData {
+    vec3 albedo;
+    vec3 specularity;
+    float glossiness;
+    vec3 emission;
+    vec3 normalW;
+    mat3 TBN;
+    vec3 viewDirW;
+    vec3 reflDirW;
+    vec3 diffuseLight;
+    vec3 specularLight;
+    vec4 reflection;
+    float alpha;
+    vec3 lightDirNormW;
+    vec3 lightDirW;
+    float atten;
+    vec3 shadowCoord;
+    vec2 uvOffset;
+};
+
+void getViewDir(inout psInternalData data) {
+    data.viewDirW = normalize(view_position - vPositionW);
+}
+
+void getReflDir(inout psInternalData data) {
+    data.reflDirW = normalize(-reflect(data.viewDirW, data.normalW));
+}
+
+void addAmbientConstant(inout psInternalData data) {
+    data.diffuseLight += light_globalAmbient;
+}
+
+void getLightDirPoint(inout psInternalData data, vec3 lightPosW) {
+    data.lightDirW = vPositionW - lightPosW;
+    data.lightDirNormW = normalize(data.lightDirW);
+}
+
+float getFalloffLinear(inout psInternalData data, float lightRadius) {
+    float d = length(data.lightDirW);
+    return max(((lightRadius - d) / lightRadius), 0.0);
+}
+
+float getFalloffInvSquared(inout psInternalData data) {
+    float sqrDist = dot(data.lightDirW, data.lightDirW);
+    return 1.0 / sqrDist;
+}
+
+float getSpotEffect(inout psInternalData data, vec3 lightSpotDirW, float lightInnerConeAngle, float lightOuterConeAngle) {
+    float cosAngle = dot(data.lightDirNormW, lightSpotDirW);
+    return smoothstep(lightOuterConeAngle, lightInnerConeAngle, cosAngle);
+}
+

@@ -23,7 +23,8 @@ void main(void)
     dx = mod(x, 0.01);
     float noize2 = saturate(0.1 + dx * 100.0);
 
-    if (tex.w<=0.0) tex.xyz = emitterPos + spawnBounds * (mod( vec3(noize, fract(noize*10.0), fract(noize*100.0))  + frameRandom, vec3(1.0) ) - 0.5);
+
+    if (tex.w<=0.0) tex.xyz = emitterPos + spawnBounds * mod( vec3(noize, fract(noize*10.0), fract(noize*100.0))  + frameRandom, vec3(1.0) );
 
     tex.w += delta * mix(1.0 - deltaRandomness, 1.0, noize) * mix(1.0 - deltaRandomnessStatic, 1.0, noize2);
 

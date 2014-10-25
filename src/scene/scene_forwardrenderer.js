@@ -20,6 +20,7 @@ pc.extend(pc.scene, function () {
     var shadowCamViewProj = new pc.Mat4();
 
     var viewMat = new pc.Mat4();
+    var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
 
     var c2sc = new pc.Mat4();
@@ -184,6 +185,7 @@ pc.extend(pc.scene, function () {
         var scope = this.device.scope;
         this.projId = scope.resolve('matrix_projection');
         this.viewId = scope.resolve('matrix_view');
+        this.viewId3 = scope.resolve('matrix_view3');
         this.viewInvId = scope.resolve('matrix_viewInverse');
         this.viewProjId = scope.resolve('matrix_viewProjection');
         this.viewPosId = scope.resolve('view_position');
@@ -229,6 +231,22 @@ pc.extend(pc.scene, function () {
             // View Matrix
             viewMat.copy(wtm).invert();
             this.viewId.setValue(viewMat.data);
+
+
+            viewMat3.data[0] = viewMat.data[0];
+            viewMat3.data[1] = viewMat.data[1];
+            viewMat3.data[2] = viewMat.data[2];
+
+            viewMat3.data[3] = viewMat.data[4];
+            viewMat3.data[4] = viewMat.data[5];
+            viewMat3.data[5] = viewMat.data[6];
+
+            viewMat3.data[6] = viewMat.data[8];
+            viewMat3.data[7] = viewMat.data[9];
+            viewMat3.data[8] = viewMat.data[10];
+
+            this.viewId3.setValue(viewMat3.data);
+
 
             // ViewProjection Matrix
             viewProjMat.mul2(projMat, viewMat);
@@ -281,10 +299,10 @@ pc.extend(pc.scene, function () {
 
                 // Directionals shine down the negative Y axis
                 wtm.getY(directional._direction).scale(-1);
-                scope.resolve(light + "_direction").setValue(directional._direction.data);
+                scope.resolve(light + "_direction").setValue(directional._direction.normalize().data);
 
                 if (directional.getCastShadows()) {
-                    var shadowMap = this.device.extDepthTexture ? 
+                    var shadowMap = this.device.extDepthTexture ?
                             directional._shadowCamera._renderTarget._depthTexture :
                             directional._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
@@ -336,7 +354,7 @@ pc.extend(pc.scene, function () {
                 scope.resolve(light + "_spotDirection").setValue(spot._direction.data);
 
                 if (spot.getCastShadows()) {
-                    var shadowMap = this.device.extDepthTexture ? 
+                    var shadowMap = this.device.extDepthTexture ?
                             spot._shadowCamera._renderTarget._depthTexture :
                             spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
@@ -362,7 +380,6 @@ pc.extend(pc.scene, function () {
                 scene.updateShaders = false;
             }
 
-            // Fish out all the uniforms we need to render the scene
             var lights = scene._lights;
             var models = scene._models;
             var drawCalls = scene.drawCalls;
@@ -379,6 +396,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
+            // Sort lights by type
             scene._globalLights.length = 0;
             scene._localLights[0].length = 0;
             scene._localLights[1].length = 0;
@@ -387,11 +405,7 @@ pc.extend(pc.scene, function () {
                 var light = lights[i];
                 if (light.getEnabled()) {
                     if (light.getType() === pc.scene.LIGHTTYPE_DIRECTIONAL) {
-                        if (light.getCastShadows()) {
-                            scene._globalLights.push(light);
-                        } else {
-                            scene._globalLights.unshift(light);
-                        }
+                        scene._globalLights.push(light);
                     } else {
                         scene._localLights[light.getType() === pc.scene.LIGHTTYPE_POINT ? 0 : 1].push(light);
                     }
@@ -406,12 +420,13 @@ pc.extend(pc.scene, function () {
                     meshInstance = drawCall;
 
                     if (meshInstance.material.blendType === pc.scene.BLEND_NORMAL) {
+                        meshInstance.syncAabb();
                         var meshPos = meshInstance.aabb.center;
                         var tempx = meshPos.x - camPos.x;
                         var tempy = meshPos.y - camPos.y;
                         var tempz = meshPos.z - camPos.z;
                         meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
-                    } else if (typeof meshInstance.distSqr !== 'undefined') {
+                    } else if (meshInstance.distSqr !== undefined) {
                         delete meshInstance.distSqr;
                     }
                 }
@@ -420,6 +435,7 @@ pc.extend(pc.scene, function () {
             // Sort meshes into the correct render order
             drawCalls.sort(sortDrawCalls);
 
+            // Render a depth target if the camera has one assigned
             if (camera._depthTarget) {
                 var oldTarget = camera.getRenderTarget();
                 camera.setRenderTarget(camera._depthTarget);
@@ -444,7 +460,7 @@ pc.extend(pc.scene, function () {
                                     var h = meshInstance.skinInstance.boneTexture.height;
                                     this.boneTextureSizeId.setValue([w, h])
                                 } else {
-                                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 }
                                 device.setShader(this._depthShaderSkin);
                             } else {
@@ -479,7 +495,7 @@ pc.extend(pc.scene, function () {
 
                     if (type === pc.scene.LIGHTTYPE_DIRECTIONAL) {
                         // 1. Starting at the centroid of the view frustum, back up in the opposite
-                        // direction of the light by a certain amount. This will be our temporary 
+                        // direction of the light by a certain amount. This will be our temporary
                         // working position.
                         _getFrustumCentroid(scene, camera, this.centroid);
                         shadowCam.setPosition(this.centroid);
@@ -568,7 +584,7 @@ pc.extend(pc.scene, function () {
                                 var h = meshInstance.skinInstance.boneTexture.height;
                                 this.boneTextureSizeId.setValue([w, h])
                             } else {
-                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             }
                             device.setShader(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                         } else {
@@ -606,6 +622,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
+            // Render the scene
             for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
@@ -632,7 +649,7 @@ pc.extend(pc.scene, function () {
                             var h = meshInstance.skinInstance.boneTexture.height;
                             this.boneTextureSizeId.setValue([w, h])
                         } else {
-                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);                            
+                            this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                         }
                     }
                     this.shadowEnableId.setValue(meshInstance.receiveShadow);
@@ -677,5 +694,5 @@ pc.extend(pc.scene, function () {
 
     return {
         ForwardRenderer: ForwardRenderer
-    }; 
+    };
 }());
