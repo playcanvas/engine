@@ -195,6 +195,7 @@ pc.extend(pc.fw, function () {
                     this.context.scene.fogEnd = pack.settings.render.fog_end;
                     this.context.scene.fogDensity = pack.settings.render.fog_density;
                     this.context.scene.shadowDistance = pack.settings.render.shadow_distance;
+                    this.context.scene.gammaCorrection = pack.settings.render.gamma_correction;
 
                     success(pack);
                     this.context.loader.off('progress', progress);
@@ -235,6 +236,7 @@ pc.extend(pc.fw, function () {
                 load();
             }
         },
+
 
         /**
          * @function
@@ -415,7 +417,7 @@ pc.extend(pc.fw, function () {
             if (error) {
                 document.addEventListener('fullscreenerror', e, false);
             }
-            element.requestFullscreen();
+            element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
         },
 
         /**
@@ -670,6 +672,9 @@ pc.extend(pc.fw, function () {
                                         } else {
                                             entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
                                         }
+                                    } else if (attribute.RuntimeType === pc.Curve || attribute.RuntimeType === pc.CurveSet) {
+                                        entity[componentName][attributeName] = new attribute.RuntimeType(value.keys);
+                                        entity[componentName][attributeName].type = value.type;
                                     } else {
                                         entity[componentName][attributeName] = new attribute.RuntimeType(value);
                                     }
@@ -774,6 +779,8 @@ pc.extend(pc.fw, function () {
             this.context.scene.fogDensity = settings.render.fog_density;
 
             this.context.scene.shadowDistance = settings.render.shadow_distance;
+
+            this.context.scene.gammaCorrection = settings.render.gamma_correction;
         }
     };
 

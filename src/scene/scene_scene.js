@@ -55,11 +55,12 @@ pc.extend(pc.scene, function () {
      * @property {pc.Color} fogColor The color of the fog, in enabled.
      * @property {Number} fogDensity The density of the fog. This property is only valid if the fog property
      * is set to pc.scene.FOG_EXP or pc.scene.FOG_EXP2.
-     * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This 
+     * @property {Number} fogEnd The distance from the viewpoint where linear fog reaches its maximum. This
      * property is only valid if the fog property is set to pc.scene.FOG_LINEAR.
      * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
      * only valid if the fog property is set to pc.scene.FOG_LINEAR.
      * @property {Number} shadowDistance The distance from the viewpoint beyond which shadows are no longer
+     * @property {Boolean} gammaCorrection If true then all materials will apply gamma correction
      * rendered.
      */
     var Scene = function Scene() {
@@ -75,6 +76,7 @@ pc.extend(pc.scene, function () {
         this.ambientLight = new pc.Color(0, 0, 0);
 
         this.shadowDistance = 40;
+        this._gammaCorrection = false;
 
         // Models
         this._models = [];
@@ -99,9 +101,23 @@ pc.extend(pc.scene, function () {
         }
     });
 
+    Object.defineProperty(Scene.prototype, 'gammaCorrection', {
+        get: function () {
+            return this._gammaCorrection;
+        },
+        set: function (value) {
+            if (value !== this._gammaCorrection) {
+                this._gammaCorrection = value;
+                pc.gfx.shaderChunks.defaultGamma = value ? pc.gfx.shaderChunks.gamma2_2PS : pc.gfx.shaderChunks.gamma1_0PS;
+                this.updateShaders = true;
+            }
+        }
+    });
+
     // Shaders have to be updated if:
     // - the fog mode changes
     // - lights are added or removed
+    // - gamma correction changes
     Scene.prototype._updateShaders = function (device) {
         var i;
         var materials = [];

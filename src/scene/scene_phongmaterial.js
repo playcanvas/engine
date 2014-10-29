@@ -131,6 +131,8 @@ pc.extend(pc.scene, function () {
 
         this.lightMap = null;
 
+        this.fresnelFactor = 0;
+
         // Array to pass uniforms to renderer
         this.ambientUniform = new Float32Array(3);
         this.diffuseUniform = new Float32Array(3);
@@ -235,6 +237,8 @@ pc.extend(pc.scene, function () {
             clone.reflectivity = this.reflectivity;
 
             clone.lightMap = this.lightMap;
+
+            clone.fresnelFactor = this.fresnelFactor;
 
             clone.update();
             return clone;
@@ -383,6 +387,8 @@ pc.extend(pc.scene, function () {
                     case 'blendType':
                         this.blendType = param.data;
                         break;
+                    case 'fresnelFactor':
+                        this.fresnelFactor = param.data;
                 }
             }
 
@@ -390,32 +396,23 @@ pc.extend(pc.scene, function () {
         },
 
         _updateMapTransform: function (transform, tiling, offset, rotation) {
-            if (tiling) {
-                _tempTiling.set(tiling.x, tiling.y, 1);
-            } else {
-                _tempTiling.set(1, 1, 1);
+            transform = transform || new pc.Vec4();
+            transform.set(tiling.x, tiling.y, offset.x, offset.y);
+
+            if ((transform.x==1) && (transform.y==1) && (transform.z==0) && (transform.w==0)) return null;
+            return transform;
+        },
+
+        _collectLights: function(lType, lights, typeArray, shadowArray) {
+            for (var i = 0; i < lights.length; i++) {
+                if (lights[i].getEnabled()) {
+                    var lightType = lights[i].getType();
+                    if (lightType==lType) {
+                        typeArray.push(lightType);
+                        shadowArray.push(lights[i].getCastShadows());
+                    }
+                }
             }
-
-            if (offset) {
-                _tempOffset.set(offset.x, offset.y, 0);
-            } else {
-                _tempOffset.set(0, 0, 0);
-            }
-
-            if (rotation) {
-                _tempRotation.setFromEulerAngles(rotation.x, rotation.y, rotation.z);
-            } else {
-                _tempRotation.copy(pc.Quat.IDENTITY);
-            }
-
-            transform = transform || new pc.Mat4();
-            transform.setTRS(_tempOffset, _tempRotation, _tempTiling);
-
-            // if the transform is the identity matrix
-            // then just return null so that it is not included
-            // in the shader due to limited number of shader
-            // parameters
-            return transform.isIdentity() ? null : transform;
         },
 
         update: function () {
@@ -426,8 +423,10 @@ pc.extend(pc.scene, function () {
             this.ambientUniform[2] = this.ambient.b;
             this.setParameter('material_ambient', this.ambientUniform);
 
+            var i = 0;
+
             if (this.diffuseMap) {
-                this.setParameter('texture_diffuseMap', this.diffuseMap);
+                this.setParameter("texture_diffuseMap", this.diffuseMap);
 
                 this.diffuseMapTransform = this._updateMapTransform(
                     this.diffuseMapTransform,
@@ -448,7 +447,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.specularMap) {
-                this.setParameter('texture_specularMap', this.specularMap);
+                this.setParameter("texture_specularMap", this.specularMap);
 
                 this.specularMapTransform = this._updateMapTransform(
                     this.specularMapTransform,
@@ -469,7 +468,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.glossMap) {
-                this.setParameter('texture_glossMap', this.glossMap);
+                this.setParameter("texture_glossMap", this.glossMap);
 
                 this.glossMapTransform = this._updateMapTransform(
                     this.glossMapTransform,
@@ -487,7 +486,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.emissiveMap) {
-                this.setParameter('texture_emissiveMap', this.emissiveMap);
+                this.setParameter("texture_emissiveMap", this.emissiveMap);
 
                 this.emissiveMapTransform = this._updateMapTransform(
                     this.emissiveMapTransform,
@@ -508,7 +507,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.opacityMap) {
-                this.setParameter('texture_opacityMap', this.opacityMap);
+                this.setParameter("texture_opacityMap", this.opacityMap);
 
                 this.opacityMapTransform = this._updateMapTransform(
                     this.opacityMapTransform,
@@ -526,7 +525,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.normalMap) {
-                this.setParameter('texture_normalMap', this.normalMap);
+                this.setParameter("texture_normalMap", this.normalMap);
 
                 this.normalMapTransform = this._updateMapTransform(
                     this.normalMapTransform,
@@ -543,7 +542,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.heightMap) {
-                this.setParameter('texture_heightMap', this.heightMap);
+                this.setParameter("texture_heightMap", this.heightMap);
 
                 this.heightMapTransform = this._updateMapTransform(
                     this.heightMapTransform,
@@ -573,6 +572,10 @@ pc.extend(pc.scene, function () {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             }
 
+            if (this.fresnelFactor > 0) {
+                this.setParameter('material_fresnelFactor', this.fresnelFactor);
+            }
+
             if (this.lightMap) {
                 this.setParameter('texture_lightMap', this.lightMap);
             }
@@ -583,42 +586,10 @@ pc.extend(pc.scene, function () {
         updateShader: function (device, scene) {
             var lights = scene._lights;
 
-            var numDirs = 0, numPnts = 0, numSpts = 0; // Non-shadow casters
-            var numSDirs = 0, numSPnts = 0, numSSpts = 0; // Shadow casters
-            for (var i = 0; i < lights.length; i++) {
-                var light = lights[i];
-                if (light.getEnabled()) {
-                    switch (light.getType()) {
-                        case pc.scene.LIGHTTYPE_DIRECTIONAL:
-                            if (light.getCastShadows()) {
-                                numSDirs++;
-                            } else {
-                                numDirs++;
-                            }
-                            break;
-                        case pc.scene.LIGHTTYPE_POINT:
-                            numPnts++;
-                            break;
-                        case pc.scene.LIGHTTYPE_SPOT:
-                            if (light.getCastShadows()) {
-                                numSSpts++;
-                            } else {
-                                numSpts++;
-                            }
-                            break;
-                    }
-                }
-            }
-
             var options = {
                 fog: scene.fog,
+                gamma: scene.gammaCorrection,
                 skin: !!this.meshInstances[0].skinInstance,
-                numDirs: numDirs,
-                numSDirs: numSDirs,
-                numPnts: numPnts,
-                numSPnts: numSPnts,
-                numSpts: numSpts,
-                numSSpts: numSSpts,
                 diffuseMap: !!this.diffuseMap,
                 diffuseMapTransform: !!this.diffuseMapTransform,
                 specularMap: !!this.specularMap,
@@ -635,8 +606,24 @@ pc.extend(pc.scene, function () {
                 heightMapTransform: !!this.heightMapTransform,
                 sphereMap: !!this.sphereMap,
                 cubeMap: !!this.cubeMap,
-                lightMap: !!this.lightMap
+                lightMap: !!this.lightMap,
+                useSpecular: (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
+                            || (!!this.sphereMap) || (!!this.cubeMap),
+                useFresnel: (this.fresnelFactor > 0)
             };
+
+
+            var lightType = [];
+            var lightShadow = [];
+            this._collectLights(pc.scene.LIGHTTYPE_DIRECTIONAL, lights, lightType, lightShadow);
+            this._collectLights(pc.scene.LIGHTTYPE_POINT,       lights, lightType, lightShadow);
+            this._collectLights(pc.scene.LIGHTTYPE_SPOT,        lights, lightType, lightShadow);
+
+
+            options.numLights = lightType.length;
+            options.lightType = lightType;
+            options.lightShadow = lightShadow;
+
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);
         }

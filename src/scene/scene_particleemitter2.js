@@ -49,40 +49,31 @@ pc.extend(pc.scene, function() {
     }
 
     function tex1D(arr, u, chans, outArr, test) {
+        var a, b, c;
+
         if ((chans === undefined) || (chans < 2)) {
             u *= arr.length - 1;
-            var A = arr[Math.floor(u)];
-            var B = arr[Math.ceil(u)];
-            var C = u % 1;
-            return pc.math.lerp(A, B, C);
+            a = arr[Math.floor(u)];
+            b = arr[Math.ceil(u)];
+            c = u % 1;
+            return pc.math.lerp(a, b, c);
         }
 
         u *= arr.length / chans - 1;
         if (!outArr) outArr = [];
         for (var i = 0; i < chans; i++) {
-            var A = arr[Math.floor(u) * chans + i];
-            var B = arr[Math.ceil(u) * chans + i];
-            var C = u % 1;
-            outArr[i] = pc.math.lerp(A, B, C);
+            a = arr[Math.floor(u) * chans + i];
+            b = arr[Math.ceil(u) * chans + i];
+            c = u % 1;
+            outArr[i] = pc.math.lerp(a, b, c);
         }
         return outArr;
     }
 
-    var default0Curve = new pc.Curve();
-    default0Curve.addKey(0, 0);
-    default0Curve.addKey(1, 0);
-
-    var default1Curve = new pc.Curve();
-    default1Curve.addKey(0, 1);
-    default1Curve.addKey(1, 1);
-
-    var default0Curve3 = new pc.Curve(3);
-    default0Curve3.addKey(0, [0, 0, 0]);
-    default0Curve3.addKey(1, [0, 0, 0]);
-
-    var default1Curve3 = new pc.Curve(3);
-    default1Curve3.addKey(0, [1, 1, 1]);
-    default1Curve3.addKey(1, [1, 1, 1]);
+    var default0Curve = new pc.Curve([0, 0, 1, 0]);
+    var default1Curve = new pc.Curve([0, 1, 1, 1]);
+    var default0Curve3 = new pc.CurveSet([0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]);
+    var default1Curve3 = new pc.CurveSet([0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]);
 
     var defaultParamTex = null;
 
@@ -95,11 +86,11 @@ pc.extend(pc.scene, function() {
 
     function setProperty(pName, defaultVal) {
         if (setPropertyOptions[pName] !== undefined && setPropertyOptions[pName] !== null) {
-                setPropertyTarget[pName] = setPropertyOptions[pName];
+            setPropertyTarget[pName] = setPropertyOptions[pName];
         } else {
             setPropertyTarget[pName] = defaultVal;
         }
-    };
+    }
 
     function pack3NFloats(a, b, c) {
         var packed = ((a * 255) << 16) | ((b * 255) << 8) | (c * 255);
@@ -192,14 +183,14 @@ pc.extend(pc.scene, function() {
         setProperty("rate", 1);                                  // Emission rate
         setProperty("lifetime", 50);                             // Particle lifetime
         setProperty("spawnBounds", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("wrap", false);
         setProperty("wrapBounds", null);
         // setProperty("wind", new pc.Vec3(0, 0, 0));               // Wind velocity
         setProperty("smoothness", 4);                            // Blurring width for graphs
-        setProperty("texture", null);
-        setProperty("normalTexture", null);
-        setProperty("textureAsset", null);
-        setProperty("normalTextureAsset", null);
+        setProperty("colorMap", null);
+        setProperty("normalMap", null);
         setProperty("oneShot", false);
+        setProperty("preWarm", false);
         setProperty("speedDiv", 0.0); // Randomizes particle simulation speed [0-1] per frame
         setProperty("constantSpeedDiv", 0.0); // Randomizes particle simulation speed [0-1] (one value during whole particle life)
         setProperty("sort", pc.scene.PARTICLES_SORT_NONE); // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
@@ -208,16 +199,20 @@ pc.extend(pc.scene, function() {
         setProperty("scene", null);
         setProperty("lighting", false);
         setProperty("halfLambert", false);
+        setProperty("intensity", 1.0);
         setProperty("stretch", 0.0);
         setProperty("depthSoftening", 0);
         setProperty("maxEmissionTime", 15);
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
-        setProperty("gammaCorrect", true);
         setProperty("depthTest", false);
+        setProperty("node", null);
+
         this.mode = (this.mode === "CPU" ? pc.scene.PARTICLES_MODE_CPU : pc.scene.PARTICLES_MODE_GPU);
 
-        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) this.mode = pc.scene.PARTICLES_MODE_CPU;
+        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) {
+            this.mode = pc.scene.PARTICLES_MODE_CPU;
+        }
 
         this.frameRandom = new pc.Vec3(0, 0, 0);
 
@@ -238,7 +233,7 @@ pc.extend(pc.scene, function() {
         this.constantTexLifeAndSourcePosIN = gd.scope.resolve("texLifeAndSourcePosIN");
         this.constantTexLifeAndSourcePosOUT = gd.scope.resolve("texLifeAndSourcePosOUT");
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
-        this.constantSpawnBounds = gd.scope.resolve("birthBounds");
+        this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
         this.constantRate = gd.scope.resolve("rate");
@@ -273,7 +268,7 @@ pc.extend(pc.scene, function() {
         this.lifeAndSourcePos = null;
 
         this.vbToSort = null;
-        this.vbOld = null
+        this.vbOld = null;
         this.particleDistance = null;
         this.particleNoize = null;
 
@@ -305,12 +300,14 @@ pc.extend(pc.scene, function() {
 
     ParticleEmitter2.prototype = {
         rebuild: function() {
+            var i, len;
+
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
             if (this.depthSoftening > 0) {
                 if (this.camera) {
-                    if ((this.camera.camera.camera._depthTarget === undefined) || (this.camera.camera.camera._depthTarget === null)) {
+                    if (!this.camera.camera.camera._depthTarget) {
                         this.camera.camera.camera._depthTarget = createOffscreenTarget(this.graphicsDevice, this.camera.camera);
                         this.camera.camera._depthTarget = this.camera.camera.camera._depthTarget;
                         this.camera._depthTarget = this.camera.camera.camera._depthTarget;
@@ -333,18 +330,33 @@ pc.extend(pc.scene, function() {
             this.qLocalOffset = this.localOffsetGraph.quantize(precision, this.smoothness);
             this.qWorldOffset = this.offsetGraph.quantize(precision, this.smoothness);
             this.qColor = this.colorGraph.quantize(precision, this.smoothness);
+
+            // multiply color values with intensity
+            for (i=0, len = this.qColor.length, qColor = this.qColor; i<len; i++) {
+                qColor[i] *= this.intensity;
+            }
+
             this.qPosDiv = this.localPosDivGraph.quantize(precision, this.smoothness);
             this.qPosWorldDiv = this.posDivGraph.quantize(precision, this.smoothness);
 
             this.qAngle = this.angleGraph.quantize(precision, this.smoothness);
+
+            // convert to radians
+            for (i=0, len = this.qAngle.length, qAngle = this.qAngle; i<len; i++) {
+                qAngle[i] *= pc.math.DEG_TO_RAD;
+            }
+
+            this.qAngleDiv = this.angleDivGraph.quantize(precision, this.smoothness);
+
             this.qScale = this.scaleGraph.quantize(precision, this.smoothness);
             this.qAlpha = this.alphaGraph.quantize(precision, this.smoothness);
             this.qScaleDiv = this.scaleDivGraph.quantize(precision, this.smoothness);
-            this.qAngleDiv = this.angleDivGraph.quantize(precision, this.smoothness);
+
+
             this.qAlphaDiv = this.alphaDivGraph.quantize(precision, this.smoothness);
 
             this.colorMult = 1;
-            for (var i = 0; i < this.qColor.length; i++) {
+            for (i = 0; i < this.qColor.length; i++) {
                 this.colorMult = Math.max(this.colorMult, this.qColor[i]);
             }
 
@@ -358,21 +370,21 @@ pc.extend(pc.scene, function() {
 
             // Dynamic simulation data
             this.lifeAndSourcePos = new Float32Array(this.numParticles * 4);
-            for (var i = 0; i < this.numParticles; i++) {
+            for (i = 0; i < this.numParticles; i++) {
                 this.lifeAndSourcePos[i * 4] = this.spawnBounds.x * (Math.random() * 2 - 1);
                 this.lifeAndSourcePos[i * 4 + 1] = this.spawnBounds.y * (Math.random() * 2 - 1);
                 this.lifeAndSourcePos[i * 4 + 2] = this.spawnBounds.z * (Math.random() * 2 - 1);
                 this.lifeAndSourcePos[i * 4 + 3] = -this.rate * i;
             }
             this.lifeAndSourcePosStart = new Float32Array(this.numParticles * 4);
-            for (var i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePosStart[i] = this.lifeAndSourcePos[i];
+            for (i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePosStart[i] = this.lifeAndSourcePos[i];
 
             if (this.mode === pc.scene.PARTICLES_MODE_CPU) {
                 this.vbToSort = new Array(this.numParticles);
                 this.vbOld = new Float32Array(this.numParticles * 4 * 4);
                 this.particleDistance = new Float32Array(this.numParticles);
                 this.particleNoize = new Float32Array(this.numParticles);
-                for (var i = 0; i < this.numParticles; i++) {
+                for (i = 0; i < this.numParticles; i++) {
                     this.particleNoize[i] = Math.random();
                 }
             }
@@ -414,27 +426,16 @@ pc.extend(pc.scene, function() {
             mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
             mesh.primitive[0].indexed = true;
 
-            var hasNormal = ((this.normalTexture != null) || (this.normalTextureAsset != null));
+            var hasNormal = (this.normalMap != null);
 
             var programLib = this.graphicsDevice.getProgramLibrary();
-            var normalOption = 0;
+            this.normalOption = 0;
             if (this.lighting) {
-                normalOption = hasNormal ? 2 : 1;
+                this.normalOption = hasNormal ? 2 : 1;
             }
-            var isMesh = this.mesh != null;
-            var shader = programLib.getProgram("particle2", {
-                mode: this.mode,
-                normal: normalOption,
-                halflambert: this.halfLambert,
-                stretch: this.stretch,
-                soft: this.depthSoftening,
-                mesh: isMesh,
-                srgb: this.gammaCorrect,
-                wrap: (this.wrapBounds != undefined)
-            });
-            this.material = new pc.scene.Material();
-            this.material.setShader(shader);
+            this.isMesh = this.mesh != null;
 
+            this.material = new pc.scene.Material();
             this.material.cullMode = pc.gfx.CULLFACE_NONE;
             this.material.blend = true;
 
@@ -443,19 +444,57 @@ pc.extend(pc.scene, function() {
             this.material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
 
             this.material.depthWrite = this.depthTest;
+            this.material.emitter = this;
 
+            // updateShader is also called by pc.scene.Scene when all shaders need to be updated
+            this.material.updateShader = function() {
+                var shader = programLib.getProgram("particle2", {
+                    mode: this.emitter.mode,
+                    normal: this.emitter.normalOption,
+                    halflambert: this.emitter.halfLambert,
+                    stretch: this.emitter.stretch,
+                    soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
+                    mesh: this.emitter.isMesh,
+                    srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
+                    wrap: this.emitter.wrap && this.emitter.wrapBounds
+                });
+                this.setShader(shader);
+            };
+
+            this.material.updateShader();
             this.resetMaterial();
 
-
-            this.meshInstance = new pc.scene.MeshInstance(null, mesh, this.material);
+            this.meshInstance = new pc.scene.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.layer = pc.scene.LAYER_SKYBOX; //LAYER_FX;
             this.meshInstance.updateKey(); // shouldn't be here?
 
-            this.addTime(0); // fill dynamic textures and constants with initial data
+            this._initializeTextures();
+
+            this.addTime(this._getStartTime()); // fill dynamic textures and constants with initial data
 
             this.resetTime();
         },
 
+        _initializeTextures: function () {
+            if (this.colorMap) {
+                this.material.setParameter('colorMap', this.colorMap);
+                if (this.lighting && this.normalMap) {
+                    this.material.setParameter('normalMap', this.normalMap);
+                }
+            }
+        },
+
+        _hasDepthTarget: function () {
+            if (this.camera) {
+                return !!this.camera.camera._depthTarget;
+            }
+
+            return false;
+        },
+
+        _getStartTime: function () {
+            return this.preWarm && !this.oneShot ? this.lifetime : 0;
+        },
 
         resetMaterial: function() {
             var material = this.material;
@@ -475,12 +514,21 @@ pc.extend(pc.scene, function() {
             material.setParameter('lifetime', this.lifetime);
             material.setParameter('graphSampleSize', 1.0 / this.precision);
             material.setParameter('graphNumSamples', this.precision);
-            if (this.wrapBounds) material.setParameter('wrapBounds', this.wrapBounds.data);
-            if (this.texture) material.setParameter('particleTexture', this.texture);
-            if (this.lighting) {
-                if (this.normalTexture) material.setParameter('normalTexture', this.normalTexture);
+
+            if (this.wrap && this.wrapBounds) {
+                material.setParameter('wrapBounds', this.wrapBounds.data);
             }
-            if (this.depthSoftening > 0) {
+
+            if (this.colorMap) {
+                material.setParameter('colorMap', this.colorMap);
+            }
+
+            if (this.lighting) {
+                if (this.normalMap) {
+                    material.setParameter('normalMap', this.normalMap);
+                }
+            }
+            if (this.depthSoftening > 0 && this._hasDepthTarget()) {
                 material.setParameter('uDepthMap', this.camera.camera._depthTarget.colorBuffer);
                 material.setParameter('screenSize', new pc.Vec4(gd.width, gd.height, 1.0 / gd.width, 1.0 / gd.height).data);
                 material.setParameter('softening', this.depthSoftening);
@@ -493,22 +541,24 @@ pc.extend(pc.scene, function() {
         _allocate: function(numParticles) {
             var psysVertCount = numParticles * this.numParticleVerts;
             var psysIndexCount = numParticles * this.numParticleIndices;
+            var elements, particleFormat;
+            var i;
 
             if ((this.vertexBuffer === undefined) || (this.vertexBuffer.getNumVertices() !== psysVertCount)) {
                 // Create the particle vertex format
                 if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
-                    var elements = [{
+                    elements = [{
                             semantic: pc.gfx.SEMANTIC_ATTR0,
                             components: 4,
                             type: pc.gfx.ELEMENTTYPE_FLOAT32
                         } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
                     ];
-                    var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
+                    particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
 
                     this.vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.gfx.BUFFER_DYNAMIC);
                     this.indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, psysIndexCount);
                 } else {
-                    var elements = [{
+                    elements = [{
                         semantic: pc.gfx.SEMANTIC_ATTR0,
                         components: 4,
                         type: pc.gfx.ELEMENTTYPE_FLOAT32
@@ -521,7 +571,7 @@ pc.extend(pc.scene, function() {
                         components: 4,
                         type: pc.gfx.ELEMENTTYPE_FLOAT32
                     }];
-                    var particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
+                    particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
 
                     this.vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.gfx.BUFFER_DYNAMIC);
                     this.indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, psysIndexCount);
@@ -536,9 +586,9 @@ pc.extend(pc.scene, function() {
                 }
 
                 var rnd;
-                for (var i = 0; i < psysVertCount; i++) {
+                for (i = 0; i < psysVertCount; i++) {
                     if (i % this.numParticleVerts === 0) rnd = Math.random();
-                    var id = Math.floor(i / this.numParticleVerts);
+                    id = Math.floor(i / this.numParticleVerts);
 
                     if (!this.mesh) {
                         var vertID = i % 4;
@@ -566,9 +616,9 @@ pc.extend(pc.scene, function() {
 
                 // Fill the index buffer
                 var dst = 0;
-                var indices = new Uint16Array(this.indexBuffer.lock());
+                indices = new Uint16Array(this.indexBuffer.lock());
                 if (this.mesh) meshData = new Uint16Array(this.mesh.indexBuffer[0].lock());
-                for (var i = 0; i < numParticles; i++) {
+                for (i = 0; i < numParticles; i++) {
                     if (!this.mesh) {
                         var baseIndex = i * 4;
                         indices[dst++] = baseIndex;
@@ -579,7 +629,7 @@ pc.extend(pc.scene, function() {
                         indices[dst++] = baseIndex + 3;
                     } else {
                         for (var j = 0; j < this.numParticleIndices; j++) {
-                            indices[i * this.numParticleIndices + j] = meshData[j] + i * this.numParticleVerts
+                            indices[i * this.numParticleIndices + j] = meshData[j] + i * this.numParticleVerts;
                         }
                     }
                 }
@@ -592,10 +642,12 @@ pc.extend(pc.scene, function() {
             if (this.mode === pc.scene.PARTICLES_MODE_CPU) {
                 for (var i = 0; i < this.lifeAndSourcePosStart.length; i++) this.lifeAndSourcePos[i] = this.lifeAndSourcePosStart[i];
             } else {
+                this._initializeTextures();
                 this.swapTex = false;
                 var oldTexIN = this.texLifeAndSourcePosIN;
                 this.texLifeAndSourcePosIN = this.texLifeAndSourcePosStart;
-                this.addTime(0);
+                var startTime = this.preWarm ? this.lifetime : 0;
+                this.addTime(this._getStartTime());
                 this.texLifeAndSourcePosIN = oldTexIN;
             }
             this.resetTime();
@@ -606,31 +658,15 @@ pc.extend(pc.scene, function() {
         },
 
         addTime: function(delta) {
+            var i, j;
+            var localOffset, posDivergence;
             var device = this.graphicsDevice;
+
             device.setBlending(false);
             device.setColorWrite(true, true, true, true);
             device.setCullMode(pc.gfx.CULLFACE_NONE);
             device.setDepthTest(false);
             device.setDepthWrite(false);
-
-            if ((!this.texture) && (this.textureAsset) && (this.psys)) {
-                this.texture = this.textureAsset.resource;
-                if (this.texture) {
-                    this.material.setParameter('particleTexture', this.texture);
-                    if ((!this.lighting) || (this.lighting && (this.normalTexture)) || (!this.normalTextureAsset)) this.scene.addModel(this.psys);
-                }
-            }
-
-            if (this.lighting) {
-                if ((!this.normalTexture) && (this.normalTextureAsset) && (this.psys)) {
-                    this.normalTexture = this.normalTextureAsset.resource;
-                    if (this.normalTexture) {
-                        this.material.setParameter('normalTexture', this.normalTexture);
-                        if (this.texture) this.scene.addModel(this.psys);
-                    }
-                }
-            }
-
 
             // Bake ambient and directional lighting into one ambient cube
             // TODO: only do if lighting changed
@@ -640,16 +676,16 @@ pc.extend(pc.scene, function() {
                     return;
                 }
 
-                for (var i = 0; i < 6; i++) {
+                for (i = 0; i < 6; i++) {
                     this.lightCube[i * 3] = this.scene.ambientLight.r;
                     this.lightCube[i * 3 + 1] = this.scene.ambientLight.g;
                     this.lightCube[i * 3 + 2] = this.scene.ambientLight.b;
                 }
 
                 var dirs = this.scene._globalLights;
-                for (var i = 0; i < dirs.length; i++) {
+                for (i = 0; i < dirs.length; i++) {
                     for (var c = 0; c < 6; c++) {
-                        var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0);
+                        var weight = Math.max(this.lightCubeDir[c].dot(dirs[i]._direction), 0) * dirs[i]._intensity;
                         this.lightCube[c * 3] += dirs[i]._color.r * weight;
                         this.lightCube[c * 3 + 1] += dirs[i]._color.g * weight;
                         this.lightCube[c * 3 + 2] += dirs[i]._color.b * weight;
@@ -681,11 +717,11 @@ pc.extend(pc.scene, function() {
             } else {
                 // Particle updater emulation
                 var emitterPos = this.meshInstance.node === null ? (new pc.Vec3(0, 0, 0)).data : this.meshInstance.node.getPosition().data;
-                for (var i = 0; i < this.numParticles; i++) {
+                for (i = 0; i < this.numParticles; i++) {
                     if (this.lifeAndSourcePos[i * 4 + 3] <= 0) {
-                        this.lifeAndSourcePos[i * 4] = emitterPos[0] + this.spawnBounds.x * this.particleNoize[i];
-                        this.lifeAndSourcePos[i * 4 + 1] = emitterPos[1] + this.spawnBounds.y * ((this.particleNoize[i] * 10) % 1);
-                        this.lifeAndSourcePos[i * 4 + 2] = emitterPos[2] + this.spawnBounds.z * ((this.particleNoize[i] * 100) % 1);
+                        this.lifeAndSourcePos[i * 4] = emitterPos[0] + this.spawnBounds.x * (this.particleNoize[i]-0.5);
+                        this.lifeAndSourcePos[i * 4 + 1] = emitterPos[1] + this.spawnBounds.y * (((this.particleNoize[i] * 10) % 1)-0.5);
+                        this.lifeAndSourcePos[i * 4 + 2] = emitterPos[2] + this.spawnBounds.z * (((this.particleNoize[i] * 100) % 1)-0.5);
                     }
                     var x = i * (this.lifeAndSourcePos[i * 4 + 3] + this.lifeAndSourcePos[i * 4 + 0] + this.lifeAndSourcePos[i * 4 + 1] + this.lifeAndSourcePos[i * 4 + 2] + 1.0) * 1000.0;
                     x = (x % 13.0) * (x % 123.0);
@@ -703,24 +739,21 @@ pc.extend(pc.scene, function() {
                 var data = new Float32Array(this.vertexBuffer.lock());
                 if (this.meshInstance.node) {
                     var fullMat = this.meshInstance.node.worldTransform;
-                    for (var j = 0; j < 12; j++) rotMat.data[j] = fullMat.data[j];
+                    for (j = 0; j < 12; j++) {
+                        rotMat.data[j] = fullMat.data[j];
+                    }
                 }
 
 
                 // Particle sorting
                 // TODO: optimize
-                var posCam;
-                posCam = this.camera.position.data;
-                if (this.sort > pc.scene.PARTICLES_SORT_NONE) {
-                    if (!this.camera) {
-                        console.error("There is no camera for particle sorting");
-                        return;
-                    }
+                var posCam = this.camera ? this.camera.position.data : pc.Vec3.ZERO;
 
-                    for (var i = 0; i < this.numParticles; i++) {
+                if (this.sort > pc.scene.PARTICLES_SORT_NONE && this.camera) {
+                    for (i = 0; i < this.numParticles; i++) {
                         this.vbToSort[i] = [i, Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]; // particle id
                     }
-                    for (var i = 0; i < this.numParticles * this.numParticleVerts * 4; i++) {
+                    for (i = 0; i < this.numParticles * this.numParticleVerts * 4; i++) {
                         this.vbOld[i] = this.vbCPU[i];
                     }
 
@@ -729,10 +762,10 @@ pc.extend(pc.scene, function() {
                         return particleDistance[a[1]] - particleDistance[b[1]];
                     });
 
-                    for (var i = 0; i < this.numParticles; i++) {
+                    for (i = 0; i < this.numParticles; i++) {
                         var start = this.vbToSort[i][0];
                         for (var corner = 0; corner < this.numParticleVerts; corner++) {
-                            for (var j = 0; j < 4; j++) {
+                            for (j = 0; j < 4; j++) {
                                 this.vbCPU[i * this.numParticleVerts * 4 + corner * 4 + j] = this.vbOld[start * this.numParticleVerts * 4 + corner * 4 + j];
                             }
                         }
@@ -741,7 +774,7 @@ pc.extend(pc.scene, function() {
 
 
                 // Particle VS emulation
-                for (var i = 0; i < this.numParticles; i++) {
+                for (i = 0; i < this.numParticles; i++) {
                     var particleEnabled = true;
                     var particlePosX = 0.0;
                     var particlePosY = 0.0;
@@ -780,8 +813,8 @@ pc.extend(pc.scene, function() {
 
 
                         localOffsetVec.data = tex1D(this.qLocalOffset, life, 3, localOffsetVec.data);
-                        var localOffset = localOffsetVec.data;
-                        var posDivergence = tex1D(this.qPosDiv, life, 3);
+                        localOffset = localOffsetVec.data;
+                        posDivergence = tex1D(this.qPosDiv, life, 3);
                         var scaleRnd = tex1D(this.qScaleDiv, life);
                         var angleRnd = tex1D(this.qAngleDiv, life);
                         alphaRnd = tex1D(this.qAlphaDiv, life);
@@ -806,7 +839,7 @@ pc.extend(pc.scene, function() {
                         worldOffset[1] = pc.math.lerp(worldOffset[1], divergentWorldOffsetY, posWorldDivergence[1]);
                         worldOffset[2] = pc.math.lerp(worldOffset[2], divergentWorldOffsetZ, posWorldDivergence[2]);
 
-                        angle = pc.math.lerp(angle, angle + 90 * rndFactor, angleRnd);
+                        angle = pc.math.lerp(angle, -angle, rndFactor * angleRnd);
                         scale = pc.math.lerp(scale, scale * rndFactor, scaleRnd);
 
                         if (this.meshInstance.node) {
@@ -817,7 +850,7 @@ pc.extend(pc.scene, function() {
                         particlePosY = sourcePosY + localOffset[1] + worldOffset[1];
                         particlePosZ = sourcePosZ + localOffset[2] + worldOffset[2];
 
-                        if (this.wrapBounds) {
+                        if (this.wrap && this.wrapBounds) {
                             origParticlePosX = particlePosX;
                             origParticlePosY = particlePosY;
                             origParticlePosZ = particlePosZ;
@@ -847,10 +880,10 @@ pc.extend(pc.scene, function() {
                         if (this.stretch > 0.0) {
                             life = Math.max(life - (1.0 / this.precision) * this.stretch, 0.0);
                             localOffsetVec.data = tex1D(this.qLocalOffset, life, 3, localOffsetVec.data);
-                            var localOffset = localOffsetVec.data;
-                            var posDivergence = tex1D(this.qPosDiv, life, 3);
+                            localOffset = localOffsetVec.data;
+                            posDivergence = tex1D(this.qPosDiv, life, 3);
 
-                            worldOffsetVec.data = tex1D(this.qWorldOffset, life, 3, worldOffsetVec.data, i == 0 ? 1 : 0);
+                            worldOffsetVec.data = tex1D(this.qWorldOffset, life, 3, worldOffsetVec.data, i === 0 ? 1 : 0);
                             worldOffset = worldOffsetVec.data;
                             posWorldDivergence = tex1D(this.qPosWorldDiv, life, 3);
 

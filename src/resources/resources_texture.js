@@ -55,7 +55,9 @@ pc.extend(pc.resources, function () {
     TextureResourceHandler.prototype.open = function (data, request, options) {
         var texture;
 
-        if (data instanceof Image) { // PNG, JPG or GIF
+        // Every browser seems to pass data as an Image type. For some reason, the XDK
+        // passes an HTMLImageElement. TODO: figure out why!
+        if ((data instanceof Image) || (data instanceof HTMLImageElement)) { // PNG, JPG or GIF
             var img = data;
             if (request.result) {
                 texture = request.result;

@@ -3,6 +3,63 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.6
+--------
+* Added global gammaCorrection option to pc.scene.Scene
+* Added gamma option to phong materials
+
+--------
+v0.158.5
+--------
+* [FIX] Multiple lights, 1 or more are shadow casting and 1 or more are not, could cause exception on render.
+
+--------
+v0.158.4
+--------
+* [FIX] Intel XDK now loads textures properly.
+
+--------
+v0.158.3
+--------
+* [FIX] Ambient lighting is now respected when there are no lights enabled.
+
+--------
+v0.158.2
+--------
+* [FIX] Errors when there are no lights in the scene.
+
+--------
+v0.158.1
+--------
+* [FIX] Non-fresnel reflections.
+
+--------
+v0.158.0
+--------
+* New shader system. Supports far more lights, fresnel, parallax mapping and better specular reflectance.
+
+--------
+v0.157.4
+--------
+* [FIX] pc.math.Quat#slerp now works for opposite quaternions.
+
+--------
+v0.157.3
+--------
+* [FIX] Replace canvas.style.width with canvas.style.clientWidth.
+
+--------
+v0.157.2
+--------
+* [FIX] Mouse tests.
+
+--------
+v0.157.0
+--------
+* [FIX] Fullscreen in Chrome - ignored keyboard input.
+* [FIX] Mouse now attach events on window but data is related to target.
+
+--------
 v0.156.2
 --------
 * [FIX] A mesh instance's bounding box is now guaranteed to be correct when it is queried.
