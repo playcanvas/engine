@@ -181,7 +181,7 @@ pc.gfx.programlib.phong = {
             code += chunks.normalMapPS.replace(/\$UV/g, this._uvSource("normal")+uvOffset);
             code += chunks.TBNPS;
         } else {
-            code += chunks.normalVertexPS
+            code += chunks.normalVertexPS;
         }
 
         code += chunks.defaultGamma;

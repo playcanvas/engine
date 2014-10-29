@@ -101,12 +101,6 @@ pc.extend(pc.fw, function() {
                     step: 0.1
                 }
             }, {
-                name: "gammaCorrect",
-                displayName: "Enabled gamma correction",
-                description: "",
-                type: "boolean",
-                defaultValue: true,
-            }, {
                 name: "depthTest",
                 displayName: "Depth Test",
                 description: "Enables hardware depth testing; don't use it for semi-transparent particles",
@@ -451,48 +445,22 @@ pc.extend(pc.fw, function() {
 
         cloneComponent: function (entity, clone) {
             var source = entity.particlesystem.data;
+            var schema = this.schema;
 
-            var component = this.addComponent(clone, {
-                numParticles: source.numParticles,
-                rate: source.rate,
-                lifetime: source.lifetime,
-                spawnBounds: source.spawnBounds ? source.spawnBounds.clone() : null,
-                wrapBounds: source.wrapBounds ? source.wrapBounds.clone() : null,
-                wind: source.wind ? source.wind.clone() : null,
-                smoothness: source.smoothness,
-                colorMap: source.colorMap,
-                colorMapAsset: source.colorMapAsset,
-                normalMap: source.normalMap,
-                normalMapAsset: source.normalMapAsset,
-                oneShot: source.oneShot,
-                speedDiv: source.speedDiv,
-                constantSpeedDiv: source.constantSpeedDiv,
-                sort: source.sort,
-                mode: source.mode,
-                camera: source.camera,
-                scene: source.scene,
-                lighting: source.lighting,
-                halfLambert: source.halfLambert,
-                intensity: source.intensity,
-                maxEmissionTime: source.maxEmissionTime,
-                stretch: source.stretch,
-                depthSoftening: source.depthSoftening,
-                mesh: source.mesh,
-                depthTest: source.depthTest,
-                gammaCorrect: source.gammaCorrect,
-                localOffsetGraph: source.localOffsetGraph ? source.localOffsetGraph.clone() : null,
-                offsetGraph: source.offsetGraph ? source.offsetGraph.clone() : null,
-                angleGraph: source.angleGraph ? source.angleGraph.clone() : null,
-                scaleGraph: source.scaleGraph ? source.scaleGraph.clone() : null,
-                colorGraph: source.colorGraph ? source.colorGraph.clone() : null,
-                alphaGraph: source.alphaGraph ? source.alphaGraph.clone() : null,
-                localPosDivGraph: source.localPosDivGraph ? source.localPosDivGraph.clone() : null,
-                posDivGraph: source.posDivGraph ? source.posDivGraph.clone() : null,
-                scaleDivGraph: source.scaleDivGraph ? source.scaleDivGraph.clone() : null,
-                angleDivGraph: source.angleDivGraph ? source.angleDivGraph.clone() : null,
-                alphaDivGraph: source.alphaDivGraph ? source.alphaDivGraph.clone() : null,
-                enabled: source.enabled
-            });
+            var data = {};
+
+            for (var i = 0, len = schema.length; i < len; i++) {
+                var prop = schema[i];
+                var sourceProp = source[prop.name];
+                if (sourceProp instanceof pc.Vec3 ||
+                    sourceProp instanceof pc.Curve ||
+                    sourceProp instanceof pc.CurveSet) {
+
+                    sourceProp = sourceProp.clone();
+                    data[prop.name] = sourceProp;
+                }
+            }
+            return this.addComponent(clone, data);
         },
 
         onUpdate: function(dt) {
