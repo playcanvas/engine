@@ -20,11 +20,11 @@ pc.debug = (function () {
                 row = document.createElement('tr');
                 title = document.createElement('td');
                 field = document.createElement('td');
-        
-                table.style.cssText = 'position:absolute;font-family:sans-serif;font-size:12px';
+
+                table.style.cssText = 'position:absolute;font-family:sans-serif;font-size:12px;color:#cccccc';
                 table.style.top = '0px';
                 table.style.left = '0px';
-                table.style.border = 'thin solid black';
+                table.style.border = 'thin solid #cccccc';
 
                 document.body.appendChild(table);
             }
@@ -44,7 +44,7 @@ pc.debug = (function () {
 
                 r.appendChild(t);
                 r.appendChild(f);
-                table.appendChild(r);  
+                table.appendChild(r);
             }
         }
     };
