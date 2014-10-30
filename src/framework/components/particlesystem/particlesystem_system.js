@@ -235,6 +235,32 @@ pc.extend(pc.fw, function() {
                     curveNames: ['X', 'Y', 'Z']
                 }
             }, {
+                name: 'localVelocityGraph',
+                displayName: "Local Velocity",
+                description: "A graph that defines the local velocity of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
+            }, {
+                name: 'rotationSpeedGraph',
+                displayName: "Rotation Speed",
+                description: "A graph that defines how fast particle rotates over time.",
+                type: "curve",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [0, 0, 1, 0]
+                },
+                options: {
+                    curveNames: ['Angle'],
+                    max: 360,
+                    verticalAxisValue: 360
+                }
+            }, {
                 name: 'localPosDivGraph',
                 displayName: "Local Position Divergence",
                 description: "A graph that defines the local position divergence of particles over time.",
@@ -252,6 +278,18 @@ pc.extend(pc.fw, function() {
                 name: 'offsetGraph',
                 displayName: "Position",
                 description: "A graph that defines the world position of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
+            }, {
+                name: 'velocityGraph',
+                displayName: "Velocity",
+                description: "A graph that defines the world velocity of particles over time.",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
