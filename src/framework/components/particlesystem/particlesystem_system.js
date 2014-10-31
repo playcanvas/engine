@@ -251,7 +251,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
@@ -263,7 +263,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
@@ -275,7 +275,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
@@ -288,7 +288,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
@@ -300,7 +300,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z'],
@@ -314,7 +314,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z'],
@@ -328,7 +328,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Angle']
@@ -341,7 +341,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Angle'],
@@ -354,7 +354,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Angle'],
@@ -368,7 +368,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1, 1, 1]
+                    keys: [0, 1]
                 },
                 options: {
                     curveNames: ['Scale'],
@@ -381,7 +381,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Scale'],
@@ -396,7 +396,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
+                    keys: [[0, 1], [0, 1], [0, 1]],
                 },
                 options: {
                     curveNames: ['R', 'G', 'B'],
@@ -410,7 +410,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1, 1, 1],
+                    keys: [0, 1],
                 },
                 options: {
                     curveNames: ['Opacity'],
@@ -424,7 +424,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Opacity'],
