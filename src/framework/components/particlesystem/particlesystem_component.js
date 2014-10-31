@@ -53,6 +53,7 @@ pc.extend(pc.fw, function() {
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
         this.on("set_oneShot", this.onSetOneShot, this);
+        this.on("set_blendType", this.onSetBlendType, this);
 
         SIMPLE_PROPERTIES.forEach(function (prop) {
             this.on('set_' + prop, this.onSetSimpleProperty, this);
@@ -157,6 +158,13 @@ pc.extend(pc.fw, function() {
             }
         },
 
+        onSetBlendType: function (name, oldValue, newValue) {
+            if (this.emitter) {
+                this.emitter[name] = newValue;
+                this.emitter.material.blendType = newValue;
+            }
+        },
+
         onSetSimpleProperty: function (name, oldValue, newValue) {
             if (this.emitter) {
                 this.emitter[name] = newValue;
@@ -231,7 +239,8 @@ pc.extend(pc.fw, function() {
 
                     localVelocityGraph: this.data.localVelocityGraph,
                     velocityGraph: this.data.velocityGraph,
-                    rotationSpeedGraph: this.data.rotationSpeedGraph
+                    rotationSpeedGraph: this.data.rotationSpeedGraph,
+                    blendType: this.data.blendType
                 });
 
                 this.emitter.meshInstance.node = this.entity;

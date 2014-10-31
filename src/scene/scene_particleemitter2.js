@@ -244,6 +244,7 @@ pc.extend(pc.scene, function() {
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
         setProperty("depthTest", false);
+        setProperty("blendType", pc.scene.BLEND_PREMULTIPLIED);
         setProperty("node", null);
         this.mode = (this.mode === "CPU" ? pc.scene.PARTICLES_MODE_CPU : pc.scene.PARTICLES_MODE_GPU);
 
@@ -447,8 +448,9 @@ pc.extend(pc.scene, function() {
             this.material.blend = true;
 
             // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
-            this.material.blendSrc = pc.gfx.BLENDMODE_ONE;
-            this.material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+            //this.material.blendSrc = pc.gfx.BLENDMODE_ONE;
+            //this.material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+            this.material.blendType = this.blendType;
 
             this.material.depthWrite = this.depthTest;
             this.material.emitter = this;
