@@ -245,6 +245,7 @@ pc.extend(pc.fw, function() {
                 }
             }, {
                 name: 'localOffsetGraph',
+                exposed: false,
                 displayName: "Local Position",
                 description: "A graph that defines the local position of particles over time.",
                 type: "curveset",
@@ -268,18 +269,29 @@ pc.extend(pc.fw, function() {
                     curveNames: ['X', 'Y', 'Z']
                 }
             }, {
-                name: 'rotationSpeedGraph',
-                displayName: "Rotation Speed",
-                description: "A graph that defines how fast particle rotates over time.",
-                type: "curve",
+                name: 'velocityGraph',
+                displayName: "Velocity",
+                description: "A graph that defines the world velocity of particles over time.",
+                type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
                 },
                 options: {
-                    curveNames: ['Angle'],
-                    max: 360,
-                    verticalAxisValue: 360
+                    curveNames: ['X', 'Y', 'Z']
+                }
+            }, {
+                name: 'offsetGraph',
+                exposed: false,
+                displayName: "Position",
+                description: "A graph that defines the world position of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                },
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
                 }
             }, {
                 name: 'localPosDivGraph',
@@ -296,30 +308,6 @@ pc.extend(pc.fw, function() {
                     max: 1
                 }
             }, {
-                name: 'offsetGraph',
-                displayName: "Position",
-                description: "A graph that defines the world position of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z']
-                }
-            }, {
-                name: 'velocityGraph',
-                displayName: "Velocity",
-                description: "A graph that defines the world velocity of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z']
-                }
-            }, {
                 name: 'posDivGraph',
                 displayName: "Position Divergence",
                 description: "A graph that defines the world position of particles over time.",
@@ -334,7 +322,20 @@ pc.extend(pc.fw, function() {
                     max: 1
                 }
             }, {
+                name: 'rotationSpeedGraph',
+                displayName: "Rotation Speed",
+                description: "A graph that defines how fast particle rotates over time.",
+                type: "curve",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [0, 0, 1, 0]
+                },
+                options: {
+                    curveNames: ['Angle']
+                }
+            }, {
                 name: 'angleGraph',
+                exposed: false,
                 displayName: "Angle",
                 description: "A graph that defines the rotation of particles over time.",
                 type: "curve",
@@ -344,7 +345,6 @@ pc.extend(pc.fw, function() {
                 },
                 options: {
                     curveNames: ['Angle'],
-                    max: 360,
                     verticalAxisValue: 360
                 }
             }, {

@@ -42,7 +42,6 @@ pc.extend(pc.fw, function() {
         'scaleDivGraph',
         'angleDivGraph',
         'alphaDivGraph',
-
         'velocityGraph',
         'localVelocityGraph',
         'rotationSpeedGraph'
@@ -236,7 +235,6 @@ pc.extend(pc.fw, function() {
                     depthTest: this.data.depthTest,
                     smoothness: this.data.smoothness,
                     node: this.entity,
-
                     localVelocityGraph: this.data.localVelocityGraph,
                     velocityGraph: this.data.velocityGraph,
                     rotationSpeedGraph: this.data.rotationSpeedGraph,
