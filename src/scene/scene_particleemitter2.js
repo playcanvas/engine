@@ -271,10 +271,6 @@ pc.extend(pc.scene, function() {
         setProperty("velocityGraph", null);
         setProperty("rotationSpeedGraph", null);
 
-        if (this.localVelocityGraph) this.localOffsetGraph =    velocity2Position(this, this.localVelocityGraph);
-        if (this.velocityGraph) this.offsetGraph =              velocity2Position(this, this.velocityGraph);
-        if (this.rotationSpeedGraph) this.angleGraph =          speed2Parameter(this, this.rotationSpeedGraph);
-
         // Particle updater constants
         this.constantTexLifeAndSourcePosIN = gd.scope.resolve("texLifeAndSourcePosIN");
         this.constantTexLifeAndSourcePosOUT = gd.scope.resolve("texLifeAndSourcePosOUT");
@@ -487,6 +483,10 @@ pc.extend(pc.scene, function() {
         rebuildGraphs: function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
+
+            if (this.localVelocityGraph) this.localOffsetGraph =    velocity2Position(this, this.localVelocityGraph);
+            if (this.velocityGraph) this.offsetGraph =              velocity2Position(this, this.velocityGraph);
+            if (this.rotationSpeedGraph) this.angleGraph =          speed2Parameter(this, this.rotationSpeedGraph);
 
             this.qLocalOffset = this.localOffsetGraph.quantize(precision, this.smoothness);
             this.qWorldOffset = this.offsetGraph.quantize(precision, this.smoothness);
