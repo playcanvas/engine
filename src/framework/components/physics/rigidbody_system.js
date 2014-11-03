@@ -416,8 +416,7 @@ pc.extend(pc.fw, function () {
 
             this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
             if (rayCallback.hasHit()) {
-                var collisionObjPtr = rayCallback.get_m_collisionObject();
-                var collisionObj = Ammo.wrapPointer(collisionObjPtr, Ammo.btCollisionObject);
+                var collisionObj = rayCallback.get_m_collisionObject();
                 var body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
                 var point = rayCallback.get_m_hitPointWorld();
                 var normal = rayCallback.get_m_hitNormalWorld();
