@@ -193,7 +193,8 @@ pc.extend(pc.scene, function () {
         var colorBuffer = new pc.gfx.Texture(this.device, {
             format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
             width: width,
-            height: height
+            height: height,
+            autoMipmap: false
         });
         colorBuffer.minFilter = pc.gfx.FILTER_NEAREST;
         colorBuffer.magFilter = pc.gfx.FILTER_NEAREST;
