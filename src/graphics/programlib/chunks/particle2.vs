@@ -12,6 +12,7 @@ uniform float graphSampleSize;
 uniform float graphNumSamples;
 uniform float stretch;
 uniform vec3 wrapBounds;
+uniform vec3 emitterScale;
 uniform sampler2D texLifeAndSourcePosOUT;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
@@ -89,7 +90,7 @@ void main(void)
 
     vec4 lifeAndSourcePos = texture2D(texLifeAndSourcePosOUT, vec2(id/numParticles, 0.0));
     vec3 sourcePos = lifeAndSourcePos.xyz;
-    float life = max(lifeAndSourcePos.w, 0.0) / lifetime;
+    float life = clamp(lifeAndSourcePos.w / lifetime, 0.0, 1.0);
 
     if (lifeAndSourcePos.w < 0.0) quadXY = vec2(0,0);
 
@@ -118,7 +119,7 @@ void main(void)
 
     TexCoordsAlphaLife = vec4(quadXY*0.5+0.5,    alphaRnd * (fract(rndFactor*1000.0) * 2.0 - 1.0),    life);
 
-    vec3 particlePos = sourcePos + matrix_normal * localOffset.xyz   +   worldOffset.xyz;
+    vec3 particlePos = sourcePos + mat3(matrix_model) * localOffset.xyz + worldOffset.xyz * emitterScale;
     vec3 particlePosMoved = vec3(0.0);
 
     mat2 rotMatrix;

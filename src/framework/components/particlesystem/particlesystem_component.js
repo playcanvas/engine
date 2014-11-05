@@ -6,7 +6,8 @@ pc.extend(pc.fw, function() {
         'speedDiv',
         'constantSpeedDiv',
         'colorMap',
-        'normalMap'
+        'normalMap',
+        'oneShot'
     ];
 
     // properties that need rebuilding the particle system
@@ -24,9 +25,12 @@ pc.extend(pc.fw, function() {
         'depthSoftening',
         'sort',
         'stretch',
-        'oneShot',
         'preWarm',
         'maxEmissionTime',
+        'camera'
+    ];
+
+    var GRAPH_PROPERTIES = [
         'localOffsetGraph',
         'offsetGraph',
         'angleGraph',
@@ -38,7 +42,9 @@ pc.extend(pc.fw, function() {
         'scaleDivGraph',
         'angleDivGraph',
         'alphaDivGraph',
-        'camera'
+        'velocityGraph',
+        'localVelocityGraph',
+        'rotationSpeedGraph'
     ];
 
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
@@ -46,6 +52,7 @@ pc.extend(pc.fw, function() {
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
         this.on("set_oneShot", this.onSetOneShot, this);
+        this.on("set_blendType", this.onSetBlendType, this);
 
         SIMPLE_PROPERTIES.forEach(function (prop) {
             this.on('set_' + prop, this.onSetSimpleProperty, this);
@@ -53,6 +60,10 @@ pc.extend(pc.fw, function() {
 
         COMPLEX_PROPERTIES.forEach(function (prop) {
             this.on('set_' + prop, this.onSetComplexProperty, this);
+        }.bind(this));
+
+        GRAPH_PROPERTIES.forEach(function (prop) {
+            this.on('set_' + prop, this.onSetGraphProperty, this);
         }.bind(this));
     };
 
@@ -146,6 +157,13 @@ pc.extend(pc.fw, function() {
             }
         },
 
+        onSetBlendType: function (name, oldValue, newValue) {
+            if (this.emitter) {
+                this.emitter[name] = newValue;
+                this.emitter.material.blendType = newValue;
+            }
+        },
+
         onSetSimpleProperty: function (name, oldValue, newValue) {
             if (this.emitter) {
                 this.emitter[name] = newValue;
@@ -158,6 +176,14 @@ pc.extend(pc.fw, function() {
                 this.emitter[name] = newValue;
                 this.emitter.resetMaterial();
                 this.rebuild();
+            }
+        },
+
+        onSetGraphProperty: function (name, oldValue, newValue) {
+            if (this.emitter) {
+                this.emitter[name] = newValue;
+                this.emitter.rebuildGraphs();
+                this.emitter.resetMaterial();
             }
         },
 
@@ -208,7 +234,11 @@ pc.extend(pc.fw, function() {
                     mesh: this.data.mesh,
                     depthTest: this.data.depthTest,
                     smoothness: this.data.smoothness,
-                    node: this.entity
+                    node: this.entity,
+                    localVelocityGraph: this.data.localVelocityGraph,
+                    velocityGraph: this.data.velocityGraph,
+                    rotationSpeedGraph: this.data.rotationSpeedGraph,
+                    blendType: this.data.blendType
                 });
 
                 this.emitter.meshInstance.node = this.entity;

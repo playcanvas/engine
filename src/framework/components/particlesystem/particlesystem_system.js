@@ -139,6 +139,27 @@ pc.extend(pc.fw, function() {
                 },
                 defaultValue: 0,
             }, {
+                name: "blendType",
+                displayName: "Blending Mode",
+                description: "How to blend particles",
+                type: "enumeration",
+                options: {
+                    enumerations: [{
+                        name: 'Premultiplied Alpha',
+                        value: pc.scene.BLEND_PREMULTIPLIED
+                    }, {
+                        name: 'Alpha',
+                        value: pc.scene.BLEND_NORMAL
+                    }, {
+                        name: 'Add',
+                        value: pc.scene.BLEND_ADDITIVE
+                    }, {
+                        name: 'Multiply',
+                        value: pc.scene.BLEND_MULTIPLICATIVE
+                    }]
+                },
+                defaultValue: pc.scene.BLEND_PREMULTIPLIED,
+            }, {
                 name: "stretch",
                 displayName: "Stretch",
                 description: "Stretch particles in the direction of motion",
@@ -224,12 +245,50 @@ pc.extend(pc.fw, function() {
                 }
             }, {
                 name: 'localOffsetGraph',
+                exposed: false,
                 displayName: "Local Position",
                 description: "A graph that defines the local position of particles over time.",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
+                },
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
+            }, {
+                name: 'localVelocityGraph',
+                displayName: "Local Velocity",
+                description: "A graph that defines the local velocity of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 0], [0, 0], [0, 0]]
+                },
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
+            }, {
+                name: 'velocityGraph',
+                displayName: "Velocity",
+                description: "A graph that defines the world velocity of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 0], [0, 0], [0, 0]]
+                },
+                options: {
+                    curveNames: ['X', 'Y', 'Z']
+                }
+            }, {
+                name: 'offsetGraph',
+                exposed: false,
+                displayName: "Position",
+                description: "A graph that defines the world position of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
@@ -241,24 +300,12 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z'],
                     min: 0,
                     max: 1
-                }
-            }, {
-                name: 'offsetGraph',
-                displayName: "Position",
-                description: "A graph that defines the world position of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z']
                 }
             }, {
                 name: 'posDivGraph',
@@ -267,7 +314,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0, 1, 0], [0, 0, 1, 0], [0, 0, 1, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z'],
@@ -275,17 +322,29 @@ pc.extend(pc.fw, function() {
                     max: 1
                 }
             }, {
+                name: 'rotationSpeedGraph',
+                displayName: "Rotation Speed",
+                description: "A graph that defines how fast particle rotates over time.",
+                type: "curve",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [0, 0]
+                },
+                options: {
+                    curveNames: ['Angle']
+                }
+            }, {
                 name: 'angleGraph',
+                exposed: false,
                 displayName: "Angle",
                 description: "A graph that defines the rotation of particles over time.",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Angle'],
-                    max: 360,
                     verticalAxisValue: 360
                 }
             }, {
@@ -295,7 +354,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Angle'],
@@ -309,7 +368,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1, 1, 1]
+                    keys: [0, 1]
                 },
                 options: {
                     curveNames: ['Scale'],
@@ -322,7 +381,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Scale'],
@@ -337,7 +396,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
+                    keys: [[0, 1], [0, 1], [0, 1]],
                 },
                 options: {
                     curveNames: ['R', 'G', 'B'],
@@ -351,7 +410,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1, 1, 1],
+                    keys: [0, 1],
                 },
                 options: {
                     curveNames: ['Opacity'],
@@ -365,7 +424,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0, 1, 0]
+                    keys: [0, 0]
                 },
                 options: {
                     curveNames: ['Opacity'],

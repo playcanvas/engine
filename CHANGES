@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.7
+--------
+* Fix needed for new ammo.js
+* Added velocity graphs and different blend types to particlesystem component
+
+--------
 v0.158.6
 --------
 * Added global gammaCorrection option to pc.scene.Scene

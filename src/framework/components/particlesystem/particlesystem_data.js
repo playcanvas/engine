@@ -43,6 +43,11 @@ pc.extend(pc.fw, function() {
         this.angleDivGraph = null;
         this.alphaDivGraph = null;
 
+        this.localVelocityGraph = null;
+        this.velocityGraph = null;
+        this.rotationSpeedGraph = null;
+        this.blendType = pc.scene.BLEND_PREMULTIPLIED;
+
         this.model = null;
 
         this.enabled = true;

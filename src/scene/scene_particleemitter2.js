@@ -80,6 +80,12 @@ pc.extend(pc.scene, function() {
     var localOffsetVec = new pc.Vec3();
     var worldOffsetVec = new pc.Vec3();
     var rotMat = new pc.Mat4();
+    var uniformScale = 1;
+    var nonUniformScale;
+    var spawnMatrix = new pc.Mat4();
+    var randomPos = new pc.Vec3();
+    var randomPosTformed = new pc.Vec3();
+    var tmpVec3 = new pc.Vec3();
 
     var setPropertyTarget;
     var setPropertyOptions;
@@ -169,6 +175,38 @@ pc.extend(pc.scene, function() {
         });
     }
 
+    function velocity2Position(ps, velGraph) {
+        var i, c, t;
+        var sampleTimeLength = ps.lifetime / ps.precision;
+        var temp = velGraph.quantize(ps.precision, 0);
+        var posGraph = new pc.CurveSet(3);
+        var pos = [0, 0, 0];
+        posGraph._type = posGraph.curves[0].type = posGraph.curves[1].type = posGraph.curves[2].type = pc.CURVE_LINEAR;
+        for(i=0; i<ps.precision; i++) {
+            for(c=0; c<3; c++) {
+                t = i == ps.precision-1? 1.0 : i/ps.precision;
+                pos[c] += temp[i * 3 + c] * sampleTimeLength;
+                posGraph.curves[c].add(i/ps.precision, pos[c]);
+            }
+        }
+        return posGraph;
+    }
+
+    function speed2Parameter(ps, velGraph) {
+        var i, c, t;
+        var sampleTimeLength = ps.lifetime / ps.precision;
+        var temp = velGraph.quantize(ps.precision, 0);
+        var posGraph = new pc.Curve();
+        var pos = 0;
+        posGraph.type = pc.CURVE_LINEAR;
+        for(i=0; i<ps.precision; i++) {
+            t = i == ps.precision-1? 1.0 : i/ps.precision;
+            pos += temp[i] * sampleTimeLength;
+            posGraph.add(i/ps.precision, pos);
+        }
+        return posGraph;
+    }
+
 
     var ParticleEmitter2 = function (graphicsDevice, options) {
         this.graphicsDevice = graphicsDevice;
@@ -206,8 +244,8 @@ pc.extend(pc.scene, function() {
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
         setProperty("depthTest", false);
+        setProperty("blendType", pc.scene.BLEND_PREMULTIPLIED);
         setProperty("node", null);
-
         this.mode = (this.mode === "CPU" ? pc.scene.PARTICLES_MODE_CPU : pc.scene.PARTICLES_MODE_GPU);
 
         if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) {
@@ -229,10 +267,15 @@ pc.extend(pc.scene, function() {
         setProperty("angleDivGraph", default0Curve);
         setProperty("alphaDivGraph", default0Curve);
 
+        setProperty("localVelocityGraph", null);
+        setProperty("velocityGraph", null);
+        setProperty("rotationSpeedGraph", null);
+
         // Particle updater constants
         this.constantTexLifeAndSourcePosIN = gd.scope.resolve("texLifeAndSourcePosIN");
         this.constantTexLifeAndSourcePosOUT = gd.scope.resolve("texLifeAndSourcePosOUT");
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
+        this.constantEmitterScale = gd.scope.resolve("emitterScale");
         this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
@@ -327,53 +370,14 @@ pc.extend(pc.scene, function() {
                 this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
             }
 
-            this.qLocalOffset = this.localOffsetGraph.quantize(precision, this.smoothness);
-            this.qWorldOffset = this.offsetGraph.quantize(precision, this.smoothness);
-            this.qColor = this.colorGraph.quantize(precision, this.smoothness);
-
-            // multiply color values with intensity
-            for (i=0, len = this.qColor.length, qColor = this.qColor; i<len; i++) {
-                qColor[i] *= this.intensity;
-            }
-
-            this.qPosDiv = this.localPosDivGraph.quantize(precision, this.smoothness);
-            this.qPosWorldDiv = this.posDivGraph.quantize(precision, this.smoothness);
-
-            this.qAngle = this.angleGraph.quantize(precision, this.smoothness);
-
-            // convert to radians
-            for (i=0, len = this.qAngle.length, qAngle = this.qAngle; i<len; i++) {
-                qAngle[i] *= pc.math.DEG_TO_RAD;
-            }
-
-            this.qAngleDiv = this.angleDivGraph.quantize(precision, this.smoothness);
-
-            this.qScale = this.scaleGraph.quantize(precision, this.smoothness);
-            this.qAlpha = this.alphaGraph.quantize(precision, this.smoothness);
-            this.qScaleDiv = this.scaleDivGraph.quantize(precision, this.smoothness);
-
-
-            this.qAlphaDiv = this.alphaDivGraph.quantize(precision, this.smoothness);
-
-            this.colorMult = 1;
-            for (i = 0; i < this.qColor.length; i++) {
-                this.colorMult = Math.max(this.colorMult, this.qColor[i]);
-            }
-
-            if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
-                this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_N3(this.qLocalOffset, this.qScaleDiv, this.qAngleDiv, this.qAlphaDiv));
-                this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_N3_Array(this.qWorldOffset, this.qPosDiv));
-                this.internalTex2 = _createTexture(gd, precision, 1, packTexture2_N3_Array(this.qAngle, this.qScale, this.qPosWorldDiv));
-            }
-            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), true, 1.0 / this.colorMult);
-
+            this.rebuildGraphs();
 
             // Dynamic simulation data
             this.lifeAndSourcePos = new Float32Array(this.numParticles * 4);
             for (i = 0; i < this.numParticles; i++) {
-                this.lifeAndSourcePos[i * 4] = this.spawnBounds.x * (Math.random() * 2 - 1);
-                this.lifeAndSourcePos[i * 4 + 1] = this.spawnBounds.y * (Math.random() * 2 - 1);
-                this.lifeAndSourcePos[i * 4 + 2] = this.spawnBounds.z * (Math.random() * 2 - 1);
+                this.lifeAndSourcePos[i * 4] = this.spawnBounds.x * (Math.random() - 0.5);
+                this.lifeAndSourcePos[i * 4 + 1] = this.spawnBounds.y * (Math.random() - 0.5);
+                this.lifeAndSourcePos[i * 4 + 2] = this.spawnBounds.z * (Math.random() - 0.5);
                 this.lifeAndSourcePos[i * 4 + 3] = -this.rate * i;
             }
             this.lifeAndSourcePosStart = new Float32Array(this.numParticles * 4);
@@ -440,8 +444,9 @@ pc.extend(pc.scene, function() {
             this.material.blend = true;
 
             // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
-            this.material.blendSrc = pc.gfx.BLENDMODE_ONE;
-            this.material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+            //this.material.blendSrc = pc.gfx.BLENDMODE_ONE;
+            //this.material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+            this.material.blendType = this.blendType;
 
             this.material.depthWrite = this.depthTest;
             this.material.emitter = this;
@@ -473,6 +478,55 @@ pc.extend(pc.scene, function() {
             this.addTime(this._getStartTime()); // fill dynamic textures and constants with initial data
 
             this.resetTime();
+        },
+
+        rebuildGraphs: function() {
+            var precision = this.precision;
+            var gd = this.graphicsDevice;
+
+            if (this.localVelocityGraph) this.localOffsetGraph =    velocity2Position(this, this.localVelocityGraph);
+            if (this.velocityGraph) this.offsetGraph =              velocity2Position(this, this.velocityGraph);
+            if (this.rotationSpeedGraph) this.angleGraph =          speed2Parameter(this, this.rotationSpeedGraph);
+
+            this.qLocalOffset = this.localOffsetGraph.quantize(precision, this.smoothness);
+            this.qWorldOffset = this.offsetGraph.quantize(precision, this.smoothness);
+            this.qColor = this.colorGraph.quantize(precision, this.smoothness);
+
+            // multiply color values with intensity
+            for (i=0, len = this.qColor.length, qColor = this.qColor; i<len; i++) {
+                qColor[i] *= this.intensity;
+            }
+
+            this.qPosDiv = this.localPosDivGraph.quantize(precision, this.smoothness);
+            this.qPosWorldDiv = this.posDivGraph.quantize(precision, this.smoothness);
+
+            this.qAngle = this.angleGraph.quantize(precision, this.smoothness);
+
+            // convert to radians
+            for (i=0, len = this.qAngle.length, qAngle = this.qAngle; i<len; i++) {
+                qAngle[i] *= pc.math.DEG_TO_RAD;
+            }
+
+            this.qAngleDiv = this.angleDivGraph.quantize(precision, this.smoothness);
+
+            this.qScale = this.scaleGraph.quantize(precision, this.smoothness);
+            this.qAlpha = this.alphaGraph.quantize(precision, this.smoothness);
+            this.qScaleDiv = this.scaleDivGraph.quantize(precision, this.smoothness);
+
+
+            this.qAlphaDiv = this.alphaDivGraph.quantize(precision, this.smoothness);
+
+            this.colorMult = 1;
+            for (i = 0; i < this.qColor.length; i++) {
+                this.colorMult = Math.max(this.colorMult, this.qColor[i]);
+            }
+
+            if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
+                this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_N3(this.qLocalOffset, this.qScaleDiv, this.qAngleDiv, this.qAlphaDiv));
+                this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_N3_Array(this.qWorldOffset, this.qPosDiv));
+                this.internalTex2 = _createTexture(gd, precision, 1, packTexture2_N3_Array(this.qAngle, this.qScale, this.qPosWorldDiv));
+            }
+            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), true, 1.0 / this.colorMult);
         },
 
         _initializeTextures: function () {
@@ -694,20 +748,26 @@ pc.extend(pc.scene, function() {
                 this.constantLightCube.setValue(this.lightCube);
             }
 
+            if (this.meshInstance.node === null){
+                spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
+            } else {
+                spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.meshInstance.node.getLocalScale()));
+            }
+
             if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
                 this.frameRandom.x = Math.random();
                 this.frameRandom.y = Math.random();
                 this.frameRandom.z = Math.random();
 
-                //return;
-                this.constantEmitterPos.setValue(this.meshInstance.node === null ? (new pc.Vec3(0, 0, 0)).data : this.meshInstance.node.getPosition().data);
-                this.constantSpawnBounds.setValue(this.spawnBounds.data);
+                this.constantEmitterPos.setValue(this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data);
+                this.constantSpawnBounds.setValue(spawnMatrix.data);
                 this.constantFrameRandom.setValue(this.frameRandom.data);
                 this.constantDelta.setValue(delta);
                 this.constantRate.setValue(this.rate);
                 this.constantLifetime.setValue(this.lifetime);
                 this.constantDeltaRnd.setValue(this.speedDiv);
                 this.constantDeltaRndStatic.setValue(this.constantSpeedDiv);
+                this.constantEmitterScale.setValue(this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.getLocalScale().data);
 
                 this.constantTexLifeAndSourcePosIN.setValue(this.swapTex ? this.texLifeAndSourcePosOUT : this.texLifeAndSourcePosIN);
                 pc.gfx.drawQuadWithShader(device, this.swapTex ? this.rtLifeAndSourcePosIN : this.rtLifeAndSourcePosOUT, this.oneShot ? this.shaderParticleUpdateNoRespawn : this.shaderParticleUpdateRespawn);
@@ -715,13 +775,27 @@ pc.extend(pc.scene, function() {
                 this.constantTexLifeAndSourcePosOUT.setValue(this.swapTex ? this.texLifeAndSourcePosIN : this.texLifeAndSourcePosOUT);
                 this.swapTex = !this.swapTex;
             } else {
+                var data = new Float32Array(this.vertexBuffer.lock());
+                if (this.meshInstance.node) {
+                    var fullMat = this.meshInstance.node.worldTransform;
+                    for (j = 0; j < 12; j++) {
+                        rotMat.data[j] = fullMat.data[j];
+                    }
+                    nonUniformScale = this.meshInstance.node.getLocalScale();
+                    uniformScale = Math.max(Math.max(nonUniformScale.x, nonUniformScale.y), nonUniformScale.z);
+                }
+
                 // Particle updater emulation
-                var emitterPos = this.meshInstance.node === null ? (new pc.Vec3(0, 0, 0)).data : this.meshInstance.node.getPosition().data;
+                var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 for (i = 0; i < this.numParticles; i++) {
                     if (this.lifeAndSourcePos[i * 4 + 3] <= 0) {
-                        this.lifeAndSourcePos[i * 4] = emitterPos[0] + this.spawnBounds.x * (this.particleNoize[i]-0.5);
-                        this.lifeAndSourcePos[i * 4 + 1] = emitterPos[1] + this.spawnBounds.y * (((this.particleNoize[i] * 10) % 1)-0.5);
-                        this.lifeAndSourcePos[i * 4 + 2] = emitterPos[2] + this.spawnBounds.z * (((this.particleNoize[i] * 100) % 1)-0.5);
+                        randomPos.data[0] = this.particleNoize[i] - 0.5;
+                        randomPos.data[1] = ((this.particleNoize[i] * 10) % 1) - 0.5;
+                        randomPos.data[2] = ((this.particleNoize[i] * 100) % 1) - 0.5;
+                        randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+                        this.lifeAndSourcePos[i * 4] = randomPosTformed.data[0];
+                        this.lifeAndSourcePos[i * 4 + 1] = randomPosTformed.data[1];
+                        this.lifeAndSourcePos[i * 4 + 2] = randomPosTformed.data[2];
                     }
                     var x = i * (this.lifeAndSourcePos[i * 4 + 3] + this.lifeAndSourcePos[i * 4 + 0] + this.lifeAndSourcePos[i * 4 + 1] + this.lifeAndSourcePos[i * 4 + 2] + 1.0) * 1000.0;
                     x = (x % 13.0) * (x % 123.0);
@@ -735,15 +809,6 @@ pc.extend(pc.scene, function() {
                         }
                     }
                 }
-
-                var data = new Float32Array(this.vertexBuffer.lock());
-                if (this.meshInstance.node) {
-                    var fullMat = this.meshInstance.node.worldTransform;
-                    for (j = 0; j < 12; j++) {
-                        rotMat.data[j] = fullMat.data[j];
-                    }
-                }
-
 
                 // Particle sorting
                 // TODO: optimize
@@ -844,11 +909,12 @@ pc.extend(pc.scene, function() {
 
                         if (this.meshInstance.node) {
                             rotMat.transformPoint(localOffsetVec, localOffsetVec);
+                            scale *= uniformScale;
                         }
 
-                        particlePosX = sourcePosX + localOffset[0] + worldOffset[0];
-                        particlePosY = sourcePosY + localOffset[1] + worldOffset[1];
-                        particlePosZ = sourcePosZ + localOffset[2] + worldOffset[2];
+                        particlePosX = sourcePosX + localOffset[0] + worldOffset[0] * nonUniformScale.x;
+                        particlePosY = sourcePosY + localOffset[1] + worldOffset[1] * nonUniformScale.y;
+                        particlePosZ = sourcePosZ + localOffset[2] + worldOffset[2] * nonUniformScale.z;
 
                         if (this.wrap && this.wrapBounds) {
                             origParticlePosX = particlePosX;
@@ -905,9 +971,9 @@ pc.extend(pc.scene, function() {
                                 rotMat.transformPoint(localOffsetVec, localOffsetVec);
                             }
 
-                            particlePosPastX = sourcePosX + localOffset[0] + worldOffset[0];
-                            particlePosPastY = sourcePosY + localOffset[1] + worldOffset[1];
-                            particlePosPastZ = sourcePosZ + localOffset[2] + worldOffset[2];
+                            particlePosPastX = sourcePosX + localOffset[0] + worldOffset[0] * nonUniformScale.x;
+                            particlePosPastY = sourcePosY + localOffset[1] + worldOffset[1] * nonUniformScale.y;
+                            particlePosPastZ = sourcePosZ + localOffset[2] + worldOffset[2] * nonUniformScale.z;
                             particlePosPastX += particlePosMovedX;
                             particlePosPastY += particlePosMovedY;
                             particlePosPastZ += particlePosMovedZ;
@@ -941,7 +1007,6 @@ pc.extend(pc.scene, function() {
                         }
 
                         var w = i * this.numParticleVerts * 12 + v * 12;
-
                         data[w] = particlePosX;
                         data[w + 1] = particlePosY;
                         data[w + 2] = particlePosZ;
