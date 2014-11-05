@@ -1,0 +1,7 @@
+// Schlick's approximation
+uniform float material_fresnelFactor; // unused
+void getFresnel(inout psInternalData data) {
+    float fresnel = 1.0 - max(dot(data.normalW, data.viewDirW), 0.0);
+    data.specularity = data.specularity + (1.0 - data.specularity) * fresnel * fresnel * fresnel * fresnel * fresnel;
+}
+

@@ -1,6 +1,6 @@
 uniform samplerCube texture_cubeMap;
 uniform float material_reflectionFactor;
 void addCubemapReflection(inout psInternalData data) {
-    data.reflection += vec4(textureCube(texture_cubeMap, data.reflDirW).rgb, material_reflectionFactor);
+    data.reflection += vec4(textureCubeSRGB(texture_cubeMap, data.reflDirW).rgb, material_reflectionFactor);
 }
 
