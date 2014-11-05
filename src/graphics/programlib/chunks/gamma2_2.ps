@@ -1,5 +1,11 @@
-vec4 texture2DAlbedo(sampler2D tex, vec2 uv) {
+vec4 texture2DSRGB(sampler2D tex, vec2 uv) {
     vec4 rgba = texture2D(tex, uv);
+    rgba.rgb = pow(rgba.rgb, vec3(2.2));
+    return rgba;
+}
+
+vec4 textureCubeSRGB(samplerCube tex, vec3 uvw) {
+    vec4 rgba = textureCube(tex, uvw);
     rgba.rgb = pow(rgba.rgb, vec3(2.2));
     return rgba;
 }
