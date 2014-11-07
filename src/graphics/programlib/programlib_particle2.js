@@ -1,6 +1,6 @@
 pc.gfx.programlib.particle2 = {
     generateKey: function(device, options) {
-        var key = "particle2" + options.mode + options.normal + options.halflambert + options.stretch + options.soft + options.mesh + options.srgb + options.wrap;
+        var key = "particle2" + options.mode + options.normal + options.halflambert + options.stretch + options.soft + options.mesh + options.srgb + options.wrap + options.premul;
         return key;
     },
 
@@ -49,7 +49,11 @@ pc.gfx.programlib.particle2 = {
         if (options.normal == 2) fshader +=         chunk.particle2_normalMapPS;
         if (options.normal > 0) fshader +=          options.halflambert ? chunk.particle2_halflambertPS : chunk.particle2_lambertPS;
         if (options.normal > 0) fshader +=          chunk.particle2_lightingPS;
-        fshader +=                                  options.srgb? chunk.particle2_end_srgbPS : chunk.particle2_endPS;
+        if (options.srgb) {
+            fshader += options.premul? chunk.particle2_end_srgbPS : chunk.particle2_end_srgb_nopremulPS;
+        } else {
+            fshader += options.premul? chunk.particle2_endPS : chunk.particle2_end_nopremulPS;
+        }
 
         var attributes = pc.gfx.shaderChunks.collectAttribs(vshader);
 

@@ -515,9 +515,9 @@ pc.extend(pc.fw, function() {
                 if (components.hasOwnProperty(id)) {
                     var c = components[id];
                     var data = c.data;
-                    var emitter = data.model.emitter;
 
                     if (data.enabled && c.entity.enabled) {
+                        var emitter = data.model.emitter;
                         // check if the emitter has no camera set or if the
                         // camera is disabled
                         var cameraEntity = data.camera;
