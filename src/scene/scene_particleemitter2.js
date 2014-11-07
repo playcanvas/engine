@@ -177,7 +177,26 @@ pc.extend(pc.scene, function() {
 
         if (!defaultParamTex) {
             // 1x1 white opaque
-            defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+
+            // 8x8 white almost radial gradient
+            var dtex = new Float32Array(8 * 8 * 4);
+            var x, y, xgrad, ygrad, p, c;
+            for(y=0; y<8; y++) {
+                for(x=0; x<8; x++) {
+                    xgrad = 1 - Math.abs((x / 8) * 2 - 1);
+                    ygrad = 1 - Math.abs((y / 8) * 2 - 1);
+                    c = xgrad * ygrad;
+                    p = y * 8 + x;
+                    dtex[p * 4] =     1;
+                    dtex[p * 4 + 1] = 1;
+                    dtex[p * 4 + 2] = 1;
+                    dtex[p * 4 + 3] = c;
+                }
+            }
+            defaultParamTex = _createTexture(gd, 8, 8, dtex, pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            defaultParamTex.minFilter = pc.gfx.FILTER_LINEAR;
+            defaultParamTex.magFilter = pc.gfx.FILTER_LINEAR;
         }
 
         // Global system parameters
@@ -216,7 +235,11 @@ pc.extend(pc.scene, function() {
 
         this.mode = (this.mode === "CPU" ? pc.scene.PARTICLES_MODE_CPU : pc.scene.PARTICLES_MODE_GPU);
 
-        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 4))) {
+        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 1))) {
+            this.mode = pc.scene.PARTICLES_MODE_CPU;
+        }
+
+        if (gd.fragmentUniformsCount < 100) { // TODO: change to more realistic value
             this.mode = pc.scene.PARTICLES_MODE_CPU;
         }
 
