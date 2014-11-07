@@ -40,6 +40,7 @@ pc.extend(pc.fw, function() {
                 displayName: "Lifetime 2",
                 description: "",
                 type: "number",
+                exposed: false,
                 defaultValue: 5,
                 options: {
                     min: 0,
@@ -340,7 +341,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1, 1, 1]
+                    keys: [0, 1]
                 },
                 options: {
                     curveNames: ['Scale'],
@@ -353,7 +354,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1, 1, 1]
+                    keys: [0, 1]
                 },
                 options: {
                     curveNames: ['Scale'],
@@ -394,7 +395,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1, 1, 1],
+                    keys: [0, 1],
                 },
                 options: {
                     curveNames: ['Opacity'],
@@ -408,7 +409,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1, 1, 1],
+                    keys: [0, 1],
                 },
                 options: {
                     curveNames: ['Opacity'],
