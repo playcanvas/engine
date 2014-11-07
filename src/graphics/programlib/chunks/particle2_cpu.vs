@@ -9,15 +9,15 @@ uniform mat4 matrix_viewInverse;
 
 uniform float numParticles;
 uniform float lifetime;
-uniform float graphSampleSize;
-uniform float graphNumSamples;
-uniform vec3 wrapBounds;
+//uniform float graphSampleSize;
+//uniform float graphNumSamples;
+uniform vec3 wrapBounds, emitterScale;
 uniform sampler2D texLifeAndSourcePosOUT;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
 uniform sampler2D internalTex2;
 
-varying vec4 TexCoordsAlphaLife;
+varying vec4 texCoordsAlphaLife;
 
 
 vec2 rotate(vec2 quadXY, float pRotation, out mat2 rotMatrix)
@@ -57,7 +57,7 @@ void main(void)
     //float vfrac = fract(particle_vertexData2.w);
     vec2 TC = vertPos.xy*0.5+0.5;//vec2(particle_vertexData2.w - vfrac, vfrac*10.0);
 
-    TexCoordsAlphaLife = vec4(TC, particle_vertexData2.z, particle_vertexData.w);
+    texCoordsAlphaLife = vec4(TC, particle_vertexData2.z, particle_vertexData.w);
 
     vec2 quadXY = TC*2.0 - 1.0;
 
@@ -65,7 +65,7 @@ void main(void)
     mat3 localMat;
 
     quadXY = rotate(quadXY, particle_vertexData2.x, rotMatrix);
-    quadXY *= particle_vertexData2.y;
+    //quadXY *= particle_vertexData2.y;
 
     vec3 localPos = billboard(particlePos, quadXY, localMat);
     vec3 particlePosMoved = vec3(0.0);

@@ -36,11 +36,51 @@ pc.extend(pc.fw, function() {
                     step: 0.01
                 }
             }, {
+                name: "lifetime2",
+                displayName: "Lifetime 2",
+                description: "",
+                type: "number",
+                defaultValue: 5,
+                options: {
+                    min: 0,
+                    step: 0.01
+                }
+            }, {
                 name: "rate",
                 displayName: "Emission Rate",
                 description: "Delay between emission of each particle in seconds",
                 type: "number",
                 defaultValue: 0.05,
+                options: {
+                    min: 0,
+                    step: 0.01
+                }
+            }, {
+                name: "rate2",
+                displayName: "Emission Rate 2",
+                description: "",
+                type: "number",
+                defaultValue: 0.05,
+                options: {
+                    min: 0,
+                    step: 0.01
+                }
+            }, {
+                name: "startAngle",
+                displayName: "Start Angle",
+                description: "",
+                type: "number",
+                defaultValue: 0.0,
+                options: {
+                    min: 0,
+                    step: 0.01
+                }
+            }, {
+                name: "startAngle2",
+                displayName: "Start Angle 2",
+                description: "",
+                type: "number",
+                defaultValue: 0.0,
                 options: {
                     min: 0,
                     step: 0.01
@@ -222,32 +262,9 @@ pc.extend(pc.fw, function() {
                 },
                 defaultValue: null
             }, {
-                name: "speedDiv",
-                displayName: "Speed Divergence",
-                description: "Makes each particle's speed less uniform each frame",
-                type: "number",
-                defaultValue: 0.0,
-                options: {
-                    min: 0,
-                    max: 1,
-                    step: 0.01
-                }
-            }, {
-                name: "constantSpeedDiv",
-                displayName: "Constant Speed Divergence",
-                description: "Makes each particle's speed less uniform during whole particle's lifetime",
-                type: "number",
-                defaultValue: 0.0,
-                options: {
-                    min: 0,
-                    max: 1,
-                    step: 0.01
-                }
-            }, {
-                name: 'localOffsetGraph',
-                exposed: false,
-                displayName: "Local Position",
-                description: "A graph that defines the local position of particles over time.",
+                name: 'localVelocityGraph',
+                displayName: "Local Velocity",
+                description: "A graph that defines the local velocity of particles over time.",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -257,8 +274,8 @@ pc.extend(pc.fw, function() {
                     curveNames: ['X', 'Y', 'Z']
                 }
             }, {
-                name: 'localVelocityGraph',
-                displayName: "Local Velocity",
+                name: 'localVelocityGraph2',
+                displayName: "Local Velocity 2",
                 description: "A graph that defines the local velocity of particles over time.",
                 type: "curveset",
                 defaultValue: {
@@ -275,51 +292,22 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 0], [0, 0]]
+                    keys: [[0, 0], [0, 1], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
                 }
             }, {
-                name: 'offsetGraph',
-                exposed: false,
-                displayName: "Position",
-                description: "A graph that defines the world position of particles over time.",
+                name: 'velocityGraph2',
+                displayName: "Velocity 2",
+                description: "A graph that defines the world velocity of particles over time.",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 0], [0, 0]]
+                    keys: [[0, 0], [0, 1], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
-                }
-            }, {
-                name: 'localPosDivGraph',
-                displayName: "Local Position Divergence",
-                description: "A graph that defines the local position divergence of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 0], [0, 0]]
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z'],
-                    min: 0,
-                    max: 1
-                }
-            }, {
-                name: 'posDivGraph',
-                displayName: "Position Divergence",
-                description: "A graph that defines the world position of particles over time.",
-                type: "curveset",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 0], [0, 0]]
-                },
-                options: {
-                    curveNames: ['X', 'Y', 'Z'],
-                    min: 0,
-                    max: 1
                 }
             }, {
                 name: 'rotationSpeedGraph',
@@ -334,32 +322,16 @@ pc.extend(pc.fw, function() {
                     curveNames: ['Angle']
                 }
             }, {
-                name: 'angleGraph',
-                exposed: false,
-                displayName: "Angle",
-                description: "A graph that defines the rotation of particles over time.",
+                name: 'rotationSpeedGraph2',
+                displayName: "Rotation Speed 2",
+                description: "A graph that defines how fast particle rotates over time.",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
                     keys: [0, 0]
                 },
                 options: {
-                    curveNames: ['Angle'],
-                    verticalAxisValue: 360
-                }
-            }, {
-                name: 'angleDivGraph',
-                displayName: "Angle Divergence",
-                description: "A graph that defines the rotation divergence of particles over time.",
-                type: "curve",
-                defaultValue: {
-                    type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0]
-                },
-                options: {
-                    curveNames: ['Angle'],
-                    min: 0,
-                    max: 1
+                    curveNames: ['Angle']
                 }
             }, {
                 name: 'scaleGraph',
@@ -368,26 +340,24 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1]
+                    keys: [0, 1, 1, 1]
                 },
                 options: {
                     curveNames: ['Scale'],
                     verticalAxisValue: 1
                 }
             }, {
-                name: 'scaleDivGraph',
-                displayName: "Scale Divergence",
-                description: "A graph that defines the scaling divergence of particles over time.",
+                name: 'scaleGraph2',
+                displayName: "Scale 2",
+                description: "A graph that defines the scale of particles over time.",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0]
+                    keys: [0, 1, 1, 1]
                 },
                 options: {
                     curveNames: ['Scale'],
-                    verticalAxisValue: 1,
-                    min: 0,
-                    max: 1
+                    verticalAxisValue: 1
                 }
             }, {
                 name: 'colorGraph',
@@ -396,7 +366,21 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 1], [0, 1], [0, 1]],
+                    keys: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
+                },
+                options: {
+                    curveNames: ['R', 'G', 'B'],
+                    max: 1,
+                    min: 0
+                }
+            }, {
+                name: 'colorGraph2',
+                displayName: "Color 2",
+                description: "A graph that defines the color of particles over time.",
+                type: "curveset",
+                defaultValue: {
+                    type: pc.CURVE_SMOOTHSTEP,
+                    keys: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
                 },
                 options: {
                     curveNames: ['R', 'G', 'B'],
@@ -410,7 +394,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1],
+                    keys: [0, 1, 1, 1],
                 },
                 options: {
                     curveNames: ['Opacity'],
@@ -418,13 +402,13 @@ pc.extend(pc.fw, function() {
                     min: 0
                 }
             }, {
-                name: 'alphaDivGraph',
-                displayName: "Opacity Divergence",
-                description: "A graph that defines the opacity divergence of particles over time.",
+                name: 'alphaGraph2',
+                displayName: "Opacity 2",
+                description: "A graph that defines the opacity of particles over time.",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0]
+                    keys: [0, 1, 1, 1],
                 },
                 options: {
                     curveNames: ['Opacity'],
