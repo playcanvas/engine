@@ -43,7 +43,7 @@ pc.gfx.programlib.particle2 = {
             }
             fshader +=                              "\nuniform vec3 lightCube[6];\n";
         }
-        fshader += options.srgb? chunk.gamma1_0PS : chunk.gamma2_2PS;
+        fshader += options.srgb ? chunk.gamma2_2PS : chunk.gamma1_0PS;
         fshader +=                                  chunk.particle2PS;
         if (options.soft > 0) fshader +=            chunk.particle2_softPS;
         if (options.normal == 1) fshader +=         "\nvec3 normal = Normal;\n"
