@@ -175,6 +175,11 @@ pc.extend(pc.scene, function() {
         var precision = 32;
         this.precision = precision;
 
+        if (!defaultParamTex) {
+            // 1x1 white opaque
+            defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+        }
+
         // Global system parameters
         setPropertyTarget = this;
         setPropertyOptions = options;
@@ -187,7 +192,7 @@ pc.extend(pc.scene, function() {
         setProperty("wrap", false);
         setProperty("wrapBounds", null);
         setProperty("smoothness", 4);                            // Blurring width for graphs
-        setProperty("colorMap", null);
+        setProperty("colorMap", defaultParamTex);
         setProperty("normalMap", null);
         setProperty("oneShot", false);
         setProperty("preWarm", false);
