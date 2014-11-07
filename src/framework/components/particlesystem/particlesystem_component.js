@@ -3,8 +3,6 @@ pc.extend(pc.fw, function() {
     // properties that do not need rebuilding the particle system
     var SIMPLE_PROPERTIES = [
         'spawnBounds',
-        'speedDiv',
-        'constantSpeedDiv',
         'colorMap',
         'normalMap',
         'oneShot'
@@ -14,7 +12,11 @@ pc.extend(pc.fw, function() {
     var COMPLEX_PROPERTIES = [
         'numParticles',
         'lifetime',
+        'lifetime2',
         'rate',
+        'rate2',
+        'startAngle',
+        'startAngle2',
         'smoothness',
         'lighting',
         'halfLambert',
@@ -31,20 +33,23 @@ pc.extend(pc.fw, function() {
     ];
 
     var GRAPH_PROPERTIES = [
-        'localOffsetGraph',
-        'offsetGraph',
-        'angleGraph',
         'scaleGraph',
+        'scaleGraph2',
+
         'colorGraph',
+        'colorGraph2',
+
         'alphaGraph',
-        'localPosDivGraph',
-        'posDivGraph',
-        'scaleDivGraph',
-        'angleDivGraph',
-        'alphaDivGraph',
+        'alphaGraph2',
+
         'velocityGraph',
+        'velocityGraph2',
+
         'localVelocityGraph',
-        'rotationSpeedGraph'
+        'localVelocityGraph2',
+
+        'rotationSpeedGraph',
+        'rotationSpeedGraph2'
     ];
 
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
@@ -154,6 +159,9 @@ pc.extend(pc.fw, function() {
             if (this.emitter) {
                 this.emitter[name] = newValue;
                 this.emitter.resetTime();
+                if (oldValue && !newValue) {
+                    this.emitter.oneShotEndTime = this.emitter.totalTime;
+                }
             }
         },
 
@@ -204,24 +212,35 @@ pc.extend(pc.fw, function() {
                     wrap: this.data.wrap,
                     wrapBounds: this.data.wrapBounds,
                     lifetime: this.data.lifetime,
+                    lifetime2: this.data.lifetime2,
                     rate: this.data.rate,
-                    localOffsetGraph: this.data.localOffsetGraph,
-                    offsetGraph: this.data.offsetGraph,
-                    angleGraph: this.data.angleGraph,
+                    rate2: this.data.rate2,
+
+                    startAngle: this.data.startAngle,
+                    startAngle2: this.data.startAngle2,
+
                     scaleGraph: this.data.scaleGraph,
+                    scaleGraph2: this.data.scaleGraph2,
+
                     colorGraph: this.data.colorGraph,
+                    colorGraph2: this.data.colorGraph2,
+
                     alphaGraph: this.data.alphaGraph,
-                    localPosDivGraph: this.data.localPosDivGraph,
-                    posDivGraph: this.data.posDivGraph,
-                    scaleDiv: this.data.scaleDiv,
-                    angleDivGraph: this.data.angleDivGraph,
-                    alphaDivGraph: this.data.alphaDivGraph,
+                    alphaGraph2: this.data.alphaGraph2,
+
+                    localVelocityGraph: this.data.localVelocityGraph,
+                    localVelocityGraph2: this.data.localVelocityGraph2,
+
+                    velocityGraph: this.data.velocityGraph,
+                    velocityGraph2: this.data.velocityGraph2,
+
+                    rotationSpeedGraph: this.data.rotationSpeedGraph,
+                    rotationSpeedGraph2: this.data.rotationSpeedGraph2,
+
                     colorMap: this.data.colorMap,
                     normalMap: this.data.normalMap,
                     oneShot: this.data.oneShot,
                     preWarm: this.data.preWarm,
-                    speedDiv: this.data.speedDiv,
-                    constantSpeedDiv: this.data.constantSpeedDiv,
                     sort: this.data.sort,
                     stretch: this.data.stretch,
                     lighting: this.data.lighting,
@@ -235,9 +254,6 @@ pc.extend(pc.fw, function() {
                     depthTest: this.data.depthTest,
                     smoothness: this.data.smoothness,
                     node: this.entity,
-                    localVelocityGraph: this.data.localVelocityGraph,
-                    velocityGraph: this.data.velocityGraph,
-                    rotationSpeedGraph: this.data.rotationSpeedGraph,
                     blendType: this.data.blendType
                 });
 
