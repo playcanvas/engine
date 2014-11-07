@@ -169,6 +169,8 @@ pc.extend(pc.fw, function() {
             if (this.emitter) {
                 this.emitter[name] = newValue;
                 this.emitter.material.blendType = newValue;
+                this.emitter.resetMaterial();
+                this.rebuild();
             }
         },
 
