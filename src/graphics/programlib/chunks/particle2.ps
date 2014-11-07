@@ -1,6 +1,6 @@
-varying vec4 TexCoordsAlphaLife;
+varying vec4 texCoordsAlphaLife;
 
-uniform sampler2D texLifeAndSourcePosOUT, colorMap, normalMap, uDepthMap;
+uniform sampler2D colorMap, normalMap, uDepthMap;
 uniform sampler2D internalTex3;
 uniform float graphSampleSize;
 uniform float graphNumSamples;
@@ -9,31 +9,27 @@ uniform float camera_far;
 uniform float softening;
 uniform float colorMult;
 
-vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc)
-{
+vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc) {
     return mix( texture2D(tex,tc), texture2D(tex,tc + graphSampleSize), fract(tc.x*graphNumSamples) );
 }
 
-float saturate(float x)
-{
+float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
 
-float unpackFloat(vec4 rgbaDepth)
-{
+float unpackFloat(vec4 rgbaDepth) {
     const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
     float depth = dot(rgbaDepth, bitShift);
     return depth;
 }
 
-void main(void)
-{
-    vec4 tex         = texture2D(colorMap, TexCoordsAlphaLife.xy);
-    float alphaDivergence = TexCoordsAlphaLife.z;
-    vec4 ramp     = tex1Dlod_lerp(internalTex3, vec2(TexCoordsAlphaLife.w + alphaDivergence, 0.0));
+void main(void) {
+    vec4 tex         = texture2D(colorMap, texCoordsAlphaLife.xy);
+    vec4 ramp     = tex1Dlod_lerp(internalTex3, vec2(texCoordsAlphaLife.w, 0.0));
     ramp *= colorMult;
 
-    vec3 rgb =     tex.rgb * ramp.rgb;
+    ramp.a += texCoordsAlphaLife.z;
 
+    vec3 rgb =     tex.rgb * ramp.rgb;
     float a =         tex.a * ramp.a;
 
