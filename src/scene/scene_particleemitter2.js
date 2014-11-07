@@ -517,7 +517,8 @@ pc.extend(pc.scene, function() {
                     soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
                     mesh: this.emitter.isMesh,
                     srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
-                    wrap: this.emitter.wrap && this.emitter.wrapBounds
+                    wrap: this.emitter.wrap && this.emitter.wrapBounds,
+                    premul: this.blendType === pc.scene.BLEND_PREMULTIPLIED
                 });
                 this.setShader(shader);
             };
