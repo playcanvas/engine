@@ -87,6 +87,8 @@ pc.extend(pc.scene, function() {
     var particleFinalPos = new pc.Vec3();
     var moveDirVec = new pc.Vec3();
     var rotMat = new pc.Mat4();
+    var spawnMatrix3 = new pc.Mat3();
+    var emitterMatrix3 = new pc.Mat3();
     var uniformScale = 1;
     var nonUniformScale;
     var spawnMatrix = new pc.Mat4();
@@ -184,9 +186,9 @@ pc.extend(pc.scene, function() {
             var x, y, xgrad, ygrad, p, c;
             for(y=0; y<8; y++) {
                 for(x=0; x<8; x++) {
-                    xgrad = 1 - Math.abs((x / 8) * 2 - 1);
-                    ygrad = 1 - Math.abs((y / 8) * 2 - 1);
-                    c = xgrad * ygrad;
+                    xgrad = (x + 1) - 4.5;
+                    ygrad = (y + 1) - 4.5;
+                    c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / 8)) - 0.5);
                     p = y * 8 + x;
                     dtex[p * 4] =     1;
                     dtex[p * 4 + 1] = 1;
@@ -244,8 +246,6 @@ pc.extend(pc.scene, function() {
         }
 
         this.frameRandom = new pc.Vec3(0, 0, 0);
-
-        this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
 
         // Time-dependent parameters
         setProperty("colorGraph", default1Curve3);
@@ -377,9 +377,25 @@ pc.extend(pc.scene, function() {
         return sub;
     }
 
+    function mat4ToMat3(mat4, mat3) {
+        mat3.data[0] = mat4.data[0];
+        mat3.data[1] = mat4.data[1];
+        mat3.data[2] = mat4.data[2];
+
+        mat3.data[3] = mat4.data[4];
+        mat3.data[4] = mat4.data[5];
+        mat3.data[5] = mat4.data[6];
+
+        mat3.data[6] = mat4.data[8];
+        mat3.data[7] = mat4.data[9];
+        mat3.data[8] = mat4.data[10];
+    }
+
     ParticleEmitter2.prototype = {
         rebuild: function() {
             var i, len;
+
+            this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
 
             var precision = this.precision;
             var gd = this.graphicsDevice;
@@ -836,8 +852,11 @@ pc.extend(pc.scene, function() {
                 this.constantInternalTex2.setValue(this.internalTex2);
 
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
+                var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
+                mat4ToMat3(spawnMatrix, spawnMatrix3);
+                mat4ToMat3(emitterMatrix, emitterMatrix3);
                 this.constantEmitterPos.setValue(emitterPos);
-                this.constantSpawnBounds.setValue(spawnMatrix.data);
+                this.constantSpawnBounds.setValue(spawnMatrix3.data);
                 this.constantFrameRandom.setValue(this.frameRandom.data);
                 this.constantDelta.setValue(delta);
                 this.constantTotalTime.setValue(this.totalTime);
@@ -853,7 +872,7 @@ pc.extend(pc.scene, function() {
                 this.constantLifetime.setValue(this.lifetime);
                 this.constantLifetimeDiv.setValue(this.lifetime2 - this.lifetime);
                 this.constantEmitterScale.setValue(emitterScale);
-                this.constantEmitterMatrix.setValue(this.meshInstance.node === null ? pc.Mat4.IDENTITY.data : this.meshInstance.node.getWorldTransform().data);
+                this.constantEmitterMatrix.setValue(emitterMatrix3.data);
 
                 this.constantLocalVelocityDivMult.setValue(this.localVelocityUMax.data);
                 this.constantVelocityDivMult.setValue(this.velocityUMax.data);
