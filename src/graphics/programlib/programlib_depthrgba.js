@@ -3,6 +3,7 @@ pc.gfx.programlib.depthrgba = {
         var key = "depthrgba";
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam";
+        if (options.point) key += "_pnt";
         return key;
     },
 
@@ -39,6 +40,12 @@ pc.gfx.programlib.depthrgba = {
             code += 'varying vec2 vUv0;\n\n';
         }
 
+        if (options.point) {
+            code += 'uniform vec3 view_position;\n\n';
+            code += 'uniform float light_radius;\n\n';
+            code += 'varying float vDistance;\n\n';
+        }
+
         // VERTEX SHADER BODY
         code += getSnippet(device, 'common_main_begin');
 
@@ -61,8 +68,12 @@ pc.gfx.programlib.depthrgba = {
             code += '    vUv0 = vertex_texCoord0;\n';
         }
 
+        if (options.point) {
+            code += '    vDistance = distance(view_position, positionW.xyz) / light_radius;\n';
+        }
+
         code += getSnippet(device, 'common_main_end');
-        
+
         var vshader = code;
 
         //////////////////////////////
@@ -73,6 +84,10 @@ pc.gfx.programlib.depthrgba = {
         if (options.opacityMap) {
             code += 'varying vec2 vUv0;\n\n';
             code += 'uniform sampler2D texture_opacityMap;\n\n';
+        }
+
+        if (options.point) {
+            code += 'varying float vDistance;\n\n';
         }
 
         // Packing a float in GLSL with multiplication and mod
@@ -94,7 +109,11 @@ pc.gfx.programlib.depthrgba = {
             code += '    if (texture2D(texture_opacityMap, vUv0).r < 0.25) discard;\n\n';
         }
 
-        code += '    gl_FragData[0] = packFloat(gl_FragCoord.z);\n';
+        if (options.point) {
+            code += "   gl_FragData[0] = packFloat(vDistance);\n"
+        } else {
+            code += '    gl_FragData[0] = packFloat(gl_FragCoord.z);\n';
+        }
 
         code += getSnippet(device, 'common_main_end');
 

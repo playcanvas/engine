@@ -403,13 +403,11 @@ pc.extend(pc.scene, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, typeArray, shadowArray) {
+        _collectLights: function(lType, lights, lightsSorted) {
             for (var i = 0; i < lights.length; i++) {
                 if (lights[i].getEnabled()) {
-                    var lightType = lights[i].getType();
-                    if (lightType==lType) {
-                        typeArray.push(lightType);
-                        shadowArray.push(lights[i].getCastShadows());
+                    if (lights[i].getType()==lType) {
+                        lightsSorted.push(lights[i]);
                     }
                 }
             }
@@ -639,16 +637,12 @@ pc.extend(pc.scene, function () {
 
             this._mapXForms = null;
 
-            var lightType = [];
-            var lightShadow = [];
-            this._collectLights(pc.scene.LIGHTTYPE_DIRECTIONAL, lights, lightType, lightShadow);
-            this._collectLights(pc.scene.LIGHTTYPE_POINT,       lights, lightType, lightShadow);
-            this._collectLights(pc.scene.LIGHTTYPE_SPOT,        lights, lightType, lightShadow);
+            var lightsSorted = [];
+            this._collectLights(pc.scene.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted);
+            this._collectLights(pc.scene.LIGHTTYPE_POINT,       lights, lightsSorted);
+            this._collectLights(pc.scene.LIGHTTYPE_SPOT,        lights, lightsSorted);
 
-
-            options.numLights = lightType.length;
-            options.lightType = lightType;
-            options.lightShadow = lightShadow;
+            options.lights = lightsSorted;
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);
