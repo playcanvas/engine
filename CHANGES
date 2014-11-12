@@ -3,6 +3,16 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.8
+--------
+* [FIX] Prevent min filter warnings in Designer
+* Cube/sphere maps are now treated as sRGB, added Schlick's fresnel
+* Velocities are now primary way to specify particle motions
+* Added default texture for particle systems
+* Update physics example to latest version of ammo.js
+* Update README.md
+
+--------
 v0.158.7
 --------
 * Fix needed for new ammo.js
