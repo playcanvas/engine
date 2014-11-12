@@ -10,6 +10,7 @@ pc.extend(pc.fw, function () {
         this.range = 10;
         this.innerConeAngle = 40;
         this.outerConeAngle = 45;
+        this.falloffMode = 0;
 
         // Non-serialized
         this.model = null;

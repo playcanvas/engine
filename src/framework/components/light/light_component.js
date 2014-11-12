@@ -37,6 +37,7 @@ pc.extend(pc.fw, function () {
         this.on("set_range", this.onSetRange, this);
         this.on("set_innerConeAngle", this.onSetInnerConeAngle, this);
         this.on("set_outerConeAngle", this.onSetOuterConeAngle, this);
+        this.on("set_falloffMode", this.onSetFalloffMode, this);
     };
 
     LightComponent = pc.inherits(LightComponent, pc.fw.Component);
@@ -71,6 +72,7 @@ pc.extend(pc.fw, function () {
             this.onSetRange("range", this.range, this.range);
             this.onSetInnerConeAngle("innerConeAngle", this.innerConeAngle, this.innerConeAngle);
             this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
+            this.onSetFalloffMode("falloffMode", this.falloffMode, this.falloffMode);
 
             if (this.enabled && this.entity.enabled) {
                 this.onEnable();
@@ -78,10 +80,8 @@ pc.extend(pc.fw, function () {
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
-            if (this.data.type === 'directional' || this.data.type === 'spot') {
-                var light = this.data.model.lights[0];
-                light.setCastShadows(newValue);
-            }
+            var light = this.data.model.lights[0];
+            light.setCastShadows(newValue);
         },
 
         onSetColor: function (name, oldValue, newValue) {
@@ -95,10 +95,8 @@ pc.extend(pc.fw, function () {
         },
 
         onSetShadowResolution: function (name, oldValue, newValue) {
-            if (this.data.type === 'directional' || this.data.type === 'spot') {
-                var light = this.data.model.lights[0];
-                light.setShadowResolution(newValue);
-            }
+            var light = this.data.model.lights[0];
+            light.setShadowResolution(newValue);
         },
 
         onSetRange: function (name, oldValue, newValue) {
@@ -119,6 +117,13 @@ pc.extend(pc.fw, function () {
             if (this.data.type === 'spot') {
                 var light = this.data.model.lights[0];
                 light.setOuterConeAngle(newValue);
+            }
+        },
+
+        onSetFalloffMode: function (name, oldValue, newValue) {
+            if (this.data.type === 'point' || this.data.type === 'spot') {
+                var light = this.data.model.lights[0];
+                light.setFalloffMode(newValue);
             }
         },
 
