@@ -54,18 +54,13 @@ void main(void)
     vec3 particlePos = particle_vertexData.xyz;
     vec3 vertPos = particle_vertexData3.xyz;
 
-    //float vfrac = fract(particle_vertexData2.w);
-    vec2 TC = vertPos.xy*0.5+0.5;//vec2(particle_vertexData2.w - vfrac, vfrac*10.0);
-
-    texCoordsAlphaLife = vec4(TC, particle_vertexData2.z, particle_vertexData.w);
-
-    vec2 quadXY = TC*2.0 - 1.0;
+    vec2 quadXY = vertPos.xy;
+    texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);
 
     mat2 rotMatrix;
     mat3 localMat;
 
     quadXY = rotate(quadXY, particle_vertexData2.x, rotMatrix);
-    //quadXY *= particle_vertexData2.y;
 
     vec3 localPos = billboard(particlePos, quadXY, localMat);
     vec3 particlePosMoved = vec3(0.0);
