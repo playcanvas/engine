@@ -19,19 +19,19 @@ pc.gfx.programlib.phong = {
         return key;
     },
 
-    _setMapTransform: function (codes, name) {
-        var capitalName = name.charAt(0).toUpperCase() + name.slice(1);
+    _setMapTransform: function (codes, name, id) {
         codes[0] += "uniform vec4 texture_"+name+"MapTransform;\n"
-        codes[1] += "varying vec2 vUv"+capitalName+";\n"
 
-        codes[2] += "   vUv"+capitalName+"   = vUv0 * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
-
+        if (!codes[3][id]) {
+            codes[1] += "varying vec2 vUv0_"+id+";\n"
+            codes[2] += "   vUv0_"+id+"   = uv0 * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
+            codes[3][id] = true;
+        }
         return codes;
     },
 
-    _uvSource: function(name) {
-        var capitalName = name.charAt(0).toUpperCase() + name.slice(1);
-        return this.options[name+"MapTransform"]? "vUv"+capitalName : "vUv0";
+    _uvSource: function(id) {
+        return id==0? "vUv0" : ("vUv0_" + id);
     },
 
     createShaderDefinition: function (device, options) {
@@ -79,21 +79,30 @@ pc.gfx.programlib.phong = {
             options.emissiveMap || options.normalMap || options.heightMap || options.opacityMap) {
             attributes.vertex_texCoord0 = pc.gfx.SEMANTIC_TEXCOORD0;
             code += chunks.uv0VS;
-            codeBody += "   vUv0        = getUv0(data);\n";
+            codeBody += "   vec2 uv0        = getUv0(data);\n";
 
-            var codes = [code, varyings, codeBody];
-            if (options.diffuseMapTransform)    this._setMapTransform(codes, "diffuse");
-            if (options.normalMapTransform)     this._setMapTransform(codes, "normal");
-            if (options.heightMapTransform)     this._setMapTransform(codes, "height");
-            if (options.opacityMapTransform)    this._setMapTransform(codes, "opacity");
+            var codes = [code, varyings, codeBody, []];
+            if (options.diffuseMapTransform)    this._setMapTransform(codes, "diffuse", options.diffuseMapTransform);
+            if (options.normalMapTransform)     this._setMapTransform(codes, "normal", options.normalMapTransform);
+            if (options.heightMapTransform)     this._setMapTransform(codes, "height", options.heightMapTransform);
+            if (options.opacityMapTransform)    this._setMapTransform(codes, "opacity", options.opacityMapTransform);
             if (options.useSpecular) {
-                if (options.specularMapTransform)   this._setMapTransform(codes, "specular");
-                if (options.glossMapTransform)      this._setMapTransform(codes, "gloss");
+                if (options.specularMapTransform)   this._setMapTransform(codes, "specular", options.specularMapTransform);
+                if (options.glossMapTransform)      this._setMapTransform(codes, "gloss", options.glossMapTransform);
             }
-            if (options.emissiveMapTransform)   this._setMapTransform(codes, "emissive");
+            if (options.emissiveMapTransform)   this._setMapTransform(codes, "emissive", options.emissiveMapTransform);
             code = codes[0] + codes[1];
             varyings = codes[1];
             codeBody = codes[2];
+
+            if ((options.diffuseMap && !options.diffuseMapTransform) ||
+                (options.normalMap && !options.normalMapTransform) ||
+                (options.heightMap && !options.heightMapTransform) ||
+                (options.opacityMap && !options.opacityMapTransform) ||
+                (options.specularMap && !options.specularMapTransform) ||
+                (options.glossMap && !options.glossMapTransform)) {
+                codeBody += "   vUv0        = uv0;\n";
+            }
         }
 
         if (options.lightMap) {
@@ -178,7 +187,7 @@ pc.gfx.programlib.phong = {
         var uvOffset = options.heightMap? " + data.uvOffset" : "";
 
         if (options.normalMap && useTangents) {
-            code += chunks.normalMapPS.replace(/\$UV/g, this._uvSource("normal")+uvOffset);
+            code += chunks.normalMapPS.replace(/\$UV/g, this._uvSource(options.normalMapTransform) + uvOffset);
             code += chunks.TBNPS;
         } else {
             code += chunks.normalVertexPS;
@@ -187,14 +196,14 @@ pc.gfx.programlib.phong = {
         code += chunks.defaultGamma;
 
         if (options.diffuseMap) {
-            code += chunks.albedoTexPS.replace(/\$UV/g, this._uvSource("diffuse")+uvOffset);
+            code += chunks.albedoTexPS.replace(/\$UV/g, this._uvSource(options.diffuseMapTransform) + uvOffset);
         } else {
             code += chunks.albedoColorPS;
         }
 
         if (options.useSpecular) {
             if (options.specularMap) {
-                code += chunks.specularityTexPS.replace(/\$UV/g, this._uvSource("specular")+uvOffset);
+                code += chunks.specularityTexPS.replace(/\$UV/g, this._uvSource(options.specularMapTransform) + uvOffset);
             } else {
                 code += chunks.specularityColorPS;
             }
@@ -204,26 +213,26 @@ pc.gfx.programlib.phong = {
         }
 
         if (options.glossMap) {
-            code += chunks.glossinessTexPS.replace(/\$UV/g, this._uvSource("gloss")+uvOffset);
+            code += chunks.glossinessTexPS.replace(/\$UV/g, this._uvSource(options.glossMapTransform) + uvOffset);
         } else {
             code += chunks.glossinessFloatPS;
         }
 
         if (options.opacityMap) {
-            code += chunks.opacityTexPS.replace(/\$UV/g, this._uvSource("opacity")+uvOffset);
+            code += chunks.opacityTexPS.replace(/\$UV/g, this._uvSource(options.opacityMapTransform) + uvOffset);
         } else {
             code += chunks.opacityFloatPS;
         }
 
         if (options.emissiveMap) {
-            code += chunks.emissionTexPS.replace(/\$UV/g, this._uvSource("emissive")+uvOffset);
+            code += chunks.emissionTexPS.replace(/\$UV/g, this._uvSource(options.emissiveMapTransform) + uvOffset);
         } else {
             code += chunks.emissionColorPS;
         }
 
         if (options.heightMap) {
             if (!options.normalMap) code += chunks.TBNPS;
-            code += chunks.parallaxPS.replace(/\$UV/g, this._uvSource("height"));
+            code += chunks.parallaxPS.replace(/\$UV/g, this._uvSource(options.heightMapTransform));
         }
 
         if (options.cubeMap) {

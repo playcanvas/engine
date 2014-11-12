@@ -583,35 +583,61 @@ pc.extend(pc.scene, function () {
             this.shader = null;
         },
 
+        _getMapTransformID: function(xform) {
+            if (!xform) return 0;
+            var i, j, same;
+            for(i=0; i<this._mapXForms.length; i++) {
+                same = true;
+                for(j=0; j<xform.data.length; j++) {
+                    if (this._mapXForms[i][j] != xform.data[j]) {
+                        same = false;
+                        break;
+                    }
+                }
+                if (same) {
+                    return i + 1;
+                }
+            }
+            var newID = this._mapXForms.length;
+            this._mapXForms[newID] = [];
+            for(j=0; j<xform.data.length; j++) {
+                this._mapXForms[newID][j] = xform.data[j];
+            }
+            return newID + 1;
+        },
+
         updateShader: function (device, scene) {
             var lights = scene._lights;
 
+            this._mapXForms = [];
+
             var options = {
-                fog: scene.fog,
-                gamma: scene.gammaCorrection,
-                skin: !!this.meshInstances[0].skinInstance,
-                diffuseMap: !!this.diffuseMap,
-                diffuseMapTransform: !!this.diffuseMapTransform,
-                specularMap: !!this.specularMap,
-                specularMapTransform: !!this.specularMapTransform,
-                glossMap: !!this.glossMap,
-                glossMapTransform: !!this.glossMapTransform,
-                emissiveMap: !!this.emissiveMap,
-                emissiveMapTransform: !!this.emissiveMapTransform,
-                opacityMap: !!this.opacityMap,
-                opacityMapTransform: !!this.opacityMapTransform,
-                normalMap: !!this.normalMap,
-                normalMapTransform: !!this.normalMapTransform,
-                heightMap: !!this.heightMap,
-                heightMapTransform: !!this.heightMapTransform,
-                sphereMap: !!this.sphereMap,
-                cubeMap: !!this.cubeMap,
-                lightMap: !!this.lightMap,
-                useSpecular: (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
-                            || (!!this.sphereMap) || (!!this.cubeMap),
-                useFresnel: (this.fresnelFactor > 0)
+                fog:                        scene.fog,
+                gamma:                      scene.gammaCorrection,
+                skin:                       !!this.meshInstances[0].skinInstance,
+                diffuseMap:                 !!this.diffuseMap,
+                diffuseMapTransform:        this._getMapTransformID(this.diffuseMapTransform),
+                specularMap:                !!this.specularMap,
+                specularMapTransform:       this._getMapTransformID(this.specularMapTransform),
+                glossMap:                   !!this.glossMap,
+                glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
+                emissiveMap:                !!this.emissiveMap,
+                emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
+                opacityMap:                 !!this.opacityMap,
+                opacityMapTransform:        this._getMapTransformID(this.opacityMapTransform),
+                normalMap:                  !!this.normalMap,
+                normalMapTransform:         this._getMapTransformID(this.normalMapTransform),
+                heightMap:                  !!this.heightMap,
+                heightMapTransform:         this._getMapTransformID(this.heightMapTransform),
+                sphereMap:                  !!this.sphereMap,
+                cubeMap:                    !!this.cubeMap,
+                lightMap:                   !!this.lightMap,
+                useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
+                                            || (!!this.sphereMap) || (!!this.cubeMap),
+                useFresnel:                 (this.fresnelFactor > 0)
             };
 
+            this._mapXForms = null;
 
             var lightType = [];
             var lightShadow = [];
