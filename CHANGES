@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.158.9
+--------
+* [FIX] Reduced number of varyings required for texture coordinates.
+* [FIX] Flip particle textures the right way up.
+
+--------
 v0.158.8
 --------
 * [FIX] Prevent min filter warnings in Designer
