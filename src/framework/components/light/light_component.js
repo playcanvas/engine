@@ -22,7 +22,7 @@ pc.extend(pc.fw, function () {
      * @property {Boolean} enabled Enable or disable the light
      * @property {Number} intensity The brightness of the light.
      * @property {Boolean} castShadows If enabled the light will cast shadows.
-     * @property {Number} shadowResolution The size of the texture used for the shadow map, 128, 256, 512, 1024, 2048. (Not available for point lights)
+     * @property {Number} shadowResolution The size of the texture used for the shadow map, 128, 256, 512, 1024, 2048.
      * @property {Number} range The range of the light. (Not available for directional lights)
      * @property {Number} innerConeAngle The angle at which the spotlight cone starts to fade off. (Only avaiable for spotlights)
      * @property {Number} outerConeAngle The angle at which the spotlight cone has faded to nothing. (Only avaiable for spotlights)
