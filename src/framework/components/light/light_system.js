@@ -60,10 +60,7 @@ pc.extend(pc.fw, function () {
             displayName: "Cast Shadows",
             description: "Cast shadows from this light",
             type: "boolean",
-            defaultValue: false,
-            filter: {
-                type: ['directional', 'spot']
-            }
+            defaultValue: false
         }, {
             name: "shadowResolution",
             displayName: "Shadow Resolution",
@@ -71,6 +68,9 @@ pc.extend(pc.fw, function () {
             type: "enumeration",
             options: {
                 enumerations: [{
+                    name: '128',
+                    value: 128
+                }, {
                     name: '256',
                     value: 256
                 }, {
@@ -97,6 +97,24 @@ pc.extend(pc.fw, function () {
             options: {
                 min: 0
             },
+            filter: {
+                type: ['point', 'spot']
+            }
+        }, {
+            name: "falloffMode",
+            displayName: "Falloff mode",
+            description: "Defines the way of distance attenuation",
+            type: "enumeration",
+            options: {
+                enumerations: [{
+                    name: 'Linear',
+                    value: pc.scene.LIGHTFALLOFF_LINEAR
+                }, {
+                    name: 'Inverse squared',
+                    value: pc.scene.LIGHTFALLOFF_INVERSESQUARED
+                }]
+            },
+            defaultValue: 0,
             filter: {
                 type: ['point', 'spot']
             }
@@ -159,7 +177,7 @@ pc.extend(pc.fw, function () {
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
+            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -201,7 +219,8 @@ pc.extend(pc.fw, function () {
                 innerConeAngle: entity.light.innerConeAngle,
                 outerConeAngle: entity.light.outerConeAngle,
                 castShadows: entity.light.castShadows,
-                shadowResolution: entity.light.shadowResolution
+                shadowResolution: entity.light.shadowResolution,
+                falloffMode: entity.light.falloffMode
             };
 
             this.addComponent(clone, data);
