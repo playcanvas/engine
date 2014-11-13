@@ -55,9 +55,23 @@ float getFalloffLinear(inout psInternalData data, float lightRadius) {
     return max(((lightRadius - d) / lightRadius), 0.0);
 }
 
-float getFalloffInvSquared(inout psInternalData data) {
+float square(float x) {
+    return x*x;
+}
+
+float saturate(float x) {
+    return clamp(x, 0.0, 1.0);
+}
+
+float getFalloffInvSquared(inout psInternalData data, float lightRadius) {
     float sqrDist = dot(data.lightDirW, data.lightDirW);
-    return 1.0 / sqrDist;
+    float falloff = 1.0 / (sqrDist + 1.0);
+    float invRadius = 1.0 / lightRadius;
+
+    falloff *= 16.0;
+    falloff *= square( saturate( 1.0 - square( sqrDist * square(invRadius) ) ) );
+
+    return falloff;
 }
 
 float getSpotEffect(inout psInternalData data, vec3 lightSpotDirW, float lightInnerConeAngle, float lightOuterConeAngle) {
