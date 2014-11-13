@@ -17,7 +17,6 @@ pc.extend(pc.fw, function() {
         'rate2',
         'startAngle',
         'startAngle2',
-        'smoothness',
         'lighting',
         'halfLambert',
         'intensity',
@@ -254,7 +253,6 @@ pc.extend(pc.fw, function() {
                     scene: this.system.context.scene,
                     mesh: this.data.mesh,
                     depthTest: this.data.depthTest,
-                    smoothness: this.data.smoothness,
                     node: this.entity,
                     blendType: this.data.blendType
                 });

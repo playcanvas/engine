@@ -51,7 +51,7 @@ pc.extend(pc.fw, function() {
                 displayName: "Emission Rate",
                 description: "Delay between emission of each particle in seconds",
                 type: "number",
-                defaultValue: 0.05,
+                defaultValue: 0.1,
                 options: {
                     min: 0,
                     step: 0.01
@@ -61,7 +61,7 @@ pc.extend(pc.fw, function() {
                 displayName: "Emission Rate 2",
                 description: "",
                 type: "number",
-                defaultValue: 0.05,
+                defaultValue: 0.1,
                 options: {
                     min: 0,
                     step: 0.01
@@ -112,6 +112,7 @@ pc.extend(pc.fw, function() {
                 description: "Starts particles in the middle of simulation",
                 type: "boolean",
                 defaultValue: false,
+                exposed: false,
                 filter: {
                     oneShot: false
                 }
@@ -269,22 +270,24 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 0], [0, 0]]
+                    keys: [[0, 0], [0, 0], [0, 0]],
+                    betweenCurves: false
                 },
                 options: {
-                    curveNames: ['X', 'Y', 'Z']
+                    curveNames: ['X', 'Y', 'Z'],
+                    secondCurve: 'localVelocityGraph2'
                 }
             }, {
                 name: 'localVelocityGraph2',
                 displayName: "Local Velocity 2",
-                description: "A graph that defines the local velocity of particles over time.",
+                description: "The second curve that defines the range of the localVelocityGraph",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
                     keys: [[0, 0], [0, 0], [0, 0]]
                 },
-                options: {
-                    curveNames: ['X', 'Y', 'Z']
+                filter: {
+                    always: false // hide from Designer but do expose it
                 }
             }, {
                 name: 'velocityGraph',
@@ -293,22 +296,27 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 1], [0, 0]]
+                    keys: [[0, -1], [0, -1], [0, 0]],
+                    betweenCurves: true
                 },
                 options: {
-                    curveNames: ['X', 'Y', 'Z']
+                    curveNames: ['X', 'Y', 'Z'],
+                    secondCurve: 'velocityGraph2'
                 }
             }, {
                 name: 'velocityGraph2',
                 displayName: "Velocity 2",
-                description: "A graph that defines the world velocity of particles over time.",
+                description: "The second curve that defines the range of the velocityGraph",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 1], [0, 0]]
+                    keys: [[0, 1], [0, 1], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
+                },
+                filter: {
+                    always: false // hide from Designer but do expose it
                 }
             }, {
                 name: 'rotationSpeedGraph',
@@ -317,15 +325,17 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 0]
+                    keys: [0, 0],
+                    betweenCurves: false
                 },
                 options: {
-                    curveNames: ['Angle']
+                    curveNames: ['Angle'],
+                    secondCurve: 'rotationSpeedGraph2'
                 }
             }, {
                 name: 'rotationSpeedGraph2',
                 displayName: "Rotation Speed 2",
-                description: "A graph that defines how fast particle rotates over time.",
+                description: "The second curve that defines the range of the rotationSpeedGraph",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -333,6 +343,9 @@ pc.extend(pc.fw, function() {
                 },
                 options: {
                     curveNames: ['Angle']
+                },
+                filter: {
+                    always: false
                 }
             }, {
                 name: 'scaleGraph',
@@ -341,24 +354,29 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1]
+                    keys: [0, 0.1],
+                    betweenCurves: false
                 },
                 options: {
                     curveNames: ['Scale'],
-                    verticalAxisValue: 1
+                    verticalAxisValue: 1,
+                    secondCurve: 'scaleGraph2'
                 }
             }, {
                 name: 'scaleGraph2',
                 displayName: "Scale 2",
-                description: "A graph that defines the scale of particles over time.",
+                description: "The second curve that defines the range of scaleGraph",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1]
+                    keys: [0, 0.1]
                 },
                 options: {
                     curveNames: ['Scale'],
                     verticalAxisValue: 1
+                },
+                filter: {
+                    always: false
                 }
             }, {
                 name: 'colorGraph',
@@ -367,7 +385,8 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 1, 1, 1], [0, 1, 1, 1], [0, 1, 1, 1]],
+                    keys: [[0, 1], [0, 1], [0, 1]],
+                    betweenCurves: false
                 },
                 options: {
                     curveNames: ['R', 'G', 'B'],
@@ -378,6 +397,7 @@ pc.extend(pc.fw, function() {
                 name: 'colorGraph2',
                 displayName: "Color 2",
                 description: "A graph that defines the color of particles over time.",
+                exposed: false, // not used at the moment
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -396,16 +416,18 @@ pc.extend(pc.fw, function() {
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
                     keys: [0, 1],
+                    betweenCurves: false
                 },
                 options: {
                     curveNames: ['Opacity'],
                     max: 1,
-                    min: 0
+                    min: 0,
+                    secondCurve: 'alphaGraph2'
                 }
             }, {
                 name: 'alphaGraph2',
                 displayName: "Opacity 2",
-                description: "A graph that defines the opacity of particles over time.",
+                description: "The second graph that defines the range of alphaGraph.",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -415,17 +437,9 @@ pc.extend(pc.fw, function() {
                     curveNames: ['Opacity'],
                     max: 1,
                     min: 0
-                }
-            }, {
-                name: "smoothness",
-                displayName: "Smoothness",
-                description: "Graph interpolation smoothness",
-                type: "number",
-                defaultValue: 4,
-                options: {
-                    min: 0,
-                    max: 32,
-                    step: 1
+                },
+                filter: {
+                    always: false
                 }
             }, {
                 name: 'camera',
