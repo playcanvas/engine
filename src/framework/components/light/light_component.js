@@ -21,11 +21,16 @@ pc.extend(pc.fw, function () {
      * @property {pc.fw.Color} color The Color of the light
      * @property {Boolean} enabled Enable or disable the light
      * @property {Number} intensity The brightness of the light.
-     * @property {Boolean} castShadows If enabled the light will cast shadows. (Not availablle for point lights)
-     * @property {Number} shadowResolution The size of the texture used for the shadow map, 256, 512, 1024, 2048. (Not available for point lights)
+     * @property {Boolean} castShadows If enabled the light will cast shadows.
+     * @property {Number} shadowResolution The size of the texture used for the shadow map, 128, 256, 512, 1024, 2048. (Not available for point lights)
      * @property {Number} range The range of the light. (Not available for directional lights)
      * @property {Number} innerConeAngle The angle at which the spotlight cone starts to fade off. (Only avaiable for spotlights)
      * @property {Number} outerConeAngle The angle at which the spotlight cone has faded to nothing. (Only avaiable for spotlights)
+     * @property {Number} falloffMode Defines the way of distance attenuation. (Available for point and spot lights)
+     * <ul>
+     * <li><strong>{@link pc.scene.LIGHTFALLOFF_LINEAR}</strong>: Linear.</li>
+     * <li><strong>{@link pc.scene.LIGHTFALLOFF_INVERSESQUARED}</strong>: Inverse squared.</li>
+     * </ul>
      * @extends pc.fw.Component
      */
     var LightComponent = function LightComponent(system, entity) {

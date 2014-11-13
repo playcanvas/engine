@@ -233,6 +233,9 @@ pc.extend(pc.scene, function () {
 
         setFalloffMode: function (mode) {
             this._falloffMode = mode;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
         },
 
         /**
