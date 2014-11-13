@@ -107,7 +107,7 @@ pc.extend(pc, (function () {
             return result;
         },
 
-        quantize: function(precision, blur) {
+        quantize: function(precision) {
             precision = Math.max(precision, 2);
 
             var values = new Float32Array(precision);
@@ -117,20 +117,6 @@ pc.extend(pc, (function () {
             for (var i = 0; i < precision; i++) {
                 var value = this.value(step * i);
                 values[i] = value;
-            }
-
-            if (blur > 0) {
-                var values2 = new Float32Array(precision);
-                var numSamples = blur * 2 + 1;
-                for (var i = 0; i < precision; i++) {
-                    values2[i] = 0;
-                    for (var sample = -blur; sample <= blur; sample++) {
-                        var sampleAddr = Math.max(Math.min(i + sample, precision - 1), 0);
-                        values2[i] += values[sampleAddr];
-                    }
-                    values2[i] /= numSamples;
-                }
-                values = values2;
             }
 
             return values;

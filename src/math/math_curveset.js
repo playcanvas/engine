@@ -56,7 +56,7 @@ pc.extend(pc, (function () {
             return result;
         },
 
-        quantize: function(precision, blur) {
+        quantize: function (precision) {
             precision = Math.max(precision, 2);
 
             var numCurves = this.curves.length;
@@ -73,37 +73,6 @@ pc.extend(pc, (function () {
                         values[i * numCurves + j] = value[j];
                     }
                 }
-            }
-
-            if (blur > 0) {
-                var values2 = new Float32Array(precision * numCurves);
-                var numSamples = blur * 2 + 1;
-                for (var i = 0; i < precision; i++) {
-                    if (numCurves == 1) {
-                        values2[i] = 0;
-                        for (var sample = -blur; sample <= blur; sample++) {
-                            var sampleAddr = Math.max(Math.min(i + sample, precision - 1), 0);
-                            values2[i] += values[sampleAddr];
-                        }
-                        values2[i] /= numSamples;
-                    } else {
-                        for (var chan = 0; chan < numCurves; chan++) {
-                            values2[i * numCurves + chan] = 0;
-                        }
-
-                        for (var sample = -blur; sample <= blur; sample++) {
-                            var sampleAddr = Math.max(Math.min(i + sample, precision - 1), 0);
-                            for (var chan = 0; chan < numCurves; chan++) {
-                                values2[i * numCurves + chan] += values[sampleAddr * numCurves + chan];
-                            }
-                        }
-
-                        for (var chan = 0; chan < numCurves; chan++) {
-                            values2[i * numCurves + chan] /= numSamples;
-                        }
-                    }
-                }
-                values = values2;
             }
 
             return values;

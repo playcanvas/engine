@@ -51,7 +51,7 @@ pc.extend(pc.fw, function() {
                 displayName: "Emission Rate",
                 description: "Delay between emission of each particle in seconds",
                 type: "number",
-                defaultValue: 0.05,
+                defaultValue: 0.1,
                 options: {
                     min: 0,
                     step: 0.01
@@ -61,7 +61,7 @@ pc.extend(pc.fw, function() {
                 displayName: "Emission Rate 2",
                 description: "",
                 type: "number",
-                defaultValue: 0.05,
+                defaultValue: 0.1,
                 options: {
                     min: 0,
                     step: 0.01
@@ -112,6 +112,7 @@ pc.extend(pc.fw, function() {
                 description: "Starts particles in the middle of simulation",
                 type: "boolean",
                 defaultValue: false,
+                exposed: false,
                 filter: {
                     oneShot: false
                 }
@@ -295,8 +296,8 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 1], [0, 0]],
-                    betweenCurves: false
+                    keys: [[0, -1], [0, -1], [0, 0]],
+                    betweenCurves: true
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z'],
@@ -309,7 +310,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 0], [0, 1], [0, 0]]
+                    keys: [[0, 1], [0, 1], [0, 0]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
@@ -353,7 +354,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1],
+                    keys: [0, 0.1],
                     betweenCurves: false
                 },
                 options: {
@@ -368,7 +369,7 @@ pc.extend(pc.fw, function() {
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [0, 1]
+                    keys: [0, 0.1]
                 },
                 options: {
                     curveNames: ['Scale'],
@@ -439,17 +440,6 @@ pc.extend(pc.fw, function() {
                 },
                 filter: {
                     always: false
-                }
-            }, {
-                name: "smoothness",
-                displayName: "Smoothness",
-                description: "Graph interpolation smoothness",
-                type: "number",
-                defaultValue: 4,
-                options: {
-                    min: 0,
-                    max: 32,
-                    step: 1
                 }
             }, {
                 name: 'camera',

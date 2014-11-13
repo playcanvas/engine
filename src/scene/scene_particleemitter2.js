@@ -181,22 +181,25 @@ pc.extend(pc.scene, function() {
             // 1x1 white opaque
             //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
 
-            // 8x8 white almost radial gradient
-            var dtex = new Float32Array(8 * 8 * 4);
+
+            // white almost radial gradient
+            var resolution = 16;
+            var centerPoint = resolution * 0.5 + 0.5;
+            var dtex = new Float32Array(resolution * resolution * 4);
             var x, y, xgrad, ygrad, p, c;
-            for(y=0; y<8; y++) {
-                for(x=0; x<8; x++) {
-                    xgrad = (x + 1) - 4.5;
-                    ygrad = (y + 1) - 4.5;
-                    c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / 8)) - 0.5);
-                    p = y * 8 + x;
+            for (y = 0; y < resolution; y++) {
+                for(x = 0; x < resolution; x++) {
+                    xgrad = (x + 1) - centerPoint;
+                    ygrad = (y + 1) - centerPoint;
+                    c = saturate((1 - saturate(Math.sqrt(xgrad * xgrad + ygrad * ygrad) / resolution)) - 0.5);
+                    p = y * resolution + x;
                     dtex[p * 4] =     1;
                     dtex[p * 4 + 1] = 1;
                     dtex[p * 4 + 2] = 1;
                     dtex[p * 4 + 3] = c;
                 }
             }
-            defaultParamTex = _createTexture(gd, 8, 8, dtex, pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
             defaultParamTex.minFilter = pc.gfx.FILTER_LINEAR;
             defaultParamTex.magFilter = pc.gfx.FILTER_LINEAR;
         }
@@ -212,7 +215,6 @@ pc.extend(pc.scene, function() {
         setProperty("spawnBounds", new pc.Vec3(0, 0, 0));        // Spawn point divergence
         setProperty("wrap", false);
         setProperty("wrapBounds", null);
-        setProperty("smoothness", 4);                            // Blurring width for graphs
         setProperty("colorMap", defaultParamTex);
         setProperty("normalMap", null);
         setProperty("oneShot", false);
@@ -553,19 +555,19 @@ pc.extend(pc.scene, function() {
             var gd = this.graphicsDevice;
             var i;
 
-            this.qLocalVelocity = this.localVelocityGraph.quantize(precision, this.smoothness);
-            this.qVelocity = this.velocityGraph.quantize(precision, this.smoothness);
-            this.qColor =         this.colorGraph.quantize(precision, this.smoothness);
-            this.qRotSpeed =      this.rotationSpeedGraph.quantize(precision, this.smoothness);
-            this.qScale =         this.scaleGraph.quantize(precision, this.smoothness);
-            this.qAlpha =         this.alphaGraph.quantize(precision, this.smoothness);
+            this.qLocalVelocity = this.localVelocityGraph.quantize(precision);
+            this.qVelocity = this.velocityGraph.quantize(precision);
+            this.qColor =         this.colorGraph.quantize(precision);
+            this.qRotSpeed =      this.rotationSpeedGraph.quantize(precision);
+            this.qScale =         this.scaleGraph.quantize(precision);
+            this.qAlpha =         this.alphaGraph.quantize(precision);
 
-            this.qLocalVelocity2 = this.localVelocityGraph2.quantize(precision, this.smoothness);
-            this.qVelocity2 = this.velocityGraph2.quantize(precision, this.smoothness);
-            this.qColor2 =         this.colorGraph2.quantize(precision, this.smoothness);
-            this.qRotSpeed2 =      this.rotationSpeedGraph2.quantize(precision, this.smoothness);
-            this.qScale2 =         this.scaleGraph2.quantize(precision, this.smoothness);
-            this.qAlpha2 =         this.alphaGraph2.quantize(precision, this.smoothness);
+            this.qLocalVelocity2 = this.localVelocityGraph2.quantize(precision);
+            this.qVelocity2 = this.velocityGraph2.quantize(precision);
+            this.qColor2 =         this.colorGraph2.quantize(precision);
+            this.qRotSpeed2 =      this.rotationSpeedGraph2.quantize(precision);
+            this.qScale2 =         this.scaleGraph2.quantize(precision);
+            this.qAlpha2 =         this.alphaGraph2.quantize(precision);
 
             for(i=0; i<precision; i++) {
                 this.qRotSpeed[i] *= pc.math.DEG_TO_RAD;
