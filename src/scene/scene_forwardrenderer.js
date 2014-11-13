@@ -103,6 +103,7 @@ pc.extend(pc.scene, function () {
             format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
             width: width,
             height: height,
+            autoMipmap: false
         });
         shadowMap.minFilter = pc.gfx.FILTER_NEAREST;
         shadowMap.magFilter = pc.gfx.FILTER_NEAREST;
@@ -116,7 +117,8 @@ pc.extend(pc.scene, function () {
             format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
             width: size,
             height: size,
-            cubemap: true
+            cubemap: true,
+            autoMipmap: false
         });
         cubemap.minFilter = pc.gfx.FILTER_NEAREST;
         cubemap.magFilter = pc.gfx.FILTER_NEAREST;

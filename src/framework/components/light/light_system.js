@@ -103,15 +103,15 @@ pc.extend(pc.fw, function () {
         }, {
             name: "falloffMode",
             displayName: "Falloff mode",
-            description: "",
+            description: "Defines the way of distance attenuation",
             type: "enumeration",
             options: {
                 enumerations: [{
                     name: 'Linear',
-                    value: 0
+                    value: pc.scene.LIGHTFALLOFF_LINEAR
                 }, {
                     name: 'Inverse squared',
-                    value: 1
+                    value: pc.scene.LIGHTFALLOFF_INVERSESQUARED
                 }]
             },
             defaultValue: 0,

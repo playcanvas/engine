@@ -335,7 +335,7 @@ pc.gfx.programlib.phong = {
                     code += "   data.atten = 1.0;\n";
                 } else {
                     code += "   getLightDirPoint(data, light"+i+"_position);\n";
-                    if (options.lights[i].getFalloffMode()==0) {
+                    if (options.lights[i].getFalloffMode()==pc.scene.LIGHTFALLOFF_LINEAR) {
                         code += "   data.atten = getFalloffLinear(data, light"+i+"_radius);\n";
                     } else {
                         code += "   data.atten = getFalloffInvSquared(data, light"+i+"_radius);\n";

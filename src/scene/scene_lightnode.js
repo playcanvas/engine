@@ -398,6 +398,9 @@ pc.extend(pc.scene, function () {
          */
         LIGHTTYPE_SPOT: 2,
 
+        LIGHTFALLOFF_LINEAR: 0,
+        LIGHTFALLOFF_INVERSESQUARED: 1,
+
         LightNode: LightNode
     };
 }());
