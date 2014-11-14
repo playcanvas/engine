@@ -483,7 +483,7 @@ pc.extend(pc.fw, function() {
 
                 if (types[prop] === 'vector') {
                     if (pc.type(data[prop]) === 'array') {
-                        data[prop] = new pc.Vec3(data[prop]);
+                        data[prop] = new pc.Vec3(data[prop][0], data[prop][1], data[prop][2]);
                     }
                 } else if (types[prop] === 'curve') {
                     if (!(data[prop] instanceof pc.Curve)) {
