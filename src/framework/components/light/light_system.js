@@ -47,7 +47,7 @@ pc.extend(pc.fw, function () {
         }, {
             name: "intensity",
             displayName: "Intensity",
-            description: "Factors the light color",
+            description: "The intensity of the light",
             type: "number",
             defaultValue: 1,
             options: {

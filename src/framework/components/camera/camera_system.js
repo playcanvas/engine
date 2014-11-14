@@ -21,7 +21,7 @@ pc.extend(pc.fw, function () {
         this.schema = [{
             name: "enabled",
             displayName: "Enabled",
-            description: "Disabled cameras do not render anything",
+            description: "Enable or disable the component",
             type: "boolean",
             defaultValue: true
         }, {
