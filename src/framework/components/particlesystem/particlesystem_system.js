@@ -360,7 +360,8 @@ pc.extend(pc.fw, function() {
                 options: {
                     curveNames: ['Scale'],
                     verticalAxisValue: 1,
-                    secondCurve: 'scaleGraph2'
+                    secondCurve: 'scaleGraph2',
+                    min: 0
                 }
             }, {
                 name: 'scaleGraph2',
@@ -373,7 +374,8 @@ pc.extend(pc.fw, function() {
                 },
                 options: {
                     curveNames: ['Scale'],
-                    verticalAxisValue: 1
+                    verticalAxisValue: 1,
+                    min: 0
                 },
                 filter: {
                     always: false
