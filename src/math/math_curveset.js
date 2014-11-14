@@ -48,8 +48,8 @@ pc.extend(pc, (function () {
         clone: function () {
             var result = new pc.CurveSet();
             this.curves.forEach(function (c) {
-                result.push(c.clone());
-            })
+                result.curves.push(c.clone());
+            });
 
             result._type = this._type;
 
