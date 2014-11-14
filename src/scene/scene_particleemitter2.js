@@ -518,7 +518,6 @@ pc.extend(pc.scene, function() {
             this.resetMaterial();
 
             this.meshInstance = new pc.scene.MeshInstance(this.node, mesh, this.material);
-            this.meshInstance.layer = pc.scene.LAYER_SKYBOX; //LAYER_FX;
             this.meshInstance.updateKey(); // shouldn't be here?
 
             this._initializeTextures();
