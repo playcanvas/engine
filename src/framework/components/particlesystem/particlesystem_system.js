@@ -315,7 +315,8 @@ pc.extend(pc.fw, function() {
                 },
                 options: {
                     curveNames: ['Angle'],
-                    secondCurve: 'rotationSpeedGraph2'
+                    secondCurve: 'rotationSpeedGraph2',
+                    verticalAxisValue: 360,
                 }
             }, {
                 name: 'rotationSpeedGraph2',
@@ -327,7 +328,8 @@ pc.extend(pc.fw, function() {
                     keys: [0, 0]
                 },
                 options: {
-                    curveNames: ['Angle']
+                    curveNames: ['Angle'],
+                    verticalAxisValue: 360
                 },
                 filter: {
                     always: false
