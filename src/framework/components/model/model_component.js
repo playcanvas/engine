@@ -91,7 +91,7 @@ pc.extend(pc.fw, function () {
                 var mesh = null;
 
                 if (newValue === 'asset') {
-                    if (this.data.asset != null) {
+                    if (this.data.asset !== null) {
                         this.loadModelAsset(this.data.asset);
                     } else {
                         this.model = null;
@@ -132,6 +132,7 @@ pc.extend(pc.fw, function () {
                     }
 
                     this.model = model;
+                    this.asset = null;
                 }
             }
         },
@@ -228,7 +229,7 @@ pc.extend(pc.fw, function () {
                         // this should only be at tool-time
                         this.system.context.assets.load(asset).then(function (materials) {
                             this.material = materials[0];
-                        }.bind(this))
+                        }.bind(this));
                     }
                 } else {
                     console.error(pc.string.format("Entity '{0}' is trying to load Material Asset {1} which no longer exists. Maybe this model was once a primitive shape?", this.entity.getName(), id));
