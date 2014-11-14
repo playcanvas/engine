@@ -15,6 +15,7 @@ pc.extend(pc.scene, function () {
         // Point and spot properties
         this._attenuationStart = 10;
         this._attenuationEnd = 10;
+        this._falloffMode = 0;
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -62,6 +63,7 @@ pc.extend(pc.scene, function () {
             // Point and spot properties
             clone.setAttenuationStart(this.getAttenuationStart());
             clone.setAttenuationEnd(this.getAttenuationEnd());
+            clone.setFalloffMode(this.getFalloffMode());
 
             // Spot properties
             clone.setInnerConeAngle(this.getInnerConeAngle());
@@ -103,6 +105,10 @@ pc.extend(pc.scene, function () {
          */
         getAttenuationStart: function () {
             return this._attenuationStart;
+        },
+
+        getFalloffMode: function () {
+            return this._falloffMode;
         },
 
         /**
@@ -223,6 +229,13 @@ pc.extend(pc.scene, function () {
          */
         setAttenuationStart: function (radius) {
             this._attenuationStart = radius;
+        },
+
+        setFalloffMode: function (mode) {
+            this._falloffMode = mode;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
         },
 
         /**
@@ -387,6 +400,9 @@ pc.extend(pc.scene, function () {
          * @description Spot (local) light source.
          */
         LIGHTTYPE_SPOT: 2,
+
+        LIGHTFALLOFF_LINEAR: 0,
+        LIGHTFALLOFF_INVERSESQUARED: 1,
 
         LightNode: LightNode
     };

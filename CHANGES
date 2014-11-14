@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.159.0
+--------
+* Added point light shadows
+* Added falloffMode to point lights and spot lights
+
+--------
 v0.158.9
 --------
 * [FIX] Reduced number of varyings required for texture coordinates.
