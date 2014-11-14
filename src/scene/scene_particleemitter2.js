@@ -962,9 +962,9 @@ pc.extend(pc.scene, function() {
                         particlePosMoved.x = particlePosMoved.y = particlePosMoved.z = 0;
                         if (this.wrap && this.wrapBounds) {
                             particleFinalPos.sub(posCam);
-                            particleFinalPos.x = glMod(particleFinalPos.x, this.wrapBounds.x * 2.0) - this.wrapBounds.x;
-                            particleFinalPos.y = glMod(particleFinalPos.y, this.wrapBounds.y * 2.0) - this.wrapBounds.y;
-                            particleFinalPos.z = glMod(particleFinalPos.z, this.wrapBounds.z * 2.0) - this.wrapBounds.z;
+                            particleFinalPos.x = glMod(particleFinalPos.x, this.wrapBounds.x) - this.wrapBounds.x * 0.5;
+                            particleFinalPos.y = glMod(particleFinalPos.y, this.wrapBounds.y) - this.wrapBounds.y * 0.5;
+                            particleFinalPos.z = glMod(particleFinalPos.z, this.wrapBounds.z) - this.wrapBounds.z * 0.5;
                             particleFinalPos.add(posCam);
                             particlePosMoved.copy(particleFinalPos).sub(particlePos);
                         }
