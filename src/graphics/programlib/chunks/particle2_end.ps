@@ -1,5 +1,3 @@
-
-    if (a < 0.01) discard;
-    gl_FragColor = vec4(rgb*a, a);
+    rgb = gammaCorrectOutput(rgb);
+    gl_FragColor = vec4(rgb, a);
 }
-

@@ -7,10 +7,8 @@ pc.extend(pc.fw, function() {
         this.startAngle = 0;
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
-        this.lifetime2 = null;
         this.spawnBounds = new pc.Vec3();       // Spawn point divergence
         this.wrapBounds = new pc.Vec3();
-        this.smoothness = 4;                    // Blurring width for graphs
         this.colorMap = null;
         this.colorMapAsset = null;
         this.normalMap = null;
@@ -50,7 +48,7 @@ pc.extend(pc.fw, function() {
         this.rotationSpeedGraph = null;
         this.rotationSpeedGraph2 = null;
 
-        this.blendType = pc.scene.BLEND_PREMULTIPLIED;
+        this.blendType = pc.scene.BLEND_NORMAL;
 
         this.model = null;
 

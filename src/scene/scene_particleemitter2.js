@@ -181,8 +181,7 @@ pc.extend(pc.scene, function() {
             // 1x1 white opaque
             //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
 
-
-            // white almost radial gradient
+            // white radial gradient
             var resolution = 16;
             var centerPoint = resolution * 0.5 + 0.5;
             var dtex = new Float32Array(resolution * resolution * 4);
@@ -211,7 +210,6 @@ pc.extend(pc.scene, function() {
         setProperty("rate", 1);                                  // Emission rate
         setProperty("rate2", this.rate);
         setProperty("lifetime", 50);                             // Particle lifetime
-        setProperty("lifetime2", this.lifetime);
         setProperty("spawnBounds", new pc.Vec3(0, 0, 0));        // Spawn point divergence
         setProperty("wrap", false);
         setProperty("wrapBounds", null);
@@ -232,7 +230,7 @@ pc.extend(pc.scene, function() {
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
         setProperty("depthTest", false);
-        setProperty("blendType", pc.scene.BLEND_PREMULTIPLIED);
+        setProperty("blendType", pc.scene.BLEND_NORMAL);
         setProperty("node", null);
         setProperty("startAngle", 0);
         setProperty("startAngle2", this.startAngle);
@@ -279,7 +277,6 @@ pc.extend(pc.scene, function() {
         this.constantRate = gd.scope.resolve("rate");
         this.constantRateDiv = gd.scope.resolve("rateDiv");
         this.constantLifetime = gd.scope.resolve("lifetime");
-        this.constantLifetimeDiv = gd.scope.resolve("lifetimeDiv");
         this.constantLightCube = gd.scope.resolve("lightCube[0]");
         this.constantGraphSampleSize = gd.scope.resolve("graphSampleSize");
         this.constantGraphNumSamples = gd.scope.resolve("graphNumSamples");
@@ -302,6 +299,12 @@ pc.extend(pc.scene, function() {
 
         this.lightCube = new Float32Array(6 * 3);
         this.lightCubeDir = new Array(6);
+        this.lightCubeDir[0] = new pc.Vec3(-1, 0, 0);
+        this.lightCubeDir[1] = new pc.Vec3(1, 0, 0);
+        this.lightCubeDir[2] = new pc.Vec3(0, -1, 0);
+        this.lightCubeDir[3] = new pc.Vec3(0, 1, 0);
+        this.lightCubeDir[4] = new pc.Vec3(0, 0, -1);
+        this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
 
         this.internalTex0 = null;
         this.internalTex1 = null;
@@ -334,7 +337,7 @@ pc.extend(pc.scene, function() {
     };
 
     function calcEndTime(emitter) {
-        var interval = (emitter.rate * emitter.numParticles + emitter.lifetime);
+        var interval = (Math.max(emitter.rate, emitter.rate2) * emitter.numParticles + emitter.lifetime);
         interval = Math.min(interval, emitter.maxEmissionTime);
         return Date.now() + interval * 1000;
     }
@@ -410,18 +413,6 @@ pc.extend(pc.scene, function() {
                         this.camera._depthTarget = this.camera.camera.camera._depthTarget;
                     }
                 }
-            }
-
-            if (this.lighting) {
-                // this.lightCube = new Float32Array(6 * 3);
-
-                // this.lightCubeDir = new Array(6);
-                this.lightCubeDir[0] = new pc.Vec3(-1, 0, 0);
-                this.lightCubeDir[1] = new pc.Vec3(1, 0, 0);
-                this.lightCubeDir[2] = new pc.Vec3(0, -1, 0);
-                this.lightCubeDir[3] = new pc.Vec3(0, 1, 0);
-                this.lightCubeDir[4] = new pc.Vec3(0, 0, -1);
-                this.lightCubeDir[5] = new pc.Vec3(0, 0, 1);
             }
 
             this.rebuildGraphs();
@@ -520,7 +511,7 @@ pc.extend(pc.scene, function() {
                     mesh: this.emitter.isMesh,
                     srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
-                    premul: this.blendType === pc.scene.BLEND_PREMULTIPLIED
+                    blend: this.blendType
                 });
                 this.setShader(shader);
             };
@@ -534,7 +525,8 @@ pc.extend(pc.scene, function() {
 
             this._initializeTextures();
 
-            this.addTime(this._getStartTime()); // fill dynamic textures and constants with initial data
+            this.addTime(0); // fill dynamic textures and constants with initial data
+            if (this.preWarm) this.prewarm(this.lifetime);
 
             this.resetTime();
         },
@@ -612,10 +604,6 @@ pc.extend(pc.scene, function() {
             return false;
         },
 
-        _getStartTime: function () {
-            return this.preWarm && !this.oneShot ? this.lifetime : 0;
-        },
-
         resetMaterial: function() {
             var material = this.material;
             var gd = this.graphicsDevice;
@@ -632,7 +620,6 @@ pc.extend(pc.scene, function() {
             material.setParameter('numParticles', this.numParticles);
             material.setParameter('numParticlesPot', this.numParticlesPot);
             material.setParameter('lifetime', this.lifetime);
-            material.setParameter('lifetimeDiv', this.lifetime2 - this.lifetime);
             material.setParameter('rate', this.rate);
             material.setParameter('rateDiv', this.rate2 - this.rate);
             material.setParameter('seed', this.seed);
@@ -779,10 +766,19 @@ pc.extend(pc.scene, function() {
                 this.particleTexIN = this.particleTexStart;
                 this.particleTexIN = oldTexIN;
             }
-            var startTime = this.preWarm ? this.lifetime : 0;
             this.totalTime = this.totalTimePrev = this.oneShotStartTime = this.oneShotEndTime = 0;
-            this.addTime(this._getStartTime());
+            this.addTime(0);
+            if (this.preWarm) this.prewarm(this.lifetime);
             this.resetTime();
+        },
+
+        prewarm: function(time) {
+            var lifetimeFraction = time / this.lifetime;
+            var iterations = Math.min(Math.floor(lifetimeFraction * this.precision), this.precision);
+            var stepDelta = time / iterations;
+            for(var i=0; i<iterations; i++) {
+                this.addTime(stepDelta);
+            }
         },
 
         resetTime: function() {
@@ -873,7 +869,6 @@ pc.extend(pc.scene, function() {
 
                 this.constantSeed.setValue(this.seed);
                 this.constantLifetime.setValue(this.lifetime);
-                this.constantLifetimeDiv.setValue(this.lifetime2 - this.lifetime);
                 this.constantEmitterScale.setValue(emitterScale);
                 this.constantEmitterMatrix.setValue(emitterMatrix3.data);
 
@@ -917,7 +912,7 @@ pc.extend(pc.scene, function() {
                     rndFactor3Vec.z = (rndFactor * 100.0) % 1.0;
 
                     var particleRate = pc.math.lerp(this.rate, this.rate2, rndFactor);
-                    var particleLifetime = pc.math.lerp(this.lifetime, this.lifetime2, rndFactor);
+                    var particleLifetime = this.lifetime;
                     var startSpawnTime = -particleRate * id;
                     var accumLife = Math.max(this.totalTime + startSpawnTime + particleRate, 0.0);
                     var life = (accumLife % (particleLifetime + particleRate)) - particleRate;
@@ -927,7 +922,7 @@ pc.extend(pc.scene, function() {
                     var respawn = Math.floor(accumLife / (particleLifetime + particleRate)) != Math.floor(accumLifePrev / (particleLifetime + particleRate));
 
                     var scale = 0;
-                    var alphaRnd = 0;
+                    var alphaDiv = 0;
 
                     if (life > 0.0) {
                         localVelocityVec.data =  tex1D(this.qLocalVelocity, nlife, 3, localVelocityVec.data);
@@ -938,6 +933,8 @@ pc.extend(pc.scene, function() {
                         var rotSpeed2 =          tex1D(this.qRotSpeed2, nlife);
                         scale =                  tex1D(this.qScale, nlife);
                         var scale2 =             tex1D(this.qScale2, nlife);
+                        var alpha =              tex1D(this.qAlpha, nlife);
+                        var alpha2 =             tex1D(this.qAlpha2, nlife);
 
                         localVelocityVec.x = pc.math.lerp(localVelocityVec.x, localVelocityVec2.x, rndFactor3Vec.x);
                         localVelocityVec.y = pc.math.lerp(localVelocityVec.y, localVelocityVec2.y, rndFactor3Vec.y);
@@ -948,7 +945,8 @@ pc.extend(pc.scene, function() {
                         velocityVec.z = pc.math.lerp(velocityVec.z, velocityVec2.z, rndFactor3Vec.z);
 
                         rotSpeed = pc.math.lerp(rotSpeed, rotSpeed2, rndFactor3Vec.y);
-                        scale = pc.math.lerp(scale, scale2, (rndFactor*10000.0) % 1.0) * uniformScale;
+                        scale = pc.math.lerp(scale, scale2, (rndFactor * 10000.0) % 1.0) * uniformScale;
+                        alphaDiv = (alpha2 - alpha) * ((rndFactor * 1000.0) % 1.0);
 
                         if (this.meshInstance.node) {
                             rotMat.transformPoint(localVelocityVec, localVelocityVec);
@@ -1021,7 +1019,7 @@ pc.extend(pc.scene, function() {
                         data[w + 3] = nlife;
                         data[w + 4] = this.particleTex[id * 4 + 3];
                         data[w + 5] = scale;
-                        data[w + 6] = alphaRnd * (((rndFactor * 1000.0) % 1) * 2.0 - 1.0);
+                        data[w + 6] = alphaDiv;
                         //data[w+7] =   (quadX*0.5+0.5) + (quadY*0.5+0.5) * 0.1;
                         data[w + 8] = quadX;
                         data[w + 9] = quadY;

@@ -12,7 +12,6 @@ pc.extend(pc.fw, function() {
     var COMPLEX_PROPERTIES = [
         'numParticles',
         'lifetime',
-        'lifetime2',
         'rate',
         'rate2',
         'startAngle',
@@ -159,7 +158,11 @@ pc.extend(pc.fw, function() {
                 this.emitter[name] = newValue;
                 this.emitter.resetTime();
                 if (oldValue && !newValue) {
-                    this.emitter.oneShotEndTime = this.emitter.totalTime;
+                    //this.emitter.oneShotEndTime = this.emitter.totalTime;
+                    this.reset();
+                    this.emitter.resetMaterial();
+                    this.enabled = true;
+                    this.rebuild();
                 }
             }
         },
@@ -183,6 +186,7 @@ pc.extend(pc.fw, function() {
         onSetComplexProperty: function (name, oldValue, newValue) {
             if (this.emitter) {
                 this.emitter[name] = newValue;
+                this.reset();
                 this.emitter.resetMaterial();
                 this.rebuild();
             }
@@ -213,7 +217,6 @@ pc.extend(pc.fw, function() {
                     wrap: this.data.wrap,
                     wrapBounds: this.data.wrapBounds,
                     lifetime: this.data.lifetime,
-                    lifetime2: this.data.lifetime2,
                     rate: this.data.rate,
                     rate2: this.data.rate2,
 

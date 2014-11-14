@@ -4,7 +4,7 @@ uniform sampler2D particleTexIN;
 uniform vec3 emitterPos, frameRandom, localVelocityDivMult, velocityDivMult;
 uniform mat3 spawnBounds;
 uniform mat3 emitterMatrix;
-uniform float delta, rate, rateDiv, lifetime, lifetimeDiv, numParticles, totalTime, totalTimePrev, rotSpeedDivMult, oneShotStartTime, oneShotEndTime, seed;
+uniform float delta, rate, rateDiv, lifetime, numParticles, totalTime, totalTimePrev, rotSpeedDivMult, oneShotStartTime, oneShotEndTime, seed;
 uniform float startAngle, startAngle2;
 
 uniform float graphSampleSize;
@@ -47,7 +47,7 @@ void main(void)
     vec3 rndFactor3 = vec3(rndFactor, fract(rndFactor*10.0), fract(rndFactor*100.0));
 
     float particleRate = rate + rateDiv * rndFactor;
-    float particleLifetime = lifetime + lifetimeDiv * rndFactor;
+    float particleLifetime = lifetime;
     float startSpawnTime = -particleRate * (gl_FragCoord.x - 0.5);
     float accumLife = max(totalTime + startSpawnTime + particleRate, 0.0);
     float life = mod(accumLife, particleLifetime + particleRate) - particleRate;

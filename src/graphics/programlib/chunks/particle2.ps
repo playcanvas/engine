@@ -26,7 +26,7 @@ float unpackFloat(vec4 rgbaDepth) {
 void main(void) {
     vec4 tex         = texture2DSRGB(colorMap, texCoordsAlphaLife.xy);
     vec4 ramp     = tex1Dlod_lerp(internalTex3, vec2(texCoordsAlphaLife.w, 0.0));
-    ramp *= colorMult;
+    ramp.rgb *= colorMult;
 
     ramp.a += texCoordsAlphaLife.z;
 

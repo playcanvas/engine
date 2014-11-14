@@ -36,17 +36,6 @@ pc.extend(pc.fw, function() {
                     step: 0.01
                 }
             }, {
-                name: "lifetime2",
-                displayName: "Lifetime 2",
-                description: "",
-                type: "number",
-                exposed: false,
-                defaultValue: 5,
-                options: {
-                    min: 0,
-                    step: 0.01
-                }
-            }, {
                 name: "rate",
                 displayName: "Emission Rate",
                 description: "Delay between emission of each particle in seconds",
@@ -112,7 +101,6 @@ pc.extend(pc.fw, function() {
                 description: "Starts particles in the middle of simulation",
                 type: "boolean",
                 defaultValue: false,
-                exposed: false,
                 filter: {
                     oneShot: false
                 }
@@ -187,9 +175,6 @@ pc.extend(pc.fw, function() {
                 type: "enumeration",
                 options: {
                     enumerations: [{
-                        name: 'Premultiplied Alpha',
-                        value: pc.scene.BLEND_PREMULTIPLIED
-                    }, {
                         name: 'Alpha',
                         value: pc.scene.BLEND_NORMAL
                     }, {
@@ -200,7 +185,7 @@ pc.extend(pc.fw, function() {
                         value: pc.scene.BLEND_MULTIPLICATIVE
                     }]
                 },
-                defaultValue: pc.scene.BLEND_PREMULTIPLIED,
+                defaultValue: pc.scene.BLEND_NORMAL,
             }, {
                 name: "stretch",
                 displayName: "Stretch",
