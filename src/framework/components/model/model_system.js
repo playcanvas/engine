@@ -82,7 +82,7 @@ pc.extend(pc.fw, function () {
         }, {
             name: "castShadows",
             displayName: "Cast shadows",
-            description: "Occlude light from shadow casting lights",
+            description: "Occlude light",
             type: "boolean",
             defaultValue: false
         }, {

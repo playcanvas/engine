@@ -7,10 +7,8 @@ pc.extend(pc.fw, function() {
         this.startAngle = 0;
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
-        this.lifetime2 = null;
         this.spawnBounds = new pc.Vec3();       // Spawn point divergence
         this.wrapBounds = new pc.Vec3();
-        this.smoothness = 4;                    // Blurring width for graphs
         this.colorMap = null;
         this.colorMapAsset = null;
         this.normalMap = null;
@@ -24,7 +22,6 @@ pc.extend(pc.fw, function() {
         this.lighting = false;
         this.halfLambert = false;            // Uses half-lambert lighting instead of Lambert
         this.intensity = 1;
-        this.maxEmissionTime = 15;
         this.stretch = 0.0;
         this.depthSoftening = 0;
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
@@ -50,7 +47,7 @@ pc.extend(pc.fw, function() {
         this.rotationSpeedGraph = null;
         this.rotationSpeedGraph2 = null;
 
-        this.blendType = pc.scene.BLEND_PREMULTIPLIED;
+        this.blendType = pc.scene.BLEND_NORMAL;
 
         this.model = null;
 

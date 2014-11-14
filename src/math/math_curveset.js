@@ -47,9 +47,11 @@ pc.extend(pc, (function () {
 
         clone: function () {
             var result = new pc.CurveSet();
-            this.curves.forEach(function (c) {
-                result.push(c.clone());
-            })
+
+            result.curves = [ ];
+            for(var i = 0; i < this.curves.length; i++) {
+                result.curves.push(this.curves[i].clone());
+            }
 
             result._type = this._type;
 

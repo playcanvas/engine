@@ -66,7 +66,7 @@ pc.extend(pc.fw, function () {
         }, {
             name: "3d",
             displayName: "3d",
-            description: "3d sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-3d sounds are uniform aross space",
+            description: "3d sounds are positioned in space, and their sound is dependent on listener position/orientation. Non-3d sounds are uniform across space",
             type: "boolean",
             defaultValue: true
         }, {

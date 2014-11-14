@@ -3,6 +3,18 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.159.1
+--------
+* Added metadata to particle system curves to allow 'between two curves' editing in Designer
+* Changed default values of particle system attributes
+* Removed maxEmissionTime from particle system
+* [FIX] Issues with spawnBounds and wrapBounds
+* [FIX] Appearance of different blend modes for particles
+* [FIX] Shadow resolution is now available for all light types
+* [FIX] CurveSet cloning
+* Updated component attributes descriptions
+
+--------
 v0.159.0
 --------
 * Added point light shadows

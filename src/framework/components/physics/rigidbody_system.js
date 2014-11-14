@@ -245,7 +245,7 @@ pc.extend(pc.fw, function () {
         }, {
             name: "restitution",
             displayName: "Restitution",
-            description: "The restitution determines the elasticity of collisions. 0 means an object doesn't bounce at all, a value of 1 will be a perfect reflection",
+            description: "The restitution determines the elasticity of collisions. 0 means an object does not bounce at all, a value of 1 will be a perfect reflection",
             type: "number",
             options: {
                 min: 0,
