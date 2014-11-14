@@ -226,7 +226,6 @@ pc.extend(pc.scene, function() {
         setProperty("intensity", 1.0);
         setProperty("stretch", 0.0);
         setProperty("depthSoftening", 0);
-        setProperty("maxEmissionTime", 15);
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
         setProperty("depthTest", false);
@@ -338,7 +337,6 @@ pc.extend(pc.scene, function() {
 
     function calcEndTime(emitter) {
         var interval = (Math.max(emitter.rate, emitter.rate2) * emitter.numParticles + emitter.lifetime);
-        interval = Math.min(interval, emitter.maxEmissionTime);
         return Date.now() + interval * 1000;
     }
 

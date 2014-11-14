@@ -48,7 +48,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: "rate2",
                 displayName: "Emission Rate 2",
-                description: "",
+                description: "Defines the random range of Emission Rate",
                 type: "number",
                 defaultValue: 0.1,
                 options: {
@@ -58,7 +58,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: "startAngle",
                 displayName: "Start Angle",
-                description: "",
+                description: "The starting angle of each particle in degrees",
                 type: "number",
                 defaultValue: 0.0,
                 options: {
@@ -68,7 +68,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: "startAngle2",
                 displayName: "Start Angle 2",
-                description: "",
+                description: "Defines the random range of Start Angle",
                 type: "number",
                 defaultValue: 0.0,
                 options: {
@@ -81,20 +81,6 @@ pc.extend(pc.fw, function() {
                 description: "Disables looping",
                 type: "boolean",
                 defaultValue: false,
-            }, {
-                name: "maxEmissionTime",
-                displayName: "Max emission time",
-                description: "Limits time for one-shot emission. Should be only used in case of high Speed Divergence",
-                type: "number",
-                defaultValue: 15.0,
-                options: {
-                    min: 0,
-                    max: 600,
-                    step: 0.5
-                },
-                filter: {
-                    oneShot: true
-                }
             }, {
                 name: "preWarm",
                 displayName: "Pre Warm",
@@ -150,7 +136,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: "sort",
                 displayName: "Sorting Mode",
-                description: "How to sort particles; Only works in CPU mode",
+                description: "How to sort particles; Any value other than None will force CPU mode",
                 type: "enumeration",
                 options: {
                     enumerations: [{
@@ -251,7 +237,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'localVelocityGraph',
                 displayName: "Local Velocity",
-                description: "A graph that defines the local velocity of particles over time.",
+                description: "Curves that define the local velocity of particles over time.",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -265,7 +251,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'localVelocityGraph2',
                 displayName: "Local Velocity 2",
-                description: "The second curve that defines the range of the localVelocityGraph",
+                description: "Curves that define the range of the Local Velocity",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -277,7 +263,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'velocityGraph',
                 displayName: "Velocity",
-                description: "A graph that defines the world velocity of particles over time.",
+                description: "Curves that define the world velocity of particles over time.",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -291,7 +277,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'velocityGraph2',
                 displayName: "Velocity 2",
-                description: "The second curve that defines the range of the velocityGraph",
+                description: "Curves that define the range of the Velocity",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -306,7 +292,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'rotationSpeedGraph',
                 displayName: "Rotation Speed",
-                description: "A graph that defines how fast particle rotates over time.",
+                description: "Curve that defines how fast particles rotate over time.",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -321,7 +307,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'rotationSpeedGraph2',
                 displayName: "Rotation Speed 2",
-                description: "The second curve that defines the range of the rotationSpeedGraph",
+                description: "Curve that defines the range of Rotation Speed",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -337,7 +323,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'scaleGraph',
                 displayName: "Scale",
-                description: "A graph that defines the scale of particles over time.",
+                description: "Curve that defines the scale of particles over time",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -353,7 +339,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'scaleGraph2',
                 displayName: "Scale 2",
-                description: "The second curve that defines the range of scaleGraph",
+                description: "Curve that defines the range of Scale",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -370,7 +356,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'colorGraph',
                 displayName: "Color",
-                description: "A graph that defines the color of particles over time.",
+                description: "Curves that define the color of particles over time",
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -385,7 +371,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'colorGraph2',
                 displayName: "Color 2",
-                description: "A graph that defines the color of particles over time.",
+                description: "Curves that define the range of Color",
                 exposed: false, // not used at the moment
                 type: "curveset",
                 defaultValue: {
@@ -400,7 +386,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'alphaGraph',
                 displayName: "Opacity",
-                description: "A graph that defines the opacity of particles over time.",
+                description: "Curve that defines the opacity of particles over time",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
@@ -416,7 +402,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: 'alphaGraph2',
                 displayName: "Opacity 2",
-                description: "The second graph that defines the range of alphaGraph.",
+                description: "Curve that defines the range of Opacity",
                 type: "curve",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,

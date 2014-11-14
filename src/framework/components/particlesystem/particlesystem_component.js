@@ -26,7 +26,6 @@ pc.extend(pc.fw, function() {
         'sort',
         'stretch',
         'preWarm',
-        'maxEmissionTime',
         'camera'
     ];
 
@@ -250,7 +249,6 @@ pc.extend(pc.fw, function() {
                     lighting: this.data.lighting,
                     halfLambert: this.data.halfLambert,
                     intensity: this.data.intensity,
-                    maxEmissionTime: this.data.maxEmissionTime,
                     depthSoftening: this.data.depthSoftening,
                     camera: this.data.camera,
                     scene: this.system.context.scene,
