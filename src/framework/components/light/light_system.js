@@ -84,10 +84,7 @@ pc.extend(pc.fw, function () {
                     value: 2048
                 }]
             },
-            defaultValue: 1024,
-            filter: {
-                type: ['directional', 'spot']
-            }
+            defaultValue: 1024
         }, {
             name: "range",
             displayName: "Range",
