@@ -296,7 +296,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, -1], [0, -1], [0, 0]],
+                    keys: [[0, -1], [0, -1], [0, -1]],
                     betweenCurves: true
                 },
                 options: {
@@ -310,7 +310,7 @@ pc.extend(pc.fw, function() {
                 type: "curveset",
                 defaultValue: {
                     type: pc.CURVE_SMOOTHSTEP,
-                    keys: [[0, 1], [0, 1], [0, 0]]
+                    keys: [[0, 1], [0, 1], [0, 1]]
                 },
                 options: {
                     curveNames: ['X', 'Y', 'Z']
