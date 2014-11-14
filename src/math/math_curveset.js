@@ -50,7 +50,7 @@ pc.extend(pc, (function () {
 
             result.curves = [ ];
             for(var i = 0; i < this.curves.length; i++) {
-                result.curves.push(this.curves.clone());
+                result.curves.push(this.curves[i].clone());
             }
 
             result._type = this._type;
