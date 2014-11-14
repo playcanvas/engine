@@ -1,6 +1,6 @@
 pc.gfx.programlib.particle2 = {
     generateKey: function(device, options) {
-        var key = "particle2" + options.mode + options.normal + options.halflambert + options.stretch + options.soft + options.mesh + options.srgb + options.wrap + options.premul;
+        var key = "particle2" + options.mode + options.normal + options.halflambert + options.stretch + options.soft + options.mesh + options.srgb + options.wrap + options.blend;
         return key;
     },
 
@@ -43,6 +43,8 @@ pc.gfx.programlib.particle2 = {
             }
             fshader +=                              "\nuniform vec3 lightCube[6];\n";
         }
+
+        if (options.normal==0) options.srgb = false; // don't have to perform all gamma conversions when no lighting is used
         fshader += options.srgb ? chunk.gamma2_2PS : chunk.gamma1_0PS;
         fshader +=                                  chunk.particle2PS;
         if (options.soft > 0) fshader +=            chunk.particle2_softPS;
@@ -50,11 +52,14 @@ pc.gfx.programlib.particle2 = {
         if (options.normal == 2) fshader +=         chunk.particle2_normalMapPS;
         if (options.normal > 0) fshader +=          options.halflambert ? chunk.particle2_halflambertPS : chunk.particle2_lambertPS;
         if (options.normal > 0) fshader +=          chunk.particle2_lightingPS;
-        if (options.srgb) {
-            fshader += options.premul? chunk.particle2_end_srgbPS : chunk.particle2_end_srgb_nopremulPS;
-        } else {
-            fshader += options.premul? chunk.particle2_endPS : chunk.particle2_end_nopremulPS;
+        if (options.blend==pc.scene.BLEND_NORMAL) {
+            fshader += chunk.particle2_blendNormalPS;
+        } else if (options.blend==pc.scene.BLEND_ADDITIVE) {
+            fshader += chunk.particle2_blendAddPS;
+        } else if (options.blend==pc.scene.BLEND_MULTIPLICATIVE) {
+            fshader += chunk.particle2_blendMultiplyPS;
         }
+        fshader += chunk.particle2_endPS;
 
         var attributes = pc.gfx.shaderChunks.collectAttribs(vshader);
 
