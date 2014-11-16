@@ -19,6 +19,9 @@ pc.extend(pc.fw, function () {
 
         this.type = pc.fw.RIGIDBODY_TYPE_STATIC;
 
+        this.group = pc.fw.RIGIDBODY_GROUP_STATIC;
+        this.mask = pc.fw.RIGIDBODY_MASK_NOT_STATIC_KINEMATIC;
+
         // Non-serialized properties
         this.body = null;
         this.simulationEnabled = false;

@@ -253,6 +253,20 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0
         }, {
+            name: "group",
+            displayName: "Group",
+            description: "The collision group this rigidbody belongs to",
+            type: "number",
+            defaultValue: pc.fw.RIGIDBODY_GROUP_STATIC,
+            exposed: false
+        }, {
+            name: "mask",
+            displayName: "Mask",
+            description: "The collision mask this rigidbody uses to collide",
+            type: "number",
+            defaultValue: pc.fw.RIGIDBODY_MASK_NOT_STATIC_KINEMATIC,
+            exposed: false
+        }, {
             name: "body",
             exposed: false
         }];
@@ -323,7 +337,7 @@ pc.extend(pc.fw, function () {
                 data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
             }
 
-            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type'];
+            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type', 'group', 'mask'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -338,7 +352,9 @@ pc.extend(pc.fw, function () {
                 angularFactor: [entity.rigidbody.angularFactor.x, entity.rigidbody.angularFactor.y, entity.rigidbody.angularFactor.z],
                 friction: entity.rigidbody.friction,
                 restitution: entity.rigidbody.restitution,
-                type: entity.rigidbody.type
+                type: entity.rigidbody.type,
+                group: entity.rigidbody.group,
+                mask: entity.rigidbody.mask
             };
 
             this.addComponent(clone, data);
@@ -353,8 +369,13 @@ pc.extend(pc.fw, function () {
             data.body = null;
         },
 
-        addBody: function (body) {
-            this.dynamicsWorld.addRigidBody(body);
+        addBody: function (body, group, mask) {
+            if (group !== undefined && mask !== undefined) {
+                this.dynamicsWorld.addRigidBody(body, group, mask);
+            } else {
+                this.dynamicsWorld.addRigidBody(body);
+            }
+
             return body;
         },
 
@@ -667,7 +688,7 @@ pc.extend(pc.fw, function () {
                         if (componentData.type === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
                         } else if (componentData.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
-                            entity.rigidbody.updateKinematic(dt);
+                            entity.rigidbody._updateKinematic(dt);
                         }
                     }
 
@@ -770,6 +791,29 @@ pc.extend(pc.fw, function () {
         RIGIDBODY_WANTS_DEACTIVATION: 3,
         RIGIDBODY_DISABLE_DEACTIVATION: 4,
         RIGIDBODY_DISABLE_SIMULATION: 5,
+
+        RIGIDBODY_GROUP_NONE: 0,
+        RIGIDBODY_GROUP_DEFAULT: 1,
+        RIGIDBODY_GROUP_STATIC: 2,
+        RIGIDBODY_GROUP_KINEMATIC: 4,
+        RIGIDBODY_GROUP_TRIGGER: 8,
+        RIGIDBODY_GROUP_ENGINE_1: 16,
+        RIGIDBODY_GROUP_USER_1: 32,
+        RIGIDBODY_GROUP_USER_2: 64,
+        RIGIDBODY_GROUP_USER_3: 128,
+        RIGIDBODY_GROUP_USER_4: 256,
+        RIGIDBODY_GROUP_USER_5: 512,
+        RIGIDBODY_GROUP_USER_6: 1024,
+        RIGIDBODY_GROUP_USER_7: 2048,
+        RIGIDBODY_GROUP_USER_8: 4096,
+        RIGIDBODY_GROUP_USER_9: 8192,
+        RIGIDBODY_GROUP_USER_10: 16384,
+
+        RIGIDBODY_MASK_NONE: 0,
+        RIGIDBODY_MASK_ALL: 65535,
+        RIGIDBODY_MASK_STATIC: 2,
+        RIGIDBODY_MASK_NOT_STATIC: 65535 ^ 2,
+        RIGIDBODY_MASK_NOT_STATIC_KINEMATIC: 65535 ^ (2 | 4),
 
         RigidBodyComponentSystem: RigidBodyComponentSystem
     };

@@ -47,6 +47,8 @@ pc.extend(pc.fw, function () {
         this.on('set_friction', this.onSetFriction, this);
         this.on('set_restitution', this.onSetRestitution, this);
         this.on('set_type', this.onSetType, this);
+        this.on('set_group', this.onSetGroupOrMask, this);
+        this.on('set_mask', this.onSetGroupOrMask, this);
 
         this.on('set_body', this.onSetBody, this);
 
@@ -229,7 +231,7 @@ pc.extend(pc.fw, function () {
             if (this.entity.collision && this.entity.collision.enabled && !this.data.simulationEnabled) {
                 var body = this.body;
                 if (body) {
-                    this.system.addBody(body);
+                    this.system.addBody(body, this.group, this.mask);
 
                     // set activation state so that the body goes back to normal simulation
                     if (this.isKinematic()) {
@@ -546,7 +548,7 @@ pc.extend(pc.fw, function () {
         /**
          * @private
          * @function
-         * @name pc.fwRigidBodyComponent#syncBodyToEntity
+         * @name pc.fw.RigidBodyComponent#syncBodyToEntity
          * @description Update the Entity transform from the rigid body.
          * This is called internally after the simulation is stepped, to keep the Entity transform in sync with the rigid body transform.
          */
@@ -563,13 +565,49 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+        * @function
+        * @name pc.fw.RigidBodyComponent#teleport
+        * @description Teleport an entity to a new position and/or orientation
+        * @param {pc.Vec3} position The new position
+        * @param {pc.Quat} [rotation] The new rotation
+        */
+        /**
+        * @function
+        * @name pc.fw.RigidBodyComponent#teleport^2
+        * @description Teleport an entity to a new position and/or orientation
+        * @param {Number} x The new position x value
+        * @param {Number} y The new position y value
+        * @param {Number} z The new position z value
+        * @param {Number} [x] The new quaternion x value
+        * @param {Number} [y] The new quaternion y value
+        * @param {Number} [z] The new quaternion z value
+        * @param {Number} [w] The new quaternion w value
+        */
+        teleport: function () {
+            if (arguments.length < 3) {
+                if (arguments[0]) {
+                    this.entity.setPosition(arguments[0]);
+                }
+                if (arguments[1]) {
+                    this.entity.setRotation(arguments[1]);
+                }
+            } else {
+                if (arguments.length === 7) {
+                    this.entity.setRotation(arguments[3], arguments[4], arguments[5], arguments[6]);
+                }
+                this.entity.setPosition(arguments[0], arguments[1], arguments[2]);
+            }
+            this.syncEntityToBody();
+        },
+
+        /**
          * @private
          * @function
-         * @name pc.fw.RigidBodyComponent#updateKinematic
+         * @name pc.fw.RigidBodyComponent#_updateKinematic
          * @description Kinematic objects maintain their own linear and angular velocities. This method updates their transform
          * based on their current velocity. It is called in every frame in the main physics update loop, after the simulation is stepped.
          */
-        updateKinematic: function (dt) {
+        _updateKinematic: function (dt) {
             this._displacement.copy(this._linearVelocity).scale(dt);
             this.entity.translate(this._displacement);
 
@@ -585,6 +623,7 @@ pc.extend(pc.fw, function () {
                 this.body.getMotionState().setWorldTransform(ammoTransform);
             }
         },
+
 
 
         onEnable: function () {
@@ -668,8 +707,29 @@ pc.extend(pc.fw, function () {
         onSetType: function (name, oldValue, newValue) {
             if (newValue !== oldValue) {
                 this.disableSimulation();
+
+                // set group and mask to defaults for type
+                if (newValue === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
+                    this.data.group = pc.fw.RIGIDBODY_GROUP_DEFAULT;
+                    this.data.mask = pc.fw.RIGIDBODY_MASK_ALL;
+                } else if (newValue === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
+                    this.data.group = pc.fw.RIGIDBODY_GROUP_KINEMATIC;
+                    this.data.mask = pc.fw.RIGIDBODY_MASK_ALL;
+                } else {
+                    this.data.group = pc.fw.RIGIDBODY_GROUP_STATIC;
+                    this.data.mask = pc.fw.RIGIDBODY_MASK_NOT_STATIC_KINEMATIC;
+                }
+
                 // Create a new body
                 this.createBody();
+            }
+        },
+
+        onSetGroupOrMask: function (name, oldValue, newValue) {
+            if (newValue !== oldValue) {
+                // re-enabling simulation adds rigidbody back into world with new masks
+                this.disableSimulation();
+                this.enableSimulation();
             }
         },
 
