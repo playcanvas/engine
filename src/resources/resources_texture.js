@@ -14,11 +14,13 @@ pc.extend(pc.resources, function () {
 
     var TextureResourceHandler = function (device) {
         this._device = device;
+        this.crossOrigin = undefined;
     };
     TextureResourceHandler = pc.inherits(TextureResourceHandler, pc.resources.ResourceHandler);
 
     TextureResourceHandler.prototype.load = function (request, options) {
         var identifier = request.canonical;
+        var self = this;
 
         var promise = new pc.promise.Promise(function (resolve, reject) {
             var ext = pc.path.getExtension(identifier).toLowerCase();
@@ -35,6 +37,10 @@ pc.extend(pc.resources, function () {
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var image = new Image();
+                if (self.crossOrigin !== undefined) {
+                    image.crossOrigin = self.crossOrigin;
+                }
+
                 // Call success callback after opening Texture
                 image.onload = function () {
                     resolve(image);
