@@ -3,6 +3,12 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.159.2
+--------
+* [FIX] Cloning CurveSet
+* [FIX] Cloning ParticleSystem
+
+--------
 v0.159.1
 --------
 * Added metadata to particle system curves to allow 'between two curves' editing in Designer
