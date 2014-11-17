@@ -626,7 +626,7 @@ pc.extend(pc.scene, function() {
             material.setParameter("oneShotEndTime", this.oneShotEndTime);
             material.setParameter("graphNumSamples", this.precision);
             material.setParameter("graphSampleSize", 1.0 / this.precision);
-            material.setParameter("emitterScale", pc.Vec3.ONE);
+            material.setParameter("emitterScale", pc.Vec3.ONE.data);
 
             if (this.wrap && this.wrapBounds) {
                 material.setParameter('wrapBounds', this.wrapBounds.data);
