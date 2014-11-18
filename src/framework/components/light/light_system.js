@@ -84,7 +84,10 @@ pc.extend(pc.fw, function () {
                     value: 2048
                 }]
             },
-            defaultValue: 1024
+            defaultValue: 1024,
+            filter: {
+                castShadows: true
+            }
         }, {
             name: "range",
             displayName: "Range",
