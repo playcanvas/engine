@@ -89,6 +89,9 @@ pc.extend(pc.fw, function () {
                 name: 'assets',
                 exposed: false,
                 readOnly: true
+            }, {
+                name: 'cubemap',
+                exposed: false
             }
         ];
 
@@ -100,7 +103,7 @@ pc.extend(pc.fw, function () {
 
     pc.extend(SkyboxComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            var properties = ['enabled', 'posx', 'negx', 'posy', 'negy', 'posz', 'negz'];
+            var properties = ['enabled', 'posx', 'negx', 'posy', 'negy', 'posz', 'negz', 'cubemap'];
             SkyboxComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 

@@ -126,10 +126,19 @@ pc.extend(pc.scene, function () {
         this.bumpiness = 1;
 
         this.cubeMap = null;
+        this.prefilteredCubeMap128 = null;
+        this.prefilteredCubeMap64 = null;
+        this.prefilteredCubeMap32 = null;
+        this.prefilteredCubeMap16 = null;
+        this.prefilteredCubeMap8 = null;
+        this.prefilteredCubeMap4 = null;
         this.sphereMap = null;
         this.reflectivity = 1;
 
         this.lightMap = null;
+        this.aoMap = null;
+        this.blendMapsWithColors = true;
+        this.specularAA = false;
 
         this.fresnelFactor = 0;
 
@@ -233,12 +242,21 @@ pc.extend(pc.scene, function () {
             clone.bumpiness = this.bumpiness;
 
             clone.cubeMap = this.cubeMap;
+            clone.prefilteredCubeMap128 = this.prefilteredCubeMap128;
+            clone.prefilteredCubeMap64 = this.prefilteredCubeMap64;
+            clone.prefilteredCubeMap32 = this.prefilteredCubeMap32;
+            clone.prefilteredCubeMap16 = this.prefilteredCubeMap16;
+            clone.prefilteredCubeMap8 = this.prefilteredCubeMap8;
+            clone.prefilteredCubeMap4 = this.prefilteredCubeMap4;
             clone.sphereMap = this.sphereMap;
             clone.reflectivity = this.reflectivity;
 
             clone.lightMap = this.lightMap;
+            clone.aoMap = this.aoMap;
 
             clone.fresnelFactor = this.fresnelFactor;
+            clone.blendMapsWithColors = this.blendMapsWithColors;
+            clone.specularAA = this.specularAA;
 
             clone.update();
             return clone;
@@ -366,6 +384,24 @@ pc.extend(pc.scene, function () {
                     case 'cubeMap':
                         this.cubeMap = _createTexture(param);
                         break;
+                    case 'prefilteredCubeMap128':
+                        this.prefilteredCubeMap128 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap64':
+                        this.prefilteredCubeMap64 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap32':
+                        this.prefilteredCubeMap32 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap16':
+                        this.prefilteredCubeMap16 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap8':
+                        this.prefilteredCubeMap8 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap4':
+                        this.prefilteredCubeMap4 = _createTexture(param);
+                        break;
                     case 'sphereMap':
                         this.sphereMap = _createTexture(param);
                         break;
@@ -374,6 +410,9 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'lightMap':
                         this.lightMap = _createTexture(param);
+                        break;
+                    case 'aoMap':
+                        this.aoMap = _createTexture(param);
                         break;
                     case 'depthTest':
                         this.depthTest = param.data;
@@ -386,6 +425,12 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'blendType':
                         this.blendType = param.data;
+                        break;
+                    case 'blendMapsWithColors':
+                        this.blendMapsWithColors = param.data;
+                        break;
+                    case 'specularAA':
+                        this.specularAA = param.data;
                         break;
                     case 'fresnelFactor':
                         this.fresnelFactor = param.data;
@@ -436,8 +481,9 @@ pc.extend(pc.scene, function () {
                 if (this.diffuseMapTransform) {
                     this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform.data);
                 }
-            } else {
-                this.diffuseMapTransform = null;
+            }
+
+            if (!this.diffuseMap || this.blendMapsWithColors) {
                 this.diffuseUniform[0] = this.diffuse.r;
                 this.diffuseUniform[1] = this.diffuse.g;
                 this.diffuseUniform[2] = this.diffuse.b;
@@ -457,8 +503,9 @@ pc.extend(pc.scene, function () {
                 if (this.specularMapTransform) {
                     this.setParameter('texture_specularMapTransform', this.specularMapTransform.data);
                 }
-            } else {
-                this.specularMapTransform = null;
+            }
+
+            if (!this.specularMap || this.blendMapsWithColors) {
                 this.specularUniform[0] = this.specular.r;
                 this.specularUniform[1] = this.specular.g;
                 this.specularUniform[2] = this.specular.b;
@@ -478,8 +525,9 @@ pc.extend(pc.scene, function () {
                 if (this.glossMapTransform) {
                     this.setParameter('texture_glossMapTransform', this.glossMapTransform.data);
                 }
-            } else {
-                this.glossMapTransform = null;
+            }
+
+            if (!this.glossMap || this.blendMapsWithColors) {
                 this.setParameter('material_shininess', this.shininess);
             }
 
@@ -496,8 +544,9 @@ pc.extend(pc.scene, function () {
                 if (this.emissiveMapTransform) {
                     this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform.data);
                 }
-            } else {
-                this.emissiveMapTransform = null;
+            }
+
+            if (!this.emissiveMap || this.blendMapsWithColors) {
                 this.emissiveUniform[0] = this.emissive.r;
                 this.emissiveUniform[1] = this.emissive.g;
                 this.emissiveUniform[2] = this.emissive.b;
@@ -517,8 +566,9 @@ pc.extend(pc.scene, function () {
                 if (this.opacityMapTransform) {
                     this.setParameter('texture_opacityMapTransform', this.opacityMapTransform.data);
                 }
-            } else {
-                this.opacityMapTransform = null;
+            }
+
+            if (!this.opacityMap || this.blendMapsWithColors) {
                 this.setParameter('material_opacity', this.opacity);
             }
 
@@ -536,7 +586,6 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_normalMapTransform', this.normalMapTransform.data);
                 }
             } else {
-                this.normalMapTransform = null;
             }
 
             if (this.heightMap) {
@@ -553,7 +602,6 @@ pc.extend(pc.scene, function () {
                     this.setParameter('texture_heightMapTransform', this.heightMapTransform.data);
                 }
             } else {
-                this.heightMapTransform = null;
             }
 
             if (this.normalMap || this.heightMap) {
@@ -563,10 +611,28 @@ pc.extend(pc.scene, function () {
             if (this.cubeMap) {
                 this.setParameter('texture_cubeMap', this.cubeMap);
             }
+            if (this.prefilteredCubeMap128) {
+                this.setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
+            }
+            if (this.prefilteredCubeMap64) {
+                this.setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
+            }
+            if (this.prefilteredCubeMap32) {
+                this.setParameter('texture_prefilteredCubeMap32', this.prefilteredCubeMap32);
+            }
+            if (this.prefilteredCubeMap16) {
+                this.setParameter('texture_prefilteredCubeMap16', this.prefilteredCubeMap16);
+            }
+            if (this.prefilteredCubeMap8) {
+                this.setParameter('texture_prefilteredCubeMap8', this.prefilteredCubeMap8);
+            }
+            if (this.prefilteredCubeMap4) {
+                this.setParameter('texture_prefilteredCubeMap4', this.prefilteredCubeMap4);
+            }
             if (this.sphereMap) {
                 this.setParameter('texture_sphereMap', this.sphereMap);
             }
-            if (this.sphereMap || this.cubeMap) {
+            if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             }
 
@@ -576,6 +642,10 @@ pc.extend(pc.scene, function () {
 
             if (this.lightMap) {
                 this.setParameter('texture_lightMap', this.lightMap);
+            }
+
+            if (this.aoMap) {
+                this.setParameter('texture_aoMap', this.aoMap);
             }
 
             this.shader = null;
@@ -608,31 +678,45 @@ pc.extend(pc.scene, function () {
             var lights = scene._lights;
 
             this._mapXForms = [];
+            var prefilteredCubeMap = this.prefilteredCubeMap128 && this.prefilteredCubeMap64 && this.prefilteredCubeMap32
+                                   && this.prefilteredCubeMap16 && this.prefilteredCubeMap8 && this.prefilteredCubeMap4;
 
             var options = {
                 fog:                        scene.fog,
                 gamma:                      scene.gammaCorrection,
+                toneMap:                    scene.toneMapping,
+                blendMapsWithColors:        this.blendMapsWithColors,
                 skin:                       !!this.meshInstances[0].skinInstance,
                 diffuseMap:                 !!this.diffuseMap,
                 diffuseMapTransform:        this._getMapTransformID(this.diffuseMapTransform),
+                needsDiffuseColor:          (this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1),
                 specularMap:                !!this.specularMap,
                 specularMapTransform:       this._getMapTransformID(this.specularMapTransform),
+                needsSpecularColor:         (this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1),
                 glossMap:                   !!this.glossMap,
                 glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
+                needsGlossFloat:            this.shininess!=100,
                 emissiveMap:                !!this.emissiveMap,
                 emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
+                needsEmissiveColor:         (this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1),
                 opacityMap:                 !!this.opacityMap,
                 opacityMapTransform:        this._getMapTransformID(this.opacityMapTransform),
+                needsOpacityFloat:          this.opacity!=1,
                 normalMap:                  !!this.normalMap,
                 normalMapTransform:         this._getMapTransformID(this.normalMapTransform),
+                needsNormalFloat:           this.bumpiness!=1,
                 heightMap:                  !!this.heightMap,
                 heightMapTransform:         this._getMapTransformID(this.heightMapTransform),
                 sphereMap:                  !!this.sphereMap,
-                cubeMap:                    !!this.cubeMap,
+                cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,
                 lightMap:                   !!this.lightMap,
+                aoMap:                      !!this.aoMap,
                 useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
-                                            || (!!this.sphereMap) || (!!this.cubeMap),
-                useFresnel:                 (this.fresnelFactor > 0)
+                                            || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
+                useFresnel:                 (this.fresnelFactor > 0),
+                hdrReflection:              prefilteredCubeMap? this.prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
+                prefilteredCubemap:         prefilteredCubeMap,
+                specularAA:                 this.specularAA
             };
 
             this._mapXForms = null;

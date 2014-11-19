@@ -22,6 +22,17 @@ pc.extend(pc.fw, function () {
 
     pc.extend(SkyboxComponent.prototype, {
         onSet: function (name, oldValue, newValue) {
+
+            if (name=='cubemap') {
+                this.data.model = _createSkyboxFromCubemap(this.entity, this.system.context, newValue);
+
+                if (this.enabled && this.entity.enabled) {
+                    this.system.context.scene.addModel(this.data.model);
+                    this.entity.addChild(this.data.model.graph);
+                }
+                return;
+            }
+
             function _loadTextureAsset(name, id) {
                 if (id === undefined || id === null) {
                     return;
@@ -156,11 +167,33 @@ pc.extend(pc.fw, function () {
         }
 
         var library = gd.getProgramLibrary();
-        var shader = library.getProgram('skybox');
+        var shader = library.getProgram('skybox', {hdr:cubemap.hdr});
 
         var material = new pc.scene.Material();
         material.setShader(shader);
         material.setParameter("texture_cubeMap", texture);
+        material.cull = pc.gfx.CULLFACE_NONE;
+
+        var node = new pc.scene.GraphNode();
+        var mesh = pc.scene.procedural.createBox(gd);
+        var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+
+        var model = new pc.scene.Model();
+        model.graph = node;
+        model.meshInstances = [ meshInstance ];
+
+        return model;
+    };
+
+    var _createSkyboxFromCubemap = function (entity, context, cubemap) {
+        var gd = context.graphicsDevice;
+
+        var library = gd.getProgramLibrary();
+        var shader = library.getProgram('skybox', {hdr:cubemap.hdr, prefiltered:true});
+
+        var material = new pc.scene.Material();
+        material.setShader(shader);
+        material.setParameter("texture_cubeMap", cubemap);
         material.cull = pc.gfx.CULLFACE_NONE;
 
         var node = new pc.scene.GraphNode();

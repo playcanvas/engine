@@ -26,6 +26,7 @@ pc.extend(pc.gfx, function () {
         var format = pc.gfx.PIXELFORMAT_R8_G8_B8_A8;
         var cubemap = false;
         var autoMipmap = true;
+        var hdr = false;
 
         if (typeof options !== 'undefined') {
             width = (typeof options.width !== 'undefined') ? options.width : width;
@@ -33,11 +34,13 @@ pc.extend(pc.gfx, function () {
             format = (typeof options.format !== 'undefined') ? options.format : format;
             cubemap = (typeof options.cubemap !== 'undefined') ? options.cubemap : cubemap;
             autoMipmap = (typeof options.autoMipmap !== 'undefined') ? options.autoMipmap : autoMipmap;
+            hdr = (typeof options.hdr !== 'undefined') ? options.hdr : hdr;
         }
 
         // PUBLIC
         this.name = null;
         this.autoMipmap = autoMipmap;
+        this.hdr = hdr;
 
         // PRIVATE
         var gl = this.device.gl;

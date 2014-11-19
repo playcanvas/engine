@@ -1,7 +1,8 @@
 uniform sampler2D texture_glossMap;
+uniform float material_shininess;
 void getGlossiness(inout psInternalData data) {
     // Hack: On Mac OS X, calling pow with zero for the exponent generates hideous artifacts so bias up a little
     vec4 tex = texture2D(texture_glossMap, $UV);
-    data.glossiness = tex.r + 0.0001;
+    data.glossiness = (tex.r * material_shininess * 0.01) + 0.0001;
 }
 

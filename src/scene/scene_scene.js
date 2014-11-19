@@ -79,6 +79,8 @@ pc.extend(pc.scene, function () {
 
         this.shadowDistance = 40;
         this._gammaCorrection = false;
+        this._toneMapping = 0;
+        this.exposure = 1.0;
 
         // Models
         this._models = [];
@@ -111,6 +113,19 @@ pc.extend(pc.scene, function () {
             if (value !== this._gammaCorrection) {
                 this._gammaCorrection = value;
                 pc.gfx.shaderChunks.defaultGamma = value ? pc.gfx.shaderChunks.gamma2_2PS : pc.gfx.shaderChunks.gamma1_0PS;
+                this.updateShaders = true;
+            }
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'toneMapping', {
+        get: function () {
+            return this._toneMapping;
+        },
+        set: function (value) {
+            if (value !== this._toneMapping) {
+                this._toneMapping = value;
+                pc.gfx.shaderChunks.defaultTonemapping = value ? pc.gfx.shaderChunks.tonemappingFilmicPS : pc.gfx.shaderChunks.tonemappingNonePS;
                 this.updateShaders = true;
             }
         }
