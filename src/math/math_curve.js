@@ -9,6 +9,9 @@ pc.extend(pc, (function () {
         this.keys = [];
         this.type = CURVE_SMOOTHSTEP;
 
+        this.min = null;
+        this.max = null;
+
         this.tension = 0.5; // used for CURVE_CARDINAL
 
         if (data) {
@@ -41,7 +44,7 @@ pc.extend(pc, (function () {
                 }
             }
 
-            var key = [time, value];
+            var key = [time, this._clamp(value)];
             this.keys.splice(i, 0, key);
             return key;
         },
@@ -155,13 +158,23 @@ pc.extend(pc, (function () {
                 p3 = p2 + (p3-p2)*dt1/dt2;
 
                 if (this.type === CURVE_CATMULL) {
-                    return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
+                    return this._clamp(this._interpolateCatmullRom(p0, p1, p2, p3, interpolation));
                 } else {
-                    return this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension);
+                    return this._clamp(this._interpolateCardinal(p0, p1, p2, p3, interpolation, this.tension));
                 }
             }
 
             return pc.math.lerp(leftValue, rightValue, interpolation);
+        },
+
+        _clamp: function (value) {
+            if (this.max && this.min) {
+                return pc.math.clamp(value, this.min, this.max);
+            } else if (this.max) {
+                return Math.min(value, this.max);
+            } else if (this.min) {
+                return Math.max(value, this.min);
+            }
         },
 
         _interpolateHermite: function (p0, p1, t0, t1, s) {

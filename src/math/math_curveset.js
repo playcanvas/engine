@@ -5,6 +5,8 @@ pc.extend(pc, (function () {
 
         this.curves = [];
         this._type = pc.CURVE_SMOOTHSTEP;
+        this._min = null;
+        this._max = null;
 
         if (arguments.length > 1) {
             for (i = 0; i < arguments.length; i++) {
@@ -81,6 +83,30 @@ pc.extend(pc, (function () {
         }
 
     };
+
+    Object.defineProperty(CurveSet.prototype, 'min', {
+        get: function() {
+            return this._min;
+        },
+        set: function (value) {
+            this._min = min;
+            this.curves.forEach(function (curve) {
+                curve.min = min;
+            })
+        }
+    });
+
+    Object.defineProperty(CurveSet.prototype, 'max', {
+        get: function() {
+            return this._max;
+        },
+        set: function (value) {
+            this._max = max;
+            this.curves.forEach(function (curve) {
+                curve.max = max;
+            })
+        }
+    });
 
     Object.defineProperty(CurveSet.prototype, 'length', {
         get: function() {
