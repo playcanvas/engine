@@ -755,7 +755,9 @@ pc.extend(pc.scene, function() {
             this.seed = Math.random();
             this.material.setParameter('seed', this.seed);
             if (this.mode === pc.scene.PARTICLES_MODE_CPU) {
-                for (var i = 0; i < this.particleTexStart.length; i++) this.particleTex[i] = this.particleTexStart[i];
+                for (var i = 0; i < this.particleTexStart.length; i++) {
+                    this.particleTex[i] = this.particleTexStart[i];
+                }
             } else {
                 this._initializeTextures();
                 this.swapTex = false;
@@ -764,16 +766,18 @@ pc.extend(pc.scene, function() {
                 this.particleTexIN = oldTexIN;
             }
             this.totalTime = this.totalTimePrev = this.oneShotStartTime = this.oneShotEndTime = 0;
-            this.addTime(0);
-            if (this.preWarm) this.prewarm(this.lifetime);
             this.resetTime();
+            this.addTime(0);
+            if (this.preWarm) {
+                this.prewarm(this.lifetime);
+            }
         },
 
         prewarm: function(time) {
             var lifetimeFraction = time / this.lifetime;
             var iterations = Math.min(Math.floor(lifetimeFraction * this.precision), this.precision);
             var stepDelta = time / iterations;
-            for(var i=0; i<iterations; i++) {
+            for (var i=0; i<iterations; i++) {
                 this.addTime(stepDelta);
             }
         },
