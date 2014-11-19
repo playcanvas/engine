@@ -124,20 +124,35 @@ pc.extend(pc, (function () {
             } else if (this.type === CURVE_CATMULL || this.type === CURVE_CARDINAL) {
                 var p1 = leftValue;
                 var p2 = rightValue;
-                var p0 = p1;
-                var p3 = p2;
+                var p0 = p1+(p1-p2); // default control points are extended back/forward from existing points
+                var p3 = p2+(p2-p1);
 
+                var dt1 = rightTime - leftTime;
+                var dt0 = dt1;
+                var dt2 = dt1;
+
+                // back up index to left key
                 if (i > 0) {
                     i = i - 1;
                 }
 
                 if (i > 0) {
                     p0 = keys[i-1][1];
+                    dt0 = keys[i][0] - keys[i-1][0];
                 }
 
-                if (i < keys.length-2) {
+                if (keys.length > i+1) {
+                    dt1 = keys[i+1][0] - keys[i][0];
+                }
+
+                if (keys.length > i+2) {
+                    dt2 = keys[i+2][0] - keys[i+1][0];
                     p3 = keys[i+2][1];
                 }
+
+                // normalize p0 and p3 to be equal time with p1->p2
+                p0 = p1 + (p0-p1)*dt1/dt0;
+                p3 = p2 + (p3-p2)*dt1/dt2;
 
                 if (this.type === CURVE_CATMULL) {
                     return this._interpolateCatmullRom(p0, p1, p2, p3, interpolation);
