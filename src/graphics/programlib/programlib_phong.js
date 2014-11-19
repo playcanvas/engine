@@ -95,6 +95,7 @@ pc.gfx.programlib.phong = {
             codeBody = codes[2];
 
             if ((options.diffuseMap && !options.diffuseMapTransform) ||
+                (options.emissiveMap && !options.emissiveMapTransform) ||
                 (options.normalMap && !options.normalMapTransform) ||
                 (options.heightMap && !options.heightMapTransform) ||
                 (options.opacityMap && !options.opacityMapTransform) ||

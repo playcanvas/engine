@@ -3,6 +3,14 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.159.3
+--------
+* [FIX] Emissive maps work again.
+* [FIX] pc.Curve with no keys
+* Added CURVE_CATMULL and CURVE_CARDINAL to pc.Curve()
+* Added filter for shadowResolution to only show up when castShadows is true.
+
+--------
 v0.159.2
 --------
 * [FIX] Cloning CurveSet
