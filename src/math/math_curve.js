@@ -81,6 +81,18 @@ pc.extend(pc, (function () {
         value: function (time) {
             var keys = this.keys;
 
+            // no keys
+            if (!keys.length) {
+                return 0;
+            }
+
+            // Clamp values before first and after last key
+            if (time < keys[0][0]) {
+                return keys[0][1];
+            } else if (time > keys[keys.length-1][0]) {
+                return keys[keys.length-1][1];
+            }
+
             var leftTime = 0;
             var leftValue = keys.length ? keys[0][1] : 0;
 
@@ -102,13 +114,6 @@ pc.extend(pc, (function () {
 
                 leftTime = keys[i][0];
                 leftValue = keys[i][1];
-            }
-
-            // Clamp values before first and after last key
-            if (time < keys[0][0]) {
-                return keys[0][1];
-            } else if (time > keys[keys.length-1][0]) {
-                return keys[keys.length-1][1];
             }
 
             var div = rightTime - leftTime;
