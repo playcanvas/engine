@@ -491,6 +491,8 @@ pc.extend(pc.fw, function() {
 
                     sourceProp = sourceProp.clone();
                     data[prop.name] = sourceProp;
+                } else {
+                    if (sourceProp) data[prop.name] = sourceProp;
                 }
             }
             return this.addComponent(clone, data);

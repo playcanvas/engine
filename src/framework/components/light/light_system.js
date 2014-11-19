@@ -84,7 +84,10 @@ pc.extend(pc.fw, function () {
                     value: 2048
                 }]
             },
-            defaultValue: 1024
+            defaultValue: 1024,
+            filter: {
+                castShadows: true
+            }
         }, {
             name: "range",
             displayName: "Range",
@@ -100,7 +103,7 @@ pc.extend(pc.fw, function () {
         }, {
             name: "falloffMode",
             displayName: "Falloff mode",
-            description: "Defines the way of distance attenuation",
+            description: "Controls the rate at which a light attentuates from its position",
             type: "enumeration",
             options: {
                 enumerations: [{

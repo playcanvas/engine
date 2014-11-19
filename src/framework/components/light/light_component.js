@@ -26,7 +26,7 @@ pc.extend(pc.fw, function () {
      * @property {Number} range The range of the light. (Not available for directional lights)
      * @property {Number} innerConeAngle The angle at which the spotlight cone starts to fade off. (Only avaiable for spotlights)
      * @property {Number} outerConeAngle The angle at which the spotlight cone has faded to nothing. (Only avaiable for spotlights)
-     * @property {Number} falloffMode Defines the way of distance attenuation. (Available for point and spot lights)
+     * @property {Number} falloffMode Controls the rate at which a light attentuates from its position. (Available for point and spot lights)
      * <ul>
      * <li><strong>{@link pc.scene.LIGHTFALLOFF_LINEAR}</strong>: Linear.</li>
      * <li><strong>{@link pc.scene.LIGHTFALLOFF_INVERSESQUARED}</strong>: Inverse squared.</li>
