@@ -167,7 +167,7 @@ pc.extend(pc.fw, function () {
         }
 
         var library = gd.getProgramLibrary();
-        var shader = library.getProgram('skybox', {hdr:cubemap.hdr});
+        var shader = library.getProgram('skybox', {hdr:false});
 
         var material = new pc.scene.Material();
         material.setShader(shader);
