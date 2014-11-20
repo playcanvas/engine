@@ -42,7 +42,18 @@ pc.scene = {
      * @name pc.scene.FOG_EXP2
      * @description Fog rises according to an exponential curve controlled by a density value.
      */
-    FOG_EXP2: 'exp2'
+    FOG_EXP2: 'exp2',
+
+    TONEMAP_NONE: 0,
+    TONEMAP_FILMIC: 1,
+
+    SPECULAR_PHONG: 0,
+    SPECULAR_BLINN: 1,
+
+    FRESNEL_NONE: 0,
+    FRESNEL_SIMPLE: 1,
+    FRESNEL_SCHLICK: 2,
+    FRESNEL_COMPLEX: 3
 };
 
 pc.extend(pc.scene, function () {

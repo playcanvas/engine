@@ -138,7 +138,10 @@ pc.extend(pc.scene, function () {
         this.lightMap = null;
         this.aoMap = null;
         this.blendMapsWithColors = true;
-        this.specularAA = false;
+
+        this.specularAA = true;
+        this.specularModel = pc.scene.SPECULAR_BLINN;
+        this.fresnelModel = pc.scene.FRESNEL_SCHLICK;
 
         this.fresnelFactor = 0;
 
@@ -257,6 +260,8 @@ pc.extend(pc.scene, function () {
             clone.fresnelFactor = this.fresnelFactor;
             clone.blendMapsWithColors = this.blendMapsWithColors;
             clone.specularAA = this.specularAA;
+            clone.specularModel = this.specularModel;
+            clone.fresnelModel = this.fresnelModel;
 
             clone.update();
             return clone;
@@ -431,6 +436,12 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'specularAA':
                         this.specularAA = param.data;
+                        break;
+                    case 'specularModel':
+                        this.specularModel = param.data;
+                        break;
+                    case 'fresnelModel':
+                        this.fresnelModel = param.data;
                         break;
                     case 'fresnelFactor':
                         this.fresnelFactor = param.data;
@@ -713,10 +724,11 @@ pc.extend(pc.scene, function () {
                 aoMap:                      !!this.aoMap,
                 useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
-                useFresnel:                 (this.fresnelFactor > 0),
                 hdrReflection:              prefilteredCubeMap? this.prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
                 prefilteredCubemap:         prefilteredCubeMap,
-                specularAA:                 this.specularAA
+                specularAA:                 this.specularAA,
+                specularModel:              this.specularModel,
+                fresnelModel:               this.fresnelModel
             };
 
             this._mapXForms = null;

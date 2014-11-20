@@ -238,8 +238,14 @@ pc.gfx.programlib.phong = {
             } else {
                 code += chunks.specularityColorPS;
             }
-            if (options.useFresnel) {
-                code += chunks.defaultFresnel;
+            if (options.fresnelModel > 0) {
+                if (options.fresnelModel === pc.scene.FRESNEL_SIMPLE) {
+                    code += chunks.fresnelSimplePS;
+                } else if (options.fresnelModel === pc.scene.FRESNEL_SCHLICK) {
+                    code += chunks.fresnelSchlickPS;
+                } else if (options.fresnelModel === pc.scene.FRESNEL_COMPLEX) {
+                    code += chunks.fresnelComplexPS;
+                }
             }
         }
 
@@ -316,9 +322,9 @@ pc.gfx.programlib.phong = {
 
         code += chunks.lightDiffuseLambertPS;
         if (options.useSpecular) {
-            code += chunks.defaultSpecular;
-            if (options.sphereMap || options.cubeMap || options.useFresnel) {
-                if (options.useFresnel) {
+            code += options.specularModel==0? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
+            if (options.sphereMap || options.cubeMap || (options.fresnelModel > 0)) {
+                if (options.fresnelModel > 0) {
                     code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
                 } else {
                     code += chunks.combineDiffuseSpecularOldPS;
@@ -353,8 +359,8 @@ pc.gfx.programlib.phong = {
 
         if ((lighting && options.useSpecular) || reflections) {
             code += "   getSpecularity(data);\n";
-            if (options.useFresnel) code += "   getFresnel(data);\n";
             code += "   getGlossiness(data);\n";
+            if (options.fresnelModel > 0) code += "   getFresnel(data);\n";
         }
 
         code += "   getOpacity(data);\n";

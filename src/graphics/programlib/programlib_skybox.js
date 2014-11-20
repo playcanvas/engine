@@ -34,7 +34,9 @@ pc.gfx.programlib.skybox = {
                 '    vViewDir = aPosition;',
                 '}'
             ].join('\n'),
-            fshader: getSnippet(device, 'fs_precision') + (options.hdr? chunks.defaultGamma + chunks.defaultTonemapping + chunks.rgbmPS + (options.prefiltered? chunks.skyboxPrefilteredCubePS : chunks.skyboxHDRPS) : chunks.skyboxPS)
+            fshader: getSnippet(device, 'fs_precision') +
+                (options.hdr? chunks.defaultGamma + chunks.defaultTonemapping + chunks.rgbmPS +
+                (options.prefiltered? chunks.skyboxPrefilteredCubePS : chunks.skyboxHDRPS) : chunks.skyboxPS)
         }
     }
 };
