@@ -1,6 +1,6 @@
 pc.gfx.programlib.skybox = {
     generateKey: function (device, options) {
-        var key = "skybox" + options.hdr + options.prefiltered;
+        var key = "skybox" + options.hdr + options.prefiltered + "" + options.toneMapping + "" + options.gamma;
         return key;
     },
 

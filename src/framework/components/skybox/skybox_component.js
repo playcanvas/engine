@@ -166,11 +166,14 @@ pc.extend(pc.fw, function () {
             texture.setSource(sources);
         }
 
-        var library = gd.getProgramLibrary();
-        var shader = library.getProgram('skybox', {hdr:false});
-
         var material = new pc.scene.Material();
-        material.setShader(shader);
+        material.updateShader = function() {
+            var library = gd.getProgramLibrary();
+            var shader = library.getProgram('skybox', {hdr:false, gamma:context.scene.gammaCorrection, toneMapping:context.scene.toneMapping});
+            this.setShader(shader);
+        };
+
+        material.updateShader();
         material.setParameter("texture_cubeMap", texture);
         material.cull = pc.gfx.CULLFACE_NONE;
 
@@ -188,11 +191,14 @@ pc.extend(pc.fw, function () {
     var _createSkyboxFromCubemap = function (entity, context, cubemap) {
         var gd = context.graphicsDevice;
 
-        var library = gd.getProgramLibrary();
-        var shader = library.getProgram('skybox', {hdr:cubemap.hdr, prefiltered:true});
-
         var material = new pc.scene.Material();
-        material.setShader(shader);
+        material.updateShader = function() {
+            var library = gd.getProgramLibrary();
+            var shader = library.getProgram('skybox', {hdr:cubemap.hdr, prefiltered:true, gamma:context.scene.gammaCorrection, toneMapping:context.scene.toneMapping});
+            this.setShader(shader);
+        };
+
+        material.updateShader();
         material.setParameter("texture_cubeMap", cubemap);
         material.cull = pc.gfx.CULLFACE_NONE;
 

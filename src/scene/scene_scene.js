@@ -44,7 +44,7 @@ pc.scene = {
      */
     FOG_EXP2: 'exp2',
 
-    TONEMAP_NONE: 0,
+    TONEMAP_LINEAR: 0,
     TONEMAP_FILMIC: 1,
 
     SPECULAR_PHONG: 0,
@@ -136,7 +136,7 @@ pc.extend(pc.scene, function () {
         set: function (value) {
             if (value !== this._toneMapping) {
                 this._toneMapping = value;
-                pc.gfx.shaderChunks.defaultTonemapping = value ? pc.gfx.shaderChunks.tonemappingFilmicPS : pc.gfx.shaderChunks.tonemappingNonePS;
+                pc.gfx.shaderChunks.defaultTonemapping = value ? pc.gfx.shaderChunks.tonemappingFilmicPS : pc.gfx.shaderChunks.tonemappingLinearPS;
                 this.updateShaders = true;
             }
         }
