@@ -41,61 +41,17 @@ pc.extend(pc.gfx, function () {
         options = (typeof options !== 'undefined') ? options : defaultOptions;
         this._face = (typeof options.face !== 'undefined') ? options.face : 0;
         this._depth = (typeof options.depth !== 'undefined') ? options.depth : true;
-
-        var gl = this._device.gl;
-
-        // Create a new WebGL frame buffer object
-        this._frameBuffer = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this._frameBuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER,
-                                gl.COLOR_ATTACHMENT0,
-                                this._colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + this._face : gl.TEXTURE_2D,
-                                this._colorBuffer._glTextureId,
-                                0);
-        if (this._depth) {
-            this._depthBuffer = gl.createRenderbuffer();
-            gl.bindRenderbuffer(gl.RENDERBUFFER, this._depthBuffer);
-            gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width, this.height);
-            gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this._depthBuffer);
-        }
-
-        // Ensure all is well
-        var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-        switch (status)
-        {
-            case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
-                break;
-            case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
-                break;
-            case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-                logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
-                break;
-            case gl.FRAMEBUFFER_UNSUPPORTED:
-                logERROR("RenderTarget error: FRAMEBUFFER_UNSUPPORTED");
-                break;
-            case gl.FRAMEBUFFER_COMPLETE:
-                break;
-            default:
-                break;
-        }
-
-        // Set current render target back to default frame buffer
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
     RenderTarget.prototype = {
         /**
+         * @private
          * @function
          * @name pc.gfx.RenderTarget#bind
          * @description Activates the framebuffer to receive the rasterization of all subsequent draw commands issued by
          * the graphics device.
          */
         bind: function () {
-            var gl = this._device.gl;
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this._frameBuffer);
         },
 
         /**
@@ -112,14 +68,13 @@ pc.extend(pc.gfx, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.gfx.RenderTarget#unbind
          * @description Deactivates the specified render target, restoring the device's main rendering buffer as the
          * active render target.
          */
         unbind: function () {
-            var gl = this._device.gl;
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         }
     };
 
