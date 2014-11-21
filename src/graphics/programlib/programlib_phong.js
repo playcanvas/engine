@@ -174,16 +174,6 @@ pc.gfx.programlib.phong = {
             }
         }
 
-        if (options.fog === 'linear') {
-            code += chunks.fogLinearPS;
-        } else if (options.fog === 'exp') {
-            code += chunks.fogExpPS;
-        } else if (options.fog === 'exp2') {
-            code += chunks.fogExp2PS;
-        } else {
-            code += chunks.fogNonePS;
-        }
-
         if (options.alphaTest) {
             code += getSnippet(device, 'fs_alpha_test_decl');
         }
@@ -207,6 +197,17 @@ pc.gfx.programlib.phong = {
 
         code += chunks.defaultGamma;
         code += chunks.defaultTonemapping;
+
+        if (options.fog === 'linear') {
+            code += chunks.fogLinearPS;
+        } else if (options.fog === 'exp') {
+            code += chunks.fogExpPS;
+        } else if (options.fog === 'exp2') {
+            code += chunks.fogExp2PS;
+        } else {
+            code += chunks.fogNonePS;
+        }
+
         if (options.hdrReflection) code += chunks.rgbmPS;
 
         if (options.diffuseMap) {
