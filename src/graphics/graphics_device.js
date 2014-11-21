@@ -412,16 +412,67 @@ pc.extend(pc.gfx, function () {
          * and pc.gfx.Device#updateEnd must not be nested.
          */
         updateBegin: function () {
+            var gl = this.gl;
+
             logASSERT(this.canvas !== null, "Device has not been started");
 
             this.boundBuffer = null;
             this.indexBuffer = null;
 
             // Set the render target
-            if (this.renderTarget) {
-                this.renderTarget.bind();
+            var target = this.renderTarget;
+            if (target) {
+                // Create a new WebGL frame buffer object
+                if (!target._glFrameBuffer) {
+                    target._glFrameBuffer = gl.createFramebuffer();
+
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
+
+                    if (!target._colorBuffer._glTextureId) {
+                        this.setTexture(target._colorBuffer, 0);
+                    }
+
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                            gl.COLOR_ATTACHMENT0,
+                                            target._colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
+                                            target._colorBuffer._glTextureId,
+                                            0);
+
+                    if (target._depth) {
+                        if (!target._glDepthBuffer) {
+                            target._glDepthBuffer = gl.createRenderbuffer();
+                        }
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
+                        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
+                        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
+                    }
+
+                    // Ensure all is well
+                    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+                    switch (status)
+                    {
+                        case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                            logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                            break;
+                        case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                            logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                            break;
+                        case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                            logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+                            break;
+                        case gl.FRAMEBUFFER_UNSUPPORTED:
+                            logERROR("RenderTarget error: FRAMEBUFFER_UNSUPPORTED");
+                            break;
+                        case gl.FRAMEBUFFER_COMPLETE:
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, target._glFrameBuffer);
+                }
             } else {
-                var gl = this.gl;
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 
@@ -438,6 +489,203 @@ pc.extend(pc.gfx, function () {
          * and pc.gfx.Device#updateEnd must not be nested.
          */
         updateEnd: function () {
+        },
+
+        initializeTexture: function (texture) {
+            var gl = this.gl;
+
+            texture._glTextureId = gl.createTexture();
+
+            texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
+
+            switch (texture._format) {
+                case pc.gfx.PIXELFORMAT_A8:
+                    texture._glFormat = gl.ALPHA;
+                    texture._glInternalFormat = gl.ALPHA;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PIXELFORMAT_L8:
+                    texture._glFormat = gl.LUMINANCE;
+                    texture._glInternalFormat = gl.LUMINANCE;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PIXELFORMAT_L8_A8:
+                    texture._glFormat = gl.LUMINANCE_ALPHA;
+                    texture._glInternalFormat = gl.LUMINANCE_ALPHA;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PIXELFORMAT_R5_G6_B5:
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.RGB;
+                    texture._glPixelType = gl.UNSIGNED_SHORT_5_6_5;
+                    break;
+                case pc.gfx.PIXELFORMAT_R5_G5_B5_A1:
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.RGBA;
+                    texture._glPixelType = gl.UNSIGNED_SHORT_5_5_5_1;
+                    break;
+                case pc.gfx.PIXELFORMAT_R4_G4_B4_A4:
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.RGBA;
+                    texture._glPixelType = gl.UNSIGNED_SHORT_4_4_4_4;
+                    break;
+                case pc.gfx.PIXELFORMAT_R8_G8_B8:
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.RGB;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PIXELFORMAT_R8_G8_B8_A8:
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.RGBA;
+                    texture._glPixelType = gl.UNSIGNED_BYTE;
+                    break;
+                case pc.gfx.PIXELFORMAT_DXT1:
+                    ext = this.extCompressedTextureS3TC;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
+                    break;
+                case pc.gfx.PIXELFORMAT_DXT3:
+                    ext = this.extCompressedTextureS3TC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                    break;
+                case pc.gfx.PIXELFORMAT_DXT5:
+                    ext = this.extCompressedTextureS3TC;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                    break;
+                case pc.gfx.PIXELFORMAT_RGB16F:
+                    ext = this.extTextureHalfFloat;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.RGB;
+                    texture._glPixelType = ext.HALF_FLOAT_OES;
+                    break;
+                case pc.gfx.PIXELFORMAT_RGBA16F:
+                    ext = this.extTextureHalfFloat;
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.RGBA;
+                    texture._glPixelType = ext.HALF_FLOAT_OES;
+                    break;
+                case pc.gfx.PIXELFORMAT_RGB32F:
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = gl.RGB;
+                    texture._glPixelType = gl.FLOAT;
+                    break;
+                case pc.gfx.PIXELFORMAT_RGBA32F:
+                    texture._glFormat = gl.RGBA;
+                    texture._glInternalFormat = gl.RGBA;
+                    texture._glPixelType = gl.FLOAT;
+                    break;
+            }
+        },
+
+        uploadTexture: function (texture) {
+            var gl = this.gl;
+
+            var pixels = texture._levels[0];
+
+            if (texture._cubemap) {
+                var face;
+
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                if ((pixels[0] instanceof HTMLCanvasElement) || (pixels[0] instanceof HTMLImageElement) || (pixels[0] instanceof HTMLVideoElement)) {
+                    // Upload the image, canvas or video
+                    for (face = 0; face < 6; face++) {
+                        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 
+                                      0, 
+                                      texture._glInternalFormat,
+                                      texture._glFormat,
+                                      texture._glPixelType,
+                                      pixels[face]);
+                    }
+                } else {
+                    // Upload the byte array
+                    for (face = 0; face < 6; face++) {
+                        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                      0,
+                                      texture._glInternalFormat,
+                                      texture._width,
+                                      texture._height,
+                                      0,
+                                      texture._glFormat,
+                                      texture._glPixelType,
+                                      pixels[face]);
+                    }
+                }
+            } else {
+                if ((pixels instanceof HTMLCanvasElement) || (pixels instanceof HTMLImageElement) || (pixels instanceof HTMLVideoElement)) {
+                    // Upload the image, canvas or video
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                    gl.texImage2D(gl.TEXTURE_2D,
+                                  0,
+                                  texture._glInternalFormat,
+                                  texture._glFormat,
+                                  texture._glPixelType,
+                                  pixels);
+                } else {
+                    // Upload the byte array
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                    if (texture._compressed) {
+                        gl.compressedTexImage2D(gl.TEXTURE_2D,
+                                                0,
+                                                texture._glInternalFormat,
+                                                texture._width,
+                                                texture._height,
+                                                0,
+                                                pixels);
+                    } else {
+                        gl.texImage2D(gl.TEXTURE_2D,
+                                      0,
+                                      texture._glInternalFormat,
+                                      texture._width,
+                                      texture._height,
+                                      0,
+                                      texture._glFormat,
+                                      texture._glPixelType,
+                                      pixels);
+                    }
+                }
+            }
+
+            if (texture.autoMipmap && pc.math.powerOfTwo(texture._width) && pc.math.powerOfTwo(texture._height) && texture._levels.length === 1) {
+                gl.generateMipmap(texture._glTarget);
+            }
+        },
+
+        setTexture: function (texture, textureUnit) {
+            var gl = this.gl;
+            var ext;
+
+            if (!texture._glTextureId) {
+                this.initializeTexture(texture);
+            }
+
+            gl.activeTexture(gl.TEXTURE0 + textureUnit);
+            if (this.textureUnits[textureUnit] !== texture) {
+                gl.bindTexture(texture._glTarget, texture._glTextureId);
+                this.textureUnits[textureUnit] = texture;
+            }
+
+            var _filterLookup = [gl.NEAREST, gl.LINEAR, gl.NEAREST_MIPMAP_NEAREST, gl.NEAREST_MIPMAP_LINEAR, gl.LINEAR_MIPMAP_NEAREST, gl.LINEAR_MIPMAP_LINEAR];
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, _filterLookup[texture._minFilter]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, _filterLookup[texture._magFilter]);
+
+            var _addressLookup = [gl.REPEAT, gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT];
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, _addressLookup[texture._addressU]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, _addressLookup[texture._addressV]);
+
+            var ext = this.extTextureFilterAnisotropic;
+            if (ext) {
+                maxAnisotropy = Math.min(texture.maxAnisotropy, this.maxSupportedMaxAnisotropy);
+                gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+            }
+
+            if (texture._needsUpload) {
+                this.uploadTexture(texture);
+                texture._needsUpload = false;
+            }
         },
 
         /**
@@ -513,11 +761,8 @@ pc.extend(pc.gfx, function () {
 
                 if (samplerValue instanceof pc.gfx.Texture) {
                     texture = samplerValue;
-                    if (this.textureUnits[textureUnit] !== texture) {
-                        gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                        texture.bind();
-                        this.textureUnits[textureUnit] = texture;
-                    }
+                    this.setTexture(texture, textureUnit);
+
                     if (sampler.slot !== textureUnit) {
                         gl.uniform1i(sampler.locationId, textureUnit);
                         sampler.slot = textureUnit;
@@ -528,11 +773,8 @@ pc.extend(pc.gfx, function () {
                     numTexures = samplerValue.length;
                     for (j = 0; j < numTexures; j++) {
                         texture = samplerValue[j];
-                        if (this.textureUnits[textureUnit] !== texture) {
-                            gl.activeTexture(gl.TEXTURE0 + textureUnit);
-                            texture.bind();
-                            this.textureUnits[textureUnit] = texture;
-                        }
+                        this.setTexture(texture, textureUnit);
+
                         sampler.array[j] = textureUnit;
                         textureUnit++;
                     }

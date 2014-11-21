@@ -1,0 +1,5 @@
+uniform sampler2D texture_aoMap;
+void applyAO(inout psInternalData data) {
+    data.diffuseLight *= texture2D(texture_aoMap, vUv1).g;
+}
+

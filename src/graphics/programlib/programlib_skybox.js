@@ -1,11 +1,12 @@
 pc.gfx.programlib.skybox = {
     generateKey: function (device, options) {
-        var key = "skybox";
+        var key = "skybox" + options.hdr + options.prefiltered + "" + options.toneMapping + "" + options.gamma;
         return key;
     },
 
     createShaderDefinition: function (device, options) {
         var getSnippet = pc.gfx.programlib.getSnippet;
+        var chunks = pc.gfx.shaderChunks;
 
         return {
             attributes: {
@@ -33,16 +34,9 @@ pc.gfx.programlib.skybox = {
                 '    vViewDir = aPosition;',
                 '}'
             ].join('\n'),
-            fshader: getSnippet(device, 'fs_precision') + [
-                'varying vec3 vViewDir;',
-                '',
-                'uniform samplerCube texture_cubeMap;',
-                '',
-                'void main(void)',
-                '{',
-                '    gl_FragColor = textureCube(texture_cubeMap, vec3(-vViewDir.x, vViewDir.yz));',
-                '}'
-            ].join('\n')
+            fshader: getSnippet(device, 'fs_precision') +
+                (options.hdr? chunks.defaultGamma + chunks.defaultTonemapping + chunks.rgbmPS +
+                (options.prefiltered? chunks.skyboxPrefilteredCubePS : chunks.skyboxHDRPS) : chunks.skyboxPS)
         }
     }
 };
