@@ -23,7 +23,7 @@ pc.extend(pc.fw, function () {
     pc.extend(SkyboxComponent.prototype, {
         onSet: function (name, oldValue, newValue) {
 
-            if (name=='cubemap') {
+            if ((name=='cubemap') && (newValue)) {
                 this.data.model = _createSkyboxFromCubemap(this.entity, this.system.context, newValue);
 
                 if (this.enabled && this.entity.enabled) {
