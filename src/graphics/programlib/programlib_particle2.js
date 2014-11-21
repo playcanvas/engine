@@ -1,6 +1,7 @@
 pc.gfx.programlib.particle2 = {
     generateKey: function(device, options) {
-        var key = "particle2" + options.mode + options.normal + options.halflambert + options.stretch + options.soft + options.mesh + options.srgb + options.wrap + options.blend;
+        var key = "particle2" + options.mode + options.normal + options.halflambert + options.stretch + options.soft + options.mesh
+        + options.srgb + options.wrap + options.blend + options.toneMap + options.fog;
         return key;
     },
 
@@ -44,8 +45,21 @@ pc.gfx.programlib.particle2 = {
             fshader +=                              "\nuniform vec3 lightCube[6];\n";
         }
 
-        if (options.normal==0) options.srgb = false; // don't have to perform all gamma conversions when no lighting is used
+        if ((options.normal==0) && (options.fog!="none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting is used
         fshader += options.srgb ? chunk.gamma2_2PS : chunk.gamma1_0PS;
+        fshader += "struct psInternalData {float dummy;};\n";
+        fshader += chunk.defaultTonemapping;
+
+        if (options.fog === 'linear') {
+            fshader += chunk.fogLinearPS;
+        } else if (options.fog === 'exp') {
+            fshader += chunk.fogExpPS;
+        } else if (options.fog === 'exp2') {
+            fshader += chunk.fogExp2PS;
+        } else {
+            fshader += chunk.fogNonePS;
+        }
+
         fshader +=                                  chunk.particle2PS;
         if (options.soft > 0) fshader +=            chunk.particle2_softPS;
         if (options.normal == 1) fshader +=         "\nvec3 normal = Normal;\n"
