@@ -13,7 +13,7 @@ pc.gfx.programlib.phong = {
             }
         }
         props.sort();
-        for(prop in props) key += "_" + props[prop];
+        for(prop in props) key += "_" + props[prop] + ":" + options[props[prop]];
 
         return key;
     },
@@ -174,16 +174,14 @@ pc.gfx.programlib.phong = {
             }
         }
 
-        switch (options.fog) {
-            case 'linear':
-                code += getSnippet(device, 'fs_fog_linear_decl');
-                break;
-            case 'exp':
-                code += getSnippet(device, 'fs_fog_exp_decl');
-                break;
-            case 'exp2':
-                code += getSnippet(device, 'fs_fog_exp2_decl');
-                break;
+        if (options.fog === 'linear') {
+            code += chunks.fogLinearPS;
+        } else if (options.fog === 'exp') {
+            code += chunks.fogExpPS;
+        } else if (options.fog === 'exp2') {
+            code += chunks.fogExp2PS;
+        } else {
+            code += chunks.fogNonePS;
         }
 
         if (options.alphaTest) {
@@ -431,19 +429,6 @@ pc.gfx.programlib.phong = {
         }
         code += "\n";
         code += chunks.endPS;
-
-        // Fog
-        switch (options.fog) {
-            case 'linear':
-                code += getSnippet(device, 'fs_fog_linear');
-                break;
-            case 'exp':
-                code += getSnippet(device, 'fs_fog_exp');
-                break;
-            case 'exp2':
-                code += getSnippet(device, 'fs_fog_exp2');
-                break;
-        }
 
         // Make sure all components are between 0 and 1
         code += getSnippet(device, 'fs_clamp');
