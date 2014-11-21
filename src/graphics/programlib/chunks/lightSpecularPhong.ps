@@ -1,4 +1,4 @@
 float getLightSpecular(inout psInternalData data) {
-    return pow(max(dot(data.reflDirW, -data.lightDirNormW), 0.0), data.glossiness);
+    return pow(max(dot(data.reflDirW, -data.lightDirNormW), 0.0), data.glossiness * 100.0);
 }
 

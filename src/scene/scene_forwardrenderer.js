@@ -346,6 +346,7 @@ pc.extend(pc.scene, function () {
             this.ambientColor[1] = scene.ambientLight.g;
             this.ambientColor[2] = scene.ambientLight.b;
             scope.resolve("light_globalAmbient").setValue(this.ambientColor);
+            scope.resolve("exposure").setValue(scene.exposure);
 
             for (var i = 0; i < numDirs; i++) {
                 var directional = dirs[i];

@@ -42,7 +42,18 @@ pc.scene = {
      * @name pc.scene.FOG_EXP2
      * @description Fog rises according to an exponential curve controlled by a density value.
      */
-    FOG_EXP2: 'exp2'
+    FOG_EXP2: 'exp2',
+
+    TONEMAP_LINEAR: 0,
+    TONEMAP_FILMIC: 1,
+
+    SPECULAR_PHONG: 0,
+    SPECULAR_BLINN: 1,
+
+    FRESNEL_NONE: 0,
+    FRESNEL_SIMPLE: 1,
+    FRESNEL_SCHLICK: 2,
+    FRESNEL_COMPLEX: 3
 };
 
 pc.extend(pc.scene, function () {
@@ -79,6 +90,8 @@ pc.extend(pc.scene, function () {
 
         this.shadowDistance = 40;
         this._gammaCorrection = false;
+        this._toneMapping = 0;
+        this.exposure = 1.0;
 
         // Models
         this._models = [];
@@ -111,6 +124,19 @@ pc.extend(pc.scene, function () {
             if (value !== this._gammaCorrection) {
                 this._gammaCorrection = value;
                 pc.gfx.shaderChunks.defaultGamma = value ? pc.gfx.shaderChunks.gamma2_2PS : pc.gfx.shaderChunks.gamma1_0PS;
+                this.updateShaders = true;
+            }
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'toneMapping', {
+        get: function () {
+            return this._toneMapping;
+        },
+        set: function (value) {
+            if (value !== this._toneMapping) {
+                this._toneMapping = value;
+                pc.gfx.shaderChunks.defaultTonemapping = value ? pc.gfx.shaderChunks.tonemappingFilmicPS : pc.gfx.shaderChunks.tonemappingLinearPS;
                 this.updateShaders = true;
             }
         }
