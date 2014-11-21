@@ -434,11 +434,11 @@ pc.extend(pc.gfx, function () {
 
                     gl.framebufferTexture2D(gl.FRAMEBUFFER,
                                             gl.COLOR_ATTACHMENT0,
-                                            target._colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + this._face : gl.TEXTURE_2D,
+                                            target._colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
                                             target._colorBuffer._glTextureId,
                                             0);
 
-                    if (this.renderTarget._depth) {
+                    if (target._depth) {
                         if (!target._glDepthBuffer) {
                             target._glDepthBuffer = gl.createRenderbuffer();
                         }
