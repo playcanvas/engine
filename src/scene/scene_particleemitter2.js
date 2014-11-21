@@ -508,6 +508,8 @@ pc.extend(pc.scene, function() {
                     soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
                     mesh: this.emitter.isMesh,
                     srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
+                    toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
+                    fog: this.emitter.scene ? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
                     blend: this.blendType
                 });
