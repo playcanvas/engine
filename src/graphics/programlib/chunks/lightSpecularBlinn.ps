@@ -2,6 +2,8 @@
 float getLightSpecular(inout psInternalData data) {
     vec3 h = normalize( -data.lightDirNormW - -data.viewDirW );
     float nh = max( dot( h, data.normalW ), 0.0 );
-    return pow( nh, data.glossiness ) * (data.glossiness + 2.0)/8.0;
+    float specPow = exp2(data.glossiness * 8.0); // glossiness is linear, power is not
+    specPow = antiAliasGlossiness(data, specPow);
+    return pow(nh, specPow) * (specPow + 2.0) / 8.0;
 }
 

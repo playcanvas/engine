@@ -1,7 +1,6 @@
 pc.extend(pc.scene, function () {
 
     var _tempTiling = new pc.Vec3();
-    var _tempRotation = new pc.Quat();
     var _tempOffset = new pc.Vec3();
 
     /**
@@ -17,14 +16,12 @@ pc.extend(pc.scene, function () {
      * color in preference to the 'diffuse' property.
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
-     * @property {pc.Vec3} diffuseMapRotation Controls the rotation of the diffuse map. The value represents U,V,W angles in degrees.
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * @property {pc.gfx.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * specular color in preference to the 'specular' property.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
-     * @property {pc.Vec3} specularMapRotation Controls the rotation of the specular map. The value represents U,V,W angles in degrees.
      * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128.
      * A higher shininess value results in a more focussed specular highlight.
      * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
@@ -32,7 +29,6 @@ pc.extend(pc.scene, function () {
      * shininess in preference to the 'shininess' property.
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
-     * @property {pc.Vec3} glossMapRotation Controls the rotation of the gloss map. The value represents U,V,W angles in degrees.
      * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
@@ -40,7 +36,6 @@ pc.extend(pc.scene, function () {
      * color in preference to the 'emissive' property.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
-     * @property {pc.Vec3} emissiveMapRotation Controls the rotation of the emissive map. The value represents U,V,W angles in degrees.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque. If you want the material to be transparent you also need to
      * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
@@ -50,19 +45,16 @@ pc.extend(pc.scene, function () {
      * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
-     * @property {pc.Vec3} opacityMapRotation Controls the rotation of the opacity map. The value represents U,V,W angles in degrees.
      * @property {Number} blendType The type of blending for this material. Can be one of the following valus: pc.scene.BLEND_NONE, pc.scene.BLEND_NORMAL, pc.scene.BLEND_ADDITIVE.
      * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {pc.Vec3} normalMapRotation Controls the rotation of the normal map. The value represents U,V,W angles in degrees.
      * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather
      * than a cube map. The texture contain values defining the height of the surface at that point where darker
      * pixels are lower and lighter pixels are higher.
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {pc.Vec3} heightMapRotation Controls the rotation of the height map. The value represents U,V,W angles in degrees.
      * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
      * the bump map and 1 results in a full contribution.
@@ -81,35 +73,30 @@ pc.extend(pc.scene, function () {
         this.diffuseMap = null;
         this.diffuseMapTiling = new pc.Vec2(1, 1);
         this.diffuseMapOffset = new pc.Vec2(0, 0);
-        this.diffuseMapRotation = new pc.Vec3(0, 0, 0);
         this.diffuseMapTransform = null;
 
         this.specular = new pc.Color(0, 0, 0);
         this.specularMap = null;
         this.specularMapTiling = new pc.Vec2(1, 1);
         this.specularMapOffset = new pc.Vec2(0, 0);
-        this.specularMapRotation = new pc.Vec3(0, 0, 0);
         this.specularMapTransform = null;
 
         this.shininess = 25;
         this.glossMap = null;
         this.glossMapTiling = new pc.Vec2(1, 1);
         this.glossMapOffset = new pc.Vec2(0, 0);
-        this.glossMapRotation = new pc.Vec3(0, 0, 0);
         this.glossMapTransform = null;
 
         this.emissive = new pc.Color(0, 0, 0);
         this.emissiveMap = null;
         this.emissiveMapTiling = new pc.Vec2(1, 1);
         this.emissiveMapOffset = new pc.Vec2(0, 0);
-        this.emissiveMapRotation = new pc.Vec3(0, 0, 0);
         this.emissiveMapTransform = null;
 
         this.opacity = 1;
         this.opacityMap = null;
         this.opacityMapTiling = new pc.Vec2(1, 1);
         this.opacityMapOffset = new pc.Vec2(0, 0);
-        this.opacityMapRotation = new pc.Vec3(0, 0, 0);
         this.opacityMapTransform = null;
         this.blendType = pc.scene.BLEND_NONE;
 
@@ -117,19 +104,29 @@ pc.extend(pc.scene, function () {
         this.normalMapTransform = null;
         this.normalMapTiling = new pc.Vec2(1, 1);
         this.normalMapOffset = new pc.Vec2(0, 0);
-        this.normalMapRotation = new pc.Vec3(0, 0, 0);
         this.heightMap = null;
         this.heightMapTiling = new pc.Vec2(1, 1);
         this.heightMapOffset = new pc.Vec2(0, 0);
-        this.heightMapRotation = new pc.Vec3(0, 0, 0);
         this.heightMapTransform = null;
         this.bumpiness = 1;
 
         this.cubeMap = null;
+        this.prefilteredCubeMap128 = null;
+        this.prefilteredCubeMap64 = null;
+        this.prefilteredCubeMap32 = null;
+        this.prefilteredCubeMap16 = null;
+        this.prefilteredCubeMap8 = null;
+        this.prefilteredCubeMap4 = null;
         this.sphereMap = null;
         this.reflectivity = 1;
 
         this.lightMap = null;
+        this.aoMap = null;
+        this.blendMapsWithColors = true;
+
+        this.specularAA = true;
+        this.specularModel = pc.scene.SPECULAR_BLINN;
+        this.fresnelModel = pc.scene.FRESNEL_SCHLICK;
 
         this.fresnelFactor = 0;
 
@@ -188,35 +185,30 @@ pc.extend(pc.scene, function () {
             clone.diffuseMap = this.diffuseMap;
             clone.diffuseMapTiling = this.diffuseMapTiling ? this.diffuseMapTiling.clone() : new pc.Vec2(1, 1);
             clone.diffuseMapOffset = this.diffuseMapOffset ? this.diffuseMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.diffuseMapRotation = this.diffuseMapRotation ? this.diffuseMapRotation.clone() : new pc.Vec3();
             clone.diffuseMapTransform = this.diffuseMapTransform ? this.diffuseMapTransform.clone() : null;
 
             clone.specular.copy(this.specular);
             clone.specularMap = this.specularMap;
             clone.specularMapTiling = this.specularMapTiling ? this.specularMapTiling.clone() : new pc.Vec2(1, 1);
             clone.specularMapOffset = this.specularMapOffset ? this.specularMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.specularMapRotation = this.specularMapRotation ? this.specularMapRotation.clone() : new pc.Vec3();
             clone.specularMapTransform = this.specularMapTransform ? this.specularMapTransform.clone() : null;
 
             clone.shininess = this.shininess;
             clone.glossMap = this.glossMap;
             clone.glossMapTiling = this.glossMapTiling ? this.glossMapTiling.clone() : new pc.Vec2(1, 1);
             clone.glossMapOffset = this.glossMapOffset ? this.glossMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.glossMapRotation = this.glossMapRotation ? this.glossMapRotation.clone() : new pc.Vec3();
             clone.glossMapTransform = this.glossMapTransform ? this.glossMapTransform.clone() : null;
 
             clone.emissive.copy(this.emissive);
             clone.emissiveMap = this.emissiveMap;
             clone.emissiveMapTiling = this.emissiveMapTiling ? this.emissiveMapTiling.clone() : new pc.Vec2(1, 1);
             clone.emissiveMapOffset = this.emissiveMapOffset ? this.emissiveMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.emissiveMapRotation = this.emissiveMapRotation ? this.emissiveMapRotation.clone() : new pc.Vec3();
             clone.emissiveMapTransform = this.emissiveMapTransform ? this.emissiveMapTransform.clone() : null;
 
             clone.opacity = this.opacity;
             clone.opacityMap = this.opacityMap;
             clone.opacityMapTiling = this.opacityMapTiling ? this.opacityMapTiling.clone() : new pc.Vec2(1, 1);
             clone.opacityMapOffset = this.opacityMapOffset ? this.opacityMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.opacityMapRotation = this.opacityMapRotation ? this.opacityMapRotation.clone() : new pc.Vec3();
             clone.opacityMapTransform = this.opacityMapTransform ? this.opacityMapTransform.clone() : null;
             clone.blendType = this.blendType;
 
@@ -224,21 +216,30 @@ pc.extend(pc.scene, function () {
             clone.normalMapTransform = this.normalMapTransform ? this.normalMapTransform.clone() : null;
             clone.normalMapTiling = this.normalMapTiling ? this.normalMapTiling.clone() : new pc.Vec2(1, 1);
             clone.normalMapOffset = this.normalMapOffset ? this.normalMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.normalMapRotation = this.normalMapRotation ? this.normalMapRotation.clone() : new pc.Vec3();
             clone.heightMap = this.heightMap;
             clone.heightMapTransform = this.heightMapTransform ? this.heightMapTransform.clone() : null;
             clone.heightMapTiling = this.heightMapTiling ? this.heightMapTiling.clone() : new pc.Vec2(1, 1);
             clone.heightMapOffset = this.heightMapOffset ? this.heightMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.heightMapRotation = this.heightMapRotation ? this.heightMapRotation.clone() : new pc.Vec3();
             clone.bumpiness = this.bumpiness;
 
             clone.cubeMap = this.cubeMap;
+            clone.prefilteredCubeMap128 = this.prefilteredCubeMap128;
+            clone.prefilteredCubeMap64 = this.prefilteredCubeMap64;
+            clone.prefilteredCubeMap32 = this.prefilteredCubeMap32;
+            clone.prefilteredCubeMap16 = this.prefilteredCubeMap16;
+            clone.prefilteredCubeMap8 = this.prefilteredCubeMap8;
+            clone.prefilteredCubeMap4 = this.prefilteredCubeMap4;
             clone.sphereMap = this.sphereMap;
             clone.reflectivity = this.reflectivity;
 
             clone.lightMap = this.lightMap;
+            clone.aoMap = this.aoMap;
 
             clone.fresnelFactor = this.fresnelFactor;
+            clone.blendMapsWithColors = this.blendMapsWithColors;
+            clone.specularAA = this.specularAA;
+            clone.specularModel = this.specularModel;
+            clone.fresnelModel = this.fresnelModel;
 
             clone.update();
             return clone;
@@ -273,9 +274,6 @@ pc.extend(pc.scene, function () {
                     case 'diffuseMapOffset':
                         this.diffuseMapOffset = _createVec2(param);
                         break;
-                    case 'diffuseMapRotation':
-                        this.diffuseMapRotation = _createVec3(param);
-                        break;
                     case 'specular':
                         this.specular = _createRgb(param);
                         break;
@@ -287,9 +285,6 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'specularMapOffset':
                         this.specularMapOffset = _createVec2(param);
-                        break;
-                    case 'specularMapRotation':
-                        this.specularMapRotation = _createVec3(param);
                         break;
                     case 'shininess':
                         this.shininess = param.data;
@@ -303,9 +298,6 @@ pc.extend(pc.scene, function () {
                     case 'glossMapOffset':
                         this.glossMapOffset = _createVec2(param);
                         break;
-                    case 'glossMapRotation':
-                        this.glossMapRotation = _createVec3(param);
-                        break;
                     case 'emissive':
                         this.emissive = _createRgb(param);
                         break;
@@ -317,9 +309,6 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'emissiveMapOffset':
                         this.emissiveMapOffset = _createVec2(param);
-                        break;
-                    case 'emissiveMapRotation':
-                        this.emissiveMapRotation = _createVec3(param);
                         break;
                     case 'opacity':
                         this.opacity = param.data;
@@ -333,9 +322,6 @@ pc.extend(pc.scene, function () {
                     case 'opacityMapOffset':
                         this.opacityMapOffset = _createVec2(param);
                         break;
-                    case 'opacityMapRotation':
-                        this.opacityMapRotation = _createVec3(param);
-                        break;
                     case 'normalMap':
                         this.normalMap = _createTexture(param);
                         break;
@@ -344,9 +330,6 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'normalMapOffset':
                         this.normalMapOffset = _createVec2(param);
-                        break;
-                    case 'normalMapRotation':
-                        this.normalMapRotation = _createVec3(param);
                         break;
                     case 'heightMap':
                         this.heightMap = _createTexture(param);
@@ -357,14 +340,29 @@ pc.extend(pc.scene, function () {
                     case 'heightMapOffset':
                         this.heightMapOffset = _createVec2(param);
                         break;
-                    case 'heightMapRotation':
-                        this.heightMapRotation = _createVec3(param);
-                        break;
                     case 'bumpMapFactor':
                         this.bumpiness = param.data;
                         break;
                     case 'cubeMap':
                         this.cubeMap = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap128':
+                        this.prefilteredCubeMap128 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap64':
+                        this.prefilteredCubeMap64 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap32':
+                        this.prefilteredCubeMap32 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap16':
+                        this.prefilteredCubeMap16 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap8':
+                        this.prefilteredCubeMap8 = _createTexture(param);
+                        break;
+                    case 'prefilteredCubeMap4':
+                        this.prefilteredCubeMap4 = _createTexture(param);
                         break;
                     case 'sphereMap':
                         this.sphereMap = _createTexture(param);
@@ -374,6 +372,9 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'lightMap':
                         this.lightMap = _createTexture(param);
+                        break;
+                    case 'aoMap':
+                        this.aoMap = _createTexture(param);
                         break;
                     case 'depthTest':
                         this.depthTest = param.data;
@@ -387,6 +388,18 @@ pc.extend(pc.scene, function () {
                     case 'blendType':
                         this.blendType = param.data;
                         break;
+                    case 'blendMapsWithColors':
+                        this.blendMapsWithColors = param.data;
+                        break;
+                    case 'specularAA':
+                        this.specularAA = param.data;
+                        break;
+                    case 'specularModel':
+                        this.specularModel = param.data;
+                        break;
+                    case 'fresnelModel':
+                        this.fresnelModel = param.data;
+                        break;
                     case 'fresnelFactor':
                         this.fresnelFactor = param.data;
                 }
@@ -395,7 +408,7 @@ pc.extend(pc.scene, function () {
             this.update();
         },
 
-        _updateMapTransform: function (transform, tiling, offset, rotation) {
+        _updateMapTransform: function (transform, tiling, offset) {
             transform = transform || new pc.Vec4();
             transform.set(tiling.x, tiling.y, offset.x, offset.y);
 
@@ -429,15 +442,15 @@ pc.extend(pc.scene, function () {
                 this.diffuseMapTransform = this._updateMapTransform(
                     this.diffuseMapTransform,
                     this.diffuseMapTiling,
-                    this.diffuseMapOffset,
-                    this.diffuseMapRotation
+                    this.diffuseMapOffset
                 );
 
                 if (this.diffuseMapTransform) {
                     this.setParameter('texture_diffuseMapTransform', this.diffuseMapTransform.data);
                 }
-            } else {
-                this.diffuseMapTransform = null;
+            }
+
+            if (!this.diffuseMap || this.blendMapsWithColors) {
                 this.diffuseUniform[0] = this.diffuse.r;
                 this.diffuseUniform[1] = this.diffuse.g;
                 this.diffuseUniform[2] = this.diffuse.b;
@@ -450,15 +463,15 @@ pc.extend(pc.scene, function () {
                 this.specularMapTransform = this._updateMapTransform(
                     this.specularMapTransform,
                     this.specularMapTiling,
-                    this.specularMapOffset,
-                    this.specularMapRotation
+                    this.specularMapOffset
                 );
 
                 if (this.specularMapTransform) {
                     this.setParameter('texture_specularMapTransform', this.specularMapTransform.data);
                 }
-            } else {
-                this.specularMapTransform = null;
+            }
+
+            if (!this.specularMap || this.blendMapsWithColors) {
                 this.specularUniform[0] = this.specular.r;
                 this.specularUniform[1] = this.specular.g;
                 this.specularUniform[2] = this.specular.b;
@@ -471,15 +484,15 @@ pc.extend(pc.scene, function () {
                 this.glossMapTransform = this._updateMapTransform(
                     this.glossMapTransform,
                     this.glossMapTiling,
-                    this.glossMapOffset,
-                    this.glossMapRotation
+                    this.glossMapOffset
                 );
 
                 if (this.glossMapTransform) {
                     this.setParameter('texture_glossMapTransform', this.glossMapTransform.data);
                 }
-            } else {
-                this.glossMapTransform = null;
+            }
+
+            if (!this.glossMap || this.blendMapsWithColors) {
                 this.setParameter('material_shininess', this.shininess);
             }
 
@@ -489,15 +502,15 @@ pc.extend(pc.scene, function () {
                 this.emissiveMapTransform = this._updateMapTransform(
                     this.emissiveMapTransform,
                     this.emissiveMapTiling,
-                    this.emissiveMapOffset,
-                    this.emissiveMapRotation
+                    this.emissiveMapOffset
                 );
 
                 if (this.emissiveMapTransform) {
                     this.setParameter('texture_emissiveMapTransform', this.emissiveMapTransform.data);
                 }
-            } else {
-                this.emissiveMapTransform = null;
+            }
+
+            if (!this.emissiveMap || this.blendMapsWithColors) {
                 this.emissiveUniform[0] = this.emissive.r;
                 this.emissiveUniform[1] = this.emissive.g;
                 this.emissiveUniform[2] = this.emissive.b;
@@ -510,15 +523,15 @@ pc.extend(pc.scene, function () {
                 this.opacityMapTransform = this._updateMapTransform(
                     this.opacityMapTransform,
                     this.opacityMapTiling,
-                    this.opacityMapOffset,
-                    this.opacityMapRotation
+                    this.opacityMapOffset
                 );
 
                 if (this.opacityMapTransform) {
                     this.setParameter('texture_opacityMapTransform', this.opacityMapTransform.data);
                 }
-            } else {
-                this.opacityMapTransform = null;
+            }
+
+            if (!this.opacityMap || this.blendMapsWithColors) {
                 this.setParameter('material_opacity', this.opacity);
             }
 
@@ -528,15 +541,13 @@ pc.extend(pc.scene, function () {
                 this.normalMapTransform = this._updateMapTransform(
                     this.normalMapTransform,
                     this.normalMapTiling,
-                    this.normalMapOffset,
-                    this.normalMapRotation
+                    this.normalMapOffset
                 );
 
                 if (this.normalMapTransform) {
                     this.setParameter('texture_normalMapTransform', this.normalMapTransform.data);
                 }
             } else {
-                this.normalMapTransform = null;
             }
 
             if (this.heightMap) {
@@ -545,15 +556,13 @@ pc.extend(pc.scene, function () {
                 this.heightMapTransform = this._updateMapTransform(
                     this.heightMapTransform,
                     this.heightMapTiling,
-                    this.heightMapOffset,
-                    this.heightMapRotation
+                    this.heightMapOffset
                 );
 
                 if (this.heightMapTransform) {
                     this.setParameter('texture_heightMapTransform', this.heightMapTransform.data);
                 }
             } else {
-                this.heightMapTransform = null;
             }
 
             if (this.normalMap || this.heightMap) {
@@ -563,10 +572,28 @@ pc.extend(pc.scene, function () {
             if (this.cubeMap) {
                 this.setParameter('texture_cubeMap', this.cubeMap);
             }
+            if (this.prefilteredCubeMap128) {
+                this.setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
+            }
+            if (this.prefilteredCubeMap64) {
+                this.setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
+            }
+            if (this.prefilteredCubeMap32) {
+                this.setParameter('texture_prefilteredCubeMap32', this.prefilteredCubeMap32);
+            }
+            if (this.prefilteredCubeMap16) {
+                this.setParameter('texture_prefilteredCubeMap16', this.prefilteredCubeMap16);
+            }
+            if (this.prefilteredCubeMap8) {
+                this.setParameter('texture_prefilteredCubeMap8', this.prefilteredCubeMap8);
+            }
+            if (this.prefilteredCubeMap4) {
+                this.setParameter('texture_prefilteredCubeMap4', this.prefilteredCubeMap4);
+            }
             if (this.sphereMap) {
                 this.setParameter('texture_sphereMap', this.sphereMap);
             }
-            if (this.sphereMap || this.cubeMap) {
+            if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
             }
 
@@ -576,6 +603,10 @@ pc.extend(pc.scene, function () {
 
             if (this.lightMap) {
                 this.setParameter('texture_lightMap', this.lightMap);
+            }
+
+            if (this.aoMap) {
+                this.setParameter('texture_aoMap', this.aoMap);
             }
 
             this.shader = null;
@@ -608,31 +639,46 @@ pc.extend(pc.scene, function () {
             var lights = scene._lights;
 
             this._mapXForms = [];
+            var prefilteredCubeMap = this.prefilteredCubeMap128 && this.prefilteredCubeMap64 && this.prefilteredCubeMap32
+                                   && this.prefilteredCubeMap16 && this.prefilteredCubeMap8 && this.prefilteredCubeMap4;
 
             var options = {
                 fog:                        scene.fog,
                 gamma:                      scene.gammaCorrection,
+                toneMap:                    scene.toneMapping,
+                blendMapsWithColors:        this.blendMapsWithColors,
                 skin:                       !!this.meshInstances[0].skinInstance,
                 diffuseMap:                 !!this.diffuseMap,
                 diffuseMapTransform:        this._getMapTransformID(this.diffuseMapTransform),
+                needsDiffuseColor:          (this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1),
                 specularMap:                !!this.specularMap,
                 specularMapTransform:       this._getMapTransformID(this.specularMapTransform),
+                needsSpecularColor:         (this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1),
                 glossMap:                   !!this.glossMap,
                 glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
+                needsGlossFloat:            this.shininess!=100,
                 emissiveMap:                !!this.emissiveMap,
                 emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
+                needsEmissiveColor:         (this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1),
                 opacityMap:                 !!this.opacityMap,
                 opacityMapTransform:        this._getMapTransformID(this.opacityMapTransform),
+                needsOpacityFloat:          this.opacity!=1,
                 normalMap:                  !!this.normalMap,
                 normalMapTransform:         this._getMapTransformID(this.normalMapTransform),
+                needsNormalFloat:           this.bumpiness!=1,
                 heightMap:                  !!this.heightMap,
                 heightMapTransform:         this._getMapTransformID(this.heightMapTransform),
                 sphereMap:                  !!this.sphereMap,
-                cubeMap:                    !!this.cubeMap,
+                cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,
                 lightMap:                   !!this.lightMap,
+                aoMap:                      !!this.aoMap,
                 useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
-                                            || (!!this.sphereMap) || (!!this.cubeMap),
-                useFresnel:                 (this.fresnelFactor > 0)
+                                            || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
+                hdrReflection:              prefilteredCubeMap? this.prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
+                prefilteredCubemap:         prefilteredCubeMap,
+                specularAA:                 this.specularAA,
+                specularModel:              this.specularModel,
+                fresnelModel:               this.fresnelModel
             };
 
             this._mapXForms = null;
