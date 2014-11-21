@@ -1,7 +1,6 @@
 pc.extend(pc.scene, function () {
 
     var _tempTiling = new pc.Vec3();
-    var _tempRotation = new pc.Quat();
     var _tempOffset = new pc.Vec3();
 
     /**
@@ -17,14 +16,12 @@ pc.extend(pc.scene, function () {
      * color in preference to the 'diffuse' property.
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
-     * @property {pc.Vec3} diffuseMapRotation Controls the rotation of the diffuse map. The value represents U,V,W angles in degrees.
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
      * @property {pc.gfx.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * specular color in preference to the 'specular' property.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
-     * @property {pc.Vec3} specularMapRotation Controls the rotation of the specular map. The value represents U,V,W angles in degrees.
      * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128.
      * A higher shininess value results in a more focussed specular highlight.
      * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
@@ -32,7 +29,6 @@ pc.extend(pc.scene, function () {
      * shininess in preference to the 'shininess' property.
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
-     * @property {pc.Vec3} glossMapRotation Controls the rotation of the gloss map. The value represents U,V,W angles in degrees.
      * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
@@ -40,7 +36,6 @@ pc.extend(pc.scene, function () {
      * color in preference to the 'emissive' property.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
-     * @property {pc.Vec3} emissiveMapRotation Controls the rotation of the emissive map. The value represents U,V,W angles in degrees.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque. If you want the material to be transparent you also need to
      * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
@@ -50,19 +45,16 @@ pc.extend(pc.scene, function () {
      * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
-     * @property {pc.Vec3} opacityMapRotation Controls the rotation of the opacity map. The value represents U,V,W angles in degrees.
      * @property {Number} blendType The type of blending for this material. Can be one of the following valus: pc.scene.BLEND_NONE, pc.scene.BLEND_NORMAL, pc.scene.BLEND_ADDITIVE.
      * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {pc.Vec3} normalMapRotation Controls the rotation of the normal map. The value represents U,V,W angles in degrees.
      * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather
      * than a cube map. The texture contain values defining the height of the surface at that point where darker
      * pixels are lower and lighter pixels are higher.
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {pc.Vec3} heightMapRotation Controls the rotation of the height map. The value represents U,V,W angles in degrees.
      * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
      * the bump map and 1 results in a full contribution.
@@ -81,35 +73,30 @@ pc.extend(pc.scene, function () {
         this.diffuseMap = null;
         this.diffuseMapTiling = new pc.Vec2(1, 1);
         this.diffuseMapOffset = new pc.Vec2(0, 0);
-        this.diffuseMapRotation = new pc.Vec3(0, 0, 0);
         this.diffuseMapTransform = null;
 
         this.specular = new pc.Color(0, 0, 0);
         this.specularMap = null;
         this.specularMapTiling = new pc.Vec2(1, 1);
         this.specularMapOffset = new pc.Vec2(0, 0);
-        this.specularMapRotation = new pc.Vec3(0, 0, 0);
         this.specularMapTransform = null;
 
         this.shininess = 25;
         this.glossMap = null;
         this.glossMapTiling = new pc.Vec2(1, 1);
         this.glossMapOffset = new pc.Vec2(0, 0);
-        this.glossMapRotation = new pc.Vec3(0, 0, 0);
         this.glossMapTransform = null;
 
         this.emissive = new pc.Color(0, 0, 0);
         this.emissiveMap = null;
         this.emissiveMapTiling = new pc.Vec2(1, 1);
         this.emissiveMapOffset = new pc.Vec2(0, 0);
-        this.emissiveMapRotation = new pc.Vec3(0, 0, 0);
         this.emissiveMapTransform = null;
 
         this.opacity = 1;
         this.opacityMap = null;
         this.opacityMapTiling = new pc.Vec2(1, 1);
         this.opacityMapOffset = new pc.Vec2(0, 0);
-        this.opacityMapRotation = new pc.Vec3(0, 0, 0);
         this.opacityMapTransform = null;
         this.blendType = pc.scene.BLEND_NONE;
 
@@ -117,11 +104,9 @@ pc.extend(pc.scene, function () {
         this.normalMapTransform = null;
         this.normalMapTiling = new pc.Vec2(1, 1);
         this.normalMapOffset = new pc.Vec2(0, 0);
-        this.normalMapRotation = new pc.Vec3(0, 0, 0);
         this.heightMap = null;
         this.heightMapTiling = new pc.Vec2(1, 1);
         this.heightMapOffset = new pc.Vec2(0, 0);
-        this.heightMapRotation = new pc.Vec3(0, 0, 0);
         this.heightMapTransform = null;
         this.bumpiness = 1;
 
@@ -200,35 +185,30 @@ pc.extend(pc.scene, function () {
             clone.diffuseMap = this.diffuseMap;
             clone.diffuseMapTiling = this.diffuseMapTiling ? this.diffuseMapTiling.clone() : new pc.Vec2(1, 1);
             clone.diffuseMapOffset = this.diffuseMapOffset ? this.diffuseMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.diffuseMapRotation = this.diffuseMapRotation ? this.diffuseMapRotation.clone() : new pc.Vec3();
             clone.diffuseMapTransform = this.diffuseMapTransform ? this.diffuseMapTransform.clone() : null;
 
             clone.specular.copy(this.specular);
             clone.specularMap = this.specularMap;
             clone.specularMapTiling = this.specularMapTiling ? this.specularMapTiling.clone() : new pc.Vec2(1, 1);
             clone.specularMapOffset = this.specularMapOffset ? this.specularMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.specularMapRotation = this.specularMapRotation ? this.specularMapRotation.clone() : new pc.Vec3();
             clone.specularMapTransform = this.specularMapTransform ? this.specularMapTransform.clone() : null;
 
             clone.shininess = this.shininess;
             clone.glossMap = this.glossMap;
             clone.glossMapTiling = this.glossMapTiling ? this.glossMapTiling.clone() : new pc.Vec2(1, 1);
             clone.glossMapOffset = this.glossMapOffset ? this.glossMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.glossMapRotation = this.glossMapRotation ? this.glossMapRotation.clone() : new pc.Vec3();
             clone.glossMapTransform = this.glossMapTransform ? this.glossMapTransform.clone() : null;
 
             clone.emissive.copy(this.emissive);
             clone.emissiveMap = this.emissiveMap;
             clone.emissiveMapTiling = this.emissiveMapTiling ? this.emissiveMapTiling.clone() : new pc.Vec2(1, 1);
             clone.emissiveMapOffset = this.emissiveMapOffset ? this.emissiveMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.emissiveMapRotation = this.emissiveMapRotation ? this.emissiveMapRotation.clone() : new pc.Vec3();
             clone.emissiveMapTransform = this.emissiveMapTransform ? this.emissiveMapTransform.clone() : null;
 
             clone.opacity = this.opacity;
             clone.opacityMap = this.opacityMap;
             clone.opacityMapTiling = this.opacityMapTiling ? this.opacityMapTiling.clone() : new pc.Vec2(1, 1);
             clone.opacityMapOffset = this.opacityMapOffset ? this.opacityMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.opacityMapRotation = this.opacityMapRotation ? this.opacityMapRotation.clone() : new pc.Vec3();
             clone.opacityMapTransform = this.opacityMapTransform ? this.opacityMapTransform.clone() : null;
             clone.blendType = this.blendType;
 
@@ -236,12 +216,10 @@ pc.extend(pc.scene, function () {
             clone.normalMapTransform = this.normalMapTransform ? this.normalMapTransform.clone() : null;
             clone.normalMapTiling = this.normalMapTiling ? this.normalMapTiling.clone() : new pc.Vec2(1, 1);
             clone.normalMapOffset = this.normalMapOffset ? this.normalMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.normalMapRotation = this.normalMapRotation ? this.normalMapRotation.clone() : new pc.Vec3();
             clone.heightMap = this.heightMap;
             clone.heightMapTransform = this.heightMapTransform ? this.heightMapTransform.clone() : null;
             clone.heightMapTiling = this.heightMapTiling ? this.heightMapTiling.clone() : new pc.Vec2(1, 1);
             clone.heightMapOffset = this.heightMapOffset ? this.heightMapOffset.clone() : new pc.Vec2(0, 0);
-            clone.heightMapRotation = this.heightMapRotation ? this.heightMapRotation.clone() : new pc.Vec3();
             clone.bumpiness = this.bumpiness;
 
             clone.cubeMap = this.cubeMap;
@@ -296,9 +274,6 @@ pc.extend(pc.scene, function () {
                     case 'diffuseMapOffset':
                         this.diffuseMapOffset = _createVec2(param);
                         break;
-                    case 'diffuseMapRotation':
-                        this.diffuseMapRotation = _createVec3(param);
-                        break;
                     case 'specular':
                         this.specular = _createRgb(param);
                         break;
@@ -310,9 +285,6 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'specularMapOffset':
                         this.specularMapOffset = _createVec2(param);
-                        break;
-                    case 'specularMapRotation':
-                        this.specularMapRotation = _createVec3(param);
                         break;
                     case 'shininess':
                         this.shininess = param.data;
@@ -326,9 +298,6 @@ pc.extend(pc.scene, function () {
                     case 'glossMapOffset':
                         this.glossMapOffset = _createVec2(param);
                         break;
-                    case 'glossMapRotation':
-                        this.glossMapRotation = _createVec3(param);
-                        break;
                     case 'emissive':
                         this.emissive = _createRgb(param);
                         break;
@@ -340,9 +309,6 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'emissiveMapOffset':
                         this.emissiveMapOffset = _createVec2(param);
-                        break;
-                    case 'emissiveMapRotation':
-                        this.emissiveMapRotation = _createVec3(param);
                         break;
                     case 'opacity':
                         this.opacity = param.data;
@@ -356,9 +322,6 @@ pc.extend(pc.scene, function () {
                     case 'opacityMapOffset':
                         this.opacityMapOffset = _createVec2(param);
                         break;
-                    case 'opacityMapRotation':
-                        this.opacityMapRotation = _createVec3(param);
-                        break;
                     case 'normalMap':
                         this.normalMap = _createTexture(param);
                         break;
@@ -368,9 +331,6 @@ pc.extend(pc.scene, function () {
                     case 'normalMapOffset':
                         this.normalMapOffset = _createVec2(param);
                         break;
-                    case 'normalMapRotation':
-                        this.normalMapRotation = _createVec3(param);
-                        break;
                     case 'heightMap':
                         this.heightMap = _createTexture(param);
                         break;
@@ -379,9 +339,6 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'heightMapOffset':
                         this.heightMapOffset = _createVec2(param);
-                        break;
-                    case 'heightMapRotation':
-                        this.heightMapRotation = _createVec3(param);
                         break;
                     case 'bumpMapFactor':
                         this.bumpiness = param.data;
@@ -451,7 +408,7 @@ pc.extend(pc.scene, function () {
             this.update();
         },
 
-        _updateMapTransform: function (transform, tiling, offset, rotation) {
+        _updateMapTransform: function (transform, tiling, offset) {
             transform = transform || new pc.Vec4();
             transform.set(tiling.x, tiling.y, offset.x, offset.y);
 
@@ -485,8 +442,7 @@ pc.extend(pc.scene, function () {
                 this.diffuseMapTransform = this._updateMapTransform(
                     this.diffuseMapTransform,
                     this.diffuseMapTiling,
-                    this.diffuseMapOffset,
-                    this.diffuseMapRotation
+                    this.diffuseMapOffset
                 );
 
                 if (this.diffuseMapTransform) {
@@ -507,8 +463,7 @@ pc.extend(pc.scene, function () {
                 this.specularMapTransform = this._updateMapTransform(
                     this.specularMapTransform,
                     this.specularMapTiling,
-                    this.specularMapOffset,
-                    this.specularMapRotation
+                    this.specularMapOffset
                 );
 
                 if (this.specularMapTransform) {
@@ -529,8 +484,7 @@ pc.extend(pc.scene, function () {
                 this.glossMapTransform = this._updateMapTransform(
                     this.glossMapTransform,
                     this.glossMapTiling,
-                    this.glossMapOffset,
-                    this.glossMapRotation
+                    this.glossMapOffset
                 );
 
                 if (this.glossMapTransform) {
@@ -548,8 +502,7 @@ pc.extend(pc.scene, function () {
                 this.emissiveMapTransform = this._updateMapTransform(
                     this.emissiveMapTransform,
                     this.emissiveMapTiling,
-                    this.emissiveMapOffset,
-                    this.emissiveMapRotation
+                    this.emissiveMapOffset
                 );
 
                 if (this.emissiveMapTransform) {
@@ -570,8 +523,7 @@ pc.extend(pc.scene, function () {
                 this.opacityMapTransform = this._updateMapTransform(
                     this.opacityMapTransform,
                     this.opacityMapTiling,
-                    this.opacityMapOffset,
-                    this.opacityMapRotation
+                    this.opacityMapOffset
                 );
 
                 if (this.opacityMapTransform) {
@@ -589,8 +541,7 @@ pc.extend(pc.scene, function () {
                 this.normalMapTransform = this._updateMapTransform(
                     this.normalMapTransform,
                     this.normalMapTiling,
-                    this.normalMapOffset,
-                    this.normalMapRotation
+                    this.normalMapOffset
                 );
 
                 if (this.normalMapTransform) {
@@ -605,8 +556,7 @@ pc.extend(pc.scene, function () {
                 this.heightMapTransform = this._updateMapTransform(
                     this.heightMapTransform,
                     this.heightMapTiling,
-                    this.heightMapOffset,
-                    this.heightMapRotation
+                    this.heightMapOffset
                 );
 
                 if (this.heightMapTransform) {
