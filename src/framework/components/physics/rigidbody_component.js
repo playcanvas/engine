@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
      * @param {pc.fw.Entity} entity The Entity this Component is attached to
      * @extends pc.fw.Component
      * @property {Boolean} enabled Enables or disables the Component.
-     * @property {Number} mass The mass of the body. This is only relevant for {@link pc.fw.RIGIDBODY_TYPE_DYNAMIC} bodies, other types have infinite mass.
+     * @property {Number} mass The mass of the body. This is only relevant for {@link pc.BODYTYPE_DYNAMIC} bodies, other types have infinite mass.
      * @property {pc.Vec3} linearVelocity Defines the speed of the body in a given direction.
      * @property {pc.Vec3} angularVelocity Defines the rotational speed of the body around each world axis.
      * @property {Number} linearDamping Controls the rate at which a body loses linear velocity over time.
@@ -190,8 +190,8 @@ pc.extend(pc.fw, function () {
                 body.entity = entity;
 
                 if (this.isKinematic()) {
-                    body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_KINEMATIC_OBJECT);
-                    body.setActivationState(pc.fw.RIGIDBODY_DISABLE_DEACTIVATION);
+                    body.setCollisionFlags(body.getCollisionFlags() | pc.BODYFLAG_KINEMATIC_OBJECT);
+                    body.setActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
                 }
 
                 entity.rigidbody.body = body;
@@ -235,10 +235,10 @@ pc.extend(pc.fw, function () {
 
                     // set activation state so that the body goes back to normal simulation
                     if (this.isKinematic()) {
-                        body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_DEACTIVATION);
+                        body.forceActivationState(pc.BODYSTATE_DISABLE_DEACTIVATION);
                         body.activate();
                     } else {
-                        body.forceActivationState(pc.fw.RIGIDBODY_ACTIVE_TAG);
+                        body.forceActivationState(pc.BODYFLAG_ACTIVE_TAG);
                         this.syncEntityToBody();
                     }
 
@@ -253,7 +253,7 @@ pc.extend(pc.fw, function () {
                 this.system.removeBody(body);
                 // set activation state to disable simulation to avoid body.isActive() to return
                 // true even if it's not in the dynamics world
-                body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_SIMULATION);
+                body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
 
                 this.data.simulationEnabled = false;
             }
@@ -494,31 +494,31 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @name pc.fw.RigidBodyComponent#isStatic
-         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC}
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC}
          * @returns {Boolean} True if static
          */
         isStatic: function () {
-            return (this.type === pc.fw.RIGIDBODY_TYPE_STATIC);
+            return (this.type === pc.BODYTYPE_STATIC);
         },
 
         /**
          * @function
          * @name pc.fw.RigidBodyComponent#isStaticOrKinematic
-         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_STATIC} or {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_STATIC} or {@link pc.BODYTYPE_KINEMATIC}
          * @returns {Boolean} True if static or kinematic
          */
         isStaticOrKinematic: function () {
-            return (this.type === pc.fw.RIGIDBODY_TYPE_STATIC || this.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
+            return (this.type === pc.BODYTYPE_STATIC || this.type === pc.BODYTYPE_KINEMATIC);
         },
 
         /**
          * @function
          * @name pc.fw.RigidBodyComponent#isKinematic
-         * @description Returns true if the rigid body is of type {@link pc.fw.RIGIDBODY_TYPE_KINEMATIC}
+         * @description Returns true if the rigid body is of type {@link pc.BODYTYPE_KINEMATIC}
          * @returns {Boolean} True if kinematic
          */
         isKinematic: function () {
-            return (this.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC);
+            return (this.type === pc.BODYTYPE_KINEMATIC);
         },
 
 
@@ -578,10 +578,9 @@ pc.extend(pc.fw, function () {
         * @param {Number} x The new position x value
         * @param {Number} y The new position y value
         * @param {Number} z The new position z value
-        * @param {Number} [x] The new quaternion x value
-        * @param {Number} [y] The new quaternion y value
-        * @param {Number} [z] The new quaternion z value
-        * @param {Number} [w] The new quaternion w value
+        * @param {Number} [x] The new x angle value
+        * @param {Number} [y] The new y angle value
+        * @param {Number} [z] The new z angle value
         */
         teleport: function () {
             if (arguments.length < 3) {
@@ -592,8 +591,8 @@ pc.extend(pc.fw, function () {
                     this.entity.setRotation(arguments[1]);
                 }
             } else {
-                if (arguments.length === 7) {
-                    this.entity.setRotation(arguments[3], arguments[4], arguments[5], arguments[6]);
+                if (arguments.length === 6) {
+                    this.entity.setEulerAngles(arguments[3], arguments[4], arguments[5]);
                 }
                 this.entity.setPosition(arguments[0], arguments[1], arguments[2]);
             }
@@ -709,15 +708,15 @@ pc.extend(pc.fw, function () {
                 this.disableSimulation();
 
                 // set group and mask to defaults for type
-                if (newValue === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
-                    this.data.group = pc.fw.RIGIDBODY_GROUP_DEFAULT;
-                    this.data.mask = pc.fw.RIGIDBODY_MASK_ALL;
-                } else if (newValue === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
-                    this.data.group = pc.fw.RIGIDBODY_GROUP_KINEMATIC;
-                    this.data.mask = pc.fw.RIGIDBODY_MASK_ALL;
+                if (newValue === pc.BODYTYPE_DYNAMIC) {
+                    this.data.group = pc.BODYGROUP_DEFAULT;
+                    this.data.mask = pc.BODYMASK_ALL;
+                } else if (newValue === pc.BODYTYPE_KINEMATIC) {
+                    this.data.group = pc.BODYGROUP_KINEMATIC;
+                    this.data.mask = pc.BODYMASK_ALL;
                 } else {
-                    this.data.group = pc.fw.RIGIDBODY_GROUP_STATIC;
-                    this.data.mask = pc.fw.RIGIDBODY_MASK_NOT_STATIC_KINEMATIC;
+                    this.data.group = pc.BODYGROUP_STATIC;
+                    this.data.mask = pc.BODYMASK_NOT_STATIC_KINEMATIC;
                 }
 
                 // Create a new body

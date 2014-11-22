@@ -157,16 +157,16 @@ pc.extend(pc.fw, function () {
             options: {
                 enumerations: [{
                     name: 'Static',
-                    value: pc.fw.RIGIDBODY_TYPE_STATIC
+                    value: pc.BODYTYPE_STATIC
                 }, {
                     name: 'Dynamic',
-                    value: pc.fw.RIGIDBODY_TYPE_DYNAMIC
+                    value: pc.BODYTYPE_DYNAMIC
                 }, {
                     name: 'Kinematic',
-                    value: pc.fw.RIGIDBODY_TYPE_KINEMATIC
+                    value: pc.BODYTYPE_KINEMATIC
                 }]
             },
-            defaultValue: pc.fw.RIGIDBODY_TYPE_STATIC
+            defaultValue: pc.BODYTYPE_STATIC
         }, {
             name: "mass",
             displayName: "Mass",
@@ -178,7 +178,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1,
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "linearDamping",
@@ -191,7 +191,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0,
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "angularDamping",
@@ -204,7 +204,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0,
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "linearFactor",
@@ -217,7 +217,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: [1, 1, 1],
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "angularFactor",
@@ -230,7 +230,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: [1, 1, 1],
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "friction",
@@ -257,14 +257,14 @@ pc.extend(pc.fw, function () {
             displayName: "Group",
             description: "The collision group this rigidbody belongs to",
             type: "number",
-            defaultValue: pc.fw.RIGIDBODY_GROUP_STATIC,
+            defaultValue: pc.BODYGROUP_STATIC,
             exposed: false
         }, {
             name: "mask",
             displayName: "Mask",
             description: "The collision mask this rigidbody uses to collide",
             type: "number",
-            defaultValue: pc.fw.RIGIDBODY_MASK_NOT_STATIC_KINEMATIC,
+            defaultValue: pc.BODYMASK_NOT_STATIC_KINEMATIC,
             exposed: false
         }, {
             name: "body",
@@ -275,25 +275,6 @@ pc.extend(pc.fw, function () {
 
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
-
-        // // Create the Ammo physics world
-        // if (typeof(Ammo) !== 'undefined') {
-        //     var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-        //     var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-        //     var overlappingPairCache = new Ammo.btDbvtBroadphase();
-        //     var solver = new Ammo.btSequentialImpulseConstraintSolver();
-        //     this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-
-        //     this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
-        //     this.dynamicsWorld.setGravity(this._ammoGravity);
-
-        //     // Only bind 'update' if Ammo is loaded
-        //     pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-
-        //     // Lazily create temp vars
-        //     ammoRayStart = new Ammo.btVector3();
-        //     ammoRayEnd = new Ammo.btVector3();
-        // }
 
         this.on('remove', this.onRemove, this);
 
@@ -586,8 +567,8 @@ pc.extend(pc.fw, function () {
             }
 
             var store = this.store;
-            var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.type !== pc.fw.RIGIDBODY_TYPE_STATIC;
-            var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.type !== pc.fw.RIGIDBODY_TYPE_STATIC;
+            var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.type !== pc.BODYTYPE_STATIC;
+            var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.type !== pc.BODYTYPE_STATIC;
 
             // find flags cell in collision table
             var row = 0;
@@ -685,9 +666,9 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
                     if (componentData.body && componentData.body.isActive() && componentData.enabled && entity.enabled) {
-                        if (componentData.type === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
+                        if (componentData.type === pc.BODYTYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
-                        } else if (componentData.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
+                        } else if (componentData.type === pc.BODYTYPE_KINEMATIC) {
                             entity.rigidbody._updateKinematic(dt);
                         }
                     }
@@ -761,59 +742,18 @@ pc.extend(pc.fw, function () {
     });
 
     return {
-        /**
-        * @enum pc.fw.RIGIDBODY_TYPE
-        * @name pc.fw.RIGIDBODY_TYPE_STATIC
-        * @description Static rigid bodies have infinite mass and can never move. You cannot apply forces or impulses to them or set their velocity.
-        */
+        // DEPRECATED ENUMS - see rigidbody_constants.js
         RIGIDBODY_TYPE_STATIC: 'static',
-        /**
-        * @enum pc.fw.RIGIDBODY_TYPE
-        * @name pc.fw.RIGIDBODY_TYPE_DYNAMIC
-        * @description Dynamic rigid bodies are simulated according to the forces acted on them. They have a positive, non-zero mass.
-        */
         RIGIDBODY_TYPE_DYNAMIC: 'dynamic',
-        /**
-        * @enum pc.fw.RIGIDBODY_TYPE
-        * @name pc.fw.RIGIDBODY_TYPE_KINEMATIC
-        * @description Kinematic rigid bodies are objects with infinite mass but can be moved by directly setting their velocity. You cannot apply forces or impulses to them.
-        */
         RIGIDBODY_TYPE_KINEMATIC: 'kinematic',
-
-        // Collision flags from AmmoJS
         RIGIDBODY_CF_STATIC_OBJECT: 1,
         RIGIDBODY_CF_KINEMATIC_OBJECT: 2,
         RIGIDBODY_CF_NORESPONSE_OBJECT: 4,
-
-        // Activation states from AmmoJS
         RIGIDBODY_ACTIVE_TAG: 1,
         RIGIDBODY_ISLAND_SLEEPING: 2,
         RIGIDBODY_WANTS_DEACTIVATION: 3,
         RIGIDBODY_DISABLE_DEACTIVATION: 4,
         RIGIDBODY_DISABLE_SIMULATION: 5,
-
-        RIGIDBODY_GROUP_NONE: 0,
-        RIGIDBODY_GROUP_DEFAULT: 1,
-        RIGIDBODY_GROUP_STATIC: 2,
-        RIGIDBODY_GROUP_KINEMATIC: 4,
-        RIGIDBODY_GROUP_TRIGGER: 8,
-        RIGIDBODY_GROUP_ENGINE_1: 16,
-        RIGIDBODY_GROUP_USER_1: 32,
-        RIGIDBODY_GROUP_USER_2: 64,
-        RIGIDBODY_GROUP_USER_3: 128,
-        RIGIDBODY_GROUP_USER_4: 256,
-        RIGIDBODY_GROUP_USER_5: 512,
-        RIGIDBODY_GROUP_USER_6: 1024,
-        RIGIDBODY_GROUP_USER_7: 2048,
-        RIGIDBODY_GROUP_USER_8: 4096,
-        RIGIDBODY_GROUP_USER_9: 8192,
-        RIGIDBODY_GROUP_USER_10: 16384,
-
-        RIGIDBODY_MASK_NONE: 0,
-        RIGIDBODY_MASK_ALL: 65535,
-        RIGIDBODY_MASK_STATIC: 2,
-        RIGIDBODY_MASK_NOT_STATIC: 65535 ^ 2,
-        RIGIDBODY_MASK_NOT_STATIC_KINEMATIC: 65535 ^ (2 | 4),
 
         RigidBodyComponentSystem: RigidBodyComponentSystem
     };

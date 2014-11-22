@@ -61,7 +61,7 @@ pc.extend(pc.fw, function () {
                 body.setLinearFactor(ammoVec1);
                 body.setAngularFactor(ammoVec1);
 
-                body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_NORESPONSE_OBJECT);
+                body.setCollisionFlags(body.getCollisionFlags() | pc.BODYFLAG_NORESPONSE_OBJECT);
                 body.entity = entity;
 
                 if (this.component.enabled && entity.enabled) {
@@ -93,11 +93,11 @@ pc.extend(pc.fw, function () {
 
         enable: function () {
             var body = this.body;
-            this.context.systems.rigidbody.addBody(body, pc.fw.RIGIDBODY_GROUP_TRIGGER, pc.fw.RIGIDBODY_MASK_NOT_STATIC);
+            this.context.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC);
 
             // set the body's activation state to active so that it is
             // simulated properly again
-            body.forceActivationState(pc.fw.RIGIDBODY_ACTIVE_TAG);
+            body.forceActivationState(pc.BODYSTATE_ACTIVE_TAG);
 
             body.activate();
         },
@@ -108,7 +108,7 @@ pc.extend(pc.fw, function () {
 
             // set the body's activation state to disable simulation so
             // that it properly deactivates after we remove it from the physics world
-            body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_SIMULATION);
+            body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
         }
     };
 
