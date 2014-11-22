@@ -271,7 +271,7 @@ pc.extend(pc.fw, function () {
     pc.extend(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {
             // Create the Ammo physics world
-            if (Ammo !== undefined) {
+            if (typeof Ammo !== 'undefined') {
                 var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
                 var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
                 var overlappingPairCache = new Ammo.btDbvtBroadphase();

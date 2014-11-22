@@ -16,7 +16,7 @@ pc.extend(pc.fw, function () {
         this.component = component;
         this.context = context; 
 
-        if (Ammo !== undefined) {
+        if (typeof Ammo !== 'undefined') {
             ammoVec1 = new Ammo.btVector3();
             ammoQuat = new Ammo.btQuaternion(); 
         }
@@ -29,7 +29,7 @@ pc.extend(pc.fw, function () {
             var entity = this.entity;
             var shape = data.shape;
 
-            if (shape && Ammo !== undefined) {
+            if (shape && typeof Ammo !== 'undefined') {
                 if (entity.trigger) {
                     entity.trigger.destroy();
                 }

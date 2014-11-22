@@ -140,7 +140,7 @@ pc.extend(pc.fw, function () {
 
     CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
         onLibraryLoaded: function () {
-            if (Ammo !== undefined) {
+            if (typeof Ammo !== 'undefined') {
                 //
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
@@ -358,7 +358,7 @@ pc.extend(pc.fw, function () {
             var entity = component.entity;
             var data = component.data;
 
-            if (Ammo !== undefined) {
+            if (typeof Ammo !== 'undefined') {
                 data.shape = this.createPhysicalShape(component.entity, data);
                 if (entity.rigidbody) {
                     entity.rigidbody.createBody();
@@ -599,7 +599,7 @@ pc.extend(pc.fw, function () {
         },
 
         createPhysicalShape: function (entity, data) {
-            if (Ammo !== undefined) {
+            if (typeof Ammo !== 'undefined') {
                 return new Ammo.btSphereShape(data.radius);
             } else {
                 return undefined;
@@ -753,7 +753,7 @@ pc.extend(pc.fw, function () {
             var radius = data.radius || 0.5;
             var height = Math.max((data.height || 2) - 2 * radius, 0);
 
-            if (Ammo !== undefined) {
+            if (typeof Ammo !== 'undefined') {
                 switch (axis) {
                     case 0:
                         shape = new Ammo.btCapsuleShapeX(radius, height);
@@ -892,7 +892,7 @@ pc.extend(pc.fw, function () {
             var radius = (data.radius !== undefined) ? data.radius : 0.5;
             var height = (data.height !== undefined) ? data.height : 1;
 
-            if (Ammo !== undefined) {
+            if (typeof Ammo !== 'undefined') {
                 switch (axis) {
                     case 0:
                         halfExtents = new Ammo.btVector3(height * 0.5, radius, radius);
@@ -944,7 +944,7 @@ pc.extend(pc.fw, function () {
         beforeInitialize: function (component, data) {},
 
         createPhysicalShape: function (entity, data) {
-            if (Ammo !== undefined && data.model) {
+            if (typeof Ammo !== 'undefined' && data.model) {
                 var model = data.model;
                 var shape = new Ammo.btCompoundShape();
 

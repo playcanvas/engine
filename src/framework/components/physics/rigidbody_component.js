@@ -31,7 +31,7 @@ pc.extend(pc.fw, function () {
      */
     var RigidBodyComponent = function RigidBodyComponent (system, entity) {
         // Lazily create shared variable
-        if (Ammo !== undefined && !ammoTransform) {
+        if (typeof Ammo !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();
