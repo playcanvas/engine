@@ -36,7 +36,7 @@ pc.extend(pc, (function () {
         this.objects = [];
         this.ctor = constructor;
         this.name = options.name;
-        this.useNew = typeof( options.useNew ) === 'undefined' || options.useNew;
+        this.useNew = options.useNew === undefined || options.useNew;
         this.metrics = options.metrics;
         if (options.metrics) {
             this.total = 0;

@@ -120,7 +120,7 @@ pc.extend(pc.scene, function () {
          * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, cw, ch, worldCoord) {
-            if (typeof worldCoord === 'undefined') {
+            if (worldCoord === undefined) {
                 worldCoord = new pc.Vec3();
             }
 

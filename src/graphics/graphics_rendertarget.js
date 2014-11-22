@@ -40,9 +40,9 @@ pc.extend(pc.gfx, function () {
         this._colorBuffer = colorBuffer;
 
         // Process optional arguments
-        options = (typeof options !== 'undefined') ? options : defaultOptions;
-        this._face = (typeof options.face !== 'undefined') ? options.face : 0;
-        this._depth = (typeof options.depth !== 'undefined') ? options.depth : true;
+        options = (options !== undefined) ? options : defaultOptions;
+        this._face = (options.face !== undefined) ? options.face : 0;
+        this._depth = (options.depth !== undefined) ? options.depth : true;
     };
 
     RenderTarget.prototype = {

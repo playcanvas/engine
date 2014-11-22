@@ -615,7 +615,7 @@ pc.extend(pc, (function () {
          * var tv = q.transformVector(v);
          */
         transformVector: function (vec, res) {
-            if (typeof res === 'undefined') {
+            if (res === undefined) {
                 res = new pc.Vec3();
             }
 

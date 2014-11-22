@@ -290,7 +290,7 @@ pc.extend(pc.resources, function () {
         var numIndices = 0;
         for (i = 0; i < modelData.meshes.length; i++) {
             var meshData = modelData.meshes[i];
-            if (typeof meshData.indices !== 'undefined') {
+            if (meshData.indices !== undefined) {
                 numIndices += meshData.indices.length;
             }
         }
@@ -318,7 +318,7 @@ pc.extend(pc.resources, function () {
                 new pc.Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
             );
 
-            var indexed = (typeof meshData.indices !== 'undefined');
+            var indexed = (meshData.indices !== undefined);
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = vertexBuffers[meshData.vertices];
             mesh.indexBuffer[0] = indexed ? indexBuffer : null;
@@ -326,7 +326,7 @@ pc.extend(pc.resources, function () {
             mesh.primitive[0].base = indexed ? (meshData.base + indexBase) : meshData.base;
             mesh.primitive[0].count = meshData.count;
             mesh.primitive[0].indexed = indexed;
-            mesh.skin = (typeof meshData.skin !== 'undefined') ? skins[meshData.skin] : null;
+            mesh.skin = (meshData.skin !== undefined) ? skins[meshData.skin] : null;
             mesh.aabb = aabb;
 
             if (indexed) {

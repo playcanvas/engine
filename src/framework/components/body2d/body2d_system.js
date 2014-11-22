@@ -29,7 +29,7 @@ pc.extend(pc.fw, function () {
      */
     var Body2dComponentSystem = function Body2dComponentSystem (context) {
         // Lazily unpack Box2D variables into closure
-        if (typeof(Box2D) !== 'undefined' && !b2World) {
+        if (Box2D !== undefined && !b2World) {
             unpack();
         }
 
@@ -84,7 +84,7 @@ pc.extend(pc.fw, function () {
             properties = ['static'];
             Body2dComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-            if (typeof(Box2D) !== 'undefined') {
+            if (Box2D !== undefined) {
                 this.createBody(component);
             }
         },

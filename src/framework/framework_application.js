@@ -128,16 +128,16 @@ pc.extend(pc.fw, function () {
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
-        if (typeof document.hidden !== 'undefined') {
+        if (document.hidden !== undefined) {
             this._hiddenAttr = 'hidden';
             document.addEventListener('visibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.mozHidden !== 'undefined') {
+        } else if (document.mozHidden !== undefined) {
             this._hiddenAttr = 'mozHidden';
             document.addEventListener('mozvisibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.msHidden !== 'undefined') {
+        } else if (document.msHidden !== undefined) {
             this._hiddenAttr = 'msHidden';
             document.addEventListener('msvisibilitychange', this.onVisibilityChange.bind(this), false);
-        } else if (typeof document.webkitHidden !== 'undefined') {
+        } else if (document.webkitHidden !== undefined) {
             this._hiddenAttr = 'webkitHidden';
             document.addEventListener('webkitvisibilitychange', this.onVisibilityChange.bind(this), false);
         }
@@ -180,7 +180,7 @@ pc.extend(pc.fw, function () {
                     pc.fw.ComponentSystem.postInitialize(pack.hierarchy);
 
                     // Initialise pack settings
-                    if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
+                    if (this.context.systems.rigidbody && Ammo !== undefined) {
                         var gravity = pack.settings.physics.gravity;
                         this.context.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
                     }
@@ -765,7 +765,7 @@ pc.extend(pc.fw, function () {
             var ambient = settings.render.global_ambient;
             this.context.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
 
-            if (this.context.systems.rigidbody && typeof(Ammo) !== 'undefined') {
+            if (this.context.systems.rigidbody && Ammo !== undefined) {
                 var gravity = settings.physics.gravity;
                 this.context.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
             }

@@ -49,7 +49,7 @@ pc.extend(pc.gfx, function () {
                 scopeId: graphicsDevice.scope.resolve(elementDesc.semantic),
                 dataType: elementDesc.type,
                 numComponents: elementDesc.components,
-                normalize: (typeof elementDesc.normalize === 'undefined') ? false : elementDesc.normalize,
+                normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
                 size: elementDesc.components * _typeSize[elementDesc.type]
             };
             this.elements.push(element);

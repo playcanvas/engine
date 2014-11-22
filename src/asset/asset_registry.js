@@ -235,7 +235,7 @@ pc.extend(pc.asset, function () {
                 assets = [assets];
             }
 
-            if (typeof(options) === 'undefined') {
+            if (options === undefined) {
                 // shift arguments
                 options = results;
                 results = [];

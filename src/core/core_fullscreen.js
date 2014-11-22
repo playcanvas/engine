@@ -1,6 +1,6 @@
 // Shim the Fullscreen API
 (function () {
-    if (typeof document === 'undefined') {
+    if (document === undefined) {
         // Not running in a browser
         return;
     }

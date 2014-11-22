@@ -131,7 +131,7 @@ pc.extend(pc.gfx, function () {
             location = gl.getAttribLocation(this.program, info.name);
 
             // Check attributes are correctly linked up
-            if (typeof definition.attributes[info.name] === 'undefined') {
+            if (definition.attributes[info.name] === undefined) {
                 console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
             }
 

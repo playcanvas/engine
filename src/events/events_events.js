@@ -165,7 +165,7 @@ pc.events = function () {
         * o.hasEvent('event_name'); // returns true
         */
         hasEvent: function (name) {
-            return (typeof(this._callbacks) !== 'undefined' && typeof(this._callbacks[name]) !== 'undefined' && this._callbacks[name].length > 0);
+            return (this._callbacks !== undefined && this._callbacks[name] !== undefined && this._callbacks[name].length > 0);
         }
     };
 

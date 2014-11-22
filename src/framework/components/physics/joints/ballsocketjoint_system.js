@@ -83,7 +83,7 @@ pc.extend(pc.fw, function () {
     
     BallSocketJointComponentSystem.prototype = pc.extend(BallSocketJointComponentSystem.prototype, {
         onLibraryLoaded: function () {
-            if (typeof(Ammo) !== 'undefined') {
+            if (Ammo !== undefined) {
                 // Only register update event if Ammo is loaded
             } else {
                 pc.fw.ComponentSystem.off('update', this.onUpdate, this);
@@ -91,7 +91,7 @@ pc.extend(pc.fw, function () {
         },
 
         initializeComponentData: function (component, data, properties) {
-            if (typeof(Ammo) !== 'undefined') {
+            if (Ammo !== undefined) {
                 if (component.entity.rigidbody) {
                     if (data.pivot && pc.type(data.pivot) === 'array') {
                         data.pivot = new pc.Vec3(data.pivot[0], data.pivot[1], data.pivot[2]);

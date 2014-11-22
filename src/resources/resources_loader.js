@@ -1,4 +1,4 @@
-    pc.extend(pc.resources, function () {
+pc.extend(pc.resources, function () {
     /**
     * @name pc.resources.ResourceLoader
     * @constructor Create a new instance of a ResourceLoader
@@ -16,7 +16,7 @@
     * });
     */
     var ResourceLoader = function () {
-        if (typeof(window.RSVP) === 'undefined') {
+        if (window.RSVP === undefined) {
             logERROR('Missing RSVP library');
         }
 
