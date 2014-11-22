@@ -684,7 +684,7 @@ pc.extend(pc.gfx, function () {
                 this.textureUnits[textureUnit] = texture;
             }
 
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilterLookup[texture._minFilter]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
             gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
 
             gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
