@@ -45,9 +45,6 @@ pc.extend(pc.fw, function () {
         // Create the graphics device
         this.graphicsDevice = new pc.gfx.Device(canvas);
 
-        // Enable validation of each WebGL command
-        this.graphicsDevice.enableValidation(false);
-
         var registry = new pc.fw.ComponentSystemRegistry();
 
         this.audioManager = new pc.audio.AudioManager();
