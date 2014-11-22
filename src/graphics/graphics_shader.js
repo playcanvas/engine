@@ -1,4 +1,5 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
 
     function addLineNumbers(src) {
         var chunks = src.split("\n");

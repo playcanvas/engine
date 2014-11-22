@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     var ScopeId = function (name) {
         // Set the name
         this.name = name;

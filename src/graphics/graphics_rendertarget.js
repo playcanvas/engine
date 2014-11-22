@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     var defaultOptions = {
         depth: true,
         face: 0

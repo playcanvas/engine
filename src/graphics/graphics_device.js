@@ -1,6 +1,7 @@
 pc.gfx.precalculatedTangents = true;
 
 pc.extend(pc.gfx, function () {
+    'use strict';
 
     var EVENT_RESIZE = 'resizecanvas';
 

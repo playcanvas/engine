@@ -601,7 +601,7 @@ pc.gfx = {
     TEXTURELOCK_WRITE: 2
 };
 
-pc.extend(pc, function () {
+pc.extend(pc, {
     UNIFORMTYPE_BOOL: 0,
     UNIFORMTYPE_INT: 1,
     UNIFORMTYPE_FLOAT: 2,
@@ -619,4 +619,4 @@ pc.extend(pc, function () {
     UNIFORMTYPE_MAT4: 14,
     UNIFORMTYPE_TEXTURE2D: 15,
     UNIFORMTYPE_TEXTURECUBE: 16
-}());
+});

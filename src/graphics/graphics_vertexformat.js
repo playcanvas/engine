@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     var _typeSize = [];
     _typeSize[pc.gfx.ELEMENTTYPE_INT8   ] = 1;
     _typeSize[pc.gfx.ELEMENTTYPE_UINT8  ] = 1;

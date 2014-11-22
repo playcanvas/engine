@@ -1,16 +1,24 @@
-pc.gfx.ShaderInput = function (graphicsDevice, name, type, locationId) {
-    // Set the shader attribute location
-    this.locationId = locationId;
+pc.extend(pc.gfx, function () {
+    'use strict';
 
-    // Resolve the ScopeId for the attribute name
-    this.scopeId = graphicsDevice.scope.resolve(name);
+    var ShaderInput = function (graphicsDevice, name, type, locationId) {
+        // Set the shader attribute location
+        this.locationId = locationId;
 
-    // Create the version
-    this.version = new pc.gfx.Version();
+        // Resolve the ScopeId for the attribute name
+        this.scopeId = graphicsDevice.scope.resolve(name);
 
-    // Set the data type
-    this.dataType = type;
+        // Create the version
+        this.version = new pc.gfx.Version();
 
-    // Array to hold texture unit ids
-    this.array = [];
-};
+        // Set the data type
+        this.dataType = type;
+
+        // Array to hold texture unit ids
+        this.array = [];
+    };
+
+    return {
+        ShaderInput: ShaderInput
+    }; 
+}());

@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     /**
      * @name pc.gfx.IndexBuffer
      * @class An index buffer is the mechanism via which the application specifies primitive
