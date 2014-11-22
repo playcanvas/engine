@@ -1181,54 +1181,13 @@ pc.extend(pc.gfx, function () {
             this.boneLimit = maxBones;
         },
 
-        /**
-         * @function
-         * @name pc.gfx.Device#enableValidation
-         * @description Activates additional validation within the engine. Internally,
-         * the WebGL error code is checked after every call to a WebGL function. If an error
-         * is detected, it will be output to the Javascript console. Note that enabling
-         * validation will have negative performance implications for the PlayCanvas runtime.
-         * @param {Boolean} enable true to activate validation and false to deactivate it.
-         */
+        /* DEPRECATED */
         enableValidation: function (enable) {
-            if (enable === true) {
-                if (this.gl instanceof WebGLRenderingContext) {
-
-                    // Create a new WebGLValidator object to
-                    // usurp the real WebGL context
-                    this.gl = new WebGLValidator(this.gl);
-                }
-            } else {
-                if (this.gl instanceof WebGLValidator) {
-
-                    // Unwrap the real WebGL context
-                    this.gl = Context.gl;
-                }
-            }
+            console.warn('enableValidation: This function is deprecated and will be removed shortly.');
         },
 
-        /**
-         * @function
-         * @name pc.gfx.Device#validate
-         * @description Performs a one time validation on the error state of the underlying
-         * WebGL API. Note that pc.gfx.Device#enableValidation does not have to be activated
-         * for this function to operate. If an error is detected, it is output to the
-         * Javascript console and the function returns false. Otherwise, the function returns
-         * true. If an error is detected, it will have been triggered by a WebGL call between
-         * the previous and this call to pc.gfx.Device#validate. If this is the first call to
-         * pc.gfx.Device#validate, it detects errors since the device was created.
-         * @returns {Boolean} false if there was an error and true otherwise.
-         */
         validate: function () {
-            var gl = this.gl;
-            var error = gl.getError();
-
-            if (error !== gl.NO_ERROR) {
-                Log.error("WebGL error: " + WebGLValidator.ErrorString[error]);
-                return false;
-            }
-
-            return true;
+            console.warn('validate: This function is deprecated and will be removed shortly.');
         },
 
         /**
