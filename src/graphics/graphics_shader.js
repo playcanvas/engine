@@ -106,23 +106,23 @@ pc.extend(pc.gfx, function () {
         var info, location;
 
         var _typeToPc = {};
-        _typeToPc[gl.BOOL]         = pc.gfx.ShaderInputType.BOOL;
-        _typeToPc[gl.INT]          = pc.gfx.ShaderInputType.INT;
-        _typeToPc[gl.FLOAT]        = pc.gfx.ShaderInputType.FLOAT;
-        _typeToPc[gl.FLOAT_VEC2]   = pc.gfx.ShaderInputType.VEC2;
-        _typeToPc[gl.FLOAT_VEC3]   = pc.gfx.ShaderInputType.VEC3;
-        _typeToPc[gl.FLOAT_VEC4]   = pc.gfx.ShaderInputType.VEC4;
-        _typeToPc[gl.INT_VEC2]     = pc.gfx.ShaderInputType.IVEC2;
-        _typeToPc[gl.INT_VEC3]     = pc.gfx.ShaderInputType.IVEC3;
-        _typeToPc[gl.INT_VEC4]     = pc.gfx.ShaderInputType.IVEC4;
-        _typeToPc[gl.BOOL_VEC2]    = pc.gfx.ShaderInputType.BVEC2;
-        _typeToPc[gl.BOOL_VEC3]    = pc.gfx.ShaderInputType.BVEC3;
-        _typeToPc[gl.BOOL_VEC4]    = pc.gfx.ShaderInputType.BVEC4;
-        _typeToPc[gl.FLOAT_MAT2]   = pc.gfx.ShaderInputType.MAT2;
-        _typeToPc[gl.FLOAT_MAT3]   = pc.gfx.ShaderInputType.MAT3;
-        _typeToPc[gl.FLOAT_MAT4]   = pc.gfx.ShaderInputType.MAT4;
-        _typeToPc[gl.SAMPLER_2D]   = pc.gfx.ShaderInputType.TEXTURE2D;
-        _typeToPc[gl.SAMPLER_CUBE] = pc.gfx.ShaderInputType.TEXTURECUBE;
+        _typeToPc[gl.BOOL]         = pc.UNIFORMTYPE_BOOL;
+        _typeToPc[gl.INT]          = pc.UNIFORMTYPE_INT;
+        _typeToPc[gl.FLOAT]        = pc.UNIFORMTYPE_FLOAT;
+        _typeToPc[gl.FLOAT_VEC2]   = pc.UNIFORMTYPE_VEC2;
+        _typeToPc[gl.FLOAT_VEC3]   = pc.UNIFORMTYPE_VEC3;
+        _typeToPc[gl.FLOAT_VEC4]   = pc.UNIFORMTYPE_VEC4;
+        _typeToPc[gl.INT_VEC2]     = pc.UNIFORMTYPE_IVEC2;
+        _typeToPc[gl.INT_VEC3]     = pc.UNIFORMTYPE_IVEC3;
+        _typeToPc[gl.INT_VEC4]     = pc.UNIFORMTYPE_IVEC4;
+        _typeToPc[gl.BOOL_VEC2]    = pc.UNIFORMTYPE_BVEC2;
+        _typeToPc[gl.BOOL_VEC3]    = pc.UNIFORMTYPE_BVEC3;
+        _typeToPc[gl.BOOL_VEC4]    = pc.UNIFORMTYPE_BVEC4;
+        _typeToPc[gl.FLOAT_MAT2]   = pc.UNIFORMTYPE_MAT2;
+        _typeToPc[gl.FLOAT_MAT3]   = pc.UNIFORMTYPE_MAT3;
+        _typeToPc[gl.FLOAT_MAT4]   = pc.UNIFORMTYPE_MAT4;
+        _typeToPc[gl.SAMPLER_2D]   = pc.UNIFORMTYPE_TEXTURE2D;
+        _typeToPc[gl.SAMPLER_CUBE] = pc.UNIFORMTYPE_TEXTURECUBE;
 
         var numAttributes = gl.getProgramParameter(this.program, gl.ACTIVE_ATTRIBUTES);
         while (i < numAttributes) {
