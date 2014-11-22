@@ -22,8 +22,6 @@ pc.extend(pc.posteffect, function () {
         this.resizeTimeout = null;
 
         camera.on('set_rect', this.onCameraRectChanged, this);
-
-        this.previous
     }
 
     PostEffectQueue.prototype = {
