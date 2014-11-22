@@ -151,6 +151,6 @@ var pc = {
         return result;
     } ();
 
-if (exports !== undefined) {
+if (typeof (exports) !== 'undefined') {
     exports.pc = pc;
 }
