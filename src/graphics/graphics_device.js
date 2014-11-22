@@ -153,14 +153,10 @@ pc.extend(pc.gfx, function () {
                 flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
             };
 
-            this.glPrimitive = [
-                gl.POINTS,
-                gl.LINES,
-                gl.LINE_LOOP,
-                gl.LINE_STRIP,
-                gl.TRIANGLES,
-                gl.TRIANGLE_STRIP,
-                gl.TRIANGLE_FAN
+            this.glAddress = [
+                gl.REPEAT,
+                gl.CLAMP_TO_EDGE,
+                gl.MIRRORED_REPEAT
             ];
 
             this.glBlendEquation = [
@@ -192,6 +188,25 @@ pc.extend(pc.gfx, function () {
                 gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT,
                 gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
                 gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
+            ];
+
+            this.glFilter = [
+                gl.NEAREST,
+                gl.LINEAR,
+                gl.NEAREST_MIPMAP_NEAREST,
+                gl.NEAREST_MIPMAP_LINEAR,
+                gl.LINEAR_MIPMAP_NEAREST,
+                gl.LINEAR_MIPMAP_LINEAR
+            ];
+
+            this.glPrimitive = [
+                gl.POINTS,
+                gl.LINES,
+                gl.LINE_LOOP,
+                gl.LINE_STRIP,
+                gl.TRIANGLES,
+                gl.TRIANGLE_STRIP,
+                gl.TRIANGLE_FAN
             ];
 
             this.glType = [
@@ -668,13 +683,11 @@ pc.extend(pc.gfx, function () {
                 this.textureUnits[textureUnit] = texture;
             }
 
-            var _filterLookup = [gl.NEAREST, gl.LINEAR, gl.NEAREST_MIPMAP_NEAREST, gl.NEAREST_MIPMAP_LINEAR, gl.LINEAR_MIPMAP_NEAREST, gl.LINEAR_MIPMAP_LINEAR];
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, _filterLookup[texture._minFilter]);
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, _filterLookup[texture._magFilter]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilterLookup[texture._minFilter]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
 
-            var _addressLookup = [gl.REPEAT, gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT];
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, _addressLookup[texture._addressU]);
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, _addressLookup[texture._addressV]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
 
             var ext = this.extTextureFilterAnisotropic;
             if (ext) {
