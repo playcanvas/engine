@@ -20,7 +20,7 @@ pc.extend(pc.fw, function () {
         this.type = pc.BODYTYPE_STATIC;
 
         this.group = pc.BODYGROUP_STATIC;
-        this.mask = pc.BODYMASK_NOT_STATIC_KINEMATIC;
+        this.mask = pc.BODYMASK_NOT_STATIC;
 
         // Non-serialized properties
         this.body = null;

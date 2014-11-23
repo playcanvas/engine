@@ -716,7 +716,7 @@ pc.extend(pc.fw, function () {
                     this.data.mask = pc.BODYMASK_ALL;
                 } else {
                     this.data.group = pc.BODYGROUP_STATIC;
-                    this.data.mask = pc.BODYMASK_NOT_STATIC_KINEMATIC;
+                    this.data.mask = pc.BODYMASK_NOT_STATIC;
                 }
 
                 // Create a new body
@@ -727,8 +727,11 @@ pc.extend(pc.fw, function () {
         onSetGroupOrMask: function (name, oldValue, newValue) {
             if (newValue !== oldValue) {
                 // re-enabling simulation adds rigidbody back into world with new masks
-                this.disableSimulation();
-                this.enableSimulation();
+                var isEnabled = this.enabled && this.entity.enabled;
+                if (isEnabled) {
+                    this.disableSimulation();
+                    this.enableSimulation();
+                }
             }
         },
 
