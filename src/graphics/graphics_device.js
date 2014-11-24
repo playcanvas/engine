@@ -1,6 +1,7 @@
 pc.gfx.precalculatedTangents = true;
 
 pc.extend(pc.gfx, function () {
+    'use strict';
 
     var EVENT_RESIZE = 'resizecanvas';
 
@@ -153,14 +154,10 @@ pc.extend(pc.gfx, function () {
                 flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
             };
 
-            this.glPrimitive = [
-                gl.POINTS,
-                gl.LINES,
-                gl.LINE_LOOP,
-                gl.LINE_STRIP,
-                gl.TRIANGLES,
-                gl.TRIANGLE_STRIP,
-                gl.TRIANGLE_FAN
+            this.glAddress = [
+                gl.REPEAT,
+                gl.CLAMP_TO_EDGE,
+                gl.MIRRORED_REPEAT
             ];
 
             this.glBlendEquation = [
@@ -192,6 +189,25 @@ pc.extend(pc.gfx, function () {
                 gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT,
                 gl.STENCIL_BUFFER_BIT | gl.DEPTH_BUFFER_BIT,
                 gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
+            ];
+
+            this.glFilter = [
+                gl.NEAREST,
+                gl.LINEAR,
+                gl.NEAREST_MIPMAP_NEAREST,
+                gl.NEAREST_MIPMAP_LINEAR,
+                gl.LINEAR_MIPMAP_NEAREST,
+                gl.LINEAR_MIPMAP_LINEAR
+            ];
+
+            this.glPrimitive = [
+                gl.POINTS,
+                gl.LINES,
+                gl.LINE_LOOP,
+                gl.LINE_STRIP,
+                gl.TRIANGLES,
+                gl.TRIANGLE_STRIP,
+                gl.TRIANGLE_FAN
             ];
 
             this.glType = [
@@ -269,26 +285,26 @@ pc.extend(pc.gfx, function () {
 
             // Define the uniform commit functions
             this.commitFunction = {};
-            this.commitFunction[pc.gfx.ShaderInputType.BOOL ] = function (locationId, value) { gl.uniform1i(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.INT  ] = function (locationId, value) { gl.uniform1i(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.FLOAT] = function (locationId, value) {
+            this.commitFunction[pc.UNIFORMTYPE_BOOL ] = function (locationId, value) { gl.uniform1i(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_INT  ] = function (locationId, value) { gl.uniform1i(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_FLOAT] = function (locationId, value) {
                 if (typeof value == "number")
                     gl.uniform1f(locationId, value);
                 else
                     gl.uniform1fv(locationId, value);
                 };
-            this.commitFunction[pc.gfx.ShaderInputType.VEC2 ] = function (locationId, value) { gl.uniform2fv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.VEC3 ] = function (locationId, value) { gl.uniform3fv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.VEC4 ] = function (locationId, value) { gl.uniform4fv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.IVEC2] = function (locationId, value) { gl.uniform2iv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.BVEC2] = function (locationId, value) { gl.uniform2iv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.IVEC3] = function (locationId, value) { gl.uniform3iv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.BVEC3] = function (locationId, value) { gl.uniform3iv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.IVEC4] = function (locationId, value) { gl.uniform4iv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.BVEC4] = function (locationId, value) { gl.uniform4iv(locationId, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.MAT2 ] = function (locationId, value) { gl.uniformMatrix2fv(locationId, false, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.MAT3 ] = function (locationId, value) { gl.uniformMatrix3fv(locationId, false, value); };
-            this.commitFunction[pc.gfx.ShaderInputType.MAT4 ] = function (locationId, value) { gl.uniformMatrix4fv(locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_VEC2]  = function (locationId, value) { gl.uniform2fv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_VEC3]  = function (locationId, value) { gl.uniform3fv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_VEC4]  = function (locationId, value) { gl.uniform4fv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_IVEC2] = function (locationId, value) { gl.uniform2iv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_BVEC2] = function (locationId, value) { gl.uniform2iv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_IVEC3] = function (locationId, value) { gl.uniform3iv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_BVEC3] = function (locationId, value) { gl.uniform3iv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_IVEC4] = function (locationId, value) { gl.uniform4iv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_BVEC4] = function (locationId, value) { gl.uniform4iv(locationId, value); };
+            this.commitFunction[pc.UNIFORMTYPE_MAT2]  = function (locationId, value) { gl.uniformMatrix2fv(locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_MAT3]  = function (locationId, value) { gl.uniformMatrix3fv(locationId, false, value); };
+            this.commitFunction[pc.UNIFORMTYPE_MAT4]  = function (locationId, value) { gl.uniformMatrix4fv(locationId, false, value); };
 
             // Set the initial render state
             this.setBlending(false);
@@ -668,13 +684,11 @@ pc.extend(pc.gfx, function () {
                 this.textureUnits[textureUnit] = texture;
             }
 
-            var _filterLookup = [gl.NEAREST, gl.LINEAR, gl.NEAREST_MIPMAP_NEAREST, gl.NEAREST_MIPMAP_LINEAR, gl.LINEAR_MIPMAP_NEAREST, gl.LINEAR_MIPMAP_LINEAR];
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, _filterLookup[texture._minFilter]);
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, _filterLookup[texture._magFilter]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_MIN_FILTER, this.glFilter[texture._minFilter]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_MAG_FILTER, this.glFilter[texture._magFilter]);
 
-            var _addressLookup = [gl.REPEAT, gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT];
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, _addressLookup[texture._addressU]);
-            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, _addressLookup[texture._addressV]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_S, this.glAddress[texture._addressU]);
+            gl.texParameteri(texture._glTarget, gl.TEXTURE_WRAP_T, this.glAddress[texture._addressV]);
 
             var ext = this.extTextureFilterAnisotropic;
             if (ext) {
@@ -1168,54 +1182,13 @@ pc.extend(pc.gfx, function () {
             this.boneLimit = maxBones;
         },
 
-        /**
-         * @function
-         * @name pc.gfx.Device#enableValidation
-         * @description Activates additional validation within the engine. Internally,
-         * the WebGL error code is checked after every call to a WebGL function. If an error
-         * is detected, it will be output to the Javascript console. Note that enabling
-         * validation will have negative performance implications for the PlayCanvas runtime.
-         * @param {Boolean} enable true to activate validation and false to deactivate it.
-         */
+        /* DEPRECATED */
         enableValidation: function (enable) {
-            if (enable === true) {
-                if (this.gl instanceof WebGLRenderingContext) {
-
-                    // Create a new WebGLValidator object to
-                    // usurp the real WebGL context
-                    this.gl = new WebGLValidator(this.gl);
-                }
-            } else {
-                if (this.gl instanceof WebGLValidator) {
-
-                    // Unwrap the real WebGL context
-                    this.gl = Context.gl;
-                }
-            }
+            console.warn('enableValidation: This function is deprecated and will be removed shortly.');
         },
 
-        /**
-         * @function
-         * @name pc.gfx.Device#validate
-         * @description Performs a one time validation on the error state of the underlying
-         * WebGL API. Note that pc.gfx.Device#enableValidation does not have to be activated
-         * for this function to operate. If an error is detected, it is output to the
-         * Javascript console and the function returns false. Otherwise, the function returns
-         * true. If an error is detected, it will have been triggered by a WebGL call between
-         * the previous and this call to pc.gfx.Device#validate. If this is the first call to
-         * pc.gfx.Device#validate, it detects errors since the device was created.
-         * @returns {Boolean} false if there was an error and true otherwise.
-         */
         validate: function () {
-            var gl = this.gl;
-            var error = gl.getError();
-
-            if (error !== gl.NO_ERROR) {
-                Log.error("WebGL error: " + WebGLValidator.ErrorString[error]);
-                return false;
-            }
-
-            return true;
+            console.warn('validate: This function is deprecated and will be removed shortly.');
         },
 
         /**

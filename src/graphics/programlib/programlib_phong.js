@@ -222,7 +222,7 @@ pc.gfx.programlib.phong = {
         }
 
         if (options.useSpecular) {
-            if (options.specularAA) {
+            if (options.specularAA && options.normalMap) {
                 code += chunks.specularAaToksvigPS;
             } else {
                 code += chunks.specularAaNonePS;

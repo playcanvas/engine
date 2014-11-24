@@ -77,7 +77,7 @@ pc.extend(pc, (function () {
             c[0] = r;
             c[1] = g;
             c[2] = b;
-            c[3] = (typeof a === 'undefined') ? 1 : a;
+            c[3] = (a === undefined) ? 1 : a;
 
             return this;
         },

@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     var _typeSize = [];
     _typeSize[pc.gfx.ELEMENTTYPE_INT8   ] = 1;
     _typeSize[pc.gfx.ELEMENTTYPE_UINT8  ] = 1;
@@ -47,7 +49,7 @@ pc.extend(pc.gfx, function () {
                 scopeId: graphicsDevice.scope.resolve(elementDesc.semantic),
                 dataType: elementDesc.type,
                 numComponents: elementDesc.components,
-                normalize: (typeof elementDesc.normalize === 'undefined') ? false : elementDesc.normalize,
+                normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
                 size: elementDesc.components * _typeSize[elementDesc.type]
             };
             this.elements.push(element);

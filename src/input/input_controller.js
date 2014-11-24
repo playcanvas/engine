@@ -132,7 +132,7 @@ pc.extend(pc.input, function () {
             throw new Error(pc.string.format("Action: {0} already registered", action));
         }
 
-        if (typeof(keys) === 'undefined') {
+        if (keys === undefined) {
             throw new Error('Invalid button');
         }
 
@@ -166,7 +166,7 @@ pc.extend(pc.input, function () {
             this._enableMouse();
         }
 
-        if (typeof(button) === 'undefined') {
+        if (button === undefined) {
             throw new Error('Invalid button');
         }
 
@@ -193,7 +193,7 @@ pc.extend(pc.input, function () {
      * @param {Number} button The pad button
      */
     Controller.prototype.registerPadButton = function (action, pad, button) {
-        if (typeof(button) === 'undefined') {
+        if (button === undefined) {
             throw new Error('Invalid button');
         }
         // Mouse actions are stored as negative numbers to prevent clashing with keycodes.

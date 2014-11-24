@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     function VertexIteratorSetter(buffer, vertexElement) {
         this.index = 0;
 

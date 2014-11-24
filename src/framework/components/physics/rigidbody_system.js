@@ -262,25 +262,6 @@ pc.extend(pc.fw, function () {
         this.maxSubSteps = 10;
         this.fixedTimeStep = 1/60;
 
-        // // Create the Ammo physics world
-        // if (typeof(Ammo) !== 'undefined') {
-        //     var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-        //     var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-        //     var overlappingPairCache = new Ammo.btDbvtBroadphase();
-        //     var solver = new Ammo.btSequentialImpulseConstraintSolver();
-        //     this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-
-        //     this._ammoGravity = new Ammo.btVector3(0, -9.82, 0);
-        //     this.dynamicsWorld.setGravity(this._ammoGravity);
-
-        //     // Only bind 'update' if Ammo is loaded
-        //     pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-
-        //     // Lazily create temp vars
-        //     ammoRayStart = new Ammo.btVector3();
-        //     ammoRayEnd = new Ammo.btVector3();
-        // }
-
         this.on('remove', this.onRemove, this);
 
         pc.fw.ComponentSystem.on('update', this.onUpdate, this);
@@ -290,7 +271,7 @@ pc.extend(pc.fw, function () {
     pc.extend(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {
             // Create the Ammo physics world
-            if (typeof(Ammo) !== 'undefined') {
+            if (typeof Ammo !== 'undefined') {
                 var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
                 var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
                 var overlappingPairCache = new Ammo.btDbvtBroadphase();

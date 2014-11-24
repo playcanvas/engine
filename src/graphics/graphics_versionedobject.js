@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     var idCounter = 0;
 
     var VersionedObject = function () {

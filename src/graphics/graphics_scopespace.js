@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     var ScopeSpace = function (name) {
         // Store the name
         this.name = name;

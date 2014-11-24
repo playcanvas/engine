@@ -54,66 +54,66 @@ pc.extend(pc.scene, function () {
         this.graphicsDevice = graphicsDevice;
 
         // The number of particles to emit.
-        this.numParticles = typeof options.numParticles !== 'undefined' ? options.numParticles : 1;
+        this.numParticles = options.numParticles !== undefined ? options.numParticles : 1;
         // The number of frames in the particle texture.
-        this.numFrames = typeof options.numFrames !== 'undefined' ? options.numFrames : 1;
+        this.numFrames = options.numFrames !== undefined ? options.numFrames : 1;
         // The frame duration at which to animate the particle texture in seconds per frame.
-        this.frameDuration = typeof options.frameDuration !== 'undefined' ? options.frameDuration : 1;
+        this.frameDuration = options.frameDuration !== undefined ? options.frameDuration : 1;
         // The initial frame to display for a particular particle.
-        this.frameStart = typeof options.frameStart !== 'undefined' ? options.frameStart : 0;
+        this.frameStart = options.frameStart !== undefined ? options.frameStart : 0;
         // The frame start range.
-        this.frameStartRange = typeof options.frameStartRange !== 'undefined' ? options.frameStartRange : 0;
+        this.frameStartRange = options.frameStartRange !== undefined ? options.frameStartRange : 0;
         // The life time of the entire particle system.
         // To make a particle system be continuous set this to match the lifeTime.
-        this.timeRange = typeof options.timeRange !== 'undefined' ? options.timeRange : 99999999;
+        this.timeRange = options.timeRange !== undefined ? options.timeRange : 99999999;
         // The startTime of a particle.
-        this.startTime = typeof options.startTime !== 'undefined' ? options.startTime : null;
+        this.startTime = options.startTime !== undefined ? options.startTime : null;
         // The lifeTime of a particle.
-        this.lifeTime = typeof options.lifeTime !== 'undefined' ? options.lifeTime : 1;
+        this.lifeTime = options.lifeTime !== undefined ? options.lifeTime : 1;
         // The lifeTime range.
-        this.lifeTimeRange = typeof options.lifeTimeRange !== 'undefined' ? options.lifeTimeRange : 0;
+        this.lifeTimeRange = options.lifeTimeRange !== undefined ? options.lifeTimeRange : 0;
         // The starting size of a particle.
-        this.startSize = typeof options.startSize !== 'undefined' ? options.startSize : 1;
+        this.startSize = options.startSize !== undefined ? options.startSize : 1;
         // The starting size range.
-        this.startSizeRange = typeof options.startSizeRange !== 'undefined' ? options.startSizeRange : 0;
+        this.startSizeRange = options.startSizeRange !== undefined ? options.startSizeRange : 0;
         // The ending size of a particle.
-        this.endSize = typeof options.endSize !== 'undefined' ? options.endSize : 1;
+        this.endSize = options.endSize !== undefined ? options.endSize : 1;
         // The ending size range.
-        this.endSizeRange = typeof options.endSizeRange !== 'undefined' ? options.endSizeRange : 0;
+        this.endSizeRange = options.endSizeRange !== undefined ? options.endSizeRange : 0;
         // The starting position of a particle in local space.
-        this.position = typeof options.position !== 'undefined' ? options.position : new pc.Vec3(0, 0, 0);
+        this.position = options.position !== undefined ? options.position : new pc.Vec3(0, 0, 0);
         // The starting position range.
-        this.positionRange = typeof options.positionRange !== 'undefined' ? options.positionRange : new pc.Vec3(0, 0, 0);
+        this.positionRange = options.positionRange !== undefined ? options.positionRange : new pc.Vec3(0, 0, 0);
         // The velocity of a paritcle in local space.
-        this.velocity = typeof options.velocity !== 'undefined' ? options.velocity : new pc.Vec3(0, 0, 0);
+        this.velocity = options.velocity !== undefined ? options.velocity : new pc.Vec3(0, 0, 0);
         // The velocity range.
-        this.velocityRange = typeof options.velocityRange !== 'undefined' ? options.velocityRange : new pc.Vec3(0, 0, 0);
+        this.velocityRange = options.velocityRange !== undefined ? options.velocityRange : new pc.Vec3(0, 0, 0);
         // The acceleration of a particle in local space.
-        this.acceleration = typeof options.acceleration !== 'undefined' ? options.acceleration : new pc.Vec3(0, 0, 0);
+        this.acceleration = options.acceleration !== undefined ? options.acceleration : new pc.Vec3(0, 0, 0);
         // The accleration range.
-        this.accelerationRange = typeof options.accelerationRange !== 'undefined' ? options.accelerationRange : new pc.Vec3(0, 0, 0);
+        this.accelerationRange = options.accelerationRange !== undefined ? options.accelerationRange : new pc.Vec3(0, 0, 0);
         // The starting spin value for a particle in radians.
-        this.spinStart = typeof options.spinStart !== 'undefined' ? options.spinStart : 0;
+        this.spinStart = options.spinStart !== undefined ? options.spinStart : 0;
         // The spin start range.
-        this.spinStartRange = typeof options.spinStartRange !== 'undefined' ? options.spinStartRange : 0;
+        this.spinStartRange = options.spinStartRange !== undefined ? options.spinStartRange : 0;
         // The spin speed of a particle in radians.
-        this.spinSpeed = typeof options.spinSpeed !== 'undefined' ? options.spinSpeed : 0;
+        this.spinSpeed = options.spinSpeed !== undefined ? options.spinSpeed : 0;
         // The spin speed range.
-        this.spinSpeedRange = typeof options.spinSpeedRange !== 'undefined' ? options.spinSpeedRange : 0;
+        this.spinSpeedRange = options.spinSpeedRange !== undefined ? options.spinSpeedRange : 0;
         // The color multiplier of a particle.
-        this.colorMult = typeof options.colorMult !== 'undefined' ? options.colorMult : new pc.Vec4(1, 1, 1, 1);
+        this.colorMult = options.colorMult !== undefined ? options.colorMult : new pc.Vec4(1, 1, 1, 1);
         // The color multiplier range.
-        this.colorMultRange = typeof options.colorMultRange !== 'undefined' ? options.colorMultRange : new pc.Vec4(0, 0, 0, 0);
+        this.colorMultRange = options.colorMultRange !== undefined ? options.colorMultRange : new pc.Vec4(0, 0, 0, 0);
         // The velocity of all paritcles in world space.
-        this.worldVelocity = typeof options.worldVelocity !== 'undefined' ? options.worldVelocity : new pc.Vec3(0, 0, 0);
+        this.worldVelocity = options.worldVelocity !== undefined ? options.worldVelocity : new pc.Vec3(0, 0, 0);
         // The acceleration of all paritcles in world space.
-        this.worldAcceleration = typeof options.worldAcceleration !== 'undefined' ? options.worldAcceleration : new pc.Vec3(0, 0, 0);
+        this.worldAcceleration = options.worldAcceleration !== undefined ? options.worldAcceleration : new pc.Vec3(0, 0, 0);
         // Whether these particles are oriented in 2d or 3d. true = 2d, false = 3d.
-        this.billboard = typeof options.billboard !== 'undefined' ? options.billboard : true;
+        this.billboard = options.billboard !== undefined ? options.billboard : true;
         // The orientation of a particle. This is only used if billboard is false.
-        this.orientation = typeof options.orientation !== 'undefined' ? options.orientation : new pc.Vec4(0, 0, 0, 1);
+        this.orientation = options.orientation !== undefined ? options.orientation : new pc.Vec4(0, 0, 0, 1);
 
-        this.dynamic = typeof options.dynamic !== 'undefined' ? options.dynamic : false;
+        this.dynamic = options.dynamic !== undefined ? options.dynamic : false;
 
         // Just for dynamic systems
         this.birthIndex = 0;

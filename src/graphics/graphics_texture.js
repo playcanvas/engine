@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     /**
      * @name pc.gfx.Texture
      * @class A texture is a container for texel data that can be utilized in a fragment shader.

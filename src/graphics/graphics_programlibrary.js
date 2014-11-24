@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     // Public interface
     var ProgramLibrary = function (device) {
         this._device = device;
