@@ -11,9 +11,9 @@ pc.audio = function () {
     */
     var AudioManager = function () {
         if (pc.audio.hasAudioContext()) {
-            if (AudioContext !== undefined) {
+            if (typeof AudioContext !== 'undefined') {
                 this.context = new AudioContext();
-            } else if (webkitAudioContext !== undefined) {
+            } else if (typeof webkitAudioContext !== 'undefined') {
                 this.context = new webkitAudioContext();
             }
         }
@@ -129,14 +129,16 @@ pc.audio = function () {
     return {
         AudioManager: AudioManager,
         hasAudio: function () {
-            return Audio !== undefined;
+            return (typeof Audio !== 'undefined');
         },
+
         hasAudioContext: function () {
-            return !!(AudioContext !== undefined || webkitAudioContext !== undefined);
+            return !!(typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined');
         },
+
         /**
-        * @description Estimate from the url/extension, whether the browser can play this audio type
-        */
+         * @description Estimate from the url/extension, whether the browser can play this audio type
+         */
         isSupported: function (url, audio) {
             var toMIME = {
                 '.ogg': 'audio/ogg',
