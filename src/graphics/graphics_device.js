@@ -505,6 +505,13 @@ pc.extend(pc.gfx, function () {
          * and pc.gfx.Device#updateEnd must not be nested.
          */
         updateEnd: function () {
+            var gl = this.gl;
+
+            // Unset the render target
+            var target = this.renderTarget;
+            if (target) {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
         },
 
         initializeTexture: function (texture) {
