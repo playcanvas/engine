@@ -552,13 +552,16 @@ pc.extend(pc.fw, function () {
          */
         syncBodyToEntity: function () {
             var body = this.body;
-            if (body.isActive() && body.getMotionState()) {
-                body.getMotionState().getWorldTransform(ammoTransform);
+            if (body.isActive()) {
+                var motionState = body.getMotionState();
+                if (motionState) {
+                    motionState.getWorldTransform(ammoTransform);
 
-                var p = ammoTransform.getOrigin();
-                var q = ammoTransform.getRotation();
-                this.entity.setPosition(p.x(), p.y(), p.z());
-                this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                    var p = ammoTransform.getOrigin();
+                    var q = ammoTransform.getRotation();
+                    this.entity.setPosition(p.x(), p.y(), p.z());
+                    this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                }
             }
         },
 
