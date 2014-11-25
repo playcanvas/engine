@@ -20,7 +20,7 @@ pc.extend(pc.resources, function () {
                 // we have them when we create the cubemap, otherwise this will
                 // cause issues in cases like cubemaps used in materials which will be
                 // rendered without textures in the Designer
-                this._loadCubemapTextures([], asset.data, request, function (textures) {
+                this._loadCubemapTextures([], asset.data, request).then(function (textures) {
                     var data = pc.extend({}, asset.data);
                     data.textures = textures;
                     resolve(data);
@@ -146,53 +146,57 @@ pc.extend(pc.resources, function () {
         return result;
     };
 
-    // Loads the textures of the cubemap and
-    // calls the callback with the textures as
-    // the parameter when done
-    CubemapResourceHandler.prototype._loadCubemapTextures = function (existingSources, data, request, callback) {
-        // initialize existing sources if needed
-        if (!this._areValidTextures(existingSources)) {
-            existingSources = [null, null, null, null, null, null];
-        }
+    // Loads the textures of the cubemap - Returns a promise
+    CubemapResourceHandler.prototype._loadCubemapTextures = function (existingSources, data, request) {
+        var promise = new pc.promise.Promise(function (resolve, reject) {
+            // initialize existing sources if needed
+            if (!this._areValidTextures(existingSources)) {
+                existingSources = [null, null, null, null, null, null];
+            }
 
-        if (this._areValidTextures(data.textures)) {
-            var sourceIndexes = [];
+            if (this._areValidTextures(data.textures)) {
+                var sourceIndexes = [];
 
-            var requests = [];
-            for (var i = 0; i < 6; i++) {
+                var requests = [];
+                for (var i = 0; i < 6; i++) {
 
-                if (data.textures[i] !== null) {
-                    var asset = this._assets.getAssetById(data.textures[i]);
-                    if (!asset) {
-                        pc.log.error(pc.string.format('Could not load cubemap - Texture {0} not found', data.textures[i]));
-                        return;
-                    }
+                    if (data.textures[i] !== null) {
+                        var asset = this._assets.getAssetById(data.textures[i]);
+                        if (!asset) {
+                            pc.log.error(pc.string.format('Could not load cubemap - Texture {0} not found', data.textures[i]));
+                            return;
+                        }
 
-                    // try to avoid making a texture request if the image is the same
-                    if (!existingSources[i] || !pc.string.endsWith(existingSources[i].src, asset.getFileUrl())) {
-                        requests.push(new pc.resources.TextureRequest(asset.getFileUrl()));
-                        sourceIndexes.push(i);
+                        // try to avoid making a texture request if the image is the same
+                        if (!existingSources[i] || !pc.string.endsWith(existingSources[i].src, asset.getFileUrl())) {
+                            requests.push(new pc.resources.TextureRequest(asset.getFileUrl()));
+                            sourceIndexes.push(i);
+                        }
                     }
                 }
-            }
 
-            if (requests.length) {
-                // update sources with the new images
-                this._loader.request(requests).then(function (resources) {
-                    for (var i = 0; i < sourceIndexes.length; i++) {
-                        existingSources[sourceIndexes[i]] = resources[i].getSource();
-                    }
+                if (requests.length) {
+                    // update sources with the new images
+                    this._loader.request(requests).then(function (resources) {
+                        for (var i = 0; i < sourceIndexes.length; i++) {
+                            existingSources[sourceIndexes[i]] = resources[i].getSource();
+                        }
 
-                    // call callback
-                    callback(existingSources);
-                });
+                        // call callback
+                        resolve(existingSources);
+                    }, function (error) {
+                        reject(error);
+                    });
+                } else {
+                    // call callback instantly
+                    resolve(existingSources);
+                }
             } else {
-                // call callback instantly
-                callback(existingSources);
+                resolve(existingSources);
             }
-        } else {
-            callback(existingSources);
-        }
+        }.bind(this));
+
+        return promise;
     };
 
     // Updates cubemap data and reloads textures
@@ -221,7 +225,7 @@ pc.extend(pc.resources, function () {
             cubemap.maxAnisotropy = data.anisotropy;
         }
 
-        this._loadCubemapTextures(cubemap.getSource(), data, request, function (textures) {
+        this._loadCubemapTextures(cubemap.getSource(), data, request).then(function (textures) {
             if (this._areValidTextures(textures, true)) {
                 cubemap.setSource(textures);
             }
