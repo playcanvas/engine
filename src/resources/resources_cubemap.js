@@ -48,7 +48,7 @@ pc.extend(pc.resources, function () {
                         });
 
                         this._assets.load(assets).then(function (responses) {
-                             // Only when referenced assets are loaded do we resolve the material load
+                             // Only when referenced assets are loaded do we resolve the cubemap load
                              data.textures = responses.map(function (texture) {
                                 return texture.getSource();
                              });
