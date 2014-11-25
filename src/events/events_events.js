@@ -139,14 +139,15 @@ pc.events = function () {
             var callbacks;
 
             if(this._callbacks && this._callbacks[name]) {
-                args = pc.makeArray(arguments);
-                args.shift();
-
-                callbacks = this._callbacks[name].slice(); // clone list so that deleting inside callbacks works
-                length = callbacks.length;
-                for(index = 0; index < length; ++index) {
-                    var scope = callbacks[index].scope;
-                    callbacks[index].callback.apply(scope, args);
+                length = this._callbacks[name].length
+                if (length) {
+                    args = pc.makeArray(arguments);
+                    args.shift();
+                    callbacks = this._callbacks[name].slice(); // clone list so that deleting inside callbacks works
+                    for(index = 0; index < length; ++index) {
+                        var scope = callbacks[index].scope;
+                        callbacks[index].callback.apply(scope, args);
+                    }
                 }
             }
 
