@@ -91,9 +91,7 @@ pc.extend(pc.resources, function () {
 
     MaterialResourceHandler.prototype._listReferencedAssets = function (data) {
         // Get all asset parameters from the material
-        var i, n = data.parameters.length;
         var param;
-        var results = [];
 
         return data.parameters.filter(function (param) {
             return (param.type === 'texture' || param.type === 'cubemap') && param.data;
