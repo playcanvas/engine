@@ -90,6 +90,7 @@
 ../src/resources/resources_text.js
 ../src/resources/resources_image.js
 ../src/resources/resources_texture.js
+../src/resources/resources_cubemap.js
 ../src/scene/resources/resources_model.js
 ../src/scene/resources/resources_material.js
 ../src/anim/anim_anim.js

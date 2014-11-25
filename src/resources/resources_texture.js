@@ -68,10 +68,11 @@ pc.extend(pc.resources, function () {
             if (request.result) {
                 texture = request.result;
             } else {
+                format = pc.string.endsWith(img.src.toLowerCase(), '.jpg') ? pc.gfx.PIXELFORMAT_R8_G8_B8 : pc.gfx.PIXELFORMAT_R8_G8_B8_A8;
                 texture = new pc.gfx.Texture(this._device, {
                     width: img.width,
                     height: img.height,
-                    format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
+                    format: format
                 });
             }
             texture.setSource(img);
