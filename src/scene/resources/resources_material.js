@@ -160,8 +160,9 @@ pc.extend(pc.resources, function () {
 
                     var texture = this._assets.loader.getFromCache(url);
                     if (!texture) {
+                        format = pc.string.endsWith(url.toLowerCase(), '.jpg') ? pc.gfx.PIXELFORMAT_R8_G8_B8 : pc.gfx.PIXELFORMAT_R8_G8_B8_A8;
                         texture = new pc.gfx.Texture(this._device, {
-                            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8
+                            format: format
                         });
 
                         texture.name = textureData.name;
