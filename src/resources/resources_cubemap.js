@@ -90,7 +90,7 @@ pc.extend(pc.resources, function () {
         texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
         texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
 
-        if (this._areValidTextures(data.textures)) {
+        if (this._areValidTextures(data.textures, true)) {
             texture.setSource(data.textures);
         }
 
@@ -106,16 +106,40 @@ pc.extend(pc.resources, function () {
     };
 
     // Checks if there are 6 non-null textures in the specified array
-    CubemapResourceHandler.prototype._areValidTextures = function (textures) {
+    CubemapResourceHandler.prototype._areValidTextures = function (textures, showErrors) {
         var result = textures && textures.length === 6;
+        var error;
 
         if (result) {
+            var width = textures[0] ? textures[0].width : null;
+            var height = textures[0] ? textures[0].height : null;
+
             for (var i = 0; i < 6; i++) {
                 if (!textures[i]) {
                     result = false;
                     break;
                 }
+
+
+                if ((!textures[i] instanceof HTMLCanvasElement) ||
+                    (!textures[i] instanceof HTMLImageElement) ||
+                    (!textures[i] instanceof HTMLVideoElement)) {
+                    error = 'Cubemap source is not an instance of HTMLCanvasElement, HTMLImageElement or HTMLVideoElement.';
+                    result = false;
+                    break;
+                }
+
+                if (textures[i].width !== width  || textures[i].height !== height) {
+                    error = 'Cubemap sources do not all share the same dimensions.';
+                    result = false;
+                    break;
+                }
             }
+
+        }
+
+        if (error && showErrors) {
+            alert(error);
         }
 
         return result;
@@ -193,7 +217,7 @@ pc.extend(pc.resources, function () {
         }
 
         this._loadCubemapTextures(cubemap.getSource(), data, request, function (textures) {
-            if (this._areValidTextures(textures)) {
+            if (this._areValidTextures(textures, true)) {
                 cubemap.setSource(textures);
             }
         }.bind(this));

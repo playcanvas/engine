@@ -426,9 +426,9 @@ pc.extend(pc.asset, function () {
         _createCubemapRequest: function (asset, texture) {
             var url = asset.getFileUrl();
             if (url) {
-                return new pc.resources.CubemapRequest(url);
+                return new pc.resources.CubemapRequest(url, null, texture);
             } else {
-                return new pc.resources.CubemapRequest("asset://" + asset.id);
+                return new pc.resources.CubemapRequest("asset://" + asset.id, null, texture);
             }
         },
 

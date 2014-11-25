@@ -112,7 +112,7 @@ pc.extend(pc.resources, function () {
             } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.gfx.Texture)) {
                 var cubemapAsset = this._getTextureAssetFromRegistry(param.data, request);
                 this._loadCubemapParamFromCache(param, cubemapAsset);
-                if (!param.data && cubemapAsset) {
+                if (!(param.data instanceof pc.gfx.Texture) && cubemapAsset) {
                     requests.push(this._loadCubemapParamPromise(param, cubemapAsset));
                 }
             }
@@ -182,21 +182,34 @@ pc.extend(pc.resources, function () {
     };
 
     // Try to load a cubemap from the cache and set param.data to it.
-    MaterialResourceHandler.prototype._loadCubemapParamFromCache = function(param, textureAsset) {
-        param.data = textureAsset ? textureAsset.resource : null;
-
-        if (!textureAsset) {
+    MaterialResourceHandler.prototype._loadCubemapParamFromCache = function(param, cubemapAsset) {
+        if (cubemapAsset) {
+            if (cubemapAsset.resource) {
+                param.data = cubemapAsset.resource;
+            }
+        } else {
             pc.log.error(pc.string.format('Could not load cubemap. Asset {0} not found', param.data));
+            param.data = null;
         }
     };
 
     // Return a promise which loads the cubemap asset and sets it to param.data if successful
-    MaterialResourceHandler.prototype._loadCubemapParamPromise = function(param, textureAsset) {
+    MaterialResourceHandler.prototype._loadCubemapParamPromise = function(param, cubemapAsset) {
+        // Create new texture and set it to param.data so that the cubemap
+        // resource loader will use the pre-existing texture instead of creating a new one.
+        // That way if another request comes in at the same time for this parameter, it will
+        // not create another load request but rather wait until this texture has finished loading.
+        // (Useful in the Designer if the same material is loading multiple times simultaneously)
+        param.data = new pc.gfx.Texture(this._device, {
+            format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+            cubemap: true
+        });
+
         return new pc.promise.Promise(function (resolve, reject) {
-            this._assets.load([textureAsset]).then(function (resources) {
-                param.data = resources[0];
+            this._assets.load([cubemapAsset], [param.data], {}).then(function (resources) {
                 resolve();
             }, function (error) {
+                param.data = null;
                 reject(error);
             });
         }.bind(this));
