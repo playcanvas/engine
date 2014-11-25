@@ -85,6 +85,7 @@ pc.extend(pc.resources, function () {
 
         // set texture data
         texture.name = data.name;
+        texture.maxAnisotropy = data.anisotropy;
         texture.minFilter = data.minFilter;
         texture.magFilter = data.magFilter;
         texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
@@ -214,6 +215,10 @@ pc.extend(pc.resources, function () {
 
         if (cubemap.addressV !== pc.gfx.ADDRESS_CLAMP_TO_EDGE) {
             cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        }
+
+        if (cubemap.maxAnisotropy !== data.anisotropy) {
+            cubemap.maxAnisotropy = data.anisotropy;
         }
 
         this._loadCubemapTextures(cubemap.getSource(), data, request, function (textures) {
