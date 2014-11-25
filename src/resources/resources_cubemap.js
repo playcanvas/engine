@@ -28,7 +28,43 @@ pc.extend(pc.resources, function () {
 
             }.bind(this));
         } else {
-            // TODO: load cubemap for engine users. Probably a cubemap file
+            // Loading from URL (engine-only)
+            // Load cubemap data from a file (as opposed to from an asset)
+            promise = new pc.promise.Promise(function (resolve, reject) {
+                pc.net.http.get(request.canonical, function(response) {
+                    var data = pc.extend({}, response);
+                    data.textures = [];
+
+                    var textures = response.textures;
+                    if (textures.length) {
+                        // Create and load all referenced textures
+                        var assets = [];
+                        textures.forEach(function (path) {
+                             var filename = pc.path.getBasename(path);
+                             var url = pc.path.join(pc.path.split(request.canonical)[0], path);
+                             assets.push(new pc.asset.Asset(filename, 'texture', {
+                                 url: url
+                             }));
+                        });
+
+                        this._assets.load(assets).then(function (responses) {
+                             // Only when referenced assets are loaded do we resolve the material load
+                             data.textures = responses.map(function (texture) {
+                                return texture.getSource();
+                             });
+                             resolve(data);
+                         }, function (error) {
+                            reject(error);
+                         });
+                    } else {
+                        resolve(data);
+                    }
+                }.bind(this), {
+                    error: function () {
+                        reject();
+                    }
+                });
+            }.bind(this));
         }
 
         return promise;
