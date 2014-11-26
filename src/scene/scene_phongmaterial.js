@@ -122,13 +122,20 @@ pc.extend(pc.scene, function () {
 
         this.lightMap = null;
         this.aoMap = null;
+        this.aoUvSet = 0;
         this.blendMapsWithColors = true;
 
         this.specularAA = true;
+        this.conserveEnergy = true;
         this.specularModel = pc.scene.SPECULAR_BLINN;
         this.fresnelModel = pc.scene.FRESNEL_SCHLICK;
 
         this.fresnelFactor = 0;
+
+        this.modulateAmbient = false;
+        this.modulateDiffuse = false;
+        this.modulateSpecular = false;
+        this.modulateEmission = false;
 
         // Array to pass uniforms to renderer
         this.ambientUniform = new Float32Array(3);
@@ -234,12 +241,19 @@ pc.extend(pc.scene, function () {
 
             clone.lightMap = this.lightMap;
             clone.aoMap = this.aoMap;
+            clone.aoUvSet = this.aoUvSet;
 
             clone.fresnelFactor = this.fresnelFactor;
             clone.blendMapsWithColors = this.blendMapsWithColors;
             clone.specularAA = this.specularAA;
+            clone.conserveEnergy = this.conserveEnergy;
             clone.specularModel = this.specularModel;
             clone.fresnelModel = this.fresnelModel;
+
+            clone.modulateAmbient = this.modulateAmbient;
+            clone.modulateDiffuse = this.modulateDiffuse;
+            clone.modulateSpecular = this.modulateSpecular;
+            clone.modulateEmission = this.modulateEmission;
 
             clone.update();
             return clone;
@@ -376,6 +390,21 @@ pc.extend(pc.scene, function () {
                     case 'aoMap':
                         this.aoMap = _createTexture(param);
                         break;
+                    case 'aoUvSet':
+                        this.aoUvSet = param.data;
+                        break;
+                    case 'modulateAmbient':
+                        this.modulateAmbient = param.data;
+                        break;
+                    case 'modulateDiffuse':
+                        this.modulateDiffuse = param.data;
+                        break;
+                    case 'modulateSpecular':
+                        this.modulateSpecular = param.data;
+                        break;
+                    case 'modulateEmission':
+                        this.modulateEmission = param.data;
+                        break;
                     case 'depthTest':
                         this.depthTest = param.data;
                         break;
@@ -393,6 +422,9 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'specularAA':
                         this.specularAA = param.data;
+                        break;
+                    case 'conserveEnergy':
+                        this.conserveEnergy = param.data;
                         break;
                     case 'specularModel':
                         this.specularModel = param.data;
@@ -450,7 +482,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
-            if (!this.diffuseMap || this.blendMapsWithColors) {
+            if (!this.diffuseMap || this.blendMapsWithColors && this.modulateDiffuse) {
                 this.diffuseUniform[0] = this.diffuse.r;
                 this.diffuseUniform[1] = this.diffuse.g;
                 this.diffuseUniform[2] = this.diffuse.b;
@@ -493,7 +525,10 @@ pc.extend(pc.scene, function () {
             }
 
             if (!this.glossMap || this.blendMapsWithColors) {
-                this.setParameter('material_shininess', this.shininess);
+                // Shininess is 0-100 value
+                // which is actually a 0-1 glosiness value.
+                // Can be converted to specular power using exp2(shininess * 0.01 * 11)
+                this.setParameter('material_shininess', this.shininess * 0.01);
             }
 
             if (this.emissiveMap) {
@@ -636,6 +671,7 @@ pc.extend(pc.scene, function () {
         },
 
         updateShader: function (device, scene) {
+            var i;
             var lights = scene._lights;
 
             this._mapXForms = [];
@@ -648,18 +684,19 @@ pc.extend(pc.scene, function () {
                 toneMap:                    scene.toneMapping,
                 blendMapsWithColors:        this.blendMapsWithColors,
                 skin:                       !!this.meshInstances[0].skinInstance,
+                modulateAmbient:            this.modulateAmbient,
                 diffuseMap:                 !!this.diffuseMap,
                 diffuseMapTransform:        this._getMapTransformID(this.diffuseMapTransform),
-                needsDiffuseColor:          (this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1),
+                needsDiffuseColor:          ((this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1)) && this.modulateDiffuse,
                 specularMap:                !!this.specularMap,
                 specularMapTransform:       this._getMapTransformID(this.specularMapTransform),
-                needsSpecularColor:         (this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1),
+                needsSpecularColor:         ((this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1)) && this.modulateSpecular,
                 glossMap:                   !!this.glossMap,
                 glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
                 needsGlossFloat:            this.shininess!=100,
                 emissiveMap:                !!this.emissiveMap,
                 emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
-                needsEmissiveColor:         (this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1),
+                needsEmissiveColor:         ((this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1)) && this.modulateEmission,
                 opacityMap:                 !!this.opacityMap,
                 opacityMapTransform:        this._getMapTransformID(this.opacityMapTransform),
                 needsOpacityFloat:          this.opacity!=1,
@@ -672,11 +709,13 @@ pc.extend(pc.scene, function () {
                 cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,
                 lightMap:                   !!this.lightMap,
                 aoMap:                      !!this.aoMap,
+                aoUvSet:                    this.aoUvSet,
                 useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
                 hdrReflection:              prefilteredCubeMap? this.prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
                 prefilteredCubemap:         prefilteredCubeMap,
                 specularAA:                 this.specularAA,
+                conserveEnergy:             this.conserveEnergy,
                 specularModel:              this.specularModel,
                 fresnelModel:               this.fresnelModel
             };
@@ -689,6 +728,16 @@ pc.extend(pc.scene, function () {
             this._collectLights(pc.scene.LIGHTTYPE_SPOT,        lights, lightsSorted);
 
             options.lights = lightsSorted;
+
+            // Gamma correct colors
+            if (scene.gammaCorrection) {
+                for(i=0; i<3; i++) {
+                    this.ambientUniform[i] = Math.pow(this.ambient.data[i], 2.2);
+                    this.diffuseUniform[i] = Math.pow(this.diffuse.data[i], 2.2);
+                    this.specularUniform[i] = Math.pow(this.specular.data[i], 2.2);
+                    this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2);
+                }
+            }
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);
