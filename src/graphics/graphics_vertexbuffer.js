@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     /**
      * @name pc.gfx.VertexBuffer
      * @class A vertex buffer is the mechanism via which the application specifies vertex 

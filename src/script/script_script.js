@@ -50,7 +50,7 @@ pc.script = (function () {
          * }
          */
         create: function (name, callback) {
-            if (typeof(callback) === 'undefined') {
+            if (callback === undefined) {
                 callback = attributes;
             }
             //_loader.add(name, callback);

@@ -31,7 +31,7 @@ pc.extend(pc.fw, function () {
      */
     var RigidBodyComponent = function RigidBodyComponent (system, entity) {
         // Lazily create shared variable
-        if (typeof(Ammo) !== 'undefined' && !ammoTransform) {
+        if (typeof Ammo !== 'undefined' && !ammoTransform) {
             ammoTransform = new Ammo.btTransform();
             ammoVec1 = new Ammo.btVector3();
             ammoVec2 = new Ammo.btVector3();
@@ -339,7 +339,7 @@ pc.extend(pc.fw, function () {
             if (body) {
                 body.activate();
                 ammoVec1.setValue(x, y, z);
-                if (typeof(px) !== 'undefined') {
+                if (px !== undefined) {
                     ammoVec2.setValue(px, py, pz);
                     body.applyForce(ammoVec1, ammoVec2);
                 } else {
@@ -441,7 +441,7 @@ pc.extend(pc.fw, function () {
             if (body) {
                 body.activate();
                 ammoVec1.setValue(x, y, z);
-                if (typeof(px) !== 'undefined') {
+                if (px !== undefined) {
                     ammoVec2.setValue(px, py, pz);
                     body.applyImpulse(ammoVec1, ammoVec2);
                 } else {
@@ -552,13 +552,16 @@ pc.extend(pc.fw, function () {
          */
         syncBodyToEntity: function () {
             var body = this.body;
-            if (body.isActive() && body.getMotionState()) {
-                body.getMotionState().getWorldTransform(ammoTransform);
+            if (body.isActive()) {
+                var motionState = body.getMotionState();
+                if (motionState) {
+                    motionState.getWorldTransform(ammoTransform);
 
-                var p = ammoTransform.getOrigin();
-                var q = ammoTransform.getRotation();
-                this.entity.setPosition(p.x(), p.y(), p.z());
-                this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                    var p = ammoTransform.getOrigin();
+                    var q = ammoTransform.getRotation();
+                    this.entity.setPosition(p.x(), p.y(), p.z());
+                    this.entity.setRotation(q.x(), q.y(), q.z(), q.w());
+                }
             }
         },
 

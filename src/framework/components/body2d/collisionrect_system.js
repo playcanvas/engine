@@ -20,7 +20,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.ComponentSystem
      */
     var CollisionRectComponentSystem = function CollisionRectComponentSystem (context) {
-        if (typeof(Box2D) !== 'undefined' && !b2World) {
+        if (Box2D !== undefined && !b2World) {
             unpack();
         }
 
@@ -139,7 +139,7 @@ pc.extend(pc.fw, function () {
             properties = ['density', 'friction', 'restitution', 'x', 'y', 'model'];
             CollisionRectComponentSystem._super.initializeComponentData.call(this, component, data, properties);
 
-            if (typeof(Box2D) !== 'undefined') {
+            if (Box2D !== undefined) {
                 component.fixtureDef = this.createFixtureDef(component.entity, component);
                 
                 if (component.entity.body2d) {

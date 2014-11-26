@@ -14,9 +14,9 @@ pc.extend(pc.audio, function () {
         */
         Channel = function (manager, sound, options) {
             options = options || {};
-            this.volume = (typeof options.volume === 'undefined') ? 1 : options.volume;
-            this.loop = (typeof options.loop === 'undefined') ? false : options.loop;
-            this.pitch = (typeof options.pitch === 'undefined' ? 1 : options.pitch);
+            this.volume = (options.volume === undefined) ? 1 : options.volume;
+            this.loop = (options.loop === undefined) ? false : options.loop;
+            this.pitch = (options.pitch === undefined ? 1 : options.pitch);
 
             this.sound = sound;
                 
@@ -174,7 +174,7 @@ pc.extend(pc.audio, function () {
             this.volume = options.volume || 1;
             this.loop = options.loop || false;
             this.sound = sound;
-            this.pitch = typeof options.pitch !== 'undefined' ? options.pitch : 1;
+            this.pitch = options.pitch !== undefined ? options.pitch : 1;
 
             this.paused = false;
             this.suspended = false;
@@ -218,8 +218,6 @@ pc.extend(pc.audio, function () {
             stop: function () {
                 if (this.source) {                
                     this.source.pause();
-                    // Reset to beginning of sample.
-                    this.source.currentTime = 0;
                 }
 
                 this.manager.off('volumechange', this.onManagerVolumeChange, this);

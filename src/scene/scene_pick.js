@@ -27,8 +27,8 @@ pc.extend(pc.scene, function () {
         this.scene = null;
 
         this.clearOptions = {
-            color: [1.0, 1.0, 1.0, 1.0],
-            depth: 1.0,
+            color: [1, 1, 1, 1],
+            depth: 1,
             flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
         };
         this.resize(width, height);
@@ -61,15 +61,27 @@ pc.extend(pc.scene, function () {
      * });
      */
     Picker.prototype.getSelection = function (rect) {
+        var device = this.device;
+
         rect.width = rect.width || 1;
         rect.height = rect.height || 1;
 
-        this._pickBufferTarget.bind();
+        // Cache active render target
+        var prevRenderTarget = device.getRenderTarget();
+
+        // Ready the device for rendering to the pick buffer
+        device.setRenderTarget(this._pickBufferTarget);
+        device.updateBegin();
 
         var pixels = new ArrayBuffer(4 * rect.width * rect.height);
         var pixelsBytes = new Uint8Array(pixels);
         var gl = this.device.gl;
         gl.readPixels(rect.x, rect.y, rect.width, rect.height, gl.RGBA, gl.UNSIGNED_BYTE, pixelsBytes);
+
+        device.updateEnd();
+
+        // Restore render target
+        device.setRenderTarget(prevRenderTarget);
 
         var selection = [];
 
@@ -99,8 +111,9 @@ pc.extend(pc.scene, function () {
      * @param {pc.scene.Scene} scene The scene containing the pickable mesh instances.
      */
     Picker.prototype.prepare = function (camera, scene) {
+        var device = this.device;
+
         this.scene = scene;
-        device = this.device;
 
         // Cache active render target
         var prevRenderTarget = device.getRenderTarget();

@@ -231,11 +231,11 @@ pc.extend(pc.asset, function () {
         * });
         */
         load: function (assets, results, options) {
-            if (assets && !assets.length) {
+            if (assets && pc.type(assets) !== 'array') {
                 assets = [assets];
             }
 
-            if (typeof(options) === 'undefined') {
+            if (options === undefined) {
                 // shift arguments
                 options = results;
                 results = [];
@@ -255,6 +255,9 @@ pc.extend(pc.asset, function () {
                         break;
                     case pc.asset.ASSET_TEXTURE:
                         requests.push(this._createTextureRequest(asset, results[index]));
+                        break;
+                    case pc.asset.ASSET_CUBEMAP:
+                        requests.push(this._createCubemapRequest(asset, results[index]));
                         break;
                     case pc.asset.ASSET_MATERIAL:
                         requests.push(this._createMaterialRequest(asset));
@@ -418,6 +421,15 @@ pc.extend(pc.asset, function () {
 
         _createTextureRequest: function (asset, texture) {
             return new pc.resources.TextureRequest(asset.getFileUrl(), null, texture);
+        },
+
+        _createCubemapRequest: function (asset, texture) {
+            var url = asset.getFileUrl();
+            if (url) {
+                return new pc.resources.CubemapRequest(url, null, texture);
+            } else {
+                return new pc.resources.CubemapRequest("asset://" + asset.id, null, texture);
+            }
         },
 
         _createMaterialRequest: function (asset) {

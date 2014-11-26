@@ -27,7 +27,7 @@ pc.extend(pc.fw, function () {
      * @extends pc.fw.Component
      */
     var Body2dComponent = function Body2dComponent (system, entity) {
-        if (typeof(Box2D) !== 'undefined' && !b2World) {
+        if (Box2D !== undefined && !b2World) {
             // Lazily unpack common Box2D variables into closure
             unpack();
         }

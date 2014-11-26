@@ -13,8 +13,8 @@ pc.extend(pc.shape, function () {
      * @param {pc.Vec3} halfExtents The size of the box where 2 * halfExtents[0] is the size in the local x axis, etc.
      */
     function Box(transform, halfExtents) {
-        this.transform = (typeof transform === 'undefined') ? new pc.Mat4() : transform;
-        this.halfExtents = (typeof halfExtents === 'undefined') ? new pc.Vec3(0.5, 0.5, 0.5) : halfExtents;
+        this.transform = (transform === undefined) ? new pc.Mat4() : transform;
+        this.halfExtents = (halfExtents === undefined) ? new pc.Vec3(0.5, 0.5, 0.5) : halfExtents;
 
         this.type = pc.shape.Type.BOX;
     };

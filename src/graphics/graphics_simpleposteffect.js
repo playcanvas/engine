@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, (function () {
+    'use strict';
+
     // Draws shaded full-screen quad in a single call
     var _postEffectQuadVB = null;
 

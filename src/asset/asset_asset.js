@@ -118,6 +118,7 @@ pc.extend(pc.asset, function () {
         ASSET_MODEL: 'model',
         ASSET_MATERIAL: 'material',
         ASSET_TEXT: 'text',
-        ASSET_TEXTURE: 'texture'
+        ASSET_TEXTURE: 'texture',
+        ASSET_CUBEMAP: 'cubemap'
     };
 }());

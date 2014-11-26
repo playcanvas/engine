@@ -383,20 +383,20 @@ pc.extend(pc.scene, function () {
 
     return {
         /**
-         * @enum pc.gfx.LIGHTTYPE
-         * @name pc.gfx.LIGHTTYPE_DIRECTIONAL
+         * @enum pc.scene.LIGHTTYPE
+         * @name pc.scene.LIGHTTYPE_DIRECTIONAL
          * @description Directional (global) light source.
          */
         LIGHTTYPE_DIRECTIONAL: 0,
         /**
-         * @enum pc.gfx.LIGHTTYPE
-         * @name pc.gfx.LIGHTTYPE_POINT
+         * @enum pc.scene.LIGHTTYPE
+         * @name pc.scene.LIGHTTYPE_POINT
          * @description Point (local) light source.
          */
         LIGHTTYPE_POINT: 1,
         /**
-         * @enum pc.gfx.LIGHTTYPE
-         * @name pc.gfx.LIGHTTYPE_SPOT
+         * @enum pc.scene.LIGHTTYPE
+         * @name pc.scene.LIGHTTYPE_SPOT
          * @description Spot (local) light source.
          */
         LIGHTTYPE_SPOT: 2,

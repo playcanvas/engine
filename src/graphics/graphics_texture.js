@@ -1,4 +1,6 @@
 pc.extend(pc.gfx, function () {
+    'use strict';
+
     /**
      * @name pc.gfx.Texture
      * @class A texture is a container for texel data that can be utilized in a fragment shader.
@@ -77,7 +79,7 @@ pc.extend(pc.gfx, function () {
         set: function (filter) {
             if (!(pc.math.powerOfTwo(this._width) && pc.math.powerOfTwo(this._height))) {
                 if (!((filter === pc.gfx.FILTER_NEAREST) || (filter === pc.gfx.FILTER_LINEAR)))  {
-                    logWARNING("Invalid filter mode set on non power of two texture. Forcing linear addressing.");
+                    logWARNING("Invalid minification filter mode set on non power of two texture. Forcing linear addressing.");
                     filter = pc.gfx.FILTER_LINEAR;
                 }
             }
@@ -89,7 +91,7 @@ pc.extend(pc.gfx, function () {
         get: function() { return this._magFilter; },
         set: function(magFilter) {
             if (!((magFilter === pc.gfx.FILTER_NEAREST) || (magFilter === pc.gfx.FILTER_LINEAR)))  {
-                logWARNING("Invalid maginication filter mode. Must be set to FILTER_NEAREST or FILTER_LINEAR.");
+                logWARNING("Invalid magnification filter mode. Must be set to FILTER_NEAREST or FILTER_LINEAR.");
             }
             this._magFilter = magFilter;
         }

@@ -141,7 +141,7 @@ pc.extend(pc.fw, function () {
 
             // initialize
             properties.forEach(function(value) {
-                if (typeof data[value] !== 'undefined') {
+                if (data[value] !== undefined) {
                     component[value] = data[value];
                 } else {
                     component[value] = component.data[value];
