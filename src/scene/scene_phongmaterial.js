@@ -22,7 +22,7 @@ pc.extend(pc.scene, function () {
      * specular color in preference to the 'specular' property.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
-     * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128.
+     * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (mirror).
      * A higher shininess value results in a more focussed specular highlight.
      * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
