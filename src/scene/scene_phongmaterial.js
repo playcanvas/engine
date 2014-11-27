@@ -125,7 +125,7 @@ pc.extend(pc.scene, function () {
         this.aoUvSet = 0;
         this.blendMapsWithColors = true;
 
-        this.specularAA = true;
+        this.specularAntialias = true;
         this.conserveEnergy = true;
         this.specularModel = pc.scene.SPECULAR_BLINN;
         this.fresnelModel = pc.scene.FRESNEL_SCHLICK;
@@ -245,7 +245,7 @@ pc.extend(pc.scene, function () {
 
             clone.fresnelFactor = this.fresnelFactor;
             clone.blendMapsWithColors = this.blendMapsWithColors;
-            clone.specularAA = this.specularAA;
+            clone.specularAntialias = this.specularAntialias;
             clone.conserveEnergy = this.conserveEnergy;
             clone.specularModel = this.specularModel;
             clone.fresnelModel = this.fresnelModel;
@@ -420,8 +420,8 @@ pc.extend(pc.scene, function () {
                     case 'blendMapsWithColors':
                         this.blendMapsWithColors = param.data;
                         break;
-                    case 'specularAA':
-                        this.specularAA = param.data;
+                    case 'specularAntialias':
+                        this.specularAntialias = param.data;
                         break;
                     case 'conserveEnergy':
                         this.conserveEnergy = param.data;
@@ -714,7 +714,7 @@ pc.extend(pc.scene, function () {
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
                 hdrReflection:              prefilteredCubeMap? this.prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
                 prefilteredCubemap:         prefilteredCubeMap,
-                specularAA:                 this.specularAA,
+                specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
                 specularModel:              this.specularModel,
                 fresnelModel:               this.fresnelModel
