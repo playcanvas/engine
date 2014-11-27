@@ -1,6 +1,5 @@
 uniform float material_shininess;
 void getGlossiness(inout psInternalData data) {
-    // Hack: On Mac OS X, calling pow with zero for the exponent generates hideous artifacts so bias up a little
-    data.glossiness = material_shininess * 0.01 + 0.0001;
+    data.glossiness = material_shininess;
 }
 

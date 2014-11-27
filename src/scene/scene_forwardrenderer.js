@@ -339,21 +339,27 @@ pc.extend(pc.scene, function () {
         dispatchGlobalLights: function (scene) {
             var dirs = scene._globalLights;
             var numDirs = dirs.length;
+            var i;
 
             var scope = this.device.scope;
 
             this.ambientColor[0] = scene.ambientLight.r;
             this.ambientColor[1] = scene.ambientLight.g;
             this.ambientColor[2] = scene.ambientLight.b;
+            if (scene.gammaCorrection) {
+                for(i=0; i<3; i++) {
+                    this.ambientColor[i] = Math.pow(this.ambientColor[i], 2.2);
+                }
+            }
             scope.resolve("light_globalAmbient").setValue(this.ambientColor);
             scope.resolve("exposure").setValue(scene.exposure);
 
-            for (var i = 0; i < numDirs; i++) {
+            for (i = 0; i < numDirs; i++) {
                 var directional = dirs[i];
                 var wtm = directional.getWorldTransform();
                 var light = "light" + i;
 
-                scope.resolve(light + "_color").setValue(directional._finalColor.data);
+                scope.resolve(light + "_color").setValue(scene.gammaCorrection? directional._linearFinalColor.data : directional._finalColor.data);
 
                 // Directionals shine down the negative Y axis
                 wtm.getY(directional._direction).scale(-1);
@@ -391,7 +397,7 @@ pc.extend(pc.scene, function () {
                 light = "light" + (numDirs + i);
 
                 scope.resolve(light + "_radius").setValue(point._attenuationEnd);
-                scope.resolve(light + "_color").setValue(point._finalColor.data);
+                scope.resolve(light + "_color").setValue(scene.gammaCorrection? point._linearFinalColor.data : point._finalColor.data);
                 wtm.getTranslation(point._position);
                 scope.resolve(light + "_position").setValue(point._position.data);
 
@@ -413,7 +419,7 @@ pc.extend(pc.scene, function () {
                 scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
                 scope.resolve(light + "_outerConeAngle").setValue(spot._outerConeAngleCos);
                 scope.resolve(light + "_radius").setValue(spot._attenuationEnd);
-                scope.resolve(light + "_color").setValue(spot._finalColor.data);
+                scope.resolve(light + "_color").setValue(scene.gammaCorrection? spot._linearFinalColor.data : spot._finalColor.data);
                 wtm.getTranslation(spot._position);
                 scope.resolve(light + "_position").setValue(spot._position.data);
                 // Spots shine down the negative Y axis
@@ -718,6 +724,11 @@ pc.extend(pc.scene, function () {
                 this.fogColor[0] = scene.fogColor.r;
                 this.fogColor[1] = scene.fogColor.g;
                 this.fogColor[2] = scene.fogColor.b;
+                if (scene.gammaCorrection) {
+                    for(i=0; i<3; i++) {
+                        this.fogColor[i] = Math.pow(this.fogColor[i], 2.2);
+                    }
+                }
                 this.fogColorId.setValue(this.fogColor);
                 if (scene.fog === pc.scene.FOG_LINEAR) {
                     this.fogStartId.setValue(scene.fogStart);

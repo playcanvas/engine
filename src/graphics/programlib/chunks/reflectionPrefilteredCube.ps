@@ -21,12 +21,7 @@ void addCubemapReflection(inout psInternalData data) {
     // We fix mip0 to 128x128, so code is rather static.
     // Mips smaller than 4x4 aren't great even for diffuse. Don't forget that we don't have bilinear filtering between different faces.
 
-    //float specPow = exp2(data.glossiness * 8.0);
-    //specPow = antiAliasGlossiness(data, specPow);
-    //float gloss = log2(specPow) / 8.0;
-
     float bias = saturate(1.0 - data.glossiness) * 5.0; // multiply by max mip level
-    //bias = antiAliasGlossiness(data, bias);
     int index1 = int(bias);
     int index2 = int(min(bias + 1.0, 7.0));
 
