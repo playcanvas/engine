@@ -91,82 +91,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott and Arthur Rahteenko
      */
     var PhongMaterial = function () {
-        this.ambient = new pc.Color(0.7, 0.7, 0.7);
-
-        this.diffuse = new pc.Color(0.7, 0.7, 0.7);
-        this.diffuseMap = null;
-        this.diffuseMapTiling = new pc.Vec2(1, 1);
-        this.diffuseMapOffset = new pc.Vec2(0, 0);
-        this.diffuseMapTransform = null;
-
-        this.specular = new pc.Color(0, 0, 0);
-        this.specularMap = null;
-        this.specularMapTiling = new pc.Vec2(1, 1);
-        this.specularMapOffset = new pc.Vec2(0, 0);
-        this.specularMapTransform = null;
-
-        this.shininess = 25;
-        this.glossMap = null;
-        this.glossMapTiling = new pc.Vec2(1, 1);
-        this.glossMapOffset = new pc.Vec2(0, 0);
-        this.glossMapTransform = null;
-
-        this.emissive = new pc.Color(0, 0, 0);
-        this.emissiveMap = null;
-        this.emissiveMapTiling = new pc.Vec2(1, 1);
-        this.emissiveMapOffset = new pc.Vec2(0, 0);
-        this.emissiveMapTransform = null;
-
-        this.opacity = 1;
-        this.opacityMap = null;
-        this.opacityMapTiling = new pc.Vec2(1, 1);
-        this.opacityMapOffset = new pc.Vec2(0, 0);
-        this.opacityMapTransform = null;
-        this.blendType = pc.scene.BLEND_NONE;
-
-        this.normalMap = null;
-        this.normalMapTransform = null;
-        this.normalMapTiling = new pc.Vec2(1, 1);
-        this.normalMapOffset = new pc.Vec2(0, 0);
-        this.heightMap = null;
-        this.heightMapTiling = new pc.Vec2(1, 1);
-        this.heightMapOffset = new pc.Vec2(0, 0);
-        this.heightMapTransform = null;
-        this.bumpiness = 1;
-
-        this.cubeMap = null;
-        this.prefilteredCubeMap128 = null;
-        this.prefilteredCubeMap64 = null;
-        this.prefilteredCubeMap32 = null;
-        this.prefilteredCubeMap16 = null;
-        this.prefilteredCubeMap8 = null;
-        this.prefilteredCubeMap4 = null;
-        this.sphereMap = null;
-        this.reflectivity = 1;
-
-        this.lightMap = null;
-        this.aoMap = null;
-        this.aoUvSet = 0;
-        this.blendMapsWithColors = true;
-
-        this.specularAntialias = true;
-        this.conserveEnergy = true;
-        this.specularModel = pc.scene.SPECULAR_BLINN;
-        this.fresnelModel = pc.scene.FRESNEL_SCHLICK;
-
-        this.fresnelFactor = 0;
-
-        this.ambientTint = false;
-        this.diffuseMapTint = false;
-        this.specularMapTint = false;
-        this.emissiveMapTint = false;
-
-        // Array to pass uniforms to renderer
-        this.ambientUniform = new Float32Array(3);
-        this.diffuseUniform = new Float32Array(3);
-        this.specularUniform = new Float32Array(3);
-        this.emissiveUniform = new Float32Array(3);
-
+        this.reset();
         this.update();
     };
 
@@ -290,6 +215,8 @@ pc.extend(pc.scene, function () {
         * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
         */
         init: function (data) {
+            this.reset();
+
             // Initialise material from data
             this.name = data.name;
 
@@ -464,6 +391,84 @@ pc.extend(pc.scene, function () {
             this.update();
         },
 
+        reset: function () {
+            this.ambient = new pc.Color(0.7, 0.7, 0.7);
+
+            this.diffuse = new pc.Color(0.7, 0.7, 0.7);
+            this.diffuseMap = null;
+            this.diffuseMapTiling = new pc.Vec2(1, 1);
+            this.diffuseMapOffset = new pc.Vec2(0, 0);
+            this.diffuseMapTransform = null;
+
+            this.specular = new pc.Color(0, 0, 0);
+            this.specularMap = null;
+            this.specularMapTiling = new pc.Vec2(1, 1);
+            this.specularMapOffset = new pc.Vec2(0, 0);
+            this.specularMapTransform = null;
+
+            this.shininess = 25;
+            this.glossMap = null;
+            this.glossMapTiling = new pc.Vec2(1, 1);
+            this.glossMapOffset = new pc.Vec2(0, 0);
+            this.glossMapTransform = null;
+
+            this.emissive = new pc.Color(0, 0, 0);
+            this.emissiveMap = null;
+            this.emissiveMapTiling = new pc.Vec2(1, 1);
+            this.emissiveMapOffset = new pc.Vec2(0, 0);
+            this.emissiveMapTransform = null;
+
+            this.opacity = 1;
+            this.opacityMap = null;
+            this.opacityMapTiling = new pc.Vec2(1, 1);
+            this.opacityMapOffset = new pc.Vec2(0, 0);
+            this.opacityMapTransform = null;
+            this.blendType = pc.scene.BLEND_NONE;
+
+            this.normalMap = null;
+            this.normalMapTransform = null;
+            this.normalMapTiling = new pc.Vec2(1, 1);
+            this.normalMapOffset = new pc.Vec2(0, 0);
+            this.heightMap = null;
+            this.heightMapTiling = new pc.Vec2(1, 1);
+            this.heightMapOffset = new pc.Vec2(0, 0);
+            this.heightMapTransform = null;
+            this.bumpiness = 1;
+
+            this.cubeMap = null;
+            this.prefilteredCubeMap128 = null;
+            this.prefilteredCubeMap64 = null;
+            this.prefilteredCubeMap32 = null;
+            this.prefilteredCubeMap16 = null;
+            this.prefilteredCubeMap8 = null;
+            this.prefilteredCubeMap4 = null;
+            this.sphereMap = null;
+            this.reflectivity = 1;
+
+            this.lightMap = null;
+            this.aoMap = null;
+            this.aoUvSet = 0;
+            this.blendMapsWithColors = true;
+
+            this.specularAntialias = true;
+            this.conserveEnergy = true;
+            this.specularModel = pc.scene.SPECULAR_BLINN;
+            this.fresnelModel = pc.scene.FRESNEL_SCHLICK;
+
+            this.fresnelFactor = 0;
+
+            this.ambientTint = false;
+            this.diffuseMapTint = false;
+            this.specularMapTint = false;
+            this.emissiveMapTint = false;
+
+            // Array to pass uniforms to renderer
+            this.ambientUniform = new Float32Array(3);
+            this.diffuseUniform = new Float32Array(3);
+            this.specularUniform = new Float32Array(3);
+            this.emissiveUniform = new Float32Array(3);
+        },
+
         _updateMapTransform: function (transform, tiling, offset) {
             transform = transform || new pc.Vec4();
             transform.set(tiling.x, tiling.y, offset.x, offset.y);
@@ -552,7 +557,11 @@ pc.extend(pc.scene, function () {
                 // Shininess is 0-100 value
                 // which is actually a 0-1 glosiness value.
                 // Can be converted to specular power using exp2(shininess * 0.01 * 11)
-                this.setParameter('material_shininess', this.shininess * 0.01);
+                if (this.specularModel===pc.scene.SPECULAR_PHONG) {
+                    this.setParameter('material_shininess', Math.pow(2, this.shininess * 0.01 * 11)); // legacy
+                } else {
+                    this.setParameter('material_shininess', this.shininess * 0.01); // correct
+                }
             }
 
             if (this.emissiveMap) {
