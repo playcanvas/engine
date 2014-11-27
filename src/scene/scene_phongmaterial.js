@@ -91,7 +91,7 @@ pc.extend(pc.scene, function () {
      * @author Will Eastcott and Arthur Rahteenko
      */
     var PhongMaterial = function () {
-        this._resetDefaults();
+        this.reset();
         this.update();
     };
 
