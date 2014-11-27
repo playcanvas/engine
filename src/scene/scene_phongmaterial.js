@@ -64,7 +64,31 @@ pc.extend(pc.scene, function () {
      * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
      * @property {pc.gfx.Texture} lightMap The light map of the material. This must be a 2D texture rather
      * than a cube map.
-     * @author Will Eastcott
+     * @property {Boolean} ambientModulate Enables scene ambient modulation by material ambient color.
+     * @property {Boolean} diffuseModulate Enables diffuseMap modulation by diffuse color.
+     * @property {Boolean} specularModulate Enables specularMap modulation by specular color.
+     * @property {Boolean} emissiveModulate Enables emissiveMap modulation by emissive color.
+     * @property {pc.gfx.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
+     * @property {Number} aoMapUvSet Defines UV set used for AO map. Can be 0 or 1.
+     * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
+     * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
+        It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
+     * @property {Number} specularModel Defines the formula used for specular reflections.
+     * <ul>
+     * <li><strong>{@link pc.scene.SPECULAR_PHONG}</strong>: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
+     * <li><strong>{@link pc.scene.SPECULAR_BLINN}</strong>: Energy-conserving Blinn-Phong.</li>
+     * </ul>
+     * @property {Number} fresnelModel Defines the formula used for Fresnel effect.
+     As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
+     When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
+     * <ul>
+     * <li><strong>{@link pc.scene.FRESNEL_NONE}</strong>: No Fresnel.</li>
+     * <li><strong>{@link pc.scene.FRESNEL_SIMPLE}</strong>: Fake effect resembling Fresnel with formula pow(dotVN, fresnelFactor). Use fresnelFactor to tweak effect power</li>
+     * <li><strong>{@link pc.scene.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color. fresnelFactor is not used.</li>
+     * <li><strong>{@link pc.scene.FRESNEL_COMPLEX}</strong>: More complex Fresnel formula. Use fresnelFactor to specify IOR values.</li>
+     * </ul>
+     * @property {Number} fresnelFactor A parameter for Fresnel. May mean different things depending on fresnelModel.
+     * @author Will Eastcott and Arthur Rahteenko
      */
     var PhongMaterial = function () {
         this.ambient = new pc.Color(0.7, 0.7, 0.7);
