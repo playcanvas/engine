@@ -132,10 +132,10 @@ pc.extend(pc.scene, function () {
 
         this.fresnelFactor = 0;
 
-        this.modulateAmbient = false;
-        this.modulateDiffuse = false;
-        this.modulateSpecular = false;
-        this.modulateEmission = false;
+        this.ambientModulate = false;
+        this.diffuseModulate = false;
+        this.specularModulate = false;
+        this.emissiveModulate = false;
 
         // Array to pass uniforms to renderer
         this.ambientUniform = new Float32Array(3);
@@ -250,10 +250,10 @@ pc.extend(pc.scene, function () {
             clone.specularModel = this.specularModel;
             clone.fresnelModel = this.fresnelModel;
 
-            clone.modulateAmbient = this.modulateAmbient;
-            clone.modulateDiffuse = this.modulateDiffuse;
-            clone.modulateSpecular = this.modulateSpecular;
-            clone.modulateEmission = this.modulateEmission;
+            clone.ambientModulate = this.ambientModulate;
+            clone.diffuseModulate = this.diffuseModulate;
+            clone.specularModulate = this.specularModulate;
+            clone.emissiveModulate = this.emissiveModulate;
 
             clone.update();
             return clone;
@@ -393,17 +393,17 @@ pc.extend(pc.scene, function () {
                     case 'aoUvSet':
                         this.aoUvSet = param.data;
                         break;
-                    case 'modulateAmbient':
-                        this.modulateAmbient = param.data;
+                    case 'ambientModulate':
+                        this.ambientModulate = param.data;
                         break;
-                    case 'modulateDiffuse':
-                        this.modulateDiffuse = param.data;
+                    case 'diffuseModulate':
+                        this.diffuseModulate = param.data;
                         break;
-                    case 'modulateSpecular':
-                        this.modulateSpecular = param.data;
+                    case 'specularModulate':
+                        this.specularModulate = param.data;
                         break;
-                    case 'modulateEmission':
-                        this.modulateEmission = param.data;
+                    case 'emissiveModulate':
+                        this.emissiveModulate = param.data;
                         break;
                     case 'depthTest':
                         this.depthTest = param.data;
@@ -482,7 +482,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
-            if (!this.diffuseMap || this.blendMapsWithColors && this.modulateDiffuse) {
+            if (!this.diffuseMap || (this.blendMapsWithColors && this.diffuseModulate)) {
                 this.diffuseUniform[0] = this.diffuse.r;
                 this.diffuseUniform[1] = this.diffuse.g;
                 this.diffuseUniform[2] = this.diffuse.b;
@@ -503,7 +503,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
-            if (!this.specularMap || this.blendMapsWithColors) {
+            if (!this.specularMap || (this.blendMapsWithColors && this.specularModulate)) {
                 this.specularUniform[0] = this.specular.r;
                 this.specularUniform[1] = this.specular.g;
                 this.specularUniform[2] = this.specular.b;
@@ -545,7 +545,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
-            if (!this.emissiveMap || this.blendMapsWithColors) {
+            if (!this.emissiveMap || (this.blendMapsWithColors && this.emissiveModulate)) {
                 this.emissiveUniform[0] = this.emissive.r;
                 this.emissiveUniform[1] = this.emissive.g;
                 this.emissiveUniform[2] = this.emissive.b;
@@ -684,19 +684,19 @@ pc.extend(pc.scene, function () {
                 toneMap:                    scene.toneMapping,
                 blendMapsWithColors:        this.blendMapsWithColors,
                 skin:                       !!this.meshInstances[0].skinInstance,
-                modulateAmbient:            this.modulateAmbient,
+                modulateAmbient:            this.ambientModulate,
                 diffuseMap:                 !!this.diffuseMap,
                 diffuseMapTransform:        this._getMapTransformID(this.diffuseMapTransform),
-                needsDiffuseColor:          ((this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1)) && this.modulateDiffuse,
+                needsDiffuseColor:          ((this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1)) && this.diffuseModulate,
                 specularMap:                !!this.specularMap,
                 specularMapTransform:       this._getMapTransformID(this.specularMapTransform),
-                needsSpecularColor:         ((this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1)) && this.modulateSpecular,
+                needsSpecularColor:         ((this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1)) && this.specularModulate,
                 glossMap:                   !!this.glossMap,
                 glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
                 needsGlossFloat:            this.shininess!=100,
                 emissiveMap:                !!this.emissiveMap,
                 emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
-                needsEmissiveColor:         ((this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1)) && this.modulateEmission,
+                needsEmissiveColor:         ((this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1)) && this.emissiveModulate,
                 opacityMap:                 !!this.opacityMap,
                 opacityMapTransform:        this._getMapTransformID(this.opacityMapTransform),
                 needsOpacityFloat:          this.opacity!=1,
