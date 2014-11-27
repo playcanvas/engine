@@ -557,11 +557,7 @@ pc.extend(pc.scene, function () {
                 // Shininess is 0-100 value
                 // which is actually a 0-1 glosiness value.
                 // Can be converted to specular power using exp2(shininess * 0.01 * 11)
-                if (this.specularModel===pc.scene.SPECULAR_PHONG) {
-                    this.setParameter('material_shininess', Math.pow(2, this.shininess * 0.01 * 11)); // legacy
-                } else {
-                    this.setParameter('material_shininess', this.shininess * 0.01); // correct
-                }
+                this.setParameter('material_shininess', this.shininess * 0.01);
             }
 
             if (this.emissiveMap) {
