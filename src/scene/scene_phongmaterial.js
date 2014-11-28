@@ -394,7 +394,7 @@ pc.extend(pc.scene, function () {
         reset: function () {
             this.ambient = new pc.Color(0.7, 0.7, 0.7);
 
-            this.diffuse = new pc.Color(0.7, 0.7, 0.7);
+            this.diffuse = new pc.Color(1, 1, 1);
             this.diffuseMap = null;
             this.diffuseMapTiling = new pc.Vec2(1, 1);
             this.diffuseMapOffset = new pc.Vec2(0, 0);
