@@ -73,7 +73,7 @@ pc.extend(pc.scene, function () {
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
         It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
-     * @property {Number} specularModel Defines the formula used for specular reflections.
+     * @property {Number} shadingModel Defines the shading model.
      * <ul>
      * <li><strong>{@link pc.scene.SPECULAR_PHONG}</strong>: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
      * <li><strong>{@link pc.scene.SPECULAR_BLINN}</strong>: Energy-conserving Blinn-Phong.</li>
@@ -196,7 +196,7 @@ pc.extend(pc.scene, function () {
             clone.blendMapsWithColors = this.blendMapsWithColors;
             clone.specularAntialias = this.specularAntialias;
             clone.conserveEnergy = this.conserveEnergy;
-            clone.specularModel = this.specularModel;
+            clone.shadingModel = this.shadingModel;
             clone.fresnelModel = this.fresnelModel;
 
             clone.ambientTint = this.ambientTint;
@@ -377,8 +377,8 @@ pc.extend(pc.scene, function () {
                     case 'conserveEnergy':
                         this.conserveEnergy = param.data;
                         break;
-                    case 'specularModel':
-                        this.specularModel = param.data;
+                    case 'shadingModel':
+                        this.shadingModel = param.data;
                         break;
                     case 'fresnelModel':
                         this.fresnelModel = param.data;
@@ -450,10 +450,10 @@ pc.extend(pc.scene, function () {
             this.aoUvSet = 0;
             this.blendMapsWithColors = true;
 
-            this.specularAntialias = true;
+            this.specularAntialias = false;
             this.conserveEnergy = true;
-            this.specularModel = pc.scene.SPECULAR_BLINN;
-            this.fresnelModel = pc.scene.FRESNEL_SCHLICK;
+            this.shadingModel = pc.scene.SPECULAR_PHONG;
+            this.fresnelModel = pc.scene.FRESNEL_NONE;
 
             this.fresnelFactor = 0;
 
@@ -557,7 +557,12 @@ pc.extend(pc.scene, function () {
                 // Shininess is 0-100 value
                 // which is actually a 0-1 glosiness value.
                 // Can be converted to specular power using exp2(shininess * 0.01 * 11)
-                this.setParameter('material_shininess', this.shininess * 0.01);
+                if (this.shadingModel===pc.scene.SPECULAR_PHONG) {
+                    this.setParameter('material_shininess', Math.pow(2, this.shininess * 0.01 * 11)); // legacy: expand back to specular power
+                    console.log(Math.pow(2, this.shininess * 0.01 * 11));
+                } else {
+                    this.setParameter('material_shininess', this.shininess * 0.01); // correct
+                }
             }
 
             if (this.emissiveMap) {
@@ -722,7 +727,7 @@ pc.extend(pc.scene, function () {
                 needsSpecularColor:         ((this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1)) && this.specularMapTint,
                 glossMap:                   !!this.glossMap,
                 glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
-                needsGlossFloat:            this.shininess!=100,
+                needsGlossFloat:            true,//this.shininess!=100,
                 emissiveMap:                !!this.emissiveMap,
                 emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
                 needsEmissiveColor:         ((this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1)) && this.emissiveMapTint,
@@ -745,7 +750,7 @@ pc.extend(pc.scene, function () {
                 prefilteredCubemap:         prefilteredCubeMap,
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
-                specularModel:              this.specularModel,
+                shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel
             };
 
