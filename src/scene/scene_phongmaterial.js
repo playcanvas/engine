@@ -559,7 +559,6 @@ pc.extend(pc.scene, function () {
                 // Can be converted to specular power using exp2(shininess * 0.01 * 11)
                 if (this.shadingModel===pc.scene.SPECULAR_PHONG) {
                     this.setParameter('material_shininess', Math.pow(2, this.shininess * 0.01 * 11)); // legacy: expand back to specular power
-                    console.log(Math.pow(2, this.shininess * 0.01 * 11));
                 } else {
                     this.setParameter('material_shininess', this.shininess * 0.01); // correct
                 }
