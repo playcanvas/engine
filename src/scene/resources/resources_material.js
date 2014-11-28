@@ -76,6 +76,7 @@ pc.extend(pc.resources, function () {
 
     MaterialResourceHandler.prototype.open = function (data, request, options) {
         var material = new pc.scene.PhongMaterial();
+
         this._updatePhongMaterial(material, data, request);
 
         var asset = this._getAssetFromRequest(request);
@@ -100,6 +101,12 @@ pc.extend(pc.resources, function () {
 
     MaterialResourceHandler.prototype._updatePhongMaterial = function (material, data, request) {
         var requests = [];
+
+        data.parameters.push({
+            name: 'shadingModel',
+            type: 'float',
+            data: data.shader === 'blinn' ? pc.scene.SPECULAR_BLINN : pc.scene.SPECULAR_PHONG
+        });
 
         // Replace texture ids with actual textures
         // Should we copy 'data' here instead of updating in place?
