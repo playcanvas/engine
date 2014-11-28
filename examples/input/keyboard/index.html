@@ -59,7 +59,7 @@
             application.context.root.addChild(entity);
         });
 
-        var keyboard = new pc.input.Keyboard(document);
+        var keyboard = new pc.input.Keyboard(document.body);
 
         application.on("update", function () {
             if (keyboard.isPressed(pc.input.KEY_LEFT)) {

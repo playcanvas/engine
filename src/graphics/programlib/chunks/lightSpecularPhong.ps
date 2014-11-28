@@ -1,6 +1,5 @@
 float getLightSpecular(inout psInternalData data) {
-    // use old shininess calculation for Phong so old projects won't break
-    float specPow = data.glossiness * 100.0;
+    float specPow = data.glossiness;
 
     specPow = antiAliasGlossiness(data, specPow);
 
