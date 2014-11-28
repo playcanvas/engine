@@ -40,6 +40,13 @@ pc.gfx.programlib.phong = {
         var useTangents = pc.gfx.precalculatedTangents;
         if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
 
+        if (options.shadingModel===pc.scene.SPECULAR_PHONG) {
+            options.fresnelModel = 0;
+            options.specularAA = false;
+        } else {
+            options.fresnelModel = (options.fresnelModel===0)? pc.scene.FRESNEL_SCHLICK : options.fresnelModel;
+        }
+
         this.options = options;
 
         ////////////////////////////
@@ -326,7 +333,7 @@ pc.gfx.programlib.phong = {
 
         code += chunks.lightDiffuseLambertPS;
         if (options.useSpecular) {
-            code += options.specularModel==0? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
+            code += options.shadingModel===pc.scene.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || options.cubeMap || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy) {
