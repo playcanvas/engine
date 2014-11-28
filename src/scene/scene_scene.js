@@ -93,6 +93,14 @@ pc.extend(pc.scene, function () {
         this._toneMapping = 0;
         this.exposure = 1.0;
 
+        this._prefilteredCubeMapPreset = null;
+        this._prefilteredCubeMap128 = null;
+        this._prefilteredCubeMap64 = null;
+        this._prefilteredCubeMap32 = null;
+        this._prefilteredCubeMap16 = null;
+        this._prefilteredCubeMap8 = null;
+        this._prefilteredCubeMap4 = null;
+
         // Models
         this._models = [];
 
@@ -142,12 +150,81 @@ pc.extend(pc.scene, function () {
         }
     });
 
+    Object.defineProperty(Scene.prototype, 'prefilteredCubeMapPreset', {
+        get: function () {
+            return this._prefilteredCubeMapPreset;
+        },
+        set: function (value) {
+            if (value !== this._prefilteredCubeMapPreset) {
+                this._prefilteredCubeMapPreset = value;
+                this._prefilteredCubeMap128 = null;
+                this._prefilteredCubeMap64 = null;
+                this._prefilteredCubeMap32 = null;
+                this._prefilteredCubeMap16 = null;
+                this._prefilteredCubeMap8 = null;
+                this._prefilteredCubeMap4 = null;
+                this.updateShaders = true;
+            }
+        }
+    });
+
     // Shaders have to be updated if:
     // - the fog mode changes
     // - lights are added or removed
     // - gamma correction changes
     Scene.prototype._updateShaders = function (device) {
         var i;
+
+        if (this._prefilteredCubeMapPreset) {
+            if ((!this._prefilteredCubeMap128) || (!this._prefilteredCubeMap64) || (!this._prefilteredCubeMap32)
+                 || (!this._prefilteredCubeMap16) || (!this._prefilteredCubeMap8) || (!this._prefilteredCubeMap4)) {
+                // Did I ever tell you the definition of hacks?
+                var cubeName = this._prefilteredCubeMapPreset;
+                var resources = [];
+                var loaded = 0;
+                var scene = this;
+                for(var mip=0; mip<6; mip++) {
+                    for(var face=0; face<6; face++) {
+                        var loadId = mip * 6 + face;
+                        resources[loadId] = new Image();
+                        resources[loadId].crossOrigin = "anonymous"; // for local testing and just in case
+                        resources[loadId].onload = function () {
+                            loaded++;
+                            if (loaded >= 36) {
+                                var cubeMaps = [];
+                                for(var mip2=0; mip2<6; mip2++) {
+                                    sources = [];
+                                    for (var face2=0; face2<6; face2++) {
+                                        sources[face2] = resources[mip2 * 6 + face2];
+                                    }
+                                    cubeMaps[mip2] = new pc.gfx.Texture(device, {
+                                        cubemap: true,
+                                        hdr: true
+                                    });
+                                    cubeMaps[mip2].setSource(sources);
+                                }
+                                scene._prefilteredCubeMap128 = cubeMaps[0];
+                                scene._prefilteredCubeMap64 = cubeMaps[1];
+                                scene._prefilteredCubeMap32 = cubeMaps[2];
+                                scene._prefilteredCubeMap16 = cubeMaps[3];
+                                scene._prefilteredCubeMap8 = cubeMaps[4];
+                                scene._prefilteredCubeMap4 = cubeMaps[5];
+                                scene.updateShaders = true;
+                            }
+                        };
+                        resources[loadId].src = "http://static.playcanvas.com/cubemaps/hdr/"+cubeName+"/"+cubeName+"_m0"+mip+"_c0"+face+".png";
+                     }
+                }
+            }
+        } else {
+            this._prefilteredCubeMap128 = null;
+            this._prefilteredCubeMap64 = null;
+            this._prefilteredCubeMap32 = null;
+            this._prefilteredCubeMap16 = null;
+            this._prefilteredCubeMap8 = null;
+            this._prefilteredCubeMap4 = null;
+        }
+
         var materials = [];
         var drawCalls = this.drawCalls;
         for (i = 0; i < drawCalls.length; i++) {
