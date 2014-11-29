@@ -3,6 +3,11 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.160.1
+--------
+* Remove excess console logging
+
+--------
 v0.160.0
 --------
 * Lots of changes in shading, moving towards physically based rendering
