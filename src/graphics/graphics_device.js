@@ -669,7 +669,7 @@ pc.extend(pc.gfx, function () {
                     }
                 }
             } else {
-                if ((pixels instanceof HTMLCanvasElement) || (pixels instanceof HTMLImageElement) || (pixels instanceof HTMLVideoElement)) {
+                if ((baseLevel instanceof HTMLCanvasElement) || (baseLevel instanceof HTMLImageElement) || (baseLevel instanceof HTMLVideoElement)) {
                     pixels = baseLevel;
 
                     // Downsize images that are too large to be used as textures
