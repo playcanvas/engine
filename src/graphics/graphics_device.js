@@ -705,14 +705,10 @@ pc.extend(pc.gfx, function () {
 
             var ext = this.extTextureFilterAnisotropic;
             if (ext) {
+                var maxAnisotropy = this.maxAnisotropy;
                 var anisotropy = texture.anisotropy;
-                if (anisotropy > 1) {
-                    var maxAnisotropy = this.maxAnisotropy;
-                    if (maxAnisotropy > 1) {
-                        anisotropy = Math.min(anisotropy, maxAnisotropy);
-                        gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
-                    }
-                }
+                anisotropy = Math.min(anisotropy, maxAnisotropy);
+                gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
             }
 
             if (texture._needsUpload) {
