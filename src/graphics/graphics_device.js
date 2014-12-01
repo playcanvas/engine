@@ -628,7 +628,6 @@ pc.extend(pc.gfx, function () {
             var gl = this.gl;
 
             var baseLevel = texture._levels[0];
-            var pixels;
 
             if (texture._cubemap) {
                 var face;
@@ -638,12 +637,11 @@ pc.extend(pc.gfx, function () {
                 if ((baseLevel[0] instanceof HTMLCanvasElement) || (baseLevel[0] instanceof HTMLImageElement) || (baseLevel[0] instanceof HTMLVideoElement)) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
-                        pixels = baseLevel[face];
-
+                        var src = baseLevel[face];
                         // Downsize images that are too large to be used as cube maps
-                        if (pixels instanceof HTMLImageElement) {
-                            if (pixels.width > this.maxSupportedCubeMapSize || pixels.height > this.maxSupportedCubeMapSize) {
-                                pixels = _downsampleImage(pixels, this.maxSupportedCubeMapSize);
+                        if (src instanceof HTMLImageElement) {
+                            if (src.width > this.maxSupportedCubeMapSize || src.height > this.maxSupportedCubeMapSize) {
+                                src = _downsampleImage(src, this.maxSupportedCubeMapSize);
                             }
                         }
 
@@ -652,7 +650,7 @@ pc.extend(pc.gfx, function () {
                                       texture._glInternalFormat,
                                       texture._glFormat,
                                       texture._glPixelType,
-                                      pixels);
+                                      src);
                     }
                 } else {
                     // Upload the byte array
@@ -665,17 +663,15 @@ pc.extend(pc.gfx, function () {
                                       0,
                                       texture._glFormat,
                                       texture._glPixelType,
-                                      pixels[face]);
+                                      baseLevel[face]);
                     }
                 }
             } else {
                 if ((baseLevel instanceof HTMLCanvasElement) || (baseLevel instanceof HTMLImageElement) || (baseLevel instanceof HTMLVideoElement)) {
-                    pixels = baseLevel;
-
                     // Downsize images that are too large to be used as textures
-                    if (pixels instanceof HTMLImageElement) {
-                        if (pixels.width > this.maxSupportedTextureSize || pixels.height > this.maxSupportedTextureSize) {
-                            pixels = _downsampleImage(pixels, this.maxSupportedTextureSize);
+                    if (baseLevel instanceof HTMLImageElement) {
+                        if (baseLevel.width > this.maxSupportedTextureSize || baseLevel.height > this.maxSupportedTextureSize) {
+                            baseLevel = _downsampleImage(baseLevel, this.maxSupportedTextureSize);
                         }
                     }
 
@@ -687,7 +683,7 @@ pc.extend(pc.gfx, function () {
                                   texture._glInternalFormat,
                                   texture._glFormat,
                                   texture._glPixelType,
-                                  pixels);
+                                  baseLevel);
                 } else {
                     // Upload the byte array
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -698,7 +694,7 @@ pc.extend(pc.gfx, function () {
                                                 texture._width,
                                                 texture._height,
                                                 0,
-                                                pixels);
+                                                baseLevel);
                     } else {
                         gl.texImage2D(gl.TEXTURE_2D,
                                       0,
@@ -708,7 +704,7 @@ pc.extend(pc.gfx, function () {
                                       0,
                                       texture._glFormat,
                                       texture._glPixelType,
-                                      pixels);
+                                      baseLevel);
                     }
                 }
             }
