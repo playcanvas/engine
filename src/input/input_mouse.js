@@ -364,7 +364,7 @@ pc.extend(pc.input, function () {
     // Apply PointerLock shims
     (function () {
         // Old API
-        if (navigator === undefined || document === undefined) {
+        if (typeof navigator === 'undefined' || typeof document === 'undefined') {
             // Not running in a browser
             return;
         }

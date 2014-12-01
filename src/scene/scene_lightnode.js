@@ -23,6 +23,7 @@ pc.extend(pc.scene, function () {
 
         // Cache of light property data in a format more friendly for shader uniforms
         this._finalColor = new pc.Vec3(0.8, 0.8, 0.8);
+        this._linearFinalColor = new pc.Vec3();
         this._position = new pc.Vec3(0, 0, 0);
         this._direction = new pc.Vec3(0, 0, 0);
         this._innerConeAngleCos = Math.cos(this._innerConeAngle * Math.PI / 180);
@@ -284,6 +285,9 @@ pc.extend(pc.scene, function () {
             // Update final color
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
+            for(var c=0; c<3; c++) {
+                this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
+            }
         },
 
         /**
@@ -332,6 +336,9 @@ pc.extend(pc.scene, function () {
             var b = c.b;
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
+            for(var c=0; c<3; c++) {
+                this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
+            }
         },
 
         /**
@@ -383,20 +390,20 @@ pc.extend(pc.scene, function () {
 
     return {
         /**
-         * @enum pc.gfx.LIGHTTYPE
-         * @name pc.gfx.LIGHTTYPE_DIRECTIONAL
+         * @enum pc.scene.LIGHTTYPE
+         * @name pc.scene.LIGHTTYPE_DIRECTIONAL
          * @description Directional (global) light source.
          */
         LIGHTTYPE_DIRECTIONAL: 0,
         /**
-         * @enum pc.gfx.LIGHTTYPE
-         * @name pc.gfx.LIGHTTYPE_POINT
+         * @enum pc.scene.LIGHTTYPE
+         * @name pc.scene.LIGHTTYPE_POINT
          * @description Point (local) light source.
          */
         LIGHTTYPE_POINT: 1,
         /**
-         * @enum pc.gfx.LIGHTTYPE
-         * @name pc.gfx.LIGHTTYPE_SPOT
+         * @enum pc.scene.LIGHTTYPE
+         * @name pc.scene.LIGHTTYPE_SPOT
          * @description Spot (local) light source.
          */
         LIGHTTYPE_SPOT: 2,

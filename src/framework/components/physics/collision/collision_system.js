@@ -501,7 +501,7 @@ pc.extend(pc.fw, function () {
         },
 
         createPhysicalShape: function (entity, data) {
-            if (Ammo !== undefined) {
+            if (typeof Ammo !== 'undefined') {
                 var he = data.halfExtents;
                 var ammoHe = new Ammo.btVector3(he.x, he.y, he.z);
                 return new Ammo.btBoxShape(ammoHe);

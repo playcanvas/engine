@@ -218,8 +218,6 @@ pc.extend(pc.audio, function () {
             stop: function () {
                 if (this.source) {                
                     this.source.pause();
-                    // Reset to beginning of sample.
-                    this.source.currentTime = 0;
                 }
 
                 this.manager.off('volumechange', this.onManagerVolumeChange, this);

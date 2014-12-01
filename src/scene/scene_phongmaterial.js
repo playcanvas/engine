@@ -22,7 +22,7 @@ pc.extend(pc.scene, function () {
      * specular color in preference to the 'specular' property.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
-     * @property {Number} shininess The specular shine of the material. This value can be between 0 and 128.
+     * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (mirror).
      * A higher shininess value results in a more focussed specular highlight.
      * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
@@ -64,78 +64,34 @@ pc.extend(pc.scene, function () {
      * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
      * @property {pc.gfx.Texture} lightMap The light map of the material. This must be a 2D texture rather
      * than a cube map.
-     * @author Will Eastcott
+     * @property {Boolean} ambientTint Enables scene ambient multiplication by material ambient color.
+     * @property {Boolean} diffuseMapTint Enables diffuseMap multiplication by diffuse color.
+     * @property {Boolean} specularMapTint Enables specularMap multiplication by specular color.
+     * @property {Boolean} emissiveMapTint Enables emissiveMap multiplication by emissive color.
+     * @property {pc.gfx.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
+     * @property {Number} aoMapUvSet Defines UV set used for AO map. Can be 0 or 1.
+     * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
+     * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
+        It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
+     * @property {Number} shadingModel Defines the shading model.
+     * <ul>
+     * <li><strong>{@link pc.scene.SPECULAR_PHONG}</strong>: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
+     * <li><strong>{@link pc.scene.SPECULAR_BLINN}</strong>: Energy-conserving Blinn-Phong.</li>
+     * </ul>
+     * @property {Number} fresnelModel Defines the formula used for Fresnel effect.
+     As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
+     When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
+     * <ul>
+     * <li><strong>{@link pc.scene.FRESNEL_NONE}</strong>: No Fresnel.</li>
+     * <li><strong>{@link pc.scene.FRESNEL_SIMPLE}</strong>: Fake effect resembling Fresnel with formula pow(dotVN, fresnelFactor). Use fresnelFactor to tweak effect power</li>
+     * <li><strong>{@link pc.scene.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color. fresnelFactor is not used.</li>
+     * <li><strong>{@link pc.scene.FRESNEL_COMPLEX}</strong>: More complex Fresnel formula. Use fresnelFactor to specify IOR values.</li>
+     * </ul>
+     * @property {Number} fresnelFactor A parameter for Fresnel. May mean different things depending on fresnelModel.
+     * @author Will Eastcott and Arthur Rahteenko
      */
     var PhongMaterial = function () {
-        this.ambient = new pc.Color(0.7, 0.7, 0.7);
-
-        this.diffuse = new pc.Color(0.7, 0.7, 0.7);
-        this.diffuseMap = null;
-        this.diffuseMapTiling = new pc.Vec2(1, 1);
-        this.diffuseMapOffset = new pc.Vec2(0, 0);
-        this.diffuseMapTransform = null;
-
-        this.specular = new pc.Color(0, 0, 0);
-        this.specularMap = null;
-        this.specularMapTiling = new pc.Vec2(1, 1);
-        this.specularMapOffset = new pc.Vec2(0, 0);
-        this.specularMapTransform = null;
-
-        this.shininess = 25;
-        this.glossMap = null;
-        this.glossMapTiling = new pc.Vec2(1, 1);
-        this.glossMapOffset = new pc.Vec2(0, 0);
-        this.glossMapTransform = null;
-
-        this.emissive = new pc.Color(0, 0, 0);
-        this.emissiveMap = null;
-        this.emissiveMapTiling = new pc.Vec2(1, 1);
-        this.emissiveMapOffset = new pc.Vec2(0, 0);
-        this.emissiveMapTransform = null;
-
-        this.opacity = 1;
-        this.opacityMap = null;
-        this.opacityMapTiling = new pc.Vec2(1, 1);
-        this.opacityMapOffset = new pc.Vec2(0, 0);
-        this.opacityMapTransform = null;
-        this.blendType = pc.scene.BLEND_NONE;
-
-        this.normalMap = null;
-        this.normalMapTransform = null;
-        this.normalMapTiling = new pc.Vec2(1, 1);
-        this.normalMapOffset = new pc.Vec2(0, 0);
-        this.heightMap = null;
-        this.heightMapTiling = new pc.Vec2(1, 1);
-        this.heightMapOffset = new pc.Vec2(0, 0);
-        this.heightMapTransform = null;
-        this.bumpiness = 1;
-
-        this.cubeMap = null;
-        this.prefilteredCubeMap128 = null;
-        this.prefilteredCubeMap64 = null;
-        this.prefilteredCubeMap32 = null;
-        this.prefilteredCubeMap16 = null;
-        this.prefilteredCubeMap8 = null;
-        this.prefilteredCubeMap4 = null;
-        this.sphereMap = null;
-        this.reflectivity = 1;
-
-        this.lightMap = null;
-        this.aoMap = null;
-        this.blendMapsWithColors = true;
-
-        this.specularAA = true;
-        this.specularModel = pc.scene.SPECULAR_BLINN;
-        this.fresnelModel = pc.scene.FRESNEL_SCHLICK;
-
-        this.fresnelFactor = 0;
-
-        // Array to pass uniforms to renderer
-        this.ambientUniform = new Float32Array(3);
-        this.diffuseUniform = new Float32Array(3);
-        this.specularUniform = new Float32Array(3);
-        this.emissiveUniform = new Float32Array(3);
-
+        this.reset();
         this.update();
     };
 
@@ -234,12 +190,19 @@ pc.extend(pc.scene, function () {
 
             clone.lightMap = this.lightMap;
             clone.aoMap = this.aoMap;
+            clone.aoUvSet = this.aoUvSet;
 
             clone.fresnelFactor = this.fresnelFactor;
             clone.blendMapsWithColors = this.blendMapsWithColors;
-            clone.specularAA = this.specularAA;
-            clone.specularModel = this.specularModel;
+            clone.specularAntialias = this.specularAntialias;
+            clone.conserveEnergy = this.conserveEnergy;
+            clone.shadingModel = this.shadingModel;
             clone.fresnelModel = this.fresnelModel;
+
+            clone.ambientTint = this.ambientTint;
+            clone.diffuseMapTint = this.diffuseMapTint;
+            clone.specularMapTint = this.specularMapTint;
+            clone.emissiveMapTint = this.emissiveMapTint;
 
             clone.update();
             return clone;
@@ -252,6 +215,8 @@ pc.extend(pc.scene, function () {
         * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
         */
         init: function (data) {
+            this.reset();
+
             // Initialise material from data
             this.name = data.name;
 
@@ -376,6 +341,21 @@ pc.extend(pc.scene, function () {
                     case 'aoMap':
                         this.aoMap = _createTexture(param);
                         break;
+                    case 'aoUvSet':
+                        this.aoUvSet = param.data;
+                        break;
+                    case 'ambientTint':
+                        this.ambientTint = param.data;
+                        break;
+                    case 'diffuseMapTint':
+                        this.diffuseMapTint = param.data;
+                        break;
+                    case 'specularMapTint':
+                        this.specularMapTint = param.data;
+                        break;
+                    case 'emissiveMapTint':
+                        this.emissiveMapTint = param.data;
+                        break;
                     case 'depthTest':
                         this.depthTest = param.data;
                         break;
@@ -391,11 +371,14 @@ pc.extend(pc.scene, function () {
                     case 'blendMapsWithColors':
                         this.blendMapsWithColors = param.data;
                         break;
-                    case 'specularAA':
-                        this.specularAA = param.data;
+                    case 'specularAntialias':
+                        this.specularAntialias = param.data;
                         break;
-                    case 'specularModel':
-                        this.specularModel = param.data;
+                    case 'conserveEnergy':
+                        this.conserveEnergy = param.data;
+                        break;
+                    case 'shadingModel':
+                        this.shadingModel = param.data;
                         break;
                     case 'fresnelModel':
                         this.fresnelModel = param.data;
@@ -406,6 +389,84 @@ pc.extend(pc.scene, function () {
             }
 
             this.update();
+        },
+
+        reset: function () {
+            this.ambient = new pc.Color(0.7, 0.7, 0.7);
+
+            this.diffuse = new pc.Color(1, 1, 1);
+            this.diffuseMap = null;
+            this.diffuseMapTiling = new pc.Vec2(1, 1);
+            this.diffuseMapOffset = new pc.Vec2(0, 0);
+            this.diffuseMapTransform = null;
+
+            this.specular = new pc.Color(0, 0, 0);
+            this.specularMap = null;
+            this.specularMapTiling = new pc.Vec2(1, 1);
+            this.specularMapOffset = new pc.Vec2(0, 0);
+            this.specularMapTransform = null;
+
+            this.shininess = 25;
+            this.glossMap = null;
+            this.glossMapTiling = new pc.Vec2(1, 1);
+            this.glossMapOffset = new pc.Vec2(0, 0);
+            this.glossMapTransform = null;
+
+            this.emissive = new pc.Color(0, 0, 0);
+            this.emissiveMap = null;
+            this.emissiveMapTiling = new pc.Vec2(1, 1);
+            this.emissiveMapOffset = new pc.Vec2(0, 0);
+            this.emissiveMapTransform = null;
+
+            this.opacity = 1;
+            this.opacityMap = null;
+            this.opacityMapTiling = new pc.Vec2(1, 1);
+            this.opacityMapOffset = new pc.Vec2(0, 0);
+            this.opacityMapTransform = null;
+            this.blendType = pc.scene.BLEND_NONE;
+
+            this.normalMap = null;
+            this.normalMapTransform = null;
+            this.normalMapTiling = new pc.Vec2(1, 1);
+            this.normalMapOffset = new pc.Vec2(0, 0);
+            this.heightMap = null;
+            this.heightMapTiling = new pc.Vec2(1, 1);
+            this.heightMapOffset = new pc.Vec2(0, 0);
+            this.heightMapTransform = null;
+            this.bumpiness = 1;
+
+            this.cubeMap = null;
+            this.prefilteredCubeMap128 = null;
+            this.prefilteredCubeMap64 = null;
+            this.prefilteredCubeMap32 = null;
+            this.prefilteredCubeMap16 = null;
+            this.prefilteredCubeMap8 = null;
+            this.prefilteredCubeMap4 = null;
+            this.sphereMap = null;
+            this.reflectivity = 1;
+
+            this.lightMap = null;
+            this.aoMap = null;
+            this.aoUvSet = 0;
+            this.blendMapsWithColors = true;
+
+            this.specularAntialias = false;
+            this.conserveEnergy = true;
+            this.shadingModel = pc.scene.SPECULAR_PHONG;
+            this.fresnelModel = pc.scene.FRESNEL_NONE;
+
+            this.fresnelFactor = 0;
+
+            this.ambientTint = false;
+            this.diffuseMapTint = false;
+            this.specularMapTint = false;
+            this.emissiveMapTint = false;
+
+            // Array to pass uniforms to renderer
+            this.ambientUniform = new Float32Array(3);
+            this.diffuseUniform = new Float32Array(3);
+            this.specularUniform = new Float32Array(3);
+            this.emissiveUniform = new Float32Array(3);
         },
 
         _updateMapTransform: function (transform, tiling, offset) {
@@ -450,7 +511,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
-            if (!this.diffuseMap || this.blendMapsWithColors) {
+            if (!this.diffuseMap || (this.blendMapsWithColors && this.diffuseMapTint)) {
                 this.diffuseUniform[0] = this.diffuse.r;
                 this.diffuseUniform[1] = this.diffuse.g;
                 this.diffuseUniform[2] = this.diffuse.b;
@@ -471,7 +532,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
-            if (!this.specularMap || this.blendMapsWithColors) {
+            if (!this.specularMap || (this.blendMapsWithColors && this.specularMapTint)) {
                 this.specularUniform[0] = this.specular.r;
                 this.specularUniform[1] = this.specular.g;
                 this.specularUniform[2] = this.specular.b;
@@ -493,7 +554,14 @@ pc.extend(pc.scene, function () {
             }
 
             if (!this.glossMap || this.blendMapsWithColors) {
-                this.setParameter('material_shininess', this.shininess);
+                // Shininess is 0-100 value
+                // which is actually a 0-1 glosiness value.
+                // Can be converted to specular power using exp2(shininess * 0.01 * 11)
+                if (this.shadingModel===pc.scene.SPECULAR_PHONG) {
+                    this.setParameter('material_shininess', Math.pow(2, this.shininess * 0.01 * 11)); // legacy: expand back to specular power
+                } else {
+                    this.setParameter('material_shininess', this.shininess * 0.01); // correct
+                }
             }
 
             if (this.emissiveMap) {
@@ -510,7 +578,7 @@ pc.extend(pc.scene, function () {
                 }
             }
 
-            if (!this.emissiveMap || this.blendMapsWithColors) {
+            if (!this.emissiveMap || (this.blendMapsWithColors && this.emissiveMapTint)) {
                 this.emissiveUniform[0] = this.emissive.r;
                 this.emissiveUniform[1] = this.emissive.g;
                 this.emissiveUniform[2] = this.emissive.b;
@@ -636,6 +704,7 @@ pc.extend(pc.scene, function () {
         },
 
         updateShader: function (device, scene) {
+            var i;
             var lights = scene._lights;
 
             this._mapXForms = [];
@@ -648,18 +717,19 @@ pc.extend(pc.scene, function () {
                 toneMap:                    scene.toneMapping,
                 blendMapsWithColors:        this.blendMapsWithColors,
                 skin:                       !!this.meshInstances[0].skinInstance,
+                modulateAmbient:            this.ambientTint,
                 diffuseMap:                 !!this.diffuseMap,
                 diffuseMapTransform:        this._getMapTransformID(this.diffuseMapTransform),
-                needsDiffuseColor:          (this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1),
+                needsDiffuseColor:          ((this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1)) && this.diffuseMapTint,
                 specularMap:                !!this.specularMap,
                 specularMapTransform:       this._getMapTransformID(this.specularMapTransform),
-                needsSpecularColor:         (this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1),
+                needsSpecularColor:         ((this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1)) && this.specularMapTint,
                 glossMap:                   !!this.glossMap,
                 glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
-                needsGlossFloat:            this.shininess!=100,
+                needsGlossFloat:            true,//this.shininess!=100,
                 emissiveMap:                !!this.emissiveMap,
                 emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
-                needsEmissiveColor:         (this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1),
+                needsEmissiveColor:         ((this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1)) && this.emissiveMapTint,
                 opacityMap:                 !!this.opacityMap,
                 opacityMapTransform:        this._getMapTransformID(this.opacityMapTransform),
                 needsOpacityFloat:          this.opacity!=1,
@@ -672,12 +742,14 @@ pc.extend(pc.scene, function () {
                 cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,
                 lightMap:                   !!this.lightMap,
                 aoMap:                      !!this.aoMap,
+                aoUvSet:                    this.aoUvSet,
                 useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
                 hdrReflection:              prefilteredCubeMap? this.prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
                 prefilteredCubemap:         prefilteredCubeMap,
-                specularAA:                 this.specularAA,
-                specularModel:              this.specularModel,
+                specularAA:                 this.specularAntialias,
+                conserveEnergy:             this.conserveEnergy,
+                shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel
             };
 
@@ -689,6 +761,16 @@ pc.extend(pc.scene, function () {
             this._collectLights(pc.scene.LIGHTTYPE_SPOT,        lights, lightsSorted);
 
             options.lights = lightsSorted;
+
+            // Gamma correct colors
+            if (scene.gammaCorrection) {
+                for(i=0; i<3; i++) {
+                    this.ambientUniform[i] = Math.pow(this.ambient.data[i], 2.2);
+                    this.diffuseUniform[i] = Math.pow(this.diffuse.data[i], 2.2);
+                    this.specularUniform[i] = Math.pow(this.specular.data[i], 2.2);
+                    this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2);
+                }
+            }
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);

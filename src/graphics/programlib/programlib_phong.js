@@ -38,6 +38,14 @@ pc.gfx.programlib.phong = {
         var lighting = options.lights.length > 0;
         var reflections = options.cubeMap || options.sphereMap || options.prefilteredCubemap;
         var useTangents = pc.gfx.precalculatedTangents;
+        if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
+
+        if (options.shadingModel===pc.scene.SPECULAR_PHONG) {
+            options.fresnelModel = 0;
+            options.specularAA = false;
+        } else {
+            options.fresnelModel = (options.fresnelModel===0)? pc.scene.FRESNEL_SCHLICK : options.fresnelModel;
+        }
 
         this.options = options;
 
@@ -106,7 +114,7 @@ pc.gfx.programlib.phong = {
             }
         }
 
-        if (options.lightMap || options.aoMap) {
+        if (options.lightMap || (options.aoMap && options.aoUvSet===1)) {
             attributes.vertex_texCoord1 = pc.gfx.SEMANTIC_TEXCOORD1;
             code += chunks.uv1VS;
             codeBody += "   vUv1        = getUv1(data);\n";
@@ -185,11 +193,11 @@ pc.gfx.programlib.phong = {
 
         if (options.normalMap && useTangents) {
             var uv = this._uvSource(options.normalMapTransform) + uvOffset;
-            if (options.needsNormalFloat) {
+            //if (options.needsNormalFloat) {
                 code += chunks.normalMapFloatPS.replace(/\$UV/g, uv);
-            } else {
-                code += chunks.normalMapPS.replace(/\$UV/g, uv);
-            }
+            //} else {
+             //   code += chunks.normalMapPS.replace(/\$UV/g, uv);
+            //}
             code += chunks.TBNPS;
         } else {
             code += chunks.normalVertexPS;
@@ -306,7 +314,7 @@ pc.gfx.programlib.phong = {
         }
 
         if (options.aoMap) {
-            code += chunks.aoBakedPS;
+            code += chunks.aoBakedPS.replace(/\$UV/g, options.aoUvSet===0? "vUv0" : "vUv1");
         }
 
         if (options.prefilteredCubemap) {
@@ -315,16 +323,24 @@ pc.gfx.programlib.phong = {
             code += chunks.ambientConstantPS;
         }
 
+        if (options.modulateAmbient) {
+            code += "uniform vec3 material_ambient;\n"
+        }
+
         if (numShadowLights > 0) {
             code += chunks.shadowPS;
         }
 
         code += chunks.lightDiffuseLambertPS;
         if (options.useSpecular) {
-            code += options.specularModel==0? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
+            code += options.shadingModel===pc.scene.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || options.cubeMap || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
-                    code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
+                    if (options.conserveEnergy) {
+                        code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
+                    } else {
+                        code += chunks.combineDiffuseSpecularNoConservePS; // if you don't use environment cubemaps, you may consider this
+                    }
                 } else {
                     code += chunks.combineDiffuseSpecularOldPS;
                 }
@@ -372,6 +388,9 @@ pc.gfx.programlib.phong = {
         }
 
         code += "   addAmbient(data);\n";
+        if (options.modulateAmbient) {
+            code += "   data.diffuseLight *= material_ambient;\n"
+        }
         if (options.aoMap) {
                 code += "    applyAO(data);\n";
          }

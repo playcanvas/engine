@@ -78,6 +78,7 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
         loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler( this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice));
+        loader.registerHandler(pc.resources.CubemapRequest, new pc.resources.CubemapResourceHandler( this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
@@ -193,6 +194,8 @@ pc.extend(pc.fw, function () {
                     this.context.scene.fogDensity = pack.settings.render.fog_density;
                     this.context.scene.shadowDistance = pack.settings.render.shadow_distance;
                     this.context.scene.gammaCorrection = pack.settings.render.gamma_correction;
+                    this.context.scene.toneMapping = pack.settings.render.tonemapping;
+                    this.context.scene.exposure = pack.settings.render.exposure;
 
                     success(pack);
                     this.context.loader.off('progress', progress);
@@ -778,6 +781,8 @@ pc.extend(pc.fw, function () {
             this.context.scene.shadowDistance = settings.render.shadow_distance;
 
             this.context.scene.gammaCorrection = settings.render.gamma_correction;
+            this.context.scene.toneMapping = settings.render.tonemapping;
+            this.context.scene.exposure = settings.render.exposure;
         }
     };
 
