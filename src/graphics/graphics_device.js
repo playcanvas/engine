@@ -1,5 +1,3 @@
-pc.gfx.precalculatedTangents = true;
-
 pc.extend(pc.gfx, function () {
     'use strict';
 
@@ -27,7 +25,7 @@ pc.extend(pc.gfx, function () {
     };
 
     var _createContext = function (canvas, options) {
-        var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+        var names = ["webgl", "experimental-webgl"];
         var context = null;
         for (var i = 0; i < names.length; i++) {
             try {
@@ -38,6 +36,31 @@ pc.extend(pc.gfx, function () {
             }
         }
         return context;
+    };
+
+    var _downsampleImage = function (image, size) {
+        var srcW = image.width;
+        var srcH = image.height;
+
+        if ((srcW > size) || (srcH > size)) {
+            var scale = size / Math.max(srcW, srcH);
+            var dstW = Math.floor(srcW * scale);
+            var dstH = Math.floor(srcH * scale);
+
+            console.warn('Image dimensions larger than max supported texture size of ' + size + '. ' +
+                         'Resizing from ' + srcW + ', ' + srcH + ' to ' + dstW + ', ' + dstH + '.');
+
+            var canvas = document.createElement('canvas');
+            canvas.width = dstW;
+            canvas.height = dstH;
+
+            var context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0, srcW, srcH, 0, 0, dstW, dstH);
+
+            return canvas;
+        }
+
+        return image;
     };
 
     /**
@@ -79,6 +102,7 @@ pc.extend(pc.gfx, function () {
 
         // Retrieve the WebGL context
         this.gl = _createContext(canvas, {alpha: false});
+        var gl = this.gl;
 
         if (!this.gl) {
             throw new pc.gfx.ContextCreationError();
@@ -98,7 +122,9 @@ pc.extend(pc.gfx, function () {
             this.vertexBuffers = [];
             this.precision     = 'highp';
 
-            var gl = this.gl;
+            this.maxSupportedTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+            this.maxSupportedCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
+
             logINFO("Device started");
             logINFO("WebGL version:                " + gl.getParameter(gl.VERSION));
             logINFO("WebGL shader version:         " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
@@ -115,8 +141,8 @@ pc.extend(pc.gfx, function () {
             logINFO("WebGL max vertex tex units:   " + gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS));
             logINFO("WebGL max tex units:          " + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
 
-            logINFO("WebGL max texture size:       " + gl.getParameter(gl.MAX_TEXTURE_SIZE));
-            logINFO("WebGL max cubemap size:       " + gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE));
+            logINFO("WebGL max texture size:       " + this.maxSupportedTextureSize);
+            logINFO("WebGL max cubemap size:       " + this.maxSupportedCubeMapSize);
 
             // Query the precision supported by ints and floats in vertex and fragment shaders
             var vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
@@ -361,10 +387,7 @@ pc.extend(pc.gfx, function () {
             gl.vertexAttribPointer(0, 4, gl.UNSIGNED_BYTE, false, 4, 0);
             this.supportsUnsignedByte = (gl.getError() === 0);
             gl.deleteBuffer(bufferId);
-
-
         }).call(this);
-
     };
 
     Device.prototype = {
@@ -430,8 +453,6 @@ pc.extend(pc.gfx, function () {
         updateBegin: function () {
             var gl = this.gl;
 
-            logASSERT(this.canvas !== null, "Device has not been started");
-
             this.boundBuffer = null;
             this.indexBuffer = null;
 
@@ -458,27 +479,28 @@ pc.extend(pc.gfx, function () {
                         if (!target._glDepthBuffer) {
                             target._glDepthBuffer = gl.createRenderbuffer();
                         }
+
                         gl.bindRenderbuffer(gl.RENDERBUFFER, target._glDepthBuffer);
                         gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, target.width, target.height);
                         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
                         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, target._glDepthBuffer);
                     }
 
                     // Ensure all is well
                     var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-                    switch (status)
-                    {
+                    switch (status) {
                         case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                            logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+                            console.error("ERROR: FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
                             break;
                         case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                            logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+                            console.error("ERROR: FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
                             break;
                         case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-                            logERROR("RenderTarget error: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+                            console.error("ERROR: FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
                             break;
                         case gl.FRAMEBUFFER_UNSUPPORTED:
-                            logERROR("RenderTarget error: FRAMEBUFFER_UNSUPPORTED");
+                            console.error("ERROR: FRAMEBUFFER_UNSUPPORTED");
                             break;
                         case gl.FRAMEBUFFER_COMPLETE:
                             break;
@@ -598,22 +620,32 @@ pc.extend(pc.gfx, function () {
         uploadTexture: function (texture) {
             var gl = this.gl;
 
-            var pixels = texture._levels[0];
+            var baseLevel = texture._levels[0];
+            var pixels;
 
             if (texture._cubemap) {
                 var face;
 
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-                if ((pixels[0] instanceof HTMLCanvasElement) || (pixels[0] instanceof HTMLImageElement) || (pixels[0] instanceof HTMLVideoElement)) {
+                if ((baseLevel[0] instanceof HTMLCanvasElement) || (baseLevel[0] instanceof HTMLImageElement) || (baseLevel[0] instanceof HTMLVideoElement)) {
                     // Upload the image, canvas or video
                     for (face = 0; face < 6; face++) {
+                        pixels = baseLevel[face];
+
+                        // Downsize images that are too large to be used as cube maps
+                        if (pixels instanceof HTMLImageElement) {
+                            if (pixels.width > this.maxSupportedCubeMapSize || pixels.height > this.maxSupportedCubeMapSize) {
+                                pixels = _downsampleImage(pixels, this.maxSupportedCubeMapSize);
+                            }
+                        }
+
                         gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 
                                       0, 
                                       texture._glInternalFormat,
                                       texture._glFormat,
                                       texture._glPixelType,
-                                      pixels[face]);
+                                      pixels);
                     }
                 } else {
                     // Upload the byte array
@@ -631,6 +663,15 @@ pc.extend(pc.gfx, function () {
                 }
             } else {
                 if ((pixels instanceof HTMLCanvasElement) || (pixels instanceof HTMLImageElement) || (pixels instanceof HTMLVideoElement)) {
+                    pixels = baseLevel;
+
+                    // Downsize images that are too large to be used as textures
+                    if (pixels instanceof HTMLImageElement) {
+                        if (pixels.width > this.maxSupportedTextureSize || pixels.height > this.maxSupportedTextureSize) {
+                            pixels = _downsampleImage(pixels, this.maxSupportedTextureSize);
+                        }
+                    }
+
                     // Upload the image, canvas or video
                     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
                     gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
@@ -672,7 +713,6 @@ pc.extend(pc.gfx, function () {
 
         setTexture: function (texture, textureUnit) {
             var gl = this.gl;
-            var ext;
 
             if (!texture._glTextureId) {
                 this.initializeTexture(texture);
@@ -692,8 +732,12 @@ pc.extend(pc.gfx, function () {
 
             var ext = this.extTextureFilterAnisotropic;
             if (ext) {
-                maxAnisotropy = Math.min(texture.maxAnisotropy, this.maxSupportedMaxAnisotropy);
-                gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+                var maxAnisotropy = texture.maxAnisotropy;
+                var maxSupportedMaxAnisotropy = this.maxSupportedMaxAnisotropy;
+                if ((maxAnisotropy > 1) && (maxSupportedMaxAnisotropy > 1)) {
+                    maxAnisotropy = Math.min(maxAnisotropy, maxSupportedMaxAnisotropy);
+                    gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+                }
             }
 
             if (texture._needsUpload) {
@@ -1233,6 +1277,7 @@ pc.extend(pc.gfx, function () {
     return {
         UnsupportedBrowserError: UnsupportedBrowserError,
         ContextCreationError: ContextCreationError,
-        Device: Device
+        Device: Device,
+        precalculatedTangents: true
     };
 }());
