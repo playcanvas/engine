@@ -881,6 +881,11 @@ pc.extend(pc.gfx, function () {
             }
         },
 
+        readPixels: function (x, y, w, h, pixels) {
+            var gl = this.gl;
+            gl.readPixels(x, y, w, h, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        },
+
         setClearDepth: function (depth) {
             if (depth !== this.clearDepth) {
                 this.gl.clearDepth(depth);
