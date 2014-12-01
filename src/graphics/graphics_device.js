@@ -73,6 +73,9 @@ pc.extend(pc.gfx, function () {
      * @param {Object} canvas The canvas to which the graphics device is tied.
      * @property {Number} width Width of the back buffer in pixels (read-only).
      * @property {Number} height Height of the back buffer in pixels (read-only).
+     * @property {Number} maxAnisotropy The maximum supported texture anisotropy setting (read-only).
+     * @property {Number} maxCubeMapSize The maximum supported dimension of a cube map (read-only).
+     * @property {Number} maxTextureSize The maximum supported dimension of a texture (read-only).
      * is attached is fullscreen or not.
      */
 
@@ -242,13 +245,9 @@ pc.extend(pc.gfx, function () {
                 gl.hint(this.extStandardDerivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES, gl.NICEST);
             }
 
-            this.maxTextureMaxAnisotropy = 1;
             this.extTextureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic');
             if (!this.extTextureFilterAnisotropic) {
                 this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-            }
-            if (this.extTextureFilterAnisotropic) {
-                this.maxTextureMaxAnisotropy = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
             }
 
             this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
@@ -706,11 +705,13 @@ pc.extend(pc.gfx, function () {
 
             var ext = this.extTextureFilterAnisotropic;
             if (ext) {
-                var maxAnisotropy = texture.maxAnisotropy;
-                var maxSupportedMaxAnisotropy = this.maxSupportedMaxAnisotropy;
-                if ((maxAnisotropy > 1) && (maxSupportedMaxAnisotropy > 1)) {
-                    maxAnisotropy = Math.min(maxAnisotropy, maxSupportedMaxAnisotropy);
-                    gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, maxAnisotropy);
+                var anisotropy = texture.anisotropy;
+                if (anisotropy > 1) {
+                    var maxAnisotropy = this.maxAnisotropy;
+                    if (maxAnisotropy > 1) {
+                        anisotropy = Math.min(anisotropy, maxAnisotropy);
+                        gl.texParameterf(texture._glTarget, ext.TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+                    }
                 }
             }
 
@@ -1227,23 +1228,17 @@ pc.extend(pc.gfx, function () {
         }
     };
 
-    Object.defineProperty(Device.prototype, 'maxSupportedMaxAnisotropy', {
-        get: function() {
-            return this.maxTextureMaxAnisotropy;
-        }
-    });
-
     Object.defineProperty(Device.prototype, 'width', {
-        get: function() { return this.gl.drawingBufferWidth || this.canvas.width; }
+        get: function () { return this.gl.drawingBufferWidth || this.canvas.width; }
     });
 
     Object.defineProperty(Device.prototype, 'height', {
-        get: function() { return this.gl.drawingBufferHeight || this.canvas.height; }
+        get: function () { return this.gl.drawingBufferHeight || this.canvas.height; }
     });
 
     Object.defineProperty(Device.prototype, 'fullscreen', {
-        get: function() { return !!document.fullscreenElement; },
-        set: function(fullscreen) {
+        get: function () { return !!document.fullscreenElement; },
+        set: function (fullscreen) {
             if (fullscreen) {
                 var canvas = this.gl.canvas;
                 canvas.requestFullscreen();
@@ -1251,6 +1246,26 @@ pc.extend(pc.gfx, function () {
                 document.exitFullscreen();
             }
         }
+    });
+
+    Object.defineProperty(Device.prototype, 'maxAnisotropy', {
+        get: ( function () {
+            var maxAniso;
+
+            return function () {
+                if (maxAniso === undefined) {
+                    maxAniso = 1;
+
+                    var gl = this.gl;
+                    var glExt = this.extTextureFilterAnisotropic;
+                    if (glExt) {
+                        maxAniso = gl.getParameter(glExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
+                    }
+                }
+
+                return maxAniso;
+            }
+        } )()
     });
 
     return {
