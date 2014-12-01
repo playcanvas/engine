@@ -122,27 +122,8 @@ pc.extend(pc.gfx, function () {
             this.vertexBuffers = [];
             this.precision     = 'highp';
 
-            this.maxSupportedTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-            this.maxSupportedCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
-
-            logINFO("Device started");
-            logINFO("WebGL version:                " + gl.getParameter(gl.VERSION));
-            logINFO("WebGL shader version:         " + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
-            logINFO("WebGL vendor:                 " + gl.getParameter(gl.VENDOR));
-            logINFO("WebGL renderer:               " + gl.getParameter(gl.RENDERER));
-            logINFO("WebGL extensions:             " + gl.getSupportedExtensions());
-
-            logINFO("WebGL max vertex attribs:     " + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
-            logINFO("WebGL max vshader vectors:    " + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
-            logINFO("WebGL max varying vectors:    " + gl.getParameter(gl.MAX_VARYING_VECTORS));
-            logINFO("WebGL max fshader vectors:    " + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
-
-            logINFO("WebGL max combined tex units: " + gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
-            logINFO("WebGL max vertex tex units:   " + gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS));
-            logINFO("WebGL max tex units:          " + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
-
-            logINFO("WebGL max texture size:       " + this.maxSupportedTextureSize);
-            logINFO("WebGL max cubemap size:       " + this.maxSupportedCubeMapSize);
+            this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+            this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
 
             // Query the precision supported by ints and floats in vertex and fragment shaders
             var vertexShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT);
@@ -640,8 +621,8 @@ pc.extend(pc.gfx, function () {
                         var src = baseLevel[face];
                         // Downsize images that are too large to be used as cube maps
                         if (src instanceof HTMLImageElement) {
-                            if (src.width > this.maxSupportedCubeMapSize || src.height > this.maxSupportedCubeMapSize) {
-                                src = _downsampleImage(src, this.maxSupportedCubeMapSize);
+                            if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
+                                src = _downsampleImage(src, this.maxCubeMapSize);
                             }
                         }
 
@@ -670,8 +651,8 @@ pc.extend(pc.gfx, function () {
                 if ((baseLevel instanceof HTMLCanvasElement) || (baseLevel instanceof HTMLImageElement) || (baseLevel instanceof HTMLVideoElement)) {
                     // Downsize images that are too large to be used as textures
                     if (baseLevel instanceof HTMLImageElement) {
-                        if (baseLevel.width > this.maxSupportedTextureSize || baseLevel.height > this.maxSupportedTextureSize) {
-                            baseLevel = _downsampleImage(baseLevel, this.maxSupportedTextureSize);
+                        if (baseLevel.width > this.maxTextureSize || baseLevel.height > this.maxTextureSize) {
+                            baseLevel = _downsampleImage(baseLevel, this.maxTextureSize);
                         }
                     }
 
