@@ -157,16 +157,16 @@ pc.extend(pc.fw, function () {
             options: {
                 enumerations: [{
                     name: 'Static',
-                    value: pc.fw.RIGIDBODY_TYPE_STATIC
+                    value: pc.BODYTYPE_STATIC
                 }, {
                     name: 'Dynamic',
-                    value: pc.fw.RIGIDBODY_TYPE_DYNAMIC
+                    value: pc.BODYTYPE_DYNAMIC
                 }, {
                     name: 'Kinematic',
-                    value: pc.fw.RIGIDBODY_TYPE_KINEMATIC
+                    value: pc.BODYTYPE_KINEMATIC
                 }]
             },
-            defaultValue: pc.fw.RIGIDBODY_TYPE_STATIC
+            defaultValue: pc.BODYTYPE_STATIC
         }, {
             name: "mass",
             displayName: "Mass",
@@ -178,7 +178,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 1,
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "linearDamping",
@@ -191,7 +191,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0,
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "angularDamping",
@@ -204,7 +204,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: 0,
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "linearFactor",
@@ -217,7 +217,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: [1, 1, 1],
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "angularFactor",
@@ -230,7 +230,7 @@ pc.extend(pc.fw, function () {
             },
             defaultValue: [1, 1, 1],
             filter: {
-                'type': [pc.fw.RIGIDBODY_TYPE_DYNAMIC, pc.fw.RIGIDBODY_TYPE_KINEMATIC]
+                'type': [pc.BODYTYPE_DYNAMIC, pc.BODYTYPE_KINEMATIC]
             }
         }, {
             name: "friction",
@@ -252,6 +252,20 @@ pc.extend(pc.fw, function () {
                 step: 0.01
             },
             defaultValue: 0
+        }, {
+            name: "group",
+            displayName: "Group",
+            description: "The collision group this rigidbody belongs to",
+            type: "number",
+            defaultValue: pc.BODYGROUP_STATIC,
+            exposed: false
+        }, {
+            name: "mask",
+            displayName: "Mask",
+            description: "The collision mask this rigidbody uses to collide",
+            type: "number",
+            defaultValue: pc.BODYMASK_NOT_STATIC_KINEMATIC,
+            exposed: false
         }, {
             name: "body",
             exposed: false
@@ -304,7 +318,7 @@ pc.extend(pc.fw, function () {
                 data.angularFactor = new pc.Vec3(data.angularFactor[0], data.angularFactor[1], data.angularFactor[2]);
             }
 
-            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type'];
+            properties = ['enabled', 'mass', 'linearDamping', 'angularDamping', 'linearFactor', 'angularFactor', 'friction', 'restitution', 'type', 'group', 'mask'];
             RigidBodyComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -319,7 +333,9 @@ pc.extend(pc.fw, function () {
                 angularFactor: [entity.rigidbody.angularFactor.x, entity.rigidbody.angularFactor.y, entity.rigidbody.angularFactor.z],
                 friction: entity.rigidbody.friction,
                 restitution: entity.rigidbody.restitution,
-                type: entity.rigidbody.type
+                type: entity.rigidbody.type,
+                group: entity.rigidbody.group,
+                mask: entity.rigidbody.mask
             };
 
             this.addComponent(clone, data);
@@ -334,8 +350,13 @@ pc.extend(pc.fw, function () {
             data.body = null;
         },
 
-        addBody: function (body) {
-            this.dynamicsWorld.addRigidBody(body);
+        addBody: function (body, group, mask) {
+            if (group !== undefined && mask !== undefined) {
+                this.dynamicsWorld.addRigidBody(body, group, mask);
+            } else {
+                this.dynamicsWorld.addRigidBody(body);
+            }
+
             return body;
         },
 
@@ -546,8 +567,8 @@ pc.extend(pc.fw, function () {
             }
 
             var store = this.store;
-            var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.type !== pc.fw.RIGIDBODY_TYPE_STATIC;
-            var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.type !== pc.fw.RIGIDBODY_TYPE_STATIC;
+            var entityIsNonStaticRb = entityRb && store[entity.getGuid()].data.type !== pc.BODYTYPE_STATIC;
+            var otherIsNonStaticRb = otherRb && store[other.getGuid()].data.type !== pc.BODYTYPE_STATIC;
 
             // find flags cell in collision table
             var row = 0;
@@ -645,10 +666,10 @@ pc.extend(pc.fw, function () {
                     var entity = components[id].entity;
                     var componentData = components[id].data;
                     if (componentData.body && componentData.body.isActive() && componentData.enabled && entity.enabled) {
-                        if (componentData.type === pc.fw.RIGIDBODY_TYPE_DYNAMIC) {
+                        if (componentData.type === pc.BODYTYPE_DYNAMIC) {
                             entity.rigidbody.syncBodyToEntity();
-                        } else if (componentData.type === pc.fw.RIGIDBODY_TYPE_KINEMATIC) {
-                            entity.rigidbody.updateKinematic(dt);
+                        } else if (componentData.type === pc.BODYTYPE_KINEMATIC) {
+                            entity.rigidbody._updateKinematic(dt);
                         }
                     }
 
@@ -721,31 +742,13 @@ pc.extend(pc.fw, function () {
     });
 
     return {
-        /**
-        * @enum pc.fw.RIGIDBODY_TYPE
-        * @name pc.fw.RIGIDBODY_TYPE_STATIC
-        * @description Static rigid bodies have infinite mass and can never move. You cannot apply forces or impulses to them or set their velocity.
-        */
+        // DEPRECATED ENUMS - see rigidbody_constants.js
         RIGIDBODY_TYPE_STATIC: 'static',
-        /**
-        * @enum pc.fw.RIGIDBODY_TYPE
-        * @name pc.fw.RIGIDBODY_TYPE_DYNAMIC
-        * @description Dynamic rigid bodies are simulated according to the forces acted on them. They have a positive, non-zero mass.
-        */
         RIGIDBODY_TYPE_DYNAMIC: 'dynamic',
-        /**
-        * @enum pc.fw.RIGIDBODY_TYPE
-        * @name pc.fw.RIGIDBODY_TYPE_KINEMATIC
-        * @description Kinematic rigid bodies are objects with infinite mass but can be moved by directly setting their velocity. You cannot apply forces or impulses to them.
-        */
         RIGIDBODY_TYPE_KINEMATIC: 'kinematic',
-
-        // Collision flags from AmmoJS
         RIGIDBODY_CF_STATIC_OBJECT: 1,
         RIGIDBODY_CF_KINEMATIC_OBJECT: 2,
         RIGIDBODY_CF_NORESPONSE_OBJECT: 4,
-
-        // Activation states from AmmoJS
         RIGIDBODY_ACTIVE_TAG: 1,
         RIGIDBODY_ISLAND_SLEEPING: 2,
         RIGIDBODY_WANTS_DEACTIVATION: 3,
