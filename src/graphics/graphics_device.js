@@ -250,39 +250,29 @@ pc.extend(pc.gfx, function () {
             if (this.extTextureFilterAnisotropic) {
                 this.maxTextureMaxAnisotropy = gl.getParameter(this.extTextureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT);
             }
+
             this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
             if (this.extCompressedTextureS3TC) {
                 var formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-                var formatMsg = "WebGL compressed texture formats:";
                 for (var i = 0; i < formats.length; i++) {
                     switch (formats[i]) {
                         case this.extCompressedTextureS3TC.COMPRESSED_RGB_S3TC_DXT1_EXT:
-                            formatMsg += ' COMPRESSED_RGB_S3TC_DXT1_EXT';
                             break;
                         case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT1_EXT:
-                            formatMsg += ' COMPRESSED_RGBA_S3TC_DXT1_EXT';
                             break;
                         case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT3_EXT:
-                            formatMsg += ' COMPRESSED_RGBA_S3TC_DXT3_EXT';
                             break;
                         case this.extCompressedTextureS3TC.COMPRESSED_RGBA_S3TC_DXT5_EXT:
-                            formatMsg += ' COMPRESSED_RGBA_S3TC_DXT5_EXT';
                             break;
                         default:
-                            formatMsg += ' UNKOWN(' + formats[i] + ')';
                             break;
                     }
                 }
-                logINFO(formatMsg);
             }
+
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
-            if (this.extDrawBuffers) {
-                logINFO("WebGL max draw buffers:       " + gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT));
-                logINFO("WebGL max color attachments:  " + gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT));
-            } else {
-                logINFO("WebGL max draw buffers:       " + 1);
-                logINFO("WebGL max color attachments:  " + 1);
-            }
+            this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
+            this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
 
             // Create the default render target
             this.renderTarget = null;
