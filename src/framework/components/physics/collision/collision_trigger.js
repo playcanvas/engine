@@ -93,7 +93,7 @@ pc.extend(pc.fw, function () {
 
         enable: function () {
             var body = this.body;
-            this.context.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC);
+            this.context.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
 
             // set the body's activation state to active so that it is
             // simulated properly again
