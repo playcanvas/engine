@@ -872,6 +872,8 @@ pc.extend(pc.gfx, function () {
 
             var flags = (options.flags === undefined) ? defaultOptions.flags : options.flags;
             if (flags !== 0) {
+                var gl = this.gl;
+
                 // Set the clear color
                 if (flags & pc.gfx.CLEARFLAG_COLOR) {
                     var color = (options.color === undefined) ? defaultOptions.color : options.color;
@@ -882,10 +884,19 @@ pc.extend(pc.gfx, function () {
                     // Set the clear depth
                     var depth = (options.depth === undefined) ? defaultOptions.depth : options.depth;
                     this.setClearDepth(depth);
+                    if (!this.depthWrite) {
+                        gl.depthMask(true);
+                    }
                 }
 
                 // Clear the frame buffer
-                this.gl.clear(this.glClearFlag[flags]);
+                gl.clear(this.glClearFlag[flags]);
+
+                if (flags & pc.gfx.CLEARFLAG_DEPTH) {
+                    if (!this.depthWrite) {
+                        gl.depthMask(false);
+                    }
+                }
             }
         },
 
