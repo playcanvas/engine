@@ -3,6 +3,19 @@ PlayCanvas Runtime Changes
 --------------------------
 
 --------
+v0.161.0
+--------
+* [BREAKING] Texture.maxAnisotropy -> Texture.anisotropy. Device.maxSupportedMaxAnisotropy -> Device.maxAnisotropy
+* [FIX] Picking and gizmo rendering fixed when depthWrite is false in the scene
+* Added support for groups and masks to the RigidBody component
+* Optimized RigidBodySystem update loop to take advantage of groups and masks
+* Resample textures which are too large for device
+* Added pc.gfx.Device.readPixels() to read pixels from current render target
+* Remove low-level graphics logging on start up
+* Deprecated ScriptComponentSystem.broadcast()
+* Deprecated ScriptComponent.send()
+
+--------
 v0.160.1
 --------
 * Remove excess console logging
