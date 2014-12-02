@@ -632,59 +632,79 @@ pc.extend(pc.fw, function () {
                     if ((flags0 & pc.BODYFLAG_NORESPONSE_OBJECT) ||
                         (flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
 
-                        // fire triggerenter events
-                        var newCollision = this._storeCollision(e0, e1);
-                        if (newCollision) {
-                            if (e0.collision && !(flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
-                                e0.collision.fire("triggerenter", e1);
+                        var e0Events = e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave");
+                        var e1Events = e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave");
+
+                        if (e0Events) {
+                            // fire triggerenter events
+                            var newCollision = this._storeCollision(e0, e1);
+                            if (newCollision) {
+                                if (e0.collision && !(flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
+                                    e0.collision.fire("triggerenter", e1);
+                                }
                             }
                         }
-                        var newCollision = this._storeCollision(e1, e0);
-                        if (newCollision) {
-                            if (e1.collision && !(flags0 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
-                                e1.collision.fire("triggerenter", e0);
+
+                        if (e1Events) {
+                            var newCollision = this._storeCollision(e1, e0);
+                            if (newCollision) {
+                                if (e1.collision && !(flags0 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
+                                    e1.collision.fire("triggerenter", e0);
+                                }
                             }
                         }
                     } else {
-                        for (j = 0; j < numContacts; j++) {
-                            var btContactPoint = manifold.getContactPoint(j);
+                        var e0Events = e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend")|| e0.collision.hasEvent("contact");
+                        var e1Events = e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact");
+                        var globalEvents = this.hasEvent("contact");
 
-                            var contactPoint = this._createContactPointFromAmmo(btContactPoint);
-                            var reverseContactPoint = this._createReverseContactPointFromAmmo(btContactPoint);
+                        if (globalEvents || e0Events || e1Events) {
+                            for (j = 0; j < numContacts; j++) {
+                                var btContactPoint = manifold.getContactPoint(j);
 
-                            forwardContacts.push(contactPoint);
-                            reverseContacts.push(reverseContactPoint);
+                                var contactPoint = this._createContactPointFromAmmo(btContactPoint);
+                                var reverseContactPoint = null;
+                                if (e0Events || e1Events) {
+                                    reverseContactPoint = this._createReverseContactPointFromAmmo(btContactPoint);
+                                    forwardContacts.push(contactPoint);
+                                    reverseContacts.push(reverseContactPoint);
+                                }
 
-                            // fire global contact event for every contact
-                            // var result = new SingleContactResult(e0, e1, contactPoint);
-                            var result = this._createSingleContactResult(e0, e1, contactPoint);
+                                if (globalEvents) {
+                                    // fire global contact event for every contact
+                                    var result = this._createSingleContactResult(e0, e1, contactPoint);
+                                    this.fire("contact", result);
+                                }
+                            }
 
-                            this.fire("contact", result);
+                            if (e0Events) {
+                                var forwardResult = this._createContactResult(e1, forwardContacts);
+
+                                // fire contact events on collision volume
+                                if (e0.collision) {
+                                    e0.collision.fire("contact", forwardResult);
+                                }
+
+                                // fire collisionstart events
+                                var newCollision = this._storeCollision(e0, e1);
+                                if (newCollision && e0.collision) {
+                                    e0.collision.fire("collisionstart", forwardResult);
+                                }
+                            }
+
+                            if (e1Events) {
+                                var reverseResult = this._createContactResult(e0, reverseContacts);
+
+                                if (e1.collision) {
+                                    e1.collision.fire("contact", reverseResult)
+                                }
+
+                                var newCollision = this._storeCollision(e1, e0);
+                                if (newCollision && e1.collision) {
+                                    e1.collision.fire("collisionstart", reverseResult);
+                                }
+                            }
                         }
-
-                        var forwardResult = this._createContactResult(e1, forwardContacts);
-                        var reverseResult = this._createContactResult(e0, reverseContacts);
-
-                        // fire contact events on collision volume
-                        if (e0.collision) {
-                            e0.collision.fire("contact", forwardResult);
-                        }
-
-                        if (e1.collision) {
-                            e1.collision.fire("contact", reverseResult)
-                        }
-
-                        // fire collisionstart events
-                        var newCollision = this._storeCollision(e0, e1);
-                        if (newCollision && e0.collision) {
-                            e0.collision.fire("collisionstart", forwardResult);
-                        }
-
-                        var newCollision = this._storeCollision(e1, e0);
-                        if (newCollision && e1.collision) {
-                            e1.collision.fire("collisionstart", reverseResult);
-                        }
-
                     }
 
                 }
