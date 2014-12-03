@@ -661,9 +661,9 @@ pc.extend(pc.scene, function () {
             if (this.sphereMap) {
                 this.setParameter('texture_sphereMap', this.sphereMap);
             }
-            if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
+            //if (this.sphereMap || this.cubeMap || this.prefilteredCubeMap128) {
                 this.setParameter('material_reflectionFactor', this.reflectivity);
-            }
+            //}
 
             if (this.fresnelFactor > 0) {
                 this.setParameter('material_fresnelFactor', this.fresnelFactor);
@@ -708,8 +708,24 @@ pc.extend(pc.scene, function () {
             var lights = scene._lights;
 
             this._mapXForms = [];
-            var prefilteredCubeMap = this.prefilteredCubeMap128 && this.prefilteredCubeMap64 && this.prefilteredCubeMap32
-                                   && this.prefilteredCubeMap16 && this.prefilteredCubeMap8 && this.prefilteredCubeMap4;
+            var prefilteredCubeMap128 = this.prefilteredCubeMap128? this.prefilteredCubeMap128 : scene._prefilteredCubeMap128;
+            var prefilteredCubeMap64 = this.prefilteredCubeMap64? this.prefilteredCubeMap64 : scene._prefilteredCubeMap64;
+            var prefilteredCubeMap32 = this.prefilteredCubeMap32? this.prefilteredCubeMap32 : scene._prefilteredCubeMap32;
+            var prefilteredCubeMap16 = this.prefilteredCubeMap16? this.prefilteredCubeMap16 : scene._prefilteredCubeMap16;
+            var prefilteredCubeMap8 = this.prefilteredCubeMap8? this.prefilteredCubeMap8 : scene._prefilteredCubeMap8;
+            var prefilteredCubeMap4 = this.prefilteredCubeMap4? this.prefilteredCubeMap4 : scene._prefilteredCubeMap4;
+
+            var prefilteredCubeMap = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
+                                   && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
+
+            if (prefilteredCubeMap128 === scene._prefilteredCubeMap128) {
+                this.setParameter('texture_prefilteredCubeMap128', scene._prefilteredCubeMap128);
+                this.setParameter('texture_prefilteredCubeMap64', scene._prefilteredCubeMap64);
+                this.setParameter('texture_prefilteredCubeMap32', scene._prefilteredCubeMap32);
+                this.setParameter('texture_prefilteredCubeMap16', scene._prefilteredCubeMap16);
+                this.setParameter('texture_prefilteredCubeMap8', scene._prefilteredCubeMap8);
+                this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
+            }
 
             var options = {
                 fog:                        scene.fog,
@@ -745,7 +761,7 @@ pc.extend(pc.scene, function () {
                 aoUvSet:                    this.aoUvSet,
                 useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
-                hdrReflection:              prefilteredCubeMap? this.prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
+                hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
                 prefilteredCubemap:         prefilteredCubeMap,
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,

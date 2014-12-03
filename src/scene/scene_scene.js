@@ -93,6 +93,17 @@ pc.extend(pc.scene, function () {
         this._toneMapping = 0;
         this.exposure = 1.0;
 
+        this._prefilteredCubeMap128 = null;
+        this._prefilteredCubeMap64 = null;
+        this._prefilteredCubeMap32 = null;
+        this._prefilteredCubeMap16 = null;
+        this._prefilteredCubeMap8 = null;
+        this._prefilteredCubeMap4 = null;
+
+        this._skyboxCubeMap = null;
+        this._skyboxModel = null;
+
+
         // Models
         this._models = [];
 
@@ -142,12 +153,56 @@ pc.extend(pc.scene, function () {
         }
     });
 
+    Object.defineProperty(Scene.prototype, 'skybox', {
+        get: function () {
+            return this._skyboxCubeMap;
+        },
+        set: function (value) {
+            if (value !== this._skyboxCubeMap) {
+                this._skyboxCubeMap = value;
+                if (this._skyboxModel) {
+                    if (this.containsModel(this._skyboxModel)) {
+                        this.removeModel(this._skyboxModel);
+                    }
+                }
+                this._skyboxModel = null;
+                this.updateShaders = true;
+            }
+        }
+    });
+
     // Shaders have to be updated if:
     // - the fog mode changes
     // - lights are added or removed
     // - gamma correction changes
     Scene.prototype._updateShaders = function (device) {
         var i;
+
+        if (this._skyboxCubeMap && !this._skyboxModel) {
+            var material = new pc.scene.Material();
+            var scene = this;
+            material.updateShader = function() {
+                var library = device.getProgramLibrary();
+                var shader = library.getProgram('skybox', {hdr:scene._skyboxCubeMap.hdr, prefiltered:scene._skyboxCubeMap.hdr, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
+                this.setShader(shader);
+            };
+
+            material.updateShader();
+            material.setParameter("texture_cubeMap", this._skyboxCubeMap);
+            material.cull = pc.gfx.CULLFACE_NONE;
+
+            var node = new pc.scene.GraphNode();
+            var mesh = pc.scene.procedural.createBox(device);
+            var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+
+            var model = new pc.scene.Model();
+            model.graph = node;
+            model.meshInstances = [ meshInstance ];
+            this._skyboxModel = model;
+
+            this.addModel(model);
+        }
+
         var materials = [];
         var drawCalls = this.drawCalls;
         for (i = 0; i < drawCalls.length; i++) {
