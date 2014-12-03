@@ -19,7 +19,6 @@ pc.extend(pc, function () {
          */
         open: function (text) {
             pc.log.write(Date());
-            pc.log.info("Log opened");
         },
 
         /**

@@ -26,6 +26,7 @@ pc.extend(pc.fw, function () {
 
     pc.extend(ScriptComponent.prototype, {
         /**
+         * @private
          * @function
          * @name pc.fw.ScriptComponent#send
          * @description Send a message to a script attached to the entity.
@@ -38,6 +39,7 @@ pc.extend(pc.fw, function () {
          * entity.script.send('enemy', 'doDamage', 10);
          */
         send: function (name, functionName) {
+            console.warn("DEPRECATED: ScriptComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/")
             var args = pc.makeArray(arguments).slice(2);
             var instances = this.entity.script.instances;
             var fn;

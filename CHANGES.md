@@ -1,10 +1,25 @@
---------------------------
-PlayCanvas Runtime Changes
---------------------------
+# PlayCanvas Engine Changes
 
---------
-v0.160.0
---------
+### v0.161.0
+
+* [BREAKING] Texture.maxAnisotropy -> Texture.anisotropy. Device.maxSupportedMaxAnisotropy -> Device.maxAnisotropy
+* [FIX] Picking and gizmo rendering fixed when depthWrite is false in the scene
+* Added support for groups and masks to the RigidBody component
+* Optimized RigidBodySystem update loop to take advantage of groups and masks
+* Resample textures which are too large for device
+* Added pc.gfx.Device.readPixels() to read pixels from current render target
+* Remove low-level graphics logging on start up
+* Deprecated ScriptComponentSystem.broadcast()
+* Deprecated ScriptComponent.send()
+
+
+### v0.160.1
+
+* Remove excess console logging
+
+
+### v0.160.0
+
 * Lots of changes in shading, moving towards physically based rendering
 * Added tonemapping and exposure in pack settings
 * Support tinting textures in materials
@@ -23,28 +38,28 @@ v0.160.0
 * [FIX] HTML5 Audio API fallback works again. This is relevant to IE that doesn't support Web Audio yet.
 * [FIX] Picking now works for transparent and/or depth write disabled meshes.
 
---------
-v0.159.4
---------
+
+### v0.159.4
+
 * [FIX] particlesystem component reset function now works for one shots if lifetime is less than reset interval.
 
---------
-v0.159.3
---------
+
+### v0.159.3
+
 * [FIX] Emissive maps work again.
 * [FIX] pc.Curve with no keys
 * Added CURVE_CATMULL and CURVE_CARDINAL to pc.Curve()
 * Added filter for shadowResolution to only show up when castShadows is true.
 
---------
-v0.159.2
---------
+
+### v0.159.2
+
 * [FIX] Cloning CurveSet
 * [FIX] Cloning ParticleSystem
 
---------
-v0.159.1
---------
+
+### v0.159.1
+
 * Added metadata to particle system curves to allow 'between two curves' editing in Designer
 * Changed default values of particle system attributes
 * Removed maxEmissionTime from particle system
@@ -54,21 +69,21 @@ v0.159.1
 * [FIX] CurveSet cloning
 * Updated component attributes descriptions
 
---------
-v0.159.0
---------
+
+### v0.159.0
+
 * Added point light shadows
 * Added falloffMode to point lights and spot lights
 
---------
-v0.158.9
---------
+
+### v0.158.9
+
 * [FIX] Reduced number of varyings required for texture coordinates.
 * [FIX] Flip particle textures the right way up.
 
---------
-v0.158.8
---------
+
+### v0.158.8
+
 * [FIX] Prevent min filter warnings in Designer
 * Cube/sphere maps are now treated as sRGB, added Schlick's fresnel
 * Velocities are now primary way to specify particle motions
@@ -76,133 +91,133 @@ v0.158.8
 * Update physics example to latest version of ammo.js
 * Update README.md
 
---------
-v0.158.7
---------
+
+### v0.158.7
+
 * Fix needed for new ammo.js
 * Added velocity graphs and different blend types to particlesystem component
 
---------
-v0.158.6
---------
+
+### v0.158.6
+
 * Added global gammaCorrection option to pc.scene.Scene
 * Added gamma option to phong materials
 
---------
-v0.158.5
---------
+
+### v0.158.5
+
 * [FIX] Multiple lights, 1 or more are shadow casting and 1 or more are not, could cause exception on render.
 
---------
-v0.158.4
---------
+
+### v0.158.4
+
 * [FIX] Intel XDK now loads textures properly.
 
---------
-v0.158.3
---------
+
+### v0.158.3
+
 * [FIX] Ambient lighting is now respected when there are no lights enabled.
 
---------
-v0.158.2
---------
+
+### v0.158.2
+
 * [FIX] Errors when there are no lights in the scene.
 
---------
-v0.158.1
---------
+
+### v0.158.1
+
 * [FIX] Non-fresnel reflections.
 
---------
-v0.158.0
---------
+
+### v0.158.0
+
 * New shader system. Supports far more lights, fresnel, parallax mapping and better specular reflectance.
 
---------
-v0.157.4
---------
+
+### v0.157.4
+
 * [FIX] pc.math.Quat#slerp now works for opposite quaternions.
 
---------
-v0.157.3
---------
+
+### v0.157.3
+
 * [FIX] Replace canvas.style.width with canvas.style.clientWidth.
 
---------
-v0.157.2
---------
+
+### v0.157.2
+
 * [FIX] Mouse tests.
 
---------
-v0.157.0
---------
+
+### v0.157.0
+
 * [FIX] Fullscreen in Chrome - ignored keyboard input.
 * [FIX] Mouse now attach events on window but data is related to target.
 
---------
-v0.156.2
---------
+
+### v0.156.2
+
 * [FIX] A mesh instance's bounding box is now guaranteed to be correct when it is queried.
 * [FIX] pc.input.GamePad#is/wasPressed now respects the latest GamePad API spec.
 
---------
-v0.156.1
---------
+
+### v0.156.1
+
 * [FIX] Issue where sounds sometimes play twice in the beginning
 
---------
-v0.156.0
---------
+
+### v0.156.0
+
 * Assets no longer have resource ids, Fixed examples for the new asset format
 * Use a TextureRequest for skybox textures instead of ImageRequests so that they can be cached correctly and used by other assets like materials without issues
 * Added textured cube to examples.
 
---------
-v0.155.1
---------
+
+### v0.155.1
+
 * Added CONTRIB file with CLA details and tips
 * Use the current Gamepad API
 * [FIX] Audiosources with 'activate' false no longer play on startup
 
---------
-v0.155.0
---------
+
+### v0.155.0
+
 * pc.fw.Entity#clone is now synchronous
 
---------
-v0.154.6
---------
+
+### v0.154.6
+
 * Can now reorder Entities or insert them at specific indices in a parent's child list.
 
---------
-v0.154.5
---------
+
+### v0.154.5
+
 * [FIX] Negative speed for animations now works as expected.
 
---------
-v0.154.4
---------
+
+### v0.154.4
+
 * [FIX] Do not abort XHR requests with status 0 when downloading local files.
 
---------
-v0.154.3
---------
+
+### v0.154.3
+
 * [FIX] Backed out synchronous-clone branch until we fix a bug related to skyboxes.
 
---------
-v0.154.2
---------
+
+### v0.154.2
+
 * [FIX] Picking for skinned meshes.
 * [FIX] pc.fw.Entity#clone is now synchronous.
 
---------
-v0.154.1
---------
+
+### v0.154.1
+
 * [FIX] Phong shader generation where there are no lights enabled.
 
---------
-v0.154.0
---------
+
+### v0.154.0
+
 * [FIX] Shadows for orthographic cameras.
 * Removed all dynamic allocations for directional shadow casting lights.
 * Added LINELOOP and TRIFAN graphics primitives.
@@ -212,143 +227,143 @@ v0.154.0
 * [FIX] Respect a mesh instance's receiveShadow property.
 * Unprivate the docs for AssetRegistry#find and AssetRegistry#findAll
 
---------
-v0.153.0
---------
+
+### v0.153.0
+
 * User must now explicitly set the blendType of a material as opacity and opacityMap are no longer doing this automatically.
 * Removed MaterialResourceLoader, now use MaterialResourceHandler everywhere.
 * Add nicer error messages if model tries to load material asset which isn't present.
 
---------
-v0.152.2
---------
+
+### v0.152.2
+
 * Added pc.Vec3#project
 * Added pc.shape.Sphere#intersectRay
 * [FIX] Bug where materials with opacity 1 would not become transparent if their opacity changed to less than 1 at runtime
 
---------
-v0.152.1
---------
+
+### v0.152.1
+
 * [FIX] Typo in the example for pc.resources.ResourceLoader.request
 * [FIX] Load model even when no material mappings for a model have been found
 * [FIX] Remove camera and lights debug shapes when a camera gets disabled
 * Removed color correction post effect
 * Convert script attributes of type 'vector' to pc.Vec3
 
---------
-v0.152.0
---------
+
+### v0.152.0
+
 * Re-factor AssetRegistry
 * [BREAKING] AssetRegistry#update() is replace with AssetRegistry#addGroup() and AssetRegistry#createAndAddAsset()
 * [BREAKING] AssetRegistry#all() is replaced with AssetRegistry#list([groupName])
 * Added displayNames to all post effect scripts
 
---------
-v0.151.2
---------
+
+### v0.151.2
+
 * Removed some parameters from bloom post effect.
 
---------
-v0.151.1
---------
+
+### v0.151.1
+
 * Merged pull request by b1naryth1ef: Cleaned up build script.
 
---------
-v0.151.0
---------
+
+### v0.151.0
+
 * Updated build.py for Git
 
---------
-v0.150.1
---------
+
+### v0.150.1
+
 * Increased decimal precision of camera clip planes to 5.
 * Show 3 arrows for directional light gizmo.
 
---------
-v0.150.0
---------
+
+### v0.150.0
+
 * Added PostEffectQueue#setRenderTargetScale which means post effects can use buffers larger or smaller than the canvas
 * Added GraphNode#findByPath and GraphNode#getPath for querying scene hierarchy.
 
---------
-v0.149.2
---------
+
+### v0.149.2
+
 * [FIX] Backout last change and use last version of ammo because raycasting works differently in latest version
 
---------
-v0.149.1
---------
+
+### v0.149.1
+
 * [FIX] Bug with casting collision object to a btRigidBody in raycastFirst.
 
---------
-v0.149.0
---------
+
+### v0.149.0
+
 * Added shadowDistance property to the scene, beyond which shadows are not rendered.
 * [FIX] Update the scene's shaders when shadows are toggled.
 
---------
-v0.148.0
---------
+
+### v0.148.0
+
 * Updated ammo.js to latest kripken master branch
 
---------
-v0.147.9
---------
+
+### v0.147.9
+
 * [FIX] Typo in default clear options.
 
---------
-v0.147.8
---------
+
+### v0.147.8
+
 * [FIX] screenToWorld now works for orthographic cameras.
 
---------
-v0.147.7
---------
+
+### v0.147.7
+
 * Added 'resizecanvas' event fired from the pc.gfx.Device
 * [FIX] Render targets of post effects are now resized when necessary
 * Added optimization for events#fire method
 
---------
-v0.147.6
---------
+
+### v0.147.6
+
 * [FIX] Only add material to material cache if its asset is found in the asset registry
 
---------
-v0.147.5
---------
+
+### v0.147.5
+
 * [FIX] Delete the cached model when in onAssetChange
 * [FIX] Add onAssetChange listener even when we're not in the designer so that we catch changes to model mappings that come from the designer via livelink
 * [FIX] New assets are now added to the asset registry via livelink
 * Fixes in README.md
 * Updated examples
 
---------
-v0.147.4
---------
+
+### v0.147.4
+
 * Added animation example and Playbot model
 * Added post effects and camera scripts under extras
 * Added LICENSE file
 
---------
-v0.147.3
---------
+
+### v0.147.3
+
 * Improve float packing algorithm (used for shadow mapping).
 * [FIX] postEffects is initialized before enabled
 
---------
-v0.147.2
---------
+
+### v0.147.2
+
 * [FIX] Frame buffer clearing now works if flags are zero.
 * [FIX] Documentation fixes for post effects.
 
---------
-v0.147.1
---------
+
+### v0.147.1
+
 * Documented post effects.
 
---------
-v0.147.0
---------
+
+### v0.147.0
+
 * When an entity is destroyed it will first disable all of its components.
 * When a component is initialized its onEnable method will be called.
 * Added pc.posteffect.PostEffectQueue for managing multiple post effects for a camera. The camera component now has a post effects queue allowing users to add / remove post effects to a camera.
@@ -359,41 +374,41 @@ v0.147.0
 * All post effects now derive from pc.posteffect.PostEffect.
 * [FIX] Set particle_time to 0 when a particle emitter is initialized.
 
---------
-v0.146.1
---------
+
+### v0.146.1
+
 * [FIX] Set state that affects shadow buffer clearing before the clear happens (in particular, depth write).
 
---------
-v0.146.0
---------
+
+### v0.146.0
+
 * Support for loading models with URL mapping instead of resource_id mapping
 * Added resource handler for text resources
 
---------
-v0.145.4
---------
+
+### v0.145.4
+
 * [FIX] Disable simulation before changing the rigidbody type so that simulation will be properly enabled again after the type changes
 * Improved the docs for applyForce
 
---------
-v0.145.3
---------
+
+### v0.145.3
+
 * [FIX] Added null check when updating script instances in case some of them are removed from the update list while the loop is in progress
 
---------
-v0.145.2
---------
+
+### v0.145.2
+
 * Changed camera nearClip and farClip minimum to be 0.0001 and decimal precision to 3 digits
 
---------
-v0.145.1
---------
+
+### v0.145.1
+
 * [FIX] Remove assignment to constructor property in pc.inherits, seems to fix FF Bug which breaks inheritance randomly!?
 
---------
-v0.145.0
---------
+
+### v0.145.0
+
 * Added documentation to currentTime and duration in the animation component
 * Updated docs for pc.math.random
 * Added examples directory with spinning cube example
@@ -406,138 +421,138 @@ v0.145.0
 * [FIX] Bug where a model component would not update its model's graph if it started disabled
 * [FIX] If a collision component is initialised before a rigid body component and a trigger is created, make sure to destroy that trigger when the rigid body is initialised
 
---------
-v0.144.3
---------
+
+### v0.144.3
+
 * [FIX] Ensure render targets are rendered fullscreen for post fx.
 
---------
-v0.144.2
---------
+
+### v0.144.2
+
 * [FIX] Error when trying to call script instance#destroy when removing a script component
 
---------
-v0.144.1
---------
+
+### v0.144.1
+
 * [FIX] Renamed pc.events.initalize to pc.events.attach to prevent it breaking compatibility when adding events to script instances
 
---------
-v0.144.0
---------
+
+### v0.144.0
+
 * Improved entity enabling / disabling mechanism to include children
 * Improved component enabling / disabling mechanism
 * Various optimizations
 
---------
-v0.143.4
---------
+
+### v0.143.4
+
 * [FIX] Fixed typos in script attribute docs
 
---------
-v0.143.3
---------
+
+### v0.143.3
+
 * [FIX] Call e.preventDefault in 'touchmove' event to avoid issues in Chrome Android
 
---------
-v0.143.2
---------
+
+### v0.143.2
+
 * [FIX] Identity texture transform now correctly generated.
 
---------
-v0.143.1
---------
+
+### v0.143.1
+
 * Optimizations in the script system, obb shapes and materials
 
---------
-v0.143.0
---------
+
+### v0.143.0
+
 * Call onEnable / onDisable methods on script instances when their script component is enabled / disbled
 
---------
-v0.142.0
---------
+
+### v0.142.0
+
 * Added enabling / disabling of Entities and Components
 
---------
-v0.141.1
---------
+
+### v0.141.1
+
 * [FIX] On FFOS, packaged apps does not have content type set correctly for some data formats (e.g. OGG).
 
---------
-v0.141.0
---------
+
+### v0.141.0
+
 * Added pitch to audiosource component
 
---------
-v0.140.0
---------
+
+### v0.140.0
+
 * Added input_mouse#wasReleased method
 
---------
-v0.139.1
---------
+
+### v0.139.1
+
 * Added documentation for decimalPrecision for script attributes
 
---------
-v0.139.0
---------
+
+### v0.139.0
+
 * Added postInitialize method in scripts
 
---------
-v0.138.3
---------
+
+### v0.138.3
+
 * [FIX] Script Attributes would not update correctly from the designer
 * [FIX] Documentation fixes
 
---------
-v0.138.2
---------
+
+### v0.138.2
+
 * [FIX] Only include texture transforms in Phong materials if they are not the identity matrix
 
---------
-v0.138.1
---------
+
+### v0.138.1
+
 * [FIX] Update particle emitter code to latest Math API.
 
---------
-v0.138.0
---------
+
+### v0.138.0
+
 * Added onAttributeChanged method in scripts and 'set' event for script attributes
 * Default near / far camera clip planes now default to 0.3 and 1000
 * [FIX] pc.Quat#transformVector now creates a pc.Vec3 result instead of a pc.Quat
 * [FIX] Error when a collision component has been destroyed and we need to call collision exit events
 
---------
-v0.137.2
---------
+
+### v0.137.2
+
 * [FIX] Gravity livelink now works with the new Math API.
 
---------
-v0.137.1
---------
+
+### v0.137.1
+
 * Add support for fullscreen 'screenscanvas' mode in CocoonJS.
 
---------
-v0.137.0
---------
+
+### v0.137.0
+
 * Exposed material texture transforms in the designer
 * Added texture tiling, offset and rotation
 
---------
-v0.136.2
---------
+
+### v0.136.2
+
 * [FIX] UV transforms work again.
 
---------
-v0.136.1
---------
+
+### v0.136.1
+
 * [FIX] CameraNode#screenToWorld (new Maths API)
 * [FIX] Global ambient now works again
 * [FIX] Triggers now work again (new Maths API)
 
---------
-v0.136.0
---------
+
+### v0.136.0
+
 * [BREAKING] New Maths API
 * Replaced pc.math.vec2 with pc.Vec2
 * Replaced pc.math.vec3 with pc.Vec3
@@ -546,25 +561,25 @@ v0.136.0
 * Replaced pc.math.mat4 with pc.Mat4
 * See docs for more details
 
---------
-v0.135.2
---------
+
+### v0.135.2
+
 * [FIX] bumpMapFactor now becomes bumpiness in the Phong material
 
-v0.135.1
---------
+### v0.135.1
+
 * Hide ballsocketjoint from the docs.
 * [FIX] Prevent the engine throwing an exception on startup if the anisotropic filter extension is not available.
 
---------
-v0.135.0
---------
+
+### v0.135.0
+
 * Merged model and primitive components
 * Added cylinder collision
 
---------
-v0.134.0
---------
+
+### v0.134.0
+
 * [FIX] Collision component cloning issues
 * [FIX] Fullscreen button should now work in IE11+
 * [FIX] Capsule resize bug in the designer where the same capsule would be always be edited
@@ -575,386 +590,386 @@ v0.134.0
 * Added pc.Color#clone and pc.scene.Material#clone
 * Support for more Phong material attributes in the designer
 
---------
-v0.133.2
---------
+
+### v0.133.2
+
 * [FIX] More accurate reporting of delta time in the framework (fixes jittery physics).
 
---------
-v0.133.1
---------
+
+### v0.133.1
+
 * [FIX] Sphere maps now load into the engine correctly.
 
---------
-v0.133.0
---------
+
+### v0.133.0
+
 * Changed rigidbody.bodyType to rigidBody.type
 
---------
-v0.132.1
---------
+
+### v0.132.1
+
 * [FIX] Materials are no longer tied to a single scene (broke picking).
 
---------
-v0.132.0
---------
+
+### v0.132.0
+
 * Moved Asset and AssetRegistry from pc.fw into pc.asset
 * Renamed getAsset() to getAssetByResourceId()
 * Added AssetRegistry.find() and AssetRegistry.findAll(), and deprecated getAssetByName
 
---------
-v0.131.1
---------
+
+### v0.131.1
+
 * [FIX] Allow PlayCanvas to run in IE11 by avoiding UNSIGNED_BYTE data with vertexAttribPointer if it's not supported.
 
---------
-v0.131.0
---------
+
+### v0.131.0
+
 * Integrated fog settings with the Designer
 
---------
-v0.130.3
---------
+
+### v0.130.3
+
 * Updated script component docs
 
---------
-v0.130.2
---------
+
+### v0.130.2
+
 * Updated script component docs
 
---------
-v0.130.1
---------
+
+### v0.130.1
+
 * Updated script related documentation
 
---------
-v0.130.0
---------
+
+### v0.130.0
+
 * Added script attributes support
 * LightNode#setColor now takes a pc.Color instead of a pc.math.vec3
 * Changed camera and light node code to be in object notation
 * [FIX] Changing shadow resolution in Designer works again
 * [FIX] Reflection map handled correctly in PhongMaterial
 
---------
-v0.129.2
---------
+
+### v0.129.2
+
 * [FIX] Depth write state caching.
 * [FIX] Blend function caching now works properly.
 
---------
-v0.129.1
---------
+
+### v0.129.1
+
 * Removed setFrontFace function.
 * Added EXP fog and fixed the equation for determining EXP2 fog factor.
 * [FIX] Light enabling/disabling works in Designer again.
 
---------
-v0.129.0
---------
+
+### v0.129.0
+
 * [FIX] Cloning Entities with light components works
 * Added render states to materials
 * [FIX] Trigger volumes no longer deactivate after a period of in-activity
 * [FIX] Fixed crash in Designer when collision component is removed
 
---------
-v0.128.2
---------
+
+### v0.128.2
+
 * [FIX] Setting linear and angular velocity values on a kinematic rigidbody works again
 * [FIX] Moving a trigger (collision component) works
 
---------
-v0.128.1
---------
+
+### v0.128.1
+
 * [FIX] Touch co-ordinates now match MouseEvent co-ordinates. i.e. top-left to bottom-right and match the CSS size of the element
 * More docs to Entity and pc.net.http
 
---------
-v0.128.0
---------
+
+### v0.128.0
+
 * Added context.touch if the browser has touch controls enabled
 * Filtering camera fov and orthoHeight based on projection value
 
---------
-v0.127.3
---------
+
+### v0.127.3
+
 * [FIX] Issues with collision mesh scaling
 
---------
-v0.127.2
---------
+
+### v0.127.2
+
 * Fix docs for light component
 
---------
-v0.127.1
---------
+
+### v0.127.1
+
 * Add documentation for light component
 
---------
-v0.127.0
---------
+
+### v0.127.0
+
 * [BREAKING] Remove all directionallight, pointlight, spotlight components. Replaced with light component
 
---------
-v0.126.6
---------
+
+### v0.126.6
+
 * [FIX] Light cloning issue
 * [FIX] Issue when setting range on spotlights
 * Added support for non-billboarded particles
 
---------
-v0.126.5
---------
+
+### v0.126.5
+
 * Changed trigger documentation.
 * Added particle system support - only static emitters are supported for now.
 
---------
-v0.126.4
---------
+
+### v0.126.4
+
 * [FIX] Error when rigid body entities are null.
 
---------
-v0.126.3
---------
+
+### v0.126.3
+
 * [FIX] Error when cloning collision components.
 
---------
-v0.126.2
---------
+
+### v0.126.2
+
 * [FIX] Alpha sorting now uses the bounding box so create a default one.
 
---------
-v0.126.1
---------
+
+### v0.126.1
+
 * Updated collision event documentation
 
---------
-v0.126.0
---------
+
+### v0.126.0
+
 * Added light component that combines all other lights into one. (private for now)
 * Now filtering rigid body properties that are irrelevant to static rigid bodies
 * Added triggerenter and triggerleave events and now only firing contact, collisionstart, collisionend events between rigid bodies
 
---------
-v0.125.2
---------
+
+### v0.125.2
+
 * [FIX] Added collision component 'type' in its properties
 
---------
-v0.125.1
---------
+
+### v0.125.1
+
 * [BREAKING] Remove all old collision* components
 
---------
-v0.125.0
---------
+
+### v0.125.0
+
 * [FIX] Designer crash when removing a rigidbody component and trying to move the Entity
 * No longer fire contact events between two static bodies
 * No longer fire contact events between triggers
 * Add documenation for collision component
 * Removed deprecated 2D physics code
 
---------
-v0.124.0
---------
+
+### v0.124.0
+
 * Added collision component which has the functionality of all the other collision components.
 
---------
-v0.123.1
---------
+
+### v0.123.1
+
 * [FIX] Opacity of zero now works. Setting an opacity map now sets the correct blend mode on the material.
 
---------
-v0.123.0
---------
+
+### v0.123.0
+
 * Added collision triggers when an entity only has a collision component and not a rigid body
 
---------
-v0.122.3
---------
+
+### v0.122.3
+
 * Render transparent meshes back to front order
 * Change OPEN_ENTITY livelink message to match new Designer format
 
---------
-v0.122.2
---------
+
+### v0.122.2
+
 * [FIX] Gizmo no longer broken - take a copy of Pack data before opening
 
---------
-v0.122.1
---------
+
+### v0.122.1
+
 * [FIX] If Ammo not loaded
 
---------
-v0.122.0
---------
+
+### v0.122.0
+
 * [FIX] Loading pack settings at startup
 
---------
-v0.121.0
---------
+
+### v0.121.0
+
 * Support for PackSettings livelink messages
 
---------
-v0.120.2
---------
+
+### v0.120.2
+
 * [FIX] Check the precision capabilities of the GPU and generate shaders accordingly.
 * Now calling activate internally in rigid body methods that apply forces etc.
 
---------
-v0.120.1
---------
+
+### v0.120.1
+
 * Added docs for pc.scene.Mesh and pc.scene.MeshInstance.
 
---------
-v0.120.0
---------
+
+### v0.120.0
+
 * Support for displaying remote cameras in designer
 
---------
-v0.119.1
---------
+
+### v0.119.1
+
 * [FIX] Force cache-busting off on resources to fix script debugging
 
---------
-v0.119.0
---------
+
+### v0.119.0
+
 * No longer caching scripts when running from the designer
 
---------
-v0.118.0
---------
+
+### v0.118.0
+
 * Added component system descriptions
 
---------
-v0.117.0
---------
+
+### v0.117.0
+
 * [FIX] Docs for pc.input.Controller
 * [FIX] Docs for pc.fw.ApplicationContext
 
---------
-v0.116.0
---------
+
+### v0.116.0
+
 * Added pc.input.Keyboard#wasReleased()
 * [FIX] Capsule rendering in Designer
 
---------
-v0.115.1
---------
+
+### v0.115.1
+
 * [FIX] Previous change broke kinematic objects
 
---------
-v0.115.0
---------
+
+### v0.115.0
+
 * Changed setLinearVelocity and setAngularVelocity methods to linearVelocity and angularVelocity properties
 * Add applyTorque and applyTorqueImpulse to Rigidbody Component
 * Changed setLinearFactor and setAngularFactor methods to linearFactor and angularFactor properties
 * Add linearDamping and angularDamping properties to Rigidbody Component
 
 
---------
-v0.114.1
---------
+
+### v0.114.1
+
 * [FIX] Update raycasting to the latest Ammo API.
 
---------
-v0.114.0
---------
+
+### v0.114.0
+
 * Update Ammo (Physics Engine) to be based on Bullet 2.8.1
 * Allocate less when loading animations
 
---------
-v0.113.0
---------
+
+### v0.113.0
+
 * Added pc.resources.JsonResourceHandler for loading assets of type 'json'.
 
---------
-v0.112.0
---------
+
+### v0.112.0
+
 * [FIX] Update setLinearFactor and setAngularFactor to work correctly
 
---------
-v0.111.5
---------
+
+### v0.111.5
+
 * [FIX] Lighting is now correct for non-uniform scaled objects.
 
---------
-v0.111.4
---------
+
+### v0.111.4
+
 * [FIX] Handle the case where a single material is referenced by a skinned and an unskinned mesh.
 
---------
-v0.111.3
---------
+
+### v0.111.3
+
 * Skin splitting works again.
 * pc.json API now private.
 
---------
-v0.111.2
---------
+
+### v0.111.2
+
 * [FIX] Sky boxes no longer flicker.
 
---------
-v0.111.1
---------
+
+### v0.111.1
+
 * [FIX] Default assets list in animation component to [] not null
 
---------
-v0.111.0
---------
+
+### v0.111.0
+
 * [BREAKING] New Model Asset format
 * Support for Textures as first-class Assets
 * Support for Materials as first-class Assets
 
---------
-v0.110.0
---------
+
+### v0.110.0
+
 * Added ballsocket joint component.
 
---------
-v0.109.1
---------
+
+### v0.109.1
+
 * [FIX] 109 broke scene rendering/picking in Designer.
 
---------
-v0.109.0
---------
+
+### v0.109.0
+
 * Added a forward render for scene rendering.
 * Added Bokeh post effect.
 * Added depth shader.
 
---------
-v0.108.0
---------
+
+### v0.108.0
+
 * [FIX] Check for supported audio types when loading for Web Audio API
 * Added sepia post effect
 * Added blend post effect
 * Added edge detect post effect
 
---------
-v0.107.4
---------
+
+### v0.107.4
+
 * [FIX] Static cubemap component fixed.
 * Add camera component property to get/set the render target.
 
---------
-v0.107.3
---------
+
+### v0.107.3
+
 * [FIX] Flip skybox in X.
 
---------
-v0.107.2
---------
+
+### v0.107.2
+
 * Docs improvements.
 
---------
-v0.107.1
---------
+
+### v0.107.1
+
 * [FIX] pc.Color accepts another pc.Color as a constructor argument
 
---------
-v0.107.0
---------
+
+### v0.107.0
+
 * [BREAKING] Removed Bloom Component
 * [BREAKING] Removed 'offscreen' attribute from Camera Component
 * [BREAKING] Changed pc.gfx.VertexElementType to pc.gfx.ELEMENTTYPE_
@@ -963,19 +978,19 @@ v0.107.0
 * Added new pc.posteffect namespace for Post Effects
 * Added Bloom, FXAA and Luminosity post effects
 
---------
-v0.106.2
---------
+
+### v0.106.2
+
 * [FIX] ResourceLoader now correctly loads identical child resources concurrently.
 
---------
-v0.106.1
---------
+
+### v0.106.1
+
 * Added generic vertex semantics for things like particle data.
 
---------
-v0.106.0
---------
+
+### v0.106.0
+
 * [BREAKING] Frame buffers are now render targets
 * [BREAKING] Decoupled PlayCanvas file format from shader code by introducing vertex semantics
 * [BREAKING] Updated Camera, Primitive, Directional Light, Spot Light and Point Light components to use pc.Color
@@ -983,62 +998,62 @@ v0.106.0
 * pc.Color object for representing RGBA colors
 * [FIX] Camera setOrthoHeight() now updates the matrix
 
---------
-v0.105.3
---------
+
+### v0.105.3
+
 * [FIX] Updated screenToWorld function to no longer require pc.gfx.Device.getCurrent.
 
---------
-v0.105.2
---------
+
+### v0.105.2
+
 * Updated pc.gfx docs.
 
---------
-v0.105.1
---------
+
+### v0.105.1
+
 * [FIX] Correct lookup of precalculatedTangents setting.
 
---------
-v0.105.0
---------
+
+### v0.105.0
+
 * Engine updated to support multiple canvases on a single page
 * [BREAKING] pc.gfx.Device.getCurrent() and pc.gfx.Device.setCurrent() removed
 * pc.gfx.Device now avaiable in pc.fw.ApplicationContext
 * [FIX] pc.math.vec3.clone creates a proper clone now
 
---------
-v0.104.5
---------
+
+### v0.104.5
+
 * Store the DOM touch event in pc.input.TouchEvent to allow calling of prevent Default in handler.
 
---------
-v0.104.4
---------
+
+### v0.104.4
+
 * [FIX] Rigid body system now steps the simulation independent of frame rate.
 
---------
-v0.104.3
---------
+
+### v0.104.3
+
 * [FIX] Exceptions that are thrown in script constructors or initialize() are no longer swallowed
 
---------
-v0.104.2
---------
+
+### v0.104.2
+
 * Added support for scaled collision meshes.
 
---------
-v0.104.1
---------
+
+### v0.104.1
+
 * Documentation fixes for ResourceLoader
 
---------
-v0.104.0
---------
+
+### v0.104.0
+
 * New pc.resources.ResourceLoader which returns a RSVP.Promise instead of using callbacks
 
---------
-v0.103.0
---------
+
+### v0.103.0
+
 * Added collisioncapsule component
 * Engine updated to comply with JSHint
 * [FIX] No longer possible to pick line geometry
@@ -1046,40 +1061,40 @@ v0.103.0
 * [FIX] Sounds (Web Audio API) now pause correctly if paused more than once on a single play through
 
 
---------
-v0.102.3
---------
+
+### v0.102.3
+
 * [FIX] Updated to latest Web Audio API spec. PlayCanvas apps no longer crash in Firefox Nightly.
 
---------
-v0.102.2
---------
+
+### v0.102.2
+
 * [FIX] GraphNode right, up and forwards properties now work.
 * [FIX] pc.math.multiply now creates a result quaternion correctly if not supplied as parameter.
 
---------
-v0.102.1
---------
+
+### v0.102.1
+
 * [FIX] Don't add collision meshes to the hierarchy.
 
---------
-v0.102.0
---------
+
+### v0.102.0
+
 * Added new collision mesh component.
 
---------
-v0.101.1
---------
+
+### v0.101.1
+
 * [FIX] Animation blending works again (broken in 0.99.1).
 
---------
-v0.101.0
---------
+
+### v0.101.0
+
 * Documented almost all of pc.math and renamed a number of functions for uniformity.
 
---------
-v0.100.0
---------
+
+### v0.100.0
+
 * Added pc.math.smoothstep and pc.math.smootherstep.
 * pc.math.pot -> pc.math.powerOfTwo
 * Removed pc.math trigonometric functions.
@@ -1087,12 +1102,12 @@ v0.100.0
 * Allow skybox to be rendered at any time with any camera (much more robust and faster too!).
 
 -------
-v0.99.1
+### v0.99.1
 -------
 * Update a skeleton's graph if a time is explicitly set. Prevents you seeing previous animation frame on playing an anim from an entity script, since entity script udpates occur after animation component update.
 
 -------
-v0.99.0
+### v0.99.0
 -------
 * Aspect ratio of Designer-rendered cameras is now fixed at 16/9.
 * Exposed aspectRatio on camera component.
@@ -1100,89 +1115,89 @@ v0.99.0
 * Update a skeleton's interpolated keyframes immediately upon setting a new time.
 
 -------
-v0.98.6
+### v0.98.6
 -------
 * Added documenation for pc.fw.Entity#clone()
 
 -------
-v0.98.5
+### v0.98.5
 -------
 * Soften PCF shadows.
 
 -------
-v0.98.4
+### v0.98.4
 -------
 * [FIX] Prevent GLSL pow function from being passed zero which causes glitches on Mac OS X.
 
 -------
-v0.98.3
+### v0.98.3
 -------
 * Optimize setting of vertex buffer attributes in the graphics device.
 * Simplified and optimized GLSL lighting code.
 * [FIX] Specular lighting calculation now takes the light color into account.
 
 -------
-v0.98.2
+### v0.98.2
 -------
 * Renamed enums for blend modes and primitive types.
 * Disable blending for opaque meshes.
 * Add a blend type to a material that specifies how it should blend when rendered.
 
 -------
-v0.98.1
+### v0.98.1
 -------
 * Added pc.audio.Channel#getDuration() to safely access the duration of the audio clip
 * Added pc.string.toBool() to convert a string value to a boolean value
 
 -------
-v0.97.2
+### v0.97.2
 -------
 * [FIX] Work around presumed GLSL compiler bug on Mac where directional light appears inverted in Y axis. Code should be equivalent.
 
 -------
-v0.97.1
+### v0.97.1
 -------
 * Optimized WebGL texture state setting.
 * [FIX] Phong shader now generates correct GLSL for lightmapping with no lights.
 
 -------
-v0.97.0
+### v0.97.0
 -------
 * Add pc.fw.AudioSourceComponent#unpause() to resume playback from paused (instead of using play() which starts from the beginning of the sound)
 * [FIX] Tabbing away correctly suspends audio in Firefox
 
 -------
-v0.96.6
+### v0.96.6
 -------
 * [FIX] Use parentNode value for element if touch event lands on an SVG element. [Properly this time]
 
 -------
-v0.96.5
+### v0.96.5
 -------
 * [FIX] Use parentNode value for element if touch event lands on an SVG element.
 
 -------
-v0.96.4
+### v0.96.4
 -------
 * [FIX] Fix so that touch position is not null in Firefox when using SVG elements
 
 -------
-v0.96.3
+### v0.96.3
 -------
 * [FIX] Fix to touch events when attached to elements without width and height attributes (i.e. not the canvas)
 
 -------
-v0.96.2
+### v0.96.2
 -------
 * [FIX] No longer call preventDefault() in TouchDevice event handling. User should call it themselves.
 
 -------
-v0.96.1
+### v0.96.1
 -------
 * [FIX] Make sure physics libraries are loaded before loading Entities
 
 -------
-v0.96.0
+### v0.96.0
 -------
 * loadFromTOC function for pc.fw.Application
 * Added AssetCache for preloading asset metadata
@@ -1194,26 +1209,26 @@ v0.96.0
 * Deprecate AssetResourceHandler and EntityResourceHandler
 
 -------
-v0.95.0
+### v0.95.0
 -------
 * Added Entity#clone() method
 * Support opacity on shadow maps (useful for alpha-tested foliage)
 * Check if isActive() is true before syncing entity to rigidbody
 
 -------
-v0.94.3
+### v0.94.3
 -------
 * [FIX] Procedural cylinder code was generating caps incorrectly, causing NaNs to be generated for tangents.
 * Renormalize normal and tangent in case the model matrix has a scale in it.
 
 -------
-v0.94.2
+### v0.94.2
 -------
 * Better scaling function for normal map.
 * [FIX] Fixes for when no lights are enabled.
 
 -------
-v0.94.1
+### v0.94.1
 -------
 * Switched engine back to using precalculated tangents, but can be switched on a device flag.
 * Change spotlight boundary interpolation.
@@ -1223,7 +1238,7 @@ v0.94.1
 * Fix WebGL errors about texture completeness (unitialised texture objects).
 
 -------
-v0.94.0
+### v0.94.0
 -------
 * Engine no longer generate vertex tangents. Instead, it perturbs surface normals using a normal map in the fragment shader.
 * Added support for heightmap bump mapping.
@@ -1232,40 +1247,40 @@ v0.94.0
 * Per pixel opacity no longer queried from diffuse map alpha channel (use opacity map instead).
 
 -------
-v0.93.1
+### v0.93.1
 -------
 * Physics docs corrections.
 
 -------
-v0.93.0
+### v0.93.0
 -------
 * Renamed collisionbox.size to collisionbox.halfExtents
 
 -------
-v0.92.0
+### v0.92.0
 -------
 * First public version of rigidbody component
 
 -------
-v0.91.0
+### v0.91.0
 -------
 * Renamed 'body3d' component to 'rigidbody' component
 * Added isActive() and activate() to rigidbody component
 * Better argument options for applyForce() and applyImpulse()
 
 -------
-v0.90.2
+### v0.90.2
 -------
 * relativePoint for Body3d.applyForce and Body3d.applyImpulse is now an optional argument, defaults to 0,0,0
 * [FIX] Default values for body3d and collisionbox
 
 -------
-v0.90.1
+### v0.90.1
 -------
 * [FIX] Activate body inside a syncTransform() so that livelink movement re-activates
 
 -------
-v0.90.0
+### v0.90.0
 -------
 * [FIX] GraphNode#rotate() and GraphNode#rotateLocal() take can accept a single vector argument like in the docs
 * Replace Body3d 'static' with 'bodyType' which can be dynamic, kinematic or static.
@@ -1277,20 +1292,20 @@ v0.90.0
 * Fire 'livelink:updatetransform' event when entity transform is updated over a livelink
 
 -------
-v0.89.0
+### v0.89.0
 -------
 * Implemented pc.scene.Model#generateWireframe.
 * Added pc.input.TouchDevice
 * Added shadow resolution attribute. Removed cast shadows attribute from point light component.
 
 -------
-v0.88.1
+### v0.88.1
 -------
 * Added pc.fw.CameraComponent#screenToWorld.
 * [FIX] Skybox now renders correctly in Designer.
 
 -------
-v0.88.0
+### v0.88.0
 -------
 * [FIX] Engine now honours toggling of cast shadows in Designer.
 * pc.gfx.ClearFlag -> pc.gfx.CLEARFLAG
@@ -1300,43 +1315,43 @@ v0.88.0
 * Initial support for inserting one-shot commands into draw call queue (to do things like clearing the depth buffer).
 
 -------
-v0.87.0
+### v0.87.0
 -------
 * Replace event methods .bind()/.unbind() with .on()/.off(). Deprecated bind()/unbind().
 * [FIX] Designer cameras now no longer create frustum graphics resources (caused WebGL errors).
 
 -------
-v0.86.6
+### v0.86.6
 -------
 * [FIX] Binary skins now partition correctly.
 
 -------
-v0.86.5
+### v0.86.5
 -------
 * [FIX] Final fix for skybox component.
 
 -------
-v0.86.4
+### v0.86.4
 -------
 * [FIX] Skybox now renders at the correct depth.
 
 -------
-v0.86.3
+### v0.86.3
 -------
 * [FIX] Infinite loop for scenes with shadows.
 
 -------
-v0.86.2
+### v0.86.2
 -------
 * [FIX] Only mesh instances marked as shadow caster rendered into shadow map.
 
 -------
-v0.86.1
+### v0.86.1
 -------
 * [FIX] Skybox component updated to new pc.scene API.
 
 -------
-v0.86.0
+### v0.86.0
 -------
 * New Scene library with sorting enabled -- rendering speed boost++!
 * Support for loading code libraries before Application starts
@@ -1345,28 +1360,28 @@ v0.86.0
 * [FIX] Use clientWidth to get canvas size instead of style.width (which is 100%)
 
 -------
-v0.85.4
+### v0.85.4
 -------
 * [FIX] Script instance initialize() method is called when an Entity is created over LiveLink
 
 -------
-v0.85.3
+### v0.85.3
 -------
 * [FIX] Point lights render with the right color in Designer again.
 * [FIX] pc.input.Controller now handles mouse move properly again.
 
 -------
-v0.85.2
+### v0.85.2
 -------
 * [FIX] Texture filters set incorrectly on JSON model load.
 
 -------
-v0.85.1
+### v0.85.1
 -------
 * Update Body3d transforms after stepping simulation
 
 -------
-v0.85.0
+### v0.85.0
 -------
 * [BREAKING] Mouse and Keyboard events are now passed pc.input.MouseEvent and pc.input.KeyboardEvent respectively. The original browser event is available as the 'event' property.
 * [BREAKING] Some pc.input enumerations have changed now EVENT_MOUSEMOVE, etc and MOUSEBUTTON_LEFT, etc. They are also featured in the documentation now.
@@ -1375,23 +1390,23 @@ v0.85.0
 * [FIX] Primitive Component color works correctly
 
 -------
-v0.84.1
+### v0.84.1
 -------
 * [FIX] Animation component now plays an animation on set in the connected game.
 
 -------
-v0.84.0
+### v0.84.0
 -------
 * New material APIs. See pc.scene.PhongMaterial, DepthMaterial, PickMaterial and BasicMaterial.
 * [FIX] Updated pad handling in pc.input to the latest GamePad spec.
 
 -------
-v0.83.1
+### v0.83.1
 -------
 * [FIX] Removed some debug comments
 
 -------
-v0.83.0
+### v0.83.0
 -------
 * pc.event.bind() and pc.event.unbind() now take an optional scope parameter to use as 'this' when firing.
 * Optimized GraphNode#getWorldTransform. It no longer syncs the entire hierarchy, just the path from the root to the queried node
@@ -1400,39 +1415,39 @@ v0.83.0
 * [FIX] Deleting Body2d Component with no collision body no longer crashes
 
 -------
-v0.82.6
+### v0.82.6
 -------
 * [FIX] Rotating Body2d Components in Designer works
 * [FIX] Convert between Eulers and single Angle for Body2d Components more robustly
 
 -------
-v0.82.5
+### v0.82.5
 -------
 * [FIX] 2D collision works again in the Designer
 
 -------
-v0.82.4
+### v0.82.4
 -------
 * [FIX] Prevent rendering of collisioncircle components unless debugRender flag is set
 
 -------
-v0.82.3
+### v0.82.3
 -------
 * [FIX] All components properly updated to new texture API.
 
 -------
-v0.82.2
+### v0.82.2
 -------
 * [FIX] Additional typo in binary texture stream reader.
 
 -------
-v0.82.1
+### v0.82.1
 -------
 * [FIX] binary stream reader to use new texture API.
 * Fixed reference to entity.close()
 
 -------
-v0.82.0
+### v0.82.0
 -------
 * [BREAKING] Renamed Entity#close to Entity#destroy
 * [BREAKING] New pc.gfx.Texture API. Much simpler interface more based around properties. pc.gfx.Texture2D and pc.gfx.TextureCube collapsed back into pc.gfx.Texture.
@@ -1440,49 +1455,49 @@ v0.82.0
 * Don't expose PickComponent in designer. It doens't work
 
 -------
-v0.81.7
+### v0.81.7
 -------
 * [FIX] cubemap component works again.
 
 -------
-v0.81.6
+### v0.81.6
 -------
 * [FIX] script.broadcast fixed.
 * [FIX] PickSystem debug rendering works.
 * [FIX] Set correct filter/address modes on pick buffer texture.
 
 -------
-v0.81.5
+### v0.81.5
 -------
 * Lots of documentation changes to go with the new documentation template
 
 -------
-v0.81.4
+### v0.81.4
 -------
 * [FIX] GraphNode#lookAt now correctly marks the local transform as dirty.
 
 -------
-v0.81.3
+### v0.81.3
 -------
 * [FIX] Prevent audio sources from playing in Designer.
 
 -------
-v0.81.2
+### v0.81.2
 -------
 * [FIX] AudioSourceComponent play function fixed for 2D sounds.
 
 -------
-v0.81.1
+### v0.81.1
 -------
 * [FIX] Fog GLSL fixed.
 
 -------
-v0.81.0
+### v0.81.0
 -------
 * Added support for anisotropic texture filtering.
 
 -------
-v0.80.0
+### v0.80.0
 -------
 * [BREAKING] New API Components and ComponentSystems
 * [BREAKING] Removed deprecated 'header' Component
@@ -1494,22 +1509,22 @@ v0.80.0
 * Added postUpdate() event called after all update() events
 
 -------
-v0.79.3
+### v0.79.3
 -------
 * [FIX] Spotlighting now correctly normalizes the spot direction after it is passed to the fragment shader.
 
 -------
-v0.79.2
+### v0.79.2
 -------
 * Restrict bone limit a little further to allow for more complex shaders.
 
 -------
-v0.79.1
+### v0.79.1
 -------
 * Limit the number of supported bones per skin in order to get around a performance issue on the Mac Mini 2009.
 
 -------
-v0.79.0
+### v0.79.0
 -------
 * [FIX] Body2d works in degrees everywhere
 * [FIX] pc.math.mat4.fromEulersXYZ
@@ -1518,23 +1533,23 @@ v0.79.0
 * Some shader optimizations
 
 -------
-v0.78.1
+### v0.78.1
 -------
 * [FIX][BREAKING] Renamed MouseEvent.buttons to MouseEvent._buttons to avoid clash with new FireFox event property
 
 -------
-v0.78.0
+### v0.78.0
 -------
 * [BREAKING] Renamed ScriptObject method updateFixed() to fixedUpdate()
 * fixedUpdate() now runs before update()
 
 -------
-v0.77.1
+### v0.77.1
 -------
 * [FIX] Rendering collisionrects works again
 
 -------
-v0.77.0
+### v0.77.0
 -------
 * [BREAKING] All pc.math library functions take degrees instead of radians
 * [BREAKING] Removed GraphNode methods setParent() and setChildren()
@@ -1550,58 +1565,58 @@ v0.77.0
 * Script component urls field is now a proper array instead of a comma-separated string
 
 -------
-v0.76.0
+### v0.76.0
 -------
 * Engine now loads in nodejs environment
 * Deprecate requestAnimFrame() and replace with requestAnimationFrame()
 * Replace requestAnimationFrame shim with new version from Paul Irish
 
 -------
-v0.75.6
+### v0.75.6
 -------
 * [FIX] Offscreen buffer creation deferred until rendering occurs. Fixes bloom on app start up.
 * [FIX] Bloom no longer crashes the engine when disabled from Designer.
 
 -------
-v0.75.5
+### v0.75.5
 -------
 * [FIX] Point light spheres no longer crash the Designer.
 * Shader system now uses shared GLSL snippets.
 
 -------
-v0.75.4
+### v0.75.4
 -------
 * [FIX] Reduced shadow mapping artifacts.
 
 -------
-v0.75.3
+### v0.75.3
 -------
 * [FIX] Back out previous fix for pc.math.quat.toMat4()
 
 -------
-v0.75.2
+### v0.75.2
 -------
 * [FIX] Fix for pc.math.quat.toMat4()
 
 -------
-v0.75.1
+### v0.75.1
 -------
 * [FIX] Body2d components were overwriting ltm with shared variable
 
 -------
-v0.75.0
+### v0.75.0
 -------
 * Scale mouse value in pc.input.Controller.getAxis() down to more closely match the gamepad values
 * [FIX] pc.input.Mouse.isPointerLocker() works correctly
 
 -------
-v0.74.0
+### v0.74.0
 -------
 * Optimized Body2d so that it no longer updates the transform static bodies every frame.
 * [FIX] pc.math.mat4.getZ() no longer creates a vec3 if one is supplied
 
 -------
-v0.73.0
+### v0.73.0
 -------
 * Fullscreen API support, use enableFullscreen(), disableFullscreen() on pc.fw.Application
 * PointerLock API support, use enablePointerLock(), disablePointerLock() on pc.input.Mouse
@@ -1612,101 +1627,101 @@ v0.73.0
 * [FIX] body2d.raycastFirst sometimes returned the wrong entity
 
 -------
-v0.72.0
+### v0.72.0
 -------
 * Clear old events from mouse and keyboard if they are attached to a second element
 * Allow Controller to take a options argument to pass in existing Mouse/Keyboard/Gamepad input handlers
 * Updated Closure Compiler
 
 -------
-v0.71.2
+### v0.71.2
 -------
 * [FIX] Check for existing cachedMaterial before setting/deleting when handling shadow maps. Duplicated materials are shared between meshes so must only be deleted once.
 * [FIX] Handle case where <audio> tag isn't supported. e.g. Headless clients
 
 -------
-v0.71.1
+### v0.71.1
 -------
 * Sync hierarchy and mesh AABBs after loading and cloning models.
 
 -------
-v0.71.0
+### v0.71.0
 -------
 * [FIX] Fix picking for cloned models
 * [FIX] Add new components over LiveLink in correct order.
 
 -------
-v0.70.0
+### v0.70.0
 -------
 * [FIX] CollisionRect renders again
 
 -------
-v0.69.0
+### v0.69.0
 -------
 * [FIX] pc.scene.Model.clone() correctly clones textures, materials and geometry lists
 
 -------
-v0.68.0
+### v0.68.0
 -------
 * [FIX] updates to collisionrect and collisioncircle values in the Designer are reflect in the live game.
 * [FIX] Set velocity to 0 when updating transform of a body2d component from the Designer
 
 -------
-v0.67.4
+### v0.67.4
 -------
 * [FIX] Eye space z sorting is now based on mesh AABB center rather than WTM position.
 
 -------
-v0.67.3
+### v0.67.3
 -------
 * Fix for 0.67.2.
 
 -------
-v0.67.2
+### v0.67.2
 -------
 * Optimize pc.math.mat4.compose and fromEulerXYZ to use scratch matrices.
 
 -------
-v0.67.1
+### v0.67.1
 -------
 * [FIX] Body2d Component rotates correctly in designer.
 * Added setPositionAndAngle() to Body2d component
 
 -------
-v0.67.0
+### v0.67.0
 -------
 * [FIX] Body2d Component sometimes creates upside down transforms, because undefined value was being used as index
 
 -------
-v0.66.0
+### v0.66.0
 -------
 * Added TextureCache object to cache loaded textures and use them instead of reloading
 
 -------
-v0.65.0
+### v0.65.0
 -------
 * Added optional ignore value to Body2dComponentSystem.raycastFirst
 
 -------
-v0.64.1
+### v0.64.1
 -------
 * Optimize the number of varying used by the phong shader generator with relation to UV sets and texture transforms.
 
 -------
-v0.64.0
+### v0.64.0
 -------
 * [FIX] Handle onclose event in pc.net.Socket()
 * [FIX] Body2dComponentSystem.setAngle and setPosition update world transform directly so that hierarchy is in sync
 
 -------
-v0.63.0
+### v0.63.0
 -------
 * Added support for Keep Aspect Ratio in Application Data
 * Increased gamepad deadzone
 * [FIX] Changes made to 2D body and collision in Designer are reflected in live game
 
 -------
-v0.62.0
+### v0.62.0
 -------
 * Added pc.debug.display() which displays an object in the corner of the page
 * Added gamepad support with pc.input.GamePads (Chrome Canary, FF Special build at the mo)
@@ -1715,18 +1730,18 @@ v0.62.0
 * [FIX] Binary geometries with vertex colors now load. Also, binary skin cloning is fixed.
 
 -------
-v0.61.1
+### v0.61.1
 -------
 * [FIX] Check that animations have been loaded before playing on AnimationComponentSystem.setModel
 
 -------
-v0.61.0
+### v0.61.0
 -------
 * [FIX] Added support to the animation system for blending two skeletons with different topologies.
 * [BREAKING] AnimationComponentSystem.setAnimation() renamed to play()
 
 -------
-v0.60.0
+### v0.60.0
 -------
 * Added caching for downloaded files to pc.resources.ResourceLoader.
     Anything store as a Asset on the server can be cached and multiple instances are cloned (models) or shared.
@@ -1738,51 +1753,51 @@ v0.60.0
 * Optimized some code generation for the Phong shader generator, especially for the case when no lights are enabled.
 
 -------
-v0.59.0
+### v0.59.0
 -------
 * [FIX] Fix possible crash when animation components are loaded while the application is running
 * [FIX] Fix possible crash when loading body2d components while the application is running
 
 -------
-v0.58.0
+### v0.58.0
 -------
 * Updates to private Body2D component
 
 -------
-v0.57.0
+### v0.57.0
 -------
 * [FIX] Entity hierarchy is built and world transforms synced before createComponent is called
 * Added private Body2D component
 
 -------
-v0.56.0
+### v0.56.0
 -------
 * Added pc.net.Socket which wraps native WebSocket
 
 -------
-v0.55.0
+### v0.55.0
 -------
 * [FIX] Pack loading no longer edits pack data in place, a PackResourceHandler.open returns a copy
 
 -------
-v0.54.2
+### v0.54.2
 -------
 * [FIX] Set up dynamic lights right at the start of a scene flush.
 
 -------
-v0.54.1
+### v0.54.1
 -------
 * [FIX] Rendering would fail for materials with a specular map but no transform applied to the map.
 
 -------
-v0.54.0
+### v0.54.0
 -------
 * Update to new Pack format, with application_data, and hierarchy properties
 * pc.scene.GraphNode#getLocal/WorldPosition no longer return a reference to the graph node's LTM/WTM but a newly allocated vector.
 * pc.net.http.delete_ renamed to pc.net.http.del
 
 -------
-v0.53.0
+### v0.53.0
 -------
 * Phong shader now only transforms UVs in the vertex shader if there is a non-identity texture transform set.
 * GraphNode#lookAt no longer allocates.
@@ -1790,17 +1805,17 @@ v0.53.0
 * Allow integer vertex attribs which require normalization on a render. This allows for UINT8 vertex colors in a vertex buffer, for example.
 
 -------
-v0.52.2
+### v0.52.2
 -------
 * Ensure an animation is set on a skeleton before having anim component set skeleton's graph.
 
 -------
-v0.52.1
+### v0.52.1
 -------
 * Re-add Function.extendsFrom until Designer is updated
 
 -------
-v0.52.0
+### v0.52.0
 -------
 * Replaced Function.extendsFrom with pc.inherits.
 * Added pc.cookie.get/set to use browser cookies.
@@ -1808,7 +1823,7 @@ v0.52.0
 * Skin partitioning now operates on a pc.scene.Geometry.
 
 -------
-v0.51.0
+### v0.51.0
 -------
 * Added setVolume() to AudioManager, it affects the volume of all audio sources
 * Added suspend() and resume() to AudioManager, to pause and resume all audio sources
@@ -1819,7 +1834,7 @@ v0.51.0
 * Removed deprecated functions pc.each and pc.callback
 
 -------
-v0.50.0
+### v0.50.0
 -------
 * Added pc.audio.isSupported(url) to test if the url to an audio file is a supported format.
 * [FIX] Prevent crash in pc.audio.Channel3d if stop() is called when using Audio tag (FF/Opera/Safari)
@@ -1827,12 +1842,12 @@ v0.50.0
 * [FIX] Probably fixed #38 by checking for 'loadstart', 'canplaythrough' and 'loadeddata' events to see if Audio tag has loaded.
 
 -------
-v0.49.0
+### v0.49.0
 -------
 * [FIX] Fix infinite loop in lighting
 
 -------
-v0.48.0
+### v0.48.0
 -------
 * Optional support for binary model data
 * Optimized in place tangent generation
@@ -1843,7 +1858,7 @@ v0.48.0
 * Switch bloom component to use Float32Array to pass uniforms to GPU.
 
 -------
-v0.47.0
+### v0.47.0
 -------
 * [FIX] Designer Camera in FF works again
 * Added event.wheel value to MouseEvent which is normalized value across all browsers
@@ -1855,17 +1870,17 @@ v0.47.0
 * Update camera aspect ratio on resize.
 
 -------
-v0.46.0
+### v0.46.0
 -------
 * [FIX] Unsupported audio formats no longer hang resource loading in Firefox
 
 -------
-v0.45.0
+### v0.45.0
 -------
 * Option to show debug ResourceLoader in pc.fw.Application
 
 -------
-v0.44.0
+### v0.44.0
 -------
 * Optimized pc.scene.Scene front to back sorting callback.
 * Added support for Axes to pc.input.Controller.
@@ -1875,7 +1890,7 @@ v0.44.0
 * [FIX] Phong shader now handles case where specular factor map is only sampler.
 
 -------
-v0.43.0
+### v0.43.0
 -------
 * Optimized Device#clear
 * Renamed castShadows back to getCastShadows and receiveShadows back to getReceiveShadows
@@ -1884,7 +1899,7 @@ v0.43.0
 * Fixed shadowmapping GLSL outside of UV bounds
 
 -------
-v0.42.0
+### v0.42.0
 -------
 * Animation file format updated!  Reconvert all animation JSON from source FBX files!
 * Reworked animation API to support skeleton to graph link up via bone names. This fixes the case where the skeleton does not include all the graph nodes.
@@ -1895,19 +1910,19 @@ v0.42.0
 * Updated Closure Compiler to latest version (fixes new lines at end of code modules in non-minified engine).
 
 -------
-v0.41.2
+### v0.41.2
 -------
 * [FIX] AudioSource correctly plays audio when you add a new component over livelink
 * [FIX] Cache model (if it exists) on animation component creation.
 
 -------
-v0.41.1
+### v0.41.1
 -------
 * Increase script resource loading timeout from 10s to 60s
 * Removed debug logging from resource loading
 
 -------
-v0.41.0
+### v0.41.0
 -------
 * Reexposed cast shadows for point light even though it doesn't function (fixes saving).
 * Make default light radius 10.
@@ -1920,7 +1935,7 @@ v0.41.0
 * Further optimizations to calculateTangents.  Probably about 10x faster than it was originally.
 
 -------
-v0.40.0
+### v0.40.0
 -------
 * Update primitive component to support casting/receiving shadows
 * Compute/load AABB info for models and primitives
@@ -1930,17 +1945,17 @@ v0.40.0
 * [FIX] Script resources which are regular javascript files no longer hang the resource loader.
 
 -------
-v0.39.3
+### v0.39.3
 -------
 [FIX] If a spotlight's outer cone angle changes, update the shadow camera's FOV.
 
 -------
-v0.39.2
+### v0.39.2
 -------
 [FIX] Fixed logic for enabling shadow casting on a light more than once.
 
 -------
-v0.39.0
+### v0.39.0
 -------
 * Shadow casting enabled in the pc.scene API for directional and spot lights.
 * Support multiple simultaneous shadow casting lights.
@@ -1949,17 +1964,17 @@ v0.39.0
 * [FIX] pc.net.OAuth clears away iframes correctly
 
 -------
-v0.38.1
+### v0.38.1
 -------
 * [FIX] Crash in Firefox when loading an exported game with a large number of Entity/Assets.
 
 -------
-v0.38.0
+### v0.38.0
 -------
 * [FIX] Use event.currentTarget instead of target to calculate mouse offset co-ords in pc.input.Mouse
 
 -------
-v0.37.0
+### v0.37.0
 -------
 * [FIX] context.systems.script.send() no longer crashes if you send to an entity that doesn't have a script component
 * Improved light loading and support for loading distinct light intensity attribute
@@ -1967,7 +1982,7 @@ v0.37.0
 * Added pc.fw.AppData where application data is loaded into
 
 -------
-v0.36.0
+### v0.36.0
 -------
 * All ComponentSystems can implement an initialize() method which is passed the root entity of a loaded Pack after the Pack is loaded, but before any updates are called
 * Exposed both inner and outer spotlight cone angles in Designer
@@ -1976,12 +1991,12 @@ v0.36.0
 * Moved static global lighting functions onto Scene instance
 
 -------
-v0.35.1
+### v0.35.1
 -------
 * [FIX] pc.audio.Listener setVelocity crash on Firefox
 
 -------
-v0.35.0
+### v0.35.0
 -------
 * Correctly render orthographic frustum in Designer
 * Optimized animation addTime function by caching keyframe indices
@@ -1990,18 +2005,18 @@ v0.35.0
 * Update the orientation of listener in audiolistener components so that supported platforms have correct panning.
 
 -------
-v0.34.0
+### v0.34.0
 -------
 * Added support for distance model parameters in Audio Components
 
 -------
-v0.33.0
+### v0.33.0
 -------
 * New pc.audio.AudioManager
 * New pc.audio.Sound, pc.audio.Channel, pc.audio.Channel3d, pc.audio.Listener
 
 -------
-v0.32.0
+### v0.32.0
 -------
 * Added ModelComponentSystem.setVisible() to show/hide models
 * Added currentTime and duration accessors to AnimationComponentSystem
@@ -2009,41 +2024,41 @@ v0.32.0
 * [FIX] Script update() is no longer called before the resource loading callback is called
 
 -------
-v0.31.4
+### v0.31.4
 -------
 * Fixed pc.math.vec3.clone.
 
 -------
-v0.31.3
+### v0.31.3
 -------
 * Switched vector, matrix and quaternion code to use Float32Array instead of Array.
 
 -------
-v0.31.2
+### v0.31.2
 -------
 * Some optimizations mainly based around pre-creating objects/arrays to avoid garbage collection.
 
 -------
-v0.31.1
+### v0.31.1
 -------
 * Added first pass at device orientation input handler.
 * Don't generate tangents on load if the geometry already has them.
 
 -------
-v0.31.0
+### v0.31.0
 -------
 * Added LiveLinkReparentEntityMessage and LiveLinkUpdateEntityNameMessage.
 * Replaced pc.fw.Entity.reparentByGuid() with pc.fw.Entity.reparent().
 
 -------
-v0.30.1
+### v0.30.1
 -------
 * Added 'step' option to number attributes that are exposed to the designer.
 * Prevent livelink crashing if window has been closed by user.
 * [FIX] Creating audio components works.
 
 -------
-v0.30.0
+### v0.30.0
 -------
 * Change max camera FOV to 90.
 * Added support for 'enumeration' type when exposing vars to the Designer.
@@ -2064,7 +2079,7 @@ v0.30.0
 * [FIX] toEulerXYZ and fromEulerXYZ perform updates in the 'correct' order and are compatible now.
 
 -------
-v0.29.0
+### v0.29.0
 -------
 * [FIX] Fixed up EntityResourceHandler function call to be static.
 * [FIX] Fixed directionallight/camera components to render correctly using updated Device#draw function.
@@ -2074,7 +2089,7 @@ v0.29.0
 * Added support for wireframe rendering. Call pc.scene.Geometry#generateWireframe on a geometry and then call pc.scene.MeshNode#setRenderStyle(pc.scene.RenderStyle.WIREFRAME)
 
 -------
-v0.28.0
+### v0.28.0
 -------
 * Prevent livelink sending messages to itself.
 * [FIX] Picking code updated following deletion of SubMesh API.
@@ -2085,25 +2100,25 @@ v0.28.0
 * [FIX] pc.shape.Box.containsPoint() works now.
 
 -------
-v0.27.0
+### v0.27.0
 -------
 * [FIX] pc.math.mat4.invert() works now
 * [FIX] Fix camera frustum rendering and direction light rendering
 
 -------
-v0.26.1
+### v0.26.1
 -------
 * [FIX] build script -o support was broken
 
 -------
-v0.26.0
+### v0.26.0
 -------
 * [BREAKING] Change to json model format. Index buffers are now per geometry rather than per sub-mesh
 * Simplified full screen quad vertex shader a little for Bloom component
 * Replace audio buffers with audio element for Firefox
 
 -------
-v0.25.0
+### v0.25.0
 -------
 * [FIX] Scripts are loaded as part of the entity requestBatch now, so callback fires after script instance is created
 * [FIX] Entity.close() properly closes child entities
@@ -2115,7 +2130,7 @@ v0.25.0
 * The delta time (dt) value passed in to Update methods is clamped to a max of 0.1s to prevent it getting very large (especially while debugging)
 
 -------
-v0.24.0
+### v0.24.0
 -------
 * Fix audio in Firefox, remove setSource() method. Use play(entity, name) now.
 * Added audionode.js shim for Firefox
@@ -2127,7 +2142,7 @@ v0.24.0
 * [FIX] guessResponseType method correctly handles urls with queries and fragments
 
 -------
-v0.23.0
+### v0.23.0
 -------
 * Fixes to allow PlayCanvas to run in Opera 12
 * Added support for point light attenuation
@@ -2138,7 +2153,7 @@ v0.23.0
 * [FIX] Fix problem where material shininess can be zero giving undefined results
 
 -------
-v0.22.0
+### v0.22.0
 -------
 * Added a fixed time step update function to the framework.
 * Only override format of image elements in Texture2D.prototype.setSource.
@@ -2146,7 +2161,7 @@ v0.22.0
 * [FIX] Alpha test now actually works as a render state.
 
 -------
-v0.21.0
+### v0.21.0
 -------
 * The Blinn-Phong program now uses the standard Phong lighting equation.
 * [FIX] Fixed probable bug in CLOSE_ENTITY message which could be closing the wrong entity.
@@ -2154,25 +2169,25 @@ v0.21.0
 * Added runtime support for specular factor maps which multiply either the specular material color or the assigned specular map.
 
 -------
-v0.20.0
+### v0.20.0
 -------
 * [FIX] Skinning should now work in all cases.
 * [FIX] Fix for some keys (e.g. 'n' and 'z') not working in input handler.
 
 -------
-v0.19.0
+### v0.19.0
 -------
 * Added support for fetching binary data in pc.net.http
 * Added pc.path.getExtension(filename) function
 
 -------
-v0.18.1
+### v0.18.1
 -------
 * [FIX] PickComponentSystem.addShape was referencing an undefined variable 'data'
 * [FIX] Missing var definitions were assigning to globals
 
 -------
-v0.18.0
+### v0.18.0
 -------
 * Namespace logging functions
 * Update primitive component to create models and add them to the scene to render
@@ -2184,28 +2199,28 @@ v0.18.0
 * [FIX] Updated references to old light API on model load
 
 -------
-v0.17.1
+### v0.17.1
 -------
-* Fixed GLSL picking broken in v0.17.0
+* Fixed GLSL picking broken in ### v0.17.0
 
 -------
-v0.17.0
+### v0.17.0
 -------
 * Fixed picking for skinned geometry
 * Added guard to check of labels array is present in entity data. (It isn't in some older entities)
 
 -------
-v0.16.1
+### v0.16.1
 -------
 * AssetResourceHandler supplies a url prefix so that if the code is hosted on a site other than platform.playcanvas.com it can still work
 
 -------
-v0.16.0
+### v0.16.0
 -------
 * Added blending support to animation component.
 
 -------
-v0.15.0
+### v0.15.0
 -------
 * Changed pc.gfx.Device#setCurrent to a static function
 * Removed pc.gfx.Device#stop
@@ -2214,31 +2229,31 @@ v0.15.0
 * Fix removed old code from cubemap
 
 -------
-v0.14.1
+### v0.14.1
 -------
 * Fix for pc.fw.Application still referencing old _camera variable
 * Fix for Bloom Component still referencing old _camera variable
 * Fix for SkyBox Component still referencing old _camera variable
 
 -------
-v0.14.0
+### v0.14.0
 -------
 * Replaced pop() and push() in CameraComponentSystem with setCurrent()
 
 -------
-v0.13.1
+### v0.13.1
 -------
 * Fix mouse down event for left mouse button.
 
 -------
-v0.13.0
+### v0.13.0
 -------
 * Added support for preventDefault and stopPropagation in pc.input.Keyboard
 * Updated components to initialize the defaults correctly
 * Auto-register all the shader generators (so the user doesn't have to)
 
 -------
-v0.12.0
+### v0.12.0
 -------
 * hierarchy is synced in Application.start() before first update tick
 * Added pc.input.MouseEvent
@@ -2249,7 +2264,7 @@ v0.12.0
 * Removed planereflection component
 
 ------
-v0.7.0
+### v0.7.0
 ------
 
 * Added first pass at an animation component. Just loads/runs a single animation for now.
@@ -2264,7 +2279,7 @@ v0.7.0
 * Added runtime support for emissive maps.
 
 ------
-v0.6.0
+### v0.6.0
 ------
 
 * Added CHANGES file
@@ -2281,7 +2296,7 @@ v0.6.0
 
 
 ------
-v0.5.0
+### v0.5.0
 ------
 
 * ScriptLoader replaces ResourceLoader object

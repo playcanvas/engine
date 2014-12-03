@@ -1,11 +1,11 @@
 pc.extend(pc.fw, function () {
 
     var ammoVec1, ammoQuat;
-    
+
     /**
     * @private
     * @name pc.fw.Trigger
-    * @description Creates a trigger object used to create internal physics objects that interact with 
+    * @description Creates a trigger object used to create internal physics objects that interact with
     * rigid bodies and trigger collision events with no collision response
     * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application
     * @param {pc.fw.Component} component The component for which the trigger will be created
@@ -14,11 +14,11 @@ pc.extend(pc.fw, function () {
     var Trigger = function Trigger (context, component, data) {
         this.entity = component.entity;
         this.component = component;
-        this.context = context; 
+        this.context = context;
 
         if (typeof Ammo !== 'undefined') {
             ammoVec1 = new Ammo.btVector3();
-            ammoQuat = new Ammo.btQuaternion(); 
+            ammoQuat = new Ammo.btQuaternion();
         }
 
         this.initialize(data);
@@ -61,13 +61,13 @@ pc.extend(pc.fw, function () {
                 body.setLinearFactor(ammoVec1);
                 body.setAngularFactor(ammoVec1);
 
-                body.setCollisionFlags(body.getCollisionFlags() | pc.fw.RIGIDBODY_CF_NORESPONSE_OBJECT);
+                body.setCollisionFlags(body.getCollisionFlags() | pc.BODYFLAG_NORESPONSE_OBJECT);
                 body.entity = entity;
 
                 if (this.component.enabled && entity.enabled) {
                     this.enable();
                 }
-            } 
+            }
         },
 
         destroy: function () {
@@ -93,11 +93,11 @@ pc.extend(pc.fw, function () {
 
         enable: function () {
             var body = this.body;
-            this.context.systems.rigidbody.addBody(body);
+            this.context.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
 
-            // set the body's activation state to active so that it is 
+            // set the body's activation state to active so that it is
             // simulated properly again
-            body.forceActivationState(pc.fw.RIGIDBODY_ACTIVE_TAG);
+            body.forceActivationState(pc.BODYSTATE_ACTIVE_TAG);
 
             body.activate();
         },
@@ -106,9 +106,9 @@ pc.extend(pc.fw, function () {
             var body = this.body;
             this.context.systems.rigidbody.removeBody(body);
 
-            // set the body's activation state to disable simulation so 
+            // set the body's activation state to disable simulation so
             // that it properly deactivates after we remove it from the physics world
-            body.forceActivationState(pc.fw.RIGIDBODY_DISABLE_SIMULATION);
+            body.forceActivationState(pc.BODYSTATE_DISABLE_SIMULATION);
         }
     };
 

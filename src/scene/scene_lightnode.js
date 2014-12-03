@@ -286,7 +286,11 @@ pc.extend(pc.scene, function () {
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
             for(var c=0; c<3; c++) {
-                this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
+                if (i >= 1) {
+                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
+                } else {
+                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c], 2.2);
+                }
             }
         },
 
@@ -336,9 +340,11 @@ pc.extend(pc.scene, function () {
             var b = c.b;
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
-            for(var c=0; c<3; c++) {
-                this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
-            }
+                if (i >= 1) {
+                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
+                } else {
+                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c], 2.2);
+                }
         },
 
         /**

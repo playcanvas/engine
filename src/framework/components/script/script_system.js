@@ -278,6 +278,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.fw.ScriptComponentSystem#broadcast
          * @description Send a message to all Script Objects with a specific name.
@@ -289,6 +290,7 @@ pc.extend(pc.fw, function () {
          * entityEntity.script.broadcast('enemy', 'doDamage', 10);
          */
         broadcast: function (name, functionName) {
+            console.warn("DEPRECATED: ScriptComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/")
             var args = pc.makeArray(arguments).slice(2);
 
             var id, data, fn;

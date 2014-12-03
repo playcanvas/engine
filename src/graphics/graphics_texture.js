@@ -12,8 +12,8 @@ pc.extend(pc.gfx, function () {
      * @property {Number} magFilter The magnification filter to be applied to the texture (see pc.gfx.FILTER_*).
      * @property {Number} addressU The addressing mode to be applied to the texture (see pc.gfx.ADDRESS_*).
      * @property {Number} addressV The addressing mode to be applied to the texture (see pc.gfx.ADDRESS_*).
-     * @property {Number} maxAnisotropy Integer value specifying the level of anisotropic to apply to the texture
-     * ranging from 1 (no anisotropic filtering) to the pc.gfx.Device property maxSupportedMaxAnisotropy.
+     * @property {Number} anisotropy Integer value specifying the level of anisotropic to apply to the texture
+     * ranging from 1 (no anisotropic filtering) to the pc.gfx.Device property maxAnisotropy.
      * @property {Number} width [Read only] The width of the based mip level in pixels.
      * @property {Number} height [Read only] The height of the based mip level in pixels.
      * @property {Number} format [Read only] The pixel format of the texture (see pc.gfx.PIXELFORMAT_*).
@@ -64,7 +64,7 @@ pc.extend(pc.gfx, function () {
             this._minFilter = pc.gfx.FILTER_LINEAR;
         }
         this._magFilter = pc.gfx.FILTER_LINEAR;
-        this._maxAnisotropy = 1;
+        this._anisotropy = 1;
 
         // Mip levels
         this._levels = cubemap ? [[ null, null, null, null, null, null ]] : [ null ];
@@ -123,10 +123,10 @@ pc.extend(pc.gfx, function () {
         }
     });
 
-    Object.defineProperty(Texture.prototype, 'maxAnisotropy', {
-        get: function () { return this._maxAnisotropy; },
-        set: function (maxAnisotropy) {
-            this._maxAnisotropy = maxAnisotropy;
+    Object.defineProperty(Texture.prototype, 'anisotropy', {
+        get: function () { return this._anisotropy; },
+        set: function (anisotropy) {
+            this._anisotropy = anisotropy;
         }
     });
 
