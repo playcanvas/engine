@@ -991,7 +991,7 @@ pc.extend(pc.scene, function() {
                             particlePosMoved.copy(particleFinalPos).sub(particlePos);
                         }
 
-                        if (this.alignToMotion && (!respawn) && this.camera) {
+                        if (this.alignToMotion && !respawn && this.camera) {
                             viewProjMat.transformPoint(moveDirVec, moveDirVec);
                             len = Math.sqrt(moveDirVec.x * moveDirVec.x + moveDirVec.y * moveDirVec.y);
                             moveDirVec.x /= len;
