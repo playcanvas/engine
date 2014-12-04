@@ -86,15 +86,19 @@ pc.extend(pc.scene, function() {
     var particlePosMoved = new pc.Vec3();
     var particleFinalPos = new pc.Vec3();
     var moveDirVec = new pc.Vec3();
+    var moveDirVec2 = new pc.Vec3();
     var rotMat = new pc.Mat4();
     var spawnMatrix3 = new pc.Mat3();
     var emitterMatrix3 = new pc.Mat3();
+    var viewMat = new pc.Mat4();
+    var viewProjMat = new pc.Mat4();
     var uniformScale = 1;
     var nonUniformScale;
     var spawnMatrix = new pc.Mat4();
     var randomPos = new pc.Vec3();
     var randomPosTformed = new pc.Vec3();
     var tmpVec3 = new pc.Vec3();
+    var velocityV = new pc.Vec3();
 
     var setPropertyTarget;
     var setPropertyOptions;
@@ -225,6 +229,7 @@ pc.extend(pc.scene, function() {
         setProperty("halfLambert", false);
         setProperty("intensity", 1.0);
         setProperty("stretch", 0.0);
+        setProperty("alignToMotion", false);
         setProperty("depthSoftening", 0);
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
@@ -440,9 +445,9 @@ pc.extend(pc.scene, function() {
             for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
 
             if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, 1, this.particleTex);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 1, this.particleTex);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, 1, this.particleTexStart);
+                this.particleTexIN = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
+                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
+                this.particleTexStart = _createTexture(gd, this.numParticlesPot, 2, this.particleTexStart);
 
                 this.rtParticleTexIN = new pc.gfx.RenderTarget(gd, this.particleTexIN, {
                     depth: false
@@ -505,6 +510,7 @@ pc.extend(pc.scene, function() {
                     normal: this.emitter.normalOption,
                     halflambert: this.emitter.halfLambert,
                     stretch: this.emitter.stretch,
+                    alignToMotion: this.emitter.alignToMotion,
                     soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
                     mesh: this.emitter.isMesh,
                     srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
@@ -907,6 +913,14 @@ pc.extend(pc.scene, function() {
                 // Particle updater emulation
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 var posCam = this.camera ? this.camera.position : pc.Vec3.ZERO;
+                if (this.camera) {
+                    var projMat = this.camera.camera.camera.getProjectionMatrix();
+                    var wtm = this.camera.getWorldTransform();
+                    viewMat.copy(wtm);
+                    viewMat.invert();
+                    viewProjMat.mul2(projMat, viewMat);
+                }
+
                 for (i = 0; i < this.numParticles; i++) {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
                     var rndFactor = (this.particleNoize[id] + this.seed) % 1.0;
@@ -926,6 +940,9 @@ pc.extend(pc.scene, function() {
 
                     var scale = 0;
                     var alphaDiv = 0;
+                    var angle = 0;
+                    var len;
+                    var interpolation;
 
                     if (life > 0.0) {
                         localVelocityVec.data =  tex1D(this.qLocalVelocity, nlife, 3, localVelocityVec.data);
@@ -955,6 +972,8 @@ pc.extend(pc.scene, function() {
                             rotMat.transformPoint(localVelocityVec, localVelocityVec);
                         }
                         localVelocityVec.add(velocityVec.mul(nonUniformScale));
+                        moveDirVec.copy(localVelocityVec);
+                        moveDirVec2.copy(localVelocityVec);
 
                         particlePosPrev.x = this.particleTex[id * 4];
                         particlePosPrev.y = this.particleTex[id * 4 + 1];
@@ -972,9 +991,16 @@ pc.extend(pc.scene, function() {
                             particlePosMoved.copy(particleFinalPos).sub(particlePos);
                         }
 
+                        if (this.alignToMotion && !respawn && this.camera) {
+                            viewProjMat.transformPoint(moveDirVec, moveDirVec);
+                            len = Math.sqrt(moveDirVec.x * moveDirVec.x + moveDirVec.y * moveDirVec.y);
+                            moveDirVec.x /= len;
+                            moveDirVec.y /= len;
+                            angle = Math.atan2(moveDirVec.x, moveDirVec.y);
+                        }
+
                         if ((this.stretch > 0.0) && (!respawn)) {
-                            moveDirVec.copy(particlePos).sub(particlePosPrev).scale(this.stretch);
-                            particlePosPrev.sub(moveDirVec).add(particlePosMoved);
+                            viewMat.transformPoint(moveDirVec2, velocityV);
                         }
 
                         this.particleTex[id * 4] =      particleFinalPos.x;
@@ -1008,11 +1034,6 @@ pc.extend(pc.scene, function() {
                         var quadZ = this.vbCPU[i * this.numParticleVerts * 4 + v * 4 + 2];
                         if (!particleEnabled) {
                             quadX = quadY = quadZ = 0;
-                        } else {
-                            if ((this.stretch > 0.0) && (!respawn)) {
-                                var interpolation = quadY * 0.5 + 0.5;
-                                particleFinalPos.lerp(particleFinalPos, particlePosPrev, interpolation);
-                            }
                         }
 
                         var w = i * this.numParticleVerts * 12 + v * 12;
@@ -1020,13 +1041,14 @@ pc.extend(pc.scene, function() {
                         data[w + 1] = particleFinalPos.y;
                         data[w + 2] = particleFinalPos.z;
                         data[w + 3] = nlife;
-                        data[w + 4] = this.particleTex[id * 4 + 3];
+                        data[w + 4] = this.alignToMotion? angle : this.particleTex[id * 4 + 3];
                         data[w + 5] = scale;
                         data[w + 6] = alphaDiv;
-                        //data[w+7] =   (quadX*0.5+0.5) + (quadY*0.5+0.5) * 0.1;
+                        data[w+7] =   velocityV.x;//(quadX*0.5+0.5) + (quadY*0.5+0.5) * 0.1;
                         data[w + 8] = quadX;
                         data[w + 9] = quadY;
                         data[w + 10] = quadZ;
+                        data[w + 11] = velocityV.y;
                     }
                 }
 

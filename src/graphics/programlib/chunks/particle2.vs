@@ -80,7 +80,7 @@ void main(void) {
     float rndFactor = fract(sin(id + 1.0 + seed));
     vec3 rndFactor3 = vec3(rndFactor, fract(rndFactor*10.0), fract(rndFactor*100.0));
 
-    vec4 particleTex = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.0));
+    vec4 particleTex = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.25));
     vec3 pos = particleTex.xyz;
     float angle = particleTex.w;
 

@@ -180,9 +180,14 @@ pc.extend(pc.fw, function() {
                 defaultValue: 0,
                 options: {
                     min: 0,
-                    max: 32,
-                    step: 0.25
+                    step: 0.01
                 }
+            }, {
+                name: "alignToMotion",
+                displayName: "Align to motion",
+                description: "Rotates particles along the direction of motion",
+                type: 'boolean',
+                defaultValue: false
             }, {
                 name: "spawnBounds",
                 displayName: "Spawn Bounds",
