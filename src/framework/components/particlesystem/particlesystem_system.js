@@ -119,7 +119,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: "depthTest",
                 displayName: "Depth Test",
-                description: "Enables hardware depth testing; don't use it for semi-transparent particles",
+                description: "Enables hardware depth testing. Do not use it for semi-transparent particles",
                 type: "boolean",
                 defaultValue: false,
             }, {
