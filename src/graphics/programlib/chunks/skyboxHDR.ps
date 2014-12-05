@@ -2,7 +2,7 @@ varying vec3 vViewDir;
 uniform samplerCube texture_cubeMap;
 
 void main(void) {
-    vec3 color = textureCubeRGBM(texture_cubeMap, vec3(-vViewDir.x, vViewDir.yz));
+    vec3 color = textureCubeRGBM(texture_cubeMap, vViewDir);
     color = toneMap(color);
     color = gammaCorrectOutput(color);
     gl_FragColor = vec4(color, 1.0);
