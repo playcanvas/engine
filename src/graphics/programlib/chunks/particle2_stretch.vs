@@ -2,13 +2,15 @@
     bool respawn = floor(accumLife / (particleLifetime + particleRate)) != floor(accumLifePrev / (particleLifetime + particleRate));
 
     if (!respawn) {
-        particleTex = texture2D(particleTexIN, vec2(id / numParticlesPot, 0.0));
-        vec3 posPrev = particleTex.xyz;
-        vec3 moveDir = (pos - posPrev) * stretch;
-        posPrev = pos - moveDir;
+        vec3 moveDir = particleVelocity * stretch;
+        vec3 posPrev = pos - moveDir;
         posPrev += particlePosMoved;
 
-        float interpolation =  quadXY.y * 0.5 + 0.5;
+        vec2 velocityV = normalize((mat3(matrix_view) * particleVelocity).xy);
+        vec2 centerToVertexV = normalize((mat3(matrix_view) * localPos).xy);
+
+        float interpolation = dot(-velocityV, centerToVertexV) * 0.5 + 0.5;
+
         particlePos = mix(particlePos, posPrev, interpolation);
     }
 

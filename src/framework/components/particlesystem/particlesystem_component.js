@@ -25,6 +25,7 @@ pc.extend(pc.fw, function() {
         'depthSoftening',
         'sort',
         'stretch',
+        'alignToMotion',
         'preWarm',
         'camera'
     ];
@@ -246,6 +247,7 @@ pc.extend(pc.fw, function() {
                     preWarm: this.data.preWarm,
                     sort: this.data.sort,
                     stretch: this.data.stretch,
+                    alignToMotion: this.data.alignToMotion,
                     lighting: this.data.lighting,
                     halfLambert: this.data.halfLambert,
                     intensity: this.data.intensity,

@@ -23,6 +23,7 @@ pc.extend(pc.fw, function() {
         this.halfLambert = false;            // Uses half-lambert lighting instead of Lambert
         this.intensity = 1;
         this.stretch = 0.0;
+        this.alignToMotion = false;
         this.depthSoftening = 0;
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                 // Leave undefined to use simple quads

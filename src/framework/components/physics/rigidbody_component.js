@@ -24,6 +24,8 @@ pc.extend(pc.fw, function () {
      * @property {Number} restitution The amount of energy lost when two objects collide, this determines the bounciness of the object.
      * A value of 0 means that no energy is lost in the collision, a value of 1 means that all energy is lost.
      * So the higher the value the less bouncy the object is.
+     * @property {Number} group The collision group this body belongs to. Combine the group and the mask to prevent bodies colliding with each other.
+     * @property {Number} mask The collision mask sets which groups this body collides with. It is a bitfield of 16 bits, the first 8 bits are reserved for engine use.
      * @property {pc.fw.RIGIDBODY_TYPE} type The type of RigidBody determines how it is simulated.
      * Static objects have infinite mass and cannot move,
      * Dynamic objects are simulated according to the forces applied to them,

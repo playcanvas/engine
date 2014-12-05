@@ -197,6 +197,11 @@ pc.extend(pc.fw, function () {
                     this.context.scene.toneMapping = pack.settings.render.tonemapping;
                     this.context.scene.exposure = pack.settings.render.exposure;
 
+                    if (pack.settings.render.skybox) {
+                        var skybox = this.context.assets.getAssetById(pack.settings.render.skybox);
+                        this.context.scene.skybox = skybox ? skybox.resource : null;
+                    }
+
                     success(pack);
                     this.context.loader.off('progress', progress);
                 }.bind(this), function (msg) {
@@ -783,6 +788,25 @@ pc.extend(pc.fw, function () {
             this.context.scene.gammaCorrection = settings.render.gamma_correction;
             this.context.scene.toneMapping = settings.render.tonemapping;
             this.context.scene.exposure = settings.render.exposure;
+
+            if (settings.render.skybox) {
+                var skybox = this.context.assets.getAssetById(settings.render.skybox);
+                if (!skybox) {
+                    pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
+                } else {
+                    if (!skybox.resource) {
+                        this.context.assets.load([skybox]).then(function (resources){
+                            this.context.scene.skybox = resources[0];
+                        }.bind(this), function (error) {
+                            pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
+                        });
+                    } else {
+                        this.context.scene.skybox = skybox.resource;
+                    }
+                }
+            } else {
+                this.context.scene.skybox = null;
+            }
         }
     };
 

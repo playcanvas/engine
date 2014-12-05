@@ -1,14 +1,16 @@
 attribute vec4 particle_vertexData;     // XYZ = world pos, W = life
-attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = unused
-attribute vec4 particle_vertexData3;     // XYZ = particle local pos
+attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = velocityV.x
+attribute vec4 particle_vertexData3;     // XYZ = particle local pos, W = velocityV.y
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
+uniform mat4 matrix_view;
 uniform mat3 matrix_normal;
 uniform mat4 matrix_viewInverse;
 
 uniform float numParticles;
 uniform float lifetime;
+uniform float stretch;
 //uniform float graphSampleSize;
 //uniform float graphNumSamples;
 uniform vec3 wrapBounds, emitterScale;
@@ -64,6 +66,4 @@ void main(void)
 
     vec3 localPos = billboard(particlePos, quadXY, localMat);
     vec3 particlePosMoved = vec3(0.0);
-
-
 
