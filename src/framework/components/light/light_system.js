@@ -89,6 +89,21 @@ pc.extend(pc.fw, function () {
                 castShadows: true
             }
         }, {
+            name: 'shadowBias',
+            displayName: 'Shadow Bias',
+            description: 'Tunes the shadows to reduce rendering artifacts',
+            type: 'number',
+            options: {
+                min: 0,
+                max: 1,
+                decimalPrecision: 5,
+                step: 0.01
+            },
+            defaultValue: 0.05,
+            filter: {
+                castShadows: true
+            }
+        },{
             name: "range",
             displayName: "Range",
             description: "The distance from the light where its contribution falls to zero",
@@ -177,7 +192,7 @@ pc.extend(pc.fw, function () {
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution'];
+            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowResolution', 'shadowBias'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -209,18 +224,21 @@ pc.extend(pc.fw, function () {
         },
 
         cloneComponent: function (entity, clone) {
+            var light = entity.light;
+
             // create new data block for clone
             var data = {
-                type: entity.light.type,
-                enabled: entity.light.enabled,
-                color: [entity.light.color.r, entity.light.color.g, entity.light.color.b],
-                intensity: entity.light.intensity,
-                range: entity.light.range,
-                innerConeAngle: entity.light.innerConeAngle,
-                outerConeAngle: entity.light.outerConeAngle,
-                castShadows: entity.light.castShadows,
-                shadowResolution: entity.light.shadowResolution,
-                falloffMode: entity.light.falloffMode
+                type: light.type,
+                enabled: light.enabled,
+                color: [light.color.r, light.color.g, light.color.b],
+                intensity: light.intensity,
+                range: light.range,
+                innerConeAngle: light.innerConeAngle,
+                outerConeAngle: light.outerConeAngle,
+                castShadows: light.castShadows,
+                shadowResolution: light.shadowResolution,
+                falloffMode: light.falloffMode,
+                shadowBias: light.shadowBias
             };
 
             this.addComponent(clone, data);
