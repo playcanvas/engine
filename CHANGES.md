@@ -1,5 +1,13 @@
 # PlayCanvas Engine Changes
 
+### v0.162.1
+* Added alignToMotion to particle systems.
+* Exposed shadowBias for light components.
+* [FIX] Particle stretching.
+* [FIX] Only alpha sort mesh instances in the main world.
+* [FIX] Removed debug log.
+* [FIX] Light intensity not working because of typo.
+
 ### v0.162.0
 
 * Scene can now have a skybox by setting scene.skybox = cubemap.
