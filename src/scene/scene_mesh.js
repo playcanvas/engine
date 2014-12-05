@@ -49,6 +49,7 @@ pc.extend(pc.scene, function () {
         this.renderStyle = pc.scene.RENDERSTYLE_SOLID;
         this.castShadow = false;
         this.receiveShadow = true;
+        this.drawToDepth = true;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.key = 0;
@@ -124,5 +125,5 @@ pc.extend(pc.scene, function () {
         Command: Command,
         Mesh: Mesh,
         MeshInstance: MeshInstance
-    }; 
+    };
 }());

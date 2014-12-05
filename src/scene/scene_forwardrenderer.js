@@ -523,7 +523,7 @@ pc.extend(pc.scene, function () {
 
                 for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                     drawCall = drawCalls[i];
-                    if (!drawCall.command) {
+                    if (!drawCall.command && drawCall.drawToDepth) {
                         meshInstance = drawCall;
                         mesh = meshInstance.mesh;
 

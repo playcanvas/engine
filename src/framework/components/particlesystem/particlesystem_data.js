@@ -13,7 +13,7 @@ pc.extend(pc.fw, function() {
         this.colorMapAsset = null;
         this.normalMap = null;
         this.normalMapAsset = null;
-        this.oneShot = false;
+        this.loop = true;
         this.preWarm = false;
         this.sort = 0;                          // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;   Forces CPU mode if not 0
         this.mode = "GPU";
