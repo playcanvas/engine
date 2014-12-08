@@ -91,6 +91,7 @@ pc.extend(pc.fw, function () {
             clearOptions.color[0] = newValue.r;
             clearOptions.color[1] = newValue.g;
             clearOptions.color[2] = newValue.b;
+            clearOptions.color[3] = newValue.a;
         },
 
         onSetFov: function (name, oldValue, newValue) {
