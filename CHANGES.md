@@ -1,5 +1,10 @@
 # PlayCanvas Engine Changes
 
+### v0.162.4
+* Added autoPlay to particle systems
+* Particle systems no longer disable themselves
+* [FIX] Issue when cloning particles that contained boolean parameters with false values
+
 ### v0.162.3
 * Specular lighting now respects AO maps.
 
