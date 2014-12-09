@@ -574,7 +574,7 @@ pc.extend(pc.fw, function () {
         * @name pc.fw.RigidBodyComponent#teleport
         * @description Teleport an entity to a new position and/or orientation
         * @param {pc.Vec3} position The new position
-        * @param {pc.Quat} [rotation] The new rotation
+        * @param {pc.Vec3} [angles] THe new set of Euler angles
         */
         /**
         * @function
@@ -593,7 +593,7 @@ pc.extend(pc.fw, function () {
                     this.entity.setPosition(arguments[0]);
                 }
                 if (arguments[1]) {
-                    this.entity.setRotation(arguments[1]);
+                    this.entity.setEulerAngles(arguments[1]);
                 }
             } else {
                 if (arguments.length === 6) {
