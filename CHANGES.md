@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.162.3
+* Specular lighting now respects AO maps.
+
 ### v0.162.2
 * Added reset(), stop(), play(), pause() and isPlaying() methods to particle systems
 * Replaced oneShot property with loop property in particle systems
