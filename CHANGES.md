@@ -1,5 +1,12 @@
 # PlayCanvas Engine Changes
 
+### v0.162.2
+* Added reset(), stop(), play(), pause() and isPlaying() methods to particle systems
+* Replaced oneShot property with loop property in particle systems
+* Non-looped particle emitters do not start emission unless play() is called
+* [FIX] particles CPU stretching
+* [FIX] WebGL warning spamming by disallowing particles to be rendered into depth map
+
 ### v0.162.1
 * Added alignToMotion to particle systems.
 * Exposed shadowBias for light components.
