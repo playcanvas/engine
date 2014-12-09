@@ -1,5 +1,23 @@
 # PlayCanvas Engine Changes
 
+### v0.162.1
+* Added alignToMotion to particle systems.
+* Exposed shadowBias for light components.
+* [FIX] Particle stretching.
+* [FIX] Only alpha sort mesh instances in the main world.
+* [FIX] Removed debug log.
+* [FIX] Light intensity not working because of typo.
+
+### v0.162.0
+
+* Scene can now have a skybox by setting scene.skybox = cubemap.
+* Added optional destinations parameter in livelink#send.
+* Shader now uses scene's prefilteredCubeMap if it's not overridden in material;
+* [FIX] Light intensity issues
+* [FIX] Picker can now only select basic and phong material mesh instances. This fixes picking if a sky box is in the scene.
+* [FIX] Document rigidbody group and mask properties.
+* [FIX] Missing rigidbody constant BODYGROUP_ENGINE_3.
+
 ### v0.161.0
 
 * [BREAKING] Texture.maxAnisotropy -> Texture.anisotropy. Device.maxSupportedMaxAnisotropy -> Device.maxAnisotropy

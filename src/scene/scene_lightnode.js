@@ -340,11 +340,13 @@ pc.extend(pc.scene, function () {
             var b = c.b;
             var i = this._intensity;
             this._finalColor.set(r * i, g * i, b * i);
+            for(var j = 0; j < 3; j++) {
                 if (i >= 1) {
-                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c] / i, 2.2) * i;
+                    this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j] / i, 2.2) * i;
                 } else {
-                    this._linearFinalColor.data[c] = Math.pow(this._finalColor.data[c], 2.2);
+                    this._linearFinalColor.data[j] = Math.pow(this._finalColor.data[j], 2.2);
                 }
+            }
         },
 
         /**

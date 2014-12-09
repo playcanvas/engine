@@ -73,10 +73,8 @@ pc.extend(pc.scene, function () {
         device.setRenderTarget(this._pickBufferTarget);
         device.updateBegin();
 
-        var pixels = new ArrayBuffer(4 * rect.width * rect.height);
-        var pixelsBytes = new Uint8Array(pixels);
-        var gl = this.device.gl;
-        gl.readPixels(rect.x, rect.y, rect.width, rect.height, gl.RGBA, gl.UNSIGNED_BYTE, pixelsBytes);
+        var pixels = new Uint8Array(4 * rect.width * rect.height);
+        device.readPixels(rect.x, rect.y, rect.width, rect.height, pixels);
 
         device.updateEnd();
 
@@ -86,8 +84,10 @@ pc.extend(pc.scene, function () {
         var selection = [];
 
         for (var i = 0; i < rect.width * rect.height; i++) {
-            var pixel = new Uint8Array(pixels, i * 4, 4);
-            var index = pixel[0] << 16 | pixel[1] << 8 | pixel[2];
+            var r = pixels[4 * i + 0];
+            var g = pixels[4 * i + 1];
+            var b = pixels[4 * i + 2];
+            var index = r << 16 | g << 8 | b;
             // White is 'no selection'
             if (index !== 0xffffff) {
                 var selectedMeshInstance = this.scene.drawCalls[index];
@@ -127,7 +127,7 @@ pc.extend(pc.scene, function () {
 
         // Build mesh instance list (ideally done by visibility query)
         var i;
-        var mesh, meshInstance;
+        var mesh, meshInstance, material;
         var type;
         var drawCalls = scene.drawCalls;
         var numDrawCalls = drawCalls.length;
@@ -154,9 +154,18 @@ pc.extend(pc.scene, function () {
             if (!drawCalls[i].command) {
                 meshInstance = drawCalls[i];
                 mesh = meshInstance.mesh;
+                material = meshInstance.material;
 
-                type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type; 
-                if ((type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP) || (type === pc.gfx.PRIMITIVE_TRIFAN)) {
+                type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type;
+                var isSolid = (type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP) || (type === pc.gfx.PRIMITIVE_TRIFAN);
+                var isPickable = (material instanceof pc.scene.PhongMaterial) || (material instanceof pc.scene.BasicMaterial);
+                if (isSolid && isPickable) {
+
+                    device.setBlending(false);
+                    device.setCullMode(material.cull);
+                    device.setDepthWrite(material.depthWrite);
+                    device.setDepthTest(material.depthTest);
+
                     modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                     if (meshInstance.skinInstance) {
                         if (device.supportsBoneTextures) {
@@ -169,10 +178,10 @@ pc.extend(pc.scene, function () {
                         }
                     }
 
-                    this.pickColor[0] = ((i >> 16) & 0xff) / 255.0;
-                    this.pickColor[1] = ((i >> 8) & 0xff) / 255.0;
-                    this.pickColor[2] = (i & 0xff) / 255.0;
-                    this.pickColor[3] = 1.0;
+                    this.pickColor[0] = ((i >> 16) & 0xff) / 255;
+                    this.pickColor[1] = ((i >> 8) & 0xff) / 255;
+                    this.pickColor[2] = (i & 0xff) / 255;
+                    this.pickColor[3] = 1;
                     pickColorId.setValue(this.pickColor);
                     device.setShader(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
 

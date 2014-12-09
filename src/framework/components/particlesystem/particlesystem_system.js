@@ -76,11 +76,11 @@ pc.extend(pc.fw, function() {
                     step: 0.01
                 }
             }, {
-                name: "oneShot",
-                displayName: "One Shot",
-                description: "Disables looping",
+                name: "loop",
+                displayName: "Loop",
+                description: "Enables looping",
                 type: "boolean",
-                defaultValue: false,
+                defaultValue: true,
             }, {
                 name: "preWarm",
                 displayName: "Pre Warm",
@@ -88,7 +88,7 @@ pc.extend(pc.fw, function() {
                 type: "boolean",
                 defaultValue: false,
                 filter: {
-                    oneShot: false
+                    loop: true
                 }
             }, {
                 name: "lighting",
@@ -119,7 +119,7 @@ pc.extend(pc.fw, function() {
             }, {
                 name: "depthTest",
                 displayName: "Depth Test",
-                description: "Enables hardware depth testing; don't use it for semi-transparent particles",
+                description: "Enables hardware depth testing. Do not use it for semi-transparent particles",
                 type: "boolean",
                 defaultValue: false,
             }, {
@@ -180,9 +180,14 @@ pc.extend(pc.fw, function() {
                 defaultValue: 0,
                 options: {
                     min: 0,
-                    max: 32,
-                    step: 0.25
+                    step: 0.01
                 }
+            }, {
+                name: "alignToMotion",
+                displayName: "Align to motion",
+                description: "Rotates particles along the direction of motion",
+                type: 'boolean',
+                defaultValue: false
             }, {
                 name: "spawnBounds",
                 displayName: "Spawn Bounds",
@@ -303,6 +308,9 @@ pc.extend(pc.fw, function() {
                     curveNames: ['Angle'],
                     secondCurve: 'rotationSpeedGraph2',
                     verticalAxisValue: 360,
+                },
+                filter: {
+                    alignToMotion: false
                 }
             }, {
                 name: 'rotationSpeedGraph2',

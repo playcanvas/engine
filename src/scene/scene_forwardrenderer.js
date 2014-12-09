@@ -492,15 +492,18 @@ pc.extend(pc.scene, function () {
                 if (!drawCall.command) {
                     meshInstance = drawCall;
 
-                    if ((meshInstance.material.blendType === pc.scene.BLEND_NORMAL) || (meshInstance.material.blendType === pc.scene.BLEND_PREMULTIPLIED)) {
-                        meshInstance.syncAabb();
-                        var meshPos = meshInstance.aabb.center;
-                        var tempx = meshPos.x - camPos.x;
-                        var tempy = meshPos.y - camPos.y;
-                        var tempz = meshPos.z - camPos.z;
-                        meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
-                    } else if (meshInstance.distSqr !== undefined) {
-                        delete meshInstance.distSqr;
+                    // Only alpha sort mesh instances in the main world
+                    if (meshInstance.layer === pc.scene.LAYER_WORLD) {
+                        if ((meshInstance.material.blendType === pc.scene.BLEND_NORMAL) || (meshInstance.material.blendType === pc.scene.BLEND_PREMULTIPLIED)) {
+                            meshInstance.syncAabb();
+                            var meshPos = meshInstance.aabb.center;
+                            var tempx = meshPos.x - camPos.x;
+                            var tempy = meshPos.y - camPos.y;
+                            var tempz = meshPos.z - camPos.z;
+                            meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
+                        } else if (meshInstance.distSqr !== undefined) {
+                            delete meshInstance.distSqr;
+                        }
                     }
                 }
             }
@@ -520,32 +523,30 @@ pc.extend(pc.scene, function () {
 
                 for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                     drawCall = drawCalls[i];
-                    if (!drawCall.command) {
+                    if (!drawCall.command && drawCall.drawToDepth) {
                         meshInstance = drawCall;
-                        if (meshInstance.layer !== pc.scene.LAYER_SKYBOX) {
-                            mesh = meshInstance.mesh;
+                        mesh = meshInstance.mesh;
 
-                            this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
-                            if (meshInstance.skinInstance) {
-                                if (device.supportsBoneTextures) {
-                                    this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
-                                    var w = meshInstance.skinInstance.boneTexture.width;
-                                    var h = meshInstance.skinInstance.boneTexture.height;
-                                    this.boneTextureSizeId.setValue([w, h])
-                                } else {
-                                    this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
-                                }
-                                device.setShader(this._depthShaderSkin);
+                        this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
+                        if (meshInstance.skinInstance) {
+                            if (device.supportsBoneTextures) {
+                                this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
+                                var w = meshInstance.skinInstance.boneTexture.width;
+                                var h = meshInstance.skinInstance.boneTexture.height;
+                                this.boneTextureSizeId.setValue([w, h])
                             } else {
-                                device.setShader(this._depthShaderStatic);
+                                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             }
-
-                            style = meshInstance.renderStyle;
-
-                            device.setVertexBuffer(mesh.vertexBuffer, 0);
-                            device.setIndexBuffer(mesh.indexBuffer[style]);
-                            device.draw(mesh.primitive[style]);
+                            device.setShader(this._depthShaderSkin);
+                        } else {
+                            device.setShader(this._depthShaderStatic);
                         }
+
+                        style = meshInstance.renderStyle;
+
+                        device.setVertexBuffer(mesh.vertexBuffer, 0);
+                        device.setIndexBuffer(mesh.indexBuffer[style]);
+                        device.draw(mesh.primitive[style]);
                     }
 
                     camera.setRenderTarget(oldTarget);
@@ -658,9 +659,10 @@ pc.extend(pc.scene, function () {
                             shadowCam.setRenderTarget(light._shadowCubeMap[pass]);
                         }
 
+                        this.setCamera(shadowCam);
+
                         device.setBlending(false);
                         device.setColorWrite(true, true, true, true);
-                        device.setCullMode(pc.gfx.CULLFACE_BACK);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
 
@@ -668,12 +670,12 @@ pc.extend(pc.scene, function () {
                             device.setColorWrite(false, false, false, false);
                         }
 
-                        this.setCamera(shadowCam);
-
                         for (j = 0, numInstances = shadowCasters.length; j < numInstances; j++) {
                             meshInstance = shadowCasters[j];
                             mesh = meshInstance.mesh;
                             material = meshInstance.material;
+
+                            device.setCullMode(material.cull);
 
                             this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (material.opacityMap) {

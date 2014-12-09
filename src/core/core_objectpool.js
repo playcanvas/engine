@@ -112,7 +112,6 @@ pc.extend(pc, (function () {
 
     AllocatePool.prototype = {
         _resize: function (size) {
-            console.debug(pc.string.format("resize {0} pool to {1}", this._constructor.name, size));
             if (size > this._pool.length) {
                 for (var i = this._pool.length; i < size; i++) {
                     this._pool[i] = new this._constructor();

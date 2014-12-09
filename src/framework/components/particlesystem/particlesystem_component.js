@@ -5,7 +5,7 @@ pc.extend(pc.fw, function() {
         'spawnBounds',
         'colorMap',
         'normalMap',
-        'oneShot'
+        'loop'
     ];
 
     // properties that need rebuilding the particle system
@@ -25,6 +25,7 @@ pc.extend(pc.fw, function() {
         'depthSoftening',
         'sort',
         'stretch',
+        'alignToMotion',
         'preWarm',
         'camera'
     ];
@@ -53,7 +54,7 @@ pc.extend(pc.fw, function() {
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
-        this.on("set_oneShot", this.onSetOneShot, this);
+        this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
 
         SIMPLE_PROPERTIES.forEach(function (prop) {
@@ -152,17 +153,10 @@ pc.extend(pc.fw, function() {
             }
         },
 
-        onSetOneShot: function (name, oldValue, newValue) {
+        onSetLoop: function (name, oldValue, newValue) {
             if (this.emitter) {
                 this.emitter[name] = newValue;
                 this.emitter.resetTime();
-                if (oldValue && !newValue) {
-                    //this.emitter.oneShotEndTime = this.emitter.totalTime;
-                    this.reset();
-                    this.emitter.resetMaterial();
-                    this.enabled = true;
-                    this.rebuild();
-                }
             }
         },
 
@@ -242,10 +236,11 @@ pc.extend(pc.fw, function() {
 
                     colorMap: this.data.colorMap,
                     normalMap: this.data.normalMap,
-                    oneShot: this.data.oneShot,
+                    loop: this.data.loop,
                     preWarm: this.data.preWarm,
                     sort: this.data.sort,
                     stretch: this.data.stretch,
+                    alignToMotion: this.data.alignToMotion,
                     lighting: this.data.lighting,
                     halfLambert: this.data.halfLambert,
                     intensity: this.data.intensity,
@@ -267,10 +262,12 @@ pc.extend(pc.fw, function() {
                 this.data.model = this.psys;
                 this.emitter.psys = this.psys;
 
-                // called after oneShot emitter is finished. As you can dynamically change oneShot parameter, it should be always initialized
+                // called after non-looped emitter is finished. As you can dynamically change loop parameter, it should be always initialized
 				this.emitter.onFinished = function() {
 					this.enabled = false;
 				}.bind(this);
+
+                if (!this.data.loop) this.enabled = false;
             }
 
 
@@ -294,7 +291,36 @@ pc.extend(pc.fw, function() {
         },
 
         reset: function() {
+            this.stop();
+            this.emitter.addTime(1000);
+            //this.play();
+            this.onSetLoop("loop", false, this.data.loop);
             this.emitter.reset();
+        },
+
+        stop: function() {
+            this.onSetLoop("loop", false, false);
+            this.emitter.addTime(0, true); // remap life < 0 to life > lifetime to prevent spawning after stop
+        },
+
+        pause: function() {
+            this.data.enabled = false;
+        },
+
+        play: function() {
+            this.data.enabled = true;
+            this.enabled = true;
+            this.onEnable();
+            this.emitter.resetTime();
+            this.onSetLoop("loop", false, this.data.loop);
+        },
+
+        isPlaying: function() {
+            if (!this.enabled || !this.data.enabled) return false;
+            if (!this.emitter.loop) {
+                if (Date.now() > this.emitter.endTime) return false;
+            }
+            return true;
         },
 
         rebuild: function() {
