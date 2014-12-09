@@ -393,7 +393,7 @@ pc.gfx.programlib.phong = {
         }
         if (options.aoMap) {
                 code += "    applyAO(data);\n";
-         }
+        }
 
         if (lighting || reflections) {
             if (options.cubeMap) {
@@ -448,6 +448,11 @@ pc.gfx.programlib.phong = {
             }
         }
         code += "\n";
+
+        if (options.aoMap && options.occludeSpecular) {
+                code += "    occludeSpecular(data);\n";
+        }
+
         code += chunks.endPS;
 
         // Make sure all components are between 0 and 1

@@ -196,6 +196,7 @@ pc.extend(pc.scene, function () {
             clone.blendMapsWithColors = this.blendMapsWithColors;
             clone.specularAntialias = this.specularAntialias;
             clone.conserveEnergy = this.conserveEnergy;
+            clone.occludeSpecular = this.occludeSpecular;
             clone.shadingModel = this.shadingModel;
             clone.fresnelModel = this.fresnelModel;
 
@@ -377,6 +378,9 @@ pc.extend(pc.scene, function () {
                     case 'conserveEnergy':
                         this.conserveEnergy = param.data;
                         break;
+                    case 'occludeSpecular':
+                        this.occludeSpecular = param.data;
+                        break;
                     case 'shadingModel':
                         this.shadingModel = param.data;
                         break;
@@ -452,6 +456,7 @@ pc.extend(pc.scene, function () {
 
             this.specularAntialias = false;
             this.conserveEnergy = true;
+            this.occludeSpecular = true;
             this.shadingModel = pc.scene.SPECULAR_PHONG;
             this.fresnelModel = pc.scene.FRESNEL_NONE;
 
@@ -765,6 +770,7 @@ pc.extend(pc.scene, function () {
                 prefilteredCubemap:         prefilteredCubeMap,
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
+                occludeSpecular:            this.occludeSpecular,
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel
             };
