@@ -15,6 +15,12 @@ pc.extend(pc.fw, function() {
                 type: "boolean",
                 defaultValue: true
             }, {
+                name: "autoPlay",
+                displayName: "Auto Play",
+                description: "Play automatically on start",
+                type: "boolean",
+                defaultValue: true
+            }, {
                 name: "numParticles",
                 displayName: "Particle count",
                 description: "Total number of particles allocated",
@@ -500,7 +506,9 @@ pc.extend(pc.fw, function() {
                     sourceProp = sourceProp.clone();
                     data[prop.name] = sourceProp;
                 } else {
-                    if (sourceProp) data[prop.name] = sourceProp;
+                    if (sourceProp !== null && sourceProp !== undefined) {
+                        data[prop.name] = sourceProp;
+                    }
                 }
             }
             return this.addComponent(clone, data);
@@ -534,7 +542,9 @@ pc.extend(pc.fw, function() {
                             c.entity.particlesystem.camera = currentCamera;
                         }
 
-                        emitter.addTime(dt);
+                        if (!data.paused) {
+                            emitter.addTime(dt);
+                        }
                     }
                 }
             }

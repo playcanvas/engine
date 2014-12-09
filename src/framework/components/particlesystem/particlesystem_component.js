@@ -262,16 +262,11 @@ pc.extend(pc.fw, function() {
                 this.data.model = this.psys;
                 this.emitter.psys = this.psys;
 
-                // called after non-looped emitter is finished. As you can dynamically change loop parameter, it should be always initialized
-				this.emitter.onFinished = function() {
-					this.enabled = false;
-				}.bind(this);
-
-                if (!this.data.loop) this.enabled = false;
+                if (!this.data.loop && !this.data.autoPlay) {
+                    this.pause();
+                }
             }
 
-
-            ParticleSystemComponent._super.onEnable.call(this);
             if (this.data.model) {
                 if (!this.system.context.scene.containsModel(this.data.model)) {
                     if (this.emitter.colorMap) {
@@ -279,6 +274,9 @@ pc.extend(pc.fw, function() {
                     }
                 }
             }
+
+            ParticleSystemComponent._super.onEnable.call(this);
+
         },
 
         onDisable: function() {
@@ -293,34 +291,32 @@ pc.extend(pc.fw, function() {
         reset: function() {
             this.stop();
             this.emitter.addTime(1000);
-            //this.play();
-            this.onSetLoop("loop", false, this.data.loop);
+            this.emitter.loop = this.data.loop;
             this.emitter.reset();
         },
 
         stop: function() {
-            this.onSetLoop("loop", false, false);
+            this.emitter.loop = false;
+            this.emitter.resetTime();
             this.emitter.addTime(0, true); // remap life < 0 to life > lifetime to prevent spawning after stop
         },
 
         pause: function() {
-            this.data.enabled = false;
+            this.data.paused = true;
+        },
+
+        unpause: function () {
+            this.data.paused = false;
         },
 
         play: function() {
-            this.data.enabled = true;
-            this.enabled = true;
-            this.onEnable();
+            this.data.paused = false;
+            this.emitter.loop = this.data.loop;
             this.emitter.resetTime();
-            this.onSetLoop("loop", false, this.data.loop);
         },
 
         isPlaying: function() {
-            if (!this.enabled || !this.data.enabled) return false;
-            if (!this.emitter.loop) {
-                if (Date.now() > this.emitter.endTime) return false;
-            }
-            return true;
+            return this.emitter.loop ? Date.now() <= this.emitter.endTime : this.data.paused;
         },
 
         rebuild: function() {
