@@ -76,11 +76,11 @@ pc.extend(pc.fw, function() {
                     step: 0.01
                 }
             }, {
-                name: "oneShot",
-                displayName: "One Shot",
-                description: "Disables looping",
+                name: "loop",
+                displayName: "Loop",
+                description: "Enables looping",
                 type: "boolean",
-                defaultValue: false,
+                defaultValue: true,
             }, {
                 name: "preWarm",
                 displayName: "Pre Warm",
@@ -88,7 +88,7 @@ pc.extend(pc.fw, function() {
                 type: "boolean",
                 defaultValue: false,
                 filter: {
-                    oneShot: false
+                    loop: true
                 }
             }, {
                 name: "lighting",

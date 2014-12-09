@@ -1,6 +1,7 @@
 attribute vec4 particle_vertexData;     // XYZ = world pos, W = life
-attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = velocityV.x
-attribute vec4 particle_vertexData3;     // XYZ = particle local pos, W = velocityV.y
+attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = velocity.x
+attribute vec4 particle_vertexData3;     // XYZ = particle local pos, W = velocity.y
+attribute vec2 particle_vertexData4;     // X = velocity.z, W = unused
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
@@ -54,7 +55,9 @@ vec3 billboard(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat)
 void main(void)
 {
     vec3 particlePos = particle_vertexData.xyz;
+    vec3 pos = particlePos;
     vec3 vertPos = particle_vertexData3.xyz;
+    vec3 particleVelocity = vec3(particle_vertexData2.w, particle_vertexData3.w, particle_vertexData4.x);
 
     vec2 quadXY = vertPos.xy;
     texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);

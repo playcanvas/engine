@@ -12,7 +12,7 @@ uniform float graphNumSamples;
 uniform float stretch;
 uniform vec3 wrapBounds;
 uniform vec3 emitterScale;
-uniform float rate, rateDiv, lifetime, deltaRandomnessStatic, totalTime, totalTimePrev, scaleDivMult, alphaDivMult, oneShotStartTime, seed;
+uniform float rate, rateDiv, lifetime, deltaRandomnessStatic, scaleDivMult, alphaDivMult, seed;
 uniform sampler2D particleTexOUT, particleTexIN;
 uniform sampler2D internalTex0;
 uniform sampler2D internalTex1;
@@ -84,17 +84,14 @@ void main(void) {
     vec3 pos = particleTex.xyz;
     float angle = particleTex.w;
 
-    float particleRate = rate + rateDiv * rndFactor;
-    float particleLifetime = lifetime;
-    float startSpawnTime = -particleRate * id;
-    float accumLife = max(totalTime + startSpawnTime + particleRate, 0.0);
-    float life = mod(accumLife, particleLifetime + particleRate) - particleRate;
-    if (life <= 0.0) quadXY = vec2(0,0);
-    float nlife = clamp(life / particleLifetime, 0.0, 1.0);
+    vec4 particleTex2 = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.75));
+    vec3 particleVelocity = particleTex2.xyz;
+    float life = particleTex2.w;
 
-    float accumLifeOneShotStart = max(oneShotStartTime + startSpawnTime + particleRate, 0.0);
-    bool endOfSim = floor(accumLife / (particleLifetime + particleRate)) != floor(accumLifeOneShotStart / (particleLifetime + particleRate));
-    if (endOfSim) quadXY = vec2(0,0);
+    float particleLifetime = lifetime;
+
+    if (life <= 0.0 || life > particleLifetime) quadXY = vec2(0,0);
+    float nlife = clamp(life / particleLifetime, 0.0, 1.0);
 
     vec3 paramDiv;
     vec4 params =                 tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);

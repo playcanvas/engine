@@ -10,15 +10,6 @@
     <canvas id="application-canvas"></canvas>
 
     <script>
-        function createMaterial(colors) {
-            var material = new pc.scene.PhongMaterial();
-            for (var param in colors) {
-                material[param] = colors[param];
-            }
-            material.update();
-            return material;
-        }
-
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
@@ -51,30 +42,24 @@
         application.context.root.addChild(lightDirEntity);
 
 
-        // Offset position down 5 metres
-        var posCurve = new pc.CurveSet([
-            [0, 0, 1, 0],  // x
-            [0, 0, 1, -5], // y
-            [0, 0, 1, 0] // z
+        // set up random downwards velocity from -0.4 to -0.7
+        var velocityCurve = new pc.CurveSet([
+            [0, 0],     // x
+            [0, -0.7],  // y
+            [0, 0]      // z
+        ]);
+        var velocityCurve2 = new pc.CurveSet([
+            [0, 0],   // x
+            [0, -0.4],// y
+            [0, 0]    // z
         ]);
 
-        posCurve.type = pc.CURVE_LINEAR;
+        // set up random rotation speed from -100 to 100 degrees per second
+        var rotCurve = new pc.Curve([0, 100]);
+        var rotCurve2 = new pc.Curve([0, -100]);
 
         // scale is constant at 0.1
-        var scaleCurve = new pc.Curve([0, 0.1, 1, 0.1]);
-
-        // rotate snowflakes
-        var angleCurve = new pc.Curve([0, 0, 1, 360 * 2]);
-
-        // randomize rotation
-        var angleDivCurve = new pc.Curve([0, 0, 1, 1]);
-
-        // color is constant white
-        var colorCurve = new pc.CurveSet([
-            [0, 1, 1, 1], // red channel
-            [0, 1, 1, 1], // green channel
-            [0, 1, 1, 1] // blue channel
-        ]);
+        var scaleCurve = new pc.Curve([0, 0.1]);
 
         // Create entity for particle system
         var entity = new pc.fw.Entity();
@@ -88,13 +73,14 @@
                 numParticles: 100,
                 lifetime: 10,
                 rate: 0.1,
-                constantSpeedDiv: 0.5,
+                startAngle: 360,
+                startAngle2: -360,
                 spawnBounds: new pc.Vec3(5, 0, 0),
-                offsetGraph: posCurve,
+                velocityGraph: velocityCurve,
+                velocityGraph2: velocityCurve2,
                 scaleGraph: scaleCurve,
-                angleGraph: angleCurve,
-                angleDivGraph: angleDivCurve,
-                colorGraph: colorCurve,
+                rotationSpeedGraph: rotCurve,
+                rotationSpeedGraph2: rotCurve2,
                 colorMap: result.resource
             });
         });
