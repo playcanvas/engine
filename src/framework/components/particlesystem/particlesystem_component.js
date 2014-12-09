@@ -316,7 +316,17 @@ pc.extend(pc.fw, function() {
         },
 
         isPlaying: function() {
-            return this.emitter.loop ? Date.now() <= this.emitter.endTime : this.data.paused;
+            if (this.data.paused) {
+                return false;
+            } else {
+                if (this.emitter.loop) {
+                    return true;
+                } else {
+                    // possible bug here what happens if the non looping emitter
+                    // was paused in the meantime?
+                    return Date.now() <= this.emitter.endTime;
+                }
+            }
         },
 
         rebuild: function() {
