@@ -4,27 +4,28 @@
 
 PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games and other interactive 3D content in all modern browsers without the need for a plugin.
 
-## Published games
+## Published Games and Demos
 
 Many games have been published using the PlayCanvas engine. Here is a small selection.
 
-[![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://swooop.playcanvas.com) [![Dungeon Fury](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4450/DVBWHU-image-25.jpg)](http://dungeonfury.playcanvas.com) [![Accelerally](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/3489/JN3X88-image-25.jpg)](http://apps.playcanvas.com/will/acceleronly/accelerally) [![Going Around](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/7/3491/HMYM08-image-25.jpg)](http://apps.playcanvas.com/dave/goingaround/goingaround)
+[![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/333626/BGQN9H-image-25.jpg)](http://apps.playcanvas.com/max/star-lord/Star-Lord) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://swooop.playcanvas.com) [![Dungeon Fury](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4450/DVBWHU-image-25.jpg)](http://dungeonfury.playcanvas.com) [![Accelerally](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/3489/JN3X88-image-25.jpg)](http://apps.playcanvas.com/will/acceleronly/accelerally) [![Going Around](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/7/3491/HMYM08-image-25.jpg)](http://apps.playcanvas.com/dave/goingaround/goingaround)
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/play).
 
 ## Features
 
-The PlayCanvas Engine is a fully feature 3D game engine.
+The PlayCanvas Engine is a fully featured 3D game engine.
 
 * **Graphics**
     * WebGL-based 3D renderer
-    * Ambient, directional, point and spot lights
-    * Static and Skinned Meshes
-    * Skinned animation support
-    * Shadows
+    * Directional, point and spot lights (all of which can cast shadows)
+    * Static and skinned meshes
+    * Keyframed animation support
+    * Particle engine with editor
+    * Physically based rendering (PBR)
+    * PostFX library: bloom, edge detect, FXAA, vignette, etc
     * Seamless default material support from Maya, 3DS Max, Blender, etc.
     * Full model export pipeline from Maya, 3DS Max, Blender, etc via [PlayCanvas Tools](https://playcanvas.com)
-    * PostFX library, bloom, bokah, edge detect, fxaa, vignette, etc
 * **Collision & Physics**
     * Full integration with 3D rigid-body physics engine [ammo.js](https://github.com/kripken/ammo.js)
 * **Audio**
@@ -32,9 +33,9 @@ The PlayCanvas Engine is a fully feature 3D game engine.
 * **Resource Loading**
     * Simple and powerful resource loading
 * **Entity / Component System**
-    * Built-in components for model rendering, animation, audio sources, rigidbodies, collision, trigger volumes
+    * Built-in components: audiosource, animation, camera, collision, light, rigidbody, script
 * **Scripting system**
-    * Write game behaviours by attaching Javascript to game entities.
+    * Write game behaviours by attaching JavaScript to game entities.
 * **Input**
     * Mouse, Keyboard, Touch, Gamepad support
 
