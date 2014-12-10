@@ -20,7 +20,6 @@ pc.gfx.programlib.particle2 = {
             if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
             vshader +=                              chunk.particle2VS;
             if (options.wrap) vshader +=                              chunk.particle2_wrapVS;
-            if ((options.stretch > 0.0) || (options.alignToMotion)) vshader +=   chunk.particle2_velocityVS;
             if (options.alignToMotion) vshader +=     chunk.particle2_pointAlongVS;
             vshader +=                              options.mesh ? chunk.particle2_meshVS : chunk.particle2_billboardVS;
             if (options.normal == 1) vshader +=     chunk.particle2_normalVS;
@@ -31,7 +30,7 @@ pc.gfx.programlib.particle2 = {
             if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
             if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
             vshader +=                              chunk.particle2_cpuVS;
-            if (options.stretch > 0.0) vshader +=   chunk.particle2_cpu_stretchVS;
+            if (options.stretch > 0.0) vshader +=   chunk.particle2_stretchVS;
             //if (options.wrap) vshader +=                              chunk.particle2_wrapVS;
             if (options.mesh) vshader +=            chunk.particle2_cpu_meshVS;
             if (options.normal == 1) vshader +=     chunk.particle2_normalVS;

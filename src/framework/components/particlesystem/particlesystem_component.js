@@ -5,7 +5,7 @@ pc.extend(pc.fw, function() {
         'spawnBounds',
         'colorMap',
         'normalMap',
-        'oneShot'
+        'loop'
     ];
 
     // properties that need rebuilding the particle system
@@ -54,7 +54,7 @@ pc.extend(pc.fw, function() {
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
         this.on("set_mesh", this.onSetMesh, this);
-        this.on("set_oneShot", this.onSetOneShot, this);
+        this.on("set_loop", this.onSetLoop, this);
         this.on("set_blendType", this.onSetBlendType, this);
 
         SIMPLE_PROPERTIES.forEach(function (prop) {
@@ -153,17 +153,10 @@ pc.extend(pc.fw, function() {
             }
         },
 
-        onSetOneShot: function (name, oldValue, newValue) {
+        onSetLoop: function (name, oldValue, newValue) {
             if (this.emitter) {
                 this.emitter[name] = newValue;
                 this.emitter.resetTime();
-                if (oldValue && !newValue) {
-                    //this.emitter.oneShotEndTime = this.emitter.totalTime;
-                    this.reset();
-                    this.emitter.resetMaterial();
-                    this.enabled = true;
-                    this.rebuild();
-                }
             }
         },
 
@@ -243,7 +236,7 @@ pc.extend(pc.fw, function() {
 
                     colorMap: this.data.colorMap,
                     normalMap: this.data.normalMap,
-                    oneShot: this.data.oneShot,
+                    loop: this.data.loop,
                     preWarm: this.data.preWarm,
                     sort: this.data.sort,
                     stretch: this.data.stretch,
@@ -269,14 +262,11 @@ pc.extend(pc.fw, function() {
                 this.data.model = this.psys;
                 this.emitter.psys = this.psys;
 
-                // called after oneShot emitter is finished. As you can dynamically change oneShot parameter, it should be always initialized
-				this.emitter.onFinished = function() {
-					this.enabled = false;
-				}.bind(this);
+                if (!this.data.loop && !this.data.autoPlay) {
+                    this.pause();
+                }
             }
 
-
-            ParticleSystemComponent._super.onEnable.call(this);
             if (this.data.model) {
                 if (!this.system.context.scene.containsModel(this.data.model)) {
                     if (this.emitter.colorMap) {
@@ -284,6 +274,9 @@ pc.extend(pc.fw, function() {
                     }
                 }
             }
+
+            ParticleSystemComponent._super.onEnable.call(this);
+
         },
 
         onDisable: function() {
@@ -296,7 +289,44 @@ pc.extend(pc.fw, function() {
         },
 
         reset: function() {
+            this.stop();
+            this.emitter.addTime(1000);
+            this.emitter.loop = this.data.loop;
             this.emitter.reset();
+        },
+
+        stop: function() {
+            this.emitter.loop = false;
+            this.emitter.resetTime();
+            this.emitter.addTime(0, true); // remap life < 0 to life > lifetime to prevent spawning after stop
+        },
+
+        pause: function() {
+            this.data.paused = true;
+        },
+
+        unpause: function () {
+            this.data.paused = false;
+        },
+
+        play: function() {
+            this.data.paused = false;
+            this.emitter.loop = this.data.loop;
+            this.emitter.resetTime();
+        },
+
+        isPlaying: function() {
+            if (this.data.paused) {
+                return false;
+            } else {
+                if (this.emitter.loop) {
+                    return true;
+                } else {
+                    // possible bug here what happens if the non looping emitter
+                    // was paused in the meantime?
+                    return Date.now() <= this.emitter.endTime;
+                }
+            }
         },
 
         rebuild: function() {

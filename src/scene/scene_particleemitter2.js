@@ -219,7 +219,7 @@ pc.extend(pc.scene, function() {
         setProperty("wrapBounds", null);
         setProperty("colorMap", defaultParamTex);
         setProperty("normalMap", null);
-        setProperty("oneShot", false);
+        setProperty("loop", true);
         setProperty("preWarm", false);
         setProperty("sort", pc.scene.PARTICLES_SORT_NONE); // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
         setProperty("mode", this.sort > pc.scene.PARTICLES_SORT_NONE ? "CPU" : "GPU");
@@ -290,13 +290,9 @@ pc.extend(pc.scene, function() {
         this.constantEmitterMatrix = gd.scope.resolve("emitterMatrix");
         this.constantNumParticles = gd.scope.resolve("numParticles");
         this.constantNumParticlesPot = gd.scope.resolve("numParticlesPot");
-        this.constantTotalTime = gd.scope.resolve("totalTime");
-        this.constantTotalTimePrev = gd.scope.resolve("totalTimePrev");
         this.constantLocalVelocityDivMult = gd.scope.resolve("localVelocityDivMult");
         this.constantVelocityDivMult = gd.scope.resolve("velocityDivMult");
         this.constantRotSpeedDivMult = gd.scope.resolve("rotSpeedDivMult");
-        this.constantOneShotStartTime = gd.scope.resolve("oneShotStartTime");
-        this.constantOneShotEndTime = gd.scope.resolve("oneShotEndTime");
         this.constantSeed = gd.scope.resolve("seed");
         this.constantStartAngle = gd.scope.resolve("startAngle");
         this.constantStartAngle2 = gd.scope.resolve("startAngle2");
@@ -324,6 +320,7 @@ pc.extend(pc.scene, function() {
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
+        this.shaderParticleUpdateOnStop = null;
 
         this.numParticleVerts = 0;
         this.numParticleIndices = 0;
@@ -331,10 +328,6 @@ pc.extend(pc.scene, function() {
         this.material = null;
         this.meshInstance = null;
 
-        this.totalTime = 0;
-        this.totalTimePrev = 0;
-        this.oneShotStartTime = 0;
-        this.oneShotEndTime = 0;
         this.seed = 0;
 
         this.rebuild();
@@ -431,7 +424,7 @@ pc.extend(pc.scene, function() {
                 }
             //}
 
-            this.particleTex = new Float32Array(this.numParticles * 4);
+            this.particleTex = new Float32Array(this.numParticlesPot * 4 * 2);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.node === null){
                 spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
@@ -441,7 +434,8 @@ pc.extend(pc.scene, function() {
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
             }
-            this.particleTexStart = new Float32Array(this.numParticles * 4);
+
+            this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 2);
             for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
 
             if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
@@ -459,16 +453,13 @@ pc.extend(pc.scene, function() {
             }
 
             var chunks = pc.gfx.shaderChunks;
-            var shaderCodeRespawn = chunks.particleUpdaterStartPS;
-            shaderCodeRespawn += chunks.particleUpdaterRespawnPS;
-            shaderCodeRespawn += chunks.particleUpdaterEndPS;
+            var shaderCodeRespawn = chunks.particleUpdaterStartPS + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
+            var shaderCodeNoRespawn = chunks.particleUpdaterStartPS + chunks.particleUpdaterEndPS;
+            var shaderCodeOnStop = chunks.particleUpdaterStartPS + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
-            var shaderCodeNoRespawn = chunks.particleUpdaterStartPS;
-            shaderCodeNoRespawn += chunks.particleUpdaterRespawnPS; // weird, right
-            shaderCodeNoRespawn += chunks.particleUpdaterEndPS;
-
-            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad" + false);
-            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad" + true);
+            this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0");
+            this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1");
+            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2");
 
             this.numParticleVerts = this.mesh === null ? 4 : this.mesh.vertexBuffer.numVertices;
             this.numParticleIndices = this.mesh === null ? 6 : this.mesh.indexBuffer[0].numIndices;
@@ -527,6 +518,7 @@ pc.extend(pc.scene, function() {
 
             this.meshInstance = new pc.scene.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.updateKey(); // shouldn't be here?
+            this.meshInstance.drawToDepth = false;
 
             this._initializeTextures();
 
@@ -541,10 +533,15 @@ pc.extend(pc.scene, function() {
             randomPos.data[1] = ((this.particleNoize[i] * 10) % 1) - 0.5;
             randomPos.data[2] = ((this.particleNoize[i] * 100) % 1) - 0.5;
             randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+
             this.particleTex[i * 4] =     randomPosTformed.data[0];
             this.particleTex[i * 4 + 1] = randomPosTformed.data[1];
             this.particleTex[i * 4 + 2] = randomPosTformed.data[2];
             this.particleTex[i * 4 + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, this.particleNoize[i]);
+
+            var particleRate = pc.math.lerp(this.rate, this.rate2, this.particleNoize[i]);
+            var startSpawnTime = -particleRate * i;
+            this.particleTex[i * 4 + 3 + this.numParticlesPot * 4] = startSpawnTime;
         },
 
         rebuildGraphs: function() {
@@ -630,8 +627,6 @@ pc.extend(pc.scene, function() {
             material.setParameter('seed', this.seed);
             material.setParameter('scaleDivMult', this.scaleUMax[0]);
             material.setParameter('alphaDivMult', this.alphaUMax[0]);
-            material.setParameter("oneShotStartTime", this.oneShotStartTime);
-            material.setParameter("oneShotEndTime", this.oneShotEndTime);
             material.setParameter("graphNumSamples", this.precision);
             material.setParameter("graphSampleSize", 1.0 / this.precision);
             material.setParameter("emitterScale", pc.Vec3.ONE.data);
@@ -690,6 +685,10 @@ pc.extend(pc.scene, function() {
                     }, {
                         semantic: pc.gfx.SEMANTIC_ATTR2,
                         components: 4,
+                        type: pc.gfx.ELEMENTTYPE_FLOAT32
+                    }, {
+                        semantic: pc.gfx.SEMANTIC_ATTR3,
+                        components: 2,
                         type: pc.gfx.ELEMENTTYPE_FLOAT32
                     }];
                     particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
@@ -768,14 +767,12 @@ pc.extend(pc.scene, function() {
                 }
             } else {
                 this._initializeTextures();
-                this.swapTex = false;
-                var oldTexIN = this.particleTexIN;
-                this.particleTexIN = this.particleTexStart;
-                this.particleTexIN = oldTexIN;
             }
-            this.totalTime = this.totalTimePrev = this.oneShotStartTime = this.oneShotEndTime = 0;
             this.resetTime();
+            var origLoop =  this.loop;
+            this.loop = true;
             this.addTime(0);
+            this.loop = origLoop;
             if (this.preWarm) {
                 this.prewarm(this.lifetime);
             }
@@ -791,19 +788,12 @@ pc.extend(pc.scene, function() {
         },
 
         resetTime: function() {
-            //this.totalTime = this.totalTimePrev = 0;
             this.endTime = calcEndTime(this);
         },
 
-        addTime: function(delta) {
+        addTime: function(delta, isOnStop) {
             var i, j;
             var device = this.graphicsDevice;
-
-            this.totalTimePrev = this.totalTime;
-            this.totalTime += delta;
-            if (!this.oneShot) {
-                this.oneShotStartTime = this.totalTime;
-            }
 
             device.setBlending(false);
             device.setColorWrite(true, true, true, true);
@@ -867,10 +857,6 @@ pc.extend(pc.scene, function() {
                 this.constantSpawnBounds.setValue(spawnMatrix3.data);
                 this.constantFrameRandom.setValue(this.frameRandom.data);
                 this.constantDelta.setValue(delta);
-                this.constantTotalTime.setValue(this.totalTime);
-                this.constantTotalTimePrev.setValue(this.totalTimePrev);
-                this.constantOneShotStartTime.setValue(this.oneShotStartTime);
-                this.constantOneShotEndTime.setValue(this.oneShotEndTime);
                 this.constantRate.setValue(this.rate);
                 this.constantRateDiv.setValue(this.rate2 - this.rate);
                 this.constantStartAngle.setValue(this.startAngle * pc.math.DEG_TO_RAD);
@@ -888,13 +874,13 @@ pc.extend(pc.scene, function() {
                 var texIN = this.swapTex ? this.particleTexOUT : this.particleTexIN;
                 var texOUT = this.swapTex ? this.particleTexIN : this.particleTexOUT;
                 this.constantParticleTexIN.setValue(texIN);
-                pc.gfx.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.oneShot ? this.shaderParticleUpdateNoRespawn : this.shaderParticleUpdateRespawn);
+                if (!isOnStop) {
+                    pc.gfx.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.loop ? this.shaderParticleUpdateRespawn : this.shaderParticleUpdateNoRespawn);
+                } else {
+                    pc.gfx.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.shaderParticleUpdateOnStop);
+                }
                 this.constantParticleTexOUT.setValue(texOUT);
 
-                this.material.setParameter("totalTime", this.totalTime);
-                this.material.setParameter("totalTimePrev", this.totalTimePrev);
-                this.material.setParameter("oneShotStartTime", this.oneShotStartTime);
-                this.material.setParameter("oneShotEndTime", this.oneShotEndTime);
                 this.material.setParameter("particleTexOUT", texOUT);
                 this.material.setParameter("particleTexIN", texIN);
 
@@ -931,20 +917,18 @@ pc.extend(pc.scene, function() {
                     var particleRate = pc.math.lerp(this.rate, this.rate2, rndFactor);
                     var particleLifetime = this.lifetime;
                     var startSpawnTime = -particleRate * id;
-                    var accumLife = Math.max(this.totalTime + startSpawnTime + particleRate, 0.0);
-                    var life = (accumLife % (particleLifetime + particleRate)) - particleRate;
-                    var nlife = saturate(life / particleLifetime);
 
-                    var accumLifePrev = Math.max(this.totalTimePrev + startSpawnTime + particleRate, 0.0);
-                    var respawn = Math.floor(accumLife / (particleLifetime + particleRate)) != Math.floor(accumLifePrev / (particleLifetime + particleRate));
+                    var life = this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] + delta;
+                    var nlife = saturate(life / particleLifetime);
 
                     var scale = 0;
                     var alphaDiv = 0;
                     var angle = 0;
                     var len;
                     var interpolation;
+                    var particleEnabled = life > 0.0 && life < particleLifetime;
 
-                    if (life > 0.0) {
+                    if (particleEnabled) {
                         localVelocityVec.data =  tex1D(this.qLocalVelocity, nlife, 3, localVelocityVec.data);
                         localVelocityVec2.data = tex1D(this.qLocalVelocity2, nlife, 3, localVelocityVec2.data);
                         velocityVec.data =       tex1D(this.qVelocity, nlife, 3, velocityVec.data);
@@ -991,16 +975,12 @@ pc.extend(pc.scene, function() {
                             particlePosMoved.copy(particleFinalPos).sub(particlePos);
                         }
 
-                        if (this.alignToMotion && !respawn && this.camera) {
+                        if (this.alignToMotion && this.camera) {
                             viewProjMat.transformPoint(moveDirVec, moveDirVec);
                             len = Math.sqrt(moveDirVec.x * moveDirVec.x + moveDirVec.y * moveDirVec.y);
                             moveDirVec.x /= len;
                             moveDirVec.y /= len;
                             angle = Math.atan2(moveDirVec.x, moveDirVec.y);
-                        }
-
-                        if ((this.stretch > 0.0) && (!respawn)) {
-                            viewMat.transformPoint(moveDirVec2, velocityV);
                         }
 
                         this.particleTex[id * 4] =      particleFinalPos.x;
@@ -1018,15 +998,17 @@ pc.extend(pc.scene, function() {
                                 this.particleDistance[id] = -life;
                             }
                         }
-                    }
-
-                    var accumLifeOneShotStart = Math.max(this.oneShotStartTime + startSpawnTime + particleRate, 0.0);
-                    var endOfSim = Math.floor(accumLife / (particleLifetime + particleRate)) != Math.floor(accumLifeOneShotStart / (particleLifetime + particleRate));
-
-                    var particleEnabled = !(respawn || endOfSim || life <= 0.0);
-                    if (!particleEnabled) {
+                    } else {
                         this.calcSpawnPosition(emitterPos, id);
                     }
+
+                    if (life > particleLifetime && this.loop) {
+                        life = -particleRate * id;
+                    }
+                    if (life <= 0 && isOnStop) {
+                        life = particleLifetime + 1;
+                    }
+                    this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] = life;
 
                     for (var v = 0; v < this.numParticleVerts; v++) {
                         var quadX = this.vbCPU[i * this.numParticleVerts * 4 + v * 4];
@@ -1036,7 +1018,8 @@ pc.extend(pc.scene, function() {
                             quadX = quadY = quadZ = 0;
                         }
 
-                        var w = i * this.numParticleVerts * 12 + v * 12;
+                        var vertSize = 14;
+                        var w = i * this.numParticleVerts * vertSize + v * vertSize;
                         data[w] = particleFinalPos.x;
                         data[w + 1] = particleFinalPos.y;
                         data[w + 2] = particleFinalPos.z;
@@ -1044,11 +1027,12 @@ pc.extend(pc.scene, function() {
                         data[w + 4] = this.alignToMotion? angle : this.particleTex[id * 4 + 3];
                         data[w + 5] = scale;
                         data[w + 6] = alphaDiv;
-                        data[w+7] =   velocityV.x;//(quadX*0.5+0.5) + (quadY*0.5+0.5) * 0.1;
+                        data[w+7] =   moveDirVec2.x;
                         data[w + 8] = quadX;
                         data[w + 9] = quadY;
                         data[w + 10] = quadZ;
-                        data[w + 11] = velocityV.y;
+                        data[w + 11] = moveDirVec2.y;
+                        data[w + 12] = moveDirVec2.z;
                     }
                 }
 
@@ -1080,7 +1064,7 @@ pc.extend(pc.scene, function() {
                 this.vertexBuffer.unlock();
             }
 
-            if (this.oneShot) {
+            if (!this.loop) {
                 if (this.onFinished) {
                     if (Date.now() > this.endTime) {
                         this.onFinished();

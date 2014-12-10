@@ -523,7 +523,7 @@ pc.extend(pc.scene, function () {
 
                 for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                     drawCall = drawCalls[i];
-                    if (!drawCall.command) {
+                    if (!drawCall.command && drawCall.drawToDepth) {
                         meshInstance = drawCall;
                         mesh = meshInstance.mesh;
 
@@ -659,9 +659,10 @@ pc.extend(pc.scene, function () {
                             shadowCam.setRenderTarget(light._shadowCubeMap[pass]);
                         }
 
+                        this.setCamera(shadowCam);
+
                         device.setBlending(false);
                         device.setColorWrite(true, true, true, true);
-                        device.setCullMode(pc.gfx.CULLFACE_BACK);
                         device.setDepthWrite(true);
                         device.setDepthTest(true);
 
@@ -669,12 +670,12 @@ pc.extend(pc.scene, function () {
                             device.setColorWrite(false, false, false, false);
                         }
 
-                        this.setCamera(shadowCam);
-
                         for (j = 0, numInstances = shadowCasters.length; j < numInstances; j++) {
                             meshInstance = shadowCasters[j];
                             mesh = meshInstance.mesh;
                             material = meshInstance.material;
+
+                            device.setCullMode(material.cull);
 
                             this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (material.opacityMap) {
