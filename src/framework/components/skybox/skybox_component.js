@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @component
      * @name pc.fw.SkyboxComponent
      * @constructor Create a new SkyboxComponent
