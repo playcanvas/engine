@@ -1,4 +1,20 @@
 pc.extend(pc.fw, function () {
+
+    // Script components must all be enabled / disabled AFTER all other components.
+    // So every time we need to call onEnable / onDisable
+    // recursively for an Entity and its children, we
+    // collect all script components in this array
+    // so that we call onEnable / onDisable on them after
+    // we've done so for the rest of the components.
+    var _childScriptsTempBuffer = [];
+    // holds the start index of the array above for every enable / disable loop
+    var _childScriptsStart = 0;
+    // holds the end index of the array above for every enable / disable loop
+    var _childScriptsEnd = 0;
+
+    var ON_ENABLE = 'onEnable';
+    var ON_DISABLE = 'onDisable';
+
     /**
      * @name pc.fw.Entity
      * @class <p>The Entity is the core primitive of a PlayCanvas game. Each one contains a globally unique identifier (GUID) to distinguish
@@ -76,20 +92,87 @@ pc.extend(pc.fw, function () {
         this._guid = guid;
     };
 
+    Entity.prototype._notifyHierarchyStateChanged = function (node, enabled) {
+        var scripts = _childScriptsTempBuffer;
+
+        // Before we start enabling/disabling components we need
+        // to reset the start index for the buffer that holds all the
+        // scripts. Enabling / disabling this Entity will create a
+        // window in our buffer that will hold all the script components of
+        // this Entity and its children. The start of the buffer window is
+        // _childScriptStart and the end is _childScriptEnd
+        _childScriptsStart = 0;
+        for (var i=0,len=scripts.length; i<len; i++) {
+            if (scripts[i]) {
+                _childScriptsStart = i+1;
+            } else {
+                break;
+            }
+        }
+
+        // The end index should start from the same place as the start. As we add scripts
+        // to the buffer we will increase _childScriptsEnd
+        _childScriptsEnd = _childScriptsStart;
+
+        // Recursively enable/disable all components except scripts. Scripts will be
+        // inserted into the buffer instead
+        pc.fw.Entity._super._notifyHierarchyStateChanged.call(this, node, enabled);
+
+        // Now that we have collected all the child scripts, enable / disable them accordingly
+        var method = enabled ? ON_ENABLE : ON_DISABLE;
+
+        // Cache start and end indices because when we enable / disable a script,
+        // that might kick of another Enable / Disable recursion which will modify the same
+        // static variables
+        var end = _childScriptsEnd;
+        var start = _childScriptsStart;
+
+        // enable / disable the scripts in our buffer window
+        for (var i=start; i<end; i++) {
+            // Calling this method may start enabling / disabling
+            // other Entities before we're done with this one. This is
+            // why setting the entries in our buffer window to null needs
+            // to happen in a different loop otherwise we risk overwriting
+            // entries
+            scripts[i][method]();
+        }
+
+        // Set all the scripts in our buffer window to null.
+        for (var i=start; i<end; i++) {
+            scripts[i] = null;
+        }
+
+    };
+
     Entity.prototype._onHierarchyStateChanged = function (enabled) {
         pc.fw.Entity._super._onHierarchyStateChanged.call(this, enabled);
 
-        // enable / disable all the components
+        var scripts = _childScriptsTempBuffer;
+        var scriptsLen = scripts.length;
+
+        // enable / disable all the components except scripts
         var component;
         var components = this.c;
+        var method = enabled ? ON_ENABLE : ON_DISABLE;
+
         for (type in components) {
             if (components.hasOwnProperty(type)) {
                 component = components[type];
                 if (component.enabled) {
-                    if (enabled) {
-                        component.onEnable();
+                    if (type !== 'script') {
+                        component[method]();
                     } else {
-                        component.onDisable();
+                        // if this is a script then store it to call
+                        // onEnable / onDisable after the other components
+                        if (_childScriptsEnd < scriptsLen) {
+                            // avoid allocating memory if possible
+                            scripts[_childScriptsEnd] = component;
+                        } else {
+                            scripts.push(component);
+                            scriptsLen++;
+                        }
+
+                        _childScriptsEnd++;
                     }
                 }
             }
