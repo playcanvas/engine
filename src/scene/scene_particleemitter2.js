@@ -221,8 +221,8 @@ pc.extend(pc.scene, function() {
         setProperty("normalMap", null);
         setProperty("loop", true);
         setProperty("preWarm", false);
-        setProperty("sort", pc.scene.PARTICLES_SORT_NONE); // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
-        setProperty("mode", pc.scene.PARTICLES_MODE_GPU);
+        setProperty("sort", pc.scene.PARTICLESORT_NONE); // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
+        setProperty("mode", pc.scene.PARTICLEMODE_GPU);
         setProperty("scene", null);
         setProperty("lighting", false);
         setProperty("halfLambert", false);
@@ -405,8 +405,8 @@ pc.extend(pc.scene, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
-            this.useCpu = this.mode === pc.scene.PARTICLES_MODE_CPU;
-            this.useCpu = this.useCpu || this.sort > pc.scene.PARTICLES_SORT_NONE ||  // force CPU if desirable by user or sorting is enabled
+            this.useCpu = this.mode === pc.scene.PARTICLEMODE_CPU;
+            this.useCpu = this.useCpu || this.sort > pc.scene.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
             gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
             this.vertexBuffer = undefined; // force regen VB
@@ -1048,7 +1048,7 @@ pc.extend(pc.scene, function() {
 
                 // Particle sorting
                 // TODO: optimize
-                if (this.sort > pc.scene.PARTICLES_SORT_NONE && this.camera) {
+                if (this.sort > pc.scene.PARTICLESORT_NONE && this.camera) {
                     for (i = 0; i < this.numParticles; i++) {
                         this.vbToSort[i] = [i, Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]; // particle id
                     }
@@ -1089,11 +1089,11 @@ pc.extend(pc.scene, function() {
 
     return {
         ParticleEmitter2: ParticleEmitter2,
-        PARTICLES_SORT_NONE: 0,
-        PARTICLES_SORT_DISTANCE: 1,
-        PARTICLES_SORT_NEWER_FIRST: 2,
-        PARTICLES_SORT_OLDER_FIRST: 3,
-        PARTICLES_MODE_GPU: 0,
-        PARTICLES_MODE_CPU: 1
+        PARTICLESORT_NONE: 0,
+        PARTICLESORT_DISTANCE: 1,
+        PARTICLESORT_NEWER_FIRST: 2,
+        PARTICLESORT_OLDER_FIRST: 3,
+        PARTICLEMODE_GPU: 0,
+        PARTICLEMODE_CPU: 1
     };
 }());

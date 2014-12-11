@@ -147,16 +147,16 @@ pc.extend(pc.fw, function() {
                 options: {
                     enumerations: [{
                         name: 'None',
-                        value: pc.scene.PARTICLES_SORT_NONE
+                        value: pc.scene.PARTICLESORT_NONE
                     }, {
                         name: 'Camera Distance',
-                        value: pc.scene.PARTICLES_SORT_DISTANCE
+                        value: pc.scene.PARTICLESORT_DISTANCE
                     }, {
                         name: 'Newer First',
-                        value: pc.scene.PARTICLES_SORT_NEWER_FIRST
+                        value: pc.scene.PARTICLESORT_NEWER_FIRST
                     }, {
                         name: 'Older First',
-                        value: pc.scene.PARTICLES_SORT_OLDER_FIRST
+                        value: pc.scene.PARTICLESORT_OLDER_FIRST
                     }]
                 },
                 defaultValue: 0,
