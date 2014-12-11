@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### v0.162.5
+* Added RigidBodyComponent#teleport(Vec3, Quat)
+* Removed skybox from documentation
+
 ### v0.162.4
 * Added autoPlay to particle systems
 * Particle systems no longer disable themselves
