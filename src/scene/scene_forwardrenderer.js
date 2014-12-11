@@ -448,6 +448,8 @@ pc.extend(pc.scene, function () {
             var device = this.device;
             var scope = device.scope;
 
+            scene._activeCamera = camera;
+
             if (scene.updateShaders) {
                 scene._updateShaders(device);
                 scene.updateShaders = false;

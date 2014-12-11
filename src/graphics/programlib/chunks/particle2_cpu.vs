@@ -1,7 +1,7 @@
 attribute vec4 particle_vertexData;     // XYZ = world pos, W = life
 attribute vec4 particle_vertexData2;     // X = angle, Y = scale, Z = alpha, W = velocity.x
 attribute vec4 particle_vertexData3;     // XYZ = particle local pos, W = velocity.y
-attribute vec2 particle_vertexData4;     // X = velocity.z, W = unused
+attribute vec2 particle_vertexData4;     // X = velocity.z, W = particle ID
 
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
@@ -58,6 +58,7 @@ void main(void)
     vec3 pos = particlePos;
     vec3 vertPos = particle_vertexData3.xyz;
     vec3 particleVelocity = vec3(particle_vertexData2.w, particle_vertexData3.w, particle_vertexData4.x);
+    vec2 velocityV = normalize((mat3(matrix_view) * particleVelocity).xy); // should be removed by compiler if align/stretch is not used
 
     vec2 quadXY = vertPos.xy;
     texCoordsAlphaLife = vec4(quadXY * -0.5 + 0.5, particle_vertexData2.z, particle_vertexData.w);
@@ -65,8 +66,7 @@ void main(void)
     mat2 rotMatrix;
     mat3 localMat;
 
-    quadXY = rotate(quadXY, particle_vertexData2.x, rotMatrix);
-
-    vec3 localPos = billboard(particlePos, quadXY, localMat);
+    float angle = particle_vertexData2.x;
     vec3 particlePosMoved = vec3(0.0);
+    vec3 meshLocalPos = particle_vertexData3.xyz;
 

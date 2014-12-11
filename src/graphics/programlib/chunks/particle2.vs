@@ -86,6 +86,7 @@ void main(void) {
 
     vec4 particleTex2 = texture2D(particleTexOUT, vec2(id / numParticlesPot, 0.75));
     vec3 particleVelocity = particleTex2.xyz;
+    vec2 velocityV = normalize((mat3(matrix_view) * particleVelocity).xy); // should be removed by compiler if align/stretch is not used
     float life = particleTex2.w;
 
     float particleLifetime = lifetime;
@@ -105,6 +106,7 @@ void main(void) {
 
     vec3 particlePos = pos;
     vec3 particlePosMoved = vec3(0.0);
+    vec3 meshLocalPos = particle_vertexData.xyz;
 
     mat2 rotMatrix;
     mat3 localMat;

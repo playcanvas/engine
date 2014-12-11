@@ -431,9 +431,6 @@ pc.extend(pc.fw, function() {
                     always: false
                 }
             }, {
-                name: 'camera',
-                exposed: false
-            }, {
                 name: 'colorMap',
                 exposed: false
             }, {

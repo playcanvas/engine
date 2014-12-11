@@ -154,10 +154,10 @@ pc.extend(pc.scene, function() {
     }
 
     function createOffscreenTarget(gd, camera) {
-        var rect = camera.rect;
+        var rect = camera._rect;
 
-        var width = Math.floor(rect.z * gd.width);
-        var height = Math.floor(rect.w * gd.height);
+        var width = Math.floor(rect.width * gd.width);
+        var height = Math.floor(rect.height * gd.height);
 
         var colorBuffer = new pc.gfx.Texture(gd, {
             format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
@@ -222,8 +222,7 @@ pc.extend(pc.scene, function() {
         setProperty("loop", true);
         setProperty("preWarm", false);
         setProperty("sort", pc.scene.PARTICLES_SORT_NONE); // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
-        setProperty("mode", this.sort > pc.scene.PARTICLES_SORT_NONE ? "CPU" : "GPU");
-        setProperty("camera", null);
+        setProperty("mode", pc.scene.PARTICLES_MODE_GPU);
         setProperty("scene", null);
         setProperty("lighting", false);
         setProperty("halfLambert", false);
@@ -238,16 +237,6 @@ pc.extend(pc.scene, function() {
         setProperty("node", null);
         setProperty("startAngle", 0);
         setProperty("startAngle2", this.startAngle);
-
-        this.mode = (this.mode === "CPU" ? pc.scene.PARTICLES_MODE_CPU : pc.scene.PARTICLES_MODE_GPU);
-
-        if (!(gd.extTextureFloat && (gd.maxVertexTextures >= 1))) {
-            this.mode = pc.scene.PARTICLES_MODE_CPU;
-        }
-
-        if (gd.fragmentUniformsCount < 100) { // TODO: change to more realistic value
-            this.mode = pc.scene.PARTICLES_MODE_CPU;
-        }
 
         this.frameRandom = new pc.Vec3(0, 0, 0);
 
@@ -316,7 +305,11 @@ pc.extend(pc.scene, function() {
         this.particleDistance = null;
         this.particleNoize = null;
 
+        this.camera = null;
+
         this.swapTex = false;
+        this.useMesh = true;
+        this.useCpu = false;
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
@@ -393,36 +386,51 @@ pc.extend(pc.scene, function() {
     }
 
     ParticleEmitter2.prototype = {
-        rebuild: function() {
-            var i, len;
 
-            this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
-
-            var precision = this.precision;
-            var gd = this.graphicsDevice;
-
+        onChangeCamera: function() {
             if (this.depthSoftening > 0) {
                 if (this.camera) {
-                    if (!this.camera.camera.camera._depthTarget) {
-                        this.camera.camera.camera._depthTarget = createOffscreenTarget(this.graphicsDevice, this.camera.camera);
-                        this.camera.camera._depthTarget = this.camera.camera.camera._depthTarget;
-                        this.camera._depthTarget = this.camera.camera.camera._depthTarget;
+                    if (!this.camera._depthTarget) {
+                        this.camera._depthTarget = createOffscreenTarget(this.graphicsDevice, this.camera);
+                        this._depthTarget = this.camera._depthTarget;
                     }
                 }
             }
+            this.regenShader();
+            this.resetMaterial();
+        },
 
+        rebuild: function() {
+            var i, len;
+            var precision = this.precision;
+            var gd = this.graphicsDevice;
+
+            this.useCpu = this.mode === pc.scene.PARTICLES_MODE_CPU;
+            this.useCpu = this.useCpu || this.sort > pc.scene.PARTICLES_SORT_NONE ||  // force CPU if desirable by user or sorting is enabled
+            (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
+            gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
+            this.vertexBuffer = undefined; // force regen VB
+
+            this.useMesh = false;
+            if (this.mesh) {
+                var totalVertCount = this.numParticles * this.mesh.vertexBuffer.numVertices;
+                if (totalVertCount > 65535) {
+                    console.warn("WARNING: particle system can't render mesh particles because numParticles * numVertices is more than 65k. Reverting to quad particles.");
+                } else {
+                    this.useMesh = true;
+                }
+            }
+
+            this.numParticlesPot = pc.math.nextPowerOfTwo(this.numParticles);
             this.rebuildGraphs();
 
             // Dynamic simulation data
-            //if (this.mode === pc.scene.PARTICLES_MODE_CPU) {
-                this.vbToSort = new Array(this.numParticles);
-                this.vbOld = new Float32Array(this.numParticles * 4 * 4);
-                this.particleDistance = new Float32Array(this.numParticles);
-                this.particleNoize = new Float32Array(this.numParticles);
-                for (i = 0; i < this.numParticles; i++) {
-                    this.particleNoize[i] = Math.random();
-                }
-            //}
+            this.vbToSort = new Array(this.numParticles);
+            this.particleDistance = new Float32Array(this.numParticles);
+            this.particleNoize = new Float32Array(this.numParticles);
+            for (i = 0; i < this.numParticles; i++) {
+                this.particleNoize[i] = Math.random();
+            }
 
             this.particleTex = new Float32Array(this.numParticlesPot * 4 * 2);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
@@ -438,7 +446,7 @@ pc.extend(pc.scene, function() {
             this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 2);
             for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
 
-            if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
+            if (!this.useCpu) {
                 this.particleTexIN = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
                 this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
                 this.particleTexStart = _createTexture(gd, this.numParticlesPot, 2, this.particleTexStart);
@@ -461,8 +469,8 @@ pc.extend(pc.scene, function() {
             this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1");
             this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2");
 
-            this.numParticleVerts = this.mesh === null ? 4 : this.mesh.vertexBuffer.numVertices;
-            this.numParticleIndices = this.mesh === null ? 6 : this.mesh.indexBuffer[0].numIndices;
+            this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
+            this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
             this._allocate(this.numParticles);
 
             var mesh = new pc.scene.Mesh();
@@ -472,15 +480,6 @@ pc.extend(pc.scene, function() {
             mesh.primitive[0].base = 0;
             mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
             mesh.primitive[0].indexed = true;
-
-            var hasNormal = (this.normalMap != null);
-
-            var programLib = this.graphicsDevice.getProgramLibrary();
-            this.normalOption = 0;
-            if (this.lighting) {
-                this.normalOption = hasNormal ? 2 : 1;
-            }
-            this.isMesh = this.mesh != null;
 
             this.material = new pc.scene.Material();
             this.material.cullMode = pc.gfx.CULLFACE_NONE;
@@ -494,26 +493,7 @@ pc.extend(pc.scene, function() {
             this.material.depthWrite = this.depthTest;
             this.material.emitter = this;
 
-            // updateShader is also called by pc.scene.Scene when all shaders need to be updated
-            this.material.updateShader = function() {
-                var shader = programLib.getProgram("particle2", {
-                    mode: this.emitter.mode,
-                    normal: this.emitter.normalOption,
-                    halflambert: this.emitter.halfLambert,
-                    stretch: this.emitter.stretch,
-                    alignToMotion: this.emitter.alignToMotion,
-                    soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
-                    mesh: this.emitter.isMesh,
-                    srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
-                    toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
-                    fog: this.emitter.scene ? this.emitter.scene.fog : "none",
-                    wrap: this.emitter.wrap && this.emitter.wrapBounds,
-                    blend: this.blendType
-                });
-                this.setShader(shader);
-            };
-
-            this.material.updateShader();
+            this.regenShader();
             this.resetMaterial();
 
             this.meshInstance = new pc.scene.MeshInstance(this.node, mesh, this.material);
@@ -581,7 +561,7 @@ pc.extend(pc.scene, function() {
             this.qScaleDiv =         divGraphFrom2Curves(this.qScale, this.qScale2, this.scaleUMax);
             this.qAlphaDiv =         divGraphFrom2Curves(this.qAlpha, this.qAlpha2, this.alphaUMax);
 
-            if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
+            if (!this.useCpu) {
                 this.internalTex0 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qLocalVelocity, this.qLocalVelocityDiv));
                 this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qVelocity, this.qVelocityDiv));
                 this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
@@ -600,10 +580,38 @@ pc.extend(pc.scene, function() {
 
         _hasDepthTarget: function () {
             if (this.camera) {
-                return !!this.camera.camera._depthTarget;
+                return !!this.camera._depthTarget;
             }
 
             return false;
+        },
+
+        regenShader: function() {
+            var programLib = this.graphicsDevice.getProgramLibrary();
+            var hasNormal = (this.normalMap != null);
+            this.normalOption = 0;
+            if (this.lighting) {
+                this.normalOption = hasNormal ? 2 : 1;
+            }
+            // updateShader is also called by pc.scene.Scene when all shaders need to be updated
+            this.material.updateShader = function() {
+                var shader = programLib.getProgram("particle2", {
+                    useCpu: this.emitter.useCpu,
+                    normal: this.emitter.normalOption,
+                    halflambert: this.emitter.halfLambert,
+                    stretch: this.emitter.stretch,
+                    alignToMotion: this.emitter.alignToMotion,
+                    soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
+                    mesh: this.emitter.useMesh,
+                    srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
+                    toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
+                    fog: this.emitter.scene ? this.emitter.scene.fog : "none",
+                    wrap: this.emitter.wrap && this.emitter.wrapBounds,
+                    blend: this.blendType
+                });
+                this.setShader(shader);
+            };
+            this.material.updateShader();
         },
 
         resetMaterial: function() {
@@ -612,7 +620,7 @@ pc.extend(pc.scene, function() {
 
             material.setParameter('stretch', this.stretch);
             material.setParameter('colorMult', this.intensity);
-            if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
+            if (!this.useCpu) {
                 material.setParameter('internalTex0', this.internalTex0);
                 material.setParameter('internalTex1', this.internalTex1);
                 material.setParameter('internalTex2', this.internalTex2);
@@ -645,9 +653,9 @@ pc.extend(pc.scene, function() {
                 }
             }
             if (this.depthSoftening > 0 && this._hasDepthTarget()) {
-                material.setParameter('uDepthMap', this.camera.camera._depthTarget.colorBuffer);
+                material.setParameter('uDepthMap', this.camera._depthTarget.colorBuffer);
                 material.setParameter('screenSize', new pc.Vec4(gd.width, gd.height, 1.0 / gd.width, 1.0 / gd.height).data);
-                material.setParameter('softening', this.depthSoftening);
+                material.setParameter('softening', 1.0 / (this.depthSoftening * this.depthSoftening * 100)); // remap to more perceptually linear
             }
             if (this.stretch > 0.0) material.cull = pc.gfx.CULLFACE_NONE;
         },
@@ -662,7 +670,7 @@ pc.extend(pc.scene, function() {
 
             if ((this.vertexBuffer === undefined) || (this.vertexBuffer.getNumVertices() !== psysVertCount)) {
                 // Create the particle vertex format
-                if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
+                if (!this.useCpu) {
                     elements = [{
                             semantic: pc.gfx.SEMANTIC_ATTR0,
                             components: 4,
@@ -700,7 +708,7 @@ pc.extend(pc.scene, function() {
                 // Fill the vertex buffer
                 var data = new Float32Array(this.vertexBuffer.lock());
                 var meshData, stride;
-                if (this.mesh) {
+                if (this.useMesh) {
                     meshData = new Float32Array(this.mesh.vertexBuffer.lock());
                     stride = meshData.length / this.mesh.vertexBuffer.numVertices;
                 }
@@ -710,7 +718,7 @@ pc.extend(pc.scene, function() {
                     id = Math.floor(i / this.numParticleVerts);
                     if (i % this.numParticleVerts === 0) rnd = this.particleNoize[id];//Math.random();
 
-                    if (!this.mesh) {
+                    if (!this.useMesh) {
                         var vertID = i % 4;
                         data[i * 4] = particleVerts[vertID][0];
                         data[i * 4 + 1] = particleVerts[vertID][1];
@@ -725,11 +733,12 @@ pc.extend(pc.scene, function() {
                     data[i * 4 + 3] = id + rnd;
                 }
 
-                if (this.mode === pc.scene.PARTICLES_MODE_CPU) {
+                if (this.useCpu) {
                     this.vbCPU = new Float32Array(data);
+                    this.vbOld = new Float32Array(this.vbCPU.length);
                 }
                 this.vertexBuffer.unlock();
-                if (this.mesh) {
+                if (this.useMesh) {
                     this.mesh.vertexBuffer.unlock();
                 }
 
@@ -737,9 +746,9 @@ pc.extend(pc.scene, function() {
                 // Fill the index buffer
                 var dst = 0;
                 indices = new Uint16Array(this.indexBuffer.lock());
-                if (this.mesh) meshData = new Uint16Array(this.mesh.indexBuffer[0].lock());
+                if (this.useMesh) meshData = new Uint16Array(this.mesh.indexBuffer[0].lock());
                 for (i = 0; i < numParticles; i++) {
-                    if (!this.mesh) {
+                    if (!this.useMesh) {
                         var baseIndex = i * 4;
                         indices[dst++] = baseIndex;
                         indices[dst++] = baseIndex + 1;
@@ -754,14 +763,14 @@ pc.extend(pc.scene, function() {
                     }
                 }
                 this.indexBuffer.unlock();
-                if (this.mesh) this.mesh.indexBuffer[0].unlock();
+                if (this.useMesh) this.mesh.indexBuffer[0].unlock();
             }
         },
 
         reset: function() {
             this.seed = Math.random();
             this.material.setParameter('seed', this.seed);
-            if (this.mode === pc.scene.PARTICLES_MODE_CPU) {
+            if (this.useCpu) {
                 for (var i = 0; i < this.particleTexStart.length; i++) {
                     this.particleTex[i] = this.particleTexStart[i];
                 }
@@ -827,6 +836,13 @@ pc.extend(pc.scene, function() {
                 this.constantLightCube.setValue(this.lightCube);
             }
 
+            if (this.scene) {
+                if (this.camera!=this.scene._activeCamera) {
+                    this.camera = this.scene._activeCamera;
+                    this.onChangeCamera();
+                }
+            }
+
             if (this.meshInstance.node === null){
                 spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
             } else {
@@ -836,7 +852,7 @@ pc.extend(pc.scene, function() {
             var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.getLocalScale().data;
             this.material.setParameter("emitterScale", emitterScale);
 
-            if (this.mode === pc.scene.PARTICLES_MODE_GPU) {
+            if (!this.useCpu) {
                 this.frameRandom.x = Math.random();
                 this.frameRandom.y = Math.random();
                 this.frameRandom.z = Math.random();
@@ -900,15 +916,17 @@ pc.extend(pc.scene, function() {
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
                 var posCam = this.camera ? this.camera.position : pc.Vec3.ZERO;
                 if (this.camera) {
-                    var projMat = this.camera.camera.camera.getProjectionMatrix();
+                    var projMat = this.camera.getProjectionMatrix();
                     var wtm = this.camera.getWorldTransform();
                     viewMat.copy(wtm);
                     viewMat.invert();
                     viewProjMat.mul2(projMat, viewMat);
                 }
 
+                var vertSize = 14;
                 for (i = 0; i < this.numParticles; i++) {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
+
                     var rndFactor = (this.particleNoize[id] + this.seed) % 1.0;
                     rndFactor3Vec.x = rndFactor;
                     rndFactor3Vec.y = (rndFactor * 10.0) % 1.0;
@@ -967,20 +985,12 @@ pc.extend(pc.scene, function() {
                         particleFinalPos.copy(particlePos);
                         particlePosMoved.x = particlePosMoved.y = particlePosMoved.z = 0;
                         if (this.wrap && this.wrapBounds) {
-                            particleFinalPos.sub(posCam);
+                            particleFinalPos.sub(emitterPos);
                             particleFinalPos.x = glMod(particleFinalPos.x, this.wrapBounds.x) - this.wrapBounds.x * 0.5;
                             particleFinalPos.y = glMod(particleFinalPos.y, this.wrapBounds.y) - this.wrapBounds.y * 0.5;
                             particleFinalPos.z = glMod(particleFinalPos.z, this.wrapBounds.z) - this.wrapBounds.z * 0.5;
-                            particleFinalPos.add(posCam);
+                            particleFinalPos.add(emitterPos);
                             particlePosMoved.copy(particleFinalPos).sub(particlePos);
-                        }
-
-                        if (this.alignToMotion && this.camera) {
-                            viewProjMat.transformPoint(moveDirVec, moveDirVec);
-                            len = Math.sqrt(moveDirVec.x * moveDirVec.x + moveDirVec.y * moveDirVec.y);
-                            moveDirVec.x /= len;
-                            moveDirVec.y /= len;
-                            angle = Math.atan2(moveDirVec.x, moveDirVec.y);
                         }
 
                         this.particleTex[id * 4] =      particleFinalPos.x;
@@ -1018,7 +1028,6 @@ pc.extend(pc.scene, function() {
                             quadX = quadY = quadZ = 0;
                         }
 
-                        var vertSize = 14;
                         var w = i * this.numParticleVerts * vertSize + v * vertSize;
                         data[w] = particleFinalPos.x;
                         data[w + 1] = particleFinalPos.y;
@@ -1033,6 +1042,7 @@ pc.extend(pc.scene, function() {
                         data[w + 10] = quadZ;
                         data[w + 11] = moveDirVec2.y;
                         data[w + 12] = moveDirVec2.z;
+                        // 13 is particle id
                     }
                 }
 
@@ -1042,7 +1052,7 @@ pc.extend(pc.scene, function() {
                     for (i = 0; i < this.numParticles; i++) {
                         this.vbToSort[i] = [i, Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]; // particle id
                     }
-                    for (i = 0; i < this.numParticles * this.numParticleVerts * 4; i++) {
+                    for (i = 0; i < this.vbCPU.length; i++) {
                         this.vbOld[i] = this.vbCPU[i];
                     }
 
