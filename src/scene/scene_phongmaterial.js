@@ -723,6 +723,20 @@ pc.extend(pc.scene, function () {
             var prefilteredCubeMap = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
                                    && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
 
+            if (prefilteredCubeMap) {
+                // Set up hires texture to contain the whole mip chain
+                if (!prefilteredCubeMap128._prefilteredMips) {
+                    prefilteredCubeMap128.autoMipmap = false;
+                    var mip, face;
+                    var mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
+                    for(mip=1; mip<6; mip++) {
+                        prefilteredCubeMap128._levels[mip] = mips[mip]._levels[0];
+                    }
+                    prefilteredCubeMap128.upload();
+                    prefilteredCubeMap128._prefilteredMips = true;
+                }
+            }
+
             if (prefilteredCubeMap128 === scene._prefilteredCubeMap128) {
                 this.setParameter('texture_prefilteredCubeMap128', scene._prefilteredCubeMap128);
                 this.setParameter('texture_prefilteredCubeMap64', scene._prefilteredCubeMap64);

@@ -263,7 +263,10 @@ pc.extend(pc.gfx, function () {
                 }
             }
 
+            this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');
+
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+            this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
             this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
@@ -623,87 +626,100 @@ pc.extend(pc.gfx, function () {
         uploadTexture: function (texture) {
             var gl = this.gl;
 
-            var baseLevel = texture._levels[0];
+            var mipLevel = 0;
+            var mipObject;
 
-            if (texture._cubemap) {
-                var face;
+            while(texture._levels[mipLevel] || mipLevel==0) { // Upload all existing mip levels. Initialize 0 mip anyway.
+                mipObject = texture._levels[mipLevel];
 
-                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-                if ((baseLevel[0] instanceof HTMLCanvasElement) || (baseLevel[0] instanceof HTMLImageElement) || (baseLevel[0] instanceof HTMLVideoElement)) {
-                    // Upload the image, canvas or video
-                    for (face = 0; face < 6; face++) {
-                        var src = baseLevel[face];
-                        // Downsize images that are too large to be used as cube maps
-                        if (src instanceof HTMLImageElement) {
-                            if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
-                                src = _downsampleImage(src, this.maxCubeMapSize);
+                if (mipLevel==1) {
+                    // We have more than one mip levels we want to assign, but we need all mips to make
+                    // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
+                    gl.generateMipmap(texture._glTarget);
+                }
+
+                if (texture._cubemap) {
+                    var face;
+
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                    if ((mipObject[0] instanceof HTMLCanvasElement) || (mipObject[0] instanceof HTMLImageElement) || (mipObject[0] instanceof HTMLVideoElement)) {
+                        // Upload the image, canvas or video
+                        for (face = 0; face < 6; face++) {
+                            var src = mipObject[face];
+                            // Downsize images that are too large to be used as cube maps
+                            if (src instanceof HTMLImageElement) {
+                                if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
+                                    src = _downsampleImage(src, this.maxCubeMapSize);
+                                }
+                            }
+
+                            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                          mipLevel,
+                                          texture._glInternalFormat,
+                                          texture._glFormat,
+                                          texture._glPixelType,
+                                          src);
+                        }
+                    } else {
+                        // Upload the byte array
+                        for (face = 0; face < 6; face++) {
+                            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                          mipLevel,
+                                          texture._glInternalFormat,
+                                          texture._width,
+                                          texture._height,
+                                          0,
+                                          texture._glFormat,
+                                          texture._glPixelType,
+                                          mipObject[face]);
+                        }
+                    }
+                } else {
+                    if ((mipObject instanceof HTMLCanvasElement) || (mipObject instanceof HTMLImageElement) || (mipObject instanceof HTMLVideoElement)) {
+                        // Downsize images that are too large to be used as textures
+                        if (mipObject instanceof HTMLImageElement) {
+                            if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
+                                mipObject = _downsampleImage(mipObject, this.maxTextureSize);
                             }
                         }
 
-                        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face, 
-                                      0, 
+                        // Upload the image, canvas or video
+                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                        gl.texImage2D(gl.TEXTURE_2D,
+                                      mipLevel,
                                       texture._glInternalFormat,
                                       texture._glFormat,
                                       texture._glPixelType,
-                                      src);
-                    }
-                } else {
-                    // Upload the byte array
-                    for (face = 0; face < 6; face++) {
-                        gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                      0,
-                                      texture._glInternalFormat,
-                                      texture._width,
-                                      texture._height,
-                                      0,
-                                      texture._glFormat,
-                                      texture._glPixelType,
-                                      baseLevel[face]);
-                    }
-                }
-            } else {
-                if ((baseLevel instanceof HTMLCanvasElement) || (baseLevel instanceof HTMLImageElement) || (baseLevel instanceof HTMLVideoElement)) {
-                    // Downsize images that are too large to be used as textures
-                    if (baseLevel instanceof HTMLImageElement) {
-                        if (baseLevel.width > this.maxTextureSize || baseLevel.height > this.maxTextureSize) {
-                            baseLevel = _downsampleImage(baseLevel, this.maxTextureSize);
+                                      mipObject);
+                    } else {
+                        // Upload the byte array
+                        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                        if (texture._compressed) {
+                            gl.compressedTexImage2D(gl.TEXTURE_2D,
+                                                    mipLevel,
+                                                    texture._glInternalFormat,
+                                                    texture._width,
+                                                    texture._height,
+                                                    0,
+                                                    mipObject);
+                        } else {
+                            gl.texImage2D(gl.TEXTURE_2D,
+                                          mipLevel,
+                                          texture._glInternalFormat,
+                                          texture._width,
+                                          texture._height,
+                                          0,
+                                          texture._glFormat,
+                                          texture._glPixelType,
+                                          mipObject);
                         }
                     }
-
-                    // Upload the image, canvas or video
-                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
-                    gl.texImage2D(gl.TEXTURE_2D,
-                                  0,
-                                  texture._glInternalFormat,
-                                  texture._glFormat,
-                                  texture._glPixelType,
-                                  baseLevel);
-                } else {
-                    // Upload the byte array
-                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-                    if (texture._compressed) {
-                        gl.compressedTexImage2D(gl.TEXTURE_2D,
-                                                0,
-                                                texture._glInternalFormat,
-                                                texture._width,
-                                                texture._height,
-                                                0,
-                                                baseLevel);
-                    } else {
-                        gl.texImage2D(gl.TEXTURE_2D,
-                                      0,
-                                      texture._glInternalFormat,
-                                      texture._width,
-                                      texture._height,
-                                      0,
-                                      texture._glFormat,
-                                      texture._glPixelType,
-                                      baseLevel);
-                    }
                 }
+                mipLevel++;
             }
+
 
             if (texture.autoMipmap && pc.math.powerOfTwo(texture._width) && pc.math.powerOfTwo(texture._height) && texture._levels.length === 1) {
                 gl.generateMipmap(texture._glTarget);
