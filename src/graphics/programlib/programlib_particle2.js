@@ -1,13 +1,15 @@
 pc.gfx.programlib.particle2 = {
     generateKey: function(device, options) {
-        var key = "particle2" + options.mode + options.normal + options.halflambert + options.stretch + options.soft + options.mesh
-        + options.srgb + options.wrap + options.blend + options.toneMap + options.fog + options.alignToMotion;
+        var key = "particle2";
+        for(prop in options) {
+            if (options.hasOwnProperty(prop)) {
+                key += options[prop];
+            }
+        }
         return key;
     },
 
     createShaderDefinition: function(device, options) {
-        var modeGPU = 0;
-        var modeCPU = 1;
 
         var getSnippet = pc.gfx.programlib.getSnippet;
         var chunk = pc.gfx.shaderChunks;
@@ -15,7 +17,7 @@ pc.gfx.programlib.particle2 = {
         var vshader = "";
         var fshader = getSnippet(device, 'fs_precision') + "\n";
 
-        if (options.mode == modeGPU) {
+        if (!options.useCpu) {
             if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
             if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
             vshader +=                              chunk.particle2VS;
@@ -30,11 +32,12 @@ pc.gfx.programlib.particle2 = {
             if (options.normal == 1) vshader +=     "\nvarying vec3 Normal;\n";
             if (options.normal == 2) vshader +=     "\nvarying mat3 ParticleMat;\n";
             vshader +=                              chunk.particle2_cpuVS;
-            if (options.stretch > 0.0) vshader +=   chunk.particle2_stretchVS;
             //if (options.wrap) vshader +=                              chunk.particle2_wrapVS;
-            if (options.mesh) vshader +=            chunk.particle2_cpu_meshVS;
+            if (options.alignToMotion) vshader +=     chunk.particle2_pointAlongVS;
+            vshader +=                              options.mesh ? chunk.particle2_meshVS : chunk.particle2_billboardVS;
             if (options.normal == 1) vshader +=     chunk.particle2_normalVS;
             if (options.normal == 2) vshader +=     chunk.particle2_TBNVS;
+            if (options.stretch > 0.0) vshader +=   chunk.particle2_stretchVS;
             vshader +=                              chunk.particle2_cpu_endVS;
         }
 
@@ -47,7 +50,7 @@ pc.gfx.programlib.particle2 = {
             fshader +=                              "\nuniform vec3 lightCube[6];\n";
         }
 
-        if ((options.normal==0) && (options.fog!="none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting is used
+        if ((options.normal==0) && (options.fog=="none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
         fshader += options.srgb ? chunk.gamma2_2PS : chunk.gamma1_0PS;
         fshader += "struct psInternalData {float dummy;};\n";
         fshader += chunk.defaultTonemapping;

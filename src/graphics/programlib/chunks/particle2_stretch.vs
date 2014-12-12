@@ -2,7 +2,6 @@
     vec3 posPrev = pos - moveDir;
     posPrev += particlePosMoved;
 
-    vec2 velocityV = normalize((mat3(matrix_view) * particleVelocity).xy);
     vec2 centerToVertexV = normalize((mat3(matrix_view) * localPos).xy);
 
     float interpolation = dot(-velocityV, centerToVertexV) * 0.5 + 0.5;
