@@ -1,5 +1,24 @@
 # PlayCanvas Engine Changes
 
+### v0.162.6
+* Added check for more than 65k verts in particle system.
+* Particle systems wrapBounds are now relative to emitter position instead of camera position.
+* Particle systems mode parameter now uses enum, not string.
+* Particle systems depth softening control is now a bit more intuitive.
+* Added _activeCamera to scene object.
+* Removed camera property from particle system.
+* [FIX] Particle systems alignToMotion.
+* [FIX] Gamma correction on particles in some conditions.
+* [FIX] Particle shader caching key generation.
+* [FIX] Runtime CPU-GPU particle switch.
+* [FIX] Sorting of mesh particles.
+* [FIX] Mobile particle problems.
+* [FIX] Depth softening bugs.
+
+### v0.162.5
+* Added RigidBodyComponent#teleport(Vec3, Quat)
+* Removed skybox from documentation
+
 ### v0.162.4
 * Added autoPlay to particle systems
 * Particle systems no longer disable themselves

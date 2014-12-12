@@ -237,6 +237,32 @@ pc.extend(pc.gfx, function () {
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
+            // Test if we can render to floating-point RGBA texture
+            this.extTextureFloatRenderable = !!this.extTextureFloat;
+            if (this.extTextureFloat) {
+                var __texture = gl.createTexture();
+                gl.bindTexture(gl.TEXTURE_2D, __texture);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+                var __width = 2;
+                var __height = 2;
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, __width, __height, 0, gl.RGBA, gl.FLOAT, null);
+
+                // Try to use this texture as a render target.
+                var __fbo = gl.createFramebuffer();
+                gl.bindFramebuffer(gl.FRAMEBUFFER, __fbo);
+                gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, __texture, 0);
+                gl.bindTexture(gl.TEXTURE_2D, null);
+                // It is legal for a WebGL implementation exposing the OES_texture_float extension to
+                // support floating-point textures but not as attachments to framebuffer objects.
+                if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
+                    this.extTextureFloatRenderable = false;
+                }
+            }
+
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
 
             this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");

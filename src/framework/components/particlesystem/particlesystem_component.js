@@ -26,8 +26,7 @@ pc.extend(pc.fw, function() {
         'sort',
         'stretch',
         'alignToMotion',
-        'preWarm',
-        'camera'
+        'preWarm'
     ];
 
     var GRAPH_PROPERTIES = [
@@ -196,14 +195,6 @@ pc.extend(pc.fw, function() {
         onEnable: function() {
             if (!this.emitter && !this.system._inTools) {
 
-                // try to get a valid camera
-                if (!this.data.camera) {
-                    var camera = this.system.context.systems.camera.cameras[0];
-                    if (camera) {
-                        this.data.camera = camera.entity;
-                    }
-                }
-
                 this.emitter = new pc.scene.ParticleEmitter2(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     spawnBounds: this.data.spawnBounds,
@@ -245,7 +236,6 @@ pc.extend(pc.fw, function() {
                     halfLambert: this.data.halfLambert,
                     intensity: this.data.intensity,
                     depthSoftening: this.data.depthSoftening,
-                    camera: this.data.camera,
                     scene: this.system.context.scene,
                     mesh: this.data.mesh,
                     depthTest: this.data.depthTest,

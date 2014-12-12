@@ -22,7 +22,7 @@ pc.extend(pc.fw, function() {
                 defaultValue: true
             }, {
                 name: "numParticles",
-                displayName: "Particle count",
+                displayName: "Particle Count",
                 description: "Total number of particles allocated",
                 type: "number",
                 defaultValue: 30,
@@ -113,7 +113,7 @@ pc.extend(pc.fw, function() {
                 }
             }, {
                 name: "intensity",
-                displayName: "Color intensity",
+                displayName: "Color Intensity",
                 description: "Controls the intensity of the colors for each particle",
                 type: "number",
                 defaultValue: 1,
@@ -147,16 +147,16 @@ pc.extend(pc.fw, function() {
                 options: {
                     enumerations: [{
                         name: 'None',
-                        value: pc.scene.PARTICLES_SORT_NONE
+                        value: pc.scene.PARTICLESORT_NONE
                     }, {
                         name: 'Camera Distance',
-                        value: pc.scene.PARTICLES_SORT_DISTANCE
+                        value: pc.scene.PARTICLESORT_DISTANCE
                     }, {
                         name: 'Newer First',
-                        value: pc.scene.PARTICLES_SORT_NEWER_FIRST
+                        value: pc.scene.PARTICLESORT_NEWER_FIRST
                     }, {
                         name: 'Older First',
-                        value: pc.scene.PARTICLES_SORT_OLDER_FIRST
+                        value: pc.scene.PARTICLESORT_OLDER_FIRST
                     }]
                 },
                 defaultValue: 0,
@@ -190,7 +190,7 @@ pc.extend(pc.fw, function() {
                 }
             }, {
                 name: "alignToMotion",
-                displayName: "Align to motion",
+                displayName: "Align To Motion",
                 description: "Rotates particles along the direction of motion",
                 type: 'boolean',
                 defaultValue: false
@@ -227,7 +227,7 @@ pc.extend(pc.fw, function() {
                 defaultValue: null
             }, {
                 name: "normalMapAsset",
-                displayName: "Normal map",
+                displayName: "Normal Map",
                 description: "Normal map used for each particle",
                 type: "asset",
                 options: {
@@ -237,7 +237,7 @@ pc.extend(pc.fw, function() {
                 defaultValue: null
             }, {
                 name: "mesh",
-                displayName: "Particle mesh",
+                displayName: "Particle Mesh",
                 description: "Mesh to use as particle; Will be quad, if not set",
                 type: "asset",
                 options: {
@@ -431,9 +431,6 @@ pc.extend(pc.fw, function() {
                     always: false
                 }
             }, {
-                name: 'camera',
-                exposed: false
-            }, {
                 name: 'colorMap',
                 exposed: false
             }, {
@@ -525,22 +522,6 @@ pc.extend(pc.fw, function() {
 
                     if (data.enabled && c.entity.enabled) {
                         var emitter = data.model.emitter;
-                        // check if the emitter has no camera set or if the
-                        // camera is disabled
-                        var cameraEntity = data.camera;
-                        var camera = cameraEntity ? cameraEntity.camera : null;
-                        if (!cameraEntity || !camera || !camera.enabled) {
-
-                            // if there is no valid camera then get the first enabled camera
-                            if (!currentCamera) {
-                                currentCamera = this.context.systems.camera.cameras[0];
-                                if (currentCamera) {
-                                    currentCamera = currentCamera.entity;
-                                }
-                            }
-
-                            c.entity.particlesystem.camera = currentCamera;
-                        }
 
                         if (!data.paused) {
                             emitter.addTime(dt);
