@@ -723,7 +723,7 @@ pc.extend(pc.scene, function () {
             var prefilteredCubeMap = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
                                    && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
 
-            if (prefilteredCubeMap) {
+            if (prefilteredCubeMap && device.extTextureLod && device.samplerCount < 16) {
                 // Set up hires texture to contain the whole mip chain
                 if (!prefilteredCubeMap128._prefilteredMips) {
                     prefilteredCubeMap128.autoMipmap = false;
