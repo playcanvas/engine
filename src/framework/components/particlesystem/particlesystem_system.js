@@ -522,22 +522,6 @@ pc.extend(pc.fw, function() {
 
                     if (data.enabled && c.entity.enabled) {
                         var emitter = data.model.emitter;
-                        // check if the emitter has no camera set or if the
-                        // camera is disabled
-                        var cameraEntity = data.camera;
-                        var camera = cameraEntity ? cameraEntity.camera : null;
-                        if (!cameraEntity || !camera || !camera.enabled) {
-
-                            // if there is no valid camera then get the first enabled camera
-                            if (!currentCamera) {
-                                currentCamera = this.context.systems.camera.cameras[0];
-                                if (currentCamera) {
-                                    currentCamera = currentCamera.entity;
-                                }
-                            }
-
-                            c.entity.particlesystem.camera = currentCamera;
-                        }
 
                         if (!data.paused) {
                             emitter.addTime(dt);
