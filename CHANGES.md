@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.162.7
+* Single mipmapped prefiltered cubemap instead of 6 by using EXT_shader_texture_lod. Only enabled when extension exists AND device has less than 16 samplers (mobiles).
+
 ### v0.162.6
 * Added check for more than 65k verts in particle system.
 * Particle systems wrapBounds are now relative to emitter position instead of camera position.
