@@ -1,0 +1,6 @@
+
+void addAmbient(inout psInternalData data) {
+    vec3 fixedReflDir = fixSeamsStretch(data.normalW, 5.0, 128.0);
+    data.diffuseLight = decodeRGBM( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, 5.0) );
+}
+

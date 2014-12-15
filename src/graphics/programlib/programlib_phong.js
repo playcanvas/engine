@@ -38,6 +38,7 @@ pc.gfx.programlib.phong = {
         var lighting = options.lights.length > 0;
         var reflections = options.cubeMap || options.sphereMap || options.prefilteredCubemap;
         var useTangents = pc.gfx.precalculatedTangents;
+        var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
         if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
 
         if (options.shadingModel===pc.scene.SPECULAR_PHONG) {
@@ -296,7 +297,11 @@ pc.gfx.programlib.phong = {
 
         if (options.cubeMap) {
             if (options.prefilteredCubemap) {
-                code += chunks.reflectionPrefilteredCubePS;
+                if (useTexCubeLod) {
+                    code += chunks.reflectionPrefilteredCubeLodPS;
+                } else {
+                    code += chunks.reflectionPrefilteredCubePS;
+                }
             } else {
                 code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g, options.hdrReflection? "textureCubeRGBM" : "textureCubeSRGB");
             }
@@ -318,7 +323,11 @@ pc.gfx.programlib.phong = {
         }
 
         if (options.prefilteredCubemap) {
-            code += chunks.ambientPrefilteredCubePS;
+            if (useTexCubeLod) {
+                code += chunks.ambientPrefilteredCubeLodPS;
+            } else {
+                code += chunks.ambientPrefilteredCubePS;
+            }
         } else {
             code += chunks.ambientConstantPS;
         }
