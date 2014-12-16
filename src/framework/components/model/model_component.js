@@ -305,12 +305,11 @@ pc.extend(pc.fw, function () {
         * @description Attached to the asset during loading (while running with the designer or over livelink), this callback
         * is used to reload the asset if it is changed.
         */
-        onAssetChange: function (asset) {
-            // Remove the asset from the cache and reload it
-            asset.resource = null;
-            this.system.context.loader.removeFromCache(asset.getFileUrl());
-            this.asset = null;
-            this.asset = asset.id;
+        onAssetChange: function (asset, attribute, newValue, oldValue) {
+            if (attribute === 'resource') {
+                // Reload the asset
+                this.asset = asset;
+            }
         }
     });
 

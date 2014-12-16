@@ -113,7 +113,7 @@ pc.extend(pc.resources, function () {
         for (var i = 0; i < data.parameters.length; i++) {
             var param = data.parameters[i];
             if (param.type === 'texture' && param.data && !(param.data instanceof pc.gfx.Texture)) {
-                this._loadTextureParam(param, request);
+                this._loadTextureParam(material, param, request);
             } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.gfx.Texture)) {
                 var cubemapAsset = this._getTextureAssetFromRegistry(param.data, request);
                 this._loadCubemapParamFromCache(param, cubemapAsset);
@@ -147,7 +147,7 @@ pc.extend(pc.resources, function () {
     };
 
     // Loads a texture asset and sets param.data to it
-    MaterialResourceHandler.prototype._loadTextureParam = function(param, request) {
+    MaterialResourceHandler.prototype._loadTextureParam = function(material, param, request) {
         var url;
         var textureId = param.data;
 
@@ -155,7 +155,20 @@ pc.extend(pc.resources, function () {
 
         var asset = this._getTextureAssetFromRegistry(textureId, request);
 
+        function onTextureChanged (asset, attribute, newValue, oldValue) {
+            if (attribute === 'resource') {
+                if (material[param.name] === oldValue) {
+                    material[param.name] = newValue;
+                    material.update();
+                } else {
+                    asset.off('change', onTextureChanged);
+                }
+            }
+        }
+
         if (asset) {
+            asset.on('change', onTextureChanged);
+
             if (asset.resource) {
                 // Asset already loaded, use cached texture
                 param.data = asset.resource;
@@ -166,7 +179,8 @@ pc.extend(pc.resources, function () {
                     var textureData = asset.data;
 
                     var texture = this._assets.loader.getFromCache(url);
-                    if (!texture) {
+                    var inCache = !!texture;
+                    if (!inCache) {
                         format = pc.string.endsWith(url.toLowerCase(), '.jpg') ? pc.gfx.PIXELFORMAT_R8_G8_B8 : pc.gfx.PIXELFORMAT_R8_G8_B8_A8;
                         texture = new pc.gfx.Texture(this._device, {
                             format: format
@@ -180,6 +194,12 @@ pc.extend(pc.resources, function () {
                     }
 
                     this._assets.load([asset], [texture], {});
+
+                    // add the texture in the cache immediately to avoid
+                    // creating another texture object on load
+                    if (!inCache) {
+                        this._assets.loader.addToCache(url, texture);
+                    }
 
                     param.data = texture;
                 }

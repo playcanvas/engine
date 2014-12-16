@@ -12,8 +12,9 @@ pc.extend(pc.resources, function () {
         }
     }
 
-    var TextureResourceHandler = function (device) {
+    var TextureResourceHandler = function (device, assets) {
         this._device = device;
+        this._assets = assets;
         this.crossOrigin = undefined;
     };
     TextureResourceHandler = pc.inherits(TextureResourceHandler, pc.resources.ResourceHandler);
@@ -51,6 +52,12 @@ pc.extend(pc.resources, function () {
                     var element = event.srcElement;
                     reject(pc.string.format("Error loading Texture from: '{0}'", element.src));
                 };
+
+                var asset = self._assets.getAssetByUrl(request.canonical);
+                if (asset && asset.file) {
+                    identifier += '?t=' + asset.file.hash;
+                }
+
                 image.src = identifier;
             }
         });

@@ -198,6 +198,14 @@ pc.extend(pc.resources, function () {
             }
         },
 
+        unregisterHash: function (identifier) {
+            var hash = this.getHash(identifier);
+            if (hash) {
+                delete this._hashes[identifier];
+                delete this._cache[hash];
+            }
+        },
+
         /**
         * @function
         * @name pc.resources.ResourceLoader#getHash

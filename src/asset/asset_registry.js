@@ -120,7 +120,8 @@ pc.extend(pc.asset, function () {
             }
             this._names[asset.name].push(asset.id);
             if (asset.file) {
-                this._urls[asset.file.url] = asset.id;
+                this._urls[asset.getFileUrl()] = asset.id;
+                asset.on('change', this.onAssetChanged, this);
             }
         },
 
@@ -134,7 +135,36 @@ pc.extend(pc.asset, function () {
             delete this._cache[asset.id];
             delete this._names[asset.name];
             if (asset.file) {
+                asset.off('change', this.onAssetChanged, this);
                 delete this._urls[asset.file.url];
+            }
+        },
+
+        onAssetChanged: function (asset, attribute, newValue, oldValue) {
+            var url;
+            if (attribute === 'file') {
+                if (oldValue) {
+                    if (newValue && newValue.hash === oldValue.hash) {
+                        return;
+                    }
+
+                    url = asset.prefix ? pc.path.join(asset.prefix, oldValue.url) : oldValue.url;
+                    delete this._urls[url];
+                    this.loader.unregisterHash(url);
+                }
+
+                if (newValue) {
+                    url = asset.getFileUrl();
+                    this._urls[url] = asset.id;
+                    this.loader.registerHash(newValue.hash, url);
+
+                    var oldResource = asset.resource;
+                    this.load([asset]).then(function (resources) {
+                        asset.fire('change', asset, 'resource', resources[0], oldResource);
+                    });
+                } else {
+                    asset.off('change', this.onAssetChanged, this);
+                }
             }
         },
 
