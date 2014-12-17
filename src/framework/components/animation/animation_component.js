@@ -120,6 +120,11 @@ pc.extend(pc.fw, function () {
                 if (!asset) {
                     logERROR(pc.string.format('Trying to load animation component before assets {0} are loaded', ids));
                 } else {
+
+                    // subscribe to change event so that we reload the animation if necessary
+                    asset.off('change', this.onAssetChanged, this);
+                    asset.on('change', this.onAssetChanged, this);
+
                     // if the asset is in the cache try to load it synchronously
                     if (asset.resource) {
                         animations[asset.name] = asset.resource;
@@ -143,6 +148,23 @@ pc.extend(pc.fw, function () {
             }
         },
 
+        onAssetChanged: function (asset, attribute, newValue, oldValue) {
+            if (attribute === 'resource') {
+                // replace old animation with new one
+                if (newValue) {
+                    this.animations[asset.name] = newValue;
+                    if (this.data.currAnim === asset.name) {
+                        // restart animation
+                        if (this.data.playing && this.data.enabled && this.entity.enabled)  {
+                            this.play(asset.name, 0);
+                        }
+                    }
+                } else {
+                    delete this.animations[asset.name];
+                }
+            }
+        },
+
         onSetAnimations: function (name, oldValue, newValue) {
             var data = this.data;
 
@@ -163,7 +185,15 @@ pc.extend(pc.fw, function () {
                 break;
             }
         },
+
         onSetAssets: function (name, oldValue, newValue) {
+            if (oldValue && oldValue.length) {
+                for (var i = 0; i < oldValue.length; i++) {
+                    // unsubscribe from change event for old assets
+                    oldValue[i].off('change', this.onAssetChanged, this);
+                }
+            }
+
             this.loadAnimationAssets(newValue);
         },
 
