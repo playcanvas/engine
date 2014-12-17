@@ -92,6 +92,21 @@ pc.extend(pc.asset, function () {
                 prefix = this.prefix;
             }
             return pc.path.join(prefix, url);
+        },
+
+        /**
+        * @name pc.asset.Asset#set
+        * @function
+        * @description Sets an asset property and fires a 'change' event if the property has changed
+        * @example
+        * asset.set('name', 'new_name');
+        */
+        set: function (name, value) {
+            var old = this[name];
+            if (old !== value) {
+                this[name] = value;
+                this.fire('change', this, name, value, old);
+            }
         }
     };
 

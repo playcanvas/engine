@@ -629,11 +629,7 @@ pc.extend(pc.fw, function () {
                             var data = msg.content.assets[id];
                             for (var key in data) {
                                 if (data.hasOwnProperty(key)) {
-                                    var prev = asset[key];
-                                    if (prev !== data[key]) {
-                                        asset[key] = data[key];
-                                        asset.fire('change', asset, key, asset[key], prev);
-                                    }
+                                    asset.set(key, data[key]);
                                 }
                             }
                         }
@@ -771,9 +767,7 @@ pc.extend(pc.fw, function () {
         _linkUpdateAsset: function (id, attribute, value) {
             var asset = this.context.assets.getAssetById(id);
             if (asset) {
-                var prevValue = asset[attribute];
-                asset[attribute] = value;
-                asset.fire('change', asset, attribute, value, prevValue);
+                asset.set(attribute, value);
             }
         },
 
