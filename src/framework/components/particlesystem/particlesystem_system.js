@@ -123,9 +123,9 @@ pc.extend(pc.fw, function() {
                     step: 0.1
                 }
             }, {
-                name: "depthTest",
-                displayName: "Depth Test",
-                description: "Enables hardware depth testing. Do not use it for semi-transparent particles",
+                name: "depthWrite",
+                displayName: "Depth Write",
+                description: "Enables writing to depth buffer, therefore giving accurate occlusion between particles. Do not use it for semi-transparent particles",
                 type: "boolean",
                 defaultValue: false,
             }, {
