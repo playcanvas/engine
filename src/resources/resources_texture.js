@@ -68,6 +68,9 @@ pc.extend(pc.resources, function () {
                     reject(pc.string.format("Error loading Texture from: '{0}'", element.src));
                 };
 
+                // Add the file hash as the timestamp to make sure the texture is not cached.
+                // This is only needed for img elements because they do not always check the server
+                // for modified files if the URL is in browser memory
                 var asset = self._assets.getAssetByUrl(request.canonical);
                 if (asset && asset.file) {
                     identifier += '?t=' + asset.file.hash;
