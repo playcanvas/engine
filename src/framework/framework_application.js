@@ -319,7 +319,7 @@ pc.extend(pc.fw, function () {
          */
         tick: function () {
             // Submit a request to queue up a new animation frame immediately
-            requestAnimationFrame(this.tick.bind(this), this.canvas);
+            window.requestAnimationFrame(this.tick.bind(this));
 
             var now = (window.performance && window.performance.now) ? performance.now() : Date.now();
             var dt = (now - (time || now)) / 1000.0;
