@@ -184,15 +184,11 @@ pc.extend(pc.resources, function () {
     };
 
     MaterialResourceHandler.prototype._loadTextureParamPromise = function(param, textureAsset) {
-        return new pc.promise.Promise(function (resolve, reject) {
-            this._assets.load([textureAsset]).then(function (resources) {
-                param.data = resources[0];
-                resolve();
-            }, function (error) {
-                param.data = null;
-                reject(error);
-            });
-        }.bind(this));
+        return this._assets.load(textureAsset).then(function (resources) {
+            param.data = resources[0];
+        }, function (error) {
+            param.data = null;
+        });
     };
 
     // Try to load a cubemap from the cache and set param.data to it.
@@ -209,15 +205,11 @@ pc.extend(pc.resources, function () {
 
     // Return a promise which loads the cubemap asset and sets it to param.data if successful
     MaterialResourceHandler.prototype._loadCubemapParamPromise = function(param, cubemapAsset) {
-        return new pc.promise.Promise(function (resolve, reject) {
-            this._assets.load([cubemapAsset]).then(function (resources) {
-                param.data = resources[0];
-                resolve();
-            }, function (error) {
-                param.data = null;
-                reject(error);
-            });
-        }.bind(this));
+        return this._assets.load(cubemapAsset).then(function (resources) {
+            param.data = resources[0];
+        }, function (error) {
+            param.data = null;
+        });
     };
 
     MaterialResourceHandler.prototype._getAssetFromRequest = function (request) {
