@@ -1,8 +1,36 @@
 pc.extend(pc.resources, function () {
+
+    function onTextureAssetChanged (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resource') {
+            return;
+        }
+
+        var material = this;
+        var dirty = false;
+
+        if (oldValue) {
+            for (var key in material) {
+                if (material.hasOwnProperty(key)) {
+                    if (material[key] === oldValue) {
+                        material[key] = newValue;
+                        dirty = true;
+                    }
+                }
+            }
+        }
+
+        if (dirty) {
+            material.update();
+        } else {
+            asset.off('change', onTextureAssetChanged, material);
+        }
+    }
+
     var MaterialResourceHandler = function (device, assets) {
         this._assets = assets;
         this._device = device;
     };
+
     MaterialResourceHandler = pc.inherits(MaterialResourceHandler, pc.resources.ResourceHandler);
 
     MaterialResourceHandler.prototype.load = function (request, options) {
@@ -118,8 +146,8 @@ pc.extend(pc.resources, function () {
         }
 
         for (var id in textures) {
-            textures[id].off('change', material.onTextureAssetChanged, material);
-            textures[id].on('change', material.onTextureAssetChanged, material);
+            textures[id].off('change', onTextureAssetChanged, material);
+            textures[id].on('change', onTextureAssetChanged, material);
         }
 
         if (requests.length) {
@@ -132,7 +160,6 @@ pc.extend(pc.resources, function () {
         } else {
             material.init(data);
         }
-
     };
 
     MaterialResourceHandler.prototype._getTextureAssetFromRegistry = function(textureId, request) {

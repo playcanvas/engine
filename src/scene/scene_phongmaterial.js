@@ -708,29 +708,6 @@ pc.extend(pc.scene, function () {
             return newID + 1;
         },
 
-        onTextureAssetChanged: function (asset, attribute, newValue, oldValue) {
-            if (attribute !== 'resource') {
-                return;
-            }
-
-            var self = this;
-            var dirty = false;
-            for (var key in self) {
-                if (self.hasOwnProperty(key)) {
-                    if (self[key] === oldValue) {
-                        self[key] = newValue;
-                        dirty = true;
-                    }
-                }
-            }
-
-            if (dirty) {
-                this.update();
-            } else {
-                asset.off('change', this.onTextureAssetChanged, this);
-            }
-        },
-
         updateShader: function (device, scene) {
             var i;
             var lights = scene._lights;
