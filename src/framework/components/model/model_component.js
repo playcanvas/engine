@@ -57,24 +57,26 @@ pc.extend(pc.fw, function () {
                 return;
             }
 
-            function _onLoad(resources) {
-                var model = resources[0];
-                if (this.system.context.designer) {
-                    model.generateWireframe();
-                }
-
-                asset.on('change', this.onAssetChange, this);
-
-                if (this.data.type === 'asset') {
-                    this.model = model;
-                }
-            }
+            asset.off('change', this.onAssetChange, this); // do not subscribe multiple times
+            asset.on('change', this.onAssetChange, this);
 
             if (asset.resource) {
                 var model = asset.resource.clone();
-                _onLoad.call(this, [model]);
+                this._onModelLoaded(model);
             } else {
-                this.system.context.assets.load(asset, [], options).then(_onLoad.bind(this));
+                this.system.context.assets.load(asset, [], options).then(function (resources) {
+                    this._onModelLoaded(resources[0]);
+                }.bind(this));
+            }
+        },
+
+        _onModelLoaded: function (model) {
+            if (this.system.context.designer) {
+                model.generateWireframe();
+            }
+
+            if (this.data.type === 'asset') {
+                this.model = model;
             }
         },
 
@@ -234,7 +236,7 @@ pc.extend(pc.fw, function () {
                 } else {
                     console.error(pc.string.format("Entity '{0}' is trying to load Material Asset {1} which no longer exists. Maybe this model was once a primitive shape?", this.entity.getPath(), id));
                 }
-                }
+            }
 
             // if no material asset was loaded then use the default material
             if (!material) {
@@ -307,8 +309,38 @@ pc.extend(pc.fw, function () {
         */
         onAssetChange: function (asset, attribute, newValue, oldValue) {
             if (attribute === 'resource') {
-                // Reload the asset
-                this.asset = asset;
+                // if the model resource has changed then set it
+                if (newValue) {
+                    this._onModelLoaded(newValue);
+                }
+            } else if (attribute === 'data') {
+                // if the data has changed then it means the mapping has changed
+                // so check if the mapping is different and if so reload the model
+                var isMappingDifferent = false;
+                var mapping = newValue.mapping;
+                var oldMapping = oldValue.mapping;
+                if (mapping && !oldMapping || oldMapping && !mapping) {
+                    isMappingDifferent = true;
+                } else if (mapping) {
+                    if (mapping && mapping.length !== oldMapping.length) {
+                        isMappingDifferent = true;
+                    } else {
+                        for (var i = 0; i < mapping.length; i++) {
+                            if (mapping[i].material !== oldMapping[i].material) {
+                                isMappingDifferent = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (isMappingDifferent) {
+                    // clear the cache and reload the model
+                    asset.resource = null;
+                    this.system.context.loader.removeFromCache(asset.getFileUrl());
+                    this.loadModelAsset(asset.id);
+                }
+
             }
         }
     });

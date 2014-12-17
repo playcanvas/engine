@@ -121,7 +121,7 @@ pc.extend(pc.asset, function () {
             this._names[asset.name].push(asset.id);
             if (asset.file) {
                 this._urls[asset.getFileUrl()] = asset.id;
-                asset.on('change', this.onAssetChanged, this);
+                asset.on('change', this._onAssetChanged, this);
             }
         },
 
@@ -135,35 +135,48 @@ pc.extend(pc.asset, function () {
             delete this._cache[asset.id];
             delete this._names[asset.name];
             if (asset.file) {
-                asset.off('change', this.onAssetChanged, this);
+                asset.off('change', this._onAssetChanged, this);
                 delete this._urls[asset.file.url];
             }
         },
 
-        onAssetChanged: function (asset, attribute, newValue, oldValue) {
+        /**
+        * @private
+        * @function
+        * @name pc.asset.AssetRegistry#_onAssetChanged
+        * @description Takes care of reloading an asset file if it has changed
+        */
+        _onAssetChanged: function (asset, attribute, newValue, oldValue) {
             var url;
             if (attribute === 'file') {
                 if (oldValue) {
+                    // if the file hash hasn't changed don't do anything
                     if (newValue && newValue.hash === oldValue.hash) {
                         return;
                     }
 
+                    // get old asset url
                     url = asset.prefix ? pc.path.join(asset.prefix, oldValue.url) : oldValue.url;
+
+                    // remove old url connections
                     delete this._urls[url];
                     this.loader.unregisterHash(url);
+                    this.loader.removeFromCache(url);
                 }
 
                 if (newValue) {
+                    // get new asset url
                     url = asset.getFileUrl();
+
+                    // register new url
                     this._urls[url] = asset.id;
                     this.loader.registerHash(newValue.hash, url);
 
+                    // reload asset resource
                     var oldResource = asset.resource;
                     this.load([asset]).then(function (resources) {
                         asset.fire('change', asset, 'resource', resources[0], oldResource);
                     });
-                } else {
-                    asset.off('change', this.onAssetChanged, this);
                 }
             }
         },

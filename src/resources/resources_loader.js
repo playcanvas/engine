@@ -198,11 +198,17 @@ pc.extend(pc.resources, function () {
             }
         },
 
+        /**
+        * @function
+        * @name pc.resources.ResourceLoader#unregisterHash
+        * @description Unregister existing connection between a file hash and an identifier.
+        * @param {String} identifier The resource identifier
+        */
         unregisterHash: function (identifier) {
             var hash = this.getHash(identifier);
             if (hash) {
+                delete this._canonicals[hash];
                 delete this._hashes[identifier];
-                delete this._cache[hash];
             }
         },
 
@@ -258,7 +264,7 @@ pc.extend(pc.resources, function () {
         removeFromCache: function (identifier) {
             var hash = this.getHash(identifier);
             if (hash) {
-                delete this._cache[hash]
+                delete this._cache[hash];
             } else {
                 return null;
             }
