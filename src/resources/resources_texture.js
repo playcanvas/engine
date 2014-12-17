@@ -100,11 +100,12 @@ pc.extend(pc.resources, function () {
 
                 var asset = self._assets.getAssetByUrl(request.canonical);
                 if (asset && asset.data) {
-                    texture.name = asset.data.name;
-                    texture.addressU = jsonToAddressMode[asset.data.addressu];
-                    texture.addressV = jsonToAddressMode[asset.data.addressv];
-                    texture.magFilter = jsonToFilterMode[asset.data.magfilter];
-                    texture.minFilter = jsonToFilterMode[asset.data.minfilter];
+                    // check if data exists - it might not exist for engine-only users
+                    if (asset.data.name !== undefined) texture.name = asset.data.name;
+                    if (asset.data.addressu !== undefined) texture.addressU = jsonToAddressMode[asset.data.addressu];
+                    if (asset.data.addressV !== undefined) texture.addressV = jsonToAddressMode[asset.data.addressV];
+                    if (asset.data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[asset.data.magfilter];
+                    if (asset.data.minfilter !== undefined) texture.minfilter = jsonToFilterMode[asset.data.minfilter];
                 }
             }
             texture.setSource(img);
