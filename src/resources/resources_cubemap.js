@@ -157,27 +157,26 @@ pc.extend(pc.resources, function () {
             if (this._areValidTextures(data.textures)) {
                 var sourceIndexes = [];
 
-                var requests = [];
+                var assets = [];
                 for (var i = 0; i < 6; i++) {
-
                     if (data.textures[i] !== null) {
                         var asset = this._assets.getAssetById(data.textures[i]);
                         if (!asset) {
                             pc.log.error(pc.string.format('Could not load cubemap - Texture {0} not found', data.textures[i]));
                             return;
-                        }
-
-                        // try to avoid making a texture request if the image is the same
-                        if (!existingSources[i] || !pc.string.endsWith(existingSources[i].src, asset.getFileUrl())) {
-                            requests.push(new pc.resources.TextureRequest(asset.getFileUrl()));
-                            sourceIndexes.push(i);
+                        } else {
+                            // try to avoid making a texture request if the image is the same
+                            //if (!existingSources[i] || !pc.string.endsWith(existingSources[i].src, asset.getFileUrl())) {
+                                assets.push(asset);
+                                sourceIndexes.push(i);
+                            //}
                         }
                     }
                 }
 
-                if (requests.length) {
+                if (assets.length) {
                     // update sources with the new images
-                    this._loader.request(requests).then(function (resources) {
+                    this._assets.load(assets).then(function (resources) {
                         for (var i = 0; i < sourceIndexes.length; i++) {
                             existingSources[sourceIndexes[i]] = resources[i].getSource();
                         }

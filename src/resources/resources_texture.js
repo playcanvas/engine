@@ -1,4 +1,19 @@
 pc.extend(pc.resources, function () {
+    var jsonToAddressMode = {
+        "repeat": pc.gfx.ADDRESS_REPEAT,
+        "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
+        "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
+    };
+
+    var jsonToFilterMode = {
+        "nearest":             pc.gfx.FILTER_NEAREST,
+        "linear":              pc.gfx.FILTER_LINEAR,
+        "nearest_mip_nearest": pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST,
+        "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
+        "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
+        "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
+    };
+
     function arrayBufferCopy(src, dst, dstByteOffset, numBytes) {
         dst32Offset = dstByteOffset / 4;
         var tail = (numBytes % 4);
@@ -66,6 +81,7 @@ pc.extend(pc.resources, function () {
     };
 
     TextureResourceHandler.prototype.open = function (data, request, options) {
+        var self = this;
         var texture;
 
         // Every browser seems to pass data as an Image type. For some reason, the XDK
@@ -81,6 +97,15 @@ pc.extend(pc.resources, function () {
                     height: img.height,
                     format: format
                 });
+
+                var asset = self._assets.getAssetByUrl(request.canonical);
+                if (asset && asset.data) {
+                    texture.name = asset.data.name;
+                    texture.addressU = jsonToAddressMode[asset.data.addressu];
+                    texture.addressV = jsonToAddressMode[asset.data.addressv];
+                    texture.magFilter = jsonToFilterMode[asset.data.magfilter];
+                    texture.minFilter = jsonToFilterMode[asset.data.minfilter];
+                }
             }
             texture.setSource(img);
         } else if (data instanceof ArrayBuffer) { // DDS or CRN
