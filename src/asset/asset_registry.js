@@ -160,8 +160,8 @@ pc.extend(pc.asset, function () {
 
                     // remove old url connections
                     delete this._urls[url];
-                    this.loader.unregisterHash(url);
                     this.loader.removeFromCache(url);
+                    this.loader.unregisterHash(url);
                 }
 
                 if (newValue) {
