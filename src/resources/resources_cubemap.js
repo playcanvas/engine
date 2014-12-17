@@ -60,8 +60,6 @@ pc.extend(pc.resources, function () {
             promise = new pc.promise.Promise(function (resolve, reject) {
                 pc.net.http.get(request.canonical, function(response) {
                     var data = pc.extend({}, response);
-                    data.textureAssets = [];
-
                     var textures = response.textures;
                     if (textures.length) {
                         // Create and load all referenced textures
@@ -76,8 +74,11 @@ pc.extend(pc.resources, function () {
 
                         this._assets.load(assets).then(function (responses) {
                              // Only when referenced assets are loaded do we resolve the cubemap load
-                             data.textureAssets = assets;
-                             resolve(data);
+                            data.images = responses.map(function (texture) {
+                                return texture.getSource();
+                            });
+
+                            resolve(data);
                          }, function (error) {
                             reject(error);
                          });
