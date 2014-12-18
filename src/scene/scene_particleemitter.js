@@ -24,6 +24,9 @@ pc.extend(pc.scene, function() {
         var pixels = texture.lock();
 
         if (format == pc.gfx.PIXELFORMAT_R8_G8_B8_A8) {
+            texture.minFilter = pc.gfx.FILTER_LINEAR;
+            texture.magFilter = pc.gfx.FILTER_LINEAR;
+
             var temp = new Uint8Array(pixelData.length);
             for (var i = 0; i < pixelData.length; i++) {
                 temp[i] = pixelData[i] * mult8Bit * 255;
