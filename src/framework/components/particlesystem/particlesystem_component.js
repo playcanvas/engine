@@ -408,6 +408,7 @@ pc.extend(pc.fw, function() {
         },
 
         /**
+        * @private
         * @function
         * @name pc.fw.ParticleSystemComponent#rebuild
         * @description Rebuilds all data used by this particle system.
