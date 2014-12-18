@@ -65,6 +65,8 @@ pc.gfx.programlib.particle = {
             fshader += chunk.fogNonePS;
         }
 
+        if (options.normal == 2) fshader +=     "\nuniform sampler2D normalMap;\n";
+        if (options.soft > 0) fshader +=        "\nuniform sampler2D uDepthMap;\n";
         fshader +=                                  chunk.particlePS;
         if (options.soft > 0) fshader +=            chunk.particle_softPS;
         if (options.normal == 1) fshader +=         "\nvec3 normal = Normal;\n"
