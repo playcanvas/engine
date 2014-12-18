@@ -77,7 +77,7 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.TextRequest, new pc.resources.TextResourceHandler());
         loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
         loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler( this.graphicsDevice, this.context.assets));
-        loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice));
+        loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.CubemapRequest, new pc.resources.CubemapResourceHandler( this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.context.assets));
         loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
@@ -618,25 +618,31 @@ pc.extend(pc.fw, function () {
 
                 case pc.fw.LiveLinkMessageType.UPDATE_ASSETCACHE:
                     var id;
+                    var asset;
 
                     // Add new and Update existing assets
                     for (id in msg.content.assets) {
-                        var asset = this.context.assets.getAssetById(id);
+                        asset = this.context.assets.getAssetById(id);
                         if (!asset) {
-                            var assetData = msg.content.assets[id];
-                            this.context.assets.createAndAddAsset(id, assetData);
+                            this.context.assets.createAndAddAsset(id, msg.content.assets[id]);
                         } else {
-                            pc.extend(asset, msg.content.assets[id]);
+                            var data = msg.content.assets[id];
+                            for (var key in data) {
+                                if (data.hasOwnProperty(key)) {
+                                    asset[key] = data[key];
+                                }
+                            }
                         }
                     }
 
                     // Delete removed assets
                     for (id in msg.content.deleted) {
-                        var asset = this.context.assets.getAssetById(id);
+                        asset = this.context.assets.getAssetById(id);
                         if (asset) {
                             this.context.assets.removeAsset(asset);
                         }
                     }
+
                     break;
 
                 case pc.fw.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
@@ -762,7 +768,6 @@ pc.extend(pc.fw, function () {
             var asset = this.context.assets.getAssetById(id);
             if (asset) {
                 asset[attribute] = value;
-                asset.fire('change', asset, attribute, value);
             }
         },
 

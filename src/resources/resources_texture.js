@@ -1,4 +1,19 @@
 pc.extend(pc.resources, function () {
+    var jsonToAddressMode = {
+        "repeat": pc.gfx.ADDRESS_REPEAT,
+        "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
+        "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
+    };
+
+    var jsonToFilterMode = {
+        "nearest":             pc.gfx.FILTER_NEAREST,
+        "linear":              pc.gfx.FILTER_LINEAR,
+        "nearest_mip_nearest": pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST,
+        "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
+        "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
+        "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
+    };
+
     function arrayBufferCopy(src, dst, dstByteOffset, numBytes) {
         dst32Offset = dstByteOffset / 4;
         var tail = (numBytes % 4);
@@ -12,8 +27,9 @@ pc.extend(pc.resources, function () {
         }
     }
 
-    var TextureResourceHandler = function (device) {
+    var TextureResourceHandler = function (device, assets) {
         this._device = device;
+        this._assets = assets;
         this.crossOrigin = undefined;
     };
     TextureResourceHandler = pc.inherits(TextureResourceHandler, pc.resources.ResourceHandler);
@@ -51,6 +67,15 @@ pc.extend(pc.resources, function () {
                     var element = event.srcElement;
                     reject(pc.string.format("Error loading Texture from: '{0}'", element.src));
                 };
+
+                // Add the file hash as the timestamp to make sure the texture is not cached.
+                // This is only needed for img elements because they do not always check the server
+                // for modified files if the URL is in browser memory
+                var asset = self._assets.getAssetByUrl(request.canonical);
+                if (asset && asset.file) {
+                    identifier += '?t=' + asset.file.hash;
+                }
+
                 image.src = identifier;
             }
         });
@@ -59,6 +84,7 @@ pc.extend(pc.resources, function () {
     };
 
     TextureResourceHandler.prototype.open = function (data, request, options) {
+        var self = this;
         var texture;
 
         // Every browser seems to pass data as an Image type. For some reason, the XDK
@@ -74,6 +100,16 @@ pc.extend(pc.resources, function () {
                     height: img.height,
                     format: format
                 });
+
+                var asset = self._assets.getAssetByUrl(request.canonical);
+                if (asset && asset.data) {
+                    // check if data exists - it might not exist for engine-only users
+                    if (asset.data.name !== undefined) texture.name = asset.data.name;
+                    if (asset.data.addressu !== undefined) texture.addressU = jsonToAddressMode[asset.data.addressu];
+                    if (asset.data.addressV !== undefined) texture.addressV = jsonToAddressMode[asset.data.addressV];
+                    if (asset.data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[asset.data.magfilter];
+                    if (asset.data.minfilter !== undefined) texture.minfilter = jsonToFilterMode[asset.data.minfilter];
+                }
             }
             texture.setSource(img);
         } else if (data instanceof ArrayBuffer) { // DDS or CRN

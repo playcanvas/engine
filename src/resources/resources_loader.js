@@ -200,6 +200,20 @@ pc.extend(pc.resources, function () {
 
         /**
         * @function
+        * @name pc.resources.ResourceLoader#unregisterHash
+        * @description Unregister existing connection between a file hash and an identifier.
+        * @param {String} identifier The resource identifier
+        */
+        unregisterHash: function (identifier) {
+            var hash = this.getHash(identifier);
+            if (hash) {
+                delete this._canonicals[hash];
+                delete this._hashes[identifier];
+            }
+        },
+
+        /**
+        * @function
         * @name pc.resources.ResourceLoader#getHash
         * @description Return the hash registered against the identifier
         * @param {String} identifier The identifier of a resource
@@ -250,7 +264,7 @@ pc.extend(pc.resources, function () {
         removeFromCache: function (identifier) {
             var hash = this.getHash(identifier);
             if (hash) {
-                delete this._cache[hash]
+                delete this._cache[hash];
             } else {
                 return null;
             }

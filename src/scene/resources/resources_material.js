@@ -1,23 +1,36 @@
 pc.extend(pc.resources, function () {
-    var jsonToAddressMode = {
-        "repeat": pc.gfx.ADDRESS_REPEAT,
-        "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
-        "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
-    };
 
-    var jsonToFilterMode = {
-        "nearest":             pc.gfx.FILTER_NEAREST,
-        "linear":              pc.gfx.FILTER_LINEAR,
-        "nearest_mip_nearest": pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST,
-        "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
-        "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
-        "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
-    };
+    function onTextureAssetChanged (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resource') {
+            return;
+        }
+
+        var material = this;
+        var dirty = false;
+
+        if (oldValue) {
+            for (var key in material) {
+                if (material.hasOwnProperty(key)) {
+                    if (material[key] === oldValue) {
+                        material[key] = newValue;
+                        dirty = true;
+                    }
+                }
+            }
+        }
+
+        if (dirty) {
+            material.update();
+        } else {
+            asset.off('change', onTextureAssetChanged, material);
+        }
+    }
 
     var MaterialResourceHandler = function (device, assets) {
         this._assets = assets;
         this._device = device;
     };
+
     MaterialResourceHandler = pc.inherits(MaterialResourceHandler, pc.resources.ResourceHandler);
 
     MaterialResourceHandler.prototype.load = function (request, options) {
@@ -78,12 +91,11 @@ pc.extend(pc.resources, function () {
         var material = new pc.scene.PhongMaterial();
 
         this._updatePhongMaterial(material, data, request);
-
         var asset = this._getAssetFromRequest(request);
 
         asset.on('change', function (asset, attribute, value) {
             if (attribute === 'data') {
-                this._updatePhongMaterial(material, value);
+                this._updatePhongMaterial(material, value, request);
             }
         }, this);
 
@@ -108,12 +120,22 @@ pc.extend(pc.resources, function () {
             data: data.shader === 'blinn' ? pc.scene.SPECULAR_BLINN : pc.scene.SPECULAR_PHONG
         });
 
+        var textures = {};
+
         // Replace texture ids with actual textures
         // Should we copy 'data' here instead of updating in place?
         for (var i = 0; i < data.parameters.length; i++) {
             var param = data.parameters[i];
             if (param.type === 'texture' && param.data && !(param.data instanceof pc.gfx.Texture)) {
-                this._loadTextureParam(param, request);
+                var textureAsset = this._getTextureAssetFromRegistry(param.data, request);
+                if (textureAsset) {
+                    textures[textureAsset.id] = textureAsset;
+                }
+
+                this._loadTextureParamFromCache(param, textureAsset);
+                if (!(param.data instanceof pc.gfx.Texture) && textureAsset) {
+                    requests.push(this._loadTextureParamPromise(param, textureAsset));
+                }
             } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.gfx.Texture)) {
                 var cubemapAsset = this._getTextureAssetFromRegistry(param.data, request);
                 this._loadCubemapParamFromCache(param, cubemapAsset);
@@ -121,6 +143,11 @@ pc.extend(pc.resources, function () {
                     requests.push(this._loadCubemapParamPromise(param, cubemapAsset));
                 }
             }
+        }
+
+        for (var id in textures) {
+            textures[id].off('change', onTextureAssetChanged, material);
+            textures[id].on('change', onTextureAssetChanged, material);
         }
 
         if (requests.length) {
@@ -133,7 +160,6 @@ pc.extend(pc.resources, function () {
         } else {
             material.init(data);
         }
-
     };
 
     MaterialResourceHandler.prototype._getTextureAssetFromRegistry = function(textureId, request) {
@@ -146,45 +172,23 @@ pc.extend(pc.resources, function () {
         return asset;
     };
 
-    // Loads a texture asset and sets param.data to it
-    MaterialResourceHandler.prototype._loadTextureParam = function(param, request) {
-        var url;
-        var textureId = param.data;
-
-        param.data = null;
-
-        var asset = this._getTextureAssetFromRegistry(textureId, request);
-
-        if (asset) {
-            if (asset.resource) {
-                // Asset already loaded, use cached texture
-                param.data = asset.resource;
-            } else {
-                // Asset needs to be loaded
-                url = asset.getFileUrl();
-                if (url) {
-                    var textureData = asset.data;
-
-                    var texture = this._assets.loader.getFromCache(url);
-                    if (!texture) {
-                        format = pc.string.endsWith(url.toLowerCase(), '.jpg') ? pc.gfx.PIXELFORMAT_R8_G8_B8 : pc.gfx.PIXELFORMAT_R8_G8_B8_A8;
-                        texture = new pc.gfx.Texture(this._device, {
-                            format: format
-                        });
-
-                        texture.name = textureData.name;
-                        texture.addressU = jsonToAddressMode[textureData.addressu];
-                        texture.addressV = jsonToAddressMode[textureData.addressv];
-                        texture.magFilter = jsonToFilterMode[textureData.magfilter];
-                        texture.minFilter = jsonToFilterMode[textureData.minfilter];
-                    }
-
-                    this._assets.load([asset], [texture], {});
-
-                    param.data = texture;
-                }
+    MaterialResourceHandler.prototype._loadTextureParamFromCache = function(param, textureAsset) {
+        if (textureAsset) {
+            if (textureAsset.resource) {
+                param.data = textureAsset.resource;
             }
+        } else {
+            pc.log.error(pc.string.format('Could not load texture. Asset {0} not found', param.data));
+            param.data = null;
         }
+    };
+
+    MaterialResourceHandler.prototype._loadTextureParamPromise = function(param, textureAsset) {
+        return this._assets.load(textureAsset).then(function (resources) {
+            param.data = resources[0];
+        }, function (error) {
+            param.data = null;
+        });
     };
 
     // Try to load a cubemap from the cache and set param.data to it.
@@ -201,24 +205,11 @@ pc.extend(pc.resources, function () {
 
     // Return a promise which loads the cubemap asset and sets it to param.data if successful
     MaterialResourceHandler.prototype._loadCubemapParamPromise = function(param, cubemapAsset) {
-        // Create new texture and set it to param.data so that the cubemap
-        // resource loader will use the pre-existing texture instead of creating a new one.
-        // That way if another request comes in at the same time for this parameter, it will
-        // not create another load request but rather wait until this texture has finished loading.
-        // (Useful in the Designer if the same material is loading multiple times simultaneously)
-        param.data = new pc.gfx.Texture(this._device, {
-            format: pc.gfx.PIXELFORMAT_R8_G8_B8,
-            cubemap: true
+        return this._assets.load(cubemapAsset).then(function (resources) {
+            param.data = resources[0];
+        }, function (error) {
+            param.data = null;
         });
-
-        return new pc.promise.Promise(function (resolve, reject) {
-            this._assets.load([cubemapAsset], [param.data], {}).then(function (resources) {
-                resolve();
-            }, function (error) {
-                param.data = null;
-                reject(error);
-            });
-        }.bind(this));
     };
 
     MaterialResourceHandler.prototype._getAssetFromRequest = function (request) {
