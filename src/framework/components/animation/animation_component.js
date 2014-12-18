@@ -190,7 +190,12 @@ pc.extend(pc.fw, function () {
             if (oldValue && oldValue.length) {
                 for (var i = 0; i < oldValue.length; i++) {
                     // unsubscribe from change event for old assets
-                    oldValue[i].off('change', this.onAssetChanged, this);
+                    if (oldValue[i]) {
+                        var asset = this.system.context.assets.getAssetById(oldValue[i]);
+                        if (asset) {
+                            asset.off('change', this.onAssetChanged, this);
+                        }
+                    }
                 }
             }
 
