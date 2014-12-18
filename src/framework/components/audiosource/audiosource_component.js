@@ -106,6 +106,18 @@ pc.extend(pc.fw, function () {
             var newAssets = [];
             var i, len = newValue.length;
 
+            if (oldValue && oldValue.length) {
+                for (var i = 0; i < oldValue.length; i++) {
+                    // unsubscribe from change event for old assets
+                    if (oldValue[i]) {
+                        var asset = this.system.context.assets.getAssetById(oldValue[i]);
+                        if (asset) {
+                            asset.off('change', this.onAssetChanged, this);
+                        }
+                    }
+                }
+            }
+
             if (len) {
                 for(i = 0; i < len; i++) {
                     if (oldValue.indexOf(newValue[i]) < 0) {
@@ -116,6 +128,26 @@ pc.extend(pc.fw, function () {
 
             if(!this.system._inTools && newAssets.length) { // Only load audio data if we are not in the tools and if changes have been made
                 this.loadAudioSourceAssets(newAssets);
+            }
+        },
+
+        onAssetChanged: function (asset, attribute, newValue, oldValue) {
+            if (attribute === 'resource') {
+                var sources = this.data.sources;
+                if (sources) {
+                    this.data.sources[asset.name] = newValue;
+                    if (this.data.currentSource === asset.name) {
+                        // replace current sound if necessary
+                        if (this.channel) {
+                            if (this.channel.paused) {
+                                this.play(asset.name);
+                                this.pause();
+                            } else {
+                                this.play(asset.name);
+                            }
+                        }
+                    }
+                }
             }
         },
 
@@ -205,6 +237,10 @@ pc.extend(pc.fw, function () {
                     // set the current source to the first entry (before calling set, so that it can play if needed)
                     currentSource = currentSource || asset.name;
 
+                    // subscribe to change events to reload sounds if necessary
+                    asset.off('change', this.onAssetChanged, this);
+                    asset.on('change', this.onAssetChanged, this);
+
                     if (asset.resource) {
                         sources[asset.name] = asset.resource;
                     } else {
@@ -212,7 +248,7 @@ pc.extend(pc.fw, function () {
                         names.push(asset.name);
                     }
                 }
-            });
+            }.bind(this));
 
             if (requests.length) {
                 this.system.context.loader.request(requests, options).then(function (audioResources) {
