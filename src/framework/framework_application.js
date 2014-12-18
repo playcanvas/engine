@@ -629,7 +629,7 @@ pc.extend(pc.fw, function () {
                             var data = msg.content.assets[id];
                             for (var key in data) {
                                 if (data.hasOwnProperty(key)) {
-                                    asset.set(key, data[key]);
+                                    asset[key] = data[key];
                                 }
                             }
                         }
@@ -767,7 +767,7 @@ pc.extend(pc.fw, function () {
         _linkUpdateAsset: function (id, attribute, value) {
             var asset = this.context.assets.getAssetById(id);
             if (asset) {
-                asset.set(attribute, value);
+                asset[attribute] = value;
             }
         },
 

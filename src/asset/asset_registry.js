@@ -150,11 +150,6 @@ pc.extend(pc.asset, function () {
             var url;
             if (attribute === 'file') {
                 if (oldValue) {
-                    // if the file hash hasn't changed don't do anything
-                    if (newValue && newValue.hash === oldValue.hash) {
-                        return;
-                    }
-
                     // get old asset url
                     url = asset.prefix ? pc.path.join(asset.prefix, oldValue.url) : oldValue.url;
 
