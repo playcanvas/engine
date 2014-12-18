@@ -47,7 +47,7 @@ pc.extend(pc.resources, function () {
                 // we have them when we create the cubemap, otherwise this will
                 // cause issues in cases like cubemaps used in materials which will be
                 // rendered without textures in the Designer
-                this._loadCubemapImages(null, asset.data, request).then(function (images) {
+                this._loadCubemapImages(null, asset.data).then(function (images) {
                     var data = pc.extend({}, asset.data);
                     data.images = images;
                     resolve(data);
@@ -118,7 +118,7 @@ pc.extend(pc.resources, function () {
         var asset = this._getAssetFromRequest(request);
         asset.on('change', function (asset, attribute, value) {
             if (attribute === 'data') {
-                this._loadCubemapImages(cubemap, value, request).then(function (images) {
+                this._loadCubemapImages(cubemap, value).then(function (images) {
                     this._updateCubemapData(cubemap, value, images);
                 }.bind(this));
             }
@@ -168,7 +168,7 @@ pc.extend(pc.resources, function () {
     };
 
     // Loads the images of the cubemap - Returns a promise
-    CubemapResourceHandler.prototype._loadCubemapImages = function (cubemap, data, request) {
+    CubemapResourceHandler.prototype._loadCubemapImages = function (cubemap, data) {
         var self = this;
         var promise = new pc.promise.Promise(function (resolve, reject) {
             if (data.textures) {
