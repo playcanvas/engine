@@ -1,5 +1,15 @@
 # PlayCanvas Engine Changes
 
+### v0.162.8
+* Removed requestAnimationFrame polyfill since browser support is now at 100%.
+* Added documentation for particlesystem component.
+* Old particle system was deleted.
+* Removed 2 from ParticleEmitter2/particle2.
+* depthTest renamed to depthWrite in particles (that's what it actually does).
+* Removed unneeded code from simulation.
+* [FIX] Flickering bug when using CPU wrapping.
+* [FIX] Particle gamma correction fix
+
 ### v0.162.7
 * Single mipmapped prefiltered cubemap instead of 6 by using EXT_shader_texture_lod. Only enabled when extension exists AND device has less than 16 samplers (mobiles).
 
