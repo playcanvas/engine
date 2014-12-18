@@ -51,6 +51,8 @@ pc.extend(pc.resources, function () {
                     var data = pc.extend({}, asset.data);
                     data.images = images;
                     resolve(data);
+                }, function (error) {
+                    reject(error);
                 });
 
             }.bind(this));
@@ -185,8 +187,8 @@ pc.extend(pc.resources, function () {
                             return;
                         }
                     } else {
-                        // one texture is missing so just return the existing sources
-                        resolve(cubemap.getSource());
+                        // one texture is missing so just return
+                        resolve(null);
                         return;
                     }
                 }
@@ -201,8 +203,8 @@ pc.extend(pc.resources, function () {
                     reject(error);
                 });
             } else {
-                // no textures provided so just return the existing sources
-                resolve(cubemap.getSource());
+                // no textures provided so just return
+                resolve(null);
             }
         });
 
