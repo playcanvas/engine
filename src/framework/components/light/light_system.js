@@ -73,7 +73,7 @@ pc.extend(pc.fw, function () {
             defaultValue: 40,
             filter: {
                 castShadows: true,
-                type: ['directional']
+                type: 'directional'
             }
         }, {
             name: "shadowResolution",
