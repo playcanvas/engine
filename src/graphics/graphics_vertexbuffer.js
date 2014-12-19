@@ -1,20 +1,20 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     /**
-     * @name pc.gfx.VertexBuffer
+     * @name pc.VertexBuffer
      * @class A vertex buffer is the mechanism via which the application specifies vertex 
      * data to the graphics hardware.
      * @constructor Creates a new vertex buffer object.
-     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this vertex buffer.
-     * @param {pc.gfx.VertexFormat} format The vertex format of this vertex buffer.
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex buffer.
+     * @param {pc.VertexFormat} format The vertex format of this vertex buffer.
      * @param {Number} numVertices The number of vertices that this vertex buffer will hold.
-     * @param {Number} [usage] The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
+     * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
      */
     var VertexBuffer = function (graphicsDevice, format, numVertices, usage) {
         // Initialize optional parameters
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
-        this.usage = usage || pc.gfx.BUFFER_STATIC;
+        this.usage = usage || pc.BUFFER_STATIC;
 
         // Store the vertex format
         this.format = format;
@@ -38,7 +38,7 @@ pc.extend(pc.gfx, function () {
     VertexBuffer.prototype = {
         /**
          * @function
-         * @name pc.gfx.VertexBuffer#destroy
+         * @name pc.VertexBuffer#destroy
          * @description Frees resources associated with this vertex buffer.
          */
         destroy: function () {
@@ -48,9 +48,9 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.VertexBuffer#getFormat
+         * @name pc.VertexBuffer#getFormat
          * @description Returns the data format of the specified vertex buffer.
-         * @returns {pc.gfx.VertexFormat} The data format of the specified vertex buffer.
+         * @returns {pc.VertexFormat} The data format of the specified vertex buffer.
          */
         getFormat: function () {
             return this.format;
@@ -58,12 +58,12 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.VertexBuffer#getUsage
+         * @name pc.VertexBuffer#getUsage
          * @description Returns the usage type of the specified vertex buffer. This indicates
-         * whether the buffer can be modified once and used many times (pc.gfx.BUFFER_STATIC), 
-         * modified repeatedly and used many times (pc.gfx.BUFFER_DYNAMIC) or modified once 
-         * and used at most a few times (pc.gfx.BUFFER_STREAM).
-         * @returns {Number} The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
+         * whether the buffer can be modified once and used many times (pc.BUFFER_STATIC), 
+         * modified repeatedly and used many times (pc.BUFFER_DYNAMIC) or modified once 
+         * and used at most a few times (pc.BUFFER_STREAM).
+         * @returns {Number} The usage type of the vertex buffer (see pc.BUFFER_*).
          */
         getUsage: function () {
             return this.usage;
@@ -71,7 +71,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.VertexBuffer#getNumVertices
+         * @name pc.VertexBuffer#getNumVertices
          * @description Returns the number of vertices stored in the specified vertex buffer.
          * @returns {number} The number of vertices stored in the vertex buffer.
          */
@@ -81,7 +81,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.VertexBuffer#lock
+         * @name pc.VertexBuffer#lock
          * @description Returns a mapped memory block representing the content of the vertex buffer.
          * @returns {ArrayBuffer} An array containing the byte data stored in the vertex buffer.
          */
@@ -91,7 +91,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.VertexBuffer#unlock
+         * @name pc.VertexBuffer#unlock
          * @description Notifies the graphics engine that the client side copy of the vertex buffer's
          * memory can be returned to the control of the graphics driver.
          */
@@ -100,13 +100,13 @@ pc.extend(pc.gfx, function () {
             var gl = this.device.gl;
             var glUsage;
             switch (this.usage) {
-                case pc.gfx.BUFFER_STATIC:
+                case pc.BUFFER_STATIC:
                     glUsage = gl.STATIC_DRAW;
                     break;
-                case pc.gfx.BUFFER_DYNAMIC:
+                case pc.BUFFER_DYNAMIC:
                     glUsage = gl.DYNAMIC_DRAW;
                     break;
-                case pc.gfx.BUFFER_STREAM:
+                case pc.BUFFER_STREAM:
                     glUsage = gl.STREAM_DRAW;
                     break;
             }

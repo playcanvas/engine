@@ -117,7 +117,7 @@ def concat_shaders():
                     with open(path, 'r') as f:
                         name = os.path.splitext(filename)[0] + os.path.splitext(filename)[1][1:].upper()
                         content = f.read().replace("\n", "\\n")
-                        out.write('pc.gfx.shaderChunks.%s = "%s"\n' % (name, content))
+                        out.write('pc.shaderChunks.%s = "%s"\n' % (name, content))
 
 
 def setup():

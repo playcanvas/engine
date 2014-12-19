@@ -461,7 +461,7 @@ pc.extend(pc.scene, function() {
                 this.swapTex = false;
             }
 
-            var chunks = pc.gfx.shaderChunks;
+            var chunks = pc.shaderChunks;
             var shaderCodeRespawn = chunks.particleUpdaterStartPS + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeNoRespawn = chunks.particleUpdaterStartPS + chunks.particleUpdaterEndPS;
             var shaderCodeOnStop = chunks.particleUpdaterStartPS + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;

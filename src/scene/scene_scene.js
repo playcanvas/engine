@@ -134,7 +134,7 @@ pc.extend(pc.scene, function () {
         set: function (value) {
             if (value !== this._gammaCorrection) {
                 this._gammaCorrection = value;
-                pc.gfx.shaderChunks.defaultGamma = value ? pc.gfx.shaderChunks.gamma2_2PS : pc.gfx.shaderChunks.gamma1_0PS;
+                pc.shaderChunks.defaultGamma = value ? pc.shaderChunks.gamma2_2PS : pc.shaderChunks.gamma1_0PS;
                 this.updateShaders = true;
             }
         }
@@ -147,7 +147,7 @@ pc.extend(pc.scene, function () {
         set: function (value) {
             if (value !== this._toneMapping) {
                 this._toneMapping = value;
-                pc.gfx.shaderChunks.defaultTonemapping = value ? pc.gfx.shaderChunks.tonemappingFilmicPS : pc.gfx.shaderChunks.tonemappingLinearPS;
+                pc.shaderChunks.defaultTonemapping = value ? pc.shaderChunks.tonemappingFilmicPS : pc.shaderChunks.tonemappingLinearPS;
                 this.updateShaders = true;
             }
         }

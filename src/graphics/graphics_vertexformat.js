@@ -1,34 +1,34 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     var _typeSize = [];
-    _typeSize[pc.gfx.ELEMENTTYPE_INT8   ] = 1;
-    _typeSize[pc.gfx.ELEMENTTYPE_UINT8  ] = 1;
-    _typeSize[pc.gfx.ELEMENTTYPE_INT16  ] = 2;
-    _typeSize[pc.gfx.ELEMENTTYPE_UINT16 ] = 2;
-    _typeSize[pc.gfx.ELEMENTTYPE_INT32  ] = 4;
-    _typeSize[pc.gfx.ELEMENTTYPE_UINT32 ] = 4;
-    _typeSize[pc.gfx.ELEMENTTYPE_FLOAT32] = 4;
+    _typeSize[pc.ELEMENTTYPE_INT8   ] = 1;
+    _typeSize[pc.ELEMENTTYPE_UINT8  ] = 1;
+    _typeSize[pc.ELEMENTTYPE_INT16  ] = 2;
+    _typeSize[pc.ELEMENTTYPE_UINT16 ] = 2;
+    _typeSize[pc.ELEMENTTYPE_INT32  ] = 4;
+    _typeSize[pc.ELEMENTTYPE_UINT32 ] = 4;
+    _typeSize[pc.ELEMENTTYPE_FLOAT32] = 4;
 
     /**
-     * @name pc.gfx.VertexFormat
+     * @name pc.VertexFormat
      * @class A vertex format is a descriptor that defines the layout of vertex element data inside
-     * a pc.gfx.VertexBuffer object.
-     * @constructor Returns a new pc.gfx.VertexFormat object. It is constructed from a description
-     * that explicitly defines how data is to be laid out inside a vertex buffer (pc.gfx.VertexBuffer).
+     * a pc.VertexBuffer object.
+     * @constructor Returns a new pc.VertexFormat object. It is constructed from a description
+     * that explicitly defines how data is to be laid out inside a vertex buffer (pc.VertexBuffer).
      * The description is defined as an array of elements, where each element is an object with the 
      * following properties: 
-     *   semantic: pc.gfx.SEMANTIC_.
+     *   semantic: pc.SEMANTIC_.
      *   components: the number of components used by the element.
-     *   type: (pc.gfx.ELEMENTTYPE_).
+     *   type: (pc.ELEMENTTYPE_).
      *   normalize: true to remap element values to a range of 0 to 1. Defaults to false.
-     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this vertex format.
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this vertex format.
      * @param {Array} description An array of vertex element descriptions.
      * @example
-     * var vertexFormat = new pc.gfx.VertexFormat(graphicsDevice, [
-     *     { semantic: pc.gfx.SEMANTIC_POSITION, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
-     *     { semantic: pc.gfx.SEMANTIC_TEXCOORD0, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 },
-     *     { semantic: pc.gfx.SEMANTIC_COLOR, components: 4, type: pc.gfx.ELEMENTTYPE_UINT8, normalize: true }
+     * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
+     *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.ELEMENTTYPE_FLOAT32 },
+     *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.ELEMENTTYPE_FLOAT32 },
+     *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.ELEMENTTYPE_UINT8, normalize: true }
      * ]);
      *
      * @author Will Eastcott

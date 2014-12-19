@@ -1,4 +1,4 @@
-pc.gfx.programlib.basic = {
+pc.programlib.basic = {
     generateKey: function (device, options) {
         var key = 'basic';
         if (options.fog)          key += '_fog';
@@ -13,23 +13,23 @@ pc.gfx.programlib.basic = {
         // GENERATE ATTRIBUTES //
         /////////////////////////
         var attributes = {
-            vertex_position: pc.gfx.SEMANTIC_POSITION
+            vertex_position: pc.SEMANTIC_POSITION
         }
         if (options.skin) {
-            attributes.vertex_boneWeights = pc.gfx.SEMANTIC_BLENDWEIGHT;
-            attributes.vertex_boneIndices = pc.gfx.SEMANTIC_BLENDINDICES;
+            attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
         }
         if (options.vertexColors) {
-            attributes.vertex_color = pc.gfx.SEMANTIC_COLOR;
+            attributes.vertex_color = pc.SEMANTIC_COLOR;
         }
         if (options.diffuseMap) {
-            attributes.vertex_texCoord0 = pc.gfx.SEMANTIC_TEXCOORD0;
+            attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
         }
 
         ////////////////////////////
         // GENERATE VERTEX SHADER //
         ////////////////////////////
-        var getSnippet = pc.gfx.programlib.getSnippet;
+        var getSnippet = pc.programlib.getSnippet;
         var code = '';
 
         // VERTEX SHADER DECLARATIONS

@@ -1,4 +1,4 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     var ShaderInput = function (graphicsDevice, name, type, locationId) {
@@ -9,7 +9,7 @@ pc.extend(pc.gfx, function () {
         this.scopeId = graphicsDevice.scope.resolve(name);
 
         // Create the version
-        this.version = new pc.gfx.Version();
+        this.version = new pc.Version();
 
         // Set the data type
         this.dataType = type;

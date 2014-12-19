@@ -64,6 +64,7 @@
 ../src/graphics/programlib/programlib_phong.js
 ../src/graphics/programlib/programlib_pick.js
 ../src/graphics/programlib/programlib_skybox.js
+../src/graphics/graphics_backwardscompatibility.js
 ../src/posteffect/posteffect_posteffect.js
 ../src/posteffect/posteffect_posteffectqueue.js
 ../src/scene/scene_scene.js

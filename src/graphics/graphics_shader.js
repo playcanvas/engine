@@ -1,4 +1,4 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     function addLineNumbers(src) {
@@ -47,7 +47,7 @@ pc.extend(pc.gfx, function () {
     }
 
     /**
-     * @name pc.gfx.Shader
+     * @name pc.Shader
      * @class A shader is a program that is repsonsible for rendering graphical primitives on a device's
      * graphics processor.
      * @constructor Creates a new shader object. The shader is generated from a shader definition. This 
@@ -55,16 +55,16 @@ pc.extend(pc.gfx, function () {
      * The language of the code is GLSL (or more specifically ESSL, the OpenGL ES Shading Language). The
      * shader definition also describes how the PlayCanvas engine should map vertex buffer elements onto
      * the attributes specified in the vertex shader code.
-     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this shader.
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this shader.
      * @param {Object} definition The shader definition from which to build the shader.
-     * @param {Object} definition.attributes Object detailing the mapping of vertex shader attribute names to semantics (pc.gfx.SEMANTIC_*).
+     * @param {Object} definition.attributes Object detailing the mapping of vertex shader attribute names to semantics (pc.SEMANTIC_*).
      * @param {String} definition.vshader Vertex shader source (GLSL code).
      * @param {String} definition.fshader Fragment shader source (GLSL code).
      * @example 
      * // Create a shader that renders primitives with a solid red color
      * var shaderDefinition = {
      *     attributes: {
-     *         aPosition: pc.gfx.SEMANTIC_POSITION
+     *         aPosition: pc.SEMANTIC_POSITION
      *     },
      *     vshader: [
      *         "attribute vec3 aPosition;",
@@ -84,7 +84,7 @@ pc.extend(pc.gfx, function () {
      *     ].join("\n")
      * };
      * 
-     * shader = new pc.gfx.Shader(graphicsDevice, shaderDefinition);
+     * shader = new pc.Shader(graphicsDevice, shaderDefinition);
      * @author Will Eastcott
      */
     var Shader = function (graphicsDevice, definition) {
@@ -135,7 +135,7 @@ pc.extend(pc.gfx, function () {
                 console.error('Vertex shader attribute "' + info.name + '" is not mapped to a semantic in shader definition.');
             }
 
-            var attr = new pc.gfx.ShaderInput(graphicsDevice, definition.attributes[info.name], _typeToPc[info.type], location);
+            var attr = new pc.ShaderInput(graphicsDevice, definition.attributes[info.name], _typeToPc[info.type], location);
             this.attributes.push(attr);
         }
 
@@ -146,9 +146,9 @@ pc.extend(pc.gfx, function () {
             info = gl.getActiveUniform(this.program, i++);
             location = gl.getUniformLocation(this.program, info.name);
             if ((info.type === gl.SAMPLER_2D) || (info.type === gl.SAMPLER_CUBE)) {
-                this.samplers.push(new pc.gfx.ShaderInput(graphicsDevice, info.name, _typeToPc[info.type], location));
+                this.samplers.push(new pc.ShaderInput(graphicsDevice, info.name, _typeToPc[info.type], location));
             } else {
-                this.uniforms.push(new pc.gfx.ShaderInput(graphicsDevice, info.name, _typeToPc[info.type], location));
+                this.uniforms.push(new pc.ShaderInput(graphicsDevice, info.name, _typeToPc[info.type], location));
             }
         }
     };
@@ -156,7 +156,7 @@ pc.extend(pc.gfx, function () {
     Shader.prototype = {
         /**
          * @function
-         * @name pc.gfx.Shader#destroy
+         * @name pc.Shader#destroy
          * @description Frees resources associated with this shader.
          */
         destroy: function () {

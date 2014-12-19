@@ -1,16 +1,16 @@
-pc.gfx.programlib.skybox = {
+pc.programlib.skybox = {
     generateKey: function (device, options) {
         var key = "skybox" + options.hdr + options.prefiltered + "" + options.toneMapping + "" + options.gamma;
         return key;
     },
 
     createShaderDefinition: function (device, options) {
-        var getSnippet = pc.gfx.programlib.getSnippet;
-        var chunks = pc.gfx.shaderChunks;
+        var getSnippet = pc.programlib.getSnippet;
+        var chunks = pc.shaderChunks;
 
         return {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 'attribute vec3 aPosition;',

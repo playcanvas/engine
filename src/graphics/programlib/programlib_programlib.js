@@ -1,8 +1,8 @@
 /**
  * @namespace
- * @name pc.gfx.programlib
+ * @name pc.programlib
  */
-pc.gfx.programlib = {
+pc.programlib = {
     getSnippet: function (device, id) {
         var code = '';
 
@@ -93,7 +93,7 @@ pc.gfx.programlib = {
                 break;
 
             case 'fs_normal_map_funcs':
-                if (!pc.gfx.precalculatedTangents) {
+                if (!pc.precalculatedTangents) {
                     code += 'mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )\n';
                     code += '{\n';
                                  // get edge vectors of the pixel triangle
