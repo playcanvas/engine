@@ -43,7 +43,7 @@ pc.gfx.programlib.depthrgba = {
         if (options.point) {
             code += 'uniform vec3 view_position;\n\n';
             code += 'uniform float light_radius;\n\n';
-            code += 'varying float vDistance;\n\n';
+            code += 'varying vec3 worldPos;\n\n';
         }
 
         // VERTEX SHADER BODY
@@ -69,7 +69,7 @@ pc.gfx.programlib.depthrgba = {
         }
 
         if (options.point) {
-            code += '    vDistance = distance(view_position, positionW.xyz) / light_radius;\n';
+            code += '    worldPos = positionW.xyz;\n';
         }
 
         code += getSnippet(device, 'common_main_end');
@@ -87,7 +87,9 @@ pc.gfx.programlib.depthrgba = {
         }
 
         if (options.point) {
-            code += 'varying float vDistance;\n\n';
+            code += 'varying vec3 worldPos;\n\n';
+            code += 'uniform vec3 view_position;\n\n';
+            code += 'uniform float light_radius;\n\n';
         }
 
         // Packing a float in GLSL with multiplication and mod
@@ -110,7 +112,7 @@ pc.gfx.programlib.depthrgba = {
         }
 
         if (options.point) {
-            code += "   gl_FragData[0] = packFloat(vDistance);\n"
+            code += "   gl_FragData[0] = packFloat(distance(view_position, worldPos) / light_radius);\n"
         } else {
             code += '    gl_FragData[0] = packFloat(gl_FragCoord.z);\n';
         }

@@ -28,6 +28,7 @@ struct psInternalData {
     float alpha;
     vec3 lightDirNormW;
     vec3 lightDirW;
+    vec3 lightPosW;
     float atten;
     vec3 shadowCoord;
     vec2 uvOffset;
@@ -46,6 +47,7 @@ void getReflDir(inout psInternalData data) {
 void getLightDirPoint(inout psInternalData data, vec3 lightPosW) {
     data.lightDirW = vPositionW - lightPosW;
     data.lightDirNormW = normalize(data.lightDirW);
+    data.lightPosW = lightPosW;
 }
 
 float getFalloffLinear(inout psInternalData data, float lightRadius) {

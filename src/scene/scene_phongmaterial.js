@@ -177,6 +177,7 @@ pc.extend(pc.scene, function () {
             clone.heightMapTiling = this.heightMapTiling ? this.heightMapTiling.clone() : new pc.Vec2(1, 1);
             clone.heightMapOffset = this.heightMapOffset ? this.heightMapOffset.clone() : new pc.Vec2(0, 0);
             clone.bumpiness = this.bumpiness;
+            clone.heightMapMultiplier = this.heightMapMultiplier;
 
             clone.cubeMap = this.cubeMap;
             clone.prefilteredCubeMap128 = this.prefilteredCubeMap128;
@@ -204,6 +205,7 @@ pc.extend(pc.scene, function () {
             clone.diffuseMapTint = this.diffuseMapTint;
             clone.specularMapTint = this.specularMapTint;
             clone.emissiveMapTint = this.emissiveMapTint;
+            clone.emissiveIntensity = this.emissiveIntensity;
 
             clone.update();
             return clone;
@@ -309,6 +311,9 @@ pc.extend(pc.scene, function () {
                     case 'bumpMapFactor':
                         this.bumpiness = param.data;
                         break;
+                    case 'heightMapMultiplier':
+                        this.heightMapMultiplier = param.data;
+                        break;
                     case 'cubeMap':
                         this.cubeMap = _createTexture(param);
                         break;
@@ -356,6 +361,9 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'emissiveMapTint':
                         this.emissiveMapTint = param.data;
+                        break;
+                    case 'emissiveIntensity':
+                        this.emissiveIntensity = param.data;
                         break;
                     case 'depthTest':
                         this.depthTest = param.data;
@@ -438,6 +446,7 @@ pc.extend(pc.scene, function () {
             this.heightMapOffset = new pc.Vec2(0, 0);
             this.heightMapTransform = null;
             this.bumpiness = 1;
+            this.heightMapMultiplier = 1;
 
             this.cubeMap = null;
             this.prefilteredCubeMap128 = null;
@@ -466,6 +475,7 @@ pc.extend(pc.scene, function () {
             this.diffuseMapTint = false;
             this.specularMapTint = false;
             this.emissiveMapTint = false;
+            this.emissiveIntensity = 1;
 
             // Array to pass uniforms to renderer
             this.ambientUniform = new Float32Array(3);
@@ -584,9 +594,9 @@ pc.extend(pc.scene, function () {
             }
 
             if (!this.emissiveMap || (this.blendMapsWithColors && this.emissiveMapTint)) {
-                this.emissiveUniform[0] = this.emissive.r;
-                this.emissiveUniform[1] = this.emissive.g;
-                this.emissiveUniform[2] = this.emissive.b;
+                this.emissiveUniform[0] = this.emissive.r * this.emissiveIntensity;
+                this.emissiveUniform[1] = this.emissive.g * this.emissiveIntensity;
+                this.emissiveUniform[2] = this.emissive.b * this.emissiveIntensity;
                 this.setParameter('material_emissive', this.emissiveUniform);
             }
 
@@ -638,8 +648,12 @@ pc.extend(pc.scene, function () {
             } else {
             }
 
-            if (this.normalMap || this.heightMap) {
+            if (this.normalMap) {
                 this.setParameter('material_bumpMapFactor', this.bumpiness);
+            }
+
+            if (this.heightMap) {
+                this.setParameter('material_heightMapFactor', this.heightMapMultiplier * 0.025);
             }
 
             if (this.cubeMap) {
@@ -755,16 +769,16 @@ pc.extend(pc.scene, function () {
                 modulateAmbient:            this.ambientTint,
                 diffuseMap:                 !!this.diffuseMap,
                 diffuseMapTransform:        this._getMapTransformID(this.diffuseMapTransform),
-                needsDiffuseColor:          ((this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1)) && this.diffuseMapTint,
+                needsDiffuseColor:          (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
                 specularMap:                !!this.specularMap,
                 specularMapTransform:       this._getMapTransformID(this.specularMapTransform),
-                needsSpecularColor:         ((this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1)) && this.specularMapTint,
+                needsSpecularColor:         (this.specular.r!=1 || this.specular.g!=1 || this.specular.b!=1) && this.specularMapTint,
                 glossMap:                   !!this.glossMap,
                 glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
                 needsGlossFloat:            true,//this.shininess!=100,
                 emissiveMap:                !!this.emissiveMap,
                 emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
-                needsEmissiveColor:         ((this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1)) && this.emissiveMapTint,
+                needsEmissiveColor:         (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
                 opacityMap:                 !!this.opacityMap,
                 opacityMapTransform:        this._getMapTransformID(this.opacityMapTransform),
                 needsOpacityFloat:          this.opacity!=1,
@@ -778,7 +792,7 @@ pc.extend(pc.scene, function () {
                 lightMap:                   !!this.lightMap,
                 aoMap:                      !!this.aoMap,
                 aoUvSet:                    this.aoUvSet,
-                useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
+                useSpecular:                (!!this.specularMap) || !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0)
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
                 hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
                 prefilteredCubemap:         prefilteredCubeMap,
@@ -804,7 +818,7 @@ pc.extend(pc.scene, function () {
                     this.ambientUniform[i] = Math.pow(this.ambient.data[i], 2.2);
                     this.diffuseUniform[i] = Math.pow(this.diffuse.data[i], 2.2);
                     this.specularUniform[i] = Math.pow(this.specular.data[i], 2.2);
-                    this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2);
+                    this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2) * this.emissiveIntensity;
                 }
             }
 

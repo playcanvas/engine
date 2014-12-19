@@ -6,7 +6,10 @@ pc.gfx.programlib.phong = {
         for(prop in options) {
             if (prop==="lights") {
                 for(var i=0; i<options.lights.length; i++) {
-                    props.push(options.lights[i].getType() + "_" + (options.lights[i].getCastShadows() ? 1 : 0) + "_" + options.lights[i].getFalloffMode());
+                    props.push(options.lights[i].getType() + "_"
+                        + (options.lights[i].getCastShadows() ? 1 : 0) + "_"
+                        + options.lights[i].getFalloffMode() + "_"
+                        + !!options.lights[i].getNormalOffsetShadowBias());
                 }
             } else {
                 if (options[prop]) props.push(prop);
@@ -440,9 +443,27 @@ pc.gfx.programlib.phong = {
                 code += "   data.atten *= getLightDiffuse(data);\n";
                 if (options.lights[i].getCastShadows()) {
                     if (lightType==pc.scene.LIGHTTYPE_POINT) {
-                        code += "   data.atten *= getShadowPoint(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                        var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                        if (!options.lights[i].getNormalOffsetShadowBias()) {
+                            code += "   data.atten *= getShadowPoint" + shadowCoordArgs;
+                        } else {
+                            code += "   data.atten *= getShadowPointNormalOffset" + shadowCoordArgs;
+                        }
                     } else {
-                        code += "   getShadowCoord(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
+                        var shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
+                        if (!options.lights[i].getNormalOffsetShadowBias()) {
+                            if (lightType==pc.scene.LIGHTTYPE_SPOT) {
+                                code += "   getShadowCoordPersp" + shadowCoordArgs;
+                            } else {
+                                code += "   getShadowCoordOrtho" + shadowCoordArgs;
+                            }
+                        } else {
+                            if (lightType==pc.scene.LIGHTTYPE_SPOT) {
+                                code += "   getShadowCoordPerspNormalOffset" + shadowCoordArgs;
+                            } else {
+                                code += "   getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
+                            }
+                        }
                         code += "   data.atten *= getShadowPCF3x3(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
                     }
                 }
