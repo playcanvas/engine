@@ -192,7 +192,6 @@ pc.extend(pc.fw, function () {
                     this.context.scene.fogStart = pack.settings.render.fog_start;
                     this.context.scene.fogEnd = pack.settings.render.fog_end;
                     this.context.scene.fogDensity = pack.settings.render.fog_density;
-                    this.context.scene.shadowDistance = pack.settings.render.shadow_distance;
                     this.context.scene.gammaCorrection = pack.settings.render.gamma_correction;
                     this.context.scene.toneMapping = pack.settings.render.tonemapping;
                     this.context.scene.exposure = pack.settings.render.exposure;
@@ -787,8 +786,6 @@ pc.extend(pc.fw, function () {
             var fog = settings.render.fog_color;
             this.context.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
             this.context.scene.fogDensity = settings.render.fog_density;
-
-            this.context.scene.shadowDistance = settings.render.shadow_distance;
 
             this.context.scene.gammaCorrection = settings.render.gamma_correction;
             this.context.scene.toneMapping = settings.render.tonemapping;

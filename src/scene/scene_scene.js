@@ -72,9 +72,7 @@ pc.extend(pc.scene, function () {
      * property is only valid if the fog property is set to pc.scene.FOG_LINEAR.
      * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
      * only valid if the fog property is set to pc.scene.FOG_LINEAR.
-     * @property {Number} shadowDistance The distance from the viewpoint beyond which shadows are no longer
-     * @property {Boolean} gammaCorrection If true then all materials will apply gamma correction
-     * rendered.
+     * @property {Boolean} gammaCorrection If true then all materials will apply gamma correction.
      */
     var Scene = function Scene() {
         this.drawCalls = [];     // All mesh instances and commands
@@ -88,7 +86,6 @@ pc.extend(pc.scene, function () {
 
         this.ambientLight = new pc.Color(0, 0, 0);
 
-        this.shadowDistance = 40;
         this._gammaCorrection = false;
         this._toneMapping = 0;
         this.exposure = 1.0;
