@@ -81,11 +81,11 @@ pc.extend(pc.fw, function () {
         var gd = context.graphicsDevice;
 
         // Create the graphical resources required to render a camera frustum
-        var format = new pc.gfx.VertexFormat(gd, [
-            { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+        var format = new pc.VertexFormat(gd, [
+            { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
         ]);
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 41);
+        var vertexBuffer = new pc.VertexBuffer(gd, format, 41);
         var positions = new Float32Array(vertexBuffer.lock());
 
         var r = 0.5;
@@ -101,7 +101,7 @@ pc.extend(pc.fw, function () {
         }
         vertexBuffer.unlock();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 80);
+        var indexBuffer = new pc.IndexBuffer(gd, pc.INDEXFORMAT_UINT8, 80);
         var inds = new Uint8Array(indexBuffer.lock());
         for (i = 0; i < 40; i++) {
             inds[i * 2 + 0] = i;
@@ -112,7 +112,7 @@ pc.extend(pc.fw, function () {
         this.mesh = new pc.scene.Mesh();
         this.mesh.vertexBuffer = vertexBuffer;
         this.mesh.indexBuffer[0] = indexBuffer;
-        this.mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+        this.mesh.primitive[0].type = pc.PRIMITIVE_LINES;
         this.mesh.primitive[0].base = 0;
         this.mesh.primitive[0].count = indexBuffer.getNumIndices();
         this.mesh.primitive[0].indexed = true;

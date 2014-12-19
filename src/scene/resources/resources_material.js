@@ -126,20 +126,20 @@ pc.extend(pc.resources, function () {
         // Should we copy 'data' here instead of updating in place?
         for (var i = 0; i < data.parameters.length; i++) {
             var param = data.parameters[i];
-            if (param.type === 'texture' && param.data && !(param.data instanceof pc.gfx.Texture)) {
+            if (param.type === 'texture' && param.data && !(param.data instanceof pc.Texture)) {
                 var textureAsset = this._getTextureAssetFromRegistry(param.data, request);
                 if (textureAsset) {
                     textures[textureAsset.id] = textureAsset;
                 }
 
                 this._loadTextureParamFromCache(param, textureAsset);
-                if (!(param.data instanceof pc.gfx.Texture) && textureAsset) {
+                if (!(param.data instanceof pc.Texture) && textureAsset) {
                     requests.push(this._loadTextureParamPromise(param, textureAsset));
                 }
-            } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.gfx.Texture)) {
+            } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
                 var cubemapAsset = this._getTextureAssetFromRegistry(param.data, request);
                 this._loadCubemapParamFromCache(param, cubemapAsset);
-                if (!(param.data instanceof pc.gfx.Texture) && cubemapAsset) {
+                if (!(param.data instanceof pc.Texture) && cubemapAsset) {
                     requests.push(this._loadCubemapParamPromise(param, cubemapAsset));
                 }
             }

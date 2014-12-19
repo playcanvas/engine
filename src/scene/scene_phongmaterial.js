@@ -11,27 +11,27 @@ pc.extend(pc.scene, function () {
      * where each component is between 0 and 1.
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.gfx.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for diffuse
      * color in preference to the 'diffuse' property.
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
-     * @property {pc.gfx.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
+     * @property {pc.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * specular color in preference to the 'specular' property.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
      * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (mirror).
      * A higher shininess value results in a more focussed specular highlight.
-     * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
+     * @property {pc.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * shininess in preference to the 'shininess' property.
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
      * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
      * color in preference to the 'emissive' property.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
@@ -39,18 +39,18 @@ pc.extend(pc.scene, function () {
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque. If you want the material to be transparent you also need to
      * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
-     * @property {pc.gfx.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
      * in preference to the 'opacity' property. If you want the material to be transparent you also need to
      * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
      * @property {Number} blendType The type of blending for this material. Can be one of the following valus: pc.scene.BLEND_NONE, pc.scene.BLEND_NORMAL, pc.scene.BLEND_ADDITIVE.
-     * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} normalMap The normal map of the material. This must be a 2D texture rather
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} heightMap The height map of the material. This must be a 2D texture rather
      * than a cube map. The texture contain values defining the height of the surface at that point where darker
      * pixels are lower and lighter pixels are higher.
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
@@ -60,17 +60,17 @@ pc.extend(pc.scene, function () {
      * @property {Number} emissiveIntensity Emissive color multiplier.
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
      * the bump map and 1 results in a full contribution.
-     * @property {pc.gfx.Texture} sphereMap The spherical environment map of the material.
-     * @property {pc.gfx.Texture} cubeMap The cubic environment map of the material.
+     * @property {pc.Texture} sphereMap The spherical environment map of the material.
+     * @property {pc.Texture} cubeMap The cubic environment map of the material.
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and
      * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
-     * @property {pc.gfx.Texture} lightMap The light map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} lightMap The light map of the material. This must be a 2D texture rather
      * than a cube map.
      * @property {Boolean} ambientTint Enables scene ambient multiplication by material ambient color.
      * @property {Boolean} diffuseMapTint Enables diffuseMap multiplication by diffuse color.
      * @property {Boolean} specularMapTint Enables specularMap multiplication by specular color.
      * @property {Boolean} emissiveMapTint Enables emissiveMap multiplication by emissive color.
-     * @property {pc.gfx.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
+     * @property {pc.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
      * @property {Number} aoMapUvSet Defines UV set used for AO map. Can be 0 or 1.
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
@@ -99,7 +99,7 @@ pc.extend(pc.scene, function () {
 
     var _createTexture = function (param) {
         if (param.data) {
-            if (param.data instanceof pc.gfx.Texture) {
+            if (param.data instanceof pc.Texture) {
                 return param.data;
             } else {
                 throw Error("PhongMaterial.init() expects textures to already be created");
@@ -217,7 +217,7 @@ pc.extend(pc.scene, function () {
         * @private
         * @name pc.scene.PhoneMaterial#init
         * @description Update material data from a data block, as found on a material Asset.
-        * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
+        * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
         */
         init: function (data) {
             this.reset();

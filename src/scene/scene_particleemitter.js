@@ -8,24 +8,24 @@ pc.extend(pc.scene, function() {
     ];
 
     var _createTexture = function(device, width, height, pixelData, format, mult8Bit) {
-        if (!format) format = pc.gfx.PIXELFORMAT_RGBA32F;
-        var texture = new pc.gfx.Texture(device, {
+        if (!format) format = pc.PIXELFORMAT_RGBA32F;
+        var texture = new pc.Texture(device, {
             width: width,
             height: height,
             format: format,
             cubemap: false,
             autoMipmap: false
         });
-        texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        texture.minFilter = pc.gfx.FILTER_NEAREST;
-        texture.magFilter = pc.gfx.FILTER_NEAREST;
+        texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+        texture.minFilter = pc.FILTER_NEAREST;
+        texture.magFilter = pc.FILTER_NEAREST;
 
         var pixels = texture.lock();
 
-        if (format == pc.gfx.PIXELFORMAT_R8_G8_B8_A8) {
-            texture.minFilter = pc.gfx.FILTER_LINEAR;
-            texture.magFilter = pc.gfx.FILTER_LINEAR;
+        if (format == pc.PIXELFORMAT_R8_G8_B8_A8) {
+            texture.minFilter = pc.FILTER_LINEAR;
+            texture.magFilter = pc.FILTER_LINEAR;
 
             var temp = new Uint8Array(pixelData.length);
             for (var i = 0; i < pixelData.length; i++) {
@@ -160,18 +160,18 @@ pc.extend(pc.scene, function() {
         var width = Math.floor(rect.width * gd.width);
         var height = Math.floor(rect.height * gd.height);
 
-        var colorBuffer = new pc.gfx.Texture(gd, {
-            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+        var colorBuffer = new pc.Texture(gd, {
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width,
             height: height
         });
 
-        colorBuffer.minFilter = pc.gfx.FILTER_NEAREST;
-        colorBuffer.magFilter = pc.gfx.FILTER_NEAREST;
-        colorBuffer.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        colorBuffer.minFilter = pc.FILTER_NEAREST;
+        colorBuffer.magFilter = pc.FILTER_NEAREST;
+        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-        return new pc.gfx.RenderTarget(gd, colorBuffer, {
+        return new pc.RenderTarget(gd, colorBuffer, {
             depth: true
         });
     }
@@ -184,7 +184,7 @@ pc.extend(pc.scene, function() {
 
         if (!defaultParamTex) {
             // 1x1 white opaque
-            //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            //defaultParamTex = _createTexture(gd, 1, 1, [1,1,1,1], pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
 
             // white radial gradient
             var resolution = 16;
@@ -203,9 +203,9 @@ pc.extend(pc.scene, function() {
                     dtex[p * 4 + 3] = c;
                 }
             }
-            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
-            defaultParamTex.minFilter = pc.gfx.FILTER_LINEAR;
-            defaultParamTex.magFilter = pc.gfx.FILTER_LINEAR;
+            defaultParamTex = _createTexture(gd, resolution, resolution, dtex, pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            defaultParamTex.minFilter = pc.FILTER_LINEAR;
+            defaultParamTex.magFilter = pc.FILTER_LINEAR;
         }
 
         // Global system parameters
@@ -452,10 +452,10 @@ pc.extend(pc.scene, function() {
                 this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
                 this.particleTexStart = _createTexture(gd, this.numParticlesPot, 2, this.particleTexStart);
 
-                this.rtParticleTexIN = new pc.gfx.RenderTarget(gd, this.particleTexIN, {
+                this.rtParticleTexIN = new pc.RenderTarget(gd, this.particleTexIN, {
                     depth: false
                 });
-                this.rtParticleTexOUT = new pc.gfx.RenderTarget(gd, this.particleTexOUT, {
+                this.rtParticleTexOUT = new pc.RenderTarget(gd, this.particleTexOUT, {
                     depth: false
                 });
                 this.swapTex = false;
@@ -477,18 +477,18 @@ pc.extend(pc.scene, function() {
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = this.vertexBuffer;
             mesh.indexBuffer[0] = this.indexBuffer;
-            mesh.primitive[0].type = pc.gfx.PRIMITIVE_TRIANGLES;
+            mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES;
             mesh.primitive[0].base = 0;
             mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
             mesh.primitive[0].indexed = true;
 
             this.material = new pc.scene.Material();
-            this.material.cullMode = pc.gfx.CULLFACE_NONE;
+            this.material.cullMode = pc.CULLFACE_NONE;
             this.material.blend = true;
 
             // Premultiplied alpha. We can use it for both additive and alpha-transparent blending.
-            //this.material.blendSrc = pc.gfx.BLENDMODE_ONE;
-            //this.material.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+            //this.material.blendSrc = pc.BLENDMODE_ONE;
+            //this.material.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
             this.material.blendType = this.blendType;
 
             this.material.depthWrite = this.depthWrite;
@@ -567,7 +567,7 @@ pc.extend(pc.scene, function() {
                 this.internalTex1 = _createTexture(gd, precision, 1, packTextureXYZ_NXYZ(this.qVelocity, this.qVelocityDiv));
                 this.internalTex2 = _createTexture(gd, precision, 1, packTexture5Floats(this.qRotSpeed, this.qScale, this.qScaleDiv, this.qRotSpeedDiv, this.qAlphaDiv));
             }
-            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.gfx.PIXELFORMAT_R8_G8_B8_A8, 1.0);
+            this.internalTex3 = _createTexture(gd, precision, 1, packTextureRGBA(this.qColor, this.qAlpha), pc.PIXELFORMAT_R8_G8_B8_A8, 1.0);
         },
 
         _initializeTextures: function () {
@@ -658,7 +658,7 @@ pc.extend(pc.scene, function() {
                 material.setParameter('screenSize', new pc.Vec4(gd.width, gd.height, 1.0 / gd.width, 1.0 / gd.height).data);
                 material.setParameter('softening', 1.0 / (this.depthSoftening * this.depthSoftening * 100)); // remap to more perceptually linear
             }
-            if (this.stretch > 0.0) material.cull = pc.gfx.CULLFACE_NONE;
+            if (this.stretch > 0.0) material.cull = pc.CULLFACE_NONE;
         },
 
 
@@ -673,37 +673,37 @@ pc.extend(pc.scene, function() {
                 // Create the particle vertex format
                 if (!this.useCpu) {
                     elements = [{
-                            semantic: pc.gfx.SEMANTIC_ATTR0,
+                            semantic: pc.SEMANTIC_ATTR0,
                             components: 4,
-                            type: pc.gfx.ELEMENTTYPE_FLOAT32
+                            type: pc.ELEMENTTYPE_FLOAT32
                         } // GPU: XYZ = quad vertex position; W = INT: particle ID, FRAC: random factor
                     ];
-                    particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
+                    particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
 
-                    this.vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.gfx.BUFFER_DYNAMIC);
-                    this.indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, psysIndexCount);
+                    this.vertexBuffer = new pc.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.BUFFER_DYNAMIC);
+                    this.indexBuffer = new pc.IndexBuffer(this.graphicsDevice, pc.INDEXFORMAT_UINT16, psysIndexCount);
                 } else {
                     elements = [{
-                        semantic: pc.gfx.SEMANTIC_ATTR0,
+                        semantic: pc.SEMANTIC_ATTR0,
                         components: 4,
-                        type: pc.gfx.ELEMENTTYPE_FLOAT32
+                        type: pc.ELEMENTTYPE_FLOAT32
                     }, {
-                        semantic: pc.gfx.SEMANTIC_ATTR1,
+                        semantic: pc.SEMANTIC_ATTR1,
                         components: 4,
-                        type: pc.gfx.ELEMENTTYPE_FLOAT32
+                        type: pc.ELEMENTTYPE_FLOAT32
                     }, {
-                        semantic: pc.gfx.SEMANTIC_ATTR2,
+                        semantic: pc.SEMANTIC_ATTR2,
                         components: 4,
-                        type: pc.gfx.ELEMENTTYPE_FLOAT32
+                        type: pc.ELEMENTTYPE_FLOAT32
                     }, {
-                        semantic: pc.gfx.SEMANTIC_ATTR3,
+                        semantic: pc.SEMANTIC_ATTR3,
                         components: 2,
-                        type: pc.gfx.ELEMENTTYPE_FLOAT32
+                        type: pc.ELEMENTTYPE_FLOAT32
                     }];
-                    particleFormat = new pc.gfx.VertexFormat(this.graphicsDevice, elements);
+                    particleFormat = new pc.VertexFormat(this.graphicsDevice, elements);
 
-                    this.vertexBuffer = new pc.gfx.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.gfx.BUFFER_DYNAMIC);
-                    this.indexBuffer = new pc.gfx.IndexBuffer(this.graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, psysIndexCount);
+                    this.vertexBuffer = new pc.VertexBuffer(this.graphicsDevice, particleFormat, psysVertCount, pc.BUFFER_DYNAMIC);
+                    this.indexBuffer = new pc.IndexBuffer(this.graphicsDevice, pc.INDEXFORMAT_UINT16, psysIndexCount);
                 }
 
                 // Fill the vertex buffer
@@ -807,7 +807,7 @@ pc.extend(pc.scene, function() {
 
             device.setBlending(false);
             device.setColorWrite(true, true, true, true);
-            device.setCullMode(pc.gfx.CULLFACE_NONE);
+            device.setCullMode(pc.CULLFACE_NONE);
             device.setDepthTest(false);
             device.setDepthWrite(false);
 
@@ -892,9 +892,9 @@ pc.extend(pc.scene, function() {
                 var texOUT = this.swapTex ? this.particleTexIN : this.particleTexOUT;
                 this.constantParticleTexIN.setValue(texIN);
                 if (!isOnStop) {
-                    pc.gfx.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.loop ? this.shaderParticleUpdateRespawn : this.shaderParticleUpdateNoRespawn);
+                    pc.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.loop ? this.shaderParticleUpdateRespawn : this.shaderParticleUpdateNoRespawn);
                 } else {
-                    pc.gfx.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.shaderParticleUpdateOnStop);
+                    pc.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.shaderParticleUpdateOnStop);
                 }
                 this.constantParticleTexOUT.setValue(texOUT);
 

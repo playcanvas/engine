@@ -38,14 +38,14 @@ pc.extend(pc.scene, function () {
                 size = 8;
 
             this.matrixPalette = new Float32Array(size * size * 4);
-            this.boneTexture = new pc.gfx.Texture(device, {
+            this.boneTexture = new pc.Texture(device, {
                 width: size, 
                 height: size,
-                format: pc.gfx.PIXELFORMAT_RGBA32F,
+                format: pc.PIXELFORMAT_RGBA32F,
                 autoMipmap: false
             });
-            this.boneTexture.minFilter = pc.gfx.FILTER_NEAREST;
-            this.boneTexture.magFilter = pc.gfx.FILTER_NEAREST;
+            this.boneTexture.minFilter = pc.FILTER_NEAREST;
+            this.boneTexture.magFilter = pc.FILTER_NEAREST;
             this.matrixPalette = this.boneTexture.lock();
         } else {
             this.matrixPalette = new Float32Array(numBones * 16);

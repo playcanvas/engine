@@ -192,13 +192,13 @@ pc.extend(pc.scene, function () {
 
                 indexBuffer.unlock();
 
-                wireBuffer = new pc.gfx.IndexBuffer(indexBuffer.device, pc.gfx.INDEXFORMAT_UINT16, lines.length);
+                wireBuffer = new pc.IndexBuffer(indexBuffer.device, pc.INDEXFORMAT_UINT16, lines.length);
                 dstIndices = new Uint16Array(wireBuffer.lock());
                 dstIndices.set(lines);
                 wireBuffer.unlock();
 
                 mesh.primitive[pc.scene.RENDERSTYLE_WIREFRAME] = {
-                    type: pc.gfx.PRIMITIVE_LINES,
+                    type: pc.PRIMITIVE_LINES,
                     base: 0,
                     count: lines.length,
                     indexed: true

@@ -167,23 +167,23 @@ pc.extend(pc.fw, function () {
                 material.color = new pc.Color(1, 1, 0, 1);
                 material.update();
 
-                var indexBuffer = new pc.gfx.IndexBuffer(this.context.graphicsDevice, pc.gfx.INDEXFORMAT_UINT8, 24);
+                var indexBuffer = new pc.IndexBuffer(this.context.graphicsDevice, pc.INDEXFORMAT_UINT8, 24);
                 var indices = new Uint8Array(indexBuffer.lock());
                 indices.set([0,1,1,2,2,3,3,0, // Near plane
                              4,5,5,6,6,7,7,4, // Far plane
                              0,4,1,5,2,6,3,7]); // Near to far edges
                 indexBuffer.unlock();
 
-                var format = new pc.gfx.VertexFormat(this.context.graphicsDevice, [
-                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                var format = new pc.VertexFormat(this.context.graphicsDevice, [
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(this.context.graphicsDevice, format, 8, pc.gfx.BUFFER_DYNAMIC);
+                var vertexBuffer = new pc.VertexBuffer(this.context.graphicsDevice, format, 8, pc.BUFFER_DYNAMIC);
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
                 mesh.indexBuffer[0] = indexBuffer;
-                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = indexBuffer.getNumIndices();
                 mesh.primitive[0].indexed = true;

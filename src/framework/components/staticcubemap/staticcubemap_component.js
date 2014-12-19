@@ -78,14 +78,14 @@ pc.extend(pc.fw, function () {
 
     // Private
     var _createCubemap = function (entity, context, urls) {
-        var texture = new pc.gfx.Texture(context.graphicsDevice, {
-            format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+        var texture = new pc.Texture(context.graphicsDevice, {
+            format: pc.PIXELFORMAT_R8_G8_B8,
             cubemap: true
         });
-        texture.minFilter = pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR;
-        texture.magFilter = pc.gfx.FILTER_LINEAR;
-        texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
+        texture.magFilter = pc.FILTER_LINEAR;
+        texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
         var requests = urls.map(function (url) {
             return new pc.resources.ImageRequest(url);

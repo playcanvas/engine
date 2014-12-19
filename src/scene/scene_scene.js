@@ -186,7 +186,7 @@ pc.extend(pc.scene, function () {
 
             material.updateShader();
             material.setParameter("texture_cubeMap", this._skyboxCubeMap);
-            material.cull = pc.gfx.CULLFACE_NONE;
+            material.cull = pc.CULLFACE_NONE;
 
             var node = new pc.scene.GraphNode();
             var mesh = pc.scene.procedural.createBox(device);

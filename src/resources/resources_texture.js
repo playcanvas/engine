@@ -1,17 +1,17 @@
 pc.extend(pc.resources, function () {
     var jsonToAddressMode = {
-        "repeat": pc.gfx.ADDRESS_REPEAT,
-        "clamp":  pc.gfx.ADDRESS_CLAMP_TO_EDGE,
-        "mirror": pc.gfx.ADDRESS_MIRRORED_REPEAT
+        "repeat": pc.ADDRESS_REPEAT,
+        "clamp":  pc.ADDRESS_CLAMP_TO_EDGE,
+        "mirror": pc.ADDRESS_MIRRORED_REPEAT
     };
 
     var jsonToFilterMode = {
-        "nearest":             pc.gfx.FILTER_NEAREST,
-        "linear":              pc.gfx.FILTER_LINEAR,
-        "nearest_mip_nearest": pc.gfx.FILTER_NEAREST_MIPMAP_NEAREST,
-        "linear_mip_nearest":  pc.gfx.FILTER_LINEAR_MIPMAP_NEAREST,
-        "nearest_mip_linear":  pc.gfx.FILTER_NEAREST_MIPMAP_LINEAR,
-        "linear_mip_linear":   pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR
+        "nearest":             pc.FILTER_NEAREST,
+        "linear":              pc.FILTER_LINEAR,
+        "nearest_mip_nearest": pc.FILTER_NEAREST_MIPMAP_NEAREST,
+        "linear_mip_nearest":  pc.FILTER_LINEAR_MIPMAP_NEAREST,
+        "nearest_mip_linear":  pc.FILTER_NEAREST_MIPMAP_LINEAR,
+        "linear_mip_linear":   pc.FILTER_LINEAR_MIPMAP_LINEAR
     };
 
     function arrayBufferCopy(src, dst, dstByteOffset, numBytes) {
@@ -94,8 +94,8 @@ pc.extend(pc.resources, function () {
             if (request.result) {
                 texture = request.result;
             } else {
-                format = pc.string.endsWith(img.src.toLowerCase(), '.jpg') ? pc.gfx.PIXELFORMAT_R8_G8_B8 : pc.gfx.PIXELFORMAT_R8_G8_B8_A8;
-                texture = new pc.gfx.Texture(this._device, {
+                format = pc.string.endsWith(img.src.toLowerCase(), '.jpg') ? pc.PIXELFORMAT_R8_G8_B8 : pc.PIXELFORMAT_R8_G8_B8_A8;
+                texture = new pc.Texture(this._device, {
                     width: img.width,
                     height: img.height,
                     format: format
@@ -136,7 +136,7 @@ pc.extend(pc.resources, function () {
     };
     TextureRequest = pc.inherits(TextureRequest, pc.resources.ResourceRequest);
     TextureRequest.prototype.type = "texture";
-    TextureRequest.prototype.Type = pc.gfx.Texture;
+    TextureRequest.prototype.Type = pc.Texture;
 
     return {
         TextureResourceHandler: TextureResourceHandler,
