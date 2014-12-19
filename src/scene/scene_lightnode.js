@@ -32,8 +32,10 @@ pc.extend(pc.scene, function () {
         // Shadow mapping resources
         this._shadowCamera = null;
         this._shadowMatrix = new pc.Mat4();
+        this._shadowDistance = 40;
         this._shadowResolution = 1024;
         this._shadowBias = -0.0005;
+        this._normalOffsetBias = 0.0;
 
         this._scene = null;
     };
@@ -72,7 +74,9 @@ pc.extend(pc.scene, function () {
 
             // Shadow properties
             clone.setShadowBias(this.getShadowBias());
+            clone.setNormalOffsetBias(this.getNormalOffsetBias());
             clone.setShadowResolution(this.getShadowResolution());
+            clone.setShadowDistance(this.getShadowDistance());
         },
 
         /**
@@ -188,11 +192,26 @@ pc.extend(pc.scene, function () {
             return this._shadowBias;
         },
 
+        getNormalOffsetBias: function () {
+            return this._normalOffsetBias;
+        },
+
+        /**
+         * @function
+         * @name pc.scene.LightNode#getShadowDistance
+         * @description Queries the distance in camera Z at which shadows will no
+         * longer be rendered. Note that this function is only valid for directional
+         * lights.
+         * @returns {Number} The shadow distance in world units.
+         */
+        getShadowDistance: function () {
+            return this._shadowDistance;
+        },
+
         /**
          * @function
          * @name pc.scene.LightNode#getShadowResolution
-         * @description Queries the shadow map pixel resolution for this light. Note
-         * that this function is only valid for directional lights and spotlights.
+         * @description Queries the shadow map pixel resolution for this light.
          * @returns {Number} The shadow map resolution.
          */
         getShadowResolution: function () {
@@ -371,6 +390,25 @@ pc.extend(pc.scene, function () {
          */
         setShadowBias: function (bias) {
             this._shadowBias = bias;
+        },
+
+        setNormalOffsetBias: function (bias) {
+            if ((!this._normalOffsetBias && bias) || (this._normalOffsetBias && !bias)) {
+                this._scene.updateShaders = true;
+            }
+            this._normalOffsetBias = bias;
+        },
+
+        /**
+         * @function
+         * @name pc.scene.LightNode#setShadowDistance
+         * @description Sets the distance in camera Z at which the shadows cast by this
+         * light are no longer rendered. Note that this function only applies to directional
+         * lights.
+         * @param {Number} distance The shadow distance in world units
+         */
+        setShadowDistance: function (distance) {
+            this._shadowDistance = distance;
         },
 
         /**

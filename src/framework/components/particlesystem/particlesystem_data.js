@@ -55,6 +55,8 @@ pc.extend(pc.fw, function() {
 
         this.paused = false;
 
+        this.debugShape = null;
+
     };
     ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.fw.ComponentData);
 

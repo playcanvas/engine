@@ -41,15 +41,14 @@ pc.extend(pc.scene, function () {
         }
     }
 
-    function _getFrustumCentroid(scene, camera, centroid) {
-        centroid.set(0, 0, -(scene.shadowDistance + camera._nearClip) * 0.5);
+    function _getFrustumCentroid(scene, camera, farClip, centroid) {
+        centroid.set(0, 0, -(farClip + camera._nearClip) * 0.5);
         camera.getWorldTransform().transformPoint(centroid, centroid);
     }
 
-    function _getFrustumPoints(scene, camera, points) {
+    function _getFrustumPoints(scene, camera, farClip, points) {
         var cam = camera;
         var nearClip   = cam.getNearClip();
-        var farClip    = scene.shadowDistance;
         var fov        = cam.getFov() * Math.PI / 180.0;
         var aspect     = cam.getAspectRatio();
         var projection = cam.getProjection();
@@ -371,7 +370,7 @@ pc.extend(pc.scene, function () {
                             directional._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._shadowResolution, directional._shadowBias]);
+                    scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._normalOffsetBias, directional._shadowBias]);
                 }
             }
         },
@@ -407,7 +406,7 @@ pc.extend(pc.scene, function () {
                             point._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(point._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([point._shadowResolution, point._shadowResolution, point._shadowBias, point.getAttenuationEnd()]);
+                    scope.resolve(light + "_shadowParams").setValue([point._shadowResolution, point._normalOffsetBias, point._shadowBias, point.getAttenuationEnd()]);
                 }
             }
 
@@ -432,7 +431,7 @@ pc.extend(pc.scene, function () {
                             spot._shadowCamera._renderTarget.colorBuffer;
                     scope.resolve(light + "_shadowMap").setValue(shadowMap);
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
-                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._shadowResolution, spot._shadowBias]);
+                    scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias]);
                 }
             }
         },
@@ -567,10 +566,12 @@ pc.extend(pc.scene, function () {
                     var pass;
 
                     if (type === pc.scene.LIGHTTYPE_DIRECTIONAL) {
+                        var shadowDistance = light.getShadowDistance();
+
                         // 1. Starting at the centroid of the view frustum, back up in the opposite
                         // direction of the light by a certain amount. This will be our temporary
                         // working position.
-                        _getFrustumCentroid(scene, camera, this.centroid);
+                        _getFrustumCentroid(scene, camera, shadowDistance, this.centroid);
                         shadowCam.setPosition(this.centroid);
                         shadowCam.setRotation(light.getRotation());
                         // Camera's look down negative Z, and directional lights point down negative Y
@@ -578,7 +579,7 @@ pc.extend(pc.scene, function () {
 
                         // 2. Transform the 8 corners of the camera frustum into the shadow camera's
                         // view space
-                        _getFrustumPoints(scene, camera, frustumPoints);
+                        _getFrustumPoints(scene, camera, shadowDistance, frustumPoints);
                         shadowCamWtm.copy(shadowCam.getWorldTransform());
                         var worldToShadowCam = shadowCamWtm.invert();
                         var camToWorld = camera.worldTransform;
