@@ -1,7 +1,3 @@
-/**
- * @namespace
- * @name pc.programlib
- */
 pc.programlib = {
     getSnippet: function (device, id) {
         var code = '';
