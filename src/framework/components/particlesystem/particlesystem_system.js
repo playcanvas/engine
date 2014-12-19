@@ -609,8 +609,6 @@ pc.extend(pc.fw, function() {
             model.graph = node;
 
             model.meshInstances = [ new pc.scene.MeshInstance(node, this.debugMesh, this.debugMaterial) ];
-            //model.generateWireframe();
-            model.meshInstances[0].renderStyle = pc.scene.RENDERSTYLE_WIREFRAME;
 
             component.data.debugShape = model;
 
