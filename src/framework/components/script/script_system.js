@@ -408,7 +408,7 @@ pc.extend(pc.fw, function () {
 
             for (i=0; i<len; i++) {
                 var script = entity.script.scripts[i];
-                if (script.url === url) {
+                if (script.url === url && script.name === instance.name) {
                     var attributes = script.attributes;
                     if (script.name && attributes) {
                         attributes.forEach(function (attribute, index) {
@@ -454,7 +454,7 @@ pc.extend(pc.fw, function () {
             for (i=0; i<len; i++) {
                 scriptComponent = entity.script;
                 script = scriptComponent.scripts[i];
-                if (script.url === url) {
+                if (script.url === url && script.name === instance.name) {
                     name = script.name;
                     attributes = script.attributes;
                     if (name) {
