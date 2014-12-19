@@ -9,7 +9,7 @@ pc.extend(pc.fw, function () {
         this.shadowDistance = 40;
         this.shadowResolution = 1024;
         this.shadowBias = 0.05;
-        this.normalOffsetShadowBias = 0.0;
+        this.normalOffsetBias = 0.0;
         this.range = 10;
         this.innerConeAngle = 40;
         this.outerConeAngle = 45;

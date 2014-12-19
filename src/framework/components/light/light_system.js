@@ -118,7 +118,7 @@ pc.extend(pc.fw, function () {
                 castShadows: true
             }
         }, {
-            name: 'normalOffsetShadowBias',
+            name: 'normalOffsetBias',
             displayName: 'Normal Offset Shadow Bias',
             description: 'Tunes the shadows to reduce rendering artifacts',
             type: 'number',
@@ -221,7 +221,7 @@ pc.extend(pc.fw, function () {
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowBias', 'normalOffsetShadowBias'];
+            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowBias', 'normalOffsetBias'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -269,7 +269,7 @@ pc.extend(pc.fw, function () {
                 shadowResolution: light.shadowResolution,
                 falloffMode: light.falloffMode,
                 shadowBias: light.shadowBias,
-                normalOffsetShadowBias: light.normalOffsetShadowBias
+                normalOffsetBias: light.normalOffsetBias
             };
 
             this.addComponent(clone, data);
