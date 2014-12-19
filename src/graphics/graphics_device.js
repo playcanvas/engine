@@ -1,4 +1,4 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     var EVENT_RESIZE = 'resizecanvas';
@@ -64,7 +64,7 @@ pc.extend(pc.gfx, function () {
     };
 
     /**
-     * @name pc.gfx.Device
+     * @name pc.GraphicsDevice
      * @class The graphics device manages the underlying graphics context. It is responsible
      * for submitting render state changes and graphics primitives to the hardware. A graphics
      * device is tied to a specific canvas HTML element. It is valid to have more than one
@@ -81,12 +81,12 @@ pc.extend(pc.gfx, function () {
 
      /**
      * @event
-     * @name pc.gfx.Device#resizecanvas
+     * @name pc.GraphicsDevice#resizecanvas
      * @description The 'resizecanvas' event is fired when the canvas is resized
      * @param {Number} width The new width of the canvas in pixels
      * @param {Number} height The new height of the canvas in pixels
     */
-    var Device = function (canvas) {
+    var GraphicsDevice = function (canvas) {
         this.gl = undefined;
         this.canvas = canvas;
         this.shader = null;
@@ -100,7 +100,7 @@ pc.extend(pc.gfx, function () {
         this.commitFunction = {};
 
         if (!window.WebGLRenderingContext) {
-            throw new pc.gfx.UnsupportedBrowserError();
+            throw new pc.UnsupportedBrowserError();
         }
 
         // Retrieve the WebGL context
@@ -108,7 +108,7 @@ pc.extend(pc.gfx, function () {
         var gl = this.gl;
 
         if (!this.gl) {
-            throw new pc.gfx.ContextCreationError();
+            throw new pc.ContextCreationError();
         }
 
         // put the rest of the contructor in a function
@@ -161,7 +161,7 @@ pc.extend(pc.gfx, function () {
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
-                flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
+                flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
             };
 
             this.glAddress = [
@@ -306,7 +306,7 @@ pc.extend(pc.gfx, function () {
             this.renderTarget = null;
 
             // Create the ScopeNamespace for shader attributes and variables
-            this.scope = new pc.gfx.ScopeSpace("Device");
+            this.scope = new pc.ScopeSpace("Device");
 
             // Define the uniform commit functions
             this.commitFunction = {};
@@ -333,10 +333,10 @@ pc.extend(pc.gfx, function () {
 
             // Set the initial render state
             this.setBlending(false);
-            this.setBlendFunction(pc.gfx.BLENDMODE_ONE, pc.gfx.BLENDMODE_ZERO);
-            this.setBlendEquation(pc.gfx.BLENDEQUATION_ADD);
+            this.setBlendFunction(pc.BLENDMODE_ONE, pc.BLENDMODE_ZERO);
+            this.setBlendEquation(pc.BLENDEQUATION_ADD);
             this.setColorWrite(true, true, true, true);
-            this.setCullMode(pc.gfx.CULLFACE_BACK);
+            this.setCullMode(pc.CULLFACE_BACK);
             this.setDepthTest(true);
             this.setDepthWrite(true);
 
@@ -345,16 +345,16 @@ pc.extend(pc.gfx, function () {
 
             gl.enable(gl.SCISSOR_TEST);
 
-            this.programLib = new pc.gfx.ProgramLibrary(this);
-            for (var generator in pc.gfx.programlib) {
-                this.programLib.register(generator, pc.gfx.programlib[generator]);
+            this.programLib = new pc.ProgramLibrary(this);
+            for (var generator in pc.programlib) {
+                this.programLib.register(generator, pc.programlib[generator]);
             }
 
             // Calculate a estimate of the maximum number of bones that can be uploaded to the GPU
             // based on the number of available uniforms and the number of uniforms required for non-
             // bone data.  This is based off of the Phong shader.  A user defined shader may have
             // even less space available for bones so this calculated value can be overridden via
-            // pc.gfx.Device.setBoneLimit.
+            // pc.GraphicsDevice.setBoneLimit.
             var numUniforms = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
             numUniforms -= 4 * 4; // Model, view, projection and shadow matrices
             numUniforms -= 8;     // 8 lights max, each specifying a position vector
@@ -389,10 +389,10 @@ pc.extend(pc.gfx, function () {
         }).call(this);
     };
 
-    Device.prototype = {
+    GraphicsDevice.prototype = {
         /**
          * @function
-         * @name pc.gfx.Device#setViewport
+         * @name pc.GraphicsDevice#setViewport
          * @description Set the active rectangle for rendering on the specified device.
          * @param {Number} x The pixel space x-coordinate of the bottom left corner of the viewport.
          * @param {Number} y The pixel space y-coordinate of the bottom left corner of the viewport.
@@ -406,7 +406,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setScissor
+         * @name pc.GraphicsDevice#setScissor
          * @description Set the active scissor rectangle on the specified device.
          * @param {Number} x The pixel space x-coordinate of the bottom left corner of the scissor rectangle.
          * @param {Number} y The pixel space y-coordinate of the bottom left corner of the scissor rectangle.
@@ -420,9 +420,9 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#getProgramLibrary
+         * @name pc.GraphicsDevice#getProgramLibrary
          * @description Retrieves the program library assigned to the specified graphics device.
-         * @returns {pc.gfx.ProgramLibrary} The program library assigned to the device.
+         * @returns {pc.ProgramLibrary} The program library assigned to the device.
          */
         getProgramLibrary: function () {
             return this.programLib;
@@ -430,12 +430,12 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setProgramLibrary
+         * @name pc.GraphicsDevice#setProgramLibrary
          * @description Assigns a program library to the specified device. By default, a graphics
          * device is created with a program library that manages all of the programs that are
          * used to render any graphical primitives. However, this function allows the user to
          * replace the existing program library with a new one.
-         * @param {pc.gfx.ProgramLibrary} programLib The program library to assign to the device.
+         * @param {pc.ProgramLibrary} programLib The program library to assign to the device.
          */
         setProgramLibrary: function (programLib) {
             this.programLib = programLib;
@@ -443,11 +443,11 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#updateBegin
+         * @name pc.GraphicsDevice#updateBegin
          * @description Marks the beginning of a block of rendering. Internally, this function
          * binds the render target currently set on the device. This function should be matched
-         * with a call to pc.gfx.Device#updateEnd. Calls to pc.gfx.Device#updateBegin
-         * and pc.gfx.Device#updateEnd must not be nested.
+         * with a call to pc.GraphicsDevice#updateEnd. Calls to pc.GraphicsDevice#updateBegin
+         * and pc.GraphicsDevice#updateEnd must not be nested.
          */
         updateBegin: function () {
             var gl = this.gl;
@@ -520,10 +520,10 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#updateEnd
+         * @name pc.GraphicsDevice#updateEnd
          * @description Marks the end of a block of rendering. This function should be called
-         * after a matching call to pc.gfx.Device#updateBegin. Calls to pc.gfx.Device#updateBegin
-         * and pc.gfx.Device#updateEnd must not be nested.
+         * after a matching call to pc.GraphicsDevice#updateBegin. Calls to pc.GraphicsDevice#updateBegin
+         * and pc.GraphicsDevice#updateEnd must not be nested.
          */
         updateEnd: function () {
             var gl = this.gl;
@@ -543,79 +543,79 @@ pc.extend(pc.gfx, function () {
             texture._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP : gl.TEXTURE_2D;
 
             switch (texture._format) {
-                case pc.gfx.PIXELFORMAT_A8:
+                case pc.PIXELFORMAT_A8:
                     texture._glFormat = gl.ALPHA;
                     texture._glInternalFormat = gl.ALPHA;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
-                case pc.gfx.PIXELFORMAT_L8:
+                case pc.PIXELFORMAT_L8:
                     texture._glFormat = gl.LUMINANCE;
                     texture._glInternalFormat = gl.LUMINANCE;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
-                case pc.gfx.PIXELFORMAT_L8_A8:
+                case pc.PIXELFORMAT_L8_A8:
                     texture._glFormat = gl.LUMINANCE_ALPHA;
                     texture._glInternalFormat = gl.LUMINANCE_ALPHA;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
-                case pc.gfx.PIXELFORMAT_R5_G6_B5:
+                case pc.PIXELFORMAT_R5_G6_B5:
                     texture._glFormat = gl.RGB;
                     texture._glInternalFormat = gl.RGB;
                     texture._glPixelType = gl.UNSIGNED_SHORT_5_6_5;
                     break;
-                case pc.gfx.PIXELFORMAT_R5_G5_B5_A1:
+                case pc.PIXELFORMAT_R5_G5_B5_A1:
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = gl.RGBA;
                     texture._glPixelType = gl.UNSIGNED_SHORT_5_5_5_1;
                     break;
-                case pc.gfx.PIXELFORMAT_R4_G4_B4_A4:
+                case pc.PIXELFORMAT_R4_G4_B4_A4:
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = gl.RGBA;
                     texture._glPixelType = gl.UNSIGNED_SHORT_4_4_4_4;
                     break;
-                case pc.gfx.PIXELFORMAT_R8_G8_B8:
+                case pc.PIXELFORMAT_R8_G8_B8:
                     texture._glFormat = gl.RGB;
                     texture._glInternalFormat = gl.RGB;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
-                case pc.gfx.PIXELFORMAT_R8_G8_B8_A8:
+                case pc.PIXELFORMAT_R8_G8_B8_A8:
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = gl.RGBA;
                     texture._glPixelType = gl.UNSIGNED_BYTE;
                     break;
-                case pc.gfx.PIXELFORMAT_DXT1:
+                case pc.PIXELFORMAT_DXT1:
                     ext = this.extCompressedTextureS3TC;
                     texture._glFormat = gl.RGB;
                     texture._glInternalFormat = ext.COMPRESSED_RGB_S3TC_DXT1_EXT;
                     break;
-                case pc.gfx.PIXELFORMAT_DXT3:
+                case pc.PIXELFORMAT_DXT3:
                     ext = this.extCompressedTextureS3TC;
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT3_EXT;
                     break;
-                case pc.gfx.PIXELFORMAT_DXT5:
+                case pc.PIXELFORMAT_DXT5:
                     ext = this.extCompressedTextureS3TC;
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
                     break;
-                case pc.gfx.PIXELFORMAT_RGB16F:
+                case pc.PIXELFORMAT_RGB16F:
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGB;
                     texture._glInternalFormat = gl.RGB;
                     texture._glPixelType = ext.HALF_FLOAT_OES;
                     break;
-                case pc.gfx.PIXELFORMAT_RGBA16F:
+                case pc.PIXELFORMAT_RGBA16F:
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = gl.RGBA;
                     texture._glPixelType = ext.HALF_FLOAT_OES;
                     break;
-                case pc.gfx.PIXELFORMAT_RGB32F:
+                case pc.PIXELFORMAT_RGB32F:
                     texture._glFormat = gl.RGB;
                     texture._glInternalFormat = gl.RGB;
                     texture._glPixelType = gl.FLOAT;
                     break;
-                case pc.gfx.PIXELFORMAT_RGBA32F:
+                case pc.PIXELFORMAT_RGBA32F:
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = gl.RGBA;
                     texture._glPixelType = gl.FLOAT;
@@ -761,17 +761,17 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#draw
+         * @name pc.GraphicsDevice#draw
          * @description Submits a graphical primitive to the hardware for immediate rendering.
          * @param {Object} primitive Primitive object describing how to submit current vertex/index buffers defined as follows:
-         * @param {pc.gfx.PRIMITIVE} primitive.type The type of primitive to render.
+         * @param {pc.PRIMITIVE} primitive.type The type of primitive to render.
          * @param {Number} primitive.base The offset of the first index or vertex to dispatch in the draw call.
          * @param {Number} primitive.count The number of indices or vertices to dispatch in the draw call.
          * @param {Boolean} primitive.indexed True to interpret the primitive as indexed, thereby using the currently set index buffer and false otherwise.
          * @example
          * // Render a single, unindexed triangle
          * device.draw({
-         *     type: pc.gfx.PRIMITIVE_TRIANGLES,
+         *     type: pc.PRIMITIVE_TRIANGLES,
          *     base: 0,
          *     count: 3,
          *     indexed: false
@@ -830,7 +830,7 @@ pc.extend(pc.gfx, function () {
                 sampler = samplers[i];
                 samplerValue = sampler.scopeId.value;
 
-                if (samplerValue instanceof pc.gfx.Texture) {
+                if (samplerValue instanceof pc.Texture) {
                     texture = samplerValue;
                     this.setTexture(texture, textureUnit);
 
@@ -886,12 +886,12 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#clear
+         * @name pc.GraphicsDevice#clear
          * @description Clears the frame buffer of the currently set render target.
          * @param {Object} options Optional options object that controls the behavior of the clear operation defined as follows:
          * @param {Array} options.color The color to clear the color buffer to in the range 0.0 to 1.0 for each component.
          * @param {Number} options.depth The depth value to clear the depth buffer to in the range 0.0 to 1.0.
-         * @param {pc.gfx.CLEARFLAG} options.flags The buffers to clear (the types being color, depth and stencil).
+         * @param {pc.CLEARFLAG} options.flags The buffers to clear (the types being color, depth and stencil).
          * @example
          * // Clear color buffer to black and depth buffer to 1.0
          * device.clear();
@@ -899,14 +899,14 @@ pc.extend(pc.gfx, function () {
          * // Clear just the color buffer to red
          * device.clear({
          *     color: [1, 0, 0, 1],
-         *     flags: pc.gfx.CLEARFLAG_COLOR
+         *     flags: pc.CLEARFLAG_COLOR
          * });
          *
          * // Clear color buffer to yellow and depth to 1.0
          * device.clear({
          *     color: [1, 1, 0, 1],
          *     depth: 1.0,
-         *     flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
+         *     flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
          * });
          */
         clear: function (options) {
@@ -918,12 +918,12 @@ pc.extend(pc.gfx, function () {
                 var gl = this.gl;
 
                 // Set the clear color
-                if (flags & pc.gfx.CLEARFLAG_COLOR) {
+                if (flags & pc.CLEARFLAG_COLOR) {
                     var color = (options.color === undefined) ? defaultOptions.color : options.color;
                     this.setClearColor(color[0], color[1], color[2], color[3]);
                 }
 
-                if (flags & pc.gfx.CLEARFLAG_DEPTH) {
+                if (flags & pc.CLEARFLAG_DEPTH) {
                     // Set the clear depth
                     var depth = (options.depth === undefined) ? defaultOptions.depth : options.depth;
                     this.setClearDepth(depth);
@@ -935,7 +935,7 @@ pc.extend(pc.gfx, function () {
                 // Clear the frame buffer
                 gl.clear(this.glClearFlag[flags]);
 
-                if (flags & pc.gfx.CLEARFLAG_DEPTH) {
+                if (flags & pc.CLEARFLAG_DEPTH) {
                     if (!this.depthWrite) {
                         gl.depthMask(false);
                     }
@@ -967,11 +967,11 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setRenderTarget
+         * @name pc.GraphicsDevice#setRenderTarget
          * @description Sets the specified render target on the device. If null
          * is passed as a parameter, the back buffer becomes the current target
          * for all rendering operations.
-         * @param {pc.gfx.RenderTarget} The render target to activate.
+         * @param {pc.RenderTarget} The render target to activate.
          * @example
          * // Set a render target to receive all rendering output
          * device.setRenderTarget(renderTarget);
@@ -985,9 +985,9 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#getRenderTarget
+         * @name pc.GraphicsDevice#getRenderTarget
          * @description Queries the currently set render target on the device.
-         * @returns {pc.gfx.RenderTarget} The current render target.
+         * @returns {pc.RenderTarget} The current render target.
          * @example
          * // Get the current render target
          * var renderTarget = device.getRenderTarget();
@@ -998,7 +998,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#getDepthTest
+         * @name pc.GraphicsDevice#getDepthTest
          * @description Queries whether depth testing is enabled.
          * @returns {Boolean} true if depth testing is enabled and false otherwise.
          * @example
@@ -1011,7 +1011,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setDepthTest
+         * @name pc.GraphicsDevice#setDepthTest
          * @description Enables or disables depth testing of fragments. Once this state
          * is set, it persists until it is changed. By default, depth testing is enabled.
          * @param {Boolean} depthTest true to enable depth testing and false otherwise.
@@ -1032,7 +1032,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#getDepthWrite
+         * @name pc.GraphicsDevice#getDepthWrite
          * @description Queries whether writes to the depth buffer are enabled.
          * @returns {Boolean} true if depth writing is enabled and false otherwise.
          * @example
@@ -1045,7 +1045,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setDepthWrite
+         * @name pc.GraphicsDevice#setDepthWrite
          * @description Enables or disables writes to the depth buffer. Once this state
          * is set, it persists until it is changed. By default, depth writes are enabled.
          * @param {Boolean} writeDepth true to enable depth writing and false otherwise.
@@ -1061,7 +1061,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setColorWrite
+         * @name pc.GraphicsDevice#setColorWrite
          * @description Enables or disables writes to the color buffer. Once this state
          * is set, it persists until it is changed. By default, color writes are enabled
          * for all color channels.
@@ -1088,7 +1088,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#getBlending
+         * @name pc.GraphicsDevice#getBlending
          */
         getBlending: function () {
             return this.blending;
@@ -1096,7 +1096,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setBlending
+         * @name pc.GraphicsDevice#setBlending
          */
         setBlending: function (blending) {
             if (this.blending !== blending) {
@@ -1112,7 +1112,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setBlendFunction
+         * @name pc.GraphicsDevice#setBlendFunction
          */
         setBlendFunction: function (blendSrc, blendDst) {
             if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
@@ -1124,7 +1124,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setBlendEquation
+         * @name pc.GraphicsDevice#setBlendEquation
          */
         setBlendEquation: function (blendEquation) {
             if (this.blendEquation !== blendEquation) {
@@ -1136,24 +1136,24 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setCullMode
+         * @name pc.GraphicsDevice#setCullMode
          */
         setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {
                 var gl = this.gl;
                 switch (cullMode) {
-                    case pc.gfx.CULLFACE_NONE:
+                    case pc.CULLFACE_NONE:
                         gl.disable(gl.CULL_FACE);
                         break;
-                    case pc.gfx.CULLFACE_FRONT:
+                    case pc.CULLFACE_FRONT:
                         gl.enable(gl.CULL_FACE);
                         gl.cullFace(gl.FRONT);
                         break;
-                    case pc.gfx.CULLFACE_BACK:
+                    case pc.CULLFACE_BACK:
                         gl.enable(gl.CULL_FACE);
                         gl.cullFace(gl.BACK);
                         break;
-                    case pc.gfx.CULLFACE_FRONTANDBACK:
+                    case pc.CULLFACE_FRONTANDBACK:
                         gl.enable(gl.CULL_FACE);
                         gl.cullFace(gl.FRONT_AND_BACK);
                         break;
@@ -1164,11 +1164,11 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setIndexBuffer
+         * @name pc.GraphicsDevice#setIndexBuffer
          * @description Sets the current index buffer on the graphics device. On subsequent
-         * calls to pc.gfx.Device#draw, the specified index buffer will be used to provide
+         * calls to pc.GraphicsDevice#draw, the specified index buffer will be used to provide
          * index data for any indexed primitives.
-         * @param {pc.gfx.IndexBuffer} indexBuffer The index buffer to assign to the device.
+         * @param {pc.IndexBuffer} indexBuffer The index buffer to assign to the device.
          */
         setIndexBuffer: function (indexBuffer) {
             // Store the index buffer
@@ -1183,11 +1183,11 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setVertexBuffer
+         * @name pc.GraphicsDevice#setVertexBuffer
          * @description Sets the current vertex buffer for a specific stream index on the graphics
-         * device. On subsequent calls to pc.gfx.Device#draw, the specified vertex buffer will be
+         * device. On subsequent calls to pc.GraphicsDevice#draw, the specified vertex buffer will be
          * used to provide vertex data for any primitives.
-         * @param {pc.gfx.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
+         * @param {pc.VertexBuffer} vertexBuffer The vertex buffer to assign to the device.
          * @param {Number} stream The stream index for the vertex buffer, indexed from 0 upwards.
          */
         setVertexBuffer: function (vertexBuffer, stream) {
@@ -1212,9 +1212,9 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setShader
+         * @name pc.GraphicsDevice#setShader
          * @description Sets the active shader to be used during subsequent draw calls.
-         * @param {pc.gfx.Shader} shader The shader to set to assign to the device.
+         * @param {pc.Shader} shader The shader to set to assign to the device.
          */
         setShader: function(shader) {
             if (shader !== this.shader) {
@@ -1231,13 +1231,13 @@ pc.extend(pc.gfx, function () {
         /**
 
          * @function
-         * @name pc.gfx.Device#getBoneLimit
+         * @name pc.GraphicsDevice#getBoneLimit
          * @description Queries the maximum number of bones that can be referenced by a shader.
-         * The shader generators (pc.gfx.programlib) use this number to specify the matrix array
+         * The shader generators (pc.programlib) use this number to specify the matrix array
          * size of the uniform 'matrix_pose[0]'. The value is calculated based on the number of
          * available uniform vectors available after subtracting the number taken by a typical
          * heavyweight shader. If a different number is required, it can be tuned via
-         * pc.gfx.Device#setBoneLimit.
+         * pc.GraphicsDevice#setBoneLimit.
          * @returns {Number} The maximum number of bones that can be supported by the host hardware.
          */
         getBoneLimit: function () {
@@ -1246,7 +1246,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.Device#setBoneLimit
+         * @name pc.GraphicsDevice#setBoneLimit
          * @description Specifies the maximum number of bones that the device can support on
          * the current hardware. This function allows the default calculated value based on
          * available vector uniforms to be overridden.
@@ -1267,7 +1267,7 @@ pc.extend(pc.gfx, function () {
 
         /**
         * @function
-        * @name pc.gfx.Device#resizeCanvas
+        * @name pc.GraphicsDevice#resizeCanvas
         * @description Sets the width and height of the canvas, then fires the 'resizecanvas' event.
         */
         resizeCanvas: function (width, height) {
@@ -1278,15 +1278,15 @@ pc.extend(pc.gfx, function () {
         }
     };
 
-    Object.defineProperty(Device.prototype, 'width', {
+    Object.defineProperty(GraphicsDevice.prototype, 'width', {
         get: function () { return this.gl.drawingBufferWidth || this.canvas.width; }
     });
 
-    Object.defineProperty(Device.prototype, 'height', {
+    Object.defineProperty(GraphicsDevice.prototype, 'height', {
         get: function () { return this.gl.drawingBufferHeight || this.canvas.height; }
     });
 
-    Object.defineProperty(Device.prototype, 'fullscreen', {
+    Object.defineProperty(GraphicsDevice.prototype, 'fullscreen', {
         get: function () { return !!document.fullscreenElement; },
         set: function (fullscreen) {
             if (fullscreen) {
@@ -1298,7 +1298,7 @@ pc.extend(pc.gfx, function () {
         }
     });
 
-    Object.defineProperty(Device.prototype, 'maxAnisotropy', {
+    Object.defineProperty(GraphicsDevice.prototype, 'maxAnisotropy', {
         get: ( function () {
             var maxAniso;
 
@@ -1321,7 +1321,7 @@ pc.extend(pc.gfx, function () {
     return {
         UnsupportedBrowserError: UnsupportedBrowserError,
         ContextCreationError: ContextCreationError,
-        Device: Device,
+        GraphicsDevice: GraphicsDevice,
         precalculatedTangents: true
     };
 }());

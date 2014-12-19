@@ -16,11 +16,11 @@ pc.extend(pc.scene, function () {
         this.alphaTest = 0;
 
         this.blend = false;
-        this.blendSrc = pc.gfx.BLENDMODE_ONE;
-        this.blendDst = pc.gfx.BLENDMODE_ZERO;
-        this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
+        this.blendSrc = pc.BLENDMODE_ONE;
+        this.blendDst = pc.BLENDMODE_ZERO;
+        this.blendEquation = pc.BLENDEQUATION_ADD;
 
-        this.cull = pc.gfx.CULLFACE_BACK;
+        this.cull = pc.CULLFACE_BACK;
 
         this.depthTest = true;
         this.depthWrite = true;
@@ -36,29 +36,29 @@ pc.extend(pc.scene, function () {
     Object.defineProperty(Material.prototype, 'blendType', {
         get: function () {
             if ((!this.blend) &&
-                (this.blendSrc === pc.gfx.BLENDMODE_ONE) &&
-                (this.blendDst === pc.gfx.BLENDMODE_ZERO) &&
-                (this.blendEquation === pc.gfx.BLENDEQUATION_ADD)) {
+                (this.blendSrc === pc.BLENDMODE_ONE) &&
+                (this.blendDst === pc.BLENDMODE_ZERO) &&
+                (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_NONE;
             } else if ((this.blend) &&
-                       (this.blendSrc === pc.gfx.BLENDMODE_SRC_ALPHA) &&
-                       (this.blendDst === pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
-                       (this.blendEquation === pc.gfx.BLENDEQUATION_ADD)) {
+                       (this.blendSrc === pc.BLENDMODE_SRC_ALPHA) &&
+                       (this.blendDst === pc.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
+                       (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_NORMAL;
             } else if ((this.blend) &&
-                       (this.blendSrc === pc.gfx.BLENDMODE_ONE) &&
-                       (this.blendDst === pc.gfx.BLENDMODE_ONE) &&
-                       (this.blendEquation === pc.gfx.BLENDEQUATION_ADD)) {
+                       (this.blendSrc === pc.BLENDMODE_ONE) &&
+                       (this.blendDst === pc.BLENDMODE_ONE) &&
+                       (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_ADDITIVE;
             } else if ((this.blend) &&
-                       (this.blendSrc === pc.gfx.BLENDMODE_DST_COLOR) &&
-                       (this.blendDst === pc.gfx.BLENDMODE_ZERO) &&
-                       (this.blendEquation === pc.gfx.BLENDEQUATION_ADD)) {
+                       (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
+                       (this.blendDst === pc.BLENDMODE_ZERO) &&
+                       (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_MULTIPLICATIVE;
             } else if ((this.blend) &&
-                       (this.blendSrc === pc.gfx.BLENDMODE_ONE) &&
-                       (this.blendDst === pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
-                       (this.blendEquation === pc.gfx.BLENDEQUATION_ADD)) {
+                       (this.blendSrc === pc.BLENDMODE_ONE) &&
+                       (this.blendDst === pc.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
+                       (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.scene.BLEND_PREMULTIPLIED;
             } else {
                 return pc.scene.BLEND_NORMAL;
@@ -68,33 +68,33 @@ pc.extend(pc.scene, function () {
             switch (type) {
                 case pc.scene.BLEND_NONE:
                     this.blend = false;
-                    this.blendSrc = pc.gfx.BLENDMODE_ONE;
-                    this.blendDst = pc.gfx.BLENDMODE_ZERO;
-                    this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
+                    this.blendSrc = pc.BLENDMODE_ONE;
+                    this.blendDst = pc.BLENDMODE_ZERO;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
                 case pc.scene.BLEND_NORMAL:
                     this.blend = true;
-                    this.blendSrc = pc.gfx.BLENDMODE_SRC_ALPHA;
-                    this.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
-                    this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
+                    this.blendSrc = pc.BLENDMODE_SRC_ALPHA;
+                    this.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
                 case pc.scene.BLEND_PREMULTIPLIED:
                     this.blend = true;
-                    this.blendSrc = pc.gfx.BLENDMODE_ONE;
-                    this.blendDst = pc.gfx.BLENDMODE_ONE_MINUS_SRC_ALPHA;
-                    this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
+                    this.blendSrc = pc.BLENDMODE_ONE;
+                    this.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
                 case pc.scene.BLEND_ADDITIVE:
                     this.blend = true;
-                    this.blendSrc = pc.gfx.BLENDMODE_ONE;
-                    this.blendDst = pc.gfx.BLENDMODE_ONE;
-                    this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
+                    this.blendSrc = pc.BLENDMODE_ONE;
+                    this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
                 case pc.scene.BLEND_MULTIPLICATIVE:
                     this.blend = true;
-                    this.blendSrc = pc.gfx.BLENDMODE_DST_COLOR;
-                    this.blendDst = pc.gfx.BLENDMODE_ZERO;
-                    this.blendEquation = pc.gfx.BLENDEQUATION_ADD;
+                    this.blendSrc = pc.BLENDMODE_DST_COLOR;
+                    this.blendDst = pc.BLENDMODE_ZERO;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
             }
             this._updateMeshInstanceKeys();
@@ -197,7 +197,7 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.Material#setParameter
      * @description Sets a shader parameter on a material.
      * @name {string} name The name of the parameter to set.
-     * @name {number|Array|pc.gfx.Texture} data The value for the specified parameter.
+     * @name {number|Array|pc.Texture} data The value for the specified parameter.
      * @author Will Eastcott
      */
     Material.prototype.setParameter = function (name, data) {
@@ -246,7 +246,7 @@ pc.extend(pc.scene, function () {
      * @function
      * @name pc.scene.Material#getShader
      * @description Retrieves the shader assigned to the specified material.
-     * @returns {pc.gfx.Shader} The shader assigned to the material.
+     * @returns {pc.Shader} The shader assigned to the material.
      * @author Will Eastcott
      */
     Material.prototype.getShader = function () {
@@ -257,7 +257,7 @@ pc.extend(pc.scene, function () {
      * @function
      * @name pc.scene.Material#setShader
      * @description Assigns a shader to the specified material.
-     * @param {pc.gfx.Shader} shader The shader to assign to the material.
+     * @param {pc.Shader} shader The shader to assign to the material.
      * @author Will Eastcott
      */
     Material.prototype.setShader = function (shader) {

@@ -11,27 +11,27 @@ pc.extend(pc.scene, function () {
      * where each component is between 0 and 1.
      * @property {pc.Color} diffuse The diffuse color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.gfx.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} diffuseMap The diffuse map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for diffuse
      * color in preference to the 'diffuse' property.
      * @property {pc.Vec2} diffuseMapTiling Controls the 2D tiling of the diffuse map.
      * @property {pc.Vec2} diffuseMapOffset Controls the 2D offset of the diffuse map. Each component is between 0 and 1.
      * @property {pc.Color} specular The specular color of the material. This color value is 3-component (RGB),
-     * @property {pc.gfx.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
+     * @property {pc.Texture} specularMap The per-pixel specular map of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * specular color in preference to the 'specular' property.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
      * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (mirror).
      * A higher shininess value results in a more focussed specular highlight.
-     * @property {pc.gfx.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
+     * @property {pc.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
      * rather than a cube map. If this property is set to a valid texture, the texture is used as the source for
      * shininess in preference to the 'shininess' property.
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
      * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
-     * @property {pc.gfx.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
      * color in preference to the 'emissive' property.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
@@ -39,36 +39,38 @@ pc.extend(pc.scene, function () {
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque. If you want the material to be transparent you also need to
      * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
-     * @property {pc.gfx.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
      * in preference to the 'opacity' property. If you want the material to be transparent you also need to
      * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
      * @property {Number} blendType The type of blending for this material. Can be one of the following valus: pc.scene.BLEND_NONE, pc.scene.BLEND_NORMAL, pc.scene.BLEND_ADDITIVE.
-     * @property {pc.gfx.Texture} normalMap The normal map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} normalMap The normal map of the material. This must be a 2D texture rather
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
      * @property {pc.Vec2} normalMapOffset Controls the 2D offset of the normal map. Each component is between 0 and 1.
-     * @property {pc.gfx.Texture} heightMap The height map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} heightMap The height map of the material. This must be a 2D texture rather
      * than a cube map. The texture contain values defining the height of the surface at that point where darker
      * pixels are lower and lighter pixels are higher.
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map
+     * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map.
+     * @property {Number} heightMapFactor Height map multiplier.
+     * @property {Number} emissiveIntensity Emissive color multiplier.
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
      * the bump map and 1 results in a full contribution.
-     * @property {pc.gfx.Texture} sphereMap The spherical environment map of the material.
-     * @property {pc.gfx.Texture} cubeMap The cubic environment map of the material.
+     * @property {pc.Texture} sphereMap The spherical environment map of the material.
+     * @property {pc.Texture} cubeMap The cubic environment map of the material.
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and
      * can be between 0 and 1, where 0 shows no reflection and 1 is fully reflective.
-     * @property {pc.gfx.Texture} lightMap The light map of the material. This must be a 2D texture rather
+     * @property {pc.Texture} lightMap The light map of the material. This must be a 2D texture rather
      * than a cube map.
      * @property {Boolean} ambientTint Enables scene ambient multiplication by material ambient color.
      * @property {Boolean} diffuseMapTint Enables diffuseMap multiplication by diffuse color.
      * @property {Boolean} specularMapTint Enables specularMap multiplication by specular color.
      * @property {Boolean} emissiveMapTint Enables emissiveMap multiplication by emissive color.
-     * @property {pc.gfx.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
+     * @property {pc.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
      * @property {Number} aoMapUvSet Defines UV set used for AO map. Can be 0 or 1.
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
@@ -97,7 +99,7 @@ pc.extend(pc.scene, function () {
 
     var _createTexture = function (param) {
         if (param.data) {
-            if (param.data instanceof pc.gfx.Texture) {
+            if (param.data instanceof pc.Texture) {
                 return param.data;
             } else {
                 throw Error("PhongMaterial.init() expects textures to already be created");
@@ -177,6 +179,7 @@ pc.extend(pc.scene, function () {
             clone.heightMapTiling = this.heightMapTiling ? this.heightMapTiling.clone() : new pc.Vec2(1, 1);
             clone.heightMapOffset = this.heightMapOffset ? this.heightMapOffset.clone() : new pc.Vec2(0, 0);
             clone.bumpiness = this.bumpiness;
+            clone.heightMapFactor = this.heightMapFactor;
 
             clone.cubeMap = this.cubeMap;
             clone.prefilteredCubeMap128 = this.prefilteredCubeMap128;
@@ -204,6 +207,7 @@ pc.extend(pc.scene, function () {
             clone.diffuseMapTint = this.diffuseMapTint;
             clone.specularMapTint = this.specularMapTint;
             clone.emissiveMapTint = this.emissiveMapTint;
+            clone.emissiveIntensity = this.emissiveIntensity;
 
             clone.update();
             return clone;
@@ -213,7 +217,7 @@ pc.extend(pc.scene, function () {
         * @private
         * @name pc.scene.PhoneMaterial#init
         * @description Update material data from a data block, as found on a material Asset.
-        * Note, init() expects texture parameters to contain a {@link pc.gfx.Texture} not a resource id.
+        * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
         */
         init: function (data) {
             this.reset();
@@ -309,6 +313,9 @@ pc.extend(pc.scene, function () {
                     case 'bumpMapFactor':
                         this.bumpiness = param.data;
                         break;
+                    case 'heightMapFactor':
+                        this.heightMapFactor = param.data;
+                        break;
                     case 'cubeMap':
                         this.cubeMap = _createTexture(param);
                         break;
@@ -356,6 +363,9 @@ pc.extend(pc.scene, function () {
                         break;
                     case 'emissiveMapTint':
                         this.emissiveMapTint = param.data;
+                        break;
+                    case 'emissiveIntensity':
+                        this.emissiveIntensity = param.data;
                         break;
                     case 'depthTest':
                         this.depthTest = param.data;
@@ -438,6 +448,7 @@ pc.extend(pc.scene, function () {
             this.heightMapOffset = new pc.Vec2(0, 0);
             this.heightMapTransform = null;
             this.bumpiness = 1;
+            this.heightMapFactor = 1;
 
             this.cubeMap = null;
             this.prefilteredCubeMap128 = null;
@@ -466,6 +477,7 @@ pc.extend(pc.scene, function () {
             this.diffuseMapTint = false;
             this.specularMapTint = false;
             this.emissiveMapTint = false;
+            this.emissiveIntensity = 1;
 
             // Array to pass uniforms to renderer
             this.ambientUniform = new Float32Array(3);
@@ -584,9 +596,9 @@ pc.extend(pc.scene, function () {
             }
 
             if (!this.emissiveMap || (this.blendMapsWithColors && this.emissiveMapTint)) {
-                this.emissiveUniform[0] = this.emissive.r;
-                this.emissiveUniform[1] = this.emissive.g;
-                this.emissiveUniform[2] = this.emissive.b;
+                this.emissiveUniform[0] = this.emissive.r * this.emissiveIntensity;
+                this.emissiveUniform[1] = this.emissive.g * this.emissiveIntensity;
+                this.emissiveUniform[2] = this.emissive.b * this.emissiveIntensity;
                 this.setParameter('material_emissive', this.emissiveUniform);
             }
 
@@ -638,8 +650,12 @@ pc.extend(pc.scene, function () {
             } else {
             }
 
-            if (this.normalMap || this.heightMap) {
+            if (this.normalMap) {
                 this.setParameter('material_bumpMapFactor', this.bumpiness);
+            }
+
+            if (this.heightMap) {
+                this.setParameter('material_heightMapFactor', this.heightMapFactor * 0.025);
             }
 
             if (this.cubeMap) {
@@ -755,16 +771,16 @@ pc.extend(pc.scene, function () {
                 modulateAmbient:            this.ambientTint,
                 diffuseMap:                 !!this.diffuseMap,
                 diffuseMapTransform:        this._getMapTransformID(this.diffuseMapTransform),
-                needsDiffuseColor:          ((this.diffuse.r!=1) || (this.diffuse.g!=1) || (this.diffuse.b!=1)) && this.diffuseMapTint,
+                needsDiffuseColor:          (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
                 specularMap:                !!this.specularMap,
                 specularMapTransform:       this._getMapTransformID(this.specularMapTransform),
-                needsSpecularColor:         ((this.specular.r!=1) || (this.specular.g!=1) || (this.specular.b!=1)) && this.specularMapTint,
+                needsSpecularColor:         (this.specular.r!=1 || this.specular.g!=1 || this.specular.b!=1) && this.specularMapTint,
                 glossMap:                   !!this.glossMap,
                 glossMapTransform:          this._getMapTransformID(this.glossMapTransform),
                 needsGlossFloat:            true,//this.shininess!=100,
                 emissiveMap:                !!this.emissiveMap,
                 emissiveMapTransform:       this._getMapTransformID(this.emissiveMapTransform),
-                needsEmissiveColor:         ((this.emissive.r!=1) || (this.emissive.g!=1) || (this.emissive.b!=1)) && this.emissiveMapTint,
+                needsEmissiveColor:         (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
                 opacityMap:                 !!this.opacityMap,
                 opacityMapTransform:        this._getMapTransformID(this.opacityMapTransform),
                 needsOpacityFloat:          this.opacity!=1,
@@ -778,7 +794,7 @@ pc.extend(pc.scene, function () {
                 lightMap:                   !!this.lightMap,
                 aoMap:                      !!this.aoMap,
                 aoUvSet:                    this.aoUvSet,
-                useSpecular:                (!!this.specularMap) || !((this.specular.r===0) && (this.specular.g===0) && (this.specular.b===0))
+                useSpecular:                (!!this.specularMap) || !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0)
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
                 hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
                 prefilteredCubemap:         prefilteredCubeMap,
@@ -804,7 +820,7 @@ pc.extend(pc.scene, function () {
                     this.ambientUniform[i] = Math.pow(this.ambient.data[i], 2.2);
                     this.diffuseUniform[i] = Math.pow(this.diffuse.data[i], 2.2);
                     this.specularUniform[i] = Math.pow(this.specular.data[i], 2.2);
-                    this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2);
+                    this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2) * this.emissiveIntensity;
                 }
             }
 

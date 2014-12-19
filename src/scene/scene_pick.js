@@ -4,12 +4,12 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.Picker
      * @class Picker object used to select mesh instances from screen coordinates.
      * @constructor Create a new instance of a Picker object
-     * @param {pc.gfx.Device} device Graphics device used to manage internal graphics resources.
+     * @param {pc.GraphicsDevice} device Graphics device used to manage internal graphics resources.
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.
      * @property {Number} width Width of the pick buffer in pixels (read-only).
      * @property {Number} height Height of the pick buffer in pixels (read-only).
-     * @property {pc.gfx.RenderTarget} renderTarget The render target used by the picker internally (read-only).
+     * @property {pc.RenderTarget} renderTarget The render target used by the picker internally (read-only).
      */
     var Picker = function(device, width, height) {
         this.device = device;
@@ -29,7 +29,7 @@ pc.extend(pc.scene, function () {
         this.clearOptions = {
             color: [1, 1, 1, 1],
             depth: 1,
-            flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
+            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
         };
         this.resize(width, height);
     };
@@ -157,7 +157,7 @@ pc.extend(pc.scene, function () {
                 material = meshInstance.material;
 
                 type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type;
-                var isSolid = (type === pc.gfx.PRIMITIVE_TRIANGLES) || (type === pc.gfx.PRIMITIVE_TRISTRIP) || (type === pc.gfx.PRIMITIVE_TRIFAN);
+                var isSolid = (type === pc.PRIMITIVE_TRIANGLES) || (type === pc.PRIMITIVE_TRISTRIP) || (type === pc.PRIMITIVE_TRIFAN);
                 var isPickable = (material instanceof pc.scene.PhongMaterial) || (material instanceof pc.scene.BasicMaterial);
                 if (isSolid && isPickable) {
 
@@ -212,17 +212,17 @@ pc.extend(pc.scene, function () {
      * @param {Number} height The height of the pick buffer in pixels.
      */
     Picker.prototype.resize = function (width, height) {
-        var colorBuffer = new pc.gfx.Texture(this.device, {
-            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+        var colorBuffer = new pc.Texture(this.device, {
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width,
             height: height,
             autoMipmap: false
         });
-        colorBuffer.minFilter = pc.gfx.FILTER_NEAREST;
-        colorBuffer.magFilter = pc.gfx.FILTER_NEAREST;
-        colorBuffer.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        colorBuffer.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        this._pickBufferTarget = new pc.gfx.RenderTarget(this.device, colorBuffer, { depth: true });
+        colorBuffer.minFilter = pc.FILTER_NEAREST;
+        colorBuffer.magFilter = pc.FILTER_NEAREST;
+        colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+        this._pickBufferTarget = new pc.RenderTarget(this.device, colorBuffer, { depth: true });
     };
 
     Object.defineProperty(Picker.prototype, 'renderTarget', {

@@ -1,24 +1,24 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     /**
-     * @name pc.gfx.IndexBuffer
+     * @name pc.IndexBuffer
      * @class An index buffer is the mechanism via which the application specifies primitive
      * index data to the graphics hardware.
      * @constructor Creates a new index buffer.
      * @example
      * // Create an index buffer holding 3 16-bit indices
      * // The buffer is marked as static, hinting that the buffer will never be modified
-     * var indexBuffer = new pc.gfx.IndexBuffer(graphicsDevice, pc.gfx.INDEXFORMAT_UINT16, 3, pc.gfx.BUFFER_STATIC);
-     * @param {pc.gfx.Device} graphicsDevice The graphics device used to manage this index buffer.
-     * @param {Number} format The type of each index to be stored in the index buffer (see pc.gfx.INDEXFORMAT_*).
+     * var indexBuffer = new pc.IndexBuffer(graphicsDevice, pc.INDEXFORMAT_UINT16, 3, pc.BUFFER_STATIC);
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this index buffer.
+     * @param {Number} format The type of each index to be stored in the index buffer (see pc.INDEXFORMAT_*).
      * @param {Number} numIndices The number of indices to be stored in the index buffer.
-     * @param {Number} [usage] The usage type of the vertex buffer (see pc.gfx.BUFFER_*).
+     * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
      */
     var IndexBuffer = function (graphicsDevice, format, numIndices, usage) {
         // Initialize optional parameters
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)
-        this.usage = usage || pc.gfx.BUFFER_STATIC;
+        this.usage = usage || pc.BUFFER_STATIC;
 
         // Store the index format
         this.format = format;
@@ -34,13 +34,13 @@ pc.extend(pc.gfx, function () {
 
         // Allocate the storage
         var bytesPerIndex;
-        if (format === pc.gfx.INDEXFORMAT_UINT8) {
+        if (format === pc.INDEXFORMAT_UINT8) {
             bytesPerIndex = 1;
             this.glFormat = gl.UNSIGNED_BYTE;
-        } else if (format === pc.gfx.INDEXFORMAT_UINT16) {
+        } else if (format === pc.INDEXFORMAT_UINT16) {
             bytesPerIndex = 2;
             this.glFormat = gl.UNSIGNED_SHORT;
-        } else if (format === pc.gfx.INDEXFORMAT_UINT32) {
+        } else if (format === pc.INDEXFORMAT_UINT32) {
             bytesPerIndex = 4;
             this.glFormat = gl.UNSIGNED_INT;
         }
@@ -52,7 +52,7 @@ pc.extend(pc.gfx, function () {
     IndexBuffer.prototype = {
         /**
          * @function
-         * @name pc.gfx.IndexBuffer#destroy
+         * @name pc.IndexBuffer#destroy
          * @description Frees resources associated with this index buffer.
          */
         destroy: function () {
@@ -62,9 +62,9 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.IndexBuffer#getFormat
+         * @name pc.IndexBuffer#getFormat
          * @description Returns the data format of the specified index buffer.
-         * @returns {Number} The data format of the specified index buffer (see pc.gfx.INDEXFORMAT_*).
+         * @returns {Number} The data format of the specified index buffer (see pc.INDEXFORMAT_*).
          */
         getFormat: function () {
             return this.format;
@@ -72,7 +72,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.IndexBuffer#getNumIndices
+         * @name pc.IndexBuffer#getNumIndices
          * @description Returns the number of indices stored in the specified index buffer.
          * @returns {Number} The number of indices stored in the specified index buffer.
          */
@@ -82,7 +82,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.IndexBuffer#lock
+         * @name pc.IndexBuffer#lock
          * @description Gives access to the block of memory that stores the buffer's indices.
          * @returns {ArrayBuffer} A contiguous block of memory where index data can be written to.
          */
@@ -92,7 +92,7 @@ pc.extend(pc.gfx, function () {
 
         /**
          * @function
-         * @name pc.gfx.IndexBuffer#unlock
+         * @name pc.IndexBuffer#unlock
          * @description Signals that the block of memory returned by a call to the lock function is 
          * ready to be given to the graphics hardware. Only unlocked index buffers can be set on the 
          * currently active device.
@@ -102,13 +102,13 @@ pc.extend(pc.gfx, function () {
             var gl = this.device.gl;
             var glUsage;
             switch (this.usage) {
-                case pc.gfx.BUFFER_STATIC:
+                case pc.BUFFER_STATIC:
                     glUsage = gl.STATIC_DRAW;
                     break;
-                case pc.gfx.BUFFER_DYNAMIC:
+                case pc.BUFFER_DYNAMIC:
                     glUsage = gl.DYNAMIC_DRAW;
                     break;
-                case pc.gfx.BUFFER_STREAM:
+                case pc.BUFFER_STREAM:
                     glUsage = gl.STREAM_DRAW;
                     break;
             }

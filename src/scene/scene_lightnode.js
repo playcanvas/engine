@@ -35,6 +35,7 @@ pc.extend(pc.scene, function () {
         this._shadowDistance = 40;
         this._shadowResolution = 1024;
         this._shadowBias = -0.0005;
+        this._normalOffsetBias = 0.0;
 
         this._scene = null;
     };
@@ -73,6 +74,7 @@ pc.extend(pc.scene, function () {
 
             // Shadow properties
             clone.setShadowBias(this.getShadowBias());
+            clone.setNormalOffsetBias(this.getNormalOffsetBias());
             clone.setShadowResolution(this.getShadowResolution());
             clone.setShadowDistance(this.getShadowDistance());
         },
@@ -188,6 +190,10 @@ pc.extend(pc.scene, function () {
          */
         getShadowBias: function () {
             return this._shadowBias;
+        },
+
+        getNormalOffsetBias: function () {
+            return this._normalOffsetBias;
         },
 
         /**
@@ -384,6 +390,13 @@ pc.extend(pc.scene, function () {
          */
         setShadowBias: function (bias) {
             this._shadowBias = bias;
+        },
+
+        setNormalOffsetBias: function (bias) {
+            if ((!this._normalOffsetBias && bias) || (this._normalOffsetBias && !bias)) {
+                this._scene.updateShaders = true;
+            }
+            this._normalOffsetBias = bias;
         },
 
         /**

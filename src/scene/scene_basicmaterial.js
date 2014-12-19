@@ -5,7 +5,7 @@ pc.extend(pc.scene, function () {
      * @class A Basic material is is for rendering unlit geometry, either using a constant color or a
      * color map modulated with a color.
      * @property {pc.Color} color The flat color of the material (RGBA, where each component is 0 to 1).
-     * @property {pc.gfx.Texture} colorMap The color map of the material. If specified, the color map is 
+     * @property {pc.Texture} colorMap The color map of the material. If specified, the color map is 
      * modulated by the color property.
      * @author Will Eastcott
      */

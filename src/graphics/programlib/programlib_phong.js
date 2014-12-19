@@ -1,4 +1,4 @@
-pc.gfx.programlib.phong = {
+pc.programlib.phong = {
     generateKey: function (device, options) {
 
         var props = [];
@@ -6,7 +6,10 @@ pc.gfx.programlib.phong = {
         for(prop in options) {
             if (prop==="lights") {
                 for(var i=0; i<options.lights.length; i++) {
-                    props.push(options.lights[i].getType() + "_" + (options.lights[i].getCastShadows() ? 1 : 0) + "_" + options.lights[i].getFalloffMode());
+                    props.push(options.lights[i].getType() + "_"
+                        + (options.lights[i].getCastShadows() ? 1 : 0) + "_"
+                        + options.lights[i].getFalloffMode() + "_"
+                        + !!options.lights[i].getNormalOffsetBias());
                 }
             } else {
                 if (options[prop]) props.push(prop);
@@ -37,7 +40,7 @@ pc.gfx.programlib.phong = {
         var i;
         var lighting = options.lights.length > 0;
         var reflections = options.cubeMap || options.sphereMap || options.prefilteredCubemap;
-        var useTangents = pc.gfx.precalculatedTangents;
+        var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
         if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
 
@@ -53,22 +56,22 @@ pc.gfx.programlib.phong = {
         ////////////////////////////
         // GENERATE VERTEX SHADER //
         ////////////////////////////
-        var getSnippet = pc.gfx.programlib.getSnippet;
+        var getSnippet = pc.programlib.getSnippet;
         var code = '';
         var codeBody = '';
 
         var varyings = ""; // additional varyings for map transforms
 
-        var chunks = pc.gfx.shaderChunks;
+        var chunks = pc.shaderChunks;
         code += chunks.baseVS;
 
         var attributes = {
-            vertex_position: pc.gfx.SEMANTIC_POSITION
+            vertex_position: pc.SEMANTIC_POSITION
         }
         codeBody += "   vPositionW    = getWorldPosition(data);\n";
 
         if (lighting || reflections) {
-            attributes.vertex_normal = pc.gfx.SEMANTIC_NORMAL;
+            attributes.vertex_normal = pc.SEMANTIC_NORMAL;
             codeBody += "   vNormalW    = getNormal(data);\n";
 
             if ((options.sphereMap) && (device.fragmentUniformsCount <= 16)) {
@@ -77,7 +80,7 @@ pc.gfx.programlib.phong = {
             }
 
             if (options.normalMap && useTangents) {
-                attributes.vertex_tangent = pc.gfx.SEMANTIC_TANGENT;
+                attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent(data);\n";
                 codeBody += "   vBinormalW  = getBinormal(data);\n";
@@ -86,7 +89,7 @@ pc.gfx.programlib.phong = {
 
         if (options.diffuseMap || options.specularMap || options.glossMap ||
             options.emissiveMap || options.normalMap || options.heightMap || options.opacityMap) {
-            attributes.vertex_texCoord0 = pc.gfx.SEMANTIC_TEXCOORD0;
+            attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
             code += chunks.uv0VS;
             codeBody += "   vec2 uv0        = getUv0(data);\n";
 
@@ -116,18 +119,18 @@ pc.gfx.programlib.phong = {
         }
 
         if (options.lightMap || (options.aoMap && options.aoUvSet===1)) {
-            attributes.vertex_texCoord1 = pc.gfx.SEMANTIC_TEXCOORD1;
+            attributes.vertex_texCoord1 = pc.SEMANTIC_TEXCOORD1;
             code += chunks.uv1VS;
             codeBody += "   vUv1        = getUv1(data);\n";
         }
 
         if (options.vertexColors) {
-            attributes.vertex_color = pc.gfx.SEMANTIC_COLOR;
+            attributes.vertex_color = pc.SEMANTIC_COLOR;
         }
 
         if (options.skin) {
-            attributes.vertex_boneWeights = pc.gfx.SEMANTIC_BLENDWEIGHT;
-            attributes.vertex_boneIndices = pc.gfx.SEMANTIC_BLENDINDICES;
+            attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
             code += getSnippet(device, 'vs_skin_decl');
             code += chunks.transformSkinnedVS;
             if (lighting || reflections) code += chunks.normalSkinnedVS;
@@ -440,9 +443,27 @@ pc.gfx.programlib.phong = {
                 code += "   data.atten *= getLightDiffuse(data);\n";
                 if (options.lights[i].getCastShadows()) {
                     if (lightType==pc.scene.LIGHTTYPE_POINT) {
-                        code += "   data.atten *= getShadowPoint(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                        var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                        if (!options.lights[i].getNormalOffsetBias()) {
+                            code += "   data.atten *= getShadowPoint" + shadowCoordArgs;
+                        } else {
+                            code += "   data.atten *= getShadowPointNormalOffset" + shadowCoordArgs;
+                        }
                     } else {
-                        code += "   getShadowCoord(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
+                        var shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
+                        if (!options.lights[i].getNormalOffsetBias()) {
+                            if (lightType==pc.scene.LIGHTTYPE_SPOT) {
+                                code += "   getShadowCoordPersp" + shadowCoordArgs;
+                            } else {
+                                code += "   getShadowCoordOrtho" + shadowCoordArgs;
+                            }
+                        } else {
+                            if (lightType==pc.scene.LIGHTTYPE_SPOT) {
+                                code += "   getShadowCoordPerspNormalOffset" + shadowCoordArgs;
+                            } else {
+                                code += "   getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
+                            }
+                        }
                         code += "   data.atten *= getShadowPCF3x3(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
                     }
                 }

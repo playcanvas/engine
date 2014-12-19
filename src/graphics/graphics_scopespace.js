@@ -1,4 +1,4 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     var ScopeSpace = function (name) {
@@ -16,7 +16,7 @@ pc.extend(pc.gfx, function () {
             if (this.variables.hasOwnProperty(name) === false) {
 
                 // Create and add to the table
-                this.variables[name] = new pc.gfx.ScopeId(name);
+                this.variables[name] = new pc.ScopeId(name);
             }
 
             // Now return the ScopeId instance
@@ -28,7 +28,7 @@ pc.extend(pc.gfx, function () {
             if (this.namespaces.hasOwnProperty(name) === false) {
 
                 // Create and add to the table
-                this.namespaces[name] = new pc.gfx.ScopeSpace(name);
+                this.namespaces[name] = new pc.ScopeSpace(name);
 
                 logDEBUG("Added ScopeSpace: " + name);
             }

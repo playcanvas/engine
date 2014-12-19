@@ -142,14 +142,14 @@ pc.extend(pc.fw, function () {
             }
         }
 
-        var texture = new pc.gfx.Texture(gd, {
-            format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+        var texture = new pc.Texture(gd, {
+            format: pc.PIXELFORMAT_R8_G8_B8,
             cubemap: true
         });
-        texture.minFilter = pc.gfx.FILTER_LINEAR_MIPMAP_LINEAR;
-        texture.magFilter = pc.gfx.FILTER_LINEAR;
-        texture.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        texture.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        texture.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
+        texture.magFilter = pc.FILTER_LINEAR;
+        texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
         if (requests.length) {
             var options = {
@@ -176,7 +176,7 @@ pc.extend(pc.fw, function () {
 
         material.updateShader();
         material.setParameter("texture_cubeMap", texture);
-        material.cull = pc.gfx.CULLFACE_NONE;
+        material.cull = pc.CULLFACE_NONE;
 
         var node = new pc.scene.GraphNode();
         var mesh = pc.scene.procedural.createBox(gd);
@@ -201,7 +201,7 @@ pc.extend(pc.fw, function () {
 
         material.updateShader();
         material.setParameter("texture_cubeMap", cubemap);
-        material.cull = pc.gfx.CULLFACE_NONE;
+        material.cull = pc.CULLFACE_NONE;
 
         var node = new pc.scene.GraphNode();
         var mesh = pc.scene.procedural.createBox(gd);

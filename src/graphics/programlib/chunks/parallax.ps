@@ -1,6 +1,7 @@
 uniform sampler2D texture_heightMap;
+uniform float material_heightMapFactor;
 void getParallax(inout psInternalData data) {
-    const float parallaxScale = 0.025;
+    float parallaxScale = material_heightMapFactor;
     const float parallaxBias = 0.01;
 
     float height = texture2D(texture_heightMap, $UV).r * parallaxScale - parallaxBias;

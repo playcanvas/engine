@@ -29,20 +29,20 @@ pc.extend(pc.fw, function () {
     
     pc.extend(CubeMapComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            var cubemap = new pc.gfx.Texture(this.context.graphicsDevice, {
-                format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+            var cubemap = new pc.Texture(this.context.graphicsDevice, {
+                format: pc.PIXELFORMAT_R8_G8_B8,
                 width: 256,
                 height: 256,
                 cubemap: true
             });
-            cubemap.minFilter = pc.gfx.FILTER_LINEAR;
-            cubemap.magFilter = pc.gfx.FILTER_LINEAR;
-            cubemap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-            cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+            cubemap.minFilter = pc.FILTER_LINEAR;
+            cubemap.magFilter = pc.FILTER_LINEAR;
+            cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
             var targets = [];
             for (var i = 0; i < 6; i++) {
-                var target = new pc.gfx.RenderTarget(this.context.graphicsDevice, cubemap, {
+                var target = new pc.RenderTarget(this.context.graphicsDevice, cubemap, {
                     face: i,
                     depth: true
                 });

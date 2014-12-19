@@ -21,7 +21,7 @@ pc.extend(pc.fw, function () {
     * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
     * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
     * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates. The order of the values is [x, y, width, height]
-    * @property {pc.gfx.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
+    * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
     * @property {pc.posteffect.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add / remove post effects from the camera.
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
@@ -122,11 +122,11 @@ pc.extend(pc.fw, function () {
             var clearOptions = this.data.camera.getClearOptions();
             var flags = 0;
             if (this.clearColorBuffer) {
-                flags = flags | pc.gfx.CLEARFLAG_COLOR;
+                flags = flags | pc.CLEARFLAG_COLOR;
             }
 
             if (this.clearDepthBuffer) {
-                flags = flags | pc.gfx.CLEARFLAG_DEPTH;
+                flags = flags | pc.CLEARFLAG_DEPTH;
             }
 
             clearOptions.flags = flags;

@@ -37,7 +37,7 @@ pc.extend(pc.scene, function () {
         this._clearOptions = {
             color: [186.0 / 255.0, 186.0 / 255.0, 177.0 / 255.0, 1.0],
             depth: 1.0,
-            flags: pc.gfx.CLEARFLAG_COLOR | pc.gfx.CLEARFLAG_DEPTH
+            flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
         };
     };
 
@@ -271,7 +271,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.CameraNode#getRenderTarget
          * @description Retrieves the render target currently set on the specified camera.
-         * @returns {pc.gfx.RenderTarget} The camera's render target.
+         * @returns {pc.RenderTarget} The camera's render target.
          */
         getRenderTarget: function () {
             return this._renderTarget;
@@ -296,7 +296,7 @@ pc.extend(pc.scene, function () {
          * @param {Object} clearOptions The options determining the behaviour of subsequent render target clears.
          * @param {Array} clearOptions.color The options determining the behaviour of subsequent render target clears.
          * @param {number} clearOptions.depth The options determining the behaviour of subsequent render target clears.
-         * @param {pc.gfx.CLEARFLAG} clearOptions.flags The options determining the behaviour of subsequent render target clears.
+         * @param {pc.CLEARFLAG} clearOptions.flags The options determining the behaviour of subsequent render target clears.
          */
         setClearOptions: function (options) {
             this._clearOptions = options;
@@ -371,7 +371,7 @@ pc.extend(pc.scene, function () {
          * @function
          * @name pc.scene.CameraNode#setRenderTarget
          * @description Sets the specified render target on the camera.
-         * @param {pc.gfx.RenderTarget} target The render target to set.
+         * @param {pc.RenderTarget} target The render target to set.
          */
         setRenderTarget: function (target) {
             this._renderTarget = target;

@@ -1,6 +1,6 @@
 // Energy-conserving (hopefully) Blinn-Phong
 float getLightSpecular(inout psInternalData data) {
-    vec3 h = normalize( -data.lightDirNormW - -data.viewDirW );
+    vec3 h = normalize( -data.lightDirNormW + data.viewDirW );
     float nh = max( dot( h, data.normalW ), 0.0 );
 
     float specPow = exp2(data.glossiness * 11.0); // glossiness is linear, power is not; 0 - 2048

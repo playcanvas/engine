@@ -1,4 +1,4 @@
-pc.gfx.programlib.particle = {
+pc.programlib.particle = {
     generateKey: function(device, options) {
         var key = "particle";
         for(prop in options) {
@@ -11,8 +11,8 @@ pc.gfx.programlib.particle = {
 
     createShaderDefinition: function(device, options) {
 
-        var getSnippet = pc.gfx.programlib.getSnippet;
-        var chunk = pc.gfx.shaderChunks;
+        var getSnippet = pc.programlib.getSnippet;
+        var chunk = pc.shaderChunks;
 
         var vshader = "";
         var fshader = getSnippet(device, 'fs_precision') + "\n";
@@ -82,7 +82,7 @@ pc.gfx.programlib.particle = {
         }
         fshader += chunk.particle_endPS;
 
-        var attributes = pc.gfx.shaderChunks.collectAttribs(vshader);
+        var attributes = pc.shaderChunks.collectAttribs(vshader);
 
         return {
             attributes: attributes,
