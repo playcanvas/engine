@@ -528,7 +528,6 @@ pc.extend(pc.fw, function() {
         onUpdate: function(dt) {
             var components = this.store;
             var currentCamera;
-            var inTools = this._inTools;
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
@@ -549,8 +548,6 @@ pc.extend(pc.fw, function() {
 
         onToolsUpdate: function (dt) {
             var components = this.store;
-            var currentCamera;
-            var inTools = this._inTools;
 
             for (var id in components) {
                 if (components.hasOwnProperty(id)) {
