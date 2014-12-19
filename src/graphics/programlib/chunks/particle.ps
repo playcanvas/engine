@@ -1,18 +1,32 @@
-// FRAGMENT SHADER INPUTS: VARYINGS
-varying vec2 vUv0;
-varying float vAge;
-varying vec4 vColor;
+varying vec4 texCoordsAlphaLife;
 
-// FRAGMENT SHADER INPUTS: UNIFORMS
-uniform sampler2D texture_colorMap;
-uniform sampler2D texture_opacityMap;
-uniform sampler2D texture_rampMap;
+uniform sampler2D colorMap;
+uniform sampler2D internalTex3;
+uniform float graphSampleSize;
+uniform float graphNumSamples;
+uniform vec4 screenSize;
+uniform float camera_far;
+uniform float softening;
+uniform float colorMult;
 
-void main(void)
-{
-    vec4 colorMult = texture2D(texture_rampMap, vec2(vAge, 0.5)) * vColor;
-    vec3 rgb = texture2D(texture_colorMap, vUv0).rgb;
-    float a = texture2D(texture_opacityMap, vUv0).r;
-    gl_FragColor = vec4(rgb, a) * colorMult;
+float saturate(float x) {
+    return clamp(x, 0.0, 1.0);
 }
+
+float unpackFloat(vec4 rgbaDepth) {
+    const vec4 bitShift = vec4(1.0 / (256.0 * 256.0 * 256.0), 1.0 / (256.0 * 256.0), 1.0 / 256.0, 1.0);
+    float depth = dot(rgbaDepth, bitShift);
+    return depth;
+}
+
+void main(void) {
+    psInternalData data;
+    vec4 tex         = texture2DSRGB(colorMap, texCoordsAlphaLife.xy);
+    vec4 ramp     = texture2DSRGB(internalTex3, vec2(texCoordsAlphaLife.w, 0.0));
+    ramp.rgb *= colorMult;
+
+    ramp.a += texCoordsAlphaLife.z;
+
+    vec3 rgb =     tex.rgb * ramp.rgb;
+    float a =         tex.a * ramp.a;
 

@@ -866,8 +866,9 @@ pc.extend(pc.gfx, function () {
                     uniformVersion.revision = programVersion.revision;
 
                     // Call the function to commit the uniform value
-                    if (scopeId.value==null) console.log(scopeId.name+" is null");
-                    this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
+                    if (scopeId.value!==null) {
+                        this.commitFunction[uniform.dataType](uniform.locationId, scopeId.value);
+                    }
                 }
             }
 

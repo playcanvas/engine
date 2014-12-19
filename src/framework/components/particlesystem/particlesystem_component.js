@@ -21,7 +21,7 @@ pc.extend(pc.fw, function() {
         'intensity',
         'wrap',
         'wrapBounds',
-        'depthTest',
+        'depthWrite',
         'depthSoftening',
         'sort',
         'stretch',
@@ -49,6 +49,64 @@ pc.extend(pc.fw, function() {
         'rotationSpeedGraph2'
     ];
 
+    /**
+     * @component
+     * @name pc.fw.ParticleSystemComponent
+     * @constructor Create a new ParticleSystemComponent
+     * @class Used to simulate particles and produce renderable particle mesh on either CPU or GPU.
+     * GPU simulation is generally much faster than its CPU counterpart, because it avoids slow CPU-GPU synchronization and takes advantage of many GPU cores.
+     * However, it requires client to support reasonable uniform count, reading from multiple textures in vertex shader and OES_texture_float extension, including rendering into float textures.
+     * Most mobile devices fail to satisfy these requirements, so it's not recommended to simulate thousands of particles on them. GPU version also can't sort particles, so enabling sorting forces CPU mode too.
+     * Particle rotation is specified by a single angle parameter: default billboard particles rotate around camera facing axis, while mesh particles rotate around 2 different view-independent axes.
+     * Most of the simulation parameters are specified with pc.Curve or pc.CurveSet. Curves are interpolated based on each particle's lifetime, therefore parameters are able to change over time.
+     * Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way each particle will pick a random value in-between.
+     * @param {pc.fw.ParticleSystemComponent} system The ComponentSystem that created this Component
+     * @param {pc.fw.Entity} entity The Entity this Component is attached to
+     * @extends pc.fw.Component
+     * @property {Boolean} enabled Enables or disables the Component.
+     * @property {Boolean} loop Enables or disables respawning of particles.
+     * @property {Boolean} paused Pauses or unpauses the simulation.
+     * @property {Boolean} preWarm If enabled, the particle system will be initialized as though it had already completed a full cycle. This only works with looping particle systems.
+     * @property {Boolean} lighting If enabled, particles will be lit by ambient and directional lights.
+     * @property {Boolean} halfLambert Enabling Half Lambert lighting avoids particles looking too flat in shadowed areas. It is a completely non-physical lighting model but can give more pleasing visual results.
+     * @property {Boolean} alignToMotion Orient particles in their direction of motion.
+     * @property {Boolean} depthWrite If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one another in the order in which they are rendered.
+     * @property {Number} numParticles Maximum number of simulated particles.
+     * @property {Number} rate Minimal interval in seconds between particle births.
+     * @property {Number} rate2 Maximal interval in seconds between particle births.
+     * @property {Number} startAngle Minimal inital Euler angle of a particle.
+     * @property {Number} startAngle2 Maximal inital Euler angle of a particle.
+     * @property {Number} lifetime The length of time in seconds between a particle's birth and its death.
+     * @property {Number} stretch A value in world units that controls the amount by which particles are stretched based on their velocity. Particles are stretched from their center towards their previous position.
+     * @property {Number} intensity Color multiplier.
+     * @property {Number} depthSoftening Controls fading of particles near their intersections with scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can share the same map, but if you only use it for particles, bear in mind that it can double engine draw calls.
+     * @property {pc.Vec3} spawnBounds The half extents of a local space bounding box within which particles are spawned at random positions.
+     * @property {pc.Vec3} wrapBounds The half extents of a world space AABB volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
+     * @property {pc.gfx.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
+     * @property {pc.gfx.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
+     * @property {pc.scene.PARTICLESORT} sort Sorting mode. Forces CPU simulation, so be careful.
+     * <ul>
+     * <li><strong>{@link pc.scene.PARTICLESORT_NONE}</strong>: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.</li>
+     * <li><strong>{@link pc.scene.PARTICLESORT_DISTANCE}</strong>: Sorting based on distance to the camera. CPU only.</li>
+     * <li><strong>{@link pc.scene.PARTICLESORT_NEWER_FIRST}</strong>: Newer particles are drawn first. CPU only.</li>
+     * <li><strong>{@link pc.scene.PARTICLESORT_OLDER_FIRST}</strong>: Older particles are drawn first. CPU only.</li>
+     * </ul>
+     * @property {pc.scene.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
+     * @property {pc.scene.BLEND} blend Blending mode.
+     * @property {pc.CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
+     * @property {pc.CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
+     * @property {pc.CurveSet} velocityGraph World-space velocity over lifetime.
+     * @property {pc.CurveSet} velocityGraph2 If not null, particles pick random values between velocityGraph and velocityGraph2.
+     * @property {pc.CurveSet} colorGraph Color over lifetime.
+     * @property {pc.Curve} rotationSpeedGraph Rotation speed over lifetime.
+     * @property {pc.Curve} rotationSpeedGraph2 If not null, particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
+     * @property {pc.Curve} scaleGraph Scale over lifetime.
+     * @property {pc.Curve} scaleGraph2 If not null, particles pick random values between scaleGraph and scaleGraph2.
+     * @property {pc.Curve} alphaGraph Alpha over lifetime.
+     * @property {pc.Curve} alphaGraph2 If not null, particles pick random values between alphaGraph and alphaGraph2.
+
+
+     */
     var ParticleSystemComponent = function ParticleSystemComponent(system, entity) {
         this.on("set_colorMapAsset", this.onSetColorMapAsset, this);
         this.on("set_normalMapAsset", this.onSetNormalMapAsset, this);
@@ -195,7 +253,7 @@ pc.extend(pc.fw, function() {
         onEnable: function() {
             if (!this.emitter && !this.system._inTools) {
 
-                this.emitter = new pc.scene.ParticleEmitter2(this.system.context.graphicsDevice, {
+                this.emitter = new pc.scene.ParticleEmitter(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     spawnBounds: this.data.spawnBounds,
                     wrap: this.data.wrap,
@@ -238,7 +296,7 @@ pc.extend(pc.fw, function() {
                     depthSoftening: this.data.depthSoftening,
                     scene: this.system.context.scene,
                     mesh: this.data.mesh,
-                    depthTest: this.data.depthTest,
+                    depthWrite: this.data.depthWrite,
                     node: this.entity,
                     blendType: this.data.blendType
                 });
@@ -265,6 +323,13 @@ pc.extend(pc.fw, function() {
                 }
             }
 
+            if (this.data.debugShape) {
+                if (!this.system.context.scene.containsModel(this.data.debugShape)) {
+                    this.system.context.scene.addModel(this.data.debugShape);
+                    this.system.context.root.addChild(this.data.debugShape.graph);
+                }
+            }
+
             ParticleSystemComponent._super.onEnable.call(this);
 
         },
@@ -276,8 +341,18 @@ pc.extend(pc.fw, function() {
                     this.system.context.scene.removeModel(this.data.model);
                 }
             }
+
+            if (this.data.debugShape) {
+                this.system.context.root.removeChild(this.data.debugShape.graph);
+                this.system.context.scene.removeModel(this.data.debugShape);
+            }
         },
 
+        /**
+        * @function
+        * @name pc.fw.ParticleSystemComponent#reset
+        * @description Resets particle state, doesn't affect playing.
+        */
         reset: function() {
             this.stop();
             this.emitter.addTime(1000);
@@ -285,26 +360,51 @@ pc.extend(pc.fw, function() {
             this.emitter.reset();
         },
 
+        /**
+        * @function
+        * @name pc.fw.ParticleSystemComponent#stop
+        * @description Disables the emission of new particles, lets existing to finish their simulation.
+        */
         stop: function() {
             this.emitter.loop = false;
             this.emitter.resetTime();
             this.emitter.addTime(0, true); // remap life < 0 to life > lifetime to prevent spawning after stop
         },
 
+        /**
+        * @function
+        * @name pc.fw.ParticleSystemComponent#pause
+        * @description Freezes the simulation.
+        */
         pause: function() {
             this.data.paused = true;
         },
 
+        /**
+        * @function
+        * @name pc.fw.ParticleSystemComponent#unpause
+        * @description Unfreezes the simulation.
+        */
         unpause: function () {
             this.data.paused = false;
         },
 
+        /**
+        * @function
+        * @name pc.fw.ParticleSystemComponent#play
+        * @description Enables/unfreezes the simulation.
+        */
         play: function() {
             this.data.paused = false;
             this.emitter.loop = this.data.loop;
             this.emitter.resetTime();
         },
 
+        /**
+        * @function
+        * @name pc.fw.ParticleSystemComponent#isPlaying
+        * @description Checks if simulation is in progress.
+        */
         isPlaying: function() {
             if (this.data.paused) {
                 return false;
@@ -319,6 +419,12 @@ pc.extend(pc.fw, function() {
             }
         },
 
+        /**
+        * @private
+        * @function
+        * @name pc.fw.ParticleSystemComponent#rebuild
+        * @description Rebuilds all data used by this particle system.
+        */
         rebuild: function() {
             var enabled = this.enabled;
             this.enabled = false;

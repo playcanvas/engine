@@ -26,7 +26,7 @@ pc.extend(pc.fw, function() {
         this.depthSoftening = 0;
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                 // Leave undefined to use simple quads
-        this.depthTest = false;
+        this.depthWrite = false;
 
         // Time-dependent parameters
         this.scaleGraph = null;
@@ -54,6 +54,8 @@ pc.extend(pc.fw, function() {
         this.enabled = true;
 
         this.paused = false;
+
+        this.debugShape = null;
 
     };
     ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.fw.ComponentData);
