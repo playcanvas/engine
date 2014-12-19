@@ -55,7 +55,9 @@ pc.extend(pc.scene, function () {
      * pixels are lower and lighter pixels are higher.
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map
+     * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map.
+     * @property {Number} heightMapFactor Height map multiplier.
+     * @property {Number} emissiveIntensity Emissive color multiplier.
      * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
      * the bump map and 1 results in a full contribution.
      * @property {pc.gfx.Texture} sphereMap The spherical environment map of the material.
@@ -177,7 +179,7 @@ pc.extend(pc.scene, function () {
             clone.heightMapTiling = this.heightMapTiling ? this.heightMapTiling.clone() : new pc.Vec2(1, 1);
             clone.heightMapOffset = this.heightMapOffset ? this.heightMapOffset.clone() : new pc.Vec2(0, 0);
             clone.bumpiness = this.bumpiness;
-            clone.heightMapMultiplier = this.heightMapMultiplier;
+            clone.heightMapFactor = this.heightMapFactor;
 
             clone.cubeMap = this.cubeMap;
             clone.prefilteredCubeMap128 = this.prefilteredCubeMap128;
@@ -311,8 +313,8 @@ pc.extend(pc.scene, function () {
                     case 'bumpMapFactor':
                         this.bumpiness = param.data;
                         break;
-                    case 'heightMapMultiplier':
-                        this.heightMapMultiplier = param.data;
+                    case 'heightMapFactor':
+                        this.heightMapFactor = param.data;
                         break;
                     case 'cubeMap':
                         this.cubeMap = _createTexture(param);
@@ -446,7 +448,7 @@ pc.extend(pc.scene, function () {
             this.heightMapOffset = new pc.Vec2(0, 0);
             this.heightMapTransform = null;
             this.bumpiness = 1;
-            this.heightMapMultiplier = 1;
+            this.heightMapFactor = 1;
 
             this.cubeMap = null;
             this.prefilteredCubeMap128 = null;
@@ -653,7 +655,7 @@ pc.extend(pc.scene, function () {
             }
 
             if (this.heightMap) {
-                this.setParameter('material_heightMapFactor', this.heightMapMultiplier * 0.025);
+                this.setParameter('material_heightMapFactor', this.heightMapFactor * 0.025);
             }
 
             if (this.cubeMap) {
