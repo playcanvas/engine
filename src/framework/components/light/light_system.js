@@ -381,8 +381,8 @@ pc.extend(pc.fw, function () {
             }
 
             var context = this.system.context;
-            var format = new pc.gfx.VertexFormat(context.graphicsDevice, [
-                { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+            var format = new pc.VertexFormat(context.graphicsDevice, [
+                { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
             ]);
 
             // Generate the directional light arrow vertex data
@@ -413,7 +413,7 @@ pc.extend(pc.fw, function () {
                 vertexData[(i+24)*3+2] = posRot[2];
             }
             // Copy vertex data into the vertex buffer
-            var vertexBuffer = new pc.gfx.VertexBuffer(context.graphicsDevice, format, 32);
+            var vertexBuffer = new pc.VertexBuffer(context.graphicsDevice, format, 32);
             var positions = new Float32Array(vertexBuffer.lock());
             for (i = 0; i < vertexData.length; i++) {
                 positions[i] = vertexData[i];
@@ -422,7 +422,7 @@ pc.extend(pc.fw, function () {
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = vertexBuffer;
             mesh.indexBuffer[0] = null;
-            mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+            mesh.primitive[0].type = pc.PRIMITIVE_LINES;
             mesh.primitive[0].base = 0;
             mesh.primitive[0].count = vertexBuffer.getNumVertices();
             mesh.primitive[0].indexed = false;
@@ -485,7 +485,7 @@ pc.extend(pc.fw, function () {
             var context = this.system.context;
             var indexBuffer = this.indexBuffer;
             if (!indexBuffer) {
-                var indexBuffer = new pc.gfx.IndexBuffer(context.graphicsDevice, pc.gfx.INDEXFORMAT_UINT8, 88);
+                var indexBuffer = new pc.IndexBuffer(context.graphicsDevice, pc.INDEXFORMAT_UINT8, 88);
                 var inds = new Uint8Array(indexBuffer.lock());
                 // Spot cone side lines
                 inds[0] = 0;
@@ -505,16 +505,16 @@ pc.extend(pc.fw, function () {
                 this.indexBuffer = indexBuffer;
             }
 
-            var vertexFormat = new pc.gfx.VertexFormat(context.graphicsDevice, [
-                { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+            var vertexFormat = new pc.VertexFormat(context.graphicsDevice, [
+                { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
             ]);
 
-            var vertexBuffer = new pc.gfx.VertexBuffer(context.graphicsDevice, vertexFormat, 42, pc.gfx.BUFFER_DYNAMIC);
+            var vertexBuffer = new pc.VertexBuffer(context.graphicsDevice, vertexFormat, 42, pc.BUFFER_DYNAMIC);
 
             var mesh = new pc.scene.Mesh();
             mesh.vertexBuffer = vertexBuffer;
             mesh.indexBuffer[0] = indexBuffer;
-            mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+            mesh.primitive[0].type = pc.PRIMITIVE_LINES;
             mesh.primitive[0].base = 0;
             mesh.primitive[0].count = indexBuffer.getNumIndices();
             mesh.primitive[0].indexed = true;

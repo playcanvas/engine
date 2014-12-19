@@ -459,11 +459,11 @@ pc.extend(pc.fw, function () {
             if (!this.mesh) {
                 var gd = this.system.context.graphicsDevice;
 
-                var format = new pc.gfx.VertexFormat(gd, [
-                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                var format = new pc.VertexFormat(gd, [
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 8);
+                var vertexBuffer = new pc.VertexBuffer(gd, format, 8);
                 var positions = new Float32Array(vertexBuffer.lock());
                 positions.set([
                     -0.5, -0.5, -0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5,
@@ -471,7 +471,7 @@ pc.extend(pc.fw, function () {
                 ]);
                 vertexBuffer.unlock();
 
-                var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 24);
+                var indexBuffer = new pc.IndexBuffer(gd, pc.INDEXFORMAT_UINT8, 24);
                 var indices = new Uint8Array(indexBuffer.lock());
                 indices.set([
                     0,1,1,2,2,3,3,0,
@@ -483,7 +483,7 @@ pc.extend(pc.fw, function () {
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
                 mesh.indexBuffer[0] = indexBuffer;
-                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = indexBuffer.getNumIndices();
                 mesh.primitive[0].indexed = true;
@@ -538,11 +538,11 @@ pc.extend(pc.fw, function () {
                 var gd = context.graphicsDevice;
 
                 // Create the graphical resources required to render a camera frustum
-                var format = new pc.gfx.VertexFormat(gd, [
-                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                var format = new pc.VertexFormat(gd, [
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 240);
+                var vertexBuffer = new pc.VertexBuffer(gd, format, 240);
                 var positions = new Float32Array(vertexBuffer.lock());
 
                 var i, x = 0;
@@ -580,7 +580,7 @@ pc.extend(pc.fw, function () {
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
-                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = vertexBuffer.getNumVertices();
                 mesh.primitive[0].indexed = false;
@@ -634,16 +634,16 @@ pc.extend(pc.fw, function () {
                 var gd = this.system.context.graphicsDevice;
 
                 // Create the graphical resources required to render a capsule shape
-                var format = new pc.gfx.VertexFormat(gd, [
-                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                var format = new pc.VertexFormat(gd, [
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 328, pc.gfx.BUFFER_DYNAMIC);
+                var vertexBuffer = new pc.VertexBuffer(gd, format, 328, pc.BUFFER_DYNAMIC);
                 this.updateCapsuleShape(data, vertexBuffer);
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
-                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = vertexBuffer.getNumVertices();
                 mesh.primitive[0].indexed = false;
@@ -803,16 +803,16 @@ pc.extend(pc.fw, function () {
             } else {
                 var gd = this.system.context.graphicsDevice;
 
-                var format = new pc.gfx.VertexFormat(gd, [
-                    { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+                var format = new pc.VertexFormat(gd, [
+                    { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 168, pc.gfx.BUFFER_DYNAMIC);
+                var vertexBuffer = new pc.VertexBuffer(gd, format, 168, pc.BUFFER_DYNAMIC);
                 this.updateCylinderShape(data, vertexBuffer);
 
                 var mesh = new pc.scene.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
-                mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+                mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
                 mesh.primitive[0].count = vertexBuffer.getNumVertices();
                 mesh.primitive[0].indexed = false;
@@ -960,7 +960,7 @@ pc.extend(pc.fw, function () {
                     var positions;
                     for (j = 0; j < format.elements.length; j++) {
                         var element = format.elements[j];
-                        if (element.name === pc.gfx.SEMANTIC_POSITION) {
+                        if (element.name === pc.SEMANTIC_POSITION) {
                             positions = new Float32Array(vb.lock(), element.offset);
                         }
                     }

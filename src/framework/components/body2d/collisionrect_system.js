@@ -89,18 +89,18 @@ pc.extend(pc.fw, function () {
 
         var gd = context.graphicsDevice;
 
-        var format = new pc.gfx.VertexFormat(gd, [
-            { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+        var format = new pc.VertexFormat(gd, [
+            { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
         ]);
 
-        var vertexBuffer = new pc.gfx.VertexBuffer(gd, format, 4);
+        var vertexBuffer = new pc.VertexBuffer(gd, format, 4);
         var positions = new Float32Array(vertexBuffer.lock());
         positions.set([
             -0.5, 0, -0.5, -0.5, 0, 0.5, 0.5, 0, 0.5, 0.5, 0, -0.5
         ]);
         vertexBuffer.unlock();
 
-        var indexBuffer = new pc.gfx.IndexBuffer(gd, pc.gfx.INDEXFORMAT_UINT8, 8);
+        var indexBuffer = new pc.IndexBuffer(gd, pc.INDEXFORMAT_UINT8, 8);
         var indices = new Uint8Array(indexBuffer.lock());
         indices.set([
             0,1,1,2,2,3,3,0
@@ -110,7 +110,7 @@ pc.extend(pc.fw, function () {
         this.mesh = new pc.scene.Mesh();
         this.mesh.vertexBuffer = vertexBuffer;
         this.mesh.indexBuffer[0] = indexBuffer;
-        this.mesh.primitive[0].type = pc.gfx.PRIMITIVE_LINES;
+        this.mesh.primitive[0].type = pc.PRIMITIVE_LINES;
         this.mesh.primitive[0].base = 0;
         this.mesh.primitive[0].count = indexBuffer.getNumIndices();
         this.mesh.primitive[0].indexed = true;

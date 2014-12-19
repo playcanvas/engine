@@ -1,4 +1,4 @@
-pc.gfx.programlib.depth = {
+pc.programlib.depth = {
     generateKey: function (device, options) {
         var key = "depth";
         if (options.skin) key += "_skin";
@@ -11,20 +11,20 @@ pc.gfx.programlib.depth = {
         // GENERATE ATTRIBUTES //
         /////////////////////////
         var attributes = {
-            vertex_position: pc.gfx.SEMANTIC_POSITION
+            vertex_position: pc.SEMANTIC_POSITION
         }
         if (options.skin) {
-            attributes.vertex_boneWeights = pc.gfx.SEMANTIC_BLENDWEIGHT;
-            attributes.vertex_boneIndices = pc.gfx.SEMANTIC_BLENDINDICES;
+            attributes.vertex_boneWeights = pc.SEMANTIC_BLENDWEIGHT;
+            attributes.vertex_boneIndices = pc.SEMANTIC_BLENDINDICES;
         }
         if (options.opacityMap) {
-            attributes.vertex_texCoord0 = pc.gfx.SEMANTIC_TEXCOORD0;
+            attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
         }
 
         ////////////////////////////
         // GENERATE VERTEX SHADER //
         ////////////////////////////
-        var getSnippet = pc.gfx.programlib.getSnippet;
+        var getSnippet = pc.programlib.getSnippet;
         var code = '';
 
         // VERTEX SHADER DECLARATIONS

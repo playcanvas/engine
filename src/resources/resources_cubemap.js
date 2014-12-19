@@ -105,8 +105,8 @@ pc.extend(pc.resources, function () {
         if (request.result) {
             cubemap = request.result;
         } else {
-            cubemap = new pc.gfx.Texture(this._device, {
-                format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+            cubemap = new pc.Texture(this._device, {
+                format: pc.PIXELFORMAT_R8_G8_B8,
                 cubemap: true
             });
         }
@@ -225,12 +225,12 @@ pc.extend(pc.resources, function () {
             cubemap.magFilter = data.magFilter;
         }
 
-        if (cubemap.addressU !== pc.gfx.ADDRESS_CLAMP_TO_EDGE) {
-            cubemap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        if (cubemap.addressU !== pc.ADDRESS_CLAMP_TO_EDGE) {
+            cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         }
 
-        if (cubemap.addressV !== pc.gfx.ADDRESS_CLAMP_TO_EDGE) {
-            cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        if (cubemap.addressV !== pc.ADDRESS_CLAMP_TO_EDGE) {
+            cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         }
 
         if (cubemap.maxAnisotropy !== data.anisotropy) {
@@ -273,7 +273,7 @@ pc.extend(pc.resources, function () {
     };
     CubemapRequest = pc.inherits(CubemapRequest, pc.resources.ResourceRequest);
     CubemapRequest.prototype.type = "cubemap";
-    CubemapRequest.prototype.Type = pc.gfx.Texture;
+    CubemapRequest.prototype.Type = pc.Texture;
 
     return {
         CubemapResourceHandler: CubemapResourceHandler,

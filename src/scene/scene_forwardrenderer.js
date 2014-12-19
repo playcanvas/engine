@@ -98,34 +98,34 @@ pc.extend(pc.scene, function () {
     // Shadow mapping support functions //
     //////////////////////////////////////
     function createShadowMap(device, width, height) {
-        var shadowMap = new pc.gfx.Texture(device, {
-            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+        var shadowMap = new pc.Texture(device, {
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: width,
             height: height,
             autoMipmap: false
         });
-        shadowMap.minFilter = pc.gfx.FILTER_NEAREST;
-        shadowMap.magFilter = pc.gfx.FILTER_NEAREST;
-        shadowMap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        shadowMap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        return new pc.gfx.RenderTarget(device, shadowMap, true);
+        shadowMap.minFilter = pc.FILTER_NEAREST;
+        shadowMap.magFilter = pc.FILTER_NEAREST;
+        shadowMap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        shadowMap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+        return new pc.RenderTarget(device, shadowMap, true);
     };
 
     function createShadowCubeMap(device, size) {
-        var cubemap = new pc.gfx.Texture(device, {
-            format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+        var cubemap = new pc.Texture(device, {
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: size,
             height: size,
             cubemap: true,
             autoMipmap: false
         });
-        cubemap.minFilter = pc.gfx.FILTER_NEAREST;
-        cubemap.magFilter = pc.gfx.FILTER_NEAREST;
-        cubemap.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-        cubemap.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+        cubemap.minFilter = pc.FILTER_NEAREST;
+        cubemap.magFilter = pc.FILTER_NEAREST;
+        cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+        cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         var targets = [];
         for (var i = 0; i < 6; i++) {
-            var target = new pc.gfx.RenderTarget(device, cubemap, {
+            var target = new pc.RenderTarget(device, cubemap, {
                 face: i,
                 depth: true
             });
@@ -136,8 +136,8 @@ pc.extend(pc.scene, function () {
 
     function createShadowCamera(device) {
         // We don't need to clear the color buffer if we're rendering a depth map
-        var flags = pc.gfx.CLEARFLAG_DEPTH;
-        if (!device.extDepthTexture) flags |= pc.gfx.CLEARFLAG_COLOR;
+        var flags = pc.CLEARFLAG_DEPTH;
+        if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
 
         var shadowCam = new pc.scene.CameraNode();
         shadowCam.setClearOptions({
@@ -182,7 +182,7 @@ pc.extend(pc.scene, function () {
      * @name pc.scene.ForwardRenderer
      * @class The forward renderer render scene objects.
      * @constructor Creates a new forward renderer object.
-     * @param {pc.gfx.Device} graphicsDevice The graphics device used by the renderer.
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used by the renderer.
      */
     function ForwardRenderer(graphicsDevice) {
         this.device = graphicsDevice;

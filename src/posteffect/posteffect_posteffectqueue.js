@@ -31,7 +31,7 @@ pc.extend(pc.posteffect, function () {
          * @name pc.posteffect.PostEffectQueue#_createOffscreenTarget
          * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer
          * @param {Boolean} useDepth Set to true if you want to create a render target with a depth buffer
-         * @returns {pc.gfx.RenderTarget} The render target
+         * @returns {pc.RenderTarget} The render target
          */
         _createOffscreenTarget: function (useDepth) {
             var rect = this.camera.rect;
@@ -39,18 +39,18 @@ pc.extend(pc.posteffect, function () {
             var width = Math.floor(rect.z * this.context.graphicsDevice.width * this.renderTargetScale);
             var height = Math.floor(rect.w * this.context.graphicsDevice.height * this.renderTargetScale);
 
-            var colorBuffer = new pc.gfx.Texture(this.context.graphicsDevice, {
-                format: pc.gfx.PIXELFORMAT_R8_G8_B8_A8,
+            var colorBuffer = new pc.Texture(this.context.graphicsDevice, {
+                format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 width: width,
                 height: height
             });
 
-            colorBuffer.minFilter = pc.gfx.FILTER_NEAREST;
-            colorBuffer.magFilter = pc.gfx.FILTER_NEAREST;
-            colorBuffer.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-            colorBuffer.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
+            colorBuffer.minFilter = pc.FILTER_NEAREST;
+            colorBuffer.magFilter = pc.FILTER_NEAREST;
+            colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-            return new pc.gfx.RenderTarget(this.context.graphicsDevice, colorBuffer, { depth: useDepth });
+            return new pc.RenderTarget(this.context.graphicsDevice, colorBuffer, { depth: useDepth });
         },
 
         _setDepthTarget: function (depthTarget) {

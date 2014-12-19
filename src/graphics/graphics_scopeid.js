@@ -1,4 +1,4 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     var ScopeId = function (name) {
@@ -9,7 +9,7 @@ pc.extend(pc.gfx, function () {
         this.value = null;
 
         // Create the version object
-        this.versionObject = new pc.gfx.VersionedObject();
+        this.versionObject = new pc.VersionedObject();
     };
 
     ScopeId.prototype = {

@@ -82,8 +82,8 @@ pc.extend(pc.fw, function() {
      * @property {Number} depthSoftening Controls fading of particles near their intersections with scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can share the same map, but if you only use it for particles, bear in mind that it can double engine draw calls.
      * @property {pc.Vec3} spawnBounds The half extents of a local space bounding box within which particles are spawned at random positions.
      * @property {pc.Vec3} wrapBounds The half extents of a world space AABB volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
-     * @property {pc.gfx.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
-     * @property {pc.gfx.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
+     * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
+     * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
      * @property {pc.scene.PARTICLESORT} sort Sorting mode. Forces CPU simulation, so be careful.
      * <ul>
      * <li><strong>{@link pc.scene.PARTICLESORT_NONE}</strong>: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.</li>

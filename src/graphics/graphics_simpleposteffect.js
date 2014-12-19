@@ -1,4 +1,4 @@
-pc.extend(pc.gfx, (function () {
+pc.extend(pc, (function () {
     'use strict';
 
     // Draws shaded full-screen quad in a single call
@@ -6,21 +6,21 @@ pc.extend(pc.gfx, (function () {
 
     function drawQuadWithShader(device, target, shader) {
         if (_postEffectQuadVB == null) {
-            var vertexFormat = new pc.gfx.VertexFormat(device, [{
-                semantic: pc.gfx.SEMANTIC_POSITION,
+            var vertexFormat = new pc.VertexFormat(device, [{
+                semantic: pc.SEMANTIC_POSITION,
                 components: 2,
-                type: pc.gfx.ELEMENTTYPE_FLOAT32
+                type: pc.ELEMENTTYPE_FLOAT32
             }]);
-            _postEffectQuadVB = new pc.gfx.VertexBuffer(device, vertexFormat, 4);
+            _postEffectQuadVB = new pc.VertexBuffer(device, vertexFormat, 4);
 
-            var iterator = new pc.gfx.VertexIterator(_postEffectQuadVB);
-            iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, -1.0);
+            var iterator = new pc.VertexIterator(_postEffectQuadVB);
+            iterator.element[pc.SEMANTIC_POSITION].set(-1.0, -1.0);
             iterator.next();
-            iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, -1.0);
+            iterator.element[pc.SEMANTIC_POSITION].set(1.0, -1.0);
             iterator.next();
-            iterator.element[pc.gfx.SEMANTIC_POSITION].set(-1.0, 1.0);
+            iterator.element[pc.SEMANTIC_POSITION].set(-1.0, 1.0);
             iterator.next();
-            iterator.element[pc.gfx.SEMANTIC_POSITION].set(1.0, 1.0);
+            iterator.element[pc.SEMANTIC_POSITION].set(1.0, 1.0);
             iterator.end();
         }
 
@@ -41,7 +41,7 @@ pc.extend(pc.gfx, (function () {
         device.setVertexBuffer(_postEffectQuadVB, 0);
         device.setShader(shader);
         device.draw({
-            type: pc.gfx.PRIMITIVE_TRISTRIP,
+            type: pc.PRIMITIVE_TRISTRIP,
             base: 0,
             count: 4,
             indexed: false

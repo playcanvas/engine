@@ -124,7 +124,7 @@ pc.scene.procedural.calculateTangents = function (vertices, normals, uvs, indice
  * @function
  * @name pc.scene.procedural.createMesh
  * @description Creates a pc.scene.Mesh object from the supplied vertex information and topology.
- * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
+ * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Array} positions An array of 3-dimensional vertex positions.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Array} opts.normals An array of 3-dimensional vertex normals.
@@ -152,35 +152,35 @@ pc.scene.procedural.createMesh = function (device, positions, opts) {
     var indices = opts && opts.indices !== undefined ? opts.indices : null;
 
     var vertexDesc = [
-        { semantic: pc.gfx.SEMANTIC_POSITION, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 }
+        { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
     ];
     if (normals !== null) {
-        vertexDesc.push({ semantic: pc.gfx.SEMANTIC_NORMAL, components: 3, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_NORMAL, components: 3, type: pc.ELEMENTTYPE_FLOAT32 });
     }
     if (tangents !== null) {
-        vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TANGENT, components: 4, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_TANGENT, components: 4, type: pc.ELEMENTTYPE_FLOAT32 });
     }
     if (uvs !== null) {
-        vertexDesc.push({ semantic: pc.gfx.SEMANTIC_TEXCOORD0, components: 2, type: pc.gfx.ELEMENTTYPE_FLOAT32 });
+        vertexDesc.push({ semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.ELEMENTTYPE_FLOAT32 });
     }
-    var vertexFormat = new pc.gfx.VertexFormat(device, vertexDesc);
+    var vertexFormat = new pc.VertexFormat(device, vertexDesc);
 
     // Create the vertex buffer
     var numVertices  = positions.length / 3;
-    var vertexBuffer = new pc.gfx.VertexBuffer(device, vertexFormat, numVertices);
+    var vertexBuffer = new pc.VertexBuffer(device, vertexFormat, numVertices);
 
     // Write the vertex data into the vertex buffer
-    var iterator = new pc.gfx.VertexIterator(vertexBuffer);
+    var iterator = new pc.VertexIterator(vertexBuffer);
     for (var i = 0; i < numVertices; i++) {
-        iterator.element[pc.gfx.SEMANTIC_POSITION].set(positions[i*3], positions[i*3+1], positions[i*3+2]);
+        iterator.element[pc.SEMANTIC_POSITION].set(positions[i*3], positions[i*3+1], positions[i*3+2]);
         if (normals !== null) {
-            iterator.element[pc.gfx.SEMANTIC_NORMAL].set(normals[i*3], normals[i*3+1], normals[i*3+2]);
+            iterator.element[pc.SEMANTIC_NORMAL].set(normals[i*3], normals[i*3+1], normals[i*3+2]);
         }
         if (tangents !== null) {
-            iterator.element[pc.gfx.SEMANTIC_TANGENT].set(tangents[i*4], tangents[i*4+1], tangents[i*4+2], tangents[i*4+3]);
+            iterator.element[pc.SEMANTIC_TANGENT].set(tangents[i*4], tangents[i*4+1], tangents[i*4+2], tangents[i*4+3]);
         }
         if (uvs !== null) {
-            iterator.element[pc.gfx.SEMANTIC_TEXCOORD0].set(uvs[i*2], uvs[i*2+1]);
+            iterator.element[pc.SEMANTIC_TEXCOORD0].set(uvs[i*2], uvs[i*2+1]);
         }
         iterator.next();
     }
@@ -190,7 +190,7 @@ pc.scene.procedural.createMesh = function (device, positions, opts) {
     var indexBuffer = null;
     var indexed = (indices !== null);
     if (indexed) {
-        indexBuffer = new pc.gfx.IndexBuffer(device, pc.gfx.INDEXFORMAT_UINT16, indices.length);
+        indexBuffer = new pc.IndexBuffer(device, pc.INDEXFORMAT_UINT16, indices.length);
 
         // Read the indicies into the index buffer
         var dst = new Uint16Array(indexBuffer.lock());
@@ -204,7 +204,7 @@ pc.scene.procedural.createMesh = function (device, positions, opts) {
     var mesh = new pc.scene.Mesh();
     mesh.vertexBuffer = vertexBuffer;
     mesh.indexBuffer[0] = indexBuffer;
-    mesh.primitive[0].type = pc.gfx.PRIMITIVE_TRIANGLES;
+    mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES;
     mesh.primitive[0].base = 0;
     mesh.primitive[0].count = indexed ? indices.length : numVertices;
     mesh.primitive[0].indexed = indexed;
@@ -221,7 +221,7 @@ pc.scene.procedural.createMesh = function (device, positions, opts) {
  * of 0.3, 20 segments and 30 sides.</p>
  * <p>Note that the torus is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the torus's mesh.</p>
- * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
+ * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.tubeRadius The radius of the tube forming the body of the torus (defaults to 0.2).
  * @param {Number} opts.ringRadius The radius from the centre of the torus to the centre of the tube (defaults to 0.3).
@@ -281,7 +281,7 @@ pc.scene.procedural.createTorus = function (device, opts) {
         indices:   indices
     };
 
-    if (pc.gfx.precalculatedTangents) {
+    if (pc.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -473,7 +473,7 @@ pc.scene.procedural._createConeData = function (baseRadius, peakRadius, height, 
  * of 0.5, a height of 1.0, 1 height segment and 20 cap segments.</p>
  * <p>Note that the cylinder is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the cylinder's mesh.</p>
- * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
+ * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.radius The radius of the tube forming the body of the cylinder (defaults to 0.5).
  * @param {Number} opts.height The length of the body of the cylinder (defaults to 1.0).
@@ -492,7 +492,7 @@ pc.scene.procedural.createCylinder = function (device, opts) {
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc.scene.procedural._createConeData(baseRadius, baseRadius, height, heightSegments, capSegments, false);
 
-    if (pc.gfx.precalculatedTangents) {
+    if (pc.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -508,7 +508,7 @@ pc.scene.procedural.createCylinder = function (device, opts) {
  * of 0.25, a height of 1.0, 1 height segment and 10 cap segments.</p>
  * <p>Note that the capsule is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the capsule's mesh.</p>
- * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
+ * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.radius The radius of the tube forming the body of the capsule (defaults to 0.3).
  * @param {Number} opts.height The length of the body of the capsule from tip to tip (defaults to 1.0).
@@ -527,7 +527,7 @@ pc.scene.procedural.createCapsule = function (device, opts) {
     // Create vertex data for a cone that has a base and peak radius that is the same (i.e. a cylinder)
     var options = pc.scene.procedural._createConeData(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
-    if (pc.gfx.precalculatedTangents) {
+    if (pc.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -543,7 +543,7 @@ pc.scene.procedural.createCapsule = function (device, opts) {
  * of 0.5, a height of 1.0, 5 height segments and 20 cap segments.</p>
  * <p>Note that the cone is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the cone's mesh.</p>
- * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
+ * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.baseRadius The base radius of the cone (defaults to 0.5).
  * @param {Number} opts.peakRadius The peak radius of the cone (defaults to 0.0).
@@ -563,7 +563,7 @@ pc.scene.procedural.createCone = function (device, opts) {
 
     var options = pc.scene.procedural._createConeData(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
-    if (pc.gfx.precalculatedTangents) {
+    if (pc.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(options.positions, options.normals, options.uvs, options.indices);
     }
 
@@ -579,7 +579,7 @@ pc.scene.procedural.createCone = function (device, opts) {
  * and 16 segments in both longitude and latitude.</p>
  * <p>Note that the sphere is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the sphere's mesh.</p>
- * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
+ * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {Number} opts.radius The radius of the sphere (defaults to 0.5).
  * @param {Number} opts.segments The number of divisions along the longitudinal and latitudinal axes of the sphere (defaults to 16).
@@ -641,7 +641,7 @@ pc.scene.procedural.createSphere = function (device, opts) {
         indices:   indices
     };
 
-    if (pc.gfx.precalculatedTangents) {
+    if (pc.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -658,7 +658,7 @@ pc.scene.procedural.createSphere = function (device, opts) {
  * along the positive Y axis.</p>
  * <p>Note that the plane is created with UVs in the range of 0 to 1. Additionally, tangent information
  * is generated into the vertex buffer of the plane's mesh.</p>
- * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
+ * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {pc.Vec2} opts.halfExtents The half dimensions of the plane in the X and Z axes (defaults to [0.5, 0.5]).
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the plane (defaults to 5).
@@ -714,7 +714,7 @@ pc.scene.procedural.createPlane = function (device, opts) {
         indices:   indices
     };
 
-    if (pc.gfx.precalculatedTangents) {
+    if (pc.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
     }
 
@@ -730,7 +730,7 @@ pc.scene.procedural.createPlane = function (device, opts) {
  * height of 1.0 unit and 10 segments in either axis (50 triangles per face).</p>
  * <p>Note that the box is created with UVs in the range of 0 to 1 on each face. Additionally, tangent 
  * information is generated into the vertex buffer of the box's mesh.</p>
- * @param {pc.gfx.Device} device The graphics device used to manage the mesh.
+ * @param {pc.GraphicsDevice} device The graphics device used to manage the mesh.
  * @param {Object} opts An object that specifies optional inputs for the function as follows:
  * @param {pc.Vec3} opts.halfExtents The half dimensions of the box in each axis (defaults to [0.5, 0.5, 0.5]).
  * @param {Number} opts.widthSegments The number of divisions along the X axis of the box (defaults to 1).
@@ -833,7 +833,7 @@ pc.scene.procedural.createBox = function (device, opts) {
         indices:   indices
     };
 
-    if (pc.gfx.precalculatedTangents) {
+    if (pc.precalculatedTangents) {
         options.tangents = pc.scene.procedural.calculateTangents(positions, normals, uvs, indices);
     }
 

@@ -43,7 +43,7 @@ pc.extend(pc.fw, function () {
         pc.log.open();
 
         // Create the graphics device
-        this.graphicsDevice = new pc.gfx.Device(canvas);
+        this.graphicsDevice = new pc.GraphicsDevice(canvas);
 
         var registry = new pc.fw.ComponentSystemRegistry();
 

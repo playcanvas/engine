@@ -1,23 +1,23 @@
 pc.extend(pc.resources, function () {
 
     var jsonToPrimitiveType = {
-        "points":        pc.gfx.PRIMITIVE_POINTS,
-        "lines":         pc.gfx.PRIMITIVE_LINES,
-        "lineloop":      pc.gfx.PRIMITIVE_LINELOOP,
-        "linestrip":     pc.gfx.PRIMITIVE_LINESTRIP,
-        "triangles":     pc.gfx.PRIMITIVE_TRIANGLES,
-        "trianglestrip": pc.gfx.PRIMITIVE_TRISTRIP,
-        "trianglefan":   pc.gfx.PRIMITIVE_TRIFAN
+        "points":        pc.PRIMITIVE_POINTS,
+        "lines":         pc.PRIMITIVE_LINES,
+        "lineloop":      pc.PRIMITIVE_LINELOOP,
+        "linestrip":     pc.PRIMITIVE_LINESTRIP,
+        "triangles":     pc.PRIMITIVE_TRIANGLES,
+        "trianglestrip": pc.PRIMITIVE_TRISTRIP,
+        "trianglefan":   pc.PRIMITIVE_TRIFAN
     };
 
     var jsonToVertexElementType = {
-        "int8":    pc.gfx.ELEMENTTYPE_INT8,
-        "uint8":   pc.gfx.ELEMENTTYPE_UINT8,
-        "int16":   pc.gfx.ELEMENTTYPE_INT16,
-        "uint16":  pc.gfx.ELEMENTTYPE_UINT16,
-        "int32":   pc.gfx.ELEMENTTYPE_INT32,
-        "uint32":  pc.gfx.ELEMENTTYPE_UINT32,
-        "float32": pc.gfx.ELEMENTTYPE_FLOAT32
+        "int8":    pc.ELEMENTTYPE_INT8,
+        "uint8":   pc.ELEMENTTYPE_UINT8,
+        "int16":   pc.ELEMENTTYPE_INT16,
+        "uint16":  pc.ELEMENTTYPE_UINT16,
+        "int32":   pc.ELEMENTTYPE_INT32,
+        "uint32":  pc.ELEMENTTYPE_UINT32,
+        "float32": pc.ELEMENTTYPE_FLOAT32
     };
 
     var jsonToLightType = {
@@ -35,7 +35,7 @@ pc.extend(pc.resources, function () {
      * @name pc.resources.ModelResourceHandler
      * @class Resource Handler for creating pc.scene.Model resources
      * @description {@link pc.resources.ResourceHandler} use to load 3D model resources
-     * @param {pc.gfx.Device} device The graphics device that will be rendering
+     * @param {pc.GraphicsDevice} device The graphics device that will be rendering
      * @param {pc.asset.AssetRegistry} assetRegistry The AssetRegistry that is being used by the current application
      */
     var ModelResourceHandler = function (device, assetRegistry) {
@@ -197,20 +197,20 @@ pc.extend(pc.resources, function () {
         var vertexBuffers = [];
         var attribute, attributeName;
         var attributeMap = {
-            position: pc.gfx.SEMANTIC_POSITION,
-            normal: pc.gfx.SEMANTIC_NORMAL,
-            tangent: pc.gfx.SEMANTIC_TANGENT,
-            blendWeight: pc.gfx.SEMANTIC_BLENDWEIGHT,
-            blendIndices: pc.gfx.SEMANTIC_BLENDINDICES,
-            color: pc.gfx.SEMANTIC_COLOR,
-            texCoord0: pc.gfx.SEMANTIC_TEXCOORD0,
-            texCoord1: pc.gfx.SEMANTIC_TEXCOORD1,
-            texCoord2: pc.gfx.SEMANTIC_TEXCOORD2,
-            texCoord3: pc.gfx.SEMANTIC_TEXCOORD3,
-            texCoord4: pc.gfx.SEMANTIC_TEXCOORD4,
-            texCoord5: pc.gfx.SEMANTIC_TEXCOORD5,
-            texCoord6: pc.gfx.SEMANTIC_TEXCOORD6,
-            texCoord7: pc.gfx.SEMANTIC_TEXCOORD7
+            position: pc.SEMANTIC_POSITION,
+            normal: pc.SEMANTIC_NORMAL,
+            tangent: pc.SEMANTIC_TANGENT,
+            blendWeight: pc.SEMANTIC_BLENDWEIGHT,
+            blendIndices: pc.SEMANTIC_BLENDINDICES,
+            color: pc.SEMANTIC_COLOR,
+            texCoord0: pc.SEMANTIC_TEXCOORD0,
+            texCoord1: pc.SEMANTIC_TEXCOORD1,
+            texCoord2: pc.SEMANTIC_TEXCOORD2,
+            texCoord3: pc.SEMANTIC_TEXCOORD3,
+            texCoord4: pc.SEMANTIC_TEXCOORD4,
+            texCoord5: pc.SEMANTIC_TEXCOORD5,
+            texCoord6: pc.SEMANTIC_TEXCOORD6,
+            texCoord7: pc.SEMANTIC_TEXCOORD7
         };
 
         for (i = 0; i < modelData.vertices.length; i++) {
@@ -249,13 +249,13 @@ pc.extend(pc.resources, function () {
                     normalize: false
                 });
             }
-            var vertexFormat = new pc.gfx.VertexFormat(this._device, formatDesc);
+            var vertexFormat = new pc.VertexFormat(this._device, formatDesc);
 
             // Create the vertex buffer
             var numVertices = vertexData.position.data.length / vertexData.position.components;
-            var vertexBuffer = new pc.gfx.VertexBuffer(this._device, vertexFormat, numVertices);
+            var vertexBuffer = new pc.VertexBuffer(this._device, vertexFormat, numVertices);
 
-            var iterator = new pc.gfx.VertexIterator(vertexBuffer);
+            var iterator = new pc.VertexIterator(vertexBuffer);
             for (j = 0; j < numVertices; j++) {
                 for (attributeName in vertexData) {
                     attribute = vertexData[attributeName];
@@ -300,7 +300,7 @@ pc.extend(pc.resources, function () {
         var indexData = null;
         var indexBase = 0;
         if (numIndices > 0) {
-            indexBuffer = new pc.gfx.IndexBuffer(this._device, pc.gfx.INDEXFORMAT_UINT16, numIndices);
+            indexBuffer = new pc.IndexBuffer(this._device, pc.INDEXFORMAT_UINT16, numIndices);
             indexData = new Uint16Array(indexBuffer.lock());
         }
 

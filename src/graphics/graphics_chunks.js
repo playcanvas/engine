@@ -1,4 +1,4 @@
-pc.extend(pc.gfx, (function () {
+pc.extend(pc, (function () {
     'use strict';
 
     var shaderChunks = {}
@@ -15,7 +15,7 @@ pc.extend(pc.gfx, (function () {
             var attribName = vsCode.substr(startOfAttribName + 1, endOfLine - (startOfAttribName + 1));
 
             if (attribName == "aPosition") {
-                attribs.aPosition = pc.gfx.SEMANTIC_POSITION;
+                attribs.aPosition = pc.SEMANTIC_POSITION;
             } else {
                 attribs[attribName] = "ATTR" + attrs;
                 attrs++;
@@ -29,10 +29,10 @@ pc.extend(pc.gfx, (function () {
 
     shaderChunks.createShader = function(device, vsName, psName) {
         var vsCode = shaderChunks[vsName];
-        var psCode = pc.gfx.programlib.getSnippet(device, 'fs_precision') + "\n" + shaderChunks[psName];
+        var psCode = pc.programlib.getSnippet(device, 'fs_precision') + "\n" + shaderChunks[psName];
         attribs = this.collectAttribs(vsCode);
 
-        return new pc.gfx.Shader(device, {
+        return new pc.Shader(device, {
             attributes: attribs,
             vshader: vsCode,
             fshader: psCode
@@ -43,9 +43,9 @@ pc.extend(pc.gfx, (function () {
         var cached = shaderCache[uName];
         if (cached != undefined) return cached;
 
-        psCode = pc.gfx.programlib.getSnippet(device, 'fs_precision') + "\n" + psCode;
+        psCode = pc.programlib.getSnippet(device, 'fs_precision') + "\n" + psCode;
         attribs = this.collectAttribs(vsCode);
-        shaderCache[uName] = new pc.gfx.Shader(device, {
+        shaderCache[uName] = new pc.Shader(device, {
             attributes: attribs,
             vshader: vsCode,
             fshader: psCode

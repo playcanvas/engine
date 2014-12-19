@@ -1,4 +1,4 @@
-pc.extend(pc.gfx, function () {
+pc.extend(pc, function () {
     'use strict';
 
     var idCounter = 0;
@@ -8,7 +8,7 @@ pc.extend(pc.gfx, function () {
         idCounter++;
 
         // Create a version for this object
-        this.version = new pc.gfx.Version();
+        this.version = new pc.Version();
 
         // Set the unique object ID
         this.version.globalId = idCounter;
