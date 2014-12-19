@@ -9,7 +9,7 @@ pc.gfx.programlib.phong = {
                     props.push(options.lights[i].getType() + "_"
                         + (options.lights[i].getCastShadows() ? 1 : 0) + "_"
                         + options.lights[i].getFalloffMode() + "_"
-                        + !!options.lights[i].getNormalOffsetShadowBias());
+                        + !!options.lights[i].getNormalOffsetBias());
                 }
             } else {
                 if (options[prop]) props.push(prop);
@@ -444,14 +444,14 @@ pc.gfx.programlib.phong = {
                 if (options.lights[i].getCastShadows()) {
                     if (lightType==pc.scene.LIGHTTYPE_POINT) {
                         var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
-                        if (!options.lights[i].getNormalOffsetShadowBias()) {
+                        if (!options.lights[i].getNormalOffsetBias()) {
                             code += "   data.atten *= getShadowPoint" + shadowCoordArgs;
                         } else {
                             code += "   data.atten *= getShadowPointNormalOffset" + shadowCoordArgs;
                         }
                     } else {
                         var shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
-                        if (!options.lights[i].getNormalOffsetShadowBias()) {
+                        if (!options.lights[i].getNormalOffsetBias()) {
                             if (lightType==pc.scene.LIGHTTYPE_SPOT) {
                                 code += "   getShadowCoordPersp" + shadowCoordArgs;
                             } else {
