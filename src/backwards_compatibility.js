@@ -33,6 +33,13 @@ pc.extend(pc.gfx, {
 pc.posteffect = {
     createFullscreenQuad: pc.createFullscreenQuad,
     drawFullscreenQuad: pc.drawFullscreenQuad,
+
     PostEffect: pc.PostEffect,
     PostEffectQueue: pc.PostEffectQueue
+};
+
+pc.time = {
+    now: pc.now,
+
+    Timer: pc.Timer
 };
