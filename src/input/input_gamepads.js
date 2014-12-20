@@ -1,6 +1,6 @@
-pc.extend(pc.input, function () {
+pc.extend(pc, function () {
     /**
-    * @name pc.input.GamePads
+    * @name pc.GamePads
     * @class Input handler for accessing GamePad input
     */ 
     var GamePads = function () {
@@ -98,7 +98,7 @@ pc.extend(pc.input, function () {
     GamePads.prototype = {
         /**
         * @function
-        * @name pc.input.GamePads#update
+        * @name pc.GamePads#update
         * @description Update the current and previous state of the gamepads. This must be called every frame for wasPressed()
         * to work
         */
@@ -114,11 +114,11 @@ pc.extend(pc.input, function () {
 
         /**
         * @function
-        * @name pc.input.GamePads#poll
+        * @name pc.GamePads#poll
         * @description Poll for the latest data from the gamepad API.
         * @returns {Array} An array of gamepads and mappings for the model of gamepad that is attached
         * @example
-        *   var gamepads = new pc.input.GamePads();
+        *   var gamepads = new pc.GamePads();
         *   var pads = gamepads.poll();
         *   // pads[0] = { map: <map>, pad: <pad> }
         */
@@ -151,10 +151,10 @@ pc.extend(pc.input, function () {
 
         /**
         * @function
-        * @name pc.input.GamePads#isPressed
+        * @name pc.GamePads#isPressed
         * @description Returns true if the button on the pad requested is pressed
-        * @param {Number} index The index of the pad to check, use constants pc.input.PAD_1, pc.input.PAD_2, etc
-        * @param {Number} button The button to test, use constants pc.input.PAD_FACE_1, etc
+        * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
+        * @param {Number} button The button to test, use constants pc.PAD_FACE_1, etc
         * @returns {Boolean} True if the button is pressed
         */
         isPressed: function (index, button) {
@@ -163,15 +163,15 @@ pc.extend(pc.input, function () {
             }
 
             var key = this.current[index].map.buttons[button];
-            return this.current[index].pad.buttons[pc.input[key]].pressed;
+            return this.current[index].pad.buttons[pc[key]].pressed;
         },
 
         /**
         * @function
-        * @name pc.input.GamePads#wasPressed
+        * @name pc.GamePads#wasPressed
         * @description Returns true if the button was pressed since the last frame
-        * @param {Number} index The index of the pad to check, use constants pc.input.PAD_1, pc.input.PAD_2, etc
-        * @param {Number} button The button to test, use constants pc.input.PAD_FACE_1, etc
+        * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
+        * @param {Number} button The button to test, use constants pc.PAD_FACE_1, etc
         * @returns {Boolean} True if the button was pressed since the last frame
         */
         wasPressed: function (index, button) {
@@ -180,16 +180,16 @@ pc.extend(pc.input, function () {
             }
 
             var key = this.current[index].map.buttons[button];
-            var i = pc.input[key];
+            var i = pc[key];
             return this.current[index].pad.buttons[i].pressed && !this.previous[index].pad.buttons[i].pressed;
         },
 
         /**
         * @function
-        * @name pc.input.GamePads#getAxis
+        * @name pc.GamePads#getAxis
         * @description Get the value of one of the analogue axes of the pad
-        * @param {Number} index The index of the pad to check, use constants pc.input.PAD_1, pc.input.PAD_2, etc
-        * @param {Number} axes The axes to get the value of, use constants pc.input.PAD_L_STICK_X, etc
+        * @param {Number} index The index of the pad to check, use constants pc.PAD_1, pc.PAD_2, etc
+        * @param {Number} axes The axes to get the value of, use constants pc.PAD_L_STICK_X, etc
         * @returns {Number} The value of the axis between -1 and 1.
         */
         getAxis: function (index, axes) {
@@ -198,7 +198,7 @@ pc.extend(pc.input, function () {
             }
 
             var key = this.current[index].map.axes[axes];
-            var value = this.current[index].pad.axes[pc.input[key]];
+            var value = this.current[index].pad.axes[pc[key]];
 
             if (Math.abs(value) < this.deadZone) {
                 value = 0;
@@ -207,116 +207,7 @@ pc.extend(pc.input, function () {
         }
     };
 
-    return {    
-        /** 
-        * @description Index for pad 1
-        */
-        PAD_1: 0,
-        /** 
-        * @description Index for pad 2
-        */
-        PAD_2: 1,
-        /** 
-        * @description Index for pad 3
-        */
-        PAD_3: 2,
-        /** 
-        * @description Index for pad 4
-        */
-        PAD_4: 3,
-
-        /** 
-        * @description The first face button, from bottom going clockwise
-        */
-        PAD_FACE_1: 0,
-        /** 
-        * @description The second face button, from bottom going clockwise
-        */
-        PAD_FACE_2: 1,
-        /** 
-        * @description The third face button, from bottom going clockwise
-        */
-        PAD_FACE_3: 2,
-        /** 
-        * @description The fourth face button, from bottom going clockwise
-        */
-        PAD_FACE_4: 3,
-
-
-        /** 
-        * @description The first shoulder button on the left
-        */
-        PAD_L_SHOULDER_1: 4,
-        /** 
-        * @description The first shoulder button on the right
-        */
-        PAD_R_SHOULDER_1: 5,
-        /** 
-        * @description The second shoulder button on the left
-        */
-        PAD_L_SHOULDER_2: 6,
-        /** 
-        * @description The second shoulder button on the right
-        */
-        PAD_R_SHOULDER_2: 7,
-
-        /** 
-        * @description The select button
-        */
-        PAD_SELECT: 8,
-        /** 
-        * @description The start button
-        */
-        PAD_START: 9,
-
-        /** 
-        * @description The button when depressing the left analogue stick
-        */
-        PAD_L_STICK_BUTTON: 10,
-        /** 
-        * @description The button when depressing the right analogue stick
-        */
-        PAD_R_STICK_BUTTON: 11,
-
-        /** 
-        * @description Direction pad up
-        */
-        PAD_UP: 12,
-        /** 
-        * @description Direction pad down
-        */
-        PAD_DOWN: 13,
-        /** 
-        * @description Direction pad left
-        */
-        PAD_LEFT: 14,
-        /** 
-        * @description Direction pad right
-        */
-        PAD_RIGHT: 15,
-
-        /** 
-        * @description Vendor specific button
-        */
-        PAD_VENDOR: 16,
-
-        /** 
-        * @description Horizontal axis on the left analogue stick
-        */
-        PAD_L_STICK_X: 0,
-        /** 
-        * @description Vertical axis on the left analogue stick
-        */
-        PAD_L_STICK_Y: 1,
-        /** 
-        * @description Horizontal axis on the right analogue stick
-        */
-        PAD_R_STICK_X: 2,
-        /** 
-        * @description Vertical axis on the right analogue stick
-        */
-        PAD_R_STICK_Y: 3,
-
+    return {
         GamePads: GamePads
     };
 }());

@@ -30,6 +30,20 @@ pc.extend(pc.gfx, {
     VertexIterator: pc.VertexIterator
 });
 
+pc.extend(pc.input, {
+    getTouchTargetCoords: pc.getTouchTargetCoords,
+
+    Controller: pc.Controller,
+    GamePads: pc.GamePads,
+    Keyboard: pc.Keyboard,
+    KeyboardEvent: pc.KeyboardEvent,
+    Mouse: pc.Mouse,
+    MouseEvent: pc.MouseEvent,
+    Touch: pc.Touch,
+    TouchDevice: pc.TouchDevice,
+    TouchEvent: pc.TouchEvent
+});
+
 pc.posteffect = {
     createFullscreenQuad: pc.createFullscreenQuad,
     drawFullscreenQuad: pc.drawFullscreenQuad,

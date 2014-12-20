@@ -1,15 +1,15 @@
-pc.extend(pc.input, function () {
+pc.extend(pc, function () {
     /**
-    * @name pc.input.MouseEvent
+    * @name pc.MouseEvent
     * @class MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
     * @constructor Create an new MouseEvent
-    * @param {pc.input.Mouse} mouse The Mouse device that is firing this event
+    * @param {pc.Mouse} mouse The Mouse device that is firing this event
     * @param {MouseEvent} event The original browser event that fired
-    * @property {Number} x The x co-ordinate of the mouse pointer relative to the element pc.input.Mouse is attached to
-    * @property {Number} y The y co-ordinate of the mouse pointer relative to the element pc.input.Mouse is attached to
+    * @property {Number} x The x co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
+    * @property {Number} y The y co-ordinate of the mouse pointer relative to the element pc.Mouse is attached to
     * @property {Number} dx The change in x co-ordinate since the last mouse event
     * @property {Number} dy The change in y co-ordinate since the last mouse event
-    * @property {pc.input.MOUSEBUTTON} button The button
+    * @property {pc.MOUSEBUTTON} button The button
     * @property {Number} wheel A value representing the amount the mouse wheel has moved, only valid for {@link mousemove} events
     * @property {DOMElement} element The element that the mouse was fired from
     * @property {Boolean} ctrlKey True if the ctrl key was pressed when this event was fired
@@ -37,7 +37,7 @@ pc.extend(pc.input, function () {
         if (coords) {
             this.x = coords.x;
             this.y = coords.y;
-        } else if (pc.input.Mouse.isPointerLocked()) {
+        } else if (pc.Mouse.isPointerLocked()) {
             this.x = 0;
             this.y = 0;
         } else {
@@ -55,7 +55,7 @@ pc.extend(pc.input, function () {
         }
 
         // Get the movement delta in this event
-        if (pc.input.Mouse.isPointerLocked()) {
+        if (pc.Mouse.isPointerLocked()) {
             this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
             this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
         } else {
@@ -66,7 +66,7 @@ pc.extend(pc.input, function () {
         if (event.type === 'mousedown' || event.type === 'mouseup') {
             this.button = event.button;
         } else {
-            this.button = pc.input.MOUSEBUTTON_NONE;
+            this.button = pc.MOUSEBUTTON_NONE;
         }
         this.buttons = mouse._buttons.slice(0);
         this.element = event.target;
@@ -82,34 +82,34 @@ pc.extend(pc.input, function () {
     // Events Documentation
     /**
     * @event
-    * @name pc.input.Mouse#mousemove
+    * @name pc.Mouse#mousemove
     * @description Fired when the mouse is moved
-    * @param {pc.input.MouseEvent} event The MouseEvent object
+    * @param {pc.MouseEvent} event The MouseEvent object
     */
 
     /**
     * @event
-    * @name pc.input.Mouse#mousedown
+    * @name pc.Mouse#mousedown
     * @description Fired when a mouse button is pressed
-    * @param {pc.input.MouseEvent} event The MouseEvent object
+    * @param {pc.MouseEvent} event The MouseEvent object
     */
 
     /**
     * @event
-    * @name pc.input.Mouse#mouseup
+    * @name pc.Mouse#mouseup
     * @description Fired when a mouse button is released
-    * @param {pc.input.MouseEvent} event The MouseEvent object
+    * @param {pc.MouseEvent} event The MouseEvent object
     */
 
     /**
     * @event
-    * @name pc.input.Mouse#mousewheel
+    * @name pc.Mouse#mousewheel
     * @description Fired when a mouse wheel is moved
-    * @param {pc.input.MouseEvent} event The MouseEvent object
+    * @param {pc.MouseEvent} event The MouseEvent object
     */
 
     /**
-     * @name pc.input.Mouse
+     * @name pc.Mouse
      * @class A Mouse Device, bound to a DOM Element.
      * @constructor Create a new Mouse device
      * @param {DOMElement} [element] The DOMElement that the mouse events are attached to
@@ -140,8 +140,8 @@ pc.extend(pc.input, function () {
 
     /**
     * @function
-    * @name pc.input.Mouse.isPointerLocked
-    * @description Check if the mouse pointer has been locked, using {@link pc.input.Mouse#enabledPointerLock}
+    * @name pc.Mouse.isPointerLocked
+    * @description Check if the mouse pointer has been locked, using {@link pc.Mouse#enabledPointerLock}
     * @returns {Boolean} True if locked
     */
     Mouse.isPointerLocked = function () {
@@ -151,7 +151,7 @@ pc.extend(pc.input, function () {
     Mouse.prototype = {
         /**
          * @function
-         * @name pc.input.Mouse#attach
+         * @name pc.Mouse#attach
          * @description Attach mouse events to a DOMElement.
          * @param {Object} element
          */
@@ -170,7 +170,7 @@ pc.extend(pc.input, function () {
 
         /**
          * @function
-         * @name pc.input.Mouse#detach
+         * @name pc.Mouse#detach
          * @description Remove mouse events from the element that it is attached to
          */
         detach: function () {
@@ -186,7 +186,7 @@ pc.extend(pc.input, function () {
 
         /**
          * @function
-         * @name pc.input.Mouse#disableContextMenu
+         * @name pc.Mouse#disableContextMenu
          * @description Disable the context menu usually activated with right-click
          */
         disableContextMenu: function () {
@@ -196,7 +196,7 @@ pc.extend(pc.input, function () {
 
         /**
          * @function
-         * @name pc.input.Mouse#enableContextMenu
+         * @name pc.Mouse#enableContextMenu
          * @description Enable the context menu usually activated with right-click. This option is active by default.
          */
         enableContextMenu: function () {
@@ -206,7 +206,7 @@ pc.extend(pc.input, function () {
 
         /**
         * @function
-        * @name pc.input.Mouse#enablePointerLock
+        * @name pc.Mouse#enablePointerLock
         * @description Request that the browser hides the mouse cursor and locks the mouse to the element.
         * Allowing raw access to mouse movement input without risking the mouse exiting the element.
         * Notes: <br />
@@ -240,7 +240,7 @@ pc.extend(pc.input, function () {
 
         /**
         * @function
-        * @name pc.input.Mouse#disablePointerLock
+        * @name pc.Mouse#disablePointerLock
         * @description Return control of the mouse cursor to the user
         * @param {Function} [success] Function called when the mouse lock is disabled
         */
@@ -257,7 +257,7 @@ pc.extend(pc.input, function () {
 
         /**
          * @function
-         * @name pc.input.Mouse#update
+         * @name pc.Mouse#update
          * @description Update method, should be called once per frame
          * @param {Object} dt
          */
@@ -270,9 +270,9 @@ pc.extend(pc.input, function () {
 
         /**
          * @function
-         * @name pc.input.Mouse#isPressed
+         * @name pc.Mouse#isPressed
          * @description Returns true if the mouse button is currently pressed
-         * @param {pc.input.MOUSEBUTTON} button
+         * @param {pc.MOUSEBUTTON} button
          * @returns {Boolean} True if the mouse button is current pressed
          */
         isPressed: function (button) {
@@ -281,9 +281,9 @@ pc.extend(pc.input, function () {
 
         /**
          * @function
-         * @name pc.input.Mouse#wasPressed
+         * @name pc.Mouse#wasPressed
          * @description Returns true if the mouse button was pressed this frame (since the last call to update).
-         * @param {pc.input.MOUSEBUTTON} button
+         * @param {pc.MOUSEBUTTON} button
          * @returns {Boolean} True if the mouse button was pressed since the last update
          */
         wasPressed: function (button) {
@@ -292,9 +292,9 @@ pc.extend(pc.input, function () {
 
         /**
          * @function
-         * @name pc.input.Mouse#wasReleased
+         * @name pc.Mouse#wasReleased
          * @description Returns true if the mouse button was released this frame (since the last call to update).
-         * @param {pc.input.MOUSEBUTTON} button
+         * @param {pc.MOUSEBUTTON} button
          * @returns {Boolean} True if the mouse button was released since the last update
          */
         wasReleased: function (button) {
@@ -309,7 +309,7 @@ pc.extend(pc.input, function () {
             if (! e.event) return;
 
             // send 'mouseup' event
-            this.fire(pc.input.EVENT_MOUSEUP, e);
+            this.fire(pc.EVENT_MOUSEUP, e);
         },
 
         _handleDown: function (event) {
@@ -319,14 +319,14 @@ pc.extend(pc.input, function () {
             var e = new MouseEvent(this, event);
             if (! e.event) return;
 
-            this.fire(pc.input.EVENT_MOUSEDOWN, e);
+            this.fire(pc.EVENT_MOUSEDOWN, e);
         },
 
         _handleMove: function (event) {
             var e = new MouseEvent(this, event);
             if (! e.event) return;
 
-            this.fire(pc.input.EVENT_MOUSEMOVE, e);
+            this.fire(pc.EVENT_MOUSEMOVE, e);
 
             // Store the last offset position to calculate deltas
             this._lastX = e.x;
@@ -337,7 +337,7 @@ pc.extend(pc.input, function () {
             var e = new MouseEvent(this, event);
             if (! e.event) return;
 
-            this.fire(pc.input.EVENT_MOUSEWHEEL, e);
+            this.fire(pc.EVENT_MOUSEWHEEL, e);
         },
 
         _getTargetCoords: function (event) {
@@ -426,56 +426,6 @@ pc.extend(pc.input, function () {
     // Public Interface
     return  {
         Mouse: Mouse,
-        MouseEvent: MouseEvent,
-
-        /**
-         * @enum pc.input.EVENT
-         * @name pc.input.EVENT_MOUSEDOWN
-         * @description Name of event fired when a mouse button is pressed
-         */
-        EVENT_MOUSEDOWN: "mousedown",
-        /**
-         * @enum pc.input.EVENT
-         * @name pc.input.EVENT_MOUSEMOVE
-         * @description Name of event fired when the mouse is moved
-         */
-        EVENT_MOUSEMOVE: "mousemove",
-        /**
-         * @enum pc.input.EVENT
-         * @name pc.input.EVENT_MOUSEUP
-         * @description Name of event fired when a mouse button is released
-         */
-        EVENT_MOUSEUP: "mouseup",
-        /**
-         * @enum pc.input.EVENT
-         * @name pc.input.EVENT_MOUSEWHEEL
-         * @description Name of event fired when the mouse wheel is rotated
-         */
-        EVENT_MOUSEWHEEL: "mousewheel",
-
-        /**
-         * @enum pc.input.MOUSEBUTTON
-         * @name pc.input.MOUSEBUTTON_NONE
-         * @description No mouse buttons pressed
-         */
-        MOUSEBUTTON_NONE: -1,
-        /**
-         * @enum pc.input.MOUSEBUTTON
-         * @name pc.input.MOUSEBUTTON_LEFT
-         * @description The left mouse button
-         */
-        MOUSEBUTTON_LEFT: 0,
-        /**
-         * @enum pc.input.MOUSEBUTTON
-         * @name pc.input.MOUSEBUTTON_MIDDLE
-         * @description The middle mouse button
-         */
-        MOUSEBUTTON_MIDDLE: 1,
-        /**
-         * @enum pc.input.MOUSEBUTTON
-         * @name pc.input.MOUSEBUTTON_RIGHT
-         * @description The right mouse button
-         */
-        MOUSEBUTTON_RIGHT: 2
+        MouseEvent: MouseEvent
     };
 } ());

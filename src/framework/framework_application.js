@@ -8,9 +8,9 @@ pc.extend(pc.fw, function () {
      * @constructor Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
-     * @param {pc.input.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
-     * @param {pc.input.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
-     * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
+     * @param {pc.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
+     * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
+     * @param {pc.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
      * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
      * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
      * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
