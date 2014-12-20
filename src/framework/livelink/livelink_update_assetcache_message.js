@@ -1,5 +1,6 @@
 pc.extend(pc.fw, function () {
     /**
+     * @private
      * @name pc.fw.LiveLinkUpdateAssetCacheMessage
      * @constructor Create a new LiveLInkUpdateAssetCacheMessage
      * @class
