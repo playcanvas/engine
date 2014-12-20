@@ -1,11 +1,47 @@
 (function () {
     // Scene API enums
     var enums = {
+        /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_SUBTRACTIVE
+         * @description Subtract the color of the source fragment from the destination fragment
+         * and write the result to the frame buffer.
+         */
         BLEND_SUBTRACTIVE: 0,
+        /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_ADDITIVE
+         * @description Add the color of the source fragment to the destination fragment
+         * and write the result to the frame buffer.
+         */
         BLEND_ADDITIVE: 1,
+        /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_NORMAL
+         * @description Enable simple translucency for materials such as glass. This is
+         * equivalent to enabling a source blend mode of pc.BLENDMODE_SRC_ALPHA and a destination
+         * blend mode of pc.BLENDMODE_ONE_MINUS_SRC_ALPHA.
+         */
         BLEND_NORMAL: 2,
+        /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_NONE
+         * @description Disable blending.
+         */
         BLEND_NONE: 3,
+        /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_PREMULTIPLIED
+         * @description Similar to pc.BLEND_NORMAL expect the source fragment is assumed to have
+         * already been multiplied by the source alpha value.
+         */
         BLEND_PREMULTIPLIED: 4,
+        /**
+         * @enum pc.BLEND
+         * @name pc.BLEND_MULTIPLICATIVE
+         * @description Multiply the color of the source fragment by the color of the destination
+         * fragment and write the result to the frame buffer.
+         */
         BLEND_MULTIPLICATIVE: 5,
 
         /**
