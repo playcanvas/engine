@@ -8,7 +8,6 @@
 ../src/core/core_inheritance.js
 ../src/core/core_bind.js
 ../src/core/core_path.js
-../src/core/core_content.js
 ../src/core/core_string.js
 ../src/core/core_json.js
 ../src/core/core_cookie.js
