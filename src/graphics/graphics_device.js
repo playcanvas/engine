@@ -1089,6 +1089,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#getBlending
+         * @description Queries whether blending is enabled.
+         * @returns {Boolean} True if blending is enabled and false otherwise.
          */
         getBlending: function () {
             return this.blending;
@@ -1097,6 +1099,8 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setBlending
+         * @description Enables or disables blending.
+         * @param {Boolean} blending True to enable blending and false to disable it.
          */
         setBlending: function (blending) {
             if (this.blending !== blending) {
@@ -1113,6 +1117,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setBlendFunction
+         * @description Configures blending operations.
+         * @param {pc.BLENDMODE} blendSrc The source blend function.
+         * @param {pc.BLENDMODE} blendDst The destination blend function.
          */
         setBlendFunction: function (blendSrc, blendDst) {
             if ((this.blendSrc !== blendSrc) || (this.blendDst !== blendDst)) {
@@ -1125,6 +1132,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setBlendEquation
+         * @description Configures the blending equation. The default blend equation is
+         * pc.BLENDEQUATION_ADD.
+         * @param {pc.BLENDEQUATION} blendEquation The blend equation.
          */
         setBlendEquation: function (blendEquation) {
             if (this.blendEquation !== blendEquation) {
@@ -1137,6 +1147,9 @@ pc.extend(pc, function () {
         /**
          * @function
          * @name pc.GraphicsDevice#setCullMode
+         * @description Configures the cull mode. The default cull mode is
+         * pc.CULLFACE_BACK.
+         * @param {pc.CULLFACE} cullMode The cull mode.
          */
         setCullMode: function (cullMode) {
             if (this.cullMode !== cullMode) {
@@ -1229,7 +1242,7 @@ pc.extend(pc, function () {
         },
 
         /**
-
+         * @private
          * @function
          * @name pc.GraphicsDevice#getBoneLimit
          * @description Queries the maximum number of bones that can be referenced by a shader.
@@ -1245,6 +1258,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.GraphicsDevice#setBoneLimit
          * @description Specifies the maximum number of bones that the device can support on
