@@ -75,6 +75,18 @@ pc.extend(pc.scene, {
     SkinInstance: pc.SkinInstance
 });
 
+pc.scene.procedural = {
+    calculateTangents: pc.calculateTangents,
+    createMesh: pc.createMesh,
+    createTorus: pc.createTorus,
+    createCylinder: pc.createCylinder,
+    createCapsule: pc.createCapsule,
+    createCone: pc.createCone,
+    createSphere: pc.createSphere,
+    createPlane: pc.createPlane,
+    createBox: pc.createBox
+};
+
 pc.time = {
     now: pc.now,
 

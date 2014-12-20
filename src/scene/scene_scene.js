@@ -261,7 +261,7 @@ pc.extend(pc, function () {
             material.cull = pc.CULLFACE_NONE;
 
             var node = new pc.GraphNode();
-            var mesh = pc.procedural.createBox(device);
+            var mesh = pc.createBox(device);
             var meshInstance = new pc.MeshInstance(node, mesh, material);
 
             var model = new pc.Model();

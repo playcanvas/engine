@@ -455,7 +455,7 @@ pc.extend(pc.fw, function () {
             }
 
             var context = this.system.context;
-            return pc.procedural.createSphere(context.graphicsDevice, {
+            return pc.createSphere(context.graphicsDevice, {
                 radius: 0.1
             });
         },

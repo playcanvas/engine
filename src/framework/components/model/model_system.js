@@ -102,26 +102,26 @@ pc.extend(pc.fw, function () {
         this.exposeProperties();
 
         var gd = context.graphicsDevice;
-        this.box = pc.procedural.createBox(gd, {
+        this.box = pc.createBox(gd, {
             halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
         });
-        this.capsule = pc.procedural.createCapsule(gd, {
+        this.capsule = pc.createCapsule(gd, {
             radius: 0.5,
             height: 2
         });
-        this.sphere = pc.procedural.createSphere(gd, {
+        this.sphere = pc.createSphere(gd, {
             radius: 0.5
         });
-        this.cone = pc.procedural.createCone(gd, {
+        this.cone = pc.createCone(gd, {
             baseRadius: 0.5,
             peakRadius: 0,
             height: 1
         });
-        this.cylinder = pc.procedural.createCylinder(gd, {
+        this.cylinder = pc.createCylinder(gd, {
             radius: 0.5,
             height: 1
         });
-        this.plane = pc.procedural.createPlane(gd, {
+        this.plane = pc.createPlane(gd, {
             halfExtents: new pc.Vec2(0.5, 0.5),
             widthSegments: 1,
             lengthSegments: 1
