@@ -107,7 +107,7 @@ pc.extend(pc.fw, function () {
         ]);
         indexBuffer.unlock();
 
-        this.mesh = new pc.scene.Mesh();
+        this.mesh = new pc.Mesh();
         this.mesh.vertexBuffer = vertexBuffer;
         this.mesh.indexBuffer[0] = indexBuffer;
         this.mesh.primitive[0].type = pc.PRIMITIVE_LINES;
@@ -115,7 +115,7 @@ pc.extend(pc.fw, function () {
         this.mesh.primitive[0].count = indexBuffer.getNumIndices();
         this.mesh.primitive[0].indexed = true;
 
-        this.material = new pc.scene.BasicMaterial();
+        this.material = new pc.BasicMaterial();
         this.material.color = new pc.Color(0, 0, 1, 1);
         this.material.update();
 
@@ -132,9 +132,9 @@ pc.extend(pc.fw, function () {
     CollisionRectComponentSystem.prototype = pc.extend(CollisionRectComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
 
-            data.model = new pc.scene.Model();
-            data.model.graph = new pc.scene.GraphNode();
-            data.model.meshInstances = [ new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material) ];
+            data.model = new pc.Model();
+            data.model.graph = new pc.GraphNode();
+            data.model.meshInstances = [ new pc.MeshInstance(data.model.graph, this.mesh, this.material) ];
 
             properties = ['density', 'friction', 'restitution', 'x', 'y', 'model'];
             CollisionRectComponentSystem._super.initializeComponentData.call(this, component, data, properties);

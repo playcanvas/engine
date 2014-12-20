@@ -84,15 +84,15 @@ pc.extend(pc.fw, function() {
      * @property {pc.Vec3} wrapBounds The half extents of a world space AABB volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
      * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
      * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
-     * @property {pc.scene.PARTICLESORT} sort Sorting mode. Forces CPU simulation, so be careful.
+     * @property {pc.PARTICLESORT} sort Sorting mode. Forces CPU simulation, so be careful.
      * <ul>
-     * <li><strong>{@link pc.scene.PARTICLESORT_NONE}</strong>: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.</li>
-     * <li><strong>{@link pc.scene.PARTICLESORT_DISTANCE}</strong>: Sorting based on distance to the camera. CPU only.</li>
-     * <li><strong>{@link pc.scene.PARTICLESORT_NEWER_FIRST}</strong>: Newer particles are drawn first. CPU only.</li>
-     * <li><strong>{@link pc.scene.PARTICLESORT_OLDER_FIRST}</strong>: Older particles are drawn first. CPU only.</li>
+     * <li><strong>{@link pc.PARTICLESORT_NONE}</strong>: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.</li>
+     * <li><strong>{@link pc.PARTICLESORT_DISTANCE}</strong>: Sorting based on distance to the camera. CPU only.</li>
+     * <li><strong>{@link pc.PARTICLESORT_NEWER_FIRST}</strong>: Newer particles are drawn first. CPU only.</li>
+     * <li><strong>{@link pc.PARTICLESORT_OLDER_FIRST}</strong>: Older particles are drawn first. CPU only.</li>
      * </ul>
-     * @property {pc.scene.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
-     * @property {pc.scene.BLEND} blend Blending mode.
+     * @property {pc.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
+     * @property {pc.BLEND} blend Blending mode.
      * @property {pc.CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
      * @property {pc.CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
      * @property {pc.CurveSet} velocityGraph World-space velocity over lifetime.
@@ -253,7 +253,7 @@ pc.extend(pc.fw, function() {
         onEnable: function() {
             if (!this.emitter && !this.system._inTools) {
 
-                this.emitter = new pc.scene.ParticleEmitter(this.system.context.graphicsDevice, {
+                this.emitter = new pc.ParticleEmitter(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     spawnBounds: this.data.spawnBounds,
                     wrap: this.data.wrap,
@@ -303,7 +303,7 @@ pc.extend(pc.fw, function() {
 
                 this.emitter.meshInstance.node = this.entity;
 
-                this.psys = new pc.scene.Model();
+                this.psys = new pc.Model();
                 this.psys.graph = this.entity;
                 this.psys.emitter = this.emitter;
                 this.psys.meshInstances = [this.emitter.meshInstance];

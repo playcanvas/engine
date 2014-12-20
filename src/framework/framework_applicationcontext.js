@@ -5,7 +5,7 @@ pc.extend(pc.fw, function() {
      * @constructor Create a new ApplicationContext
      * @name pc.fw.ApplicationContext
      * @param {pc.resources.ResourceLoader} loaders LoaderManager which is used to load resources
-     * @param {pc.scene.Scene} scene Used to manage models to render
+     * @param {pc.Scene} scene Used to manage models to render
      * @param {pc.GraphicsDevice} graphicsDevice Global graphics device
      * @param {Object} registry ComponentSystemRegistry stores all the ComponentSystems and is used to access Component data
      * @param {Object} [options] Optional extras such as input handlers      

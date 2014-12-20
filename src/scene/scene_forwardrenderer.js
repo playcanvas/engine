@@ -1,4 +1,4 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
 
     function sortDrawCalls(drawCallA, drawCallB) {
         if (drawCallA.distSqr && drawCallB.distSqr) {
@@ -54,7 +54,7 @@ pc.extend(pc.scene, function () {
         var projection = cam.getProjection();
 
         var x, y;
-        if (projection === pc.scene.Projection.PERSPECTIVE) {
+        if (projection === pc.Projection.PERSPECTIVE) {
             y = Math.tan(fov / 2.0) * nearClip;
         } else {
             y = camera._orthoHeight;
@@ -74,7 +74,7 @@ pc.extend(pc.scene, function () {
         points[3].y = -y;
         points[3].z = -nearClip;
 
-        if (projection === pc.scene.Projection.PERSPECTIVE) {
+        if (projection === pc.Projection.PERSPECTIVE) {
             y = Math.tan(fov / 2.0) * farClip;
             x = y * aspect;
         }
@@ -139,7 +139,7 @@ pc.extend(pc.scene, function () {
         var flags = pc.CLEARFLAG_DEPTH;
         if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
 
-        var shadowCam = new pc.scene.CameraNode();
+        var shadowCam = new pc.CameraNode();
         shadowCam.setClearOptions({
             color: [1.0, 1.0, 1.0, 1.0],
             depth: 1.0,
@@ -151,7 +151,7 @@ pc.extend(pc.scene, function () {
 
     function createShadowBuffer(device, light) {
         var shadowBuffer;
-        if (light.getType() === pc.scene.LIGHTTYPE_POINT) {
+        if (light.getType() === pc.LIGHTTYPE_POINT) {
             shadowBuffer = createShadowCubeMap(device, light._shadowResolution);
             light._shadowCamera.setRenderTarget(shadowBuffer[0]);
             light._shadowCubeMap = shadowBuffer;
@@ -179,7 +179,7 @@ pc.extend(pc.scene, function () {
     }
 
     /**
-     * @name pc.scene.ForwardRenderer
+     * @name pc.ForwardRenderer
      * @class The forward renderer render scene objects.
      * @constructor Creates a new forward renderer object.
      * @param {pc.GraphicsDevice} graphicsDevice The graphics device used by the renderer.
@@ -381,8 +381,8 @@ pc.extend(pc.scene, function () {
             var light;
             var localLights = scene._localLights;
 
-            var pnts = localLights[pc.scene.LIGHTTYPE_POINT-1];
-            var spts = localLights[pc.scene.LIGHTTYPE_SPOT-1];
+            var pnts = localLights[pc.LIGHTTYPE_POINT-1];
+            var spts = localLights[pc.LIGHTTYPE_SPOT-1];
 
             var numDirs = scene._globalLights.length;
             var numPnts = pnts.length;
@@ -438,10 +438,10 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.ForwardRenderer#render
+         * @name pc.ForwardRenderer#render
          * @description Renders the scene using the specified camera.
-         * @param {pc.scene.Scene} scene The scene to render.
-         * @param {pc.scene.CameraNode} camera The camera with which to render the scene.
+         * @param {pc.Scene} scene The scene to render.
+         * @param {pc.CameraNode} camera The camera with which to render the scene.
          */
         render: function (scene, camera) {
             var device = this.device;
@@ -478,10 +478,10 @@ pc.extend(pc.scene, function () {
             for (i = 0; i < lights.length; i++) {
                 var light = lights[i];
                 if (light.getEnabled()) {
-                    if (light.getType() === pc.scene.LIGHTTYPE_DIRECTIONAL) {
+                    if (light.getType() === pc.LIGHTTYPE_DIRECTIONAL) {
                         scene._globalLights.push(light);
                     } else {
-                        scene._localLights[light.getType() === pc.scene.LIGHTTYPE_POINT ? 0 : 1].push(light);
+                        scene._localLights[light.getType() === pc.LIGHTTYPE_POINT ? 0 : 1].push(light);
                     }
                 }
             }
@@ -494,8 +494,8 @@ pc.extend(pc.scene, function () {
                     meshInstance = drawCall;
 
                     // Only alpha sort mesh instances in the main world
-                    if (meshInstance.layer === pc.scene.LAYER_WORLD) {
-                        if ((meshInstance.material.blendType === pc.scene.BLEND_NORMAL) || (meshInstance.material.blendType === pc.scene.BLEND_PREMULTIPLIED)) {
+                    if (meshInstance.layer === pc.LAYER_WORLD) {
+                        if ((meshInstance.material.blendType === pc.BLEND_NORMAL) || (meshInstance.material.blendType === pc.BLEND_PREMULTIPLIED)) {
                             meshInstance.syncAabb();
                             var meshPos = meshInstance.aabb.center;
                             var tempx = meshPos.x - camPos.x;
@@ -565,7 +565,7 @@ pc.extend(pc.scene, function () {
                     var passes = 1;
                     var pass;
 
-                    if (type === pc.scene.LIGHTTYPE_DIRECTIONAL) {
+                    if (type === pc.LIGHTTYPE_DIRECTIONAL) {
                         var shadowDistance = light.getShadowDistance();
 
                         // 1. Starting at the centroid of the view frustum, back up in the opposite
@@ -607,13 +607,13 @@ pc.extend(pc.scene, function () {
                         shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
                         shadowCamWtm.copy(shadowCam.getWorldTransform());
 
-                        shadowCam.setProjection(pc.scene.Projection.ORTHOGRAPHIC);
+                        shadowCam.setProjection(pc.Projection.ORTHOGRAPHIC);
                         shadowCam.setNearClip(0);
                         shadowCam.setFarClip((maxz - minz) * 1.5);
                         shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
                         shadowCam.setOrthoHeight((maxy - miny) * 0.5);
-                    } else if (type === pc.scene.LIGHTTYPE_SPOT) {
-                        shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
+                    } else if (type === pc.LIGHTTYPE_SPOT) {
+                        shadowCam.setProjection(pc.Projection.PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
                         shadowCam.setAspectRatio(1);
@@ -621,8 +621,8 @@ pc.extend(pc.scene, function () {
 
                         var lightWtm = light.worldTransform;
                         shadowCamWtm.mul2(lightWtm, camToLight);
-                    } else if (type === pc.scene.LIGHTTYPE_POINT) {
-                        shadowCam.setProjection(pc.scene.Projection.PERSPECTIVE);
+                    } else if (type === pc.LIGHTTYPE_POINT) {
+                        shadowCam.setProjection(pc.Projection.PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
                         shadowCam.setAspectRatio(1);
@@ -633,7 +633,7 @@ pc.extend(pc.scene, function () {
                         this.lightRadiusId.setValue(light.getAttenuationEnd());
                     }
 
-                    if (type != pc.scene.LIGHTTYPE_POINT) {
+                    if (type != pc.LIGHTTYPE_POINT) {
                         shadowCamView.copy(shadowCamWtm).invert();
                         shadowCamViewProj.mul2(shadowCam.getProjectionMatrix(), shadowCamView);
                         light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
@@ -644,7 +644,7 @@ pc.extend(pc.scene, function () {
 
                     for(pass=0; pass<passes; pass++){
 
-                        if (type === pc.scene.LIGHTTYPE_POINT) {
+                        if (type === pc.LIGHTTYPE_POINT) {
                             if (pass===0) {
                                 shadowCam.setEulerAngles(0, 90, 180);
                             } else if (pass===1) {
@@ -693,13 +693,13 @@ pc.extend(pc.scene, function () {
                                 } else {
                                     this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 }
-                                if (type === pc.scene.LIGHTTYPE_POINT) {
+                                if (type === pc.LIGHTTYPE_POINT) {
                                     device.setShader(material.opacityMap ? this._depthProgSkinOpPoint : this._depthProgSkinPoint);
                                 } else {
                                     device.setShader(material.opacityMap ? this._depthProgSkinOp : this._depthProgSkin);
                                 }
                             } else {
-                                if (type === pc.scene.LIGHTTYPE_POINT) {
+                                if (type === pc.LIGHTTYPE_POINT) {
                                     device.setShader(material.opacityMap ? this._depthProgStaticOpPoint : this._depthProgStaticPoint);
                                 } else {
                                     device.setShader(material.opacityMap ? this._depthProgStaticOp : this._depthProgStatic);
@@ -725,7 +725,7 @@ pc.extend(pc.scene, function () {
             this.dispatchLocalLights(scene);
 
             // Set up the fog
-            if (scene.fog !== pc.scene.FOG_NONE) {
+            if (scene.fog !== pc.FOG_NONE) {
                 this.fogColor[0] = scene.fogColor.r;
                 this.fogColor[1] = scene.fogColor.g;
                 this.fogColor[2] = scene.fogColor.b;
@@ -735,7 +735,7 @@ pc.extend(pc.scene, function () {
                     }
                 }
                 this.fogColorId.setValue(this.fogColor);
-                if (scene.fog === pc.scene.FOG_LINEAR) {
+                if (scene.fog === pc.FOG_LINEAR) {
                     this.fogStartId.setValue(scene.fogStart);
                     this.fogEndId.setValue(scene.fogEnd);
                 } else {

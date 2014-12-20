@@ -52,6 +52,29 @@ pc.posteffect = {
     PostEffectQueue: pc.PostEffectQueue
 };
 
+pc.extend(pc.scene, {
+    partitionSkin: pc.partitionSkin,
+
+    BasicMaterial: pc.BasicMaterial,
+    CameraNode: pc.CameraNode,
+    DepthMaterial: pc.DepthMaterial,
+    ForwardRenderer: pc.ForwardRenderer,
+    GraphNode: pc.GraphNode,
+    LightNode: pc.LightNode,
+    Material: pc.Material,
+    Command: pc.Command,
+    Mesh: pc.Mesh,
+    MeshInstance: pc.MeshInstance,
+    Model: pc.Model,
+    ParticleEmitter: pc.ParticleEmitter,
+    PhongMaterial: pc.PhongMaterial,
+    Picker: pc.Picker,
+    PickMaterial: pc.PickMaterial,
+    Scene: pc.Scene,
+    Skin: pc.Skin,
+    SkinInstance: pc.SkinInstance
+});
+
 pc.time = {
     now: pc.now,
 

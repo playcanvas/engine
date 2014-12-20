@@ -102,32 +102,32 @@ pc.extend(pc.fw, function () {
         this.exposeProperties();
 
         var gd = context.graphicsDevice;
-        this.box = pc.scene.procedural.createBox(gd, {
+        this.box = pc.procedural.createBox(gd, {
             halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
         });
-        this.capsule = pc.scene.procedural.createCapsule(gd, {
+        this.capsule = pc.procedural.createCapsule(gd, {
             radius: 0.5,
             height: 2
         });
-        this.sphere = pc.scene.procedural.createSphere(gd, {
+        this.sphere = pc.procedural.createSphere(gd, {
             radius: 0.5
         });
-        this.cone = pc.scene.procedural.createCone(gd, {
+        this.cone = pc.procedural.createCone(gd, {
             baseRadius: 0.5,
             peakRadius: 0,
             height: 1
         });
-        this.cylinder = pc.scene.procedural.createCylinder(gd, {
+        this.cylinder = pc.procedural.createCylinder(gd, {
             radius: 0.5,
             height: 1
         });
-        this.plane = pc.scene.procedural.createPlane(gd, {
+        this.plane = pc.procedural.createPlane(gd, {
             halfExtents: new pc.Vec2(0.5, 0.5),
             widthSegments: 1,
             lengthSegments: 1
         });
 
-        this.defaultMaterial = new pc.scene.PhongMaterial();
+        this.defaultMaterial = new pc.PhongMaterial();
     };
     ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.fw.ComponentSystem);
 

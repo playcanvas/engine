@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
         this.range = 10;
         this.innerConeAngle = 40;
         this.outerConeAngle = 45;
-        this.falloffMode = pc.scene.LIGHTFALLOFF_LINEAR;
+        this.falloffMode = pc.LIGHTFALLOFF_LINEAR;
 
         // Non-serialized
         this.model = null;

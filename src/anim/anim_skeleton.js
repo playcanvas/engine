@@ -254,7 +254,7 @@ pc.extend(pc, function () {
      * @description Links a skeleton to a node hierarchy. The nodes animated skeleton are
      * then subsequently used to drive the local transformation matrices of the node
      * hierarchy.
-     * @param {pc.scene.GraphNode} graph The root node of the graph that the skeleton is to drive.
+     * @param {pc.GraphNode} graph The root node of the graph that the skeleton is to drive.
      * @author Will Eastcott
      */
     Skeleton.prototype.setGraph = function (graph) {

@@ -7,7 +7,7 @@ pc.extend(pc.fw, function () {
      * managed by their respective {@link pc.fw.ComponentSystem}s.</p>
      * <p>
      * The Entity uniquely identifies the object and also provides a transform for position and orientation
-     * which it inherits from {@link pc.scene.GraphNode} so can be added into the scene graph.
+     * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
      * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to
      * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
      * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.fw.ApplicationContext}.
@@ -43,7 +43,7 @@ pc.extend(pc.fw, function () {
      * // Or use rotateLocal
      * entity.rotateLocal(0, 90, 0);
      *
-     * @extends pc.scene.GraphNode
+     * @extends pc.GraphNode
      */
     var Entity = function(){
         this._guid = pc.guid.create(); // Globally Unique Identifier
@@ -52,7 +52,7 @@ pc.extend(pc.fw, function () {
 
         pc.events.attach(this);
     };
-    Entity = pc.inherits(Entity, pc.scene.GraphNode);
+    Entity = pc.inherits(Entity, pc.GraphNode);
 
     /**
      * @function
@@ -130,7 +130,7 @@ pc.extend(pc.fw, function () {
             }
         }
 
-        pc.scene.GraphNode.prototype.addChild.call(this, child);
+        pc.GraphNode.prototype.addChild.call(this, child);
     };
 
     /**

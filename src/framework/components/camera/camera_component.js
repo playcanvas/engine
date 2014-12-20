@@ -9,14 +9,14 @@ pc.extend(pc.fw, function () {
     * @extends pc.fw.Component
     * @property {Boolean} enabled If true the camera will be added to the active cameras of the {@link pc.fw.CameraComponentSystem} and rendered with all the other active cameras.
     * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
-    * @property {pc.scene.Camera} camera The {@link pc.scene.CameraNode} used to render the scene
+    * @property {pc.Camera} camera The {@link pc.CameraNode} used to render the scene
     * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render
     * @property {Number} nearClip The distance from the camera before which no rendering will take place
     * @property {Number} farClip The distance from the camera after which no rendering will take place
-    * @property {Number} fov The Y-axis field of view of the camera, in degrees. Used for {@link pc.scene.Projection.PERSPECTIVE} cameras only. Defaults to 45.
-    * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.scene.Projection.ORTHOGRAPHIC} cameras only. Defaults to 10.
+    * @property {Number} fov The Y-axis field of view of the camera, in degrees. Used for {@link pc.Projection.PERSPECTIVE} cameras only. Defaults to 45.
+    * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.Projection.ORTHOGRAPHIC} cameras only. Defaults to 10.
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
-    * @property {pc.scene.Projection} projection The type of projection used to render the camera.
+    * @property {pc.Projection} projection The type of projection used to render the camera.
     * @property {Number} priority Controls which camera will be rendered first. Smaller numbers are rendered first.
     * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
     * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.

@@ -152,10 +152,10 @@ pc.extend(pc.fw, function () {
             options: {
                 enumerations: [{
                     name: 'Linear',
-                    value: pc.scene.LIGHTFALLOFF_LINEAR
+                    value: pc.LIGHTFALLOFF_LINEAR
                 }, {
                     name: 'Inverse squared',
-                    value: pc.scene.LIGHTFALLOFF_INVERSESQUARED
+                    value: pc.LIGHTFALLOFF_INVERSESQUARED
                 }]
             },
             defaultValue: 0,
@@ -310,7 +310,7 @@ pc.extend(pc.fw, function () {
         },
 
         _createLightNode: function (component, data) {
-            var node = new pc.scene.LightNode();
+            var node = new pc.LightNode();
             node.setName(data.type + "light");
             node.setType(this._getLightType());
             return node;
@@ -323,7 +323,7 @@ pc.extend(pc.fw, function () {
         _createDebugShape: function (component, data, node) {
             var context = this.system.context;
 
-            var model = new pc.scene.Model();
+            var model = new pc.Model();
             model.graph = node;
             model.lights = [ node ];
 
@@ -334,7 +334,7 @@ pc.extend(pc.fw, function () {
                     this.material = this._createDebugMaterial();
                 }
 
-                model.meshInstances = [ new pc.scene.MeshInstance(node, this.mesh, this.material) ];
+                model.meshInstances = [ new pc.MeshInstance(node, this.mesh, this.material) ];
             }
 
             context.scene.addModel(model);
@@ -372,7 +372,7 @@ pc.extend(pc.fw, function () {
     DirectionalLightImplementation = pc.inherits(DirectionalLightImplementation, LightComponentImplementation);
     DirectionalLightImplementation.prototype = pc.extend(DirectionalLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LIGHTTYPE_DIRECTIONAL;
+            return pc.LIGHTTYPE_DIRECTIONAL;
         },
 
         _createDebugMesh: function () {
@@ -419,7 +419,7 @@ pc.extend(pc.fw, function () {
                 positions[i] = vertexData[i];
             }
             vertexBuffer.unlock();
-            var mesh = new pc.scene.Mesh();
+            var mesh = new pc.Mesh();
             mesh.vertexBuffer = vertexBuffer;
             mesh.indexBuffer[0] = null;
             mesh.primitive[0].type = pc.PRIMITIVE_LINES;
@@ -430,7 +430,7 @@ pc.extend(pc.fw, function () {
         },
 
         _createDebugMaterial: function () {
-            var material = new pc.scene.BasicMaterial();
+            var material = new pc.BasicMaterial();
             material.color = new pc.Color(1, 1, 0, 1);
             material.update();
             return material;
@@ -446,7 +446,7 @@ pc.extend(pc.fw, function () {
     PointLightImplementation = pc.inherits(PointLightImplementation, LightComponentImplementation);
     PointLightImplementation.prototype = pc.extend(PointLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LIGHTTYPE_POINT;
+            return pc.LIGHTTYPE_POINT;
         },
 
         _createDebugMesh: function () {
@@ -455,13 +455,13 @@ pc.extend(pc.fw, function () {
             }
 
             var context = this.system.context;
-            return pc.scene.procedural.createSphere(context.graphicsDevice, {
+            return pc.procedural.createSphere(context.graphicsDevice, {
                 radius: 0.1
             });
         },
 
         _createDebugMaterial: function () {
-            var material = new pc.scene.BasicMaterial();
+            var material = new pc.BasicMaterial();
             material.color = new pc.Color(1, 1, 0, 1);
             material.update();
             return material;
@@ -478,7 +478,7 @@ pc.extend(pc.fw, function () {
     SpotLightImplementation = pc.inherits(SpotLightImplementation, LightComponentImplementation);
     SpotLightImplementation.prototype = pc.extend(SpotLightImplementation.prototype, {
         _getLightType: function() {
-            return pc.scene.LIGHTTYPE_SPOT;
+            return pc.LIGHTTYPE_SPOT;
         },
 
         _createDebugMesh: function () {
@@ -511,7 +511,7 @@ pc.extend(pc.fw, function () {
 
             var vertexBuffer = new pc.VertexBuffer(context.graphicsDevice, vertexFormat, 42, pc.BUFFER_DYNAMIC);
 
-            var mesh = new pc.scene.Mesh();
+            var mesh = new pc.Mesh();
             mesh.vertexBuffer = vertexBuffer;
             mesh.indexBuffer[0] = indexBuffer;
             mesh.primitive[0].type = pc.PRIMITIVE_LINES;
@@ -524,7 +524,7 @@ pc.extend(pc.fw, function () {
         },
 
         _createDebugMaterial: function () {
-            return new pc.scene.BasicMaterial();
+            return new pc.BasicMaterial();
         },
 
         toolsUpdate: function (data) {

@@ -1,10 +1,10 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
 
     var _tempTiling = new pc.Vec3();
     var _tempOffset = new pc.Vec3();
 
     /**
-     * @name pc.scene.PhongMaterial
+     * @name pc.PhongMaterial
      * @class A Phong material is the main, general purpose material that is most often used for rendering.
      * It can approximate a wide variety of surface types and can simlulate dynamic reflected light.
      * @property {pc.Color} ambient The ambient color of the material. This color value is 3-component (RGB),
@@ -38,14 +38,14 @@ pc.extend(pc.scene, function () {
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
      * transparent and 1 is fully opaque. If you want the material to be transparent you also need to
-     * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
+     * set the {@link pc.PhongMaterial#blendType} to pc.BLEND_NORMAL or pc.BLEND_ADDITIVE.
      * @property {pc.Texture} opacityMap The opacity map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for opacity
      * in preference to the 'opacity' property. If you want the material to be transparent you also need to
-     * set the {@link pc.scene.PhongMaterial#blendType} to pc.scene.BLEND_NORMAL or pc.scene.BLEND_ADDITIVE.
+     * set the {@link pc.PhongMaterial#blendType} to pc.BLEND_NORMAL or pc.BLEND_ADDITIVE.
      * @property {pc.Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
      * @property {pc.Vec2} opacityMapOffset Controls the 2D offset of the opacity map. Each component is between 0 and 1.
-     * @property {Number} blendType The type of blending for this material. Can be one of the following valus: pc.scene.BLEND_NONE, pc.scene.BLEND_NORMAL, pc.scene.BLEND_ADDITIVE.
+     * @property {Number} blendType The type of blending for this material. Can be one of the following valus: pc.BLEND_NONE, pc.BLEND_NORMAL, pc.BLEND_ADDITIVE.
      * @property {pc.Texture} normalMap The normal map of the material. This must be a 2D texture rather
      * than a cube map. The texture must contains normalized, tangent space normals.
      * @property {pc.Vec2} normalMapTiling Controls the 2D tiling of the normal map.
@@ -77,17 +77,17 @@ pc.extend(pc.scene, function () {
         It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
      * @property {Number} shadingModel Defines the shading model.
      * <ul>
-     * <li><strong>{@link pc.scene.SPECULAR_PHONG}</strong>: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
-     * <li><strong>{@link pc.scene.SPECULAR_BLINN}</strong>: Energy-conserving Blinn-Phong.</li>
+     * <li><strong>{@link pc.SPECULAR_PHONG}</strong>: Phong without energy conservation. You should only use it as a backwards compatibility with older projects.</li>
+     * <li><strong>{@link pc.SPECULAR_BLINN}</strong>: Energy-conserving Blinn-Phong.</li>
      * </ul>
      * @property {Number} fresnelModel Defines the formula used for Fresnel effect.
      As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined.
      When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behaviour is defined by conserveEnergy parameter.
      * <ul>
-     * <li><strong>{@link pc.scene.FRESNEL_NONE}</strong>: No Fresnel.</li>
-     * <li><strong>{@link pc.scene.FRESNEL_SIMPLE}</strong>: Fake effect resembling Fresnel with formula pow(dotVN, fresnelFactor). Use fresnelFactor to tweak effect power</li>
-     * <li><strong>{@link pc.scene.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color. fresnelFactor is not used.</li>
-     * <li><strong>{@link pc.scene.FRESNEL_COMPLEX}</strong>: More complex Fresnel formula. Use fresnelFactor to specify IOR values.</li>
+     * <li><strong>{@link pc.FRESNEL_NONE}</strong>: No Fresnel.</li>
+     * <li><strong>{@link pc.FRESNEL_SIMPLE}</strong>: Fake effect resembling Fresnel with formula pow(dotVN, fresnelFactor). Use fresnelFactor to tweak effect power</li>
+     * <li><strong>{@link pc.FRESNEL_SCHLICK}</strong>: Schlick's approximation of Fresnel (recommended). Parameterized by specular color. fresnelFactor is not used.</li>
+     * <li><strong>{@link pc.FRESNEL_COMPLEX}</strong>: More complex Fresnel formula. Use fresnelFactor to specify IOR values.</li>
      * </ul>
      * @property {Number} fresnelFactor A parameter for Fresnel. May mean different things depending on fresnelModel.
      * @author Will Eastcott and Arthur Rahteenko
@@ -122,20 +122,20 @@ pc.extend(pc.scene, function () {
     };
 
 
-    PhongMaterial = pc.inherits(PhongMaterial, pc.scene.Material);
+    PhongMaterial = pc.inherits(PhongMaterial, pc.Material);
 
     pc.extend(PhongMaterial.prototype, {
         /**
          * @function
-         * @name pc.scene.PhongMaterial#clone
+         * @name pc.PhongMaterial#clone
          * @description Duplicates a Phong material. All properties are duplicated except textures
          * where only the references are copied.
-         * @returns {pc.scene.PhongMaterial} A cloned Phong material.
+         * @returns {pc.PhongMaterial} A cloned Phong material.
          */
         clone: function () {
-            var clone = new pc.scene.PhongMaterial();
+            var clone = new pc.PhongMaterial();
 
-            pc.scene.Material.prototype._cloneInternal.call(this, clone);
+            pc.Material.prototype._cloneInternal.call(this, clone);
 
             clone.ambient.copy(this.ambient);
 
@@ -215,7 +215,7 @@ pc.extend(pc.scene, function () {
 
         /**
         * @private
-        * @name pc.scene.PhoneMaterial#init
+        * @name pc.PhoneMaterial#init
         * @description Update material data from a data block, as found on a material Asset.
         * Note, init() expects texture parameters to contain a {@link pc.Texture} not a resource id.
         */
@@ -437,7 +437,7 @@ pc.extend(pc.scene, function () {
             this.opacityMapTiling = new pc.Vec2(1, 1);
             this.opacityMapOffset = new pc.Vec2(0, 0);
             this.opacityMapTransform = null;
-            this.blendType = pc.scene.BLEND_NONE;
+            this.blendType = pc.BLEND_NONE;
 
             this.normalMap = null;
             this.normalMapTransform = null;
@@ -468,8 +468,8 @@ pc.extend(pc.scene, function () {
             this.specularAntialias = false;
             this.conserveEnergy = true;
             this.occludeSpecular = true;
-            this.shadingModel = pc.scene.SPECULAR_PHONG;
-            this.fresnelModel = pc.scene.FRESNEL_NONE;
+            this.shadingModel = pc.SPECULAR_PHONG;
+            this.fresnelModel = pc.FRESNEL_NONE;
 
             this.fresnelFactor = 0;
 
@@ -574,7 +574,7 @@ pc.extend(pc.scene, function () {
                 // Shininess is 0-100 value
                 // which is actually a 0-1 glosiness value.
                 // Can be converted to specular power using exp2(shininess * 0.01 * 11)
-                if (this.shadingModel===pc.scene.SPECULAR_PHONG) {
+                if (this.shadingModel===pc.SPECULAR_PHONG) {
                     this.setParameter('material_shininess', Math.pow(2, this.shininess * 0.01 * 11)); // legacy: expand back to specular power
                 } else {
                     this.setParameter('material_shininess', this.shininess * 0.01); // correct
@@ -808,9 +808,9 @@ pc.extend(pc.scene, function () {
             this._mapXForms = null;
 
             var lightsSorted = [];
-            this._collectLights(pc.scene.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted);
-            this._collectLights(pc.scene.LIGHTTYPE_POINT,       lights, lightsSorted);
-            this._collectLights(pc.scene.LIGHTTYPE_SPOT,        lights, lightsSorted);
+            this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted);
+            this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted);
+            this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted);
 
             options.lights = lightsSorted;
 

@@ -167,7 +167,7 @@ pc.extend(pc.fw, function () {
             texture.setSource(sources);
         }
 
-        var material = new pc.scene.Material();
+        var material = new pc.Material();
         material.updateShader = function() {
             var library = gd.getProgramLibrary();
             var shader = library.getProgram('skybox', {hdr:false, gamma:context.scene.gammaCorrection, toneMapping:context.scene.toneMapping});
@@ -178,11 +178,11 @@ pc.extend(pc.fw, function () {
         material.setParameter("texture_cubeMap", texture);
         material.cull = pc.CULLFACE_NONE;
 
-        var node = new pc.scene.GraphNode();
-        var mesh = pc.scene.procedural.createBox(gd);
-        var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+        var node = new pc.GraphNode();
+        var mesh = pc.procedural.createBox(gd);
+        var meshInstance = new pc.MeshInstance(node, mesh, material);
 
-        var model = new pc.scene.Model();
+        var model = new pc.Model();
         model.graph = node;
         model.meshInstances = [ meshInstance ];
 
@@ -192,7 +192,7 @@ pc.extend(pc.fw, function () {
     var _createSkyboxFromCubemap = function (entity, context, cubemap) {
         var gd = context.graphicsDevice;
 
-        var material = new pc.scene.Material();
+        var material = new pc.Material();
         material.updateShader = function() {
             var library = gd.getProgramLibrary();
             var shader = library.getProgram('skybox', {hdr:cubemap.hdr, prefiltered:true, gamma:context.scene.gammaCorrection, toneMapping:context.scene.toneMapping});
@@ -203,11 +203,11 @@ pc.extend(pc.fw, function () {
         material.setParameter("texture_cubeMap", cubemap);
         material.cull = pc.CULLFACE_NONE;
 
-        var node = new pc.scene.GraphNode();
-        var mesh = pc.scene.procedural.createBox(gd);
-        var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+        var node = new pc.GraphNode();
+        var mesh = pc.procedural.createBox(gd);
+        var meshInstance = new pc.MeshInstance(node, mesh, material);
 
-        var model = new pc.scene.Model();
+        var model = new pc.Model();
         model.graph = node;
         model.meshInstances = [ meshInstance ];
 

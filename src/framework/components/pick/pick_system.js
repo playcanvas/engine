@@ -41,10 +41,10 @@ pc.extend(pc.fw, function () {
         
     pc.extend(PickComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
-            // This material is swapped out for a pick material by the pc.scene.Picker. However,
+            // This material is swapped out for a pick material by the pc.Picker. However,
             // since it's useful to debug the pick shapes visually, we'll put a default phong
             // material on the pick shapes.
-            data.material = new pc.scene.PhongMaterial();
+            data.material = new pc.PhongMaterial();
 
             properties = ['material'];
             PickComponentSystem._super.initializeComponentData.call(this, component, data, properties);

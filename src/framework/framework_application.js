@@ -60,7 +60,7 @@ pc.extend(pc.fw, function () {
         }
 
         // The ApplicationContext is passed to new Components and user scripts
-        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
+        this.context = new pc.fw.ApplicationContext(loader, new pc.Scene(), this.graphicsDevice, registry, options);
 
         if (options.content) {
             this.content = options.content;
@@ -84,7 +84,7 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
-        this.renderer = new pc.scene.ForwardRenderer(this.graphicsDevice);
+        this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
 
         // Register the ScriptResourceHandler late as we need the context
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));

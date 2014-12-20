@@ -220,7 +220,7 @@ pc.extend(pc, function () {
                 camera.camera.setRect(0, 0, 1, 1);
 
                 // create a new command that renders all of the effects one after the other
-                this.command = new pc.scene.Command(pc.scene.LAYER_FX, pc.scene.BLEND_NONE, function () {
+                this.command = new pc.Command(pc.LAYER_FX, pc.BLEND_NONE, function () {
                     if (this.enabled && camera.data.isRendering) {
                         var rect = null;
                         var len = effects.length;

@@ -712,6 +712,6 @@
     pc.extend(pc, enums);
 
     // For backwards compatibility
-    pc = {};
-    pc.extend(pc, enums);
+    pc.input = {};
+    pc.extend(pc.input, enums);
 }());

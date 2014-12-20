@@ -31,8 +31,8 @@ pc.extend(pc.fw, function () {
      * @property {Number} outerConeAngle The angle at which the spotlight cone has faded to nothing. (Spot lights only)
      * @property {Number} falloffMode Controls the rate at which a light attentuates from its position. (Point and spot lights only)
      * <ul>
-     * <li><strong>{@link pc.scene.LIGHTFALLOFF_LINEAR}</strong>: Linear.</li>
-     * <li><strong>{@link pc.scene.LIGHTFALLOFF_INVERSESQUARED}</strong>: Inverse squared.</li>
+     * <li><strong>{@link pc.LIGHTFALLOFF_LINEAR}</strong>: Linear.</li>
+     * <li><strong>{@link pc.LIGHTFALLOFF_INVERSESQUARED}</strong>: Inverse squared.</li>
      * </ul>
      * @extends pc.fw.Component
      */

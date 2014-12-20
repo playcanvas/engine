@@ -1,4 +1,4 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
 
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones

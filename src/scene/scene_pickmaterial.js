@@ -1,7 +1,7 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.scene.PickMaterial
+     * @name pc.PickMaterial
      * @class A Pick material is for rendering a scene into the frame buffer such that different meshes
      * have different colors that can be queried on a frame buffer read at a specific pixel (normally a
      * click coordinate). This implements frame buffer picking.
@@ -15,18 +15,18 @@ pc.extend(pc.scene, function () {
         this.update();
     };
 
-    PickMaterial = pc.inherits(PickMaterial, pc.scene.Material);
+    PickMaterial = pc.inherits(PickMaterial, pc.Material);
 
     pc.extend(PickMaterial.prototype, {
         /**
          * @function
-         * @name pc.scene.PickMaterial#clone
+         * @name pc.PickMaterial#clone
          * @description Duplicates a Basic material. All properties are duplicated except textures
          * where only the references are copied.
-         * @returns {pc.scene.PickMaterial} A cloned Basic material.
+         * @returns {pc.PickMaterial} A cloned Basic material.
          */
         clone: function () {
-            var clone = new pc.scene.PickMaterial();
+            var clone = new pc.PickMaterial();
 
             Material.prototype._cloneInternal.call(this, clone);
 

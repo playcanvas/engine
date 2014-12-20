@@ -49,7 +49,7 @@ pc.extend(pc.fw, function () {
                 targets.push(target);
             }
 
-            var camera = new pc.scene.CameraNode();
+            var camera = new pc.CameraNode();
             camera.setNearClip(0.01);
             camera.setFarClip(10000);
             camera.setAspectRatio(1);

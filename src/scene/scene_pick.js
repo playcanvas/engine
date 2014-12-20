@@ -1,7 +1,7 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.scene.Picker
+     * @name pc.Picker
      * @class Picker object used to select mesh instances from screen coordinates.
      * @constructor Create a new instance of a Picker object
      * @param {pc.GraphicsDevice} device Graphics device used to manage internal graphics resources.
@@ -36,7 +36,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Picker#getSelection
+     * @name pc.Picker#getSelection
      * @description Return the list of mesh instances selected by the specified rectangle in the
      * previously prepared pick buffer.
      * @param {Object} rect The selection rectangle.
@@ -102,13 +102,13 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Picker#prepare
+     * @name pc.Picker#prepare
      * @description Primes the pick buffer with a rendering of the specified models from the point of view
-     * of the supplied camera. Once the pick buffer has been prepared, pc.scene.Picker#getSelection can be
+     * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change 
-     * in any way, pc.scene.Picker#prepare does not need to be called again.
-     * @param {pc.scene.CameraNode} camera The camera used to render the scene, note this is the CameraNode, not an Entity
-     * @param {pc.scene.Scene} scene The scene containing the pickable mesh instances.
+     * in any way, pc.Picker#prepare does not need to be called again.
+     * @param {pc.CameraNode} camera The camera used to render the scene, note this is the CameraNode, not an Entity
+     * @param {pc.Scene} scene The scene containing the pickable mesh instances.
      */
     Picker.prototype.prepare = function (camera, scene) {
         var device = this.device;
@@ -156,9 +156,9 @@ pc.extend(pc.scene, function () {
                 mesh = meshInstance.mesh;
                 material = meshInstance.material;
 
-                type = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].type;
+                type = mesh.primitive[pc.RENDERSTYLE_SOLID].type;
                 var isSolid = (type === pc.PRIMITIVE_TRIANGLES) || (type === pc.PRIMITIVE_TRISTRIP) || (type === pc.PRIMITIVE_TRIFAN);
-                var isPickable = (material instanceof pc.scene.PhongMaterial) || (material instanceof pc.scene.BasicMaterial);
+                var isPickable = (material instanceof pc.PhongMaterial) || (material instanceof pc.BasicMaterial);
                 if (isSolid && isPickable) {
 
                     device.setBlending(false);
@@ -186,8 +186,8 @@ pc.extend(pc.scene, function () {
                     device.setShader(mesh.skin ? this.pickProgSkin : this.pickProgStatic);
 
                     device.setVertexBuffer(mesh.vertexBuffer, 0);
-                    device.setIndexBuffer(mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID]);
-                    device.draw(mesh.primitive[pc.scene.RENDERSTYLE_SOLID]);
+                    device.setIndexBuffer(mesh.indexBuffer[pc.RENDERSTYLE_SOLID]);
+                    device.draw(mesh.primitive[pc.RENDERSTYLE_SOLID]);
                 }
             }
         }
@@ -202,11 +202,11 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Picker#resize
+     * @name pc.Picker#resize
      * @description Sets the resolution of the pick buffer. The pick buffer resolution does not need
      * to match the resolution of the corresponding frame buffer use for general rendering of the 
      * 3D scene. However, the lower the resolution of the pick buffer, the less accurate the selection
-     * results returned by pc.scene.Picker#getSelection. On the other hand, smaller pick buffers will
+     * results returned by pc.Picker#getSelection. On the other hand, smaller pick buffers will
      * yield greater performance, so there is a trade off.
      * @param {Number} width The width of the pick buffer in pixels.
      * @param {Number} height The height of the pick buffer in pixels.

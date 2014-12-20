@@ -15,7 +15,7 @@ pc.extend(pc.asset, function () {
     *
     * * `file` contains the details of a file (filename, url) which contains the resource data, e.g. an image file for a texture asset
     * * `data` contains a JSON blob which contains either the resource data for the asset (e.g. material data) or additional data for the file (e.g. material mappings for a model)
-    * * `resource` contains the final resource when it is loaded. (e.g. a {@link pc.scene.PhongMaterial} or a {@link pc.Texture})
+    * * `resource` contains the final resource when it is loaded. (e.g. a {@link pc.PhongMaterial} or a {@link pc.Texture})
     *
     * See the {@link pc.asset.AssetRegistry} for details on loading resources from assets.
     * @property {String} name The name of the asset
@@ -26,7 +26,7 @@ pc.extend(pc.asset, function () {
     * @property {Number} [file.size] The size of the resource file
     * @property {String} [file.hash] The MD5 hash of the resource file data and the Asset data field.
     * @property {Object} [data] JSON data that contains either the complete resource data (e.g. in the case of a material) or additional data (e.g. in the case of a model it contains mappings from mesh to material)
-    * @property {Object} [resource] A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.scene.Model}
+    * @property {Object} [resource] A reference to the resource when the asset is loaded. e.g. a {@link pc.Texture} or a {@link pc.Model}
     * @constructor Create a new Asset record. Generally, Assets are created in the loading process and you won't need to create them by hand.
     * @param {String} name A non-unique but human-readable name which can be later used to retrieve the asset.
     * @param {String} type Type of asset. One of ["animation", "audio", "image", "json", "material", "model", "text", "texture"]

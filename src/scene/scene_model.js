@@ -1,13 +1,13 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.scene.Model
+     * @name pc.Model
      * @class A model is a graphical object that can be added to or removed from a scene.
      * It contains a hierarchy and any number of mesh instances.
      * @constructor Creates a new model.
      * @example
      * // Create a new model
-     * var model = new pc.scene.Model();
-     * @property {pc.scene.GraphNode} graph The root node of the model's graph node hierarchy.
+     * var model = new pc.Model();
+     * @property {pc.GraphNode} graph The root node of the model's graph node hierarchy.
      * @property {Array} meshInstances An array of meshInstances contained in this model.
      */
     var Model = function Model() {
@@ -58,11 +58,11 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.Model#clone
+         * @name pc.Model#clone
          * @description Clones a model. The returned model has a newly created hierarchy
          * and mesh instances, but meshes are shared between the clone and the specified
          * model.
-         * @returns {pc.scene.Model} A clone of the specified model.
+         * @returns {pc.Model} A clone of the specified model.
          * @example
          * var clonedModel = model.clone();
          * @author Will Eastcott
@@ -80,9 +80,9 @@ pc.extend(pc.scene, function () {
                 srcNodes.push(node);
                 cloneNodes.push(newNode);
 
-                if (node instanceof pc.scene.CameraNode)
+                if (node instanceof pc.CameraNode)
                     clone.cameras.push(newNode);
-                else if (node instanceof pc.scene.LightNode)
+                else if (node instanceof pc.LightNode)
                     clone.lights.push(newNode);
 
                 var children = node.getChildren();
@@ -100,7 +100,7 @@ pc.extend(pc.scene, function () {
             // Clone the skin instances
             for (i = 0; i < this.skinInstances.length; i++) {
                 var skin = this.skinInstances[i].skin;
-                var cloneSkinInstance = new pc.scene.SkinInstance(skin);
+                var cloneSkinInstance = new pc.SkinInstance(skin);
 
                 // Resolve bone IDs to actual graph nodes
                 var bones = [];
@@ -118,7 +118,7 @@ pc.extend(pc.scene, function () {
             for (i = 0; i < this.meshInstances.length; i++) {
                 var meshInstance = this.meshInstances[i];
                 var nodeIndex = srcNodes.indexOf(meshInstance.node);
-                var cloneMeshInstance = new pc.scene.MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
+                var cloneMeshInstance = new pc.MeshInstance(cloneNodes[nodeIndex], meshInstance.mesh, meshInstance.material);
 
                 if (meshInstance.skinInstance) {
                     var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
@@ -128,7 +128,7 @@ pc.extend(pc.scene, function () {
                 cloneMeshInstances.push(cloneMeshInstance);
             }
 
-            var clone = new pc.scene.Model();
+            var clone = new pc.Model();
             clone.graph = cloneGraph;
             clone.meshInstances = cloneMeshInstances;
             clone.skinInstances = cloneSkinInstances;
@@ -140,15 +140,15 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.Model#generateWireframe
+         * @name pc.Model#generateWireframe
          * @description Generates the necessary internal data for a model to be
          * renderable as wireframe. Once this function has been called, any mesh
          * instance in the model can have its renderStyle property set to
-         * pc.scene.RENDERSTYLE_WIREFRAME
+         * pc.RENDERSTYLE_WIREFRAME
          * @example
          * model.generateWireframe();
          * for (var i = 0; i < model.meshInstances.length; i++) {
-         *     model.meshInstances[i].renderStyle = pc.scene.RENDERSTYLE_WIREFRAME;
+         *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
          * }
          * @author Will Eastcott
          */
@@ -170,9 +170,9 @@ pc.extend(pc.scene, function () {
             var offsets = [[0, 1], [1, 2], [2, 0]];
             for (i = 0; i < meshes.length; i++) {
                 mesh = meshes[i];
-                base = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].base;
-                count = mesh.primitive[pc.scene.RENDERSTYLE_SOLID].count;
-                indexBuffer = mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID];
+                base = mesh.primitive[pc.RENDERSTYLE_SOLID].base;
+                count = mesh.primitive[pc.RENDERSTYLE_SOLID].count;
+                indexBuffer = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
 
                 srcIndices = new Uint16Array(indexBuffer.lock());
 
@@ -197,18 +197,18 @@ pc.extend(pc.scene, function () {
                 dstIndices.set(lines);
                 wireBuffer.unlock();
 
-                mesh.primitive[pc.scene.RENDERSTYLE_WIREFRAME] = {
+                mesh.primitive[pc.RENDERSTYLE_WIREFRAME] = {
                     type: pc.PRIMITIVE_LINES,
                     base: 0,
                     count: lines.length,
                     indexed: true
                 };
-                mesh.indexBuffer[pc.scene.RENDERSTYLE_WIREFRAME] = wireBuffer;
+                mesh.indexBuffer[pc.RENDERSTYLE_WIREFRAME] = wireBuffer;
             }
         }
     };
-    
-	return {
-		Model: Model
-	};
+
+    return {
+        Model: Model
+    };
 }());

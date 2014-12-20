@@ -44,11 +44,11 @@ pc.programlib.phong = {
         var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
         if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
 
-        if (options.shadingModel===pc.scene.SPECULAR_PHONG) {
+        if (options.shadingModel===pc.SPECULAR_PHONG) {
             options.fresnelModel = 0;
             options.specularAA = false;
         } else {
-            options.fresnelModel = (options.fresnelModel===0)? pc.scene.FRESNEL_SCHLICK : options.fresnelModel;
+            options.fresnelModel = (options.fresnelModel===0)? pc.FRESNEL_SCHLICK : options.fresnelModel;
         }
 
         this.options = options;
@@ -159,12 +159,12 @@ pc.programlib.phong = {
         for (i = 0; i < options.lights.length; i++) {
             var lightType = options.lights[i].getType();
             code += "uniform vec3 light" + i + "_color;\n";
-            if (lightType==pc.scene.LIGHTTYPE_DIRECTIONAL) {
+            if (lightType==pc.LIGHTTYPE_DIRECTIONAL) {
                 code += "uniform vec3 light" + i + "_direction;\n";
             } else {
                 code += "uniform vec3 light" + i + "_position;\n";
                 code += "uniform float light" + i + "_radius;\n";
-                if (lightType==pc.scene.LIGHTTYPE_SPOT) {
+                if (lightType==pc.LIGHTTYPE_SPOT) {
                     code += "uniform vec3 light" + i + "_spotDirection;\n";
                     code += "uniform float light" + i + "_innerConeAngle;\n";
                     code += "uniform float light" + i + "_outerConeAngle;\n";
@@ -172,12 +172,12 @@ pc.programlib.phong = {
             }
             if (options.lights[i].getCastShadows()) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
-                if (lightType==pc.scene.LIGHTTYPE_POINT) {
+                if (lightType==pc.LIGHTTYPE_POINT) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
                 } else {
                     code += "uniform vec3 light" + i + "_shadowParams;\n"; // Width, height, bias
                 }
-                if (lightType==pc.scene.LIGHTTYPE_POINT) {
+                if (lightType==pc.LIGHTTYPE_POINT) {
                     code += "uniform samplerCube light" + i + "_shadowMap;\n";
                 } else {
                     code += "uniform sampler2D light" + i + "_shadowMap;\n";
@@ -250,11 +250,11 @@ pc.programlib.phong = {
                 code += chunks.specularityColorPS;
             }
             if (options.fresnelModel > 0) {
-                if (options.fresnelModel === pc.scene.FRESNEL_SIMPLE) {
+                if (options.fresnelModel === pc.FRESNEL_SIMPLE) {
                     code += chunks.fresnelSimplePS;
-                } else if (options.fresnelModel === pc.scene.FRESNEL_SCHLICK) {
+                } else if (options.fresnelModel === pc.FRESNEL_SCHLICK) {
                     code += chunks.fresnelSchlickPS;
-                } else if (options.fresnelModel === pc.scene.FRESNEL_COMPLEX) {
+                } else if (options.fresnelModel === pc.FRESNEL_COMPLEX) {
                     code += chunks.fresnelComplexPS;
                 }
             }
@@ -345,7 +345,7 @@ pc.programlib.phong = {
 
         code += chunks.lightDiffuseLambertPS;
         if (options.useSpecular) {
-            code += options.shadingModel===pc.scene.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
+            code += options.shadingModel===pc.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || options.cubeMap || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy) {
@@ -424,25 +424,25 @@ pc.programlib.phong = {
 
                 var lightType = options.lights[i].getType();
 
-                if (lightType==pc.scene.LIGHTTYPE_DIRECTIONAL) {
+                if (lightType==pc.LIGHTTYPE_DIRECTIONAL) {
                     // directional
                     code += "   data.lightDirNormW = light"+i+"_direction;\n";
                     code += "   data.atten = 1.0;\n";
                 } else {
                     code += "   getLightDirPoint(data, light"+i+"_position);\n";
-                    if (options.lights[i].getFalloffMode()==pc.scene.LIGHTFALLOFF_LINEAR) {
+                    if (options.lights[i].getFalloffMode()==pc.LIGHTFALLOFF_LINEAR) {
                         code += "   data.atten = getFalloffLinear(data, light"+i+"_radius);\n";
                     } else {
                         code += "   data.atten = getFalloffInvSquared(data, light"+i+"_radius);\n";
                     }
-                    if (lightType==pc.scene.LIGHTTYPE_SPOT) {
+                    if (lightType==pc.LIGHTTYPE_SPOT) {
                         code += "   data.atten *= getSpotEffect(data, light"+i+"_spotDirection, light"+i+"_innerConeAngle, light"+i+"_outerConeAngle);\n";
                     }
                 }
 
                 code += "   data.atten *= getLightDiffuse(data);\n";
                 if (options.lights[i].getCastShadows()) {
-                    if (lightType==pc.scene.LIGHTTYPE_POINT) {
+                    if (lightType==pc.LIGHTTYPE_POINT) {
                         var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
                         if (!options.lights[i].getNormalOffsetBias()) {
                             code += "   data.atten *= getShadowPoint" + shadowCoordArgs;
@@ -452,13 +452,13 @@ pc.programlib.phong = {
                     } else {
                         var shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
                         if (!options.lights[i].getNormalOffsetBias()) {
-                            if (lightType==pc.scene.LIGHTTYPE_SPOT) {
+                            if (lightType==pc.LIGHTTYPE_SPOT) {
                                 code += "   getShadowCoordPersp" + shadowCoordArgs;
                             } else {
                                 code += "   getShadowCoordOrtho" + shadowCoordArgs;
                             }
                         } else {
-                            if (lightType==pc.scene.LIGHTTYPE_SPOT) {
+                            if (lightType==pc.LIGHTTYPE_SPOT) {
                                 code += "   getShadowCoordPerspNormalOffset" + shadowCoordArgs;
                             } else {
                                 code += "   getShadowCoordOrthoNormalOffset" + shadowCoordArgs;

@@ -1,8 +1,8 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
     var id = 0;
 
     /**
-     * @name pc.scene.Material
+     * @name pc.Material
      * @class A material.
      */
     var Material = function Material() {
@@ -39,58 +39,58 @@ pc.extend(pc.scene, function () {
                 (this.blendSrc === pc.BLENDMODE_ONE) &&
                 (this.blendDst === pc.BLENDMODE_ZERO) &&
                 (this.blendEquation === pc.BLENDEQUATION_ADD)) {
-                return pc.scene.BLEND_NONE;
+                return pc.BLEND_NONE;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_SRC_ALPHA) &&
                        (this.blendDst === pc.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
-                return pc.scene.BLEND_NORMAL;
+                return pc.BLEND_NORMAL;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_ONE) &&
                        (this.blendDst === pc.BLENDMODE_ONE) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
-                return pc.scene.BLEND_ADDITIVE;
+                return pc.BLEND_ADDITIVE;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
                        (this.blendDst === pc.BLENDMODE_ZERO) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
-                return pc.scene.BLEND_MULTIPLICATIVE;
+                return pc.BLEND_MULTIPLICATIVE;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_ONE) &&
                        (this.blendDst === pc.BLENDMODE_ONE_MINUS_SRC_ALPHA) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
-                return pc.scene.BLEND_PREMULTIPLIED;
+                return pc.BLEND_PREMULTIPLIED;
             } else {
-                return pc.scene.BLEND_NORMAL;
+                return pc.BLEND_NORMAL;
             }
         },
         set: function (type) {
             switch (type) {
-                case pc.scene.BLEND_NONE:
+                case pc.BLEND_NONE:
                     this.blend = false;
                     this.blendSrc = pc.BLENDMODE_ONE;
                     this.blendDst = pc.BLENDMODE_ZERO;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
-                case pc.scene.BLEND_NORMAL:
+                case pc.BLEND_NORMAL:
                     this.blend = true;
                     this.blendSrc = pc.BLENDMODE_SRC_ALPHA;
                     this.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
-                case pc.scene.BLEND_PREMULTIPLIED:
+                case pc.BLEND_PREMULTIPLIED:
                     this.blend = true;
                     this.blendSrc = pc.BLENDMODE_ONE;
                     this.blendDst = pc.BLENDMODE_ONE_MINUS_SRC_ALPHA;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
-                case pc.scene.BLEND_ADDITIVE:
+                case pc.BLEND_ADDITIVE:
                     this.blend = true;
                     this.blendSrc = pc.BLENDMODE_ONE;
                     this.blendDst = pc.BLENDMODE_ONE;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
-                case pc.scene.BLEND_MULTIPLICATIVE:
+                case pc.BLEND_MULTIPLICATIVE:
                     this.blend = true;
                     this.blendSrc = pc.BLENDMODE_DST_COLOR;
                     this.blendDst = pc.BLENDMODE_ZERO;
@@ -130,7 +130,7 @@ pc.extend(pc.scene, function () {
     },
 
     Material.prototype.clone = function () {
-        var clone = new pc.scene.Material();
+        var clone = new pc.Material();
         this._cloneInternal(clone);
         return clone;
     },
@@ -148,7 +148,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Material#getName
+     * @name pc.Material#getName
      * @description Returns the string name of the specified material. This name is not
      * necessarily unique. Material names set by an artist within the modelling application
      * should be preserved in the PlayCanvas runtime.
@@ -161,7 +161,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Material#setName
+     * @name pc.Material#setName
      * @description Sets the string name of the specified material. This name does not
      * have to be unique.
      * @param {string} name The name of the material.
@@ -182,7 +182,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Material#getParameter
+     * @name pc.Material#getParameter
      * @description Retrieves the specified shader parameter from a material.
      * @name {string} name The name of the parameter to query.
      * @returns {Object} The named parameter.
@@ -194,7 +194,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Material#setParameter
+     * @name pc.Material#setParameter
      * @description Sets a shader parameter on a material.
      * @name {string} name The name of the parameter to set.
      * @name {number|Array|pc.Texture} data The value for the specified parameter.
@@ -214,7 +214,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Material#deleteParameter
+     * @name pc.Material#deleteParameter
      * @description Deletes a shader parameter on a material.
      * @name {string} name The name of the parameter to delete.
      * @author Will Eastcott
@@ -227,7 +227,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Material#setParameters
+     * @name pc.Material#setParameters
      * @description Pushes all material parameters into scope.
      * @author Will Eastcott
      */
@@ -244,7 +244,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Material#getShader
+     * @name pc.Material#getShader
      * @description Retrieves the shader assigned to the specified material.
      * @returns {pc.Shader} The shader assigned to the material.
      * @author Will Eastcott
@@ -255,7 +255,7 @@ pc.extend(pc.scene, function () {
 
     /**
      * @function
-     * @name pc.scene.Material#setShader
+     * @name pc.Material#setShader
      * @description Assigns a shader to the specified material.
      * @param {pc.Shader} shader The shader to assign to the material.
      * @author Will Eastcott

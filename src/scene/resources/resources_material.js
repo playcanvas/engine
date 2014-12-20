@@ -88,7 +88,7 @@ pc.extend(pc.resources, function () {
     };
 
     MaterialResourceHandler.prototype.open = function (data, request, options) {
-        var material = new pc.scene.PhongMaterial();
+        var material = new pc.PhongMaterial();
 
         this._updatePhongMaterial(material, data, request);
         var asset = this._getAssetFromRequest(request);
@@ -117,7 +117,7 @@ pc.extend(pc.resources, function () {
         data.parameters.push({
             name: 'shadingModel',
             type: 'float',
-            data: data.shader === 'blinn' ? pc.scene.SPECULAR_BLINN : pc.scene.SPECULAR_PHONG
+            data: data.shader === 'blinn' ? pc.SPECULAR_BLINN : pc.SPECULAR_PHONG
         });
 
         var textures = {};
@@ -227,7 +227,7 @@ pc.extend(pc.resources, function () {
     };
     MaterialRequest = pc.inherits(MaterialRequest, pc.resources.ResourceRequest);
     MaterialRequest.prototype.type = "material";
-    MaterialRequest.prototype.Type = pc.scene.Material;
+    MaterialRequest.prototype.Type = pc.Material;
 
     return {
         MaterialRequest: MaterialRequest,

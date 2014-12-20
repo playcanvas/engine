@@ -21,7 +21,7 @@ pc.extend(pc.fw, function () {
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Number} materialAsset The material {@link pc.Asset.Asset} that will be used to render the model (not used on models of type 'asset')
-     * @property {pc.scene.Model} model The model that is added to the scene graph.
+     * @property {pc.Model} model The model that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity)   {
         this.on("set_type", this.onSetType, this);
@@ -122,12 +122,12 @@ pc.extend(pc.fw, function () {
                             throw new Error("Invalid model type: " + newValue);
                     }
 
-                    var node = new pc.scene.GraphNode();
+                    var node = new pc.GraphNode();
 
-                    var model = new pc.scene.Model();
+                    var model = new pc.Model();
                     model.graph = node;
 
-                    model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
+                    model.meshInstances = [ new pc.MeshInstance(node, mesh, data.material) ];
 
                     if (this.system.context.designer) {
                         model.generateWireframe();
