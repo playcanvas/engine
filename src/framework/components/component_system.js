@@ -68,13 +68,9 @@ pc.extend(pc.fw, function () {
         * @param {Object} data The source data with which to create the compoent
         * @returns {pc.fw.Component} Returns a Component of type defined by the component system
         * @example
-        *   var data = {
-        *       type: 'Box',
-        *       color: new pc.Color(1,1,1)
-        *   };
         *   var entity = new pc.fw.Entity();
-        *   context.systems.primitive.addComponent(entity, data);
-        *   // entity.primitive now set to a PrimitiveComponent
+        *   context.systems.model.addComponent(entity, { type: 'box' });
+        *   // entity.model is now set to a pc.fw.ModelComponent
         */
         addComponent: function (entity, data) {
             var component = new this.ComponentType(this, entity);
@@ -103,8 +99,8 @@ pc.extend(pc.fw, function () {
         * @description Remove the {@link pc.fw.Component} from the entity and delete the associated {@link pc.fw.ComponentData}
         * @param {pc.fw.Entity} entity The entity to remove the component from
         * @example
-        * context.systems.primitive.removeComponent(this.entity);
-        * // this.entity.primitive === undefined
+        * context.systems.model.removeComponent(entity);
+        * // entity.model === undefined
         */
         removeComponent: function (entity) {
             var record = this.dataStore[entity.getGuid()];
