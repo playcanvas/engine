@@ -89,7 +89,6 @@
 ../src/resources/resources_cubemap.js
 ../src/scene/resources/resources_model.js
 ../src/scene/resources/resources_material.js
-../src/anim/anim_anim.js
 ../src/anim/anim_animation.js
 ../src/anim/anim_skeleton.js
 ../src/anim/resources/resources_animation.js

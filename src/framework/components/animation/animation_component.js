@@ -72,7 +72,7 @@ pc.extend(pc.fw, function () {
         * @name pc.fw.AnimationComponent#getAnimation
         * @description Return an animation
         * @param {String} name The name of the animation asset
-        * @returns {pc.anim.Animation} An Animation
+        * @returns {pc.Animation} An Animation
         */
         getAnimation: function (name) {
             return this.data.animations[name];
@@ -83,9 +83,9 @@ pc.extend(pc.fw, function () {
             if (model) {
                 // Create skeletons
                 var graph = model.getGraph();
-                data.fromSkel = new pc.anim.Skeleton(graph);
-                data.toSkel = new pc.anim.Skeleton(graph);
-                data.skeleton = new pc.anim.Skeleton(graph);
+                data.fromSkel = new pc.Skeleton(graph);
+                data.toSkel = new pc.Skeleton(graph);
+                data.skeleton = new pc.Skeleton(graph);
                 data.skeleton.setLooping(data.loop);
                 data.skeleton.setGraph(graph);
             }

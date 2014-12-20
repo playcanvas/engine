@@ -1,5 +1,12 @@
-// Install the low level graphics engine API to the pc.gfx namespace for
+// Install the heavily namespaced APIs to the global pc namespace for
 // backwards compatibility. This will be removed at some point in the future.
+pc.anim = {
+    Animation: pc.Animation,
+    Key: pc.Key,
+    Node: pc.Node,
+    Skeleton: pc.Skeleton
+};
+
 pc.extend(pc.gfx, {
     defaultGamma: pc.defaultGamma,
     defaultTonemapping: pc.defaultTonemapping,
