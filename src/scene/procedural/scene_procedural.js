@@ -1,10 +1,4 @@
 /**
- * @namespace Namespace for functionality related to procedural generation and processing of geometries
- * @name pc
- */
-pc = {};
-
-/**
  * @function
  * @name pc.calculateTangents
  * @description Generates tangent information from the specified vertices, normals, texture coordinates
