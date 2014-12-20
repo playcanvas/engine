@@ -257,7 +257,7 @@ pc.extend(pc.fw, function () {
                 var projection  = component.projection;
 
                 var x, y;
-                if (projection === pc.Projection.PERSPECTIVE) {
+                if (projection === pc.PROJECTION_PERSPECTIVE) {
                     y = Math.tan(fov / 2.0) * nearClip;
                 } else {
                     y = component.camera.getOrthoHeight();
@@ -278,7 +278,7 @@ pc.extend(pc.fw, function () {
                 positions[10] = -y;
                 positions[11] = -nearClip;
 
-                if (projection === pc.Projection.PERSPECTIVE) {
+                if (projection === pc.PROJECTION_PERSPECTIVE) {
                     y = Math.tan(fov / 2.0) * farClip;
                     x = y * aspectRatio;
                 }

@@ -14,7 +14,7 @@ pc.extend(pc.fw, function () {
         this.farClip = 1000;
         this.fov = 45;
         this.orthoHeight = 100;
-        this.projection = pc.Projection.PERSPECTIVE;
+        this.projection = pc.PROJECTION_PERSPECTIVE;
         this.priority = 0;
         this.rect = new pc.Vec4(0,0,1,1);
         this.enabled = true;

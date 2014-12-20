@@ -1,15 +1,10 @@
-pc.Projection = {
-    PERSPECTIVE  : 0,
-    ORTHOGRAPHIC : 1
-};
-
 pc.extend(pc, function () {
     /**
      * @name pc.CameraNode
      * @class A camera.
      */
     var CameraNode = function () {
-        this._projection = pc.Projection.PERSPECTIVE;
+        this._projection = pc.PROJECTION_PERSPECTIVE;
         this._nearClip = 0.1;
         this._farClip = 10000;
         this._fov = 45;
@@ -131,7 +126,7 @@ pc.extend(pc, function () {
             this._viewProjMat.mul2(projMat, this._viewMat);
             var invViewProjMat = this._viewProjMat.clone().invert();
 
-            if (this._projection === pc.Projection.PERSPECTIVE) {
+            if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                 // Calculate the screen click as a point on the far plane of the
                 // normalized device coordinate 'box' (z=1)
                 var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
@@ -236,7 +231,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.CameraNode#getProjection
          * @description Retrieves the projection type for the specified camera.
-         * @returns {pc.Projection} The camera's projection type.
+         * @returns {pc.PROJECTION} The camera's projection type.
          */
         getProjection: function () {
             return this._projection;
@@ -250,7 +245,7 @@ pc.extend(pc, function () {
          */
         getProjectionMatrix: function () {
             if (this._projMatDirty) {
-                if (this._projection === pc.Projection.PERSPECTIVE) {
+                if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                     this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip);
                 } else {
                     var y = this._orthoHeight;

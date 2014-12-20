@@ -87,6 +87,11 @@ pc.scene.procedural = {
     createBox: pc.createBox
 };
 
+pc.scene.Projection = {
+    ORTHOGRAPHIC: pc.PROJECTION_ORTHOGRAPHIC,
+    PERSPECTIVE: pc.PROJECTION_PERSPECTIVE
+};
+
 pc.time = {
     now: pc.now,
 

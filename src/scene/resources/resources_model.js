@@ -27,8 +27,8 @@ pc.extend(pc.resources, function () {
     };
 
     var jsonToProjectionType = {
-        "perspective":  pc.Projection.PERSPECTIVE,
-        "orthographic": pc.Projection.ORTHOGRAPHIC
+        "perspective":  pc.PROJECTION_PERSPECTIVE,
+        "orthographic": pc.PROJECTION_ORTHOGRAPHIC
     };
 
     /**

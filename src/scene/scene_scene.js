@@ -108,6 +108,19 @@
         PARTICLEMODE_GPU: 0,
         PARTICLEMODE_CPU: 1,
 
+        /**
+         * @enum pc.PROJECTION
+         * @name pc.PROJECTION_PERSPECTIVE
+         * @description A perspective camera projection where the frustum shape is essentially pyrimidal.
+         */
+        PROJECTION_PERSPECTIVE: 0,
+        /**
+         * @enum pc.PROJECTION
+         * @name pc.PROJECTION_ORTHOGRAPHIC
+         * @description An orthographic camera projection where the frustum shape is essentially a cuboid.
+         */
+        PROJECTION_ORTHOGRAPHIC: 1,
+
         RENDERSTYLE_SOLID: 0,
         RENDERSTYLE_WIREFRAME: 1,
         RENDERSTYLE_POINTS: 2,

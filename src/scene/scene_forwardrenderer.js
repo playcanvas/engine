@@ -54,7 +54,7 @@ pc.extend(pc, function () {
         var projection = cam.getProjection();
 
         var x, y;
-        if (projection === pc.Projection.PERSPECTIVE) {
+        if (projection === pc.PROJECTION_PERSPECTIVE) {
             y = Math.tan(fov / 2.0) * nearClip;
         } else {
             y = camera._orthoHeight;
@@ -74,7 +74,7 @@ pc.extend(pc, function () {
         points[3].y = -y;
         points[3].z = -nearClip;
 
-        if (projection === pc.Projection.PERSPECTIVE) {
+        if (projection === pc.PROJECTION_PERSPECTIVE) {
             y = Math.tan(fov / 2.0) * farClip;
             x = y * aspect;
         }
@@ -607,13 +607,13 @@ pc.extend(pc, function () {
                         shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
                         shadowCamWtm.copy(shadowCam.getWorldTransform());
 
-                        shadowCam.setProjection(pc.Projection.ORTHOGRAPHIC);
+                        shadowCam.setProjection(pc.PROJECTION_ORTHOGRAPHIC);
                         shadowCam.setNearClip(0);
                         shadowCam.setFarClip((maxz - minz) * 1.5);
                         shadowCam.setAspectRatio((maxx - minx) / (maxy - miny));
                         shadowCam.setOrthoHeight((maxy - miny) * 0.5);
                     } else if (type === pc.LIGHTTYPE_SPOT) {
-                        shadowCam.setProjection(pc.Projection.PERSPECTIVE);
+                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
                         shadowCam.setAspectRatio(1);
@@ -622,7 +622,7 @@ pc.extend(pc, function () {
                         var lightWtm = light.worldTransform;
                         shadowCamWtm.mul2(lightWtm, camToLight);
                     } else if (type === pc.LIGHTTYPE_POINT) {
-                        shadowCam.setProjection(pc.Projection.PERSPECTIVE);
+                        shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
                         shadowCam.setFarClip(light.getAttenuationEnd());
                         shadowCam.setAspectRatio(1);

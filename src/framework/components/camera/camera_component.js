@@ -13,8 +13,8 @@ pc.extend(pc.fw, function () {
     * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render
     * @property {Number} nearClip The distance from the camera before which no rendering will take place
     * @property {Number} farClip The distance from the camera after which no rendering will take place
-    * @property {Number} fov The Y-axis field of view of the camera, in degrees. Used for {@link pc.Projection.PERSPECTIVE} cameras only. Defaults to 45.
-    * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.Projection.ORTHOGRAPHIC} cameras only. Defaults to 10.
+    * @property {Number} fov The Y-axis field of view of the camera, in degrees. Used for {@link pc.PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
+    * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
     * @property {pc.Projection} projection The type of projection used to render the camera.
     * @property {Number} priority Controls which camera will be rendered first. Smaller numbers are rendered first.
