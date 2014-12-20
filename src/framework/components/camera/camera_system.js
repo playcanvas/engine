@@ -160,7 +160,7 @@ pc.extend(pc.fw, function () {
 
             data.camera = new pc.scene.CameraNode();
 
-            data.postEffects = new pc.posteffect.PostEffectQueue(this.context, component);
+            data.postEffects = new pc.PostEffectQueue(this.context, component);
 
             if (this.context.designer && this.displayInTools(component.entity)) {
                 var material = new pc.scene.BasicMaterial();

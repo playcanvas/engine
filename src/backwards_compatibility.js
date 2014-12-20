@@ -22,3 +22,10 @@ pc.extend(pc.gfx, {
     VertexFormat: pc.VertexFormat,
     VertexIterator: pc.VertexIterator
 });
+
+pc.posteffect = {
+    createFullscreenQuad: pc.createFullscreenQuad,
+    drawFullscreenQuad: pc.drawFullscreenQuad,
+    PostEffect: pc.PostEffect,
+    PostEffectQueue: pc.PostEffectQueue
+};
