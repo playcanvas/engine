@@ -26,6 +26,9 @@ pc.extend(pc.fw, function () {
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
     * effects).
+    * @property {pc.Mat4} projectionMatrix [Read only] The camera's projection matrix.
+    * @property {pc.Mat4} viewMatrix [Read only] The camera's view matrix.
+    * @property {pc.Frustum} frustum [Read only] The camera's frustum shape.
     */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
@@ -54,6 +57,25 @@ pc.extend(pc.fw, function () {
             console.warn("WARNING: activate: Property is deprecated. Set enabled property instead.");
             this.enabled = value;
         },
+    });
+
+    Object.defineProperty(CameraComponent.prototype, "projectionMatrix", {
+        get: function() {
+            return this.data.camera.getProjectionMatrix();
+        }
+    });
+
+    Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
+        get: function() {
+            var wtm = this.data.camera.getWorldTransform();
+            return wtm.clone().invert();
+        }
+    });
+
+    Object.defineProperty(CameraComponent.prototype, "frustum", {
+        get: function() {
+            return this.data.camera.getFrustum();
+        }
     });
 
     pc.extend(CameraComponent.prototype, {
