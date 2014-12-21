@@ -92,6 +92,10 @@ pc.scene.Projection = {
     PERSPECTIVE: pc.PROJECTION_PERSPECTIVE
 };
 
+pc.shape = {
+    Frustum: pc.Frustum
+};
+
 pc.time = {
     now: pc.now,
 

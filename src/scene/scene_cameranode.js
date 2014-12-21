@@ -23,7 +23,7 @@ pc.extend(pc, function () {
             height: 1
         };
 
-        this._frustum = new pc.shape.Frustum(this._projMat, this._viewMat);
+        this._frustum = new pc.Frustum(this._projMat, this._viewMat);
 
         // Create a full size viewport onto the backbuffer
         this._renderTarget = null;
