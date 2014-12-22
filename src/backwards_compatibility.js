@@ -7,6 +7,14 @@ pc.anim = {
     Skeleton: pc.Skeleton
 };
 
+pc.audio = {
+    AudioManager: pc.AudioManager,
+    Channel: pc.Channel,
+    Channel3d: pc.Channel3d,
+    Listener: Listener,
+    Sound: pc.Sound
+};
+
 pc.extend(pc.gfx, {
     defaultGamma: pc.defaultGamma,
     defaultTonemapping: pc.defaultTonemapping,

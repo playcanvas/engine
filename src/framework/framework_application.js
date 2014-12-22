@@ -47,7 +47,7 @@ pc.extend(pc.fw, function () {
 
         var registry = new pc.fw.ComponentSystemRegistry();
 
-        this.audioManager = new pc.audio.AudioManager();
+        this.audioManager = new pc.AudioManager();
 
         // Create resource loader
         var loader = new pc.resources.ResourceLoader();

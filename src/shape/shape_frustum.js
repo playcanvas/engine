@@ -116,7 +116,7 @@ pc.extend(pc, function () {
          * @description Tests whether a point is inside the frustum. Note that points lying in a frustum plane are
          * considered to be outside the frustum.
          * @param {pc.Vec3} point The point to test
-         * @returns {Boolean} indicating true if the point is inside the frustum, false otherwise
+         * @returns {Boolean} true if the point is inside the frustum, false otherwise
          */
         containsPoint: function (point) {
             for (var p = 0; p < 6; p++)
@@ -136,8 +136,8 @@ pc.extend(pc, function () {
          * the frustum, 2 is returned. Note that a sphere touching a frustum plane from the outside is considered to
          * be outside the frustum.
          * @param {pc.BoundingSphere} sphere The sphere to test
-         * @returns 0 if the bounding sphere is outside the frustum, 1 if it intersects the frustum and 2 if it is contained 
-         * by the frustum
+         * @returns {Number} 0 if the bounding sphere is outside the frustum, 1 if it intersects the frustum and 2 if
+         * it is contained by the frustum
          */
         containsSphere: function (sphere) {
             var c = 0;

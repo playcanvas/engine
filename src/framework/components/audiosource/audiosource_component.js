@@ -177,7 +177,7 @@ pc.extend(pc.fw, function () {
 
         onSetMaxDistance: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
-                if (this.channel instanceof pc.audio.Channel3d) {
+                if (this.channel instanceof pc.Channel3d) {
                     this.channel.setMaxDistance(newValue);
                 }
             }
@@ -185,7 +185,7 @@ pc.extend(pc.fw, function () {
 
         onSetMinDistance: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
-                if (this.channel instanceof pc.audio.Channel3d) {
+                if (this.channel instanceof pc.Channel3d) {
                     this.channel.setMinDistance(newValue);
                 }
             }
@@ -193,7 +193,7 @@ pc.extend(pc.fw, function () {
 
         onSetRollOffFactor: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
-                if (this.channel instanceof pc.audio.Channel3d) {
+                if (this.channel instanceof pc.Channel3d) {
                     this.channel.setRollOffFactor(newValue);
                 }
             }

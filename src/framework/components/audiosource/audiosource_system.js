@@ -3,7 +3,7 @@ pc.extend(pc.fw, function () {
      * @name pc.fw.AudioSourceComponentSystem
      * @constructor AudioSourceComponentSystem controls playback of an audio sample
      * @param {pc.fw.ApplicationContext} context The ApplicationContext
-     * @param {pc.audio.AudioContext} audioContext AudioContext object used to create sources and filters
+     * @param {pc.AudioContext} audioContext AudioContext object used to create sources and filters
      * @extends pc.fw.ComponentSystem
      */
     var AudioSourceComponentSystem = function (context, manager) {
@@ -159,7 +159,7 @@ pc.extend(pc.fw, function () {
                     var componentData = component.data;
 
                     // Update channel position if this is a 3d sound
-                    if (componentData.enabled && entity.enabled && componentData.channel instanceof pc.audio.Channel3d) {
+                    if (componentData.enabled && entity.enabled && componentData.channel instanceof pc.Channel3d) {
                         var pos = entity.getPosition();
                         componentData.channel.setPosition(pos);
                     }
