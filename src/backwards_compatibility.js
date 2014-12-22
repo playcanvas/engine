@@ -19,6 +19,7 @@ pc.fw = {
     Application: pc.Application,
     Component: pc.Component,
     ComponentData: pc.ComponentData,
+    ComponentSystem: pc.ComponentSystem,
     ContentFile: pc.ContentFile,
     Entity: pc.Entity,
     LiveLink: pc.LiveLink,
