@@ -1,20 +1,20 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     
     /**
      * @private
-     * @name pc.fw.SkyboxComponentSystem
+     * @name pc.SkyboxComponentSystem
      * @constructor Create a new SkyboxComponentSystem
      * @class Renders a cube skybox
-     * @param {pc.fw.ApplicationContext} context
-     * @extends pc.fw.ComponentSystem
+     * @param {pc.ApplicationContext} context
+     * @extends pc.ComponentSystem
      */
     var SkyboxComponentSystem = function SkyboxComponentSystem (context) {
         this.id = 'skybox';
         this.description = "Renders a skybox in the scene.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.SkyboxComponent;
-        this.DataType = pc.fw.SkyboxComponentData;
+        this.ComponentType = pc.SkyboxComponent;
+        this.DataType = pc.SkyboxComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -100,7 +100,7 @@ pc.extend(pc.fw, function () {
 
         this.on('remove', this.onRemove, this);
     };
-    SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.fw.ComponentSystem);
+    SkyboxComponentSystem = pc.inherits(SkyboxComponentSystem, pc.ComponentSystem);
 
     pc.extend(SkyboxComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

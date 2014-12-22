@@ -1,13 +1,13 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @private
      * @component
-     * @name pc.fw.SkyboxComponent
+     * @name pc.SkyboxComponent
      * @constructor Create a new SkyboxComponent
      * @class A skybox is cube rendered around the camera. The texture on the inside of the cube is used to display the distant environment in a simple and efficient way.
      * Set a texture Asset to be used for each face of the cube.
-     * @param {pc.fw.ApplicationContext} context
-     * @extends pc.fw.Component
+     * @param {pc.ApplicationContext} context
+     * @extends pc.Component
      * @property {Boolean} enabled Enables or disables rendering of the skybox
      * @property {Number} negx Asset id of texture that is used for negative x face
      * @property {Number} posx Asset id of texture that is used for positive x face
@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
     var SkyboxComponent = function SkyboxComponent (system, entity) {
         this.on("set", this.onSet, this);
     };
-    SkyboxComponent = pc.inherits(SkyboxComponent, pc.fw.Component);
+    SkyboxComponent = pc.inherits(SkyboxComponent, pc.Component);
 
     pc.extend(SkyboxComponent.prototype, {
         onSet: function (name, oldValue, newValue) {

@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var ContentFile = function (data) {
         this.packs = data.packs || {};
         this.appProperties = data.application_properties || {};

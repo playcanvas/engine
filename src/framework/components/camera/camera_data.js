@@ -1,9 +1,9 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @private
-     * @name pc.fw.CameraComponentData
+     * @name pc.CameraComponentData
      * @class ComponentData structure for Camera components.
-     * @extends pc.fw.ComponentData
+     * @extends pc.ComponentData
      */
     CameraComponentData = function () {
         // serialized
@@ -26,7 +26,7 @@ pc.extend(pc.fw, function () {
         this.postEffects = null;
         this.isRendering = false;
     };
-    CameraComponentData = pc.inherits(CameraComponentData, pc.fw.ComponentData);
+    CameraComponentData = pc.inherits(CameraComponentData, pc.ComponentData);
 
     return {
         CameraComponentData: CameraComponentData

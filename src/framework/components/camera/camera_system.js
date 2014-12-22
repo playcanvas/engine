@@ -1,22 +1,22 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var REMOTE_CAMERA_NEAR_CLIP = 0.5;
     var REMOTE_CAMERA_FAR_CLIP = 2;
 
     /**
-     * @name pc.fw.CameraComponentSystem
-     * @class Used to add and remove {@link pc.fw.CameraComponent}s from Entities. It also holds an
+     * @name pc.CameraComponentSystem
+     * @class Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
      * array of all active cameras.
      * @constructor Create a new CameraComponentSystem
      * @param {Object} context
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.ComponentSystem
      */
     var CameraComponentSystem = function (context) {
         this.id = 'camera';
         this.description = "Renders the scene from the location of the Entity.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.CameraComponent;
-        this.DataType = pc.fw.CameraComponentData;
+        this.ComponentType = pc.CameraComponent;
+        this.DataType = pc.CameraComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -134,10 +134,10 @@ pc.extend(pc.fw, function () {
         this.cameras = [];
 
         this.on('remove', this.onRemove, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
+        pc.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
 
     };
-    CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
+    CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
     pc.extend(CameraComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

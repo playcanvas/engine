@@ -1,6 +1,6 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.fw.ComponentSystemRegistry
+     * @name pc.ComponentSystemRegistry
      * @class Store, access and delete instances of the various ComponentSystems
      * @constructor Create a new ComponentSystemRegistry
      */
@@ -10,10 +10,10 @@ pc.extend(pc.fw, function () {
     ComponentSystemRegistry.prototype = {
         /**
          * @function
-         * @name pc.fw.ComponentSystemRegistry#add
+         * @name pc.ComponentSystemRegistry#add
          * @description Add a new Component type
          * @param {Object} name The name of the Component
-         * @param {Object} component The {pc.fw.ComponentSystem} instance
+         * @param {Object} component The {pc.ComponentSystem} instance
          */
         add: function (name, system) {
             if(!this[name]) {
@@ -25,7 +25,7 @@ pc.extend(pc.fw, function () {
         },
         /**
          * @function
-         * @name pc.fw.ComponentSystemRegistry#remove
+         * @name pc.ComponentSystemRegistry#remove
          * @description Remove a Component type
          * @param {Object} name The name of the Component remove
          */
@@ -39,10 +39,10 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.ComponentSystemRegistry#list
+         * @name pc.ComponentSystemRegistry#list
          * @description Return the contents of the registry as an array, this order of the array
          * is the order in which the ComponentSystems must be initialized
-         * @returns {Array} An array of {@link pc.fw.ComponentSystem}s 
+         * @returns {Array} An array of {@link pc.ComponentSystem}s 
          */
         list: function () {
             var list = Object.keys(this);

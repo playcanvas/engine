@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function() {
+pc.extend(pc, function() {
     var ParticleSystemComponentData = function() {
 
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
@@ -58,7 +58,7 @@ pc.extend(pc.fw, function() {
         this.debugShape = null;
 
     };
-    ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.fw.ComponentData);
+    ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 
     return {
         ParticleSystemComponentData: ParticleSystemComponentData

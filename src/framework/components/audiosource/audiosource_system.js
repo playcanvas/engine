@@ -1,18 +1,18 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.fw.AudioSourceComponentSystem
+     * @name pc.AudioSourceComponentSystem
      * @constructor AudioSourceComponentSystem controls playback of an audio sample
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext
+     * @param {pc.ApplicationContext} context The ApplicationContext
      * @param {pc.AudioContext} audioContext AudioContext object used to create sources and filters
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.ComponentSystem
      */
     var AudioSourceComponentSystem = function (context, manager) {
         this.id = "audiosource";
         this.description = "Specifies audio assets that can be played at the position of the Entity.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.AudioSourceComponent;
-        this.DataType = pc.fw.AudioSourceComponentData;
+        this.ComponentType = pc.AudioSourceComponent;
+        this.DataType = pc.AudioSourceComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -116,10 +116,10 @@ pc.extend(pc.fw, function () {
 
         this.initialized = false;
 
-        pc.fw.ComponentSystem.on('initialize', this.onInitialize, this);
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.on('initialize', this.onInitialize, this);
+        pc.ComponentSystem.on('update', this.onUpdate, this);
     };
-    AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.fw.ComponentSystem);
+    AudioSourceComponentSystem = pc.inherits(AudioSourceComponentSystem, pc.ComponentSystem);
 
     pc.extend(AudioSourceComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
@@ -141,7 +141,7 @@ pc.extend(pc.fw, function () {
             var children = root.getChildren();
             var i, len = children.length;
             for (i = 0; i < len; i++) {
-                if (children[i] instanceof pc.fw.Entity) {
+                if (children[i] instanceof pc.Entity) {
                     this.onInitialize(children[i]);
                 }
             }
@@ -168,7 +168,7 @@ pc.extend(pc.fw, function () {
         },
 
         /**
-         * @name pc.fw.AudioSourceComponentSystem#setVolume()
+         * @name pc.AudioSourceComponentSystem#setVolume()
          * @function
          * @description Set the volume for the entire AudioSource system. All sources will have their volume multiplied by this value
          * @param {Number} value The value to set the volume to. Valid from 0.0 - 1.0

@@ -259,7 +259,7 @@ pc.extend(pc.asset, function () {
         * If the asset type doesn't have file (e.g. Material Asset) then a resource is not returned (the resource list is shorter)
         * NOTE: Usually you won't have to call load() directly as Assets will be loaded as part of the Pack loading process. This is only
         * required if you are loading assets manually without using the PlayCanvas tools.
-        * @param {[pc.fw.Asset]} assets The list of assets to load
+        * @param {[pc.Asset]} assets The list of assets to load
         * @param {[Object]} [results] List of results for the resources to be stored in. This is usually not required
         * @param {Object} [options] Options to pass on to the loader
         * @returns {Promise} A Promise to the resources
@@ -341,7 +341,7 @@ pc.extend(pc.asset, function () {
         *    var model = results.resource;
         *    var asset = results.asset;
         *
-        *    entity = new pc.fw.Entity();
+        *    entity = new pc.Entity();
         *     application.context.systems.model.addComponent(entity, {
         *        type: "asset",
         *        asset: asset

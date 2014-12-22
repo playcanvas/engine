@@ -1,16 +1,16 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @component
-     * @name pc.fw.PickComponent
+     * @name pc.PickComponent
      * @constructor Create a new PickComponent
-     * @class Allows an Entity to be picked from the scene using a pc.fw.picking.Picker Object
-    * @param {pc.fw.PickComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.fw.Component
+     * @class Allows an Entity to be picked from the scene using a pc.picking.Picker Object
+    * @param {pc.PickComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @extends pc.Component
      */
     var PickComponent = function PickComponent(system, entity) {
     };
-    PickComponent = pc.inherits(PickComponent, pc.fw.Component);
+    PickComponent = pc.inherits(PickComponent, pc.Component);
     
     pc.extend(PickComponent.prototype, {
         addShape: function (shape, shapeName) {

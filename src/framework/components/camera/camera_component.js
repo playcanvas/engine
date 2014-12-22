@@ -1,12 +1,12 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
     * @component
-    * @name pc.fw.CameraComponent
+    * @name pc.CameraComponent
     * @class The Camera Component enables an Entity to render the scene.
     * @constructor Create a new Camera Component
-    * @param {pc.fw.CameraComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
-    * @extends pc.fw.Component
+    * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.Entity} entity The Entity that this Component is attached to.
+    * @extends pc.Component
     * @property {Boolean} enabled If true the camera will be render the active scene. Note that multiple cameras
     * can be enabled simulataneously.
     * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
@@ -46,7 +46,7 @@ pc.extend(pc.fw, function () {
         this.on("set_renderTarget", this.onSetRenderTarget, this);
         this.on("set_rect", this.onSetRect, this);
     };
-    CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
+    CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
     Object.defineProperty(CameraComponent.prototype, "activate", {
         get: function() {
@@ -81,7 +81,7 @@ pc.extend(pc.fw, function () {
     pc.extend(CameraComponent.prototype, {
         /**
          * @function
-         * @name pc.fw.CameraComponent#screenToWorld
+         * @name pc.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
          * @param {Number} x x coordinate on PlayCanvas' canvas element.
          * @param {Number} y y coordinate on PlayCanvas' canvas element.
@@ -191,7 +191,7 @@ pc.extend(pc.fw, function () {
          * Start rendering the frame for this camera
          * @function
          * @private
-         * @name pc.fw.CameraComponent#frameBegin
+         * @name pc.CameraComponent#frameBegin
          */
         frameBegin: function () {
             this._resetAspectRatio();
@@ -202,7 +202,7 @@ pc.extend(pc.fw, function () {
          * End rendering the frame for this camera
          * @function
          * @private
-         * @name pc.fw.CameraComponent#frameEnd
+         * @name pc.CameraComponent#frameEnd
          */
         frameEnd: function () {
             this.data.isRendering = false;

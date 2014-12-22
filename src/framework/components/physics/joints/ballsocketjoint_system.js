@@ -1,18 +1,18 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @private
-     * @name pc.fw.BallSocketJointComponentSystem
+     * @name pc.BallSocketJointComponentSystem
      * @constructor Create a new BallSocketJointComponentSystem
      * @class Manages creation of BallSocketJointComponents
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application
-     * @extends pc.fw.ComponentSystem
+     * @param {pc.ApplicationContext} context The ApplicationContext for the running application
+     * @extends pc.ComponentSystem
      */
     var BallSocketJointComponentSystem = function BallSocketJointComponentSystem(context) {
         this.id = "ballsocketjoint";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.BallSocketJointComponent;
-        this.DataType = pc.fw.BallSocketJointComponentData;
+        this.ComponentType = pc.BallSocketJointComponent;
+        this.DataType = pc.BallSocketJointComponentData;
 
         this.schema = [{
             name: "pivot",
@@ -76,17 +76,17 @@ pc.extend(pc.fw, function () {
 
         this.on('remove', this.onRemove, this);
 
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
+        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
     };
-    BallSocketJointComponentSystem = pc.inherits(BallSocketJointComponentSystem, pc.fw.ComponentSystem);
+    BallSocketJointComponentSystem = pc.inherits(BallSocketJointComponentSystem, pc.ComponentSystem);
     
     BallSocketJointComponentSystem.prototype = pc.extend(BallSocketJointComponentSystem.prototype, {
         onLibraryLoaded: function () {
             if (typeof Ammo !== 'undefined') {
                 // Only register update event if Ammo is loaded
             } else {
-                pc.fw.ComponentSystem.off('update', this.onUpdate, this);
+                pc.ComponentSystem.off('update', this.onUpdate, this);
             }
         },
 
@@ -139,7 +139,7 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.BallSocketJointComponentSystem#setDebugRender
+        * @name pc.BallSocketJointComponentSystem#setDebugRender
         * @description Display debug representation of the joint
         * @param {Boolean} value Enable or disable
         */

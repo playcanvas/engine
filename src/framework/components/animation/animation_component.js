@@ -1,12 +1,12 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
     * @component Animation
-    * @name pc.fw.AnimationComponent
+    * @name pc.AnimationComponent
     * @constructor Create a new AnimationComponent
     * @class The Animation Component allows an Entity to playback animations on models
-    * @param {pc.fw.AnimationComponentSystem} system The {@link pc.fw.ComponentSystem} that created this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to
-    * @extends pc.fw.Component
+    * @param {pc.AnimationComponentSystem} system The {@link pc.ComponentSystem} that created this Component
+    * @param {pc.Entity} entity The Entity that this Component is attached to
+    * @extends pc.Component
     * @property {Boolean} enabled If false no animation will be played
     * @property {Number} speed Speed multiplier for animation play back speed. 1.0 is playback at normal speed, 0.0 pauses the animation
     * @property {Boolean} loop If true the animation will restart from the beginning when it reaches the end
@@ -21,12 +21,12 @@ pc.extend(pc.fw, function () {
         // Handle changes to the 'loop' value
         this.on('set_loop', this.onSetLoop, this);
     };
-    AnimationComponent = pc.inherits(AnimationComponent, pc.fw.Component);
+    AnimationComponent = pc.inherits(AnimationComponent, pc.Component);
 
     pc.extend(AnimationComponent.prototype, {
         /**
          * @function
-         * @name pc.fw.AnimationComponent#play
+         * @name pc.AnimationComponent#play
          * @description Start playing an animation
          * @param {String} name The name of the animation asset to begin playing.
          * @param {Number} [blendTime] The time in seconds to blend from the current
@@ -69,7 +69,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.AnimationComponent#getAnimation
+        * @name pc.AnimationComponent#getAnimation
         * @description Return an animation
         * @param {String} name The name of the animation asset
         * @returns {pc.Animation} An Animation
@@ -230,7 +230,7 @@ pc.extend(pc.fw, function () {
     Object.defineProperties(AnimationComponent.prototype, {
         /**
         * @property
-        * @name pc.fw.AnimationComponent#currentTime
+        * @name pc.AnimationComponent#currentTime
         * @description Get or Set the current time position (in seconds) of the animation
         */
         currentTime: {
@@ -246,7 +246,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @property
-        * @name pc.fw.AnimationComponent#duration
+        * @name pc.AnimationComponent#duration
         * @description Get the duration in seconds of the current animation.
         */
         duration: {

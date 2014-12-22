@@ -1,6 +1,6 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.fw.LiveLinkOpenEntityMessage
+     * @name pc.LiveLinkOpenEntityMessage
      * @constructor Create a new LiveLinkOpenEntityMessage from individual attributes
      * @class Signal that an Entity should be loaded and opened
      * @param {Object} id
@@ -8,19 +8,19 @@ pc.extend(pc.fw, function () {
      * @private
      */
     var LiveLinkOpenEntityMessage = function(entity) {
-        this.type = pc.fw.LiveLinkMessageType.OPEN_ENTITY;
+        this.type = pc.LiveLinkMessageType.OPEN_ENTITY;
         this.content = {
             entity: entity
         };
     };
  
-    LiveLinkOpenEntityMessage = pc.inherits(LiveLinkOpenEntityMessage, pc.fw.LiveLinkMessage);
-    pc.fw.LiveLinkMessage.register("OPEN_ENTITY");
+    LiveLinkOpenEntityMessage = pc.inherits(LiveLinkOpenEntityMessage, pc.LiveLinkMessage);
+    pc.LiveLinkMessage.register("OPEN_ENTITY");
        
 
 
     /**
-     * @name pc.fw.LiveLinkOpenPackMessage
+     * @name pc.LiveLinkOpenPackMessage
      * @constructor Create a new LiveLinkOpenEntityMessage from individual attributes
      * @class Signal that an Entity should be loaded and opened
      * @param {Object} id
@@ -29,15 +29,15 @@ pc.extend(pc.fw, function () {
      * @private
      */
     var LiveLinkOpenPackMessage = function(hierarchy, pack) {
-        this.type = pc.fw.LiveLinkMessageType.OPEN_PACK;
+        this.type = pc.LiveLinkMessageType.OPEN_PACK;
         this.content = {
             pack: pc.extend({}, pack.getData())
         };
         this.content.pack.hierarchy = PCD.model.Entity.toData(hierarchy);
     };
  
-    LiveLinkOpenPackMessage = pc.inherits(LiveLinkOpenPackMessage, pc.fw.LiveLinkMessage);
-    pc.fw.LiveLinkMessage.register("OPEN_PACK");
+    LiveLinkOpenPackMessage = pc.inherits(LiveLinkOpenPackMessage, pc.LiveLinkMessage);
+    pc.LiveLinkMessage.register("OPEN_PACK");
 
     return {
         LiveLinkOpenEntityMessage: LiveLinkOpenEntityMessage,

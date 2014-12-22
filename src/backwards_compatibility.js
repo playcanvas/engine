@@ -11,8 +11,30 @@ pc.audio = {
     AudioManager: pc.AudioManager,
     Channel: pc.Channel,
     Channel3d: pc.Channel3d,
-    Listener: Listener,
+    Listener: pc.Listener,
     Sound: pc.Sound
+};
+
+pc.fw = {
+    Application: pc.Application,
+    Component: pc.Component,
+    ComponentData: pc.ComponentData,
+    ComponentSystem: pc.ComponentSystem,    
+    Entity: pc.Entity,
+    LiveLink: pc.LiveLink,
+    LiveLinkMessage: pc.LiveLinkMessage,
+    LiveLinkOpenEntityMessage: pc.LiveLinkOpenEntityMessage,
+    LiveLinkOpenPackMessage: pc.LiveLinkOpenPackMessage,
+    LiveLinkUpdateAssetCacheMessage: pc.LiveLinkUpdateAssetCacheMessage,
+    LiveLinkUpdateEntityTransformMessage: pc.LiveLinkUpdateEntityTransformMessage
+};
+
+pc.fw.LiveLinkMessageType = {
+    UPDATE_ENTITY: pc.LiveLinkMessageType.UPDATE_ENTITY,
+    UPDATE_ENTITY_TRANSFORM: pc.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM,
+    UPDATE_ENTITY_NAME: pc.LiveLinkMessageType.UPDATE_ENTITY_NAME,
+    UPDATE_ENTITY_ENABLED: pc.LiveLinkMessageType.UPDATE_ENTITY_ENABLED,
+    REPARENT_ENTITY: pc.LiveLinkMessageType.REPARENT_ENTITY
 };
 
 pc.extend(pc.gfx, {
@@ -98,10 +120,6 @@ pc.scene.procedural = {
 pc.scene.Projection = {
     ORTHOGRAPHIC: pc.PROJECTION_ORTHOGRAPHIC,
     PERSPECTIVE: pc.PROJECTION_PERSPECTIVE
-};
-
-pc.shape = {
-    Frustum: pc.Frustum
 };
 
 pc.time = {

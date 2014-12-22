@@ -1,11 +1,11 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
-    * @name pc.fw.Component
+    * @name pc.Component
     * @constructor Base constructor for a Component
     * @class Components are used to attach functionality onto Entities. Components
     * can receive update events each frame, and expose properties to the tools.
-    * @param {pc.fw.ComponentSystem} system The ComponentSystem used to create this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to
+    * @param {pc.ComponentSystem} system The ComponentSystem used to create this Component
+    * @param {pc.Entity} entity The Entity that this Component is attached to
     */
     var Component = function (system, entity) {
         this.system = system;
@@ -25,11 +25,11 @@ pc.extend(pc.fw, function () {
     Component.prototype = {
         /**
         * @property
-        * @name pc.fw.Component#data
-        * @description Access the {@link pc.fw.ComponentData} directly. Usually you should
+        * @name pc.Component#data
+        * @description Access the {@link pc.ComponentData} directly. Usually you should
         * access the data properties via the individual properties as modifying this data directly 
         * will not fire 'set' events.
-        * @type {pc.fw.ComponentData} 
+        * @type {pc.ComponentData} 
         */
         get data() {
             var record = this.system.store[this.entity.getGuid()];

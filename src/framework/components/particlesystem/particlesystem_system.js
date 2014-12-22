@@ -1,12 +1,12 @@
-pc.extend(pc.fw, function() {
+pc.extend(pc, function() {
 
     var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(context) {
         this.id = 'particlesystem';
         this.description = "Updates and renders particle system in the scene.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.ParticleSystemComponent;
-        this.DataType = pc.fw.ParticleSystemComponentData;
+        this.ComponentType = pc.ParticleSystemComponent;
+        this.DataType = pc.ParticleSystemComponentData;
 
         this.schema = [{
                 name: "enabled",
@@ -448,8 +448,8 @@ pc.extend(pc.fw, function() {
         }
 
         this.on('remove', this.onRemove, this);
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
+        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
 
         var gd = context.graphicsDevice;
         this.debugMesh = this._createDebugMesh();
@@ -459,7 +459,7 @@ pc.extend(pc.fw, function() {
         this.debugMaterial.update();
 
     };
-    ParticleSystemComponentSystem = pc.inherits(ParticleSystemComponentSystem, pc.fw.ComponentSystem);
+    ParticleSystemComponentSystem = pc.inherits(ParticleSystemComponentSystem, pc.ComponentSystem);
 
     pc.extend(ParticleSystemComponentSystem.prototype, {
 

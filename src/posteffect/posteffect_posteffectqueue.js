@@ -3,8 +3,8 @@ pc.extend(pc, function () {
      * @name pc.PostEffectQueue
      * @constructor Create a new PostEffectQueue
      * @class Used to manage multiple post effects for a camera
-     * @param {pc.fw.ApplicationContext} context The application context
-     * @param {pc.fw.CameraComponent} camera The camera component
+     * @param {pc.ApplicationContext} context The application context
+     * @param {pc.CameraComponent} camera The camera component
      */
     function PostEffectQueue(context, camera) {
         this.context = context;

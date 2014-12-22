@@ -1,18 +1,18 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
 /**
-     * @name pc.fw.LightComponentSystem
+     * @name pc.LightComponentSystem
      * @constructor Create a new LightComponentSystem.
      * @class A Light Component is used to dynamically light the scene.
-     * @param {pc.fw.ApplicationContext} context The application context.
-     * @extends pc.fw.ComponentSystem
+     * @param {pc.ApplicationContext} context The application context.
+     * @extends pc.ComponentSystem
      */
     var LightComponentSystem = function (context) {
         this.id = 'light';
         this.description = "Enables the Entity to emit light."
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.LightComponent;
-        this.DataType = pc.fw.LightComponentData;
+        this.ComponentType = pc.LightComponent;
+        this.DataType = pc.LightComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -196,10 +196,10 @@ pc.extend(pc.fw, function () {
         this.exposeProperties();
         this.implementations = {};
         this.on('remove', this.onRemove, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
+        pc.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
     };
 
-    LightComponentSystem = pc.inherits(LightComponentSystem, pc.fw.ComponentSystem);
+    LightComponentSystem = pc.inherits(LightComponentSystem, pc.ComponentSystem);
 
     pc.extend(LightComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

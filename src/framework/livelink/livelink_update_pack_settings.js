@@ -1,6 +1,6 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.fw.LiveLinkUpdatePackSettings
+     * @name pc.LiveLinkUpdatePackSettings
      * @constructor Create a new LiveLinkUpdatePackSettings from individual attributes
      * @class Signal that an Entity should be loaded and opened
      * @param {Object} id
@@ -8,14 +8,14 @@ pc.extend(pc.fw, function () {
      * @private
      */
     var LiveLinkUpdatePackSettings = function(settings) {
-        this.type = pc.fw.LiveLinkMessageType.UPDATE_PACK_SETTINGS;
+        this.type = pc.LiveLinkMessageType.UPDATE_PACK_SETTINGS;
         this.content = {
             settings: settings
         };
     };
 
-    LiveLinkUpdatePackSettings = pc.inherits(LiveLinkUpdatePackSettings, pc.fw.LiveLinkMessage);
-    pc.fw.LiveLinkMessage.register("UPDATE_PACK_SETTINGS");
+    LiveLinkUpdatePackSettings = pc.inherits(LiveLinkUpdatePackSettings, pc.LiveLinkMessage);
+    pc.LiveLinkMessage.register("UPDATE_PACK_SETTINGS");
         
     return {
         LiveLinkUpdatePackSettings: LiveLinkUpdatePackSettings

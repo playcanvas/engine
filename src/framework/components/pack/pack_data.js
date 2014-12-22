@@ -1,7 +1,7 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var PackComponentData = function () {
     };
-    PackComponentData = pc.inherits(PackComponentData, pc.fw.ComponentData);
+    PackComponentData = pc.inherits(PackComponentData, pc.ComponentData);
     
     return {
         PackComponentData: PackComponentData

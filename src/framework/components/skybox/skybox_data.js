@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function() {
+pc.extend(pc, function() {
     var SkyboxComponentData = function () {
         this.enabled = true;
         this.posx = null;
@@ -12,7 +12,7 @@ pc.extend(pc.fw, function() {
 
         this.model = null;
     };
-    SkyboxComponentData = pc.inherits(SkyboxComponentData, pc.fw.ComponentData);
+    SkyboxComponentData = pc.inherits(SkyboxComponentData, pc.ComponentData);
     
     return {
         SkyboxComponentData:SkyboxComponentData 

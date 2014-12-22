@@ -1,12 +1,12 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @component
-     * @name pc.fw.ModelComponent
+     * @name pc.ModelComponent
      * @constructor Create a new ModelComponentSystem
      * @class Enables an Entity to render a model or a primitive shape. This Component attaches additional model geometry in to the scene graph below the Entity.
-     * @param {pc.fw.ModelComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.fw.Component
+     * @param {pc.ModelComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @extends pc.Component
      * @property {String} type The type of the model, which can be one of the following values:
      * <ul>
      *     <li>asset: The component will render a model asset</li>
@@ -37,7 +37,7 @@ pc.extend(pc.fw, function () {
             get: this.getMaterialAsset.bind(this)
         });
     };
-    ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
+    ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
     pc.extend(ModelComponent.prototype, {
 
@@ -83,7 +83,7 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @private
-         * @name pc.fw.ModelComponent#onSetType
+         * @name pc.ModelComponent#onSetType
          * @description Handle changes to the 'type' variable
          */
         onSetType: function (name, oldValue, newValue) {

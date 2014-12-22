@@ -1,19 +1,19 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.fw.ModelComponentSystem
+     * @name pc.ModelComponentSystem
      * @constructor Create a new ModelComponentSystem
      * @class Allows an Entity to render a model or a primitive shape like a box,
      * capsule, sphere, cylinder, cone etc.
      * @param {Object} context
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.ComponentSystem
      */
     var ModelComponentSystem = function ModelComponentSystem (context) {
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.ModelComponent;
-        this.DataType = pc.fw.ModelComponentData;
+        this.ComponentType = pc.ModelComponent;
+        this.DataType = pc.ModelComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -129,7 +129,7 @@ pc.extend(pc.fw, function () {
 
         this.defaultMaterial = new pc.PhongMaterial();
     };
-    ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.fw.ComponentSystem);
+    ModelComponentSystem = pc.inherits(ModelComponentSystem, pc.ComponentSystem);
 
     pc.extend(ModelComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

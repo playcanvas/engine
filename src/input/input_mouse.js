@@ -211,7 +211,7 @@ pc.extend(pc, function () {
         * Allowing raw access to mouse movement input without risking the mouse exiting the element.
         * Notes: <br />
         * <ul>
-        * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.fw.Application#enableFullscreen}
+        * <li>In some browsers this will only work when the browser is running in fullscreen mode. See {@link pc.Application#enableFullscreen}
         * <li>Enabling pointer lock can only be initiated by a user action e.g. in the event handler for a mouse or keyboard input.
         * </ul>
         * @param {Function} [success] Function called if the request for mouse lock is successful.

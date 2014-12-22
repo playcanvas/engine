@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var LightComponentData = function () {
         // Serialized
         this.type = 'directional';
@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
         this.model = null;
     };
 
-    LightComponentData = pc.inherits(LightComponentData, pc.fw.ComponentData);
+    LightComponentData = pc.inherits(LightComponentData, pc.ComponentData);
 
     return {
         LightComponentData: LightComponentData

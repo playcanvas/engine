@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var ScriptComponentData = function () {
         // serialized
         this.scripts = [];
@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
         this.postInitialized = false;
         this.areScriptsLoaded = false;
     };
-    ScriptComponentData = pc.inherits(ScriptComponentData, pc.fw.ComponentData);
+    ScriptComponentData = pc.inherits(ScriptComponentData, pc.ComponentData);
 
     return {
         ScriptComponentData: ScriptComponentData

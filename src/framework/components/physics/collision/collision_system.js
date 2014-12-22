@@ -1,19 +1,19 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.fw.CollisionComponentSystem
+     * @name pc.CollisionComponentSystem
      * @constructor Creates a new CollisionComponentSystem.
-     * @class Manages creation of {@link pc.fw.CollisionComponent}s.
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application.
-     * @extends pc.fw.ComponentSystem
+     * @class Manages creation of {@link pc.CollisionComponent}s.
+     * @param {pc.ApplicationContext} context The ApplicationContext for the running application.
+     * @extends pc.ComponentSystem
      */
      var CollisionComponentSystem = function CollisionComponentSystem (context) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.CollisionComponent;
-        this.DataType = pc.fw.CollisionComponentData;
+        this.ComponentType = pc.CollisionComponent;
+        this.DataType = pc.CollisionComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -132,11 +132,11 @@ pc.extend(pc.fw, function () {
 
         this.on('remove', this.onRemove, this);
 
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
+        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
     };
 
-    CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.fw.ComponentSystem);
+    CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.ComponentSystem);
 
     CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
         onLibraryLoaded: function () {
@@ -144,7 +144,7 @@ pc.extend(pc.fw, function () {
                 //
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
-                pc.fw.ComponentSystem.off('update', this.onUpdate, this);
+                pc.ComponentSystem.off('update', this.onUpdate, this);
             }
         },
 
@@ -282,7 +282,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.CollisionComponentSystem#setDebugRender
+        * @name pc.CollisionComponentSystem#setDebugRender
         * @description Display collision shape outlines
         * @param {Boolean} value Enable or disable
         */
@@ -364,7 +364,7 @@ pc.extend(pc.fw, function () {
                     entity.rigidbody.createBody();
                 } else {
                     if (!entity.trigger) {
-                        entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                        entity.trigger = new pc.Trigger(this.system.context, component, data);
                     } else {
                         entity.trigger.initialize(data);
                     }
@@ -1073,7 +1073,7 @@ pc.extend(pc.fw, function () {
                     entity.rigidbody.createBody();
                 } else {
                     if (!entity.trigger) {
-                        entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                        entity.trigger = new pc.Trigger(this.system.context, component, data);
                     } else {
                         entity.trigger.initialize(data);
                     }
