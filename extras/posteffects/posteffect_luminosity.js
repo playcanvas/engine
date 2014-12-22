@@ -1,17 +1,17 @@
 //--------------- POST EFFECT DEFINITION------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.posteffect.Luminosity
+     * @name pc.LuminosityEffect
      * @class Outputs the luminosity of the input render target.
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
-    var Luminosity = function (graphicsDevice) {
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+    var LuminosityEffect = function (graphicsDevice) {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -41,33 +41,33 @@ pc.extend(pc.posteffect, function () {
         });
     }
 
-    Luminosity = pc.inherits(Luminosity, pc.posteffect.PostEffect);
+    LuminosityEffect = pc.inherits(LuminosityEffect, pc.PostEffect);
 
-    Luminosity.prototype = pc.extend(Luminosity.prototype, {
+    LuminosityEffect.prototype = pc.extend(LuminosityEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        Luminosity: Luminosity
+        LuminosityEffect: LuminosityEffect
     };
 }());
     
 //--------------- SCRIPT DEFINITION------------------------//    
-pc.script.create('luminosity', function (context) {
+pc.script.create('luminosityEffect', function (context) {
     
-    // Creates a new Luminosity instance
-    var Luminosity = function (entity) {
+    // Creates a new LuminosityEffect instance
+    var LuminosityEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.Luminosity(context.graphicsDevice);
+        this.effect = new pc.LuminosityEffect(context.graphicsDevice);
     };
 
-    Luminosity.prototype = {
+    LuminosityEffect.prototype = {
         onEnable: function () {
             this.entity.camera.postEffects.addEffect(this.effect, false);
         },
@@ -77,6 +77,6 @@ pc.script.create('luminosity', function (context) {
         }
     };
 
-    return Luminosity;
+    return LuminosityEffect;
     
 });

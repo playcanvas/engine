@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @name pc.ComponentSystemRegistry
      * @class Store, access and delete instances of the various ComponentSystems
      * @constructor Create a new ComponentSystemRegistry
@@ -9,6 +10,7 @@ pc.extend(pc, function () {
 
     ComponentSystemRegistry.prototype = {
         /**
+         * @private
          * @function
          * @name pc.ComponentSystemRegistry#add
          * @description Add a new Component type
@@ -24,6 +26,7 @@ pc.extend(pc, function () {
             }
         },
         /**
+         * @private
          * @function
          * @name pc.ComponentSystemRegistry#remove
          * @description Remove a Component type
@@ -38,6 +41,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.ComponentSystemRegistry#list
          * @description Return the contents of the registry as an array, this order of the array

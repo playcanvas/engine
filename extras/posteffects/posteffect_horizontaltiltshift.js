@@ -1,19 +1,19 @@
 //--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.posteffect.HorizontalTiltShift
+     * @name pc.HorizontalTiltShiftEffect
      * @class Simple fake tilt-shift effect, modulating two pass Gaussian blur by horizontal position
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} focus Controls where the "focused" vertical line lies
      */
-    var HorizontalTiltShift = function (graphicsDevice) {
+    var HorizontalTiltShiftEffect = function (graphicsDevice) {
         // Shader author: alteredq / http://alteredqualia.com/
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -61,9 +61,9 @@ pc.extend(pc.posteffect, function () {
         this.focus = 0.35;
     }
 
-    HorizontalTiltShift = pc.inherits(HorizontalTiltShift, pc.posteffect.PostEffect);
+    HorizontalTiltShiftEffect = pc.inherits(HorizontalTiltShiftEffect, pc.PostEffect);
 
-    HorizontalTiltShift.prototype = pc.extend(HorizontalTiltShift.prototype, {
+    HorizontalTiltShiftEffect.prototype = pc.extend(HorizontalTiltShiftEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -71,12 +71,12 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uH").setValue(1/inputTarget.width);
             scope.resolve("uR").setValue(this.focus);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        HorizontalTiltShift: HorizontalTiltShift
+        HorizontalTiltShiftEffect: HorizontalTiltShiftEffect
     };
 }());
 
@@ -91,14 +91,14 @@ pc.script.attribute('focus', 'number', 0.35, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('horizontaltiltshift', function (context) {
-    // Creates a new Horizontaltiltshift instance
-    var Horizontaltiltshift = function (entity) {
+pc.script.create('horizontalTiltShiftEffect', function (context) {
+    // Creates a new HorizontalTiltShiftEffect instance
+    var HorizontalTiltShiftEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.HorizontalTiltShift(context.graphicsDevice);
+        this.effect = new pc.HorizontalTiltShiftEffect(context.graphicsDevice);
     };
 
-    Horizontaltiltshift.prototype = {
+    HorizontalTiltShiftEffect.prototype = {
         initialize: function () {
             this.effect.focus = this.focus;
             this.on('set', this.onAttributeChanged, this);
@@ -117,5 +117,5 @@ pc.script.create('horizontaltiltshift', function (context) {
         }
     };
 
-    return Horizontaltiltshift;
+    return HorizontalTiltShiftEffect;
 });

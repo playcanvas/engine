@@ -1,19 +1,19 @@
 //--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.posteffect.VerticalTiltShift
+     * @name pc.VerticalTiltShiftEffect
      * @class Simple fake tilt-shift effect, modulating two pass Gaussian blur by vertical position
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} focus Controls where the "focused" horizontal line lies
      */
-    var VerticalTiltShift = function (graphicsDevice) {
+    var VerticalTiltShiftEffect = function (graphicsDevice) {
         // Shader author: alteredq / http://alteredqualia.com/
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -61,9 +61,9 @@ pc.extend(pc.posteffect, function () {
         this.focus = 0.35;
     }
 
-    VerticalTiltShift = pc.inherits(VerticalTiltShift, pc.posteffect.PostEffect);
+    VerticalTiltShiftEffect = pc.inherits(VerticalTiltShiftEffect, pc.PostEffect);
 
-    VerticalTiltShift.prototype = pc.extend(VerticalTiltShift.prototype, {
+    VerticalTiltShiftEffect.prototype = pc.extend(VerticalTiltShiftEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -71,12 +71,12 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uV").setValue(1/inputTarget.height);
             scope.resolve("uR").setValue(this.focus);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        VerticalTiltShift: VerticalTiltShift
+        VerticalTiltShiftEffect: VerticalTiltShiftEffect
     };
 }());
 
@@ -91,13 +91,13 @@ pc.script.attribute('focus', 'number', 0.35, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('verticaltiltshift', function (context) {
-    var Verticaltiltshift = function (entity) {
+pc.script.create('verticalTiltShiftEffect', function (context) {
+    var VerticalTiltShiftEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.VerticalTiltShift(context.graphicsDevice);
+        this.effect = new pc.VerticalTiltShiftEffect(context.graphicsDevice);
     };
 
-    Verticaltiltshift.prototype = {
+    VerticalTiltShiftEffect.prototype = {
         initialize: function () {
             this.effect.focus = this.focus;
             this.on('set', this.onAttributeChanged, this);
@@ -116,5 +116,5 @@ pc.script.create('verticaltiltshift', function (context) {
         }
     };
 
-    return Verticaltiltshift;
+    return VerticalTiltShiftEffect;
 });

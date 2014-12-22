@@ -1,17 +1,17 @@
 //------------------------------ POST EFFECT DEFINITION----------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.posteffect.Bokeh
-     * @class Implements the Bokeh post processing effect
+     * @name pc.BokehEffect
+     * @class Implements the BokehEffect post processing effect
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} maxBlur The maximum amount of blurring. Ranges from 0 to 1
      * @property {Number} aperture Bigger values create a shallower depth of field
      * @property {Number} focus Controls the focus of the effect
      * @property {Number} aspect Controls the blurring effect
      */
-    var Bokeh = function (graphicsDevice) {
+    var BokehEffect = function (graphicsDevice) {
         this.needsDepthBuffer = true;
 
         /**
@@ -20,9 +20,9 @@ pc.extend(pc.posteffect, function () {
         * ported from GLSL shader by Martins Upitis
         * http://artmartinsh.blogspot.com/2010/02/glsl-lens-blur-filter-with-bokeh.html
         */
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -123,9 +123,9 @@ pc.extend(pc.posteffect, function () {
         this.aspect = 1;
     }
 
-    Bokeh = pc.inherits(Bokeh, pc.posteffect.PostEffect);
+    BokehEffect = pc.inherits(BokehEffect, pc.PostEffect);
 
-    Bokeh.prototype = pc.extend(Bokeh.prototype, {
+    BokehEffect.prototype = pc.extend(BokehEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -136,12 +136,12 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uAspect").setValue(this.aspect);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uDepthMap").setValue(this.depthMap);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        Bokeh: Bokeh
+        BokehEffect: BokehEffect
     };
 }());
 
@@ -171,14 +171,14 @@ pc.script.attribute('aspect', 'number', 1, {
 
 //------------------------------ SCRIPT DEFINITION----------------------------//
 
-pc.script.create('bokeh', function (context) {
-    // Creates a new Bokeh instance
-    var Bokeh = function (entity) {
+pc.script.create('bokehEffect', function (context) {
+    // Creates a new BokehEffect instance
+    var BokehEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.Bokeh(context.graphicsDevice);
+        this.effect = new pc.BokehEffect(context.graphicsDevice);
     };
 
-    Bokeh.prototype = {
+    BokehEffect.prototype = {
         initialize: function () {
             this.effect.maxBlur = this.maxBlur;
             this.effect.aperture = this.aperture;
@@ -201,5 +201,5 @@ pc.script.create('bokeh', function (context) {
         }
     };
 
-    return Bokeh;
+    return BokehEffect;
 });
