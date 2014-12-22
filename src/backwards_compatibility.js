@@ -23,11 +23,38 @@ pc.fw = {
     ContentFile: pc.ContentFile,
     Entity: pc.Entity,
     LiveLink: pc.LiveLink,
+    LiveLinkCloseEntityMessage: pc.LiveLinkCloseEntityMessage,
     LiveLinkMessage: pc.LiveLinkMessage,
+    LiveLinkMessageRegister: pc.LiveLinkMessageRegister,
+    LiveLinkMessageType: {
+        CLOSE_ENTITY: "CLOSE_ENTITY",
+        NO_TYPE: "NO_TYPE",
+        OPEN_ENTITY: "OPEN_ENTITY",
+        OPEN_PACK: "OPEN_PACK",
+        RECEIVED: "RECEIVED",
+        REPARENT_ENTITY: "REPARENT_ENTITY",
+        SELECTION_UPDATED: "SELECTION_UPDATED",
+        UPDATE_ASSET: "UPDATE_ASSET",
+        UPDATE_ASSETCACHE: "UPDATE_ASSETCACHE",
+        UPDATE_COMPONENT: "UPDATE_COMPONENT",
+        UPDATE_ENTITY: "UPDATE_ENTITY",
+        UPDATE_ENTITY_ENABLED: "UPDATE_ENTITY_ENABLED",
+        UPDATE_ENTITY_NAME: "UPDATE_ENTITY_NAME",
+        UPDATE_ENTITY_TRANSFORM: "UPDATE_ENTITY_TRANSFORM",
+        UPDATE_PACK_SETTINGS: "UPDATE_PACK_SETTINGS"
+    },
     LiveLinkOpenEntityMessage: pc.LiveLinkOpenEntityMessage,
     LiveLinkOpenPackMessage: pc.LiveLinkOpenPackMessage,
+    LiveLinkReparentEntityMessage: pc.LiveLinkReparentEntityMessage,
     LiveLinkUpdateAssetCacheMessage: pc.LiveLinkUpdateAssetCacheMessage,
-    LiveLinkUpdateEntityTransformMessage: pc.LiveLinkUpdateEntityTransformMessage
+    LiveLinkUpdateAssetMessage: pc.LiveLinkUpdateAssetMessage,
+    LiveLinkUpdateComponentMessage: pc.LiveLinkUpdateComponentMessage,
+    LiveLinkUpdateEntityEnabledMessage: pc.LiveLinkUpdateEntityEnabledMessage,
+    LiveLinkUpdateEntityMessage: pc.LiveLinkUpdateEntityMessage,
+    LiveLinkUpdateEntityNameMessage: pc.LiveLinkUpdateEntityNameMessage,
+    LiveLinkUpdateEntityTransformMessage: pc.LiveLinkUpdateEntityTransformMessage,
+    LiveLinkUpdatePackSettings: pc.LiveLinkUpdatePackSettings,
+    Pack: pc.Pack
 };
 
 pc.fw.FillMode = {
