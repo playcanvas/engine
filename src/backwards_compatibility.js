@@ -29,6 +29,17 @@ pc.fw = {
     LiveLinkUpdateEntityTransformMessage: pc.LiveLinkUpdateEntityTransformMessage
 };
 
+pc.fw.FillMode = {
+    NONE: pc.FILLMODE_NONE,
+    FILL_WINDOW: pc.FILLMODE_FILL_WINDOW,
+    KEEP_ASPECT: pc.FILLMODE_KEEP_ASPECT
+};
+
+pc.fw.ResolutionMode = {
+    AUTO: pc.RESOLUTION_AUTO,
+    FIXED: pc.RESOLUTION_FIXED
+};
+
 pc.fw.LiveLinkMessageType = {
     UPDATE_ENTITY: pc.LiveLinkMessageType.UPDATE_ENTITY,
     UPDATE_ENTITY_TRANSFORM: pc.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM,

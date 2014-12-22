@@ -31,8 +31,8 @@ pc.extend(pc, function () {
         pc.events.attach(this);
 
         this.canvas = canvas;
-        this.fillMode = pc.FillMode.KEEP_ASPECT;
-        this.resolutionMode = pc.ResolutionMode.FIXED;
+        this.fillMode = pc.FILLMODE_KEEP_ASPECT;
+        this.resolutionMode = pc.RESOLUTION_FIXED;
         this.librariesLoaded = false;
 
         this._link = new pc.LiveLink("application");
@@ -359,7 +359,7 @@ pc.extend(pc, function () {
             this.resolutionMode = mode;
 
             // In AUTO mode the resolution is the same as the canvas size, unless specified
-            if (mode === pc.ResolutionMode.AUTO && (width === undefined)) {
+            if (mode === pc.RESOLUTION_AUTO && (width === undefined)) {
                 width = this.canvas.clientWidth;
                 height = this.canvas.clientHeight;
             }
@@ -487,7 +487,7 @@ pc.extend(pc, function () {
                 var ratio = window.devicePixelRatio;
                 this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
             } else {
-                if (this.fillMode === pc.FillMode.KEEP_ASPECT) {
+                if (this.fillMode === pc.FILLMODE_KEEP_ASPECT) {
                     var r = this.canvas.width/this.canvas.height;
                     var winR = windowWidth / windowHeight;
 
@@ -498,19 +498,19 @@ pc.extend(pc, function () {
                         height = windowHeight;
                         width = height * r;
                     }
-                } else if (this.fillMode === pc.FillMode.FILL_WINDOW) {
+                } else if (this.fillMode === pc.FILLMODE_FILL_WINDOW) {
                     width = windowWidth;
                     height = windowHeight;
                 } else {
-                    // FillMode.NONE use width and height that are provided
+                    // FILLMODE_NONE use width and height that are provided
                 }
 
                 this.canvas.style.width = width + 'px';
                 this.canvas.style.height = height + 'px';
 
                 // In AUTO mode the resolution is changed to match the canvas size
-                if (this.resolutionMode === pc.ResolutionMode.AUTO) {
-                    this.setCanvasResolution(pc.ResolutionMode.AUTO);
+                if (this.resolutionMode === pc.RESOLUTION_AUTO) {
+                    this.setCanvasResolution(pc.RESOLUTION_AUTO);
                 }
             }
 
@@ -811,40 +811,36 @@ pc.extend(pc, function () {
     };
 
     return {
-        FillMode: {
-            /**
-            * @enum pc.FillMode
-            * @name pc.FillMode.NONE
-            * @description When resizing the window the size of the canvas will not change.
-            */
-            NONE: 'NONE',
-            /**
-            * @enum pc.FillMode
-            * @name pc.FillMode.FILL_WINDOW
-            * @description When resizing the window the size of the canvas will change to fill the window exactly.
-            */
-            FILL_WINDOW: 'FILL_WINDOW',
-            /**
-            * @enum pc.FillMode
-            * @name pc.FillMode.KEEP_ASPECT
-            * @description When resizing the window the size of the canvas will change to fill the window as best it can, while maintaining the same aspect ratio.
-            */
-            KEEP_ASPECT: 'KEEP_ASPECT'
-        },
-        ResolutionMode: {
-            /**
-            * @enum pc.ResolutionMode
-            * @name pc.ResolutionMode.AUTO
-            * @description When the canvas is resized the resolution of the canvas will change to match the size of the canvas.
-            */
-            AUTO: 'AUTO',
-            /**
-            * @enum pc.ResolutionMode
-            * @name pc.ResolutionMode.FIXED
-            * @description When the canvas is resized the resolution of the canvas will remain at the same value and the output will just be scaled to fit the canvas.
-            */
-            FIXED: 'FIXED'
-        },
+        /**
+         * @enum pc.FILLMODE
+         * @name pc.FILLMODE_NONE
+         * @description When resizing the window the size of the canvas will not change.
+         */
+        FILLMODE_NONE: 0,
+        /**
+         * @enum pc.FILLMODE
+         * @name pc.FILLMODE_FILL_WINDOW
+         * @description When resizing the window the size of the canvas will change to fill the window exactly.
+         */
+        FILLMODE_FILL_WINDOW: 1,
+        /**
+         * @enum pc.FILLMODE
+         * @name pc.FILLMODE_KEEP_ASPECT
+         * @description When resizing the window the size of the canvas will change to fill the window as best it can, while maintaining the same aspect ratio.
+         */
+        FILLMODE_KEEP_ASPECT: 2,
+        /**
+        * @enum pc.RESOLUTION
+        * @name pc.RESOLUTION_AUTO
+        * @description When the canvas is resized the resolution of the canvas will change to match the size of the canvas.
+        */
+        RESOLUTION_AUTO: 0,
+        /**
+        * @enum pc.RESOLUTION
+        * @name pc.RESOLUTION_FIXED
+        * @description When the canvas is resized the resolution of the canvas will remain at the same value and the output will just be scaled to fit the canvas.
+        */
+        RESOLUTION_FIXED: 1,
         Application: Application
     };
 } ());
