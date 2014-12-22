@@ -17,23 +17,23 @@
     canvas.focus();
 
     // Create the application and start the update loop
-    var application = new pc.fw.Application(canvas, {
-        mouse: new pc.input.Mouse(canvas),
-        keyboard: new pc.input.Keyboard(canvas)
+    var application = new pc.Application(canvas, {
+        mouse: new pc.Mouse(canvas),
+        keyboard: new pc.Keyboard(canvas)
     });
 
     application.start();
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-    application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
-    application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+    application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    application.setCanvasResolution(pc.RESOLUTION_AUTO);
 
     application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
     // ***********    Helper functions    *******************
 
     function createMaterial (color) {
-        var material = new pc.scene.PhongMaterial();
+        var material = new pc.PhongMaterial();
         material.diffuse = color;
         // we need to call material.update when we change its properties
         material.update()
@@ -42,7 +42,7 @@
 
     function createBox (position, size, material) {
         // create an entity and add a model component of type 'box'
-        var box = new pc.fw.Entity();
+        var box = new pc.Entity();
         application.context.systems.model.addComponent(box, {
             type: "box"
         });
@@ -77,7 +77,7 @@
     // ***********    Create lights   *******************
 
     // make our scene prettier by adding a directional light
-    var light = new pc.fw.Entity();
+    var light = new pc.Entity();
     application.context.systems.light.addComponent(light, {
         type: "point",
         color: new pc.Color(1, 1, 1),
@@ -94,7 +94,7 @@
     // ***********    Create camera    *******************
 
     // Create an Entity with a camera component
-    var camera = new pc.fw.Entity();
+    var camera = new pc.Entity();
     application.context.systems.camera.addComponent(camera, {
         clearColor: new pc.Color(0.5, 0.5, 0.8),
         nearClip: 0.3,

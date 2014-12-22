@@ -11,7 +11,7 @@
 
     <script>
         function createMaterial(colors) {
-            var material = new pc.scene.PhongMaterial();
+            var material = new pc.PhongMaterial();
             for (var param in colors) {
                 material[param] = colors[param];
             }
@@ -25,17 +25,17 @@
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
-        var application = new pc.fw.Application(canvas);
+        var application = new pc.Application(canvas);
         application.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
-        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+        application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        application.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         var entity, light, camera;
 
         // Create an Entity with a camera component
-        var camera = new pc.fw.Entity();
+        var camera = new pc.Entity();
         application.context.systems.camera.addComponent(camera, {
             clearColor: new pc.Color(0,0,0)
         });
@@ -44,7 +44,7 @@
         camera.translateLocal(0, 0, 5);
 
         // Create an Entity for the ground
-        var ground = new pc.fw.Entity();
+        var ground = new pc.Entity();
         application.context.systems.model.addComponent(ground, {
             type: "box"
         });
@@ -52,7 +52,7 @@
         ground.setLocalPosition(0, -0.5, 0);
 
         // Create an Entity with a point light component and a sphere model component.
-        var lightDir = new pc.fw.Entity();
+        var lightDir = new pc.Entity();
         application.context.systems.light.addComponent(lightDir, {
             type: "directional",
             color: new pc.Color(1, .4, 0),
@@ -61,7 +61,7 @@
         });
         lightDir.setLocalEulerAngles(-80, 70, 0);
 
-        var light = new pc.fw.Entity();
+        var light = new pc.Entity();
         application.context.systems.light.addComponent(light, {
             type: "spot",
             color: new pc.Color(.6, .85, 1),
@@ -88,7 +88,7 @@
             var anim = results[2].asset;
 
             // Create walking dude
-            entity = new pc.fw.Entity();
+            entity = new pc.Entity();
             application.context.systems.audiosource.addComponent(entity, {
                 assets: [
                     gravel.id
