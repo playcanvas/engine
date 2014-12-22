@@ -87,7 +87,7 @@ pc.extend(pc, function () {
             "varying vec2 vUv0;",
             "",
             "uniform sampler2D uBaseTexture;",
-            "uniform float uBloomEffectThreshold;",
+            "uniform float uBloomThreshold;",
             "",
             "void main(void)",
             "{",
@@ -95,7 +95,7 @@ pc.extend(pc, function () {
             "    vec4 color = texture2D(uBaseTexture, vUv0);",
             "",
                  // Adjust it to keep only values brighter than the specified threshold.
-            "    gl_FragColor = clamp((color - uBloomEffectThreshold) / (1.0 - uBloomEffectThreshold), 0.0, 1.0);",
+            "    gl_FragColor = clamp((color - uBloomThreshold) / (1.0 - uBloomThreshold), 0.0, 1.0);",
             "}"
         ].join("\n");
 
@@ -109,7 +109,7 @@ pc.extend(pc, function () {
             "",
             "varying vec2 vUv0;",
             "",
-            "uniform sampler2D uBloomEffectTexture;",
+            "uniform sampler2D uBloomTexture;",
             "uniform vec2 uBlurOffsets[SAMPLE_COUNT];",
             "uniform float uBlurWeights[SAMPLE_COUNT];",
             "",
@@ -119,7 +119,7 @@ pc.extend(pc, function () {
                  // Combine a number of weighted image filter taps.
             "    for (int i = 0; i < SAMPLE_COUNT; i++)",
             "    {",
-            "        color += texture2D(uBloomEffectTexture, vUv0 + uBlurOffsets[i]) * uBlurWeights[i];",
+            "        color += texture2D(uBloomTexture, vUv0 + uBlurOffsets[i]) * uBlurWeights[i];",
             "    }",
             "",
             "    gl_FragColor = color;",
@@ -136,12 +136,12 @@ pc.extend(pc, function () {
             "",
             "uniform float uBloomEffectIntensity;",
             "uniform sampler2D uBaseTexture;",
-            "uniform sampler2D uBloomEffectTexture;",
+            "uniform sampler2D uBloomTexture;",
             "",
             "void main(void)",
             "{",
                  // Look up the bloom and original base image colors.
-            "    vec4 bloom = texture2D(uBloomEffectTexture, vUv0) * uBloomEffectIntensity;",
+            "    vec4 bloom = texture2D(uBloomTexture, vUv0) * uBloomEffectIntensity;",
             "    vec4 base = texture2D(uBaseTexture, vUv0);",
             "",
                  // Darken down the base image in areas where there is a lot of bloom,
@@ -207,7 +207,7 @@ pc.extend(pc, function () {
 
             // Pass 1: draw the scene into rendertarget 1, using a
             // shader that extracts only the brightest parts of the image.
-            scope.resolve("uBloomEffectThreshold").setValue(this.bloomThreshold);
+            scope.resolve("uBloomThreshold").setValue(this.bloomThreshold);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
             pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.extractShader);
 
@@ -216,7 +216,7 @@ pc.extend(pc, function () {
             calculateBlurValues(this.sampleWeights, this.sampleOffsets, 1.0 / this.targets[1].width, 0, this.blurAmount);
             scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
-            scope.resolve("uBloomEffectTexture").setValue(this.targets[0].colorBuffer);
+            scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             pc.drawFullscreenQuad(device, this.targets[1], this.vertexBuffer, this.blurShader);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
@@ -224,14 +224,14 @@ pc.extend(pc, function () {
             calculateBlurValues(this.sampleWeights, this.sampleOffsets, 0, 1.0 / this.targets[0].height, this.blurAmount);
             scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
-            scope.resolve("uBloomEffectTexture").setValue(this.targets[1].colorBuffer);
+            scope.resolve("uBloomTexture").setValue(this.targets[1].colorBuffer);
             pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.blurShader);
 
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
             scope.resolve("uBloomEffectIntensity").setValue(this.bloomIntensity);
-            scope.resolve("uBloomEffectTexture").setValue(this.targets[0].colorBuffer);
+            scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
             pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader, rect);
         }
