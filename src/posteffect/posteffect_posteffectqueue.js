@@ -3,11 +3,11 @@ pc.extend(pc, function () {
      * @name pc.PostEffectQueue
      * @constructor Create a new PostEffectQueue
      * @class Used to manage multiple post effects for a camera
-     * @param {pc.ApplicationContext} context The application context
+     * @param {pc.Application} app The application
      * @param {pc.CameraComponent} camera The camera component
      */
-    function PostEffectQueue(context, camera) {
-        this.context = context;
+    function PostEffectQueue(app, camera) {
+        this.app = app;
         this.camera = camera;
         // stores all of the post effects
         this.effects = [];
@@ -36,10 +36,10 @@ pc.extend(pc, function () {
         _createOffscreenTarget: function (useDepth) {
             var rect = this.camera.rect;
 
-            var width = Math.floor(rect.z * this.context.graphicsDevice.width * this.renderTargetScale);
-            var height = Math.floor(rect.w * this.context.graphicsDevice.height * this.renderTargetScale);
+            var width = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
+            var height = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
-            var colorBuffer = new pc.Texture(this.context.graphicsDevice, {
+            var colorBuffer = new pc.Texture(this.app.graphicsDevice, {
                 format: pc.PIXELFORMAT_R8_G8_B8_A8,
                 width: width,
                 height: height
@@ -50,7 +50,7 @@ pc.extend(pc, function () {
             colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
             colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
 
-            return new pc.RenderTarget(this.context.graphicsDevice, colorBuffer, { depth: useDepth });
+            return new pc.RenderTarget(this.app.graphicsDevice, colorBuffer, { depth: useDepth });
         },
 
         _setDepthTarget: function (depthTarget) {
@@ -211,7 +211,7 @@ pc.extend(pc, function () {
                 var effects = this.effects;
                 var camera = this.camera;
 
-                this.context.graphicsDevice.on('resizecanvas', this._onCanvasResized, this);
+                this.app.graphicsDevice.on('resizecanvas', this._onCanvasResized, this);
 
                 // set the camera's rect to full screen. Set it directly to the
                 // camera node instead of the component because we want to keep the old
@@ -240,7 +240,7 @@ pc.extend(pc, function () {
                     }
                 }.bind(this));
 
-                this.context.scene.drawCalls.push(this.command);
+                this.app.scene.drawCalls.push(this.command);
             }
         },
 
@@ -253,7 +253,7 @@ pc.extend(pc, function () {
             if (this.enabled) {
                 this.enabled = false;
 
-                this.context.graphicsDevice.off('resizecanvas', this._onCanvasResized, this);
+                this.app.graphicsDevice.off('resizecanvas', this._onCanvasResized, this);
 
                 this.camera.renderTarget = null;
                 this.camera.camera._depthTarget = null;
@@ -261,9 +261,9 @@ pc.extend(pc, function () {
                 this.camera.camera.setRect(rect.x, rect.y, rect.z, rect.w);
 
                 // remove the draw command
-                var i = this.context.scene.drawCalls.indexOf(this.command);
+                var i = this.app.scene.drawCalls.indexOf(this.command);
                 if (i >= 0) {
-                    this.context.scene.drawCalls.splice(i, 1);
+                    this.app.scene.drawCalls.splice(i, 1);
                 }
             }
         },
@@ -279,8 +279,8 @@ pc.extend(pc, function () {
 
         resizeRenderTargets: function () {
             var rect = this.camera.rect;
-            var desiredWidth = Math.floor(rect.z * this.context.graphicsDevice.width * this.renderTargetScale);
-            var desiredHeight = Math.floor(rect.w * this.context.graphicsDevice.height * this.renderTargetScale);
+            var desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width * this.renderTargetScale);
+            var desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height * this.renderTargetScale);
 
             var effects = this.effects;
 

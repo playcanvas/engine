@@ -167,7 +167,7 @@ pc.extend(pc, function () {
             var light = model.lights[0];
             light.setEnabled(true);
 
-            var scene = this.system.context.scene;
+            var scene = this.system.app.scene;
 
             if (!scene.containsModel(model)) {
                 scene.addModel(model);
@@ -182,7 +182,7 @@ pc.extend(pc, function () {
             var light = model.lights[0];
             light.setEnabled(false);
 
-            this.system.context.scene.removeModel(model);
+            this.system.app.scene.removeModel(model);
         }
     });
 

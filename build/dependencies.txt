@@ -114,7 +114,6 @@
 ../src/framework/framework_link.dev.js
 ../src/framework/framework_contentfile.js
 ../src/framework/framework_pack.js
-../src/framework/framework_applicationcontext.js
 ../src/framework/framework_application.js
 ../src/framework/resources/resources_pack.js
 ../src/framework/components/component_registry.js

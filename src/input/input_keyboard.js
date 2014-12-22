@@ -15,7 +15,7 @@ pc.extend(pc, function(){
     *     }
     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
     * };
-    * context.keyboard.on("keydown", onKeyDown, this);
+    * app.keyboard.on("keydown", onKeyDown, this);
     */
     var KeyboardEvent = function (keyboard, event) {
         this.key = event.keyCode;
@@ -69,7 +69,7 @@ pc.extend(pc, function(){
     *     }
     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
     * };
-    * context.keyboard.on("keydown", onKeyDown, this);
+    * app.keyboard.on("keydown", onKeyDown, this);
     */
 
     /**
@@ -84,7 +84,7 @@ pc.extend(pc, function(){
     *     }
     *     e.event.preventDefault(); // Use original browser event to prevent browser action.
     * };
-    * context.keyboard.on("keyup", onKeyUp, this);
+    * app.keyboard.on("keyup", onKeyUp, this);
     */
 
     /**

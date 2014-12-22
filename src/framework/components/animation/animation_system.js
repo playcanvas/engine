@@ -3,14 +3,14 @@ pc.extend(pc, function () {
      * @name pc.AnimationComponentSystem
      * @constructor Create an AnimationComponentSystem
      * @class The AnimationComponentSystem is manages creating and deleting AnimationComponents
-     * @param {pc.ApplicationContext} context The ApplicationContext for the current application
+     * @param {pc.Application} app The Application for the current application
      * @extends pc.ComponentSystem
      */
-    var AnimationComponentSystem = function AnimationComponentSystem (context) {
+    var AnimationComponentSystem = function AnimationComponentSystem (app) {
         this.id = 'animation';
         this.description = "Specifies the animation assets that can run on the model specified by the Entity's model Component.";
 
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.AnimationComponent;
         this.DataType = pc.AnimationComponentData;

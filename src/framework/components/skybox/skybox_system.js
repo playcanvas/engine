@@ -1,17 +1,17 @@
 pc.extend(pc, function () {
-    
+
     /**
      * @private
      * @name pc.SkyboxComponentSystem
      * @constructor Create a new SkyboxComponentSystem
      * @class Renders a cube skybox
-     * @param {pc.ApplicationContext} context
+     * @param {pc.ApplicationContext} app
      * @extends pc.ComponentSystem
      */
-    var SkyboxComponentSystem = function SkyboxComponentSystem (context) {
+    var SkyboxComponentSystem = function SkyboxComponentSystem (app) {
         this.id = 'skybox';
         this.description = "Renders a skybox in the scene.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.SkyboxComponent;
         this.DataType = pc.SkyboxComponentData;
@@ -31,7 +31,7 @@ pc.extend(pc, function () {
                     max: 1,
                     type: "texture"
                 },
-                defaultValue: null  
+                defaultValue: null
             }, {
              name: "negx",
              displayName: "NEGX",
@@ -41,7 +41,7 @@ pc.extend(pc, function () {
                     max: 1,
                     type: "texture"
                 },
-                defaultValue: null  
+                defaultValue: null
             }, {
              name: "posy",
              displayName: "POSY",
@@ -51,7 +51,7 @@ pc.extend(pc, function () {
                     max: 1,
                     type: "texture"
                 },
-                defaultValue: null  
+                defaultValue: null
             }, {
              name: "negy",
              displayName: "NEGY",
@@ -61,7 +61,7 @@ pc.extend(pc, function () {
                     max: 1,
                     type: "texture"
                 },
-                defaultValue: null  
+                defaultValue: null
             }, {
              name: "posz",
              displayName: "POSZ",
@@ -71,7 +71,7 @@ pc.extend(pc, function () {
                     max: 1,
                     type: "texture"
                 },
-                defaultValue: null  
+                defaultValue: null
             }, {
              name: "negz",
              displayName: "NEGZ",
@@ -81,7 +81,7 @@ pc.extend(pc, function () {
                     max: 1,
                     type: "texture"
                 },
-                defaultValue: null  
+                defaultValue: null
             }, {
                 name: 'model',
                 exposed: false,
@@ -110,7 +110,7 @@ pc.extend(pc, function () {
 
         onRemove: function (entity, data) {
             if (data.model) {
-                this.context.scene.removeModel(data.model);
+                this.app.scene.removeModel(data.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;
             }

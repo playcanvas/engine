@@ -17,17 +17,17 @@ pc.extend(pc, function () {
      *
      * @example
      * var entity = new pc.Entity();
-     * var context = ... // Get the pc.ApplicationContext
+     * var app = ... // Get the pc.Application
      *
      * // Add a Component to the Entity
-     * context.systems.camera.addComponent(entity, {
+     * app.systems.camera.addComponent(entity, {
      *   fov: 45,
      *   nearClip: 1,
      *   farClip: 10000
      * });
      *
      * // Add the Entity into the scene graph
-     * context.root.addChild(entity);
+     * app.root.addChild(entity);
      *
      * // Move the entity
      * entity.translate(10, 0, 0);

@@ -90,7 +90,7 @@ pc.extend(pc, function () {
          * @returns {pc.Vec3} The world space coordinate.
          */
         screenToWorld: function (x, y, z, worldCoord) {
-            var device = this.system.context.graphicsDevice;
+            var device = this.system.app.graphicsDevice;
             var width = parseInt(device.canvas.clientWidth);
             var height = parseInt(device.canvas.clientHeight);
             return this.data.camera.screenToWorld(x, y, z, width, height, worldCoord);
@@ -178,7 +178,7 @@ pc.extend(pc, function () {
         _resetAspectRatio: function () {
             var camera = this.camera;
             if (camera) {
-                var device = this.system.context.graphicsDevice;
+                var device = this.system.app.graphicsDevice;
                 var rect = this.rect;
                 var aspect = (device.width * rect.z) / (device.height * rect.w);
                 if (aspect !== camera.getAspectRatio()) {

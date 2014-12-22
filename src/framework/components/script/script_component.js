@@ -142,7 +142,7 @@ pc.extend(pc, function () {
             var cached = [];
 
             for (var i=0, len=urls.length; i<len; i++) {
-                var type = this.system.context.loader.getFromCache(urls[i]);
+                var type = this.system.app.loader.getFromCache(urls[i]);
 
                 // if we cannot find the script in the cache then return and load
                 // all scripts with the resource loader
@@ -196,7 +196,7 @@ pc.extend(pc, function () {
                 parent: this.entity.getRequest()
             };
 
-            var promise = this.system.context.loader.request(requests, options);
+            var promise = this.system.app.loader.request(requests, options);
             promise.then(function (resources) {
                 resources.forEach(function (ScriptType, index) {
                     // ScriptType may be null if the script component is loading an ordinary javascript lib rather than a PlayCanvas script

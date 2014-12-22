@@ -128,7 +128,7 @@ pc.extend(pc.resources, function () {
     * @example
     * var guid = ...; // get pack GUID from somewhere
     * var r = new pc.resources.PackRequest(guid);
-    * context.loader.request(r).then(function (resources) {
+    * app.loader.request(r).then(function (resources) {
     *     var pack = resources[0];
     * });
     */

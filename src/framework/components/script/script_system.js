@@ -13,13 +13,13 @@ pc.extend(pc, function () {
      * @name pc.ScriptComponentSystem
      * @constructor Create a new ScriptComponentSystem
      * @class Allows scripts to be attached to an Entity and executed
-     * @param {Object} context
+     * @param {Object} app
      * @extends pc.ComponentSystem
      */
-    var ScriptComponentSystem = function ScriptComponentSystem(context) {
+    var ScriptComponentSystem = function ScriptComponentSystem(app) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;

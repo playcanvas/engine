@@ -11,7 +11,7 @@ pc.extend(pc, function () {
     var PickComponent = function PickComponent(system, entity) {
     };
     PickComponent = pc.inherits(PickComponent, pc.Component);
-    
+
     pc.extend(PickComponent.prototype, {
         addShape: function (shape, shapeName) {
             var material = this.data.material;
@@ -19,17 +19,17 @@ pc.extend(pc, function () {
 
             switch (shape.type) {
                 case pc.shape.Type.BOX:
-                    mesh = pc.createBox(this.system.context.graphicsDevice, {
+                    mesh = pc.createBox(this.system.app.graphicsDevice, {
                         halfExtents: shape.halfExtents
                     });
                     break;
                 case pc.shape.Type.SPHERE:
-                    mesh = pc.createSphere(this.system.context.graphicsDevice, {
+                    mesh = pc.createSphere(this.system.app.graphicsDevice, {
                         radius: shape.radius
                     });
                     break;
                 case pc.shape.Type.TORUS:
-                    mesh = pc.createTorus(this.system.context.graphicsDevice, {
+                    mesh = pc.createTorus(this.system.app.graphicsDevice, {
                         tubeRadius: shape.iradius,
                         ringRadius: shape.oradius
                     });

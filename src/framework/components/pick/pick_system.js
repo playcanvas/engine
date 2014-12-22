@@ -1,15 +1,15 @@
 pc.extend(pc, function () {
-    
+
     /**
      * @name pc.PickComponentSystem
      * @constructor Create a new PickComponentSystem
      * @class Allows an Entity to be picked from the scene using a pc.picking.Picker Object
-     * @param {Object} context
+     * @param {Object} app
      * @extends pc.ComponentSystem
      */
-    var PickComponentSystem = function PickComponentSystem(context) {
+    var PickComponentSystem = function PickComponentSystem(app) {
         this.id = "pick";
-        context.systems.add(this.id, this);    
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.PickComponent;
         this.DataType = pc.PickComponentData;
@@ -27,7 +27,7 @@ pc.extend(pc, function () {
 
         // TODO: Fix pick component in Designer
         // this.exposeProperties();
-    
+
         // Dictionary of layers: name -> array of models
         this.layers = {
             'default': []
@@ -36,9 +36,9 @@ pc.extend(pc, function () {
 
         this.on('remove', this.onRemove, this);
     };
-    
+
     PickComponentSystem = pc.inherits(PickComponentSystem, pc.ComponentSystem);
-        
+
     pc.extend(PickComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             // This material is swapped out for a pick material by the pc.Picker. However,
@@ -61,13 +61,13 @@ pc.extend(pc, function () {
             this.layers[layer].push(shape.model);
 
             if (this.display) {
-                this.context.scene.addModel(shape.model);    
+                this.app.scene.addModel(shape.model);
             }
         },
 
         deleteShapes: function (layer, shapes) {
             var layerModels = this.layers[layer];
-            
+
             for (var i = 0; i < shapes.length; i++) {
                 var model = shapes[i].model;
                 var index = layerModels.indexOf(model);
@@ -75,7 +75,7 @@ pc.extend(pc, function () {
                     layerModels.splice(index, 1);
                 }
                 if (this.display) {
-                    this.context.scene.removeModel(model);    
+                    this.app.scene.removeModel(model);
                 }
             }
         },

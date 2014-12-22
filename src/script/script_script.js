@@ -5,8 +5,8 @@
 pc.script = (function () {
     var _main = null;
     var _loader = null;
-    
-    var script = {        
+
+    var script = {
         /**
          * Register the main game script resource, this is executed by called pc.script.start()
          * @function
@@ -18,34 +18,34 @@ pc.script = (function () {
             }
             _main = callback;
         },
-        
+
         setLoader: function(loader) {
             if(loader && _loader) {
                 throw new Error("pc.script already has loader object.");
             }
-            
+
             _loader = loader;
         },
-        
+
         /**
          * @function
          * @name pc.script.create
          * @description Create a script resource object. A script file should contain a single call to pc.script.create and the callback should return a script object which will be
          * instanciated when attached to Entities.
          * @param {Object} name The name of the script object.
-         * @param {Object} callback The callback function which is passed an {pc.ApplicationContext} object, 
-         * which is used to access Entities and Components, and should return the Type of the script resource 
+         * @param {Object} callback The callback function which is passed an {pc.ApplicationContext} object,
+         * which is used to access Entities and Components, and should return the Type of the script resource
          * to be instanced for each Entity.
          * @example
-         * pc.script.create( function (context) {
+         * pc.script.create( function (app) {
          *  var Scriptable = function (entity) {
          *      // store entity
          *      this.entity = entity;
-         *      
-         *      // use context
-         *      context.components.model.addComponent(entity, {...});
+         *
+         *      // use app
+         *      app.components.model.addComponent(entity, {...});
          *  };
-         *  
+         *
          *  return Scriptable;
          * }
          */
@@ -73,7 +73,7 @@ pc.script = (function () {
         *   <li>{Number} step: The step that will be used when changing the attribute value in the designer</li>
         *   <li>{Number} decimalPrecision: A number that specifies the number of decimal digits allowed for the value</li>
         *   <li>{Array} enumerations: An array of name, value pairs from which the user can select one if the attribute type is an enumeration</li>
-        * </ul> 
+        * </ul>
         * @example
         * pc.script.attribute('speed', 'number', 5);
         * pc.script.attribute('message', 'string', "My message");
@@ -87,20 +87,20 @@ pc.script = (function () {
         *        value: 1
         *     }]
         *  });
-        * 
-        * pc.script.create('scriptable', function (context) {
+        *
+        * pc.script.create('scriptable', function (app) {
         *  var Scriptable = function (entity) {
         *      // store entity
-        *      this.entity = entity;              
+        *      this.entity = entity;
         *  };
-        *  
+        *
         *  return Scriptable;
         * }
         */
         attribute: function (name, type, defaultValue, options) {
             // only works when parsing the script...
         },
-        
+
         /**
          * Begin the scripted application by calling the function passed in to pc.script.main()
          * @function
@@ -110,8 +110,8 @@ pc.script = (function () {
             _main();
         }
     };
-    
+
     pc.events.attach(script);
-        
+
     return script;
 }());

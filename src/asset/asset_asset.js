@@ -74,7 +74,7 @@ pc.extend(pc.asset, function () {
         * @description Return the URL required to fetch the file for this asset.
         * @returns {String} The URL
         * @example
-        * var assets = context.assets.find("My Image", pc.asset.ASSET_IMAGE);
+        * var assets = app.assets.find("My Image", pc.asset.ASSET_IMAGE);
         * var img = "<img src='" + assets[0].getFileUrl() + "'></img>";
         */
         getFileUrl: function () {
