@@ -7,9 +7,9 @@ pc.extend(pc.fw, function () {
     * @param {pc.fw.CameraComponentSystem} system The ComponentSystem that created this Component
     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
     * @extends pc.fw.Component
-    * @property {Boolean} enabled If true the camera will be added to the active cameras of the {@link pc.fw.CameraComponentSystem} and rendered with all the other active cameras.
+    * @property {Boolean} enabled If true the camera will be render the active scene. Note that multiple cameras
+    * can be enabled simulataneously.
     * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
-    * @property {pc.Camera} camera The {@link pc.CameraNode} used to render the scene
     * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render
     * @property {Number} nearClip The distance from the camera before which no rendering will take place
     * @property {Number} farClip The distance from the camera after which no rendering will take place
