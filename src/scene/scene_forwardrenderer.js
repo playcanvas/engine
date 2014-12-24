@@ -180,6 +180,7 @@ pc.extend(pc, function () {
     }
 
     /**
+     * @private
      * @name pc.ForwardRenderer
      * @class The forward renderer render scene objects.
      * @constructor Creates a new forward renderer object.
@@ -436,6 +437,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.ForwardRenderer#render
          * @description Renders the scene using the specified camera.
