@@ -107,7 +107,7 @@ pc.extend(pc, function () {
      * of the supplied camera. Once the pick buffer has been prepared, pc.Picker#getSelection can be
      * called multiple times on the same picker object. Therefore, if the models or camera do not change 
      * in any way, pc.Picker#prepare does not need to be called again.
-     * @param {pc.CameraNode} camera The camera used to render the scene, note this is the CameraNode, not an Entity
+     * @param {pc.Camera} camera The camera used to render the scene, note this is the CameraNode, not an Entity
      * @param {pc.Scene} scene The scene containing the pickable mesh instances.
      */
     Picker.prototype.prepare = function (camera, scene) {
@@ -141,7 +141,7 @@ pc.extend(pc, function () {
         var projId = scope.resolve('matrix_projection');
         var viewProjId = scope.resolve('matrix_viewProjection');
 
-        var wtm = camera.getWorldTransform();
+        var wtm = camera._node.getWorldTransform();
         var projMat = camera.getProjectionMatrix();
         var viewMat = wtm.clone().invert();
         var viewProjMat = new pc.Mat4();

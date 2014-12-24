@@ -57,7 +57,6 @@
             type: "directional",
             color: new pc.Color(1, .4, 0),
             intensity: 1
-            // shadowResolution: 2048
         });
         lightDir.setLocalEulerAngles(-80, 70, 0);
 
@@ -70,10 +69,10 @@
             range: 20,
             intensity: 2,
             castShadows: true,
+            shadowBias: 0.005,
             shadowResolution: 2048
         });
         light.setLocalPosition(0, 5, 0);
-        light.light.model.lights[0].setShadowBias(-0.00005);
         application.context.systems.audiolistener.addComponent(light, {});
 
         var requests = [

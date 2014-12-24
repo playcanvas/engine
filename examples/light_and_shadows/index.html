@@ -85,9 +85,9 @@
             range: 100,
             intensity: 1,
             castShadows: true,
+            shadowBias: 0.005,
             shadowResolution: 2048
         });
-        light.light.model.lights[0].setShadowBias(-0.00005); // nasty bit to ensure the shadows line up with the ground properly
 
         var cone = new pc.Entity();
         application.context.systems.model.addComponent(cone, {
@@ -102,7 +102,10 @@
             type: "point",
             color: new pc.Color(0, 0, 1),
             range: 100,
-            intensity: 1
+            intensity: 1,
+            castShadows: true,
+            shadowBias: 0.005,
+            shadowResolution: 512
         });
         application.context.systems.model.addComponent(pointlight, {
             type: "sphere"
