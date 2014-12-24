@@ -1,13 +1,16 @@
-pc.extend(pc.audio, function () {
+pc.extend(pc, function () {
+    'use strict';
+
     var Channel;
     
-    if (pc.audio.hasAudioContext()) {
+    if (pc.AudioManager.hasAudioContext()) {
         /**
-        * @name pc.audio.Channel
-        * @class A channel is created when the pc.audio.AudioManager begins playback of a pc.audio.Sound. Usually created internally by 
-        * pc.audio.AudioManager#playSound or pc.audio.AudioManager#playSound3d. Developers usually won't have to create Channels manually.
-        * @param {pc.audio.AudioManager} manager The AudioManager instance
-        * @param {pc.audio.Sound} sound The sound to playback
+        * @private
+        * @name pc.Channel
+        * @class A channel is created when the pc.AudioManager begins playback of a pc.Sound. Usually created internally by 
+        * pc.AudioManager#playSound or pc.AudioManager#playSound3d. Developers usually won't have to create Channels manually.
+        * @param {pc.AudioManager} manager The AudioManager instance
+        * @param {pc.Sound} sound The sound to playback
         * @param {Object} options
         * @param {Number} [options.volume=1] The playback volume, between 0 and 1.
         * @param {Boolean} [options.loop=false] Whether the sound should loop when it reaches the end or not.
@@ -35,10 +38,11 @@ pc.extend(pc.audio, function () {
         
         Channel.prototype = {
             /**
-            * @function
-            * @name pc.audio.Channel#play
-            * @description Begin playback of sound
-            */
+             * @private
+             * @function
+             * @name pc.Channel#play
+             * @description Begin playback of sound
+             */
             play: function () {
                 if (this.source) {
                     throw new Error('Call stop() before calling play()');
@@ -60,10 +64,11 @@ pc.extend(pc.audio, function () {
             },
 
             /**
-            * @function
-            * @name pc.audio.Channel#pause
-            * @description Pause playback of sound. Call unpause() to resume playback from the same position
-            */
+             * @private
+             * @function
+             * @name pc.Channel#pause
+             * @description Pause playback of sound. Call unpause() to resume playback from the same position
+             */
             pause: function () {
                 if (this.source) {
                     this.paused = true;
@@ -75,10 +80,11 @@ pc.extend(pc.audio, function () {
             },
 
             /**
-            * @function
-            * @name pc.audio.Channel#unpause
-            * @description Resume playback of the sound. Playback resumes at the point that the audio was paused
-            */
+             * @private
+             * @function
+             * @name pc.Channel#unpause
+             * @description Resume playback of the sound. Playback resumes at the point that the audio was paused
+             */
             unpause: function () {
                 if (this.source || !this.paused) {
                     throw new Error('Call pause() before unpausing.');
@@ -98,10 +104,11 @@ pc.extend(pc.audio, function () {
             },
 
             /**
-            * @function 
-            * @name pc.audio.Channel#stop
-            * @description Stop playback of sound. Calling play() again will restart playback from the beginning of the sound.
-            */
+             * @private
+             * @function 
+             * @name pc.Channel#stop
+             * @description Stop playback of sound. Calling play() again will restart playback from the beginning of the sound.
+             */
             stop: function () {
                 if (this.source) {
                     this.source.stop(0);
@@ -114,10 +121,11 @@ pc.extend(pc.audio, function () {
             },
             
             /**
-            * @function
-            * @name pc.audio.Channel#setLoop
-            * @description Enable/disable the loop property to make the sound restart from the beginning when it reaches the end.
-            */
+             * @private
+             * @function
+             * @name pc.Channel#setLoop
+             * @description Enable/disable the loop property to make the sound restart from the beginning when it reaches the end.
+             */
             setLoop: function (loop) {
                 this.loop = loop;
                 if (this.source) {
@@ -126,10 +134,11 @@ pc.extend(pc.audio, function () {
             },
 
             /**
-            * @function 
-            * @name pc.audio.Channel#setVolume
-            * @description Set the volume of playback between 0 and 1.
-            */
+             * @private
+             * @function 
+             * @name pc.Channel#setVolume
+             * @description Set the volume of playback between 0 and 1.
+             */
             setVolume: function (volume) {
                 this.volume = volume;
                 if (this.gain) {
@@ -169,7 +178,7 @@ pc.extend(pc.audio, function () {
             }
 
         };
-    } else if (pc.audio.hasAudio()) {
+    } else if (pc.AudioManager.hasAudio()) {
         Channel = function (manager, sound, options) {
             this.volume = options.volume || 1;
             this.loop = options.loop || false;
@@ -271,48 +280,51 @@ pc.extend(pc.audio, function () {
     // Add functions which don't depend on source type
     pc.extend(Channel.prototype, {
         /**
-        * @function
-        * @name pc.audio.Channel#getVolume
-        * @description Get the current value for the volume. Between 0 and 1.
-        */
+         * @private
+         * @function
+         * @name pc.Channel#getVolume
+         * @description Get the current value for the volume. Between 0 and 1.
+         */
         getVolume: function () {
             return this.volume;
         },
 
         /**
-        * @function
-        * @name pc.audio.Channel#getLoop
-        * @description Get the current looping state of the Channel
-        */
+         * @private
+         * @function
+         * @name pc.Channel#getLoop
+         * @description Get the current looping state of the Channel
+         */
         getLoop: function () {
             return this.loop;
         },
 
         /**
-        * @function
-        * @name pc.audio.Channel#getPitch
-        * @description Get the current pitch of the Channel
-        */
+         * @private
+         * @function
+         * @name pc.Channel#getPitch
+         * @description Get the current pitch of the Channel
+         */
         getPitch: function () {
             return this.pitch;
         },
 
         /**
-        * @function
-        * @private
-        * @name pc.audio.Channel#onManagerVolumeChange
-        * @description Handle the manager's 'volumechange' event.
-        */
+         * @private
+         * @function
+         * @name pc.Channel#onManagerVolumeChange
+         * @description Handle the manager's 'volumechange' event.
+         */
         onManagerVolumeChange: function () {
             this.setVolume(this.getVolume());
         },
-        
+
         /**
-        * @function
-        * @private
-        * @name pc.audio.Channel#onManagerSuspend
-        * @description Handle the manager's 'suspend' event.
-        */
+         * @private
+         * @function
+         * @name pc.Channel#onManagerSuspend
+         * @description Handle the manager's 'suspend' event.
+         */
         onManagerSuspend: function () {
             if (this.isPlaying() && !this.suspended) {
                 this.suspended = true;
@@ -321,11 +333,11 @@ pc.extend(pc.audio, function () {
         },
 
         /**
-        * @function
-        * @private
-        * @name pc.audio.Channel#onManagerResume
-        * @description Handle the manager's 'resume' event.
-        */
+         * @private
+         * @function
+         * @name pc.Channel#onManagerResume
+         * @description Handle the manager's 'resume' event.
+         */
         onManagerResume: function () {
             if (this.suspended) {
                 this.suspended = false;

@@ -1,10 +1,10 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @component
-     * @name pc.fw.CollisionComponent
+     * @name pc.CollisionComponent
      * @constructor Create a new CollisionComponent
-     * @class A collision volume. use this in conjunction with a {@link pc.fw.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
-     * <p>If the {@link pc.fw.Entity} does not have a {@link pc.fw.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic
+     * @class A collision volume. use this in conjunction with a {@link pc.RigidBodyComponent} to make a collision volume that can be simulated using the physics engine.
+     * <p>If the {@link pc.Entity} does not have a {@link pc.RigidBodyComponent} then this collision volume will act as a trigger volume. When an entity with a dynamic
      * or kinematic body enters or leaves an entity with a trigger volume, both entities will receive trigger events.
      * <p>The following table shows all the events that can be fired between two Entities:
      * <table class="table table-striped table-condensed">
@@ -47,8 +47,8 @@ pc.extend(pc.fw, function () {
      *   </tr>
      * </table>
      * </p>
-     * @param {pc.fw.CollisionComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
+     * @param {pc.CollisionComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {Boolean} enabled Enables or disables the Component.
      * @property {String} type The type of the collision volume. Defaults to 'box'. Can be one of the following:
      * <ul>
@@ -63,46 +63,46 @@ pc.extend(pc.fw, function () {
      * @property {Number} axis The local space axis with which the capsule or cylinder-shaped collision volume's length is aligned. 0 for X, 1 for Y and 2 for Z. Defaults to 1 (Y-axis).
      * @property {Number} height The total height of the capsule or cylinder-shaped collision volume from tip to tip. Defaults to 2.
      * @property {Number} asset The id of the asset for the model of the mesh collision volume.
-     * @property {pc.scene.Model} model The model that is added to the scene graph for the mesh collision volume.
-     * @extends pc.fw.Component
+     * @property {pc.Model} model The model that is added to the scene graph for the mesh collision volume.
+     * @extends pc.Component
      */
 
     // Events Documentation
     /**
      * @event
-     * @name pc.fw.CollisionComponent#contact
+     * @name pc.CollisionComponent#contact
      * @description The 'contact' event is fired when a contact occurs between two rigid bodies
-     * @param {pc.fw.ContactResult} result Details of the contact between the two rigid bodies.
+     * @param {pc.ContactResult} result Details of the contact between the two rigid bodies.
     */
 
     /**
      * @event
-     * @name pc.fw.CollisionComponent#collisionstart
+     * @name pc.CollisionComponent#collisionstart
      * @description The 'collisionstart' event is fired when two rigid bodies start touching.
-     * @param {pc.fw.ContactResult} result Details of the contact between the two Entities.
+     * @param {pc.ContactResult} result Details of the contact between the two Entities.
     */
 
     /**
      * @event
-     * @name pc.fw.CollisionComponent#collisionend
+     * @name pc.CollisionComponent#collisionend
      * @description The 'collisionend' event is fired two rigid-bodies stop touching.
-     * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that stopped touching this collision volume.
+     * @param {pc.Entity} other The {@link pc.Entity} that stopped touching this collision volume.
     */
 
     /**
      * @event
-     * @name pc.fw.CollisionComponent#triggerenter
+     * @name pc.CollisionComponent#triggerenter
      * @description The 'triggerenter' event is fired when a rigid body enters a trigger volume.
-     * a {@link pc.fw.RigidBodyComponent} attached.
-     * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that entered this collision volume.
+     * a {@link pc.RigidBodyComponent} attached.
+     * @param {pc.Entity} other The {@link pc.Entity} that entered this collision volume.
     */
 
     /**
      * @event
-     * @name pc.fw.CollisionComponent#triggerleave
+     * @name pc.CollisionComponent#triggerleave
      * @description The 'triggerleave' event is fired when a rigid body exits a trigger volume.
-     * a {@link pc.fw.RigidBodyComponent} attached.
-     * @param {pc.fw.Entity} other The {@link pc.fw.Entity} that exited this collision volume.
+     * a {@link pc.RigidBodyComponent} attached.
+     * @param {pc.Entity} other The {@link pc.Entity} that exited this collision volume.
     */
     var CollisionComponent = function CollisionComponent (system, entity) {
         this.on('set_type', this.onSetType, this);
@@ -115,7 +115,7 @@ pc.extend(pc.fw, function () {
         entity.on('livelink:updatetransform', this.onLiveLinkUpdateTransform, this);
         system.on('beforeremove', this.onBeforeRemove, this);
     };
-    CollisionComponent = pc.inherits(CollisionComponent, pc.fw.Component);
+    CollisionComponent = pc.inherits(CollisionComponent, pc.Component);
 
     pc.extend(CollisionComponent.prototype, {
 

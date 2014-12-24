@@ -1,10 +1,10 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
     * @private
-    * @name pc.fw.RigidBodyComponentData
+    * @name pc.RigidBodyComponentData
     * @constructor Create a new data structure for a RigidBodyComponent
     * @class Contains data for the RigidBodyComponent
-    * @extends pc.fw.ComponentData
+    * @extends pc.ComponentData
     */
     var RigidBodyComponentData = function () {
         this.enabled = true;
@@ -26,7 +26,7 @@ pc.extend(pc.fw, function () {
         this.body = null;
         this.simulationEnabled = false;
     };
-    RigidBodyComponentData = pc.inherits(RigidBodyComponentData, pc.fw.ComponentData);
+    RigidBodyComponentData = pc.inherits(RigidBodyComponentData, pc.ComponentData);
 
     return {
         RigidBodyComponentData: RigidBodyComponentData

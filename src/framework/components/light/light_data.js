@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var LightComponentData = function () {
         // Serialized
         this.type = 'directional';
@@ -13,13 +13,13 @@ pc.extend(pc.fw, function () {
         this.range = 10;
         this.innerConeAngle = 40;
         this.outerConeAngle = 45;
-        this.falloffMode = pc.scene.LIGHTFALLOFF_LINEAR;
+        this.falloffMode = pc.LIGHTFALLOFF_LINEAR;
 
         // Non-serialized
         this.model = null;
     };
 
-    LightComponentData = pc.inherits(LightComponentData, pc.fw.ComponentData);
+    LightComponentData = pc.inherits(LightComponentData, pc.ComponentData);
 
     return {
         LightComponentData: LightComponentData

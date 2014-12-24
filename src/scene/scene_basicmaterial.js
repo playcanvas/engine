@@ -1,7 +1,7 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.scene.BasicMaterial
+     * @name pc.BasicMaterial
      * @class A Basic material is is for rendering unlit geometry, either using a constant color or a
      * color map modulated with a color.
      * @property {pc.Color} color The flat color of the material (RGBA, where each component is 0 to 1).
@@ -16,18 +16,18 @@ pc.extend(pc.scene, function () {
         this.update();
     };
 
-    BasicMaterial = pc.inherits(BasicMaterial, pc.scene.Material);
+    BasicMaterial = pc.inherits(BasicMaterial, pc.Material);
 
     pc.extend(BasicMaterial.prototype, {
         /**
          * @function
-         * @name pc.scene.BasicMaterial#clone
+         * @name pc.BasicMaterial#clone
          * @description Duplicates a Basic material. All properties are duplicated except textures
          * where only the references are copied.
-         * @returns {pc.scene.BasicMaterial} A cloned Basic material.
+         * @returns {pc.BasicMaterial} A cloned Basic material.
          */
         clone: function () {
-            var clone = new pc.scene.BasicMaterial();
+            var clone = new pc.BasicMaterial();
 
             Material.prototype._cloneInternal.call(this, clone);
 

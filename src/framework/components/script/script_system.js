@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
 
     var INITIALIZE = "initialize";
     var POST_INITIALIZE = "postInitialize";
@@ -10,19 +10,19 @@ pc.extend(pc.fw, function () {
     var ON_DISABLE = 'onDisable';
 
     /**
-     * @name pc.fw.ScriptComponentSystem
+     * @name pc.ScriptComponentSystem
      * @constructor Create a new ScriptComponentSystem
      * @class Allows scripts to be attached to an Entity and executed
      * @param {Object} context
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.ComponentSystem
      */
     var ScriptComponentSystem = function ScriptComponentSystem(context) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.ScriptComponent;
-        this.DataType = pc.fw.ScriptComponentData;
+        this.ComponentType = pc.ScriptComponent;
+        this.DataType = pc.ScriptComponentData;
 
         this.schema = [{
            name: 'enabled',
@@ -55,14 +55,14 @@ pc.extend(pc.fw, function () {
         this.instancesWithToolsUpdate = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        pc.fw.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
-        pc.fw.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
-        pc.fw.ComponentSystem.on(UPDATE, this.onUpdate, this);
-        pc.fw.ComponentSystem.on(FIXED_UPDATE, this.onFixedUpdate, this);
-        pc.fw.ComponentSystem.on(POST_UPDATE, this.onPostUpdate, this);
-        pc.fw.ComponentSystem.on(TOOLS_UPDATE, this.onToolsUpdate, this);
+        pc.ComponentSystem.on(INITIALIZE, this.onInitialize, this);
+        pc.ComponentSystem.on(POST_INITIALIZE, this.onPostInitialize, this);
+        pc.ComponentSystem.on(UPDATE, this.onUpdate, this);
+        pc.ComponentSystem.on(FIXED_UPDATE, this.onFixedUpdate, this);
+        pc.ComponentSystem.on(POST_UPDATE, this.onPostUpdate, this);
+        pc.ComponentSystem.on(TOOLS_UPDATE, this.onToolsUpdate, this);
     };
-    ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.fw.ComponentSystem);
+    ScriptComponentSystem = pc.inherits(ScriptComponentSystem, pc.ComponentSystem);
 
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
@@ -84,10 +84,10 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.ScriptComponentSystem#onBeforeRemove
+        * @name pc.ScriptComponentSystem#onBeforeRemove
         * @description Handler for 'beforeremove' event which is fired when a script component is about to be removed from an entity;
-        * @param {pc.fw.Entity} entity The entity that the component will be removed from
-        * @param {pc.fw.Component} component The component about to be removed
+        * @param {pc.Entity} entity The entity that the component will be removed from
+        * @param {pc.Component} component The component about to be removed
         */
         onBeforeRemove: function (entity, component) {
             // if the script component is enabled
@@ -103,9 +103,9 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @private
-         * @name pc.fw.ScriptComponentSystem#onInitialize
+         * @name pc.ScriptComponentSystem#onInitialize
          * @description Handler for the 'initialize' event which is fired immediately after the Entity hierarchy is loaded, but before the first update loop
-         * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
+         * @param {pc.Entity} root The root of the hierarchy to initialize.
          */
         onInitialize: function (root) {
             this._registerInstances(root);
@@ -118,7 +118,7 @@ pc.extend(pc.fw, function () {
                 var children = root.getChildren();
                 var i, len = children.length;
                 for (i = 0; i < len; i++) {
-                    if (children[i] instanceof pc.fw.Entity) {
+                    if (children[i] instanceof pc.Entity) {
                         this.onInitialize(children[i]);
                     }
                 }
@@ -128,9 +128,9 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @private
-         * @name pc.fw.ScriptComponentSystem#onPostInitialize
+         * @name pc.ScriptComponentSystem#onPostInitialize
          * @description Handler for the 'postInitialize' event which is fired immediately after the 'initialize' event and before the first update loop
-         * @param {pc.fw.Entity} root The root of the hierarchy to initialize.
+         * @param {pc.Entity} root The root of the hierarchy to initialize.
          */
         onPostInitialize: function (root) {
             if (root.enabled) {
@@ -141,7 +141,7 @@ pc.extend(pc.fw, function () {
                 var children = root.getChildren();
                 var i, len = children.length;
                 for (i = 0; i < len; i++) {
-                    if (children[i] instanceof pc.fw.Entity) {
+                    if (children[i] instanceof pc.Entity) {
                         this.onPostInitialize(children[i]);
                     }
                 };
@@ -243,7 +243,7 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.ScriptComponentSystem#onUpdate
+        * @name pc.ScriptComponentSystem#onUpdate
         * @description Handler for the 'update' event which is fired every frame
         * @param {Number} dt The time delta since the last update in seconds
         */
@@ -254,7 +254,7 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.ScriptComponentSystem#onFixedUpdate
+        * @name pc.ScriptComponentSystem#onFixedUpdate
         * @description Handler for the 'fixedUpdate' event which is fired every frame just before the 'update' event but with a fixed timestep
         * @param {Number} dt A fixed timestep of 1/60 seconds
         */
@@ -265,7 +265,7 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.ScriptComponentSystem#onPostUpdate
+        * @name pc.ScriptComponentSystem#onPostUpdate
         * @description Handler for the 'postUpdate' event which is fired every frame just after the 'update' event
         * @param {Number} dt The time delta since the last update in seconds
         */
@@ -280,7 +280,7 @@ pc.extend(pc.fw, function () {
         /**
          * @private
          * @function
-         * @name pc.fw.ScriptComponentSystem#broadcast
+         * @name pc.ScriptComponentSystem#broadcast
          * @description Send a message to all Script Objects with a specific name.
          * Sending a message is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present
          * @param {String} name The name of the script to send the message to
@@ -313,10 +313,10 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.ScriptComponentSystem#_preRegisterInstance
+        * @name pc.ScriptComponentSystem#_preRegisterInstance
         * @description Internal method used to store a instance of a script created while loading. Instances are preregistered while loadeding
         * and then all registered at the same time once loading is complete
-        * @param {pc.fw.Entity} entity The Entity the script instance is attached to
+        * @param {pc.Entity} entity The Entity the script instance is attached to
         * @param {String} url The url of the script
         * @param {String} name The name of the script
         * @param {Object} instance The instance of the Script Object
@@ -338,11 +338,11 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.ScriptComponentSystem#_registerInstance
+        * @name pc.ScriptComponentSystem#_registerInstance
         * @description Get all preregistered instances for an entity and 'register' then. This means storing the instance in the ComponentData
         * and binding events for the update, fixedUpdate, postUpdate and toolsUpdate methods.
         * This function is recursive and calls itself for the complete hierarchy down from the supplied Entity
-        * @param {pc.fw.Entity} entity The Entity the instances are attached to
+        * @param {pc.Entity} entity The Entity the instances are attached to
         */
         _registerInstances: function (entity) {
             var preRegistered, instance, instanceName;
@@ -394,7 +394,7 @@ pc.extend(pc.fw, function () {
             var children = entity.getChildren();
             var i, len = children.length;
             for (i = 0; i < len; i++) {
-                if (children[i] instanceof pc.fw.Entity) {
+                if (children[i] instanceof pc.Entity) {
                     this._registerInstances(children[i]);
                 }
             }

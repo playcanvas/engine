@@ -1,5 +1,14 @@
-pc.extend(pc.scene, function () {
-
+pc.extend(pc, function () {
+    /**
+     * @name pc.Skin
+     * @class A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
+     * Specifically, the skin stores an array of bone names and for each bone, a inverse bind matrix.
+     * These matrices are instrumental in the mathematics of vertex skinning.
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device used to manage this texture.
+     * @property {Array} ibp The array of inverse bind matrices.
+     * @property {Array} boneNames The array of bone names for the bones referenced by this skin.
+     * @author Will Eastcott
+     */
     var Skin = function (graphicsDevice, ibp, boneNames) {
         // Constant between clones
         this.device = graphicsDevice;
@@ -7,6 +16,14 @@ pc.extend(pc.scene, function () {
         this.boneNames = boneNames;
     };
 
+    /**
+     * @name pc.SkinInstance
+     * @class A skin instance is responsible for generating the matrix palette that is used to 
+     * skin vertices from object space to world space.
+     * @param {pc.Skin} skin The skin that will provide the inverse bind pose matrices to 
+     * generate the final matrix palette.
+     * @author Will Eastcott
+     */
     var SkinInstance = function (skin) {
         this.skin = skin;
 

@@ -1,16 +1,16 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
 
     var time;
 
     /**
-     * @name pc.fw.Application
+     * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop
      * @constructor Create a new Application
      * @param {DOMElement} canvas The canvas element
      * @param {Object} options
-     * @param {pc.input.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
-     * @param {pc.input.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
-     * @param {pc.input.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
+     * @param {pc.Controller} [options.controller] Generic input controller, available from the ApplicationContext as controller.
+     * @param {pc.Keyboard} [options.keyboard] Keyboard handler for input, available from the ApplicationContext as keyboard.
+     * @param {pc.Mouse} [options.mouse] Mouse handler for input, available from the ApplicationContext as mouse.
      * @param {Object} [options.libraries] List of URLs to javascript libraries which should be loaded before the application starts or any packs are loaded
      * @param {Boolean} [options.displayLoader] Display resource loader information during the loading progress. Debug only
      * @param {pc.common.DepotApi} [options.depot] API interface to the current depot
@@ -18,7 +18,7 @@ pc.extend(pc.fw, function () {
      *
      * @example
      * // Create application
-     * var app = new pc.fw.Application(canvas, options);
+     * var app = new pc.Application(canvas, options);
      * // Start game loop
      * app.start()
      */
@@ -31,11 +31,11 @@ pc.extend(pc.fw, function () {
         pc.events.attach(this);
 
         this.canvas = canvas;
-        this.fillMode = pc.fw.FillMode.KEEP_ASPECT;
-        this.resolutionMode = pc.fw.ResolutionMode.FIXED;
+        this.fillMode = pc.FILLMODE_KEEP_ASPECT;
+        this.resolutionMode = pc.RESOLUTION_FIXED;
         this.librariesLoaded = false;
 
-        this._link = new pc.fw.LiveLink("application");
+        this._link = new pc.LiveLink("application");
         this._link.addDestinationWindow(window);
         this._link.listen(this._handleMessage.bind(this));
 
@@ -45,9 +45,9 @@ pc.extend(pc.fw, function () {
         // Create the graphics device
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
 
-        var registry = new pc.fw.ComponentSystemRegistry();
+        var registry = new pc.ComponentSystemRegistry();
 
-        this.audioManager = new pc.audio.AudioManager();
+        this.audioManager = new pc.AudioManager();
 
         // Create resource loader
         var loader = new pc.resources.ResourceLoader();
@@ -60,7 +60,7 @@ pc.extend(pc.fw, function () {
         }
 
         // The ApplicationContext is passed to new Components and user scripts
-        this.context = new pc.fw.ApplicationContext(loader, new pc.scene.Scene(), this.graphicsDevice, registry, options);
+        this.context = new pc.ApplicationContext(loader, new pc.Scene(), this.graphicsDevice, registry, options);
 
         if (options.content) {
             this.content = options.content;
@@ -84,30 +84,28 @@ pc.extend(pc.fw, function () {
         loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(registry, options.depot));
         loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
 
-        this.renderer = new pc.scene.ForwardRenderer(this.graphicsDevice);
+        this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
 
         // Register the ScriptResourceHandler late as we need the context
         loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this.context, options.scriptPrefix));
 
-        var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);
-        var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
-        var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
+        var rigidbodysys = new pc.RigidBodyComponentSystem(this.context);
+        var collisionsys = new pc.CollisionComponentSystem(this.context);
+        var ballsocketjointsys = new pc.BallSocketJointComponentSystem(this.context);
 
-        var animationsys = new pc.fw.AnimationComponentSystem(this.context);
-        var modelsys = new pc.fw.ModelComponentSystem(this.context);
-        var camerasys = new pc.fw.CameraComponentSystem(this.context);
-        var cubemapsys = new pc.fw.CubeMapComponentSystem(this.context);
-        var staticcubemapsys = new pc.fw.StaticCubeMapComponentSystem(this.context);
-        var lightsys = new pc.fw.LightComponentSystem(this.context);
-        var packsys = new pc.fw.PackComponentSystem(this.context);
-        var skyboxsys = new pc.fw.SkyboxComponentSystem(this.context);
-        var scriptsys = new pc.fw.ScriptComponentSystem(this.context);
-        var picksys = new pc.fw.PickComponentSystem(this.context);
-        var audiosourcesys = new pc.fw.AudioSourceComponentSystem(this.context, this.audioManager);
-        var audiolistenersys = new pc.fw.AudioListenerComponentSystem(this.context, this.audioManager);
-        var particlesystemsys = new pc.fw.ParticleSystemComponentSystem(this.context);
+        var animationsys = new pc.AnimationComponentSystem(this.context);
+        var modelsys = new pc.ModelComponentSystem(this.context);
+        var camerasys = new pc.CameraComponentSystem(this.context);
+        var lightsys = new pc.LightComponentSystem(this.context);
+        var packsys = new pc.PackComponentSystem(this.context);
+        var skyboxsys = new pc.SkyboxComponentSystem(this.context);
+        var scriptsys = new pc.ScriptComponentSystem(this.context);
+        var picksys = new pc.PickComponentSystem(this.context);
+        var audiosourcesys = new pc.AudioSourceComponentSystem(this.context, this.audioManager);
+        var audiolistenersys = new pc.AudioListenerComponentSystem(this.context, this.audioManager);
+        var particlesystemsys = new pc.ParticleSystemComponentSystem(this.context);
 
-        var designersys = new pc.fw.DesignerComponentSystem(this.context);
+        var designersys = new pc.DesignerComponentSystem(this.context);
 
         // Load libraries
         this.on('librariesloaded', this.onLibrariesLoaded, this);
@@ -174,8 +172,8 @@ pc.extend(pc.fw, function () {
                 this.context.loader.request(new pc.resources.PackRequest(guid)).then(function (resources) {
                     var pack = resources[0];
                     this.context.root.addChild(pack.hierarchy);
-                    pc.fw.ComponentSystem.initialize(pack.hierarchy);
-                    pc.fw.ComponentSystem.postInitialize(pack.hierarchy);
+                    pc.ComponentSystem.initialize(pack.hierarchy);
+                    pc.ComponentSystem.postInitialize(pack.hierarchy);
 
                     // Initialise pack settings
                     if (this.context.systems.rigidbody && typeof Ammo !== 'undefined') {
@@ -244,7 +242,7 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.Application#start
+         * @name pc.Application#start
          * @description Start the Application updating
          */
         start: function () {
@@ -259,7 +257,7 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.Application#update
+         * @name pc.Application#update
          * @description Application specific update method. Override this if you have a custom Application
          * @param {Number} dt The time delta since the last frame.
          */
@@ -267,9 +265,9 @@ pc.extend(pc.fw, function () {
             var context = this.context;
 
             // Perform ComponentSystem update
-            pc.fw.ComponentSystem.fixedUpdate(1.0 / 60.0, context, this._inTools);
-            pc.fw.ComponentSystem.update(dt, context, this._inTools);
-            pc.fw.ComponentSystem.postUpdate(dt, context, this._inTools);
+            pc.ComponentSystem.fixedUpdate(1.0 / 60.0, context, this._inTools);
+            pc.ComponentSystem.update(dt, context, this._inTools);
+            pc.ComponentSystem.postUpdate(dt, context, this._inTools);
 
             // fire update event
             this.fire("update", dt);
@@ -290,7 +288,7 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.Application#render
+         * @name pc.Application#render
          * @description Application specific render method. Override this if you have a custom Application
          */
         render: function () {
@@ -312,7 +310,7 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.Application#tick
+         * @name pc.Application#tick
          * @description Application specific tick method that calls update and render and queues
          * the next tick. Override this if you have a custom Application.
          */
@@ -333,12 +331,12 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#setCanvasFillMode
+        * @name pc.Application#setCanvasFillMode
         * @description Change the way the canvas fills the window and resizes when the window changes
         * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
         * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
         * In NONE mode, the canvas will always match the size provided
-        * @param {pc.fw.FillMode} mode The mode to use when setting the size of the canvas
+        * @param {pc.FillMode} mode The mode to use when setting the size of the canvas
         * @param {Number} [width] The width of the canvas, only used in NONE mode
         * @param {Number} [height] The height of the canvase, only used in NONE mode
         */
@@ -349,11 +347,11 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#setCanvasResolution
+        * @name pc.Application#setCanvasResolution
         * @description Change the resolution of the canvas, and set the way it behaves when the window is resized
         * In AUTO mode, the resolution is change to match the size of the canvas when the canvas resizes
         * In FIXED mode, the resolution remains until another call to setCanvasResolution()
-        * @param {pc.fw.ResolutionMode} mode The mode to use when setting the resolution
+        * @param {pc.ResolutionMode} mode The mode to use when setting the resolution
         * @param {Number} [width] The horizontal resolution, optional in AUTO mode, if not provided canvas clientWidth is used
         * @param {Number} [height] The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
         */
@@ -361,7 +359,7 @@ pc.extend(pc.fw, function () {
             this.resolutionMode = mode;
 
             // In AUTO mode the resolution is the same as the canvas size, unless specified
-            if (mode === pc.fw.ResolutionMode.AUTO && (width === undefined)) {
+            if (mode === pc.RESOLUTION_AUTO && (width === undefined)) {
                 width = this.canvas.clientWidth;
                 height = this.canvas.clientHeight;
             }
@@ -371,7 +369,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#isFullscreen
+        * @name pc.Application#isFullscreen
         * @description Returns true if the application is currently running fullscreen
         * @returns {Boolean} True if the application is running fullscreen
         */
@@ -381,7 +379,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#enableFullscreen
+        * @name pc.Application#enableFullscreen
         * @description Request that the browser enters fullscreen mode. This is not available on all browsers.
         * Note: Switching to fullscreen can only be initiated by a user action, e.g. in the event hander for a mouse or keyboard input
         * @param {DOMElement} [element] The element to display in fullscreen, if element is not provided the application canvas is used
@@ -389,7 +387,7 @@ pc.extend(pc.fw, function () {
         * @param {Function} [error] Function called if the request for fullscreen was unsuccessful
         * @example
         * var canvas = document.getElementById('application-canvas');
-        * var application = pc.fw.Application.getApplication(canvas.id);
+        * var application = pc.Application.getApplication(canvas.id);
         * var button = document.getElementById('my-button');
         * button.addEventListener('click', function () {
         *     application.enableFullscreen(canvas, function () {
@@ -426,7 +424,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#disableFullscreen
+        * @name pc.Application#disableFullscreen
         * @description If application is currently displaying an element as fullscreen, then stop and return to normal.
         * @param {Function} [success] Function called when transition to normal mode is finished
         */
@@ -446,7 +444,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#isHidden
+        * @name pc.Application#isHidden
         * @description Returns true if the window or tab in which the application is running in is not visible to the user.
         */
         isHidden: function () {
@@ -456,7 +454,7 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.Application#onVisibilityChange
+        * @name pc.Application#onVisibilityChange
         * @description Called when the visibility state of the current tab/window changes
         */
         onVisibilityChange: function (e) {
@@ -469,7 +467,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.Application#resizeCanvas
+        * @name pc.Application#resizeCanvas
         * @description Resize the canvas in line with the current FillMode
         * In KEEP_ASPECT mode, the canvas will grow to fill the window as best it can while maintaining the aspect ratio
         * In FILL_WINDOW mode, the canvas will simply fill the window, changing aspect ratio
@@ -489,7 +487,7 @@ pc.extend(pc.fw, function () {
                 var ratio = window.devicePixelRatio;
                 this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
             } else {
-                if (this.fillMode === pc.fw.FillMode.KEEP_ASPECT) {
+                if (this.fillMode === pc.FILLMODE_KEEP_ASPECT) {
                     var r = this.canvas.width/this.canvas.height;
                     var winR = windowWidth / windowHeight;
 
@@ -500,19 +498,19 @@ pc.extend(pc.fw, function () {
                         height = windowHeight;
                         width = height * r;
                     }
-                } else if (this.fillMode === pc.fw.FillMode.FILL_WINDOW) {
+                } else if (this.fillMode === pc.FILLMODE_FILL_WINDOW) {
                     width = windowWidth;
                     height = windowHeight;
                 } else {
-                    // FillMode.NONE use width and height that are provided
+                    // FILLMODE_NONE use width and height that are provided
                 }
 
                 this.canvas.style.width = width + 'px';
                 this.canvas.style.height = height + 'px';
 
                 // In AUTO mode the resolution is changed to match the canvas size
-                if (this.resolutionMode === pc.fw.ResolutionMode.AUTO) {
-                    this.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+                if (this.resolutionMode === pc.RESOLUTION_AUTO) {
+                    this.setCanvasResolution(pc.RESOLUTION_AUTO);
                 }
             }
 
@@ -525,16 +523,16 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.Application#onLibrariesLoaded
+        * @name pc.Application#onLibrariesLoaded
         * @description Event handler called when all code libraries have been loaded
         * Code libraries are passed into the constructor of the Application and the application won't start running or load packs until all libraries have
         * been loaded
         */
         onLibrariesLoaded: function () {
             // Create systems that may require external libraries
-            // var rigidbodysys = new pc.fw.RigidBodyComponentSystem(this.context);
-            // var collisionsys = new pc.fw.CollisionComponentSystem(this.context);
-            // var ballsocketjointsys = new pc.fw.BallSocketJointComponentSystem(this.context);
+            // var rigidbodysys = new pc.RigidBodyComponentSystem(this.context);
+            // var collisionsys = new pc.CollisionComponentSystem(this.context);
+            // var ballsocketjointsys = new pc.BallSocketJointComponentSystem(this.context);
 
             this.context.systems.rigidbody.onLibraryLoaded();
             this.context.systems.collision.onLibraryLoaded();
@@ -542,42 +540,42 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.Application#_handleMessage
+         * @name pc.Application#_handleMessage
          * @description Called when the LiveLink object receives a new message
-         * @param {pc.fw.LiveLiveMessage} msg The received message
+         * @param {pc.LiveLiveMessage} msg The received message
          */
         _handleMessage: function (msg) {
             var entity;
 
             switch(msg.type) {
-                case pc.fw.LiveLinkMessageType.UPDATE_COMPONENT:
+                case pc.LiveLinkMessageType.UPDATE_COMPONENT:
                     this._linkUpdateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
                     break;
-                case pc.fw.LiveLinkMessageType.UPDATE_ENTITY:
+                case pc.LiveLinkMessageType.UPDATE_ENTITY:
                     this._linkUpdateEntity(msg.content.id, msg.content.components);
                     break;
-                case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
+                case pc.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
                     this._linkUpdateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
                     break;
-                case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_NAME:
+                case pc.LiveLinkMessageType.UPDATE_ENTITY_NAME:
                     entity = this.context.root.findOne("getGuid", msg.content.id);
                     entity.setName(msg.content.name);
                     break;
-                case pc.fw.LiveLinkMessageType.UPDATE_ENTITY_ENABLED:
+                case pc.LiveLinkMessageType.UPDATE_ENTITY_ENABLED:
                     entity = this.context.root.findOne("getGuid", msg.content.id);
                     entity.enabled = msg.content.enabled;
                     break;
-                case pc.fw.LiveLinkMessageType.REPARENT_ENTITY:
+                case pc.LiveLinkMessageType.REPARENT_ENTITY:
                     this._linkReparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
                     break;
-                case pc.fw.LiveLinkMessageType.CLOSE_ENTITY:
+                case pc.LiveLinkMessageType.CLOSE_ENTITY:
                     entity = this.context.root.findOne("getGuid", msg.content.id);
                     if(entity) {
                         logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid()));
                         entity.destroy();
                     }
                     break;
-                case pc.fw.LiveLinkMessageType.OPEN_PACK:
+                case pc.LiveLinkMessageType.OPEN_PACK:
                     var pack = this.context.loader.open(pc.resources.PackRequest, msg.content.pack);
 
                     // Get the root entity back from the fake pack
@@ -589,7 +587,7 @@ pc.extend(pc.fw, function () {
                         this.context.root.addChild(entity);
                     }
                     break;
-                case pc.fw.LiveLinkMessageType.OPEN_ENTITY:
+                case pc.LiveLinkMessageType.OPEN_ENTITY:
                     var parent;
                     var entities = {};
                     var guid = null;
@@ -611,11 +609,11 @@ pc.extend(pc.fw, function () {
                         }
                     }
                     break;
-                case pc.fw.LiveLinkMessageType.UPDATE_ASSET:
+                case pc.LiveLinkMessageType.UPDATE_ASSET:
                     this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
                     break;
 
-                case pc.fw.LiveLinkMessageType.UPDATE_ASSETCACHE:
+                case pc.LiveLinkMessageType.UPDATE_ASSETCACHE:
                     var id;
                     var asset;
 
@@ -644,7 +642,7 @@ pc.extend(pc.fw, function () {
 
                     break;
 
-                case pc.fw.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
+                case pc.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
                     this._linkUpdatePackSettings(msg.content.settings);
                     break;
             }
@@ -652,7 +650,7 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.Application#_linkUpdateComponent
+         * @name pc.Application#_linkUpdateComponent
          * @description Update a value on a component,
          * @param {String} guid GUID for the entity
          * @param {String} componentName name of the component to update
@@ -726,7 +724,7 @@ pc.extend(pc.fw, function () {
 
         /**
          * @function
-         * @name pc.fw.Application#_updateEntity
+         * @name pc.Application#_updateEntity
          * @description Update an Entity from a set of components, deletes components that are no longer there, adds components that are new.
          * Note this does not update the data inside the components, just whether or not a component is present.
          * @param {Object} guid GUID of the entity
@@ -813,40 +811,37 @@ pc.extend(pc.fw, function () {
     };
 
     return {
-        FillMode: {
-            /**
-            * @enum pc.fw.FillMode
-            * @name pc.fw.FillMode.NONE
-            * @description When resizing the window the size of the canvas will not change.
-            */
-            NONE: 'NONE',
-            /**
-            * @enum pc.fw.FillMode
-            * @name pc.fw.FillMode.FILL_WINDOW
-            * @description When resizing the window the size of the canvas will change to fill the window exactly.
-            */
-            FILL_WINDOW: 'FILL_WINDOW',
-            /**
-            * @enum pc.fw.FillMode
-            * @name pc.fw.FillMode.KEEP_ASPECT
-            * @description When resizing the window the size of the canvas will change to fill the window as best it can, while maintaining the same aspect ratio.
-            */
-            KEEP_ASPECT: 'KEEP_ASPECT'
-        },
-        ResolutionMode: {
-            /**
-            * @enum pc.fw.ResolutionMode
-            * @name pc.fw.ResolutionMode.AUTO
-            * @description When the canvas is resized the resolution of the canvas will change to match the size of the canvas.
-            */
-            AUTO: 'AUTO',
-            /**
-            * @enum pc.fw.ResolutionMode
-            * @name pc.fw.ResolutionMode.FIXED
-            * @description When the canvas is resized the resolution of the canvas will remain at the same value and the output will just be scaled to fit the canvas.
-            */
-            FIXED: 'FIXED'
-        },
+        /**
+         * @enum pc.FILLMODE
+         * @name pc.FILLMODE_NONE
+         * @description When resizing the window the size of the canvas will not change.
+         */
+        FILLMODE_NONE: 'NONE',
+        /**
+         * @enum pc.FILLMODE
+         * @name pc.FILLMODE_FILL_WINDOW
+         * @description When resizing the window the size of the canvas will change to fill the window exactly.
+         */
+        FILLMODE_FILL_WINDOW: 'FILL_WINDOW',
+        /**
+         * @enum pc.FILLMODE
+         * @name pc.FILLMODE_KEEP_ASPECT
+         * @description When resizing the window the size of the canvas will change to fill the window as best it can, while maintaining the same aspect ratio.
+         */
+        FILLMODE_KEEP_ASPECT: 'KEEP_ASPECT',
+        /**
+        * @enum pc.RESOLUTION
+        * @name pc.RESOLUTION_AUTO
+        * @description When the canvas is resized the resolution of the canvas will change to match the size of the canvas.
+        */
+        RESOLUTION_AUTO: 'AUTO',
+        /**
+        * @enum pc.RESOLUTION
+        * @name pc.RESOLUTION_FIXED
+        * @description When the canvas is resized the resolution of the canvas will remain at the same value and the output will just be scaled to fit the canvas.
+        */
+        RESOLUTION_FIXED: 'FIXED',
+
         Application: Application
     };
 } ());

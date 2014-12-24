@@ -1,6 +1,6 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var LiveLinkUpdateAssetMessage = function (id, attribute, value) {
-        this.type = pc.fw.LiveLinkMessageType.UPDATE_ASSET;
+        this.type = pc.LiveLinkMessageType.UPDATE_ASSET;
         
         this.content = {
             id: id,
@@ -8,8 +8,8 @@ pc.extend(pc.fw, function () {
             value: value
         };
     };
-    LiveLinkUpdateAssetMessage = pc.inherits(LiveLinkUpdateAssetMessage, pc.fw.LiveLinkMessage);
-    pc.fw.LiveLinkMessage.register("UPDATE_ASSET");
+    LiveLinkUpdateAssetMessage = pc.inherits(LiveLinkUpdateAssetMessage, pc.LiveLinkMessage);
+    pc.LiveLinkMessage.register("UPDATE_ASSET");
 
     return {
         LiveLinkUpdateAssetMessage: LiveLinkUpdateAssetMessage

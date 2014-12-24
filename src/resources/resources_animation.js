@@ -32,12 +32,12 @@ pc.extend(pc.resources, function () {
     AnimationResourceHandler.prototype._loadAnimationV3 = function (data) {
         var animData = data.animation;
 
-        var anim = new pc.anim.Animation();
+        var anim = new pc.Animation();
         anim.setName(animData.name);
         anim.setDuration(animData.duration);
 
         for (var i = 0; i < animData.nodes.length; i++) {
-            var node = new pc.anim.Node();
+            var node = new pc.Node();
 
             var n = animData.nodes[i];
             node._name = n.name;
@@ -53,7 +53,7 @@ pc.extend(pc.resources, function () {
                 var rot = new pc.Quat().setFromEulerAngles(r[0], r[1], r[2]);
                 var scl = new pc.Vec3(s[0], s[1], s[2]);
 
-                var key = new pc.anim.Key(t, pos, rot, scl);
+                var key = new pc.Key(t, pos, rot, scl);
 
                 node._keys.push(key);
             }
@@ -67,12 +67,12 @@ pc.extend(pc.resources, function () {
     AnimationResourceHandler.prototype._loadAnimationV4 = function (data) {
         var animData = data.animation;
 
-        var anim = new pc.anim.Animation();
+        var anim = new pc.Animation();
         anim.setName(animData.name);
         anim.setDuration(animData.duration);
 
         for (var i = 0; i < animData.nodes.length; i++) {
-            var node = new pc.anim.Node();
+            var node = new pc.Node();
 
             var n = animData.nodes[i];
             node._name = n.name;
@@ -92,7 +92,7 @@ pc.extend(pc.resources, function () {
                 var rot = new pc.Quat().setFromEulerAngles(r[0], r[1], r[2]);
                 var scl = new pc.Vec3(s[0], s[1], s[2]);
 
-                var key = new pc.anim.Key(t, pos, rot, scl);
+                var key = new pc.Key(t, pos, rot, scl);
 
                 node._keys.push(key);
             }
@@ -107,7 +107,7 @@ pc.extend(pc.resources, function () {
 
     AnimationRequest = pc.inherits(AnimationRequest, pc.resources.ResourceRequest);
     AnimationRequest.prototype.type = "animation";
-    AnimationRequest.prototype.Type = pc.anim.Animation;
+    AnimationRequest.prototype.Type = pc.Animation;
 
     return {
         AnimationResourceHandler: AnimationResourceHandler,

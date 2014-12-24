@@ -4,7 +4,7 @@ pc.extend(pc.resources, function () {
      * @class ResourceHandler for loading javascript files dynamically
      * Two types of javascript file can be loaded, PlayCanvas ScriptType files which must contain a call to pc.script.create() to be called when the script executes,
      * or regular javascript files, such as third-party libraries.
-     * @param {pc.fw.ApplicationContext} context The context is passed into the ScriptType callbacks for use in user-scripts
+     * @param {pc.ApplicationContext} context The context is passed into the ScriptType callbacks for use in user-scripts
      * @param {String} prefix Prefix for script urls, so that script resources can be located in a variety of places including localhost
      */
     var ScriptResourceHandler = function (context, prefix) {

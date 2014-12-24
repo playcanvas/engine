@@ -73,11 +73,11 @@ pc.programlib.particle = {
         if (options.normal == 2) fshader +=         chunk.particle_normalMapPS;
         if (options.normal > 0) fshader +=          options.halflambert ? chunk.particle_halflambertPS : chunk.particle_lambertPS;
         if (options.normal > 0) fshader +=          chunk.particle_lightingPS;
-        if (options.blend==pc.scene.BLEND_NORMAL) {
+        if (options.blend==pc.BLEND_NORMAL) {
             fshader += chunk.particle_blendNormalPS;
-        } else if (options.blend==pc.scene.BLEND_ADDITIVE) {
+        } else if (options.blend==pc.BLEND_ADDITIVE) {
             fshader += chunk.particle_blendAddPS;
-        } else if (options.blend==pc.scene.BLEND_MULTIPLICATIVE) {
+        } else if (options.blend==pc.BLEND_MULTIPLICATIVE) {
             fshader += chunk.particle_blendMultiplyPS;
         }
         fshader += chunk.particle_endPS;

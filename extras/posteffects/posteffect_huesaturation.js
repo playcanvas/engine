@@ -1,20 +1,20 @@
 //--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.posteffect.HueSaturation
+     * @name pc.HueSaturationEffect
      * @class Allows hue and saturation adjustment of the input render target.
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} hue Controls the hue. Ranges from -1 to 1 (-1 is 180 degrees in the negative direction, 0 no change, 1 is 180 degrees in the postitive direction).
      * @property {Number} saturation Controls the saturation. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum saturation).
      */
-    var HueSaturation = function (graphicsDevice) {
+    var HueSaturationEffect = function (graphicsDevice) {
         // Shader author: tapio / http://tapio.github.com/
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -67,9 +67,9 @@ pc.extend(pc.posteffect, function () {
         this.saturation = 0;
     }
 
-    HueSaturation = pc.inherits(HueSaturation, pc.posteffect.PostEffect);
+    HueSaturationEffect = pc.inherits(HueSaturationEffect, pc.PostEffect);
 
-    HueSaturation.prototype = pc.extend(HueSaturation.prototype, {
+    HueSaturationEffect.prototype = pc.extend(HueSaturationEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -77,12 +77,12 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uHue").setValue(this.hue);
             scope.resolve("uSaturation").setValue(this.saturation);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        HueSaturation: HueSaturation
+        HueSaturationEffect: HueSaturationEffect
     };
 }());
 
@@ -104,13 +104,13 @@ pc.script.attribute('saturation', 'number', 0, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('huesaturation', function (context) {
-    var Huesaturation = function (entity) {
+pc.script.create('hueSaturationEffect', function (context) {
+    var HueSaturationEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.HueSaturation(context.graphicsDevice);
+        this.effect = new pc.HueSaturationEffect(context.graphicsDevice);
     };
 
-    Huesaturation.prototype = {
+    HueSaturationEffect.prototype = {
         initialize: function () {
             this.effect.hue = this.hue;
             this.effect.saturation = this.saturation;
@@ -130,5 +130,5 @@ pc.script.create('huesaturation', function (context) {
         }
     };
 
-    return Huesaturation;
+    return HueSaturationEffect;
 });

@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var Pack = function (data) {
         this.hierarchy = data.hierarchy;
         this.settings = data.settings;
@@ -12,10 +12,10 @@ pc.extend(pc.fw, function () {
         Pack: Pack,
         /**
          * @function
-         * @name pc.fw.loadPack
+         * @name pc.loadPack
          * @description Load and initialise a new Pack. The Pack is loaded, added to the root of the hierarchy and any new scripts are initialized.
          * @param {String} guid The GUID of the Pack to load
-         * @param {pc.fw.ApplicationContext} context The ApplicationContext containing the root hierarchy and the ScriptComponentSystem
+         * @param {pc.ApplicationContext} context The ApplicationContext containing the root hierarchy and the ScriptComponentSystem
          * @param {Function} success Callback fired when the Pack is loaded and initialized, passed the new Entity that was created
          * @param {Function} error Callback fired if there are problems, passed a list of error messages
          * @param {Function} progress Callback fired on each progress event, usually when a file or Entity is loaded, passed a percentage complete value
@@ -29,7 +29,7 @@ pc.extend(pc.fw, function () {
         //         context.root.addChild(pack.hierarchy);
                 
         //         // Initialise any systems with an initialize() method after pack is loaded
-        //         pc.fw.ComponentSystem.initialize(pack.hierarchy);
+        //         pc.ComponentSystem.initialize(pack.hierarchy);
                 
         //         // callback
         //         if (success) {

@@ -1,12 +1,12 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @component
-     * @name pc.fw.ModelComponent
+     * @name pc.ModelComponent
      * @constructor Create a new ModelComponentSystem
      * @class Enables an Entity to render a model or a primitive shape. This Component attaches additional model geometry in to the scene graph below the Entity.
-     * @param {pc.fw.ModelComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.fw.Component
+     * @param {pc.ModelComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @extends pc.Component
      * @property {String} type The type of the model, which can be one of the following values:
      * <ul>
      *     <li>asset: The component will render a model asset</li>
@@ -21,7 +21,7 @@ pc.extend(pc.fw, function () {
      * @property {Boolean} castShadows If true, this model will cast shadows for lights that have shadow casting enabled.
      * @property {Boolean} receiveShadows If true, shadows will be cast on this model
      * @property {Number} materialAsset The material {@link pc.Asset.Asset} that will be used to render the model (not used on models of type 'asset')
-     * @property {pc.scene.Model} model The model that is added to the scene graph.
+     * @property {pc.Model} model The model that is added to the scene graph.
      */
     var ModelComponent = function ModelComponent (system, entity)   {
         this.on("set_type", this.onSetType, this);
@@ -37,7 +37,7 @@ pc.extend(pc.fw, function () {
             get: this.getMaterialAsset.bind(this)
         });
     };
-    ModelComponent = pc.inherits(ModelComponent, pc.fw.Component);
+    ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
     pc.extend(ModelComponent.prototype, {
 
@@ -83,7 +83,7 @@ pc.extend(pc.fw, function () {
         /**
          * @function
          * @private
-         * @name pc.fw.ModelComponent#onSetType
+         * @name pc.ModelComponent#onSetType
          * @description Handle changes to the 'type' variable
          */
         onSetType: function (name, oldValue, newValue) {
@@ -122,12 +122,12 @@ pc.extend(pc.fw, function () {
                             throw new Error("Invalid model type: " + newValue);
                     }
 
-                    var node = new pc.scene.GraphNode();
+                    var node = new pc.GraphNode();
 
-                    var model = new pc.scene.Model();
+                    var model = new pc.Model();
                     model.graph = node;
 
-                    model.meshInstances = [ new pc.scene.MeshInstance(node, mesh, data.material) ];
+                    model.meshInstances = [ new pc.MeshInstance(node, mesh, data.material) ];
 
                     if (this.system.context.designer) {
                         model.generateWireframe();

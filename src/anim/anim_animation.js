@@ -1,21 +1,21 @@
-pc.anim.Key = function Key(time, position, rotation, scale) {
-    this.time = time;
-    this.position = position;
-    this.rotation = rotation;
-    this.scale = scale;
-};
+pc.extend(pc, function () {
+    var Key = function Key(time, position, rotation, scale) {
+        this.time = time;
+        this.position = position;
+        this.rotation = rotation;
+        this.scale = scale;
+    };
 
-pc.anim.Node = function Node() {
-    this._name = "";
-    this._keys = [];
-};
+    var Node = function Node() {
+        this._name = "";
+        this._keys = [];
+    };
 
-pc.extend(pc.anim, function () {
     /**
-     * @name pc.anim.Animation
+     * @name pc.Animation
      * @class An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy.
      * It controls how the nodes of the hierarchy are transformed over time.
-     * @description Returns a new pc.anim.Animation object.
+     * @description Returns a new pc.Animation object.
      */
     var Animation = function Animation() {
         this._name = "";
@@ -26,7 +26,7 @@ pc.extend(pc.anim, function () {
 
     /**
      * @function
-     * @name pc.anim.Animation#getDuration
+     * @name pc.Animation#getDuration
      * @description Returns the duration of the animation in seconds.
      * @returns {number} The duration of the animation in seconds.
      * @author Will Eastcott
@@ -37,7 +37,7 @@ pc.extend(pc.anim, function () {
 
     /**
      * @function
-     * @name pc.anim.Animation#getName
+     * @name pc.Animation#getName
      * @description Returns the human-readable name of the animation.
      * @returns {string} The name of the animation.
      * @author Will Eastcott
@@ -48,9 +48,9 @@ pc.extend(pc.anim, function () {
 
     /**
      * @function
-     * @name pc.anim.Animation#getNode
+     * @name pc.Animation#getNode
      * @description
-     * @returns {pc.anim.Node}
+     * @returns {pc.Node}
      * @author Will Eastcott
      */
     Animation.prototype.getNode = function (name) {
@@ -59,7 +59,7 @@ pc.extend(pc.anim, function () {
 
     /**
      * @function
-     * @name pc.anim.Animation#getNodes
+     * @name pc.Animation#getNodes
      * @description
      * @returns {Array}
      * @author Will Eastcott
@@ -70,7 +70,7 @@ pc.extend(pc.anim, function () {
 
     /**
      * @function
-     * @name pc.anim.Animation#setDuration
+     * @name pc.Animation#setDuration
      * @description Sets the duration of the specified animation in seconds.
      * @param {number} duration The duration of the animation in seconds.
      * @author Will Eastcott
@@ -81,7 +81,7 @@ pc.extend(pc.anim, function () {
 
     /**
      * @function
-     * @name pc.anim.Animation#setName
+     * @name pc.Animation#setName
      * @description Sets the human-readable name of the specified animation.
      * @param {number} name The new name for the animation.
      * @author Will Eastcott
@@ -92,10 +92,10 @@ pc.extend(pc.anim, function () {
 
     /**
      * @function
-     * @name pc.anim.Animation#setNode
+     * @name pc.Animation#setNode
      * @description
      * @param {String} name
-     * @param {pc.anim.Node} node
+     * @param {pc.Node} node
      * @author Will Eastcott
      */
     Animation.prototype.addNode = function (node) {
@@ -104,6 +104,8 @@ pc.extend(pc.anim, function () {
     };
 
     return {
-        Animation: Animation
+        Animation: Animation,
+        Key: Key,
+        Node: Node
     }; 
 }());

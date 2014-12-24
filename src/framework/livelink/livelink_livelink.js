@@ -1,10 +1,10 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     // Private
 
     // Public Interface
     /**
      * @ignore
-     * @name pc.fw.LiveLink
+     * @name pc.LiveLink
      * @class Create a link between the current window and a destination window which allows you to send messages between the two.
      * <p>Create a LiveLink object in the application you wish to send data from and a LiveLink object in the application you wish to receive data in.
      * Then add the DOMWindow object of the receiving application to the LiveLink object of the sending application.</p>
@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
      * // In application_a.js
      * var link;
      * function setup() {
-     *   link = new pc.fw.LiveLink();
+     *   link = new pc.LiveLink();
      *
      *   // Create Application B in new window and add it as a destination
      *   var w = window.open("http://myapp.com");
@@ -25,7 +25,7 @@ pc.extend(pc.fw, function () {
      * }
      *
      * // In application_b.js (running on myapp.com)
-     * var link = new pc.fw.LiveLink();
+     * var link = new pc.LiveLink();
      * link.listen(function (msg) {
      *   console.log(msg.content.value)
      * });
@@ -55,7 +55,7 @@ pc.extend(pc.fw, function () {
     /**
      * @ignore
      * @function
-     * @name pc.fw.LiveLink#detach
+     * @name pc.LiveLink#detach
      * @description removed event handler from main window
      */
     LiveLink.prototype.detach = function () {
@@ -66,7 +66,7 @@ pc.extend(pc.fw, function () {
     /**
      * @ignore
      * @function
-     * @name pc.fw.LiveLink#addDesinationWindow
+     * @name pc.LiveLink#addDesinationWindow
      * @description Add a new destination window. Messages will be sent to all destinations
      * @param {DOMWindow} window
      */
@@ -77,7 +77,7 @@ pc.extend(pc.fw, function () {
     /**
      * @ignore
      * @function
-     * @name pc.fw.LiveLink#removeDestinationWindow
+     * @name pc.LiveLink#removeDestinationWindow
      * @description Remove an existing destination window.
      * @param {DOMWindow} window
      */
@@ -94,10 +94,10 @@ pc.extend(pc.fw, function () {
     /**
      * @ignore
      * @function
-     * @name pc.fw.LiveLink#send
+     * @name pc.LiveLink#send
      * @description Send a message to all registered destinations
      * Note, if the destination window is the same as the current window, the call will be synchronous (success() will be called before the function returns), otherwise it will be asynchronous
-     * @param {pc.fw.LiveLinkMessage} msg The message to send
+     * @param {pc.LiveLinkMessage} msg The message to send
      * @param {Function} success The callback function to call when the message is handled
      * @param {Array} destinations An optional array of destinations which overrides the internal destinations
      */
@@ -137,7 +137,7 @@ pc.extend(pc.fw, function () {
                 callback: success ? success.bind(this) : function () {}
             };
         }
-        var data = pc.fw.LiveLinkMessage.serialize(msg);
+        var data = pc.LiveLinkMessage.serialize(msg);
 
         // If we're sending a message to the current window, then just call the _handleMessage function directly to prevent the overhead
         // of postMessage() which can take several hundred ms in some cases.
@@ -157,7 +157,7 @@ pc.extend(pc.fw, function () {
     /**
      * @ignore
      * @function
-     * @name pc.fw.LiveLink#listen
+     * @name pc.LiveLink#listen
      * @description Start listening for messages
      * @param {Function} callback Function to handle incoming messages, will be passed a LiveLinkMessage object
      * @param {DOMWindow} [_window] Override which window to listen on, defaults to current window
@@ -171,18 +171,18 @@ pc.extend(pc.fw, function () {
 
     LiveLink.prototype._handleMessage = function (event) {
         var msg, newmsg;
-        var data = pc.fw.LiveLinkMessage.deserialize(event.data);
+        var data = pc.LiveLinkMessage.deserialize(event.data);
 
         if(!data) {
             return;
         }
-        msg = new pc.fw.LiveLinkMessage(data, event.source);
+        msg = new pc.LiveLinkMessage(data, event.source);
 
         if(this._linkid === msg.senderid) {
             return; // Don't send messages to ourself
         }
 
-        if(msg.type == pc.fw.LiveLinkMessageType.RECEIVED) {
+        if(msg.type == pc.LiveLinkMessageType.RECEIVED) {
             // If this is a receipt of a message that this LiveLink has sent
             if(msg.content.received_from == this._linkid) {
                 // Call the callback and delete it
@@ -197,8 +197,8 @@ pc.extend(pc.fw, function () {
             this._listener(msg);
 
             // send a receipt so the sender knows we received the message
-            newmsg = new pc.fw.LiveLinkMessage();
-            newmsg.type = pc.fw.LiveLinkMessageType.RECEIVED;
+            newmsg = new pc.LiveLinkMessage();
+            newmsg.type = pc.LiveLinkMessageType.RECEIVED;
             newmsg.content = {
                 id: msg.id,
                 received_from: msg.senderid

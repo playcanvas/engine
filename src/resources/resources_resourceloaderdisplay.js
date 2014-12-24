@@ -3,11 +3,12 @@ pc.extend(pc.resources, function () {
     var count = 0;
 
     /**
-    * @name pc.resources.ResourceLoaderDisplay
-    * @class Creates a DOMElement containing updated detailed information about what is loading/loaded. Useful for debugging loading errors.
-    * This class is only really suitable for debug display at the moment.
-    * @param {DOMElement} element The DOMElement to attach this display to
-    */
+     * @private
+     * @name pc.resources.ResourceLoaderDisplay
+     * @class Creates a DOMElement containing updated detailed information about what is loading/loaded. Useful for debugging loading errors.
+     * This class is only really suitable for debug display at the moment.
+     * @param {DOMElement} element The DOMElement to attach this display to
+     */
     var ResourceLoaderDisplay = function (element, loader) {
 
         loader.on('request', this.handleRequest, this);
@@ -86,8 +87,8 @@ pc.extend(pc.resources, function () {
         },
 
         /**
-        * @function
         * @private
+        * @function
         * @name pc.resources.ResourceLoaderDisplay#_domCreate
         * @description Create the DOM structure for the basic table
         */
@@ -118,8 +119,8 @@ pc.extend(pc.resources, function () {
         },
 
         /**
-        * @function
         * @private
+        * @function
         * @name pc.resources.ResourceLoaderDisplay#_sanitizeId
         * @description Clean up the a text string for use as a dom element id
         */

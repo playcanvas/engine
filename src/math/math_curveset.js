@@ -1,5 +1,16 @@
 pc.extend(pc, (function () {
+    'use strict';
 
+    /**
+     * @name pc.CurveSet
+     * @class A curve set is a collection of curves.
+     * @constructor Creates a new curve set.
+     * @param {Array} [curveKeys] An array of arrays of keys (pairs of numbers with
+     * the time first and value second)
+     * @property {Number} length [Read only] The number of curves in the curve set
+     * @property {pc.CURVE} type The interpolation scheme applied to all curves in the
+     * curve set
+     */
     var CurveSet = function () {
         var i;
 
@@ -29,10 +40,28 @@ pc.extend(pc, (function () {
     };
 
     CurveSet.prototype = {
+        /**
+         * @function
+         * @name pc.CurveSet#get
+         * @description Return a specific curve in the curve set.
+         * @param {Number} index The index of the curve to return
+         * @returns {pc.Curve} The curve at the specified index
+         */
         get: function (index) {
             return this.curves[index];
         },
 
+        /**
+         * @function
+         * @name pc.CurveSet#value
+         * @description Returns the interpolated value of all curves in the curve
+         * set at the specified time.
+         * @param {Number} time The time at which to calculate the value
+         * @param {Array} [result] The interpolated curve values at the specified time.
+         * If this parameter is not supplied, the function allocates a new array internally
+         * to return the result.
+         * @return {Array} The interpolated curve values at the specified time
+         */
         value: function (time, result) {
             var length = this.curves.length;
             result = result || [];
@@ -45,6 +74,12 @@ pc.extend(pc, (function () {
             return result;
         },
 
+        /**
+         * @function
+         * @name pc.CurveSet#clone
+         * @description Returns a clone of the specified curve set object.
+         * @returns {pc.CurveSet} A clone of the specified curve set
+         */
         clone: function () {
             var result = new pc.CurveSet();
 

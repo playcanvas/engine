@@ -1,19 +1,19 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.fw.CollisionComponentSystem
+     * @name pc.CollisionComponentSystem
      * @constructor Creates a new CollisionComponentSystem.
-     * @class Manages creation of {@link pc.fw.CollisionComponent}s.
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext for the running application.
-     * @extends pc.fw.ComponentSystem
+     * @class Manages creation of {@link pc.CollisionComponent}s.
+     * @param {pc.ApplicationContext} context The ApplicationContext for the running application.
+     * @extends pc.ComponentSystem
      */
      var CollisionComponentSystem = function CollisionComponentSystem (context) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.CollisionComponent;
-        this.DataType = pc.fw.CollisionComponentData;
+        this.ComponentType = pc.CollisionComponent;
+        this.DataType = pc.CollisionComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -132,11 +132,11 @@ pc.extend(pc.fw, function () {
 
         this.on('remove', this.onRemove, this);
 
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
+        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
     };
 
-    CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.fw.ComponentSystem);
+    CollisionComponentSystem = pc.inherits(CollisionComponentSystem, pc.ComponentSystem);
 
     CollisionComponentSystem.prototype = pc.extend(CollisionComponentSystem.prototype, {
         onLibraryLoaded: function () {
@@ -144,7 +144,7 @@ pc.extend(pc.fw, function () {
                 //
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
-                pc.fw.ComponentSystem.off('update', this.onUpdate, this);
+                pc.ComponentSystem.off('update', this.onUpdate, this);
             }
         },
 
@@ -282,7 +282,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.CollisionComponentSystem#setDebugRender
+        * @name pc.CollisionComponentSystem#setDebugRender
         * @description Display collision shape outlines
         * @param {Boolean} value Enable or disable
         */
@@ -326,8 +326,8 @@ pc.extend(pc.fw, function () {
         beforeInitialize: function (component, data) {
             data.shape = this.createPhysicalShape(component.entity, data);
 
-            data.model = new pc.scene.Model();
-            data.model.graph = new pc.scene.GraphNode();
+            data.model = new pc.Model();
+            data.model.graph = new pc.GraphNode();
             data.model.meshInstances = [this.createDebugMesh(data)];
         },
 
@@ -364,7 +364,7 @@ pc.extend(pc.fw, function () {
                     entity.rigidbody.createBody();
                 } else {
                     if (!entity.trigger) {
-                        entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                        entity.trigger = new pc.Trigger(this.system.context, component, data);
                     } else {
                         entity.trigger.initialize(data);
                     }
@@ -480,7 +480,7 @@ pc.extend(pc.fw, function () {
                 ]);
                 indexBuffer.unlock();
 
-                var mesh = new pc.scene.Mesh();
+                var mesh = new pc.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].type = pc.PRIMITIVE_LINES;
@@ -491,13 +491,13 @@ pc.extend(pc.fw, function () {
             }
 
             if (!this.material) {
-                var material = new pc.scene.BasicMaterial();
+                var material = new pc.BasicMaterial();
                 material.color = new pc.Color(0, 0, 1, 1);
                 material.update()
                 this.material = material;
             }
 
-            return new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material);
+            return new pc.MeshInstance(data.model.graph, this.mesh, this.material);
         },
 
         createPhysicalShape: function (entity, data) {
@@ -578,7 +578,7 @@ pc.extend(pc.fw, function () {
 
                 vertexBuffer.unlock();
 
-                var mesh = new pc.scene.Mesh();
+                var mesh = new pc.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
                 mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
@@ -589,13 +589,13 @@ pc.extend(pc.fw, function () {
             }
 
             if (!this.material) {
-                var material = new pc.scene.BasicMaterial();
+                var material = new pc.BasicMaterial();
                 material.color = new pc.Color(0, 0, 1, 1);
                 material.update();
                 this.material = material;
             }
 
-            return new pc.scene.MeshInstance(data.model.graph, this.mesh, this.material);
+            return new pc.MeshInstance(data.model.graph, this.mesh, this.material);
         },
 
         createPhysicalShape: function (entity, data) {
@@ -641,7 +641,7 @@ pc.extend(pc.fw, function () {
                 var vertexBuffer = new pc.VertexBuffer(gd, format, 328, pc.BUFFER_DYNAMIC);
                 this.updateCapsuleShape(data, vertexBuffer);
 
-                var mesh = new pc.scene.Mesh();
+                var mesh = new pc.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
                 mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
@@ -653,13 +653,13 @@ pc.extend(pc.fw, function () {
 
             // no need to create a new material for each capsule shape
             if (!this.material) {
-                var material = new pc.scene.BasicMaterial();
+                var material = new pc.BasicMaterial();
                 material.color = new pc.Color(0, 0, 1, 1);
                 material.update();
                 this.material = material;
             }
 
-            return new pc.scene.MeshInstance(data.model.graph, mesh, this.material);
+            return new pc.MeshInstance(data.model.graph, mesh, this.material);
         },
 
         updateCapsuleShape: function(data, vertexBuffer) {
@@ -810,7 +810,7 @@ pc.extend(pc.fw, function () {
                 var vertexBuffer = new pc.VertexBuffer(gd, format, 168, pc.BUFFER_DYNAMIC);
                 this.updateCylinderShape(data, vertexBuffer);
 
-                var mesh = new pc.scene.Mesh();
+                var mesh = new pc.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
                 mesh.primitive[0].type = pc.PRIMITIVE_LINES;
                 mesh.primitive[0].base = 0;
@@ -818,13 +818,13 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].indexed = false;
 
                 if (!this.material) {
-                    var material = new pc.scene.BasicMaterial();
+                    var material = new pc.BasicMaterial();
                     material.color = new pc.Color(0, 0, 1, 1);
                     material.update();
                     this.material = material;
                 }
 
-                return new pc.scene.MeshInstance(data.model.graph, mesh, this.material);
+                return new pc.MeshInstance(data.model.graph, mesh, this.material);
             }
         },
 
@@ -952,7 +952,7 @@ pc.extend(pc.fw, function () {
                 for (i = 0; i < model.meshInstances.length; i++) {
                     var meshInstance = model.meshInstances[i];
                     var mesh = meshInstance.mesh;
-                    var ib = mesh.indexBuffer[pc.scene.RENDERSTYLE_SOLID];
+                    var ib = mesh.indexBuffer[pc.RENDERSTYLE_SOLID];
                     var vb = mesh.vertexBuffer;
 
                     var format = vb.getFormat();
@@ -1073,7 +1073,7 @@ pc.extend(pc.fw, function () {
                     entity.rigidbody.createBody();
                 } else {
                     if (!entity.trigger) {
-                        entity.trigger = new pc.fw.Trigger(this.system.context, component, data);
+                        entity.trigger = new pc.Trigger(this.system.context, component, data);
                     } else {
                         entity.trigger.initialize(data);
                     }

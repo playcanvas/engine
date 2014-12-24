@@ -1,14 +1,6 @@
-/**
- * @name pc.posteffect
- * @namespace Post Effects API
- * @description Functions for implementing post effects
- */
-pc.posteffect = {};
-
-pc.extend(pc.posteffect, function () {
-
+pc.extend(pc, function () {
     /**
-    * @name pc.posteffect.PostEffect
+    * @name pc.PostEffect
     * @class Base class for all post effects. Post effects take a a render target as input
     * apply effects to it and then render the result to an output render target or the screen
     * if no output is specified.
@@ -19,14 +11,14 @@ pc.extend(pc.posteffect, function () {
         this.device = graphicsDevice;
         this.shader = null;
         this.depthMap = null;
-        this.vertexBuffer = pc.posteffect.createFullscreenQuad(graphicsDevice);
+        this.vertexBuffer = pc.createFullscreenQuad(graphicsDevice);
         this.needsDepthBuffer = false;
     };
 
     PostEffect.prototype = {
         /**
         * @function
-        * @name pc.posteffect.PostEffect#render
+        * @name pc.PostEffect#render
         * @description Render the post effect using the specified inputTarget
         * to the specified outputTarget.
         * @param {pc.RenderTarget} inputTarget The input render target

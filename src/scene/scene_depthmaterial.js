@@ -1,24 +1,24 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.scene.DepthMaterial
+     * @name pc.DepthMaterial
      * @class A Depth material is is for rendering linear depth values to a render target.
      * @author Will Eastcott
      */
     var DepthMaterial = function () {
     };
 
-    DepthMaterial = pc.inherits(DepthMaterial, pc.scene.Material);
+    DepthMaterial = pc.inherits(DepthMaterial, pc.Material);
 
     pc.extend(DepthMaterial.prototype, {
         /**
          * @function
-         * @name pc.scene.DepthMaterial#clone
+         * @name pc.DepthMaterial#clone
          * @description Duplicates a Depth material.
-         * @returns {pc.scene.DepthMaterial} A cloned Depth material.
+         * @returns {pc.DepthMaterial} A cloned Depth material.
          */
         clone: function () {
-            var clone = new pc.scene.DepthMaterial();
+            var clone = new pc.DepthMaterial();
 
             Material.prototype._cloneInternal.call(this, clone);
 

@@ -1,18 +1,18 @@
 //--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.posteffect.Blend
+     * @name pc.BlendEffect
      * @class Blends the input render target with another texture
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
-     * @property {pc.gfx.Texture} blendMap The texture with which to blend the input render target with
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
+     * @property {pc.Texture} blendMap The texture with which to blend the input render target with
      * @property {Number} mixRatio The amount of blending between the input and the blendMap. Ranges from 0 to 1
      */
-    var Blend = function (graphicsDevice) {
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+    var BlendEffect = function (graphicsDevice) {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -45,12 +45,12 @@ pc.extend(pc.posteffect, function () {
 
         // Uniforms
         this.mixRatio = 0.5;
-        this.blendMap = new pc.gfx.Texture(graphicsDevice);
+        this.blendMap = new pc.Texture(graphicsDevice);
     }
 
-    Blend = pc.inherits(Blend, pc.posteffect.PostEffect);
+    BlendEffect = pc.inherits(BlendEffect, pc.PostEffect);
 
-    Blend.prototype = pc.extend(Blend.prototype, {
+    BlendEffect.prototype = pc.extend(BlendEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -58,12 +58,12 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uMixRatio").setValue(this.mixRatio);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uBlendMap").setValue(this.blendMap);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        Blend: Blend
+        BlendEffect: BlendEffect
     };
 }());
 
@@ -83,14 +83,14 @@ pc.script.attribute('blendMap', 'asset', [], {
 });
 
 //--------------- SCRIPT DEFINITION ------------------------//
-pc.script.create('blend', function (context) {
-    // Creates a new Blend instance
-    var Blend = function (entity) {
+pc.script.create('blendEffect', function (context) {
+    // Creates a new BlendEffect instance
+    var BlendEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.Blend(context.graphicsDevice);
+        this.effect = new pc.BlendEffect(context.graphicsDevice);
     };
 
-    Blend.prototype = {
+    BlendEffect.prototype = {
         initialize: function () {
             this.on('set', this.onAttributeChanged, this);
             this.effect.mixRatio = this.mixRatio;
@@ -124,5 +124,5 @@ pc.script.create('blend', function (context) {
         }
     };
 
-    return Blend;
+    return BlendEffect;
 });

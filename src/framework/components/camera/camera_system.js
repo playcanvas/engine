@@ -1,22 +1,22 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var REMOTE_CAMERA_NEAR_CLIP = 0.5;
     var REMOTE_CAMERA_FAR_CLIP = 2;
 
     /**
-     * @name pc.fw.CameraComponentSystem
-     * @class Used to add and remove {@link pc.fw.CameraComponent}s from Entities. It also holds an
+     * @name pc.CameraComponentSystem
+     * @class Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
      * array of all active cameras.
      * @constructor Create a new CameraComponentSystem
      * @param {Object} context
-     * @extends pc.fw.ComponentSystem
+     * @extends pc.ComponentSystem
      */
     var CameraComponentSystem = function (context) {
         this.id = 'camera';
         this.description = "Renders the scene from the location of the Entity.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.CameraComponent;
-        this.DataType = pc.fw.CameraComponentData;
+        this.ComponentType = pc.CameraComponent;
+        this.DataType = pc.CameraComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -134,10 +134,10 @@ pc.extend(pc.fw, function () {
         this.cameras = [];
 
         this.on('remove', this.onRemove, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
+        pc.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
 
     };
-    CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.fw.ComponentSystem);
+    CameraComponentSystem = pc.inherits(CameraComponentSystem, pc.ComponentSystem);
 
     pc.extend(CameraComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
@@ -158,12 +158,12 @@ pc.extend(pc.fw, function () {
                 data.enabled = data.activate;
             }
 
-            data.camera = new pc.scene.CameraNode();
+            data.camera = new pc.CameraNode();
 
-            data.postEffects = new pc.posteffect.PostEffectQueue(this.context, component);
+            data.postEffects = new pc.PostEffectQueue(this.context, component);
 
             if (this.context.designer && this.displayInTools(component.entity)) {
-                var material = new pc.scene.BasicMaterial();
+                var material = new pc.BasicMaterial();
                 material.color = new pc.Color(1, 1, 0, 1);
                 material.update();
 
@@ -180,7 +180,7 @@ pc.extend(pc.fw, function () {
 
                 var vertexBuffer = new pc.VertexBuffer(this.context.graphicsDevice, format, 8, pc.BUFFER_DYNAMIC);
 
-                var mesh = new pc.scene.Mesh();
+                var mesh = new pc.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
                 mesh.indexBuffer[0] = indexBuffer;
                 mesh.primitive[0].type = pc.PRIMITIVE_LINES;
@@ -188,9 +188,9 @@ pc.extend(pc.fw, function () {
                 mesh.primitive[0].count = indexBuffer.getNumIndices();
                 mesh.primitive[0].indexed = true;
 
-                var model = new pc.scene.Model();
+                var model = new pc.Model();
                 model.graph = data.camera;
-                model.meshInstances = [ new pc.scene.MeshInstance(model.graph, mesh, material) ];
+                model.meshInstances = [ new pc.MeshInstance(model.graph, mesh, material) ];
 
                 this.context.scene.addModel(model);
 
@@ -257,7 +257,7 @@ pc.extend(pc.fw, function () {
                 var projection  = component.projection;
 
                 var x, y;
-                if (projection === pc.scene.Projection.PERSPECTIVE) {
+                if (projection === pc.PROJECTION_PERSPECTIVE) {
                     y = Math.tan(fov / 2.0) * nearClip;
                 } else {
                     y = component.camera.getOrthoHeight();
@@ -278,7 +278,7 @@ pc.extend(pc.fw, function () {
                 positions[10] = -y;
                 positions[11] = -nearClip;
 
-                if (projection === pc.scene.Projection.PERSPECTIVE) {
+                if (projection === pc.PROJECTION_PERSPECTIVE) {
                     y = Math.tan(fov / 2.0) * farClip;
                     x = y * aspectRatio;
                 }

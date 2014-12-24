@@ -1,17 +1,17 @@
 //----------------------------- POST EFFECT DEFINITION -----------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.posteffect.EdgeDetect
+     * @name pc.EdgeDetectEffect
      * @class Edge Detection post effect using Sobel filter
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
-    var EdgeDetect = function (graphicsDevice) {
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+    var EdgeDetectEffect = function (graphicsDevice) {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -75,9 +75,9 @@ pc.extend(pc.posteffect, function () {
         this.color = new pc.Color(1,1,1,1);
     }
 
-    EdgeDetect = pc.inherits(EdgeDetect, pc.posteffect.PostEffect);
+    EdgeDetectEffect = pc.inherits(EdgeDetectEffect, pc.PostEffect);
 
-    EdgeDetect.prototype = pc.extend(EdgeDetect.prototype, {
+    EdgeDetectEffect.prototype = pc.extend(EdgeDetectEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -88,12 +88,12 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uColor").setValue(this.color.data);
             scope.resolve("uIntensity").setValue(this.intensity);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        EdgeDetect: EdgeDetect
+        EdgeDetectEffect: EdgeDetectEffect
     };
 }());
 
@@ -109,13 +109,13 @@ pc.script.attribute('color', 'rgba', [0.5, 0.5, 0.5, 1], {
 });
 
 //----------------------------- SCRIPT DEFINITION -----------------------------//
-pc.script.create('edgedetect', function (context) {
-    var Edgedetect = function (entity) {
+pc.script.create('edgeDetectEffect', function (context) {
+    var EdgeDetectEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.EdgeDetect(context.graphicsDevice);
+        this.effect = new pc.EdgeDetectEffect(context.graphicsDevice);
     };
 
-    Edgedetect.prototype = {
+    EdgeDetectEffect.prototype = {
         initialize: function () {
             this.on('set', this.onAttributeChanged, this);
             this.effect.intensity = this.intensity;
@@ -135,5 +135,5 @@ pc.script.create('edgedetect', function (context) {
         }
     };
 
-    return Edgedetect;
+    return EdgeDetectEffect;
 });

@@ -1,10 +1,12 @@
-pc.extend(pc.audio, function () {
+pc.extend(pc, function () {
+    'use strict';
+
     // default maxDistance, same as Web Audio API
     var MAX_DISTANCE = 10000;
     
     var Channel3d;
     
-    if (pc.audio.hasAudioContext()) {
+    if (pc.AudioManager.hasAudioContext()) {
         Channel3d = function (manager, sound, options) {
             this.position = new pc.Vec3();
             this.velocity = new pc.Vec3();
@@ -12,7 +14,7 @@ pc.extend(pc.audio, function () {
             var context = manager.context;
             this.panner = context.createPanner();
         };
-        Channel3d = pc.inherits(Channel3d, pc.audio.Channel);
+        Channel3d = pc.inherits(Channel3d, pc.Channel);
         
         Channel3d.prototype = pc.extend(Channel3d.prototype, {            
             getPosition: function () {
@@ -60,7 +62,7 @@ pc.extend(pc.audio, function () {
             /**
             * @private
             * @function
-            * @name pc.audio.Channel3d#_createSource
+            * @name pc.Channel3d#_createSource
             * @description Create the buffer source and connect it up to the correct audio nodes 
             */
             _createSource: function () {
@@ -75,7 +77,7 @@ pc.extend(pc.audio, function () {
                 this.gain.connect(context.destination);
             }
         });        
-    } else if (pc.audio.hasAudio()) {
+    } else if (pc.AudioManager.hasAudio()) {
         // temp vector storage
         var offset = new pc.Vec3();
         var distance;
@@ -111,7 +113,7 @@ pc.extend(pc.audio, function () {
             this.rollOffFactor = 1;
             
         };
-        Channel3d = pc.inherits(Channel3d, pc.audio.Channel);
+        Channel3d = pc.inherits(Channel3d, pc.Channel);
         
         Channel3d.prototype = pc.extend(Channel3d.prototype, {
             getPosition: function () {

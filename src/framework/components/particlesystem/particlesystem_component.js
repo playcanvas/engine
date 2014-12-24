@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function() {
+pc.extend(pc, function() {
 
     // properties that do not need rebuilding the particle system
     var SIMPLE_PROPERTIES = [
@@ -51,7 +51,7 @@ pc.extend(pc.fw, function() {
 
     /**
      * @component
-     * @name pc.fw.ParticleSystemComponent
+     * @name pc.ParticleSystemComponent
      * @constructor Create a new ParticleSystemComponent
      * @class Used to simulate particles and produce renderable particle mesh on either CPU or GPU.
      * GPU simulation is generally much faster than its CPU counterpart, because it avoids slow CPU-GPU synchronization and takes advantage of many GPU cores.
@@ -60,9 +60,9 @@ pc.extend(pc.fw, function() {
      * Particle rotation is specified by a single angle parameter: default billboard particles rotate around camera facing axis, while mesh particles rotate around 2 different view-independent axes.
      * Most of the simulation parameters are specified with pc.Curve or pc.CurveSet. Curves are interpolated based on each particle's lifetime, therefore parameters are able to change over time.
      * Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way each particle will pick a random value in-between.
-     * @param {pc.fw.ParticleSystemComponent} system The ComponentSystem that created this Component
-     * @param {pc.fw.Entity} entity The Entity this Component is attached to
-     * @extends pc.fw.Component
+     * @param {pc.ParticleSystemComponent} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity this Component is attached to
+     * @extends pc.Component
      * @property {Boolean} enabled Enables or disables the Component.
      * @property {Boolean} loop Enables or disables respawning of particles.
      * @property {Boolean} paused Pauses or unpauses the simulation.
@@ -84,15 +84,15 @@ pc.extend(pc.fw, function() {
      * @property {pc.Vec3} wrapBounds The half extents of a world space AABB volume centered on the owner entity's position. If a particle crosses the boundary of one side of the volume, it teleports to the opposite side.
      * @property {pc.Texture} colorMap The color map texture to apply to all particles in the system. If no texture is assigned, a default spot texture is used.
      * @property {pc.Texture} normalMap The normal map texture to apply to all particles in the system. If no texture is assigned, an approximate spherical normal is calculated for each vertex.
-     * @property {pc.scene.PARTICLESORT} sort Sorting mode. Forces CPU simulation, so be careful.
+     * @property {pc.PARTICLESORT} sort Sorting mode. Forces CPU simulation, so be careful.
      * <ul>
-     * <li><strong>{@link pc.scene.PARTICLESORT_NONE}</strong>: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.</li>
-     * <li><strong>{@link pc.scene.PARTICLESORT_DISTANCE}</strong>: Sorting based on distance to the camera. CPU only.</li>
-     * <li><strong>{@link pc.scene.PARTICLESORT_NEWER_FIRST}</strong>: Newer particles are drawn first. CPU only.</li>
-     * <li><strong>{@link pc.scene.PARTICLESORT_OLDER_FIRST}</strong>: Older particles are drawn first. CPU only.</li>
+     * <li><strong>{@link pc.PARTICLESORT_NONE}</strong>: No sorting, particles are drawn in arbitary order. Can be simulated on GPU.</li>
+     * <li><strong>{@link pc.PARTICLESORT_DISTANCE}</strong>: Sorting based on distance to the camera. CPU only.</li>
+     * <li><strong>{@link pc.PARTICLESORT_NEWER_FIRST}</strong>: Newer particles are drawn first. CPU only.</li>
+     * <li><strong>{@link pc.PARTICLESORT_OLDER_FIRST}</strong>: Older particles are drawn first. CPU only.</li>
      * </ul>
-     * @property {pc.scene.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
-     * @property {pc.scene.BLEND} blend Blending mode.
+     * @property {pc.Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer must contain local position at first 3 floats of each vertex.
+     * @property {pc.BLEND} blend Blending mode.
      * @property {pc.CurveSet} localVelocityGraph Velocity relative to emitter over lifetime.
      * @property {pc.CurveSet} localVelocityGraph2 If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
      * @property {pc.CurveSet} velocityGraph World-space velocity over lifetime.
@@ -127,7 +127,7 @@ pc.extend(pc.fw, function() {
         }.bind(this));
     };
 
-    ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.fw.Component);
+    ParticleSystemComponent = pc.inherits(ParticleSystemComponent, pc.Component);
 
     pc.extend(ParticleSystemComponent.prototype, {
 
@@ -253,7 +253,7 @@ pc.extend(pc.fw, function() {
         onEnable: function() {
             if (!this.emitter && !this.system._inTools) {
 
-                this.emitter = new pc.scene.ParticleEmitter(this.system.context.graphicsDevice, {
+                this.emitter = new pc.ParticleEmitter(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     spawnBounds: this.data.spawnBounds,
                     wrap: this.data.wrap,
@@ -303,7 +303,7 @@ pc.extend(pc.fw, function() {
 
                 this.emitter.meshInstance.node = this.entity;
 
-                this.psys = new pc.scene.Model();
+                this.psys = new pc.Model();
                 this.psys.graph = this.entity;
                 this.psys.emitter = this.emitter;
                 this.psys.meshInstances = [this.emitter.meshInstance];
@@ -350,7 +350,7 @@ pc.extend(pc.fw, function() {
 
         /**
         * @function
-        * @name pc.fw.ParticleSystemComponent#reset
+        * @name pc.ParticleSystemComponent#reset
         * @description Resets particle state, doesn't affect playing.
         */
         reset: function() {
@@ -362,7 +362,7 @@ pc.extend(pc.fw, function() {
 
         /**
         * @function
-        * @name pc.fw.ParticleSystemComponent#stop
+        * @name pc.ParticleSystemComponent#stop
         * @description Disables the emission of new particles, lets existing to finish their simulation.
         */
         stop: function() {
@@ -373,7 +373,7 @@ pc.extend(pc.fw, function() {
 
         /**
         * @function
-        * @name pc.fw.ParticleSystemComponent#pause
+        * @name pc.ParticleSystemComponent#pause
         * @description Freezes the simulation.
         */
         pause: function() {
@@ -382,7 +382,7 @@ pc.extend(pc.fw, function() {
 
         /**
         * @function
-        * @name pc.fw.ParticleSystemComponent#unpause
+        * @name pc.ParticleSystemComponent#unpause
         * @description Unfreezes the simulation.
         */
         unpause: function () {
@@ -391,7 +391,7 @@ pc.extend(pc.fw, function() {
 
         /**
         * @function
-        * @name pc.fw.ParticleSystemComponent#play
+        * @name pc.ParticleSystemComponent#play
         * @description Enables/unfreezes the simulation.
         */
         play: function() {
@@ -402,7 +402,7 @@ pc.extend(pc.fw, function() {
 
         /**
         * @function
-        * @name pc.fw.ParticleSystemComponent#isPlaying
+        * @name pc.ParticleSystemComponent#isPlaying
         * @description Checks if simulation is in progress.
         */
         isPlaying: function() {
@@ -422,7 +422,7 @@ pc.extend(pc.fw, function() {
         /**
         * @private
         * @function
-        * @name pc.fw.ParticleSystemComponent#rebuild
+        * @name pc.ParticleSystemComponent#rebuild
         * @description Rebuilds all data used by this particle system.
         */
         rebuild: function() {

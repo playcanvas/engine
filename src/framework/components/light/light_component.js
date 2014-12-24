@@ -1,7 +1,7 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @component
-     * @name pc.fw.LightComponent
+     * @name pc.LightComponent
      * @class The Light Component enables the Entity to light the scene. The light can be one of the
      * following types:
      * <ul>
@@ -9,16 +9,16 @@ pc.extend(pc.fw, function () {
      * <li><strong>point</strong>: A point light.</li>
      * <li><strong>spot</strong>: A spot light.</li>
      * </ul>
-     * @constructor Creates a new LightComponent. The constructor is for internal use only. To create a new Component use {@link pc.fw.LightComponentSystem#addComponent}.
-     * @param {pc.fw.LightComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
+     * @constructor Creates a new LightComponent. The constructor is for internal use only. To create a new Component use {@link pc.LightComponentSystem#addComponent}.
+     * @param {pc.LightComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The Entity that this Component is attached to.
      * @property {String} type The type of light.
      * <ul>
      * <li><strong>directional</strong>: A light that is infinitely far away and lights the entire scene from one direction.</li>
      * <li><strong>point</strong>: A light that illuminates in all directions from a point.</li>
      * <li><strong>spot</strong>: A light that illuminates a cone.</li>
      * </ul>
-     * @property {pc.fw.Color} color The Color of the light
+     * @property {pc.Color} color The Color of the light
      * @property {Boolean} enabled Enable or disable the light
      * @property {Number} intensity The brightness of the light.
      * @property {Boolean} castShadows If enabled the light will cast shadows.
@@ -31,10 +31,10 @@ pc.extend(pc.fw, function () {
      * @property {Number} outerConeAngle The angle at which the spotlight cone has faded to nothing. (Spot lights only)
      * @property {Number} falloffMode Controls the rate at which a light attentuates from its position. (Point and spot lights only)
      * <ul>
-     * <li><strong>{@link pc.scene.LIGHTFALLOFF_LINEAR}</strong>: Linear.</li>
-     * <li><strong>{@link pc.scene.LIGHTFALLOFF_INVERSESQUARED}</strong>: Inverse squared.</li>
+     * <li><strong>{@link pc.LIGHTFALLOFF_LINEAR}</strong>: Linear.</li>
+     * <li><strong>{@link pc.LIGHTFALLOFF_INVERSESQUARED}</strong>: Inverse squared.</li>
      * </ul>
-     * @extends pc.fw.Component
+     * @extends pc.Component
      */
     var LightComponent = function LightComponent(system, entity) {
         this.on("set_type", this.onSetType, this);
@@ -51,7 +51,7 @@ pc.extend(pc.fw, function () {
         this.on("set_falloffMode", this.onSetFalloffMode, this);
     };
 
-    LightComponent = pc.inherits(LightComponent, pc.fw.Component);
+    LightComponent = pc.inherits(LightComponent, pc.Component);
 
     Object.defineProperty(LightComponent.prototype, "enable", {
         get: function() {

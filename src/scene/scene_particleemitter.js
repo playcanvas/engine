@@ -1,5 +1,5 @@
 // Mr F
-pc.extend(pc.scene, function() {
+pc.extend(pc, function() {
     var particleVerts = [
         [-1, -1],
         [1, -1],
@@ -222,8 +222,8 @@ pc.extend(pc.scene, function() {
         setProperty("normalMap", null);
         setProperty("loop", true);
         setProperty("preWarm", false);
-        setProperty("sort", pc.scene.PARTICLESORT_NONE); // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
-        setProperty("mode", pc.scene.PARTICLEMODE_GPU);
+        setProperty("sort", pc.PARTICLESORT_NONE); // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;  Forces CPU mode if not 0
+        setProperty("mode", pc.PARTICLEMODE_GPU);
         setProperty("scene", null);
         setProperty("lighting", false);
         setProperty("halfLambert", false);
@@ -234,7 +234,7 @@ pc.extend(pc.scene, function() {
         setProperty("mesh", null);                               // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                                  // Leave undefined to use simple quads
         setProperty("depthWrite", false);
-        setProperty("blendType", pc.scene.BLEND_NORMAL);
+        setProperty("blendType", pc.BLEND_NORMAL);
         setProperty("node", null);
         setProperty("startAngle", 0);
         setProperty("startAngle2", this.startAngle);
@@ -406,8 +406,8 @@ pc.extend(pc.scene, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
-            this.useCpu = this.mode === pc.scene.PARTICLEMODE_CPU;
-            this.useCpu = this.useCpu || this.sort > pc.scene.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
+            this.useCpu = this.mode === pc.PARTICLEMODE_CPU;
+            this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
             gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
             this.vertexBuffer = undefined; // force regen VB
@@ -474,7 +474,7 @@ pc.extend(pc.scene, function() {
             this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
             this._allocate(this.numParticles);
 
-            var mesh = new pc.scene.Mesh();
+            var mesh = new pc.Mesh();
             mesh.vertexBuffer = this.vertexBuffer;
             mesh.indexBuffer[0] = this.indexBuffer;
             mesh.primitive[0].type = pc.PRIMITIVE_TRIANGLES;
@@ -482,7 +482,7 @@ pc.extend(pc.scene, function() {
             mesh.primitive[0].count = (this.numParticles * this.numParticleIndices);
             mesh.primitive[0].indexed = true;
 
-            this.material = new pc.scene.Material();
+            this.material = new pc.Material();
             this.material.cullMode = pc.CULLFACE_NONE;
             this.material.blend = true;
 
@@ -497,7 +497,7 @@ pc.extend(pc.scene, function() {
             this.regenShader();
             this.resetMaterial();
 
-            this.meshInstance = new pc.scene.MeshInstance(this.node, mesh, this.material);
+            this.meshInstance = new pc.MeshInstance(this.node, mesh, this.material);
             this.meshInstance.updateKey(); // shouldn't be here?
             this.meshInstance.drawToDepth = false;
 
@@ -594,7 +594,7 @@ pc.extend(pc.scene, function() {
             if (this.lighting) {
                 this.normalOption = hasNormal ? 2 : 1;
             }
-            // updateShader is also called by pc.scene.Scene when all shaders need to be updated
+            // updateShader is also called by pc.Scene when all shaders need to be updated
             this.material.updateShader = function() {
                 var shader = programLib.getProgram("particle", {
                     useCpu: this.emitter.useCpu,
@@ -1046,7 +1046,7 @@ pc.extend(pc.scene, function() {
 
                 // Particle sorting
                 // TODO: optimize
-                if (this.sort > pc.scene.PARTICLESORT_NONE && this.camera) {
+                if (this.sort > pc.PARTICLESORT_NONE && this.camera) {
                     for (i = 0; i < this.numParticles; i++) {
                         this.vbToSort[i] = [i, Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3])]; // particle id
                     }
@@ -1086,12 +1086,6 @@ pc.extend(pc.scene, function() {
     };
 
     return {
-        ParticleEmitter: ParticleEmitter,
-        PARTICLESORT_NONE: 0,
-        PARTICLESORT_DISTANCE: 1,
-        PARTICLESORT_NEWER_FIRST: 2,
-        PARTICLESORT_OLDER_FIRST: 3,
-        PARTICLEMODE_GPU: 0,
-        PARTICLEMODE_CPU: 1
+        ParticleEmitter: ParticleEmitter
     };
 }());

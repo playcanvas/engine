@@ -1,13 +1,13 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @private
      * @component
-     * @name pc.fw.SkyboxComponent
+     * @name pc.SkyboxComponent
      * @constructor Create a new SkyboxComponent
      * @class A skybox is cube rendered around the camera. The texture on the inside of the cube is used to display the distant environment in a simple and efficient way.
      * Set a texture Asset to be used for each face of the cube.
-     * @param {pc.fw.ApplicationContext} context
-     * @extends pc.fw.Component
+     * @param {pc.ApplicationContext} context
+     * @extends pc.Component
      * @property {Boolean} enabled Enables or disables rendering of the skybox
      * @property {Number} negx Asset id of texture that is used for negative x face
      * @property {Number} posx Asset id of texture that is used for positive x face
@@ -19,7 +19,7 @@ pc.extend(pc.fw, function () {
     var SkyboxComponent = function SkyboxComponent (system, entity) {
         this.on("set", this.onSet, this);
     };
-    SkyboxComponent = pc.inherits(SkyboxComponent, pc.fw.Component);
+    SkyboxComponent = pc.inherits(SkyboxComponent, pc.Component);
 
     pc.extend(SkyboxComponent.prototype, {
         onSet: function (name, oldValue, newValue) {
@@ -167,7 +167,7 @@ pc.extend(pc.fw, function () {
             texture.setSource(sources);
         }
 
-        var material = new pc.scene.Material();
+        var material = new pc.Material();
         material.updateShader = function() {
             var library = gd.getProgramLibrary();
             var shader = library.getProgram('skybox', {hdr:false, gamma:context.scene.gammaCorrection, toneMapping:context.scene.toneMapping});
@@ -178,11 +178,11 @@ pc.extend(pc.fw, function () {
         material.setParameter("texture_cubeMap", texture);
         material.cull = pc.CULLFACE_NONE;
 
-        var node = new pc.scene.GraphNode();
-        var mesh = pc.scene.procedural.createBox(gd);
-        var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+        var node = new pc.GraphNode();
+        var mesh = pc.createBox(gd);
+        var meshInstance = new pc.MeshInstance(node, mesh, material);
 
-        var model = new pc.scene.Model();
+        var model = new pc.Model();
         model.graph = node;
         model.meshInstances = [ meshInstance ];
 
@@ -192,7 +192,7 @@ pc.extend(pc.fw, function () {
     var _createSkyboxFromCubemap = function (entity, context, cubemap) {
         var gd = context.graphicsDevice;
 
-        var material = new pc.scene.Material();
+        var material = new pc.Material();
         material.updateShader = function() {
             var library = gd.getProgramLibrary();
             var shader = library.getProgram('skybox', {hdr:cubemap.hdr, prefiltered:true, gamma:context.scene.gammaCorrection, toneMapping:context.scene.toneMapping});
@@ -203,11 +203,11 @@ pc.extend(pc.fw, function () {
         material.setParameter("texture_cubeMap", cubemap);
         material.cull = pc.CULLFACE_NONE;
 
-        var node = new pc.scene.GraphNode();
-        var mesh = pc.scene.procedural.createBox(gd);
-        var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+        var node = new pc.GraphNode();
+        var mesh = pc.createBox(gd);
+        var meshInstance = new pc.MeshInstance(node, mesh, material);
 
-        var model = new pc.scene.Model();
+        var model = new pc.Model();
         model.graph = node;
         model.meshInstances = [ meshInstance ];
 

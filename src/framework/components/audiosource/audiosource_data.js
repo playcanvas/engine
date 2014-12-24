@@ -1,4 +1,4 @@
-pc.fw.AudioSourceComponentData = function AudioSourceComponentData() {
+pc.AudioSourceComponentData = function AudioSourceComponentData() {
     // serialized
     this.enabled = true;
     this.assets = [];

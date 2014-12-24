@@ -1,10 +1,10 @@
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.posteffect.PostEffectQueue
+     * @name pc.PostEffectQueue
      * @constructor Create a new PostEffectQueue
      * @class Used to manage multiple post effects for a camera
-     * @param {pc.fw.ApplicationContext} context The application context
-     * @param {pc.fw.CameraComponent} camera The camera component
+     * @param {pc.ApplicationContext} context The application context
+     * @param {pc.CameraComponent} camera The camera component
      */
     function PostEffectQueue(context, camera) {
         this.context = context;
@@ -28,7 +28,7 @@ pc.extend(pc.posteffect, function () {
          /**
          * @private
          * @function
-         * @name pc.posteffect.PostEffectQueue#_createOffscreenTarget
+         * @name pc.PostEffectQueue#_createOffscreenTarget
          * @description Creates a render target with the dimensions of the canvas, with an optional depth buffer
          * @param {Boolean} useDepth Set to true if you want to create a render target with a depth buffer
          * @returns {pc.RenderTarget} The render target
@@ -76,10 +76,10 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.posteffect.PostEffectQueue#addEffect
+         * @name pc.PostEffectQueue#addEffect
          * @description Adds a post effect to the queue. If the queue is disabled adding a post effect will
          * automatically enable the queue.
-         * @param {pc.posteffect.PostEffect} effect The post effect to add to the queue.
+         * @param {pc.PostEffect} effect The post effect to add to the queue.
          */
         addEffect: function (effect) {
             // first rendering of the scene requires depth buffer
@@ -117,9 +117,9 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.posteffect.PostEffectQueue#removeEffect
+         * @name pc.PostEffectQueue#removeEffect
          * @description Removes a post effect from the queue. If the queue becomes empty it will be disabled automatically.
-         * @param {pc.posteffect.PostEffect} effect The post effect to remove.
+         * @param {pc.PostEffect} effect The post effect to remove.
          */
         removeEffect: function (effect) {
             // find index of effect
@@ -179,7 +179,7 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.posteffect.PostEffectQueue#destroy
+         * @name pc.PostEffectQueue#destroy
          * @description Removes all the effects from the queue and disables it
          */
         destroy: function () {
@@ -201,7 +201,7 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.posteffect.PostEffectQueue#enable
+         * @name pc.PostEffectQueue#enable
          * @description Enables the queue and all of its effects. If there are no effects then the queue will not be enabled.
          */
         enable: function () {
@@ -220,7 +220,7 @@ pc.extend(pc.posteffect, function () {
                 camera.camera.setRect(0, 0, 1, 1);
 
                 // create a new command that renders all of the effects one after the other
-                this.command = new pc.scene.Command(pc.scene.LAYER_FX, pc.scene.BLEND_NONE, function () {
+                this.command = new pc.Command(pc.LAYER_FX, pc.BLEND_NONE, function () {
                     if (this.enabled && camera.data.isRendering) {
                         var rect = null;
                         var len = effects.length;
@@ -246,7 +246,7 @@ pc.extend(pc.posteffect, function () {
 
         /**
          * @function
-         * @name pc.posteffect.PostEffectQueue#disable
+         * @name pc.PostEffectQueue#disable
          * @description Disables the queue and all of its effects.
          */
         disable: function () {

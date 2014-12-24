@@ -1,18 +1,21 @@
-pc.extend(pc.audio, function () {
+pc.extend(pc, function () {
+    'use strict';
+
     var Sound;
-    if (pc.audio.hasAudioContext()) {
+
+    if (pc.AudioManager.hasAudioContext()) {
         Sound = function (manager, url, success, error) {
             this.buffer = null;
             this.isLoaded = false;
             
-            if (!pc.audio.isSupported(url, this.audio)) {
+            if (!pc.AudioManager.isSupported(url, this.audio)) {
                 setTimeout(function () {
                     error(pc.string.format('Audio format for {0} not supported', url));
                 }, 0);
             } else {
                 if (manager.context) {
                     pc.net.http.get(url, function (response) {
-                        manager.context.decodeAudioData(response, function(buffer) {
+                        manager.context.decodeAudioData(response, function (buffer) {
                             this.buffer = buffer;
                             this.isLoaded = true;
                             success(this);
@@ -20,11 +23,10 @@ pc.extend(pc.audio, function () {
                     }.bind(this), {
                         error: error
                     });
-                }                
+                }
             }
-
-        };        
-    } else if (pc.audio.hasAudio()) {
+        };
+    } else if (pc.AudioManager.hasAudio()) {
         Sound = function (manager, url, success, error) {
             this.isLoaded = false;
             this.audio = new Audio();
@@ -32,7 +34,7 @@ pc.extend(pc.audio, function () {
             this.audio.oncanplaythrough = function () {
                 if (!this.isLoaded) {
                     this.isLoaded = true;
-                    success(this);                    
+                    success(this);
                 }
             }.bind(this);
 

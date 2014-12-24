@@ -1,16 +1,16 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @component
-     * @name pc.fw.PickComponent
+     * @name pc.PickComponent
      * @constructor Create a new PickComponent
-     * @class Allows an Entity to be picked from the scene using a pc.fw.picking.Picker Object
-    * @param {pc.fw.PickComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
-     * @extends pc.fw.Component
+     * @class Allows an Entity to be picked from the scene using a pc.picking.Picker Object
+    * @param {pc.PickComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.Entity} entity The Entity that this Component is attached to.
+     * @extends pc.Component
      */
     var PickComponent = function PickComponent(system, entity) {
     };
-    PickComponent = pc.inherits(PickComponent, pc.fw.Component);
+    PickComponent = pc.inherits(PickComponent, pc.Component);
     
     pc.extend(PickComponent.prototype, {
         addShape: function (shape, shapeName) {
@@ -19,29 +19,29 @@ pc.extend(pc.fw, function () {
 
             switch (shape.type) {
                 case pc.shape.Type.BOX:
-                    mesh = pc.scene.procedural.createBox(this.system.context.graphicsDevice, {
+                    mesh = pc.createBox(this.system.context.graphicsDevice, {
                         halfExtents: shape.halfExtents
                     });
                     break;
                 case pc.shape.Type.SPHERE:
-                    mesh = pc.scene.procedural.createSphere(this.system.context.graphicsDevice, {
+                    mesh = pc.createSphere(this.system.context.graphicsDevice, {
                         radius: shape.radius
                     });
                     break;
                 case pc.shape.Type.TORUS:
-                    mesh = pc.scene.procedural.createTorus(this.system.context.graphicsDevice, {
+                    mesh = pc.createTorus(this.system.context.graphicsDevice, {
                         tubeRadius: shape.iradius,
                         ringRadius: shape.oradius
                     });
                     break;
             }
 
-            var node = new pc.scene.GraphNode();
-            var meshInstance = new pc.scene.MeshInstance(node, mesh, material);
+            var node = new pc.GraphNode();
+            var meshInstance = new pc.MeshInstance(node, mesh, material);
 
             meshInstance._entity = this.entity;
 
-            var model = new pc.scene.Model();
+            var model = new pc.Model();
             model.graph = node;
             model.meshInstances = [ meshInstance ];
 

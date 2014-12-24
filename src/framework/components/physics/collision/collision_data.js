@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     var CollisionComponentData = function () {
         this.enabled = true;
         this.type = 'box';
@@ -13,7 +13,7 @@ pc.extend(pc.fw, function () {
         this.model = null;
         this.initialized = false;
     };
-    CollisionComponentData = pc.inherits(CollisionComponentData, pc.fw.ComponentData);
+    CollisionComponentData = pc.inherits(CollisionComponentData, pc.ComponentData);
 
     return {
         CollisionComponentData: CollisionComponentData

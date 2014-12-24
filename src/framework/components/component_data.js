@@ -1,6 +1,7 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.fw.ComponentData
+     * @private
+     * @name pc.ComponentData
      * @class Base class for Component data storage.
      */
     var ComponentData = function () {   

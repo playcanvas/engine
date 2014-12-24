@@ -1,19 +1,19 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
      * @component
-     * @name pc.fw.AudioSourceComponent
+     * @name pc.AudioSourceComponent
      * @class The AudioSource Component controls playback of an audio sample.
      * @constructor Create a new AudioSource Component
-     * @param {pc.fw.AudioSourceComponentSystem} system The ComponentSystem that created this Component
-     * @param {pc.fw.Entity} entity The entity that the Component is attached to
-     * @extends pc.fw.Component
+     * @param {pc.AudioSourceComponentSystem} system The ComponentSystem that created this Component
+     * @param {pc.Entity} entity The entity that the Component is attached to
+     * @extends pc.Component
      * @property {Boolean} enabled If false no audio will be played
      * @property {Array} assets The list of audio assets
      * @property {Boolean} activate If true the audio will begin playing as soon as the Pack is loaded
      * @property {Number} volume The volume modifier to play the audio with. In range 0-1.
      * @property {Number} pitch The pitch modifier to play the audio with. Must be larger than 0.01
      * @property {Boolean} loop If true the audio will restart when it finishes playing
-     * @property {Boolean} 3d If true the audio will play back at the location of the Entity in space, so the audio will be affect by the position of the {@link pc.fw.AudioListenerComponent}
+     * @property {Boolean} 3d If true the audio will play back at the location of the Entity in space, so the audio will be affect by the position of the {@link pc.AudioListenerComponent}
      * @property {Number} minDistance The minimum distance from the listener at which audio falloff begins.
      * @property {Number} maxDistance The maximum distance from the listener at which audio falloff stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off anymore
      * @property {Number} rollOffFactor The factor used in the falloff equation.
@@ -28,12 +28,12 @@ pc.extend(pc.fw, function () {
         this.on("set_maxDistance", this.onSetMaxDistance, this);
         this.on("set_rollOffFactor", this.onSetRollOffFactor, this);
     };
-    AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.fw.Component);
+    AudioSourceComponent = pc.inherits(AudioSourceComponent, pc.Component);
 
     pc.extend(AudioSourceComponent.prototype, {
        /**
         * @function
-        * @name pc.fw.AudioSourceComponent#play
+        * @name pc.AudioSourceComponent#play
         * @description Begin playback of an audio asset in the component attached to an entity
         * @param {String} name The name of the Asset to play
         */
@@ -69,8 +69,8 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.AudioSourceComponent#pause
-        * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.fw.AudioSourceComponent#unpause}
+        * @name pc.AudioSourceComponent#pause
+        * @description Pause playback of the audio that is playing on the Entity. Playback can be resumed by calling {@link pc.AudioSourceComponent#unpause}
         */
         pause: function() {
             if (this.channel) {
@@ -80,7 +80,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.AudioSourceComponent#unpause
+        * @name pc.AudioSourceComponent#unpause
         * @description Resume playback of the audio if paused. Playback is resumed at the time it was paused.
         */
         unpause: function () {
@@ -91,7 +91,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.AudioSourceComponent#stop
+        * @name pc.AudioSourceComponent#stop
         * @description Stop playback on an Entity. Playback can not be resumed after being stopped.
         */
         stop: function() {
@@ -177,7 +177,7 @@ pc.extend(pc.fw, function () {
 
         onSetMaxDistance: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
-                if (this.channel instanceof pc.audio.Channel3d) {
+                if (this.channel instanceof pc.Channel3d) {
                     this.channel.setMaxDistance(newValue);
                 }
             }
@@ -185,7 +185,7 @@ pc.extend(pc.fw, function () {
 
         onSetMinDistance: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
-                if (this.channel instanceof pc.audio.Channel3d) {
+                if (this.channel instanceof pc.Channel3d) {
                     this.channel.setMinDistance(newValue);
                 }
             }
@@ -193,7 +193,7 @@ pc.extend(pc.fw, function () {
 
         onSetRollOffFactor: function (name, oldValue, newValue) {
             if (oldValue != newValue) {
-                if (this.channel instanceof pc.audio.Channel3d) {
+                if (this.channel instanceof pc.Channel3d) {
                     this.channel.setRollOffFactor(newValue);
                 }
             }

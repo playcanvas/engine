@@ -1,4 +1,4 @@
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
 
     function PartitionedVertex() {
         this.index = 0;

@@ -43,7 +43,7 @@ pc.extend(pc.resources, function () {
     PackResourceHandler.prototype.openPack = function (data, request) {
         var d = pc.extend({}, data);
         d.hierarchy = this.openEntity(d.hierarchy, request);
-        return new pc.fw.Pack(d);
+        return new pc.Pack(d);
     };
 
     PackResourceHandler.prototype.openEntity = function (data, request) {
@@ -57,7 +57,7 @@ pc.extend(pc.resources, function () {
     };
 
     PackResourceHandler.prototype.openEntityHierarchy = function (data, request) {
-        var entity = new pc.fw.Entity();
+        var entity = new pc.Entity();
 
         var p = data.position;
         var r = data.rotation;
@@ -136,7 +136,7 @@ pc.extend(pc.resources, function () {
     };
     PackRequest = pc.inherits(PackRequest, pc.resources.ResourceRequest);
     PackRequest.prototype.type = "pack";
-    PackRequest.prototype.Type = pc.fw.Pack;
+    PackRequest.prototype.Type = pc.Pack;
 
     return {
         PackResourceHandler: PackResourceHandler,

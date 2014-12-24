@@ -1,12 +1,12 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
     * @component
-    * @name pc.fw.ScriptComponent
+    * @name pc.ScriptComponent
     * @class The ScriptComponent allows you to extend the functionality of an Entity by attaching your own javascript files
     * to be executed with access to the Entity. For more details on scripting see <a href="//developer.playcanvas.com/user-manual/scripting/">Scripting</a>.
-    * @param {pc.fw.ScriptComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
-    * @extends pc.fw.Component
+    * @param {pc.ScriptComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.Entity} entity The Entity that this Component is attached to.
+    * @extends pc.Component
     * @property {Boolean} enabled Enables or disables the Component. If the Component is disabled then the following methods will not be called on the script instances:
     * <ul>
     * <li>initialize</li>
@@ -22,13 +22,13 @@ pc.extend(pc.fw, function () {
     var ScriptComponent = function ScriptComponent(system, entity) {
         this.on("set_scripts", this.onSetScripts, this);
     };
-    ScriptComponent = pc.inherits(ScriptComponent, pc.fw.Component);
+    ScriptComponent = pc.inherits(ScriptComponent, pc.Component);
 
     pc.extend(ScriptComponent.prototype, {
         /**
          * @private
          * @function
-         * @name pc.fw.ScriptComponent#send
+         * @name pc.ScriptComponent#send
          * @description Send a message to a script attached to the entity.
          * Sending a message to a script is similar to calling a method on a Script Object, except that the message will not fail if the method isn't present.
          * @param {String} name The name of the script to send the message to

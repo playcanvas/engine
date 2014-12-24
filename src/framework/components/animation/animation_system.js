@@ -1,10 +1,10 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.fw.AnimationComponentSystem
+     * @name pc.AnimationComponentSystem
      * @constructor Create an AnimationComponentSystem
      * @class The AnimationComponentSystem is manages creating and deleting AnimationComponents
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext for the current application
-     * @extends pc.fw.ComponentSystem
+     * @param {pc.ApplicationContext} context The ApplicationContext for the current application
+     * @extends pc.ComponentSystem
      */
     var AnimationComponentSystem = function AnimationComponentSystem (context) {
         this.id = 'animation';
@@ -12,8 +12,8 @@ pc.extend(pc.fw, function () {
 
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.AnimationComponent;
-        this.DataType = pc.fw.AnimationComponentData;
+        this.ComponentType = pc.AnimationComponent;
+        this.DataType = pc.AnimationComponentData;
 
         this.schema = [{
             name: "enabled",
@@ -102,9 +102,9 @@ pc.extend(pc.fw, function () {
         this.on('remove', this.onRemove, this);
         this.on('update', this.onUpdate, this);
 
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.on('update', this.onUpdate, this);
     };
-    AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.fw.ComponentSystem);
+    AnimationComponentSystem = pc.inherits(AnimationComponentSystem, pc.ComponentSystem);
 
     pc.extend(AnimationComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {

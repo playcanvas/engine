@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     // Shared math variable to avoid excessive allocation
     var transform = new pc.Mat4();
     var newWtm = new pc.Mat4();
@@ -13,13 +13,13 @@ pc.extend(pc.fw, function () {
     var frameCollisions = {};
 
     /**
-    * @name pc.fw.RaycastResult
+    * @name pc.RaycastResult
     * @class Object holding the result of a successful raycast hit
     * @constructor Create a new RaycastResul
-    * @param {pc.fw.Entity} entity The entity that was hit
+    * @param {pc.Entity} entity The entity that was hit
     * @param {pc.Vec3} point The point at which the ray hit the entity in world space
     * @param {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
-    * @property {pc.fw.Entity} entity The entity that was hit
+    * @property {pc.Entity} entity The entity that was hit
     * @property {pc.Vec3} point The point at which the ray hit the entity in world space
     * @property {pc.Vec3} normal The normal vector of the surface where the ray hit in world space.
     */
@@ -30,14 +30,14 @@ pc.extend(pc.fw, function () {
     };
 
     /**
-    * @name pc.fw.SingleContactResult
+    * @name pc.SingleContactResult
     * @class Object holding the result of a contact between two rigid bodies
     * @constructor Create a new SingleContactResult
-    * @param {pc.fw.Entity} a The first entity involved in the contact
-    * @param {pc.fw.Entity} b The second entity involved in the contact
-    * @param {pc.fw.ContactPoint} contactPoint The contact point between the two entities
-    * @property {pc.fw.Entity} a The first entity involved in the contact
-    * @property {pc.fw.Entity} b The second entity involved in the contact
+    * @param {pc.Entity} a The first entity involved in the contact
+    * @param {pc.Entity} b The second entity involved in the contact
+    * @param {pc.ContactPoint} contactPoint The contact point between the two entities
+    * @property {pc.Entity} a The first entity involved in the contact
+    * @property {pc.Entity} b The second entity involved in the contact
     * @property {pc.Vec3} localPointA The point on Entity A where the contact occured, relative to A
     * @property {pc.Vec3} localPointB The point on Entity B where the contact occured, relative to B
     * @property {pc.Vec3} pointA The point on Entity A where the contact occured, in world space
@@ -65,7 +65,7 @@ pc.extend(pc.fw, function () {
     };
 
     /**
-    * @name pc.fw.ContactPoint
+    * @name pc.ContactPoint
     * @class Object holding the result of a contact between two Entities.
     * @constructor Create a new ContactPoint
     * @param {pc.Vec3} localPoint The point on the entity where the contact occured, relative to the entity
@@ -96,13 +96,13 @@ pc.extend(pc.fw, function () {
     }
 
     /**
-    * @name pc.fw.ContactResult
+    * @name pc.ContactResult
     * @class Object holding the result of a contact between two Entities
     * @constructor Create a new ContactResult
-    * @param {pc.fw.Entity} other The entity that was involved in the contact with this entity
-    * @param {pc.fw.ContactPoint[]} contacts An array of ContactPoints with the other entity
-    * @property {pc.fw.Entity} other The entity that was involved in the contact with this entity
-    * @property {pc.fw.ContactPoint[]} contacts An array of ContactPoints with the other entity
+    * @param {pc.Entity} other The entity that was involved in the contact with this entity
+    * @param {pc.ContactPoint[]} contacts An array of ContactPoints with the other entity
+    * @property {pc.Entity} other The entity that was involved in the contact with this entity
+    * @property {pc.ContactPoint[]} contacts An array of ContactPoints with the other entity
     */
     var ContactResult = function ContactResult(other, contacts) {
         this.other = other;
@@ -112,26 +112,26 @@ pc.extend(pc.fw, function () {
     // Events Documentation
     /**
     * @event
-    * @name pc.fw.RigidBodyComponentSystem#contact
+    * @name pc.RigidBodyComponentSystem#contact
     * @description Fired when a contact occurs between two rigid bodies
-    * @param {pc.fw.SingleContactResult} result Details of the contact between the two bodies
+    * @param {pc.SingleContactResult} result Details of the contact between the two bodies
     */
 
     /**
-     * @name pc.fw.RigidBodyComponentSystem
+     * @name pc.RigidBodyComponentSystem
      * @constructor Create a new RigidBodyComponentSystem
      * @class The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also controls global values for the world such as gravity.
      * Note: The RigidBodyComponentSystem is only valid if 3D Physics is enabled in your application. You can enable this in the application settings for your Depot.
-     * @param {pc.fw.ApplicationContext} context The ApplicationContext
-     * @extends pc.fw.ComponentSystem
+     * @param {pc.ApplicationContext} context The ApplicationContext
+     * @extends pc.ComponentSystem
      */
     var RigidBodyComponentSystem = function RigidBodyComponentSystem (context) {
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.RigidBodyComponent;
-        this.DataType = pc.fw.RigidBodyComponentData;
+        this.ComponentType = pc.RigidBodyComponent;
+        this.DataType = pc.RigidBodyComponentData;
 
         this.contactPointPool = new pc.AllocatePool(ContactPoint, 1);
         this.contactResultPool = new pc.AllocatePool(ContactResult, 1);
@@ -272,9 +272,9 @@ pc.extend(pc.fw, function () {
 
         this.on('remove', this.onRemove, this);
 
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.on('update', this.onUpdate, this);
     };
-    RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.fw.ComponentSystem);
+    RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
 
     pc.extend(RigidBodyComponentSystem.prototype, {
         onLibraryLoaded: function () {
@@ -294,7 +294,7 @@ pc.extend(pc.fw, function () {
                 ammoRayEnd = new Ammo.btVector3();
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
-                pc.fw.ComponentSystem.off('update', this.onUpdate, this);
+                pc.ComponentSystem.off('update', this.onUpdate, this);
             }
         },
 
@@ -369,7 +369,7 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBodyComponentSystem#setGravity
+        * @name pc.RigidBodyComponentSystem#setGravity
         * @description Set the gravity vector for the 3D physics world
         * @param {Number} x The x-component of the gravity vector
         * @param {Number} y The y-component of the gravity vector
@@ -377,7 +377,7 @@ pc.extend(pc.fw, function () {
         */
         /**
         * @function
-        * @name pc.fw.RigidBodyComponentSystem#setGravity^2
+        * @name pc.RigidBodyComponentSystem#setGravity^2
         * @description Set the gravity vector for the 3D physics world
         * @param {pc.Vec3} gravity The gravity vector to use for the 3D physics world.
         */
@@ -398,12 +398,12 @@ pc.extend(pc.fw, function () {
 
         /**
         * @function
-        * @name pc.fw.RigidBodyComponentSystem#raycastFirst
+        * @name pc.RigidBodyComponentSystem#raycastFirst
         * @description Raycast the world and return the first entity the ray hits. Fire a ray into the world from start to end,
-        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
+        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.RaycastResult}.
         * @param {pc.Vec3} start The world space point where the ray starts
         * @param {pc.Vec3} end The world space point where the ray ends
-        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
+        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.RaycastResult} object
         */
         raycastFirst: function (start, end, callback) {
             ammoRayStart.setValue(start.x, start.y, start.z);
@@ -433,10 +433,10 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.RigidBodyComponentSystem#_storeCollision
+        * @name pc.RigidBodyComponentSystem#_storeCollision
         * @description Stores a collision between the entity and other in the contacts map and returns true if it is a new collision
-        * @param {pc.fw.Entity} entity The entity
-        * @param {pc.fw.Entity} other The entity that collides with the first entity
+        * @param {pc.Entity} entity The entity
+        * @param {pc.Entity} other The entity that collides with the first entity
         */
         _storeCollision: function (entity, other) {
             var isNewCollision = false;
@@ -502,7 +502,7 @@ pc.extend(pc.fw, function () {
         /**
         * @private
         * @function
-        * @name pc.fw.RigidBodyComponentSystem#_cleanOldCollisions
+        * @name pc.RigidBodyComponentSystem#_cleanOldCollisions
         * @description Removes collisions that no longer exist from the collisions list and fires collisionend events to the
         * related entities.
         */
@@ -542,12 +542,12 @@ pc.extend(pc.fw, function () {
 
         /**
         * @private
-        * @name pc.fw.RigidBodyComponentSystem#raycast
+        * @name pc.RigidBodyComponentSystem#raycast
         * @description Raycast the world and return all entities the ray hits. Fire a ray into the world from start to end,
-        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.fw.RaycastResult}.
+        * if the ray hits an entity with a rigidbody component, the callback function is called along with a {@link pc.RaycastResult}.
         * @param {pc.Vec3} start The world space point where the ray starts
         * @param {pc.Vec3} end The world space point where the ray ends
-        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.fw.RaycastResult} object
+        * @param {Function} callback Function called if ray hits another body. Passed a single argument: a {@link pc.RaycastResult} object
         */
         // raycast: function (start, end, callback) {
         //     var rayFrom = new Ammo.btVector3(start.x, start.y, start.z);

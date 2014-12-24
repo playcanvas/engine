@@ -1,15 +1,10 @@
-pc.scene.Projection = {
-    PERSPECTIVE  : 0,
-    ORTHOGRAPHIC : 1
-};
-
-pc.extend(pc.scene, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.scene.CameraNode
+     * @name pc.CameraNode
      * @class A camera.
      */
     var CameraNode = function () {
-        this._projection = pc.scene.Projection.PERSPECTIVE;
+        this._projection = pc.PROJECTION_PERSPECTIVE;
         this._nearClip = 0.1;
         this._farClip = 10000;
         this._fov = 45;
@@ -28,7 +23,7 @@ pc.extend(pc.scene, function () {
             height: 1
         };
 
-        this._frustum = new pc.shape.Frustum(this._projMat, this._viewMat);
+        this._frustum = new pc.Frustum(this._projMat, this._viewMat);
 
         // Create a full size viewport onto the backbuffer
         this._renderTarget = null;
@@ -42,16 +37,16 @@ pc.extend(pc.scene, function () {
     };
 
     // A CameraNode is a specialization of a GraphNode.  So inherit...
-    CameraNode = pc.inherits(CameraNode, pc.scene.GraphNode);
+    CameraNode = pc.inherits(CameraNode, pc.GraphNode);
 
     pc.extend(CameraNode.prototype, {
         /**
          * @private
          * @function
-         * @name pc.scene.CameraNode#_cloneInternal
+         * @name pc.CameraNode#_cloneInternal
          * @description Internal function for cloning the contents of a camera node. Also clones
          * the properties of the superclass GraphNode.
-         * @param {pc.scene.CameraNode} clone The clone that will receive the copied properties.
+         * @param {pc.CameraNode} clone The clone that will receive the copied properties.
          */
         _cloneInternal: function (clone) {
             // Clone GraphNode properties
@@ -69,12 +64,12 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#clone
+         * @name pc.CameraNode#clone
          * @description Duplicates a camera node but does not 'deep copy' the hierarchy.
-         * @returns {pc.scene.CameraNode} A cloned CameraNode.
+         * @returns {pc.CameraNode} A cloned CameraNode.
          */
         clone: function () {
-            var clone = new pc.scene.CameraNode();
+            var clone = new pc.CameraNode();
             this._cloneInternal(clone);
             return clone;
         },
@@ -109,7 +104,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#screenToWorld
+         * @name pc.CameraNode#screenToWorld
          * @description Convert a point from 2D canvas pixel space to 3D world space.
          * @param {Number} x x coordinate on PlayCanvas' canvas element.
          * @param {Number} y y coordinate on PlayCanvas' canvas element.
@@ -131,7 +126,7 @@ pc.extend(pc.scene, function () {
             this._viewProjMat.mul2(projMat, this._viewMat);
             var invViewProjMat = this._viewProjMat.clone().invert();
 
-            if (this._projection === pc.scene.Projection.PERSPECTIVE) {
+            if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                 // Calculate the screen click as a point on the far plane of the
                 // normalized device coordinate 'box' (z=1)
                 var far = new pc.Vec3(x / cw * 2 - 1, (ch - y) / ch * 2 - 1, 1);
@@ -161,7 +156,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getAspectRatio
+         * @name pc.CameraNode#getAspectRatio
          * @description Retrieves the setting for the specified camera's aspect ratio.
          * @returns {Number} The aspect ratio of the camera (width divided by height).
          */
@@ -171,7 +166,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getClearOptions
+         * @name pc.CameraNode#getClearOptions
          * @description Retrieves the options used to determine how the camera's render target will be cleared.
          * @return {Object} The options determining the behaviour of render target clears.
          */
@@ -181,7 +176,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getFarClip
+         * @name pc.CameraNode#getFarClip
          * @description Retrieves the setting for the specified camera's far clipping plane. This
          * is a Z-coordinate in eye coordinates.
          * @returns {Number} The far clipping plane distance.
@@ -192,7 +187,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getFov
+         * @name pc.CameraNode#getFov
          * @description Retrieves the setting for the specified camera's vertical field of view. This
          * angle is in degrees and is measured vertically between the top and bottom camera planes.
          * @returns {Number} The vertical field of view in degrees.
@@ -203,7 +198,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getFrustum
+         * @name pc.CameraNode#getFrustum
          * @description Retrieves the frustum shape for the specified camera.
          * @returns {pc.shape.Frustum} The camera's frustum shape.
          */
@@ -213,7 +208,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getNearClip
+         * @name pc.CameraNode#getNearClip
          * @description Retrieves the setting for the specified camera's near clipping plane. This
          * is a Z-coordinate in eye coordinates.
          * @returns {Number} The near clipping plane distance.
@@ -224,7 +219,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getOrthoHeight
+         * @name pc.CameraNode#getOrthoHeight
          * @description Retrieves the half height of the orthographic camera's view window.
          * @returns {Number} The half height of the orthographic view window in eye coordinates.
          */
@@ -234,9 +229,9 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getProjection
+         * @name pc.CameraNode#getProjection
          * @description Retrieves the projection type for the specified camera.
-         * @returns {pc.scene.Projection} The camera's projection type.
+         * @returns {pc.PROJECTION} The camera's projection type.
          */
         getProjection: function () {
             return this._projection;
@@ -244,13 +239,13 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getProjectionMatrix
+         * @name pc.CameraNode#getProjectionMatrix
          * @description Retrieves the projection matrix for the specified camera.
          * @returns {pc.Mat4} The camera's projection matrix.
          */
         getProjectionMatrix: function () {
             if (this._projMatDirty) {
-                if (this._projection === pc.scene.Projection.PERSPECTIVE) {
+                if (this._projection === pc.PROJECTION_PERSPECTIVE) {
                     this._projMat.setPerspective(this._fov, this._aspect, this._nearClip, this._farClip);
                 } else {
                     var y = this._orthoHeight;
@@ -269,7 +264,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#getRenderTarget
+         * @name pc.CameraNode#getRenderTarget
          * @description Retrieves the render target currently set on the specified camera.
          * @returns {pc.RenderTarget} The camera's render target.
          */
@@ -279,7 +274,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#setAspectRatio
+         * @name pc.CameraNode#setAspectRatio
          * @description Sets the specified camera's aspect ratio. This is normally the width
          * of the viewport divided by height.
          * @returns {Number} The aspect ratio of the camera.
@@ -291,7 +286,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#setClearOptions
+         * @name pc.CameraNode#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
          * @param {Object} clearOptions The options determining the behaviour of subsequent render target clears.
          * @param {Array} clearOptions.color The options determining the behaviour of subsequent render target clears.
@@ -304,7 +299,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#setFarClip
+         * @name pc.CameraNode#setFarClip
          * @description Sets the specified camera's far clipping plane. This is a Z-coordinate in eye coordinates.
          * @param {Number} far The far clipping plane distance.
          */
@@ -315,7 +310,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#setFov
+         * @name pc.CameraNode#setFov
          * @description Sets the specified camera's vertical field of view. This angle is in degrees and is
          * measured vertically from the view direction of the camera. Therefore, the angle is actually half
          * the angle between the top and bottom camera planes.
@@ -328,7 +323,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#setNearClip
+         * @name pc.CameraNode#setNearClip
          * @description Sets the specified camera's near clipping plane. This is a Z-coordinate in eye coordinates.
          * @param {Number} near The near clipping plane distance.
          */
@@ -339,7 +334,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#setOrthoHeight
+         * @name pc.CameraNode#setOrthoHeight
          * @description Sets the half height of the orthographic camera's view window.
          * @param {Number} height The half height of the orthographic view window in eye coordinates.
          */
@@ -350,10 +345,10 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#setProjection
+         * @name pc.CameraNode#setProjection
          * @description Sets the projection type for the specified camera. This determines whether the projection
          * will be orthographic (parallel projection) or perspective.
-         * @param {pc.scene.Projection} type The camera's projection type.
+         * @param {pc.Projection} type The camera's projection type.
          */
         setProjection: function (type) {
             this._projection = type;
@@ -369,7 +364,7 @@ pc.extend(pc.scene, function () {
 
         /**
          * @function
-         * @name pc.scene.CameraNode#setRenderTarget
+         * @name pc.CameraNode#setRenderTarget
          * @description Sets the specified render target on the camera.
          * @param {pc.RenderTarget} target The render target to set.
          */

@@ -1,11 +1,11 @@
-pc.extend(pc.fw, function() {
+pc.extend(pc, function() {
     
     /**
     * @private
-    * @name pc.fw.ModelComponentData
-    * @class Data for a {@link pc.fw.ModelComponent}
+    * @name pc.ModelComponentData
+    * @class Data for a {@link pc.ModelComponent}
     * @constructor Create a new data object
-    * @extends pc.fw.ComponentData
+    * @extends pc.ComponentData
     */
     var ModelComponentData = function () {
         // serialized
@@ -20,7 +20,7 @@ pc.extend(pc.fw, function() {
         this.material = null;
         this.model = null;
     };
-    ModelComponentData = pc.inherits(ModelComponentData, pc.fw.ComponentData);
+    ModelComponentData = pc.inherits(ModelComponentData, pc.ComponentData);
     
     return {
         ModelComponentData:ModelComponentData 

@@ -1,10 +1,40 @@
 pc.extend(pc, (function () {
+    'use strict';
 
+    /**
+     * @enum pc.CURVE
+     * @name pc.CURVE_LINEAR
+     * @description A linear interpolation scheme.
+     */
     var CURVE_LINEAR = 0;
+    /**
+     * @enum pc.CURVE
+     * @name pc.CURVE_SMOOTHSTEP
+     * @description A smooth step interpolation scheme.
+     */
     var CURVE_SMOOTHSTEP = 1;
+    /**
+     * @enum pc.CURVE
+     * @name pc.CURVE_CATMULL
+     * @description A Catmull-Rom spline interpolation scheme.
+     */
     var CURVE_CATMULL = 2;
+    /**
+     * @enum pc.CURVE
+     * @name pc.CURVE_CARDINAL
+     * @description A cardinal spline interpolation scheme.
+     */
     var CURVE_CARDINAL = 3;
 
+    /**
+     * @name pc.Curve
+     * @class A curve is a collection of keys (time/value pairs). The shape of the
+     * curve is defined by its type that specifies an interpolation scheme for the keys.
+     * @constructor Creates a new curve.
+     * @param {Array} [data] An array of keys (pairs of numbers with the time first and
+     * value second)
+     * @property {Number} length [Read only] The number of keys in the curve
+     */
     var Curve = function (data) {
         this.keys = [];
         this.type = CURVE_SMOOTHSTEP;
@@ -22,14 +52,13 @@ pc.extend(pc, (function () {
 
     Curve.prototype = {
         /**
-        * @private
-        * @function
-        * @name pc.Curve#add
-        * @description Add new key
-        * @param {Number} time Time to add new key
-        * @param {Number} value Value of new key
-        * @returns {Array} [time, value] pair
-        */
+         * @function
+         * @name pc.Curve#add
+         * @description Add a new key to the curve.
+         * @param {Number} time Time to add new key
+         * @param {Number} value Value of new key
+         * @returns {Array} [time, value] pair
+         */
         add: function (time, value) {
             var keys = this.keys;
             var len = keys.length;
@@ -47,23 +76,21 @@ pc.extend(pc, (function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.Curve#get
-        * @description Return a specific key
-        * @param {Number} index The index of the key to return
-        * @returns {Array} [time, value] pair
-        */
+         * @function
+         * @name pc.Curve#get
+         * @description Return a specific key.
+         * @param {Number} index The index of the key to return
+         * @returns {Array} The key at the specified index
+         */
         get: function (index) {
             return this.keys[index];
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.Curve#sort
-        * @description Sort keys by time
-        */
+         * @function
+         * @name pc.Curve#sort
+         * @description Sort keys by time.
+         */
         sort: function () {
             this.keys.sort(function (a, b) {
                 return a[0] - b[0];
@@ -71,13 +98,12 @@ pc.extend(pc, (function () {
         },
 
         /**
-        * @private
-        * @function
-        * @name pc.Curve#value
-        * @description return value interpolated at time
-        * @param {Number} time The time at which to calculate the value
-        * @return {Number} The interpolated value
-        */
+         * @function
+         * @name pc.Curve#value
+         * @description Returns the interpolated value of the curve at specified time.
+         * @param {Number} time The time at which to calculate the value
+         * @return {Number} The interpolated value
+         */
         value: function (time) {
             var keys = this.keys;
 
@@ -205,6 +231,12 @@ pc.extend(pc, (function () {
             return result;
         },
 
+        /**
+         * @function
+         * @name pc.Curve#clone
+         * @description Returns a clone of the specified curve object.
+         * @returns {pc.Curve} A clone of the specified curve
+         */
         clone: function () {
             var result = new pc.Curve();
             result.keys = pc.extend(result.keys, this.keys);
@@ -212,7 +244,7 @@ pc.extend(pc, (function () {
             return result;
         },
 
-        quantize: function(precision) {
+        quantize: function (precision) {
             precision = Math.max(precision, 2);
 
             var values = new Float32Array(precision);

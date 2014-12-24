@@ -1,18 +1,18 @@
 //--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.posteffect.Vignette
-     * @class Implements the Vignette post processing effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @name pc.VignetteEffect
+     * @class Implements the VignetteEffect post processing effect.
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} offset Controls the offset of the effect.
      * @property {Number} darkness Controls the darkness of the effect.
      */
-    var Vignette = function (graphicsDevice) {
+    var VignetteEffect = function (graphicsDevice) {
         // Shaders
         var attributes = {
-            aPosition: pc.gfx.SEMANTIC_POSITION
+            aPosition: pc.SEMANTIC_POSITION
         };
 
         var passThroughVert = [
@@ -43,7 +43,7 @@ pc.extend(pc.posteffect, function () {
             "}"
         ].join("\n");
 
-        this.vignetteShader = new pc.gfx.Shader(graphicsDevice, {
+        this.vignetteShader = new pc.Shader(graphicsDevice, {
             attributes: attributes,
             vshader: passThroughVert,
             fshader: luminosityFrag
@@ -53,9 +53,9 @@ pc.extend(pc.posteffect, function () {
         this.darkness = 1;
     }
 
-    Vignette = pc.inherits(Vignette, pc.posteffect.PostEffect);
+    VignetteEffect = pc.inherits(VignetteEffect, pc.PostEffect);
 
-    Vignette.prototype = pc.extend(Vignette, {
+    VignetteEffect.prototype = pc.extend(VignetteEffect, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -63,12 +63,12 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
             scope.resolve("uOffset").setValue(this.offset);
             scope.resolve("uDarkness").setValue(this.darkness);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.vignetteShader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.vignetteShader, rect);
         }
     });
 
     return {
-        Vignette: Vignette
+        VignetteEffect: VignetteEffect
     };
 }());
 
@@ -87,14 +87,14 @@ pc.script.attribute('darkness', 'number', 1, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('vignette', function (context) {
-    // Creates a new Vignette instance
-    var Vignette = function (entity) {
+pc.script.create('vignetteEffect', function (context) {
+    // Creates a new VignetteEffect instance
+    var VignetteEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.Vignette(context.graphicsDevice);
+        this.effect = new pc.VignetteEffect(context.graphicsDevice);
     };
 
-    Vignette.prototype = {
+    VignetteEffect.prototype = {
         initialize: function () {
             this.on('set', this.onAttributeChanged, this);
             this.effect.offset = this.offset;
@@ -114,5 +114,5 @@ pc.script.create('vignette', function (context) {
         }
     };
 
-    return Vignette;
+    return VignetteEffect;
 });

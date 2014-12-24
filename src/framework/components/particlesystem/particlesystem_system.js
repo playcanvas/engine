@@ -1,12 +1,12 @@
-pc.extend(pc.fw, function() {
+pc.extend(pc, function() {
 
     var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(context) {
         this.id = 'particlesystem';
         this.description = "Updates and renders particle system in the scene.";
         context.systems.add(this.id, this);
 
-        this.ComponentType = pc.fw.ParticleSystemComponent;
-        this.DataType = pc.fw.ParticleSystemComponentData;
+        this.ComponentType = pc.ParticleSystemComponent;
+        this.DataType = pc.ParticleSystemComponentData;
 
         this.schema = [{
                 name: "enabled",
@@ -147,16 +147,16 @@ pc.extend(pc.fw, function() {
                 options: {
                     enumerations: [{
                         name: 'None',
-                        value: pc.scene.PARTICLESORT_NONE
+                        value: pc.PARTICLESORT_NONE
                     }, {
                         name: 'Camera Distance',
-                        value: pc.scene.PARTICLESORT_DISTANCE
+                        value: pc.PARTICLESORT_DISTANCE
                     }, {
                         name: 'Newer First',
-                        value: pc.scene.PARTICLESORT_NEWER_FIRST
+                        value: pc.PARTICLESORT_NEWER_FIRST
                     }, {
                         name: 'Older First',
-                        value: pc.scene.PARTICLESORT_OLDER_FIRST
+                        value: pc.PARTICLESORT_OLDER_FIRST
                     }]
                 },
                 defaultValue: 0,
@@ -168,16 +168,16 @@ pc.extend(pc.fw, function() {
                 options: {
                     enumerations: [{
                         name: 'Alpha',
-                        value: pc.scene.BLEND_NORMAL
+                        value: pc.BLEND_NORMAL
                     }, {
                         name: 'Add',
-                        value: pc.scene.BLEND_ADDITIVE
+                        value: pc.BLEND_ADDITIVE
                     }, {
                         name: 'Multiply',
-                        value: pc.scene.BLEND_MULTIPLICATIVE
+                        value: pc.BLEND_MULTIPLICATIVE
                     }]
                 },
-                defaultValue: pc.scene.BLEND_NORMAL,
+                defaultValue: pc.BLEND_NORMAL,
             }, {
                 name: "stretch",
                 displayName: "Stretch",
@@ -448,18 +448,18 @@ pc.extend(pc.fw, function() {
         }
 
         this.on('remove', this.onRemove, this);
-        pc.fw.ComponentSystem.on('update', this.onUpdate, this);
-        pc.fw.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
+        pc.ComponentSystem.on('update', this.onUpdate, this);
+        pc.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
 
         var gd = context.graphicsDevice;
         this.debugMesh = this._createDebugMesh();
 
-        this.debugMaterial = new pc.scene.BasicMaterial();
+        this.debugMaterial = new pc.BasicMaterial();
         this.debugMaterial.color = new pc.Color(1, 0.5, 0, 1);
         this.debugMaterial.update();
 
     };
-    ParticleSystemComponentSystem = pc.inherits(ParticleSystemComponentSystem, pc.fw.ComponentSystem);
+    ParticleSystemComponentSystem = pc.inherits(ParticleSystemComponentSystem, pc.ComponentSystem);
 
     pc.extend(ParticleSystemComponentSystem.prototype, {
 
@@ -592,7 +592,7 @@ pc.extend(pc.fw, function() {
             ]);
             indexBuffer.unlock();
 
-            var mesh = new pc.scene.Mesh();
+            var mesh = new pc.Mesh();
             mesh.vertexBuffer = vertexBuffer;
             mesh.indexBuffer[0] = indexBuffer;
             mesh.primitive[0].type = pc.PRIMITIVE_LINES;
@@ -603,12 +603,12 @@ pc.extend(pc.fw, function() {
         },
 
         _createDebugShape: function (component) {
-            var node = new pc.scene.GraphNode();
+            var node = new pc.GraphNode();
 
-            var model = new pc.scene.Model();
+            var model = new pc.Model();
             model.graph = node;
 
-            model.meshInstances = [ new pc.scene.MeshInstance(node, this.debugMesh, this.debugMaterial) ];
+            model.meshInstances = [ new pc.MeshInstance(node, this.debugMesh, this.debugMaterial) ];
 
             component.data.debugShape = model;
 

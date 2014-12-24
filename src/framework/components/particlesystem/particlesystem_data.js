@@ -1,4 +1,4 @@
-pc.extend(pc.fw, function() {
+pc.extend(pc, function() {
     var ParticleSystemComponentData = function() {
 
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
@@ -16,7 +16,7 @@ pc.extend(pc.fw, function() {
         this.loop = true;
         this.preWarm = false;
         this.sort = 0;                          // Sorting mode: 0 = none, 1 = by distance, 2 = by life, 3 = by -life;   Forces CPU mode if not 0
-        this.mode = pc.scene.PARTICLEMODE_GPU;
+        this.mode = pc.PARTICLEMODE_GPU;
         this.scene = null;
         this.lighting = false;
         this.halfLambert = false;            // Uses half-lambert lighting instead of Lambert
@@ -47,7 +47,7 @@ pc.extend(pc.fw, function() {
         this.rotationSpeedGraph = null;
         this.rotationSpeedGraph2 = null;
 
-        this.blendType = pc.scene.BLEND_NORMAL;
+        this.blendType = pc.BLEND_NORMAL;
 
         this.model = null;
 
@@ -58,7 +58,7 @@ pc.extend(pc.fw, function() {
         this.debugShape = null;
 
     };
-    ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.fw.ComponentData);
+    ParticleSystemComponentData = pc.inherits(ParticleSystemComponentData, pc.ComponentData);
 
     return {
         ParticleSystemComponentData: ParticleSystemComponentData

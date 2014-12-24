@@ -1,31 +1,34 @@
-pc.extend(pc.fw, function () {
+pc.extend(pc, function () {
     /**
     * @component
-    * @name pc.fw.CameraComponent
+    * @name pc.CameraComponent
     * @class The Camera Component enables an Entity to render the scene.
     * @constructor Create a new Camera Component
-    * @param {pc.fw.CameraComponentSystem} system The ComponentSystem that created this Component
-    * @param {pc.fw.Entity} entity The Entity that this Component is attached to.
-    * @extends pc.fw.Component
-    * @property {Boolean} enabled If true the camera will be added to the active cameras of the {@link pc.fw.CameraComponentSystem} and rendered with all the other active cameras.
+    * @param {pc.CameraComponentSystem} system The ComponentSystem that created this Component
+    * @param {pc.Entity} entity The Entity that this Component is attached to.
+    * @extends pc.Component
+    * @property {Boolean} enabled If true the camera will be render the active scene. Note that multiple cameras
+    * can be enabled simulataneously.
     * @property {Number} aspectRatio The aspect ratio of the camera's viewport (width / height). Defaults to 16 / 9.
-    * @property {pc.scene.Camera} camera The {@link pc.scene.CameraNode} used to render the scene
     * @property {pc.Color} clearColor The color used to clear the canvas to before the camera starts to render
     * @property {Number} nearClip The distance from the camera before which no rendering will take place
     * @property {Number} farClip The distance from the camera after which no rendering will take place
-    * @property {Number} fov The Y-axis field of view of the camera, in degrees. Used for {@link pc.scene.Projection.PERSPECTIVE} cameras only. Defaults to 45.
-    * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.scene.Projection.ORTHOGRAPHIC} cameras only. Defaults to 10.
+    * @property {Number} fov The Y-axis field of view of the camera, in degrees. Used for {@link pc.PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
+    * @property {Number} orthoHeight The half-height of the orthographic view window (in the Y-axis). Used for {@link pc.PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
     * @property {Number} aspectRatio The aspect ratio of the camera. This is the ratio of width divided by height. Default to 16/9.
-    * @property {pc.scene.Projection} projection The type of projection used to render the camera.
+    * @property {pc.Projection} projection The type of projection used to render the camera.
     * @property {Number} priority Controls which camera will be rendered first. Smaller numbers are rendered first.
     * @property {Boolean} clearColorBuffer If true the camera will clear the color buffer to the color set in clearColor.
     * @property {Boolean} clearDepthBuffer If true the camera will clear the depth buffer.
     * @property {pc.Vec4} rect Controls where on the screen the camera will be rendered in normalized screen coordinates. The order of the values is [x, y, width, height]
     * @property {pc.RenderTarget} renderTarget The render target of the camera. Defaults to null, which causes
-    * @property {pc.posteffect.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add / remove post effects from the camera.
+    * @property {pc.PostEffectQueue} postEffects The post effects queue for this camera. Use this to add / remove post effects from the camera.
     * the camera to render to the canvas' back buffer. Setting a valid render target effectively causes the camera
     * to render to an offscreen buffer, which can then be used to achieve certain graphics effect (normally post
     * effects).
+    * @property {pc.Mat4} projectionMatrix [Read only] The camera's projection matrix.
+    * @property {pc.Mat4} viewMatrix [Read only] The camera's view matrix.
+    * @property {pc.Frustum} frustum [Read only] The camera's frustum shape.
     */
     var CameraComponent = function CameraComponent(system, entity) {
         // Bind event to update hierarchy if camera node changes
@@ -43,7 +46,7 @@ pc.extend(pc.fw, function () {
         this.on("set_renderTarget", this.onSetRenderTarget, this);
         this.on("set_rect", this.onSetRect, this);
     };
-    CameraComponent = pc.inherits(CameraComponent, pc.fw.Component);
+    CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
     Object.defineProperty(CameraComponent.prototype, "activate", {
         get: function() {
@@ -56,10 +59,29 @@ pc.extend(pc.fw, function () {
         },
     });
 
+    Object.defineProperty(CameraComponent.prototype, "projectionMatrix", {
+        get: function() {
+            return this.data.camera.getProjectionMatrix();
+        }
+    });
+
+    Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
+        get: function() {
+            var wtm = this.data.camera.getWorldTransform();
+            return wtm.clone().invert();
+        }
+    });
+
+    Object.defineProperty(CameraComponent.prototype, "frustum", {
+        get: function() {
+            return this.data.camera.getFrustum();
+        }
+    });
+
     pc.extend(CameraComponent.prototype, {
         /**
          * @function
-         * @name pc.fw.CameraComponent#screenToWorld
+         * @name pc.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
          * @param {Number} x x coordinate on PlayCanvas' canvas element.
          * @param {Number} y y coordinate on PlayCanvas' canvas element.
@@ -169,7 +191,7 @@ pc.extend(pc.fw, function () {
          * Start rendering the frame for this camera
          * @function
          * @private
-         * @name pc.fw.CameraComponent#frameBegin
+         * @name pc.CameraComponent#frameBegin
          */
         frameBegin: function () {
             this._resetAspectRatio();
@@ -180,7 +202,7 @@ pc.extend(pc.fw, function () {
          * End rendering the frame for this camera
          * @function
          * @private
-         * @name pc.fw.CameraComponent#frameEnd
+         * @name pc.CameraComponent#frameEnd
          */
         frameEnd: function () {
             this.data.isRendering = false;

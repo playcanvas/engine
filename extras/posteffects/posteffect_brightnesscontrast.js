@@ -1,20 +1,20 @@
 //--------------------------------- POST EFFECT DEFINITION -----------------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.posteffect.BrightnessContrast
+     * @name pc.BrightnessContrastEffect
      * @class Changes the brightness and contrast of the input render target
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} brightness Controls the brightness of the render target. Ranges from -1 to 1 (-1 is solid black, 0 no change, 1 solid white)
      * @property {Number} contrast Controls the contrast of the render target. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum contrast)
      */
-    var BrightnessContrast = function (graphicsDevice) {
+    var BrightnessContrastEffect = function (graphicsDevice) {
         // Shader author: tapio / http://tapio.github.com/
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -56,9 +56,9 @@ pc.extend(pc.posteffect, function () {
         this.contrast = 0;
     }
 
-    BrightnessContrast = pc.inherits(BrightnessContrast, pc.posteffect.PostEffect);
+    BrightnessContrastEffect = pc.inherits(BrightnessContrastEffect, pc.PostEffect);
 
-    BrightnessContrast.prototype = pc.extend(BrightnessContrast.prototype, {
+    BrightnessContrastEffect.prototype = pc.extend(BrightnessContrastEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -66,12 +66,12 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uBrightness").setValue(this.brightness);
             scope.resolve("uContrast").setValue(this.contrast);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        BrightnessContrast: BrightnessContrast
+        BrightnessContrastEffect: BrightnessContrastEffect
     };
 }());
 
@@ -95,13 +95,13 @@ pc.script.attribute('contrast', 'number', 0, {
 
 //--------------------------------- SCRIPT DEFINITION -----------------------------------//
 
-pc.script.create('brightnesscontrast', function (context) {
-    var Brightnesscontrast = function (entity) {
+pc.script.create('brightnessContrastEffect', function (context) {
+    var BrightnessContrastEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.BrightnessContrast(context.graphicsDevice);
+        this.effect = new pc.BrightnessContrastEffect(context.graphicsDevice);
     };
 
-    Brightnesscontrast.prototype = {
+    BrightnessContrastEffect.prototype = {
         initialize:  function () {
             this.on('set', this.onAttributeChanged, this);
 
@@ -122,5 +122,5 @@ pc.script.create('brightnesscontrast', function (context) {
         }
     };
 
-    return Brightnesscontrast;
+    return BrightnessContrastEffect;
 });
