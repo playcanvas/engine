@@ -1,6 +1,7 @@
 pc.extend(pc, function () {
 
     /**
+     * @private
      * @name pc.Light
      * @class A light.
      */
@@ -45,11 +46,13 @@ pc.extend(pc, function () {
         /**
          * @private
          * @function
-         * @name pc.Light#_cloneInternal
-         * @description Internal function for cloning the contents of a light node.
-         * @param {pc.Light} clone The clone that will receive the copied properties.
+         * @name pc.Light#clone
+         * @description Duplicates a light node but does not 'deep copy' the hierarchy.
+         * @returns {pc.Light} A cloned Light.
          */
-        _cloneInternal: function (clone) {
+        clone: function () {
+            var clone = new pc.Light();
+
             // Clone Light properties
             clone.setType(this.getType());
             clone.setColor(this.getColor());
@@ -71,21 +74,12 @@ pc.extend(pc, function () {
             clone.setNormalOffsetBias(this.getNormalOffsetBias());
             clone.setShadowResolution(this.getShadowResolution());
             clone.setShadowDistance(this.getShadowDistance());
-        },
 
-        /**
-         * @function
-         * @name pc.Light#clone
-         * @description Duplicates a light node but does not 'deep copy' the hierarchy.
-         * @returns {pc.Light} A cloned Light.
-         */
-        clone: function () {
-            var clone = new pc.Light();
-            this._cloneInternal(clone);
             return clone;
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getAttenuationEnd
          * @description Queries the radius of the point or spot light. In other words, this is
@@ -97,6 +91,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getAttenuationStart
          * @description Queries the distance from the point or spot light that attenuation begins.
@@ -111,6 +106,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getCastShadows
          * @description Queries whether the light casts shadows. Dynamic lights do not
@@ -122,6 +118,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getColor
          * @description Queries the diffuse color of the light. The PlayCanvas 'phong' shader uses this
@@ -134,6 +131,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getEnabled
          * @description Queries whether the specified light is currently enabled.
@@ -144,6 +142,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getInnerConeAngle
          * @description Queries the inner cone angle of the specified spot light. Note
@@ -155,6 +154,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getIntensity
          * @description Queries the intensity of the specified light.
@@ -165,6 +165,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getOuterConeAngle
          * @description Queries the outer cone angle of the specified spot light. Note
@@ -176,6 +177,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getShadowBias
          * @description Queries the shadow mapping depth bias for this light. Note
@@ -191,6 +193,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getShadowDistance
          * @description Queries the distance in camera Z at which shadows will no
@@ -203,6 +206,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getShadowResolution
          * @description Queries the shadow map pixel resolution for this light.
@@ -213,6 +217,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#getType
          * @description Queries the type of the light. The light can be a directional light,
@@ -224,6 +229,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setAttenuationEnd
          * @description Specifies the radius from the light position where the light's
@@ -235,6 +241,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setAttenuationStart
          * @description Specifies the radius from the light position where the light
@@ -253,6 +260,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setCastShadows
          * @description Toggles the casting of shadows from this light.
@@ -266,6 +274,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setColor
          * @description Sets the RGB color of the light. RGB components should be
@@ -273,6 +282,7 @@ pc.extend(pc, function () {
          * @param {pc.Color} color The RGB color of the light.
          */
         /**
+         * @private
          * @function
          * @name pc.Light#setColor^2
          * @description Sets the RGB color of the light. RGB components should be
@@ -308,6 +318,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setEnabled
          * @description Marks the specified light as enabled or disabled.
@@ -323,6 +334,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setInnerConeAngle
          * @description Sets the inner cone angle of the light. Note that this
@@ -336,6 +348,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setIntensity
          * @description Sets the intensity of the light. The intensity is used to
@@ -363,6 +376,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setOuterConeAngle
          * @description Sets the outer cone angle of the light. Note that this
@@ -376,6 +390,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setShadowBias
          * @description Sets the depth bias for tuning the appearance of the shadow
@@ -394,6 +409,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setShadowDistance
          * @description Sets the distance in camera Z at which the shadows cast by this
@@ -406,6 +422,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setShadowResolution
          * @description Sets the pixel width and height of the shadow map associated with this
@@ -417,6 +434,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Light#setType
          * @description Sets the type of the light. Avialable lights types are directional,

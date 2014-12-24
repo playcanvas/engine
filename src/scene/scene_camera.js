@@ -1,5 +1,6 @@
 pc.extend(pc, function () {
     /**
+     * @private
      * @name pc.Camera
      * @class A camera.
      */
@@ -40,6 +41,7 @@ pc.extend(pc, function () {
 
     Camera.prototype = {
         /**
+         * @private
          * @function
          * @name pc.Camera#clone
          * @description Duplicates a camera node but does not 'deep copy' the hierarchy.
@@ -86,6 +88,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#screenToWorld
          * @description Convert a point from 2D canvas pixel space to 3D world space.
@@ -138,6 +141,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getAspectRatio
          * @description Retrieves the setting for the specified camera's aspect ratio.
@@ -148,6 +152,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getClearOptions
          * @description Retrieves the options used to determine how the camera's render target will be cleared.
@@ -158,6 +163,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getFarClip
          * @description Retrieves the setting for the specified camera's far clipping plane. This
@@ -169,6 +175,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getFov
          * @description Retrieves the setting for the specified camera's vertical field of view. This
@@ -180,6 +187,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getFrustum
          * @description Retrieves the frustum shape for the specified camera.
@@ -190,6 +198,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getNearClip
          * @description Retrieves the setting for the specified camera's near clipping plane. This
@@ -201,6 +210,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getOrthoHeight
          * @description Retrieves the half height of the orthographic camera's view window.
@@ -211,6 +221,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getProjection
          * @description Retrieves the projection type for the specified camera.
@@ -221,6 +232,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getProjectionMatrix
          * @description Retrieves the projection matrix for the specified camera.
@@ -246,6 +258,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#getRenderTarget
          * @description Retrieves the render target currently set on the specified camera.
@@ -256,6 +269,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#setAspectRatio
          * @description Sets the specified camera's aspect ratio. This is normally the width
@@ -268,6 +282,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#setClearOptions
          * @description Sets the options used to determine how the camera's render target will be cleared.
@@ -281,6 +296,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#setFarClip
          * @description Sets the specified camera's far clipping plane. This is a Z-coordinate in eye coordinates.
@@ -292,6 +308,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#setFov
          * @description Sets the specified camera's vertical field of view. This angle is in degrees and is
@@ -305,6 +322,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#setNearClip
          * @description Sets the specified camera's near clipping plane. This is a Z-coordinate in eye coordinates.
@@ -316,6 +334,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#setOrthoHeight
          * @description Sets the half height of the orthographic camera's view window.
@@ -327,6 +346,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#setProjection
          * @description Sets the projection type for the specified camera. This determines whether the projection
@@ -346,6 +366,7 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.Camera#setRenderTarget
          * @description Sets the specified render target on the camera.
