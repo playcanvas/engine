@@ -690,8 +690,8 @@ pc.extend(pc, function () {
                                     gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                                             mipLevel,
                                                             texture._glInternalFormat,
-                                                            texture._width * resMult,
-                                                            texture._height * resMult,
+                                                            Math.max(texture._width * resMult, 1),
+                                                            Math.max(texture._height * resMult, 1),
                                                             0,
                                                             mipObject[face]);
                                 }
@@ -699,8 +699,8 @@ pc.extend(pc, function () {
                                 gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                               mipLevel,
                                               texture._glInternalFormat,
-                                              texture._width * resMult,
-                                              texture._height * resMult,
+                                              Math.max(texture._width * resMult, 1),
+                                              Math.max(texture._height * resMult, 1),
                                               0,
                                               texture._glFormat,
                                               texture._glPixelType,
@@ -735,8 +735,8 @@ pc.extend(pc, function () {
                                 gl.compressedTexImage2D(gl.TEXTURE_2D,
                                                         mipLevel,
                                                         texture._glInternalFormat,
-                                                        texture._width * resMult,
-                                                        texture._height * resMult,
+                                                        Math.max(texture._width * resMult, 1),
+                                                        Math.max(texture._height * resMult, 1),
                                                         0,
                                                         mipObject);
                             }
@@ -744,8 +744,8 @@ pc.extend(pc, function () {
                             gl.texImage2D(gl.TEXTURE_2D,
                                           mipLevel,
                                           texture._glInternalFormat,
-                                          texture._width * resMult,
-                                          texture._height * resMult,
+                                          Math.max(texture._width * resMult, 1),
+                                          Math.max(texture._height * resMult, 1),
                                           0,
                                           texture._glFormat,
                                           texture._glPixelType,

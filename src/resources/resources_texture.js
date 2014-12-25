@@ -199,8 +199,8 @@ pc.extend(pc.resources, function () {
 
                 texture._levels[i] = new Uint8Array(data, offset, mipSize);
                 offset += mipSize;
-                mipWidth *= 0.5;
-                mipHeight *= 0.5;
+                mipWidth = Math.max(mipWidth * 0.5, 1);
+                mipHeight = Math.max(mipHeight * 0.5, 1);
             }
 
             texture.upload();
