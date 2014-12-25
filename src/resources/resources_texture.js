@@ -130,7 +130,7 @@ pc.extend(pc.resources, function () {
             }
 
             // DDS loading
-            var header = new Uint32Array(data, 0, 128);
+            var header = new Uint32Array(data, 0, 128 / 4);
 
             var width = header[4];
             var height = header[3];
@@ -150,7 +150,7 @@ pc.extend(pc.resources, function () {
                 }
             }
 
-            var requiredMips = Math.floor(pc.math.log2(Math.max(width, height)) + 1);
+            var requiredMips = Math.round(pc.math.log2(Math.max(width, height)) + 1);
             var cantLoad = !format || mips !== requiredMips;
             if (cantLoad) {
                 var errEnd = ". Empty texture will be created instead.";
