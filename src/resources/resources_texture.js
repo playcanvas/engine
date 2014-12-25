@@ -49,7 +49,8 @@ pc.extend(pc.resources, function () {
                 pc.net.http.get(identifier, function (response) {
                     resolve(response);
                 }, {
-                    cache: false
+                    cache: true,
+                    responseType: 'arraybuffer'
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var image = new Image();
@@ -89,6 +90,7 @@ pc.extend(pc.resources, function () {
 
         // Every browser seems to pass data as an Image type. For some reason, the XDK
         // passes an HTMLImageElement. TODO: figure out why!
+        // Compressed textures are ArrayBuffers
         if ((data instanceof Image) || (data instanceof HTMLImageElement)) { // PNG, JPG or GIF
             var img = data;
             if (request.result) {
@@ -127,7 +129,72 @@ pc.extend(pc.resources, function () {
                 data = Module.HEAPU8.buffer.slice(dst, dst + dstSize);
             }
 
-            texture = loadDDS(data);
+            // DDS loading
+            var header = new Uint32Array(data, 0, 128);
+
+            var width = header[4];
+            var height = header[3];
+            var mips = header[7];
+            var isFourCc = header[20] === 4;
+            var fcc = header[21];
+
+            var fccDxt1 = 827611204; // DXT1
+            var fccDxt5 = 894720068; // DXT5
+
+            var format = null;
+            if (isFourCc) {
+                if (fcc===fccDxt1) {
+                    format = pc.PIXELFORMAT_DXT1;
+                } else if (fcc===fccDxt5) {
+                    format = pc.PIXELFORMAT_DXT5;
+                }
+            }
+
+            var requiredMips = Math.floor(Math.log2(Math.max(width, height)) + 1); // no log2 in IE!
+            var cantLoad = !format || mips !== requiredMips;
+            if (cantLoad) {
+                var errEnd = ". Empty texture will be created instead.";
+                if (!format) {
+                    console.error("This DDS pixel format is currently unsupported" + errEnd);
+                } else {
+                    console.error("DDS has " + mips + " mips, but engine requires " + requiredMips + errEnd);
+                }
+                texture = new pc.Texture(this._device, {
+                    width: 4,
+                    height: 4,
+                    format: pc.PIXELFORMAT_R8_G8_B8
+                });
+                return texture;
+            }
+
+            texOptions = {
+                width: width,
+                height: height,
+                format: format
+            };
+            texture = new pc.Texture(this._device, texOptions);
+
+            var offset = 128;
+            var mipWidth = width;
+            var mipHeight = height;
+            var mipSize;
+            var kBlockWidth = 4;
+            var kBlockHeight = 4;
+            var kBlockSize = fcc===fccDxt1? 8 : 16;
+            var numBlocksAcross, numBlocksDown;
+            for(var i=0; i<mips; i++) {
+                numBlocksAcross = Math.floor((mipWidth + kBlockWidth - 1) / kBlockWidth);
+                numBlocksDown = Math.floor((mipHeight + kBlockHeight - 1) / kBlockHeight);
+                numBlocks = numBlocksAcross * numBlocksDown;
+                mipSize = numBlocks * kBlockSize;
+
+                texture._levels[i] = new Uint8Array(data, offset, mipSize);
+                offset += mipSize;
+                mipWidth *= 0.5;
+                mipHeight *= 0.5;
+            }
+
+            texture.upload();
         }
         return texture;
     };
