@@ -90,7 +90,7 @@ pc.extend(pc.resources, function () {
 
         // Every browser seems to pass data as an Image type. For some reason, the XDK
         // passes an HTMLImageElement. TODO: figure out why!
-        // Compressed textures are ArrayBuffers
+        // DDS textures are ArrayBuffers
         if ((data instanceof Image) || (data instanceof HTMLImageElement)) { // PNG, JPG or GIF
             var img = data;
             if (request.result) {
@@ -137,6 +137,7 @@ pc.extend(pc.resources, function () {
             var mips = header[7];
             var isFourCc = header[20] === 4;
             var fcc = header[21];
+            var bpp = header[22];
 
             var fccDxt1 = 827611204; // DXT1
             var fccDxt5 = 894720068; // DXT5
@@ -148,16 +149,20 @@ pc.extend(pc.resources, function () {
                 } else if (fcc===fccDxt5) {
                     format = pc.PIXELFORMAT_DXT5;
                 }
+            } else {
+                if (bpp===32) {
+                    format = pc.PIXELFORMAT_R8_G8_B8_A8;
+                }
             }
 
             var requiredMips = Math.round(pc.math.log2(Math.max(width, height)) + 1);
-            var cantLoad = !format || mips !== requiredMips;
+            var cantLoad = !format || (mips !== requiredMips && isFourCc);
             if (cantLoad) {
                 var errEnd = ". Empty texture will be created instead.";
                 if (!format) {
                     console.error("This DDS pixel format is currently unsupported" + errEnd);
                 } else {
-                    console.error("DDS has " + mips + " mips, but engine requires " + requiredMips + errEnd);
+                    console.error("DDS has " + mips + " mips, but engine requires " + requiredMips + " for DXT format. " + errEnd);
                 }
                 texture = new pc.Texture(this._device, {
                     width: 4,
@@ -183,10 +188,14 @@ pc.extend(pc.resources, function () {
             var kBlockSize = fcc===fccDxt1? 8 : 16;
             var numBlocksAcross, numBlocksDown;
             for(var i=0; i<mips; i++) {
-                numBlocksAcross = Math.floor((mipWidth + kBlockWidth - 1) / kBlockWidth);
-                numBlocksDown = Math.floor((mipHeight + kBlockHeight - 1) / kBlockHeight);
-                numBlocks = numBlocksAcross * numBlocksDown;
-                mipSize = numBlocks * kBlockSize;
+                if (isFourCc) {
+                    numBlocksAcross = Math.floor((mipWidth + kBlockWidth - 1) / kBlockWidth);
+                    numBlocksDown = Math.floor((mipHeight + kBlockHeight - 1) / kBlockHeight);
+                    numBlocks = numBlocksAcross * numBlocksDown;
+                    mipSize = numBlocks * kBlockSize;
+                } else {
+                    mipSize = mipWidth * mipHeight * 4;
+                }
 
                 texture._levels[i] = new Uint8Array(data, offset, mipSize);
                 offset += mipSize;

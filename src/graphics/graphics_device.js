@@ -682,11 +682,11 @@ pc.extend(pc, function () {
                         }
                     } else {
                         // Upload the byte array
+                        var resMult = 1 / Math.pow(2, mipLevel);
                         for (face = 0; face < 6; face++) {
 
                             if (texture._compressed) {
                                 if (this.extCompressedTextureS3TC) {
-                                    var resMult = 1 / Math.pow(2, mipLevel);
                                     gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                                             mipLevel,
                                                             texture._glInternalFormat,
@@ -699,8 +699,8 @@ pc.extend(pc, function () {
                                 gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                               mipLevel,
                                               texture._glInternalFormat,
-                                              texture._width,
-                                              texture._height,
+                                              texture._width * resMult,
+                                              texture._height * resMult,
                                               0,
                                               texture._glFormat,
                                               texture._glPixelType,
@@ -729,9 +729,9 @@ pc.extend(pc, function () {
                     } else {
                         // Upload the byte array
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                        var resMult = 1 / Math.pow(2, mipLevel);
                         if (texture._compressed) {
                             if (this.extCompressedTextureS3TC) {
-                                var resMult = 1 / Math.pow(2, mipLevel);
                                 gl.compressedTexImage2D(gl.TEXTURE_2D,
                                                         mipLevel,
                                                         texture._glInternalFormat,
@@ -744,8 +744,8 @@ pc.extend(pc, function () {
                             gl.texImage2D(gl.TEXTURE_2D,
                                           mipLevel,
                                           texture._glInternalFormat,
-                                          texture._width,
-                                          texture._height,
+                                          texture._width * resMult,
+                                          texture._height * resMult,
                                           0,
                                           texture._glFormat,
                                           texture._glPixelType,
