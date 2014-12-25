@@ -63,6 +63,14 @@ pc.extend(pc, function () {
         return image;
     };
 
+    function _isIE() {
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE ");
+        var trident = navigator.userAgent.match(/Trident.*rv\:11\./);
+
+        return (msie > 0 || !!trident);
+    };
+
     /**
      * @name pc.GraphicsDevice
      * @class The graphics device manages the underlying graphics context. It is responsible
@@ -285,8 +293,7 @@ pc.extend(pc, function () {
             }
 
             if (this.extCompressedTextureS3TC) {
-                var glVersion = gl.getParameter(gl.VERSION);
-                if (glVersion === "WebGL 0.94") {
+                if (_isIE()) {
                     // IE 11 can't use mip maps with S3TC
                     this.extCompressedTextureS3TC = false;
                 }
@@ -676,15 +683,29 @@ pc.extend(pc, function () {
                     } else {
                         // Upload the byte array
                         for (face = 0; face < 6; face++) {
-                            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                          mipLevel,
-                                          texture._glInternalFormat,
-                                          texture._width,
-                                          texture._height,
-                                          0,
-                                          texture._glFormat,
-                                          texture._glPixelType,
-                                          mipObject[face]);
+
+                            if (texture._compressed) {
+                                if (this.extCompressedTextureS3TC) {
+                                    var resMult = 1 / Math.pow(2, mipLevel);
+                                    gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                                            mipLevel,
+                                                            texture._glInternalFormat,
+                                                            texture._width * resMult,
+                                                            texture._height * resMult,
+                                                            0,
+                                                            mipObject[face]);
+                                }
+                            } else {
+                                gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                              mipLevel,
+                                              texture._glInternalFormat,
+                                              texture._width,
+                                              texture._height,
+                                              0,
+                                              texture._glFormat,
+                                              texture._glPixelType,
+                                              mipObject[face]);
+                            }
                         }
                     }
                 } else {
