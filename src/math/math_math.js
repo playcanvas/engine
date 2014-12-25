@@ -19,7 +19,9 @@ pc.math = {
      * var deg = Math.PI * pc.math.RAD_TO_DEG;
      */
     RAD_TO_DEG: 180 / Math.PI,
-    
+
+    INV_LOG2: 1 / Math.log(2),
+
     /**
      * @function
      * @name pc.math.clamp
@@ -239,6 +241,15 @@ pc.math = {
         x = (x - min) / (max - min);
 
         return x * x * x * (x * (x * 6 - 15) + 10);
+    },
+
+    /**
+     * @function
+     * @name pc.math.log2
+     * @description Same as Math.log2 which is not supported by some browsers.
+     */
+    log2: function(x) {
+        return Math.log(x) * this.INV_LOG2;
     }
 };
 
