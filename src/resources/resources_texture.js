@@ -150,7 +150,7 @@ pc.extend(pc.resources, function () {
                 }
             }
 
-            var requiredMips = Math.floor(Math.log2(Math.max(width, height)) + 1); // no log2 in IE!
+            var requiredMips = Math.floor(pc.math.log2(Math.max(width, height)) + 1);
             var cantLoad = !format || mips !== requiredMips;
             if (cantLoad) {
                 var errEnd = ". Empty texture will be created instead.";
@@ -167,7 +167,7 @@ pc.extend(pc.resources, function () {
                 return texture;
             }
 
-            texOptions = {
+            var texOptions = {
                 width: width,
                 height: height,
                 format: format
