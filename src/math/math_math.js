@@ -242,16 +242,15 @@ pc.math = {
 
         return x * x * x * (x * (x * 6 - 15) + 10);
     },
-
-    /**
-     * @function
-     * @name pc.math.log2
-     * @description Same as Math.log2 which is not supported by some browsers.
-     */
-    log2: function(x) {
-        return Math.log(x) * this.INV_LOG2;
-    }
 };
 
 pc.math.intToBytes = pc.math.intToBytes32;
 pc.math.bytesToInt = pc.math.bytesToInt32;
+
+// IE doesn't have native log2
+if (!Math.log2) {
+    Math.log2 = function(x) {
+        return Math.log(x) * this.INV_LOG2;
+    }
+}
+
