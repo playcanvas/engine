@@ -19,7 +19,9 @@ pc.math = {
      * var deg = Math.PI * pc.math.RAD_TO_DEG;
      */
     RAD_TO_DEG: 180 / Math.PI,
-    
+
+    INV_LOG2: 1 / Math.log(2),
+
     /**
      * @function
      * @name pc.math.clamp
@@ -244,3 +246,11 @@ pc.math = {
 
 pc.math.intToBytes = pc.math.intToBytes32;
 pc.math.bytesToInt = pc.math.bytesToInt32;
+
+// IE doesn't have native log2
+if (!Math.log2) {
+    Math.log2 = function(x) {
+        return Math.log(x) * this.INV_LOG2;
+    }
+}
+

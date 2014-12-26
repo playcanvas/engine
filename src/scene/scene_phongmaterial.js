@@ -802,7 +802,8 @@ pc.extend(pc, function () {
                 conserveEnergy:             this.conserveEnergy,
                 occludeSpecular:            this.occludeSpecular,
                 shadingModel:               this.shadingModel,
-                fresnelModel:               this.fresnelModel
+                fresnelModel:               this.fresnelModel,
+                packedNormal:               this.normalMap? this.normalMap._compressed : false
             };
 
             this._mapXForms = null;
