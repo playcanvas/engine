@@ -241,7 +241,7 @@ pc.math = {
         x = (x - min) / (max - min);
 
         return x * x * x * (x * (x * 6 - 15) + 10);
-    },
+    }
 };
 
 pc.math.intToBytes = pc.math.intToBytes32;
