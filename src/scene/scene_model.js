@@ -80,11 +80,6 @@ pc.extend(pc, function () {
                 srcNodes.push(node);
                 cloneNodes.push(newNode);
 
-                if (node instanceof pc.CameraNode)
-                    clone.cameras.push(newNode);
-                else if (node instanceof pc.LightNode)
-                    clone.lights.push(newNode);
-
                 var children = node.getChildren();
                 for (var i = 0; i < children.length; i++) {
                     newNode.addChild(_duplicate(children[i]));

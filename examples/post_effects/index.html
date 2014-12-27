@@ -88,9 +88,9 @@
             range: 100,
             intensity: 1,
             castShadows: true,
+            shadowBias: 0.005,
             shadowResolution: 2048
         });
-        light.light.model.lights[0].setShadowBias(-0.00005); // nasty bit to ensure the shadows line up with the ground properly
 
         var cone = new pc.Entity();
         application.context.systems.model.addComponent(cone, {
@@ -105,7 +105,10 @@
             type: "point",
             color: new pc.Color(0, 0, 1),
             range: 100,
-            intensity: 1
+            intensity: 1,
+            castShadows: true,
+            shadowBias: 0.005,
+            shadowResolution: 512
         });
         application.context.systems.model.addComponent(pointlight, {
             type: "sphere"
@@ -113,15 +116,15 @@
         pointlight.model.model.meshInstances[0].material = createMaterial({diffuse: new pc.Color(0,0,0), emissive: new pc.Color(0,0,1)});
 
         // create some post effects
-        var bloom = new pc.posteffect.Bloom(application.context.graphicsDevice);
+        var bloom = new pc.BloomEffect(application.context.graphicsDevice);
         bloom.bloomThreshold = 0.1;
         camera.camera.postEffects.addEffect(bloom);
 
-        var sepia = new pc.posteffect.Sepia(application.context.graphicsDevice);
+        var sepia = new pc.SepiaEffect(application.context.graphicsDevice);
         sepia.amount = 0.7;
         camera.camera.postEffects.addEffect(sepia);
 
-        var vignette = new pc.posteffect.Vignette(application.context.graphicsDevice);
+        var vignette = new pc.VignetteEffect(application.context.graphicsDevice);
         vignette.darkness = 2;
         camera.camera.postEffects.addEffect(vignette);
 

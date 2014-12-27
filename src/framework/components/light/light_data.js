@@ -16,6 +16,7 @@ pc.extend(pc, function () {
         this.falloffMode = pc.LIGHTFALLOFF_LINEAR;
 
         // Non-serialized
+        this.light = null;
         this.model = null;
     };
 

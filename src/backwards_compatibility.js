@@ -135,11 +135,9 @@ pc.extend(pc.scene, {
     partitionSkin: pc.partitionSkin,
 
     BasicMaterial: pc.BasicMaterial,
-    CameraNode: pc.CameraNode,
     DepthMaterial: pc.DepthMaterial,
     ForwardRenderer: pc.ForwardRenderer,
     GraphNode: pc.GraphNode,
-    LightNode: pc.LightNode,
     Material: pc.Material,
     Command: pc.Command,
     Mesh: pc.Mesh,
