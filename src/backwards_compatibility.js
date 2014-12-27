@@ -1,5 +1,4 @@
-// Install the heavily namespaced APIs to the global pc namespace for
-// backwards compatibility. This will be removed at some point in the future.
+// Continue to support the old engine namespaces
 pc.anim = {
     Animation: pc.Animation,
     Key: pc.Key,
@@ -22,6 +21,11 @@ pc.fw = {
     ComponentSystem: pc.ComponentSystem,
     ContentFile: pc.ContentFile,
     Entity: pc.Entity,
+    FillMode: {
+        NONE: pc.FILLMODE_NONE,
+        FILL_WINDOW: pc.FILLMODE_FILL_WINDOW,
+        KEEP_ASPECT: pc.FILLMODE_KEEP_ASPECT
+    },
     LiveLink: pc.LiveLink,
     LiveLinkCloseEntityMessage: pc.LiveLinkCloseEntityMessage,
     LiveLinkMessage: pc.LiveLinkMessage,
@@ -54,36 +58,11 @@ pc.fw = {
     LiveLinkUpdateEntityNameMessage: pc.LiveLinkUpdateEntityNameMessage,
     LiveLinkUpdateEntityTransformMessage: pc.LiveLinkUpdateEntityTransformMessage,
     LiveLinkUpdatePackSettings: pc.LiveLinkUpdatePackSettings,
-    Pack: pc.Pack
-};
-
-pc.fw.FillMode = {
-    NONE: pc.FILLMODE_NONE,
-    FILL_WINDOW: pc.FILLMODE_FILL_WINDOW,
-    KEEP_ASPECT: pc.FILLMODE_KEEP_ASPECT
-};
-
-pc.fw.ResolutionMode = {
-    AUTO: pc.RESOLUTION_AUTO,
-    FIXED: pc.RESOLUTION_FIXED
-};
-
-pc.fw.LiveLinkMessageType = {
-    CLOSE_ENTITY: "CLOSE_ENTITY",
-    NO_TYPE: "NO_TYPE",
-    OPEN_ENTITY: "OPEN_ENTITY",
-    OPEN_PACK: "OPEN_PACK",
-    RECEIVED: "RECEIVED",
-    REPARENT_ENTITY: "REPARENT_ENTITY",
-    SELECTION_UPDATED: "SELECTION_UPDATED",
-    UPDATE_ASSET: "UPDATE_ASSET",
-    UPDATE_ASSETCACHE: "UPDATE_ASSETCACHE",
-    UPDATE_COMPONENT: "UPDATE_COMPONENT",
-    UPDATE_ENTITY: "UPDATE_ENTITY",
-    UPDATE_ENTITY_ENABLED: "UPDATE_ENTITY_ENABLED",
-    UPDATE_ENTITY_NAME: "UPDATE_ENTITY_NAME",
-    UPDATE_ENTITY_TRANSFORM: "UPDATE_ENTITY_TRANSFORM",
-    UPDATE_PACK_SETTINGS: "UPDATE_PACK_SETTINGS"
+    Pack: pc.Pack,
+    ResolutionMode: {
+        AUTO: pc.RESOLUTION_AUTO,
+        FIXED: pc.RESOLUTION_FIXED
+    }
 };
 
 pc.extend(pc.gfx, {
