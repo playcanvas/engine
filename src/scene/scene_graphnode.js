@@ -820,7 +820,7 @@ pc.extend(pc, function () {
          * @description Add a new child to the child list and update the parent value of the child node
          * @param {pc.GraphNode} node The new child to add
          * @example
-         * var e = new pc.Entity();
+         * var e = new pc.Entity(app);
          * this.entity.addChild(e);
          */
         addChild: function (node) {
@@ -861,7 +861,7 @@ pc.extend(pc, function () {
          * @param {pc.GraphNode} node The new child to insert
          * @param {Number} index The index in the child list of the parent where the new node will be inserted
          * @example
-         * var e = new pc.Entity();
+         * var e = new pc.Entity(app);
          * this.entity.insertChild(e, 1);
          */
         insertChild: function (node, index) {

@@ -3,8 +3,8 @@ pc.extend(pc.resources, function () {
      * @name pc.resources.PackResourceHandler
      * @class Handle requests for Pack resources
      */
-    var PackResourceHandler = function (registry, depot) {
-        this._registry = registry;
+    var PackResourceHandler = function (app, depot) {
+        this._app = app;
         this._depot = depot;
 
     };
@@ -57,7 +57,7 @@ pc.extend(pc.resources, function () {
     };
 
     PackResourceHandler.prototype.openEntityHierarchy = function (data, request) {
-        var entity = new pc.Entity();
+        var entity = new pc.Entity(this._app);
 
         var p = data.position;
         var r = data.rotation;
@@ -100,12 +100,12 @@ pc.extend(pc.resources, function () {
         entity.setRequest(request);
 
         // Create Components in order
-        var systems = this._registry.list();
+        var systems = this.app.systems.list();
         var i, len = systems.length;
         for (i = 0; i < len; i++) {
             var componentData = data.components[systems[i].id];
             if (componentData) {
-                this._registry[systems[i].id].addComponent(entity, componentData);
+                this.app.systems[systems[i].id].addComponent(entity, componentData);
             }
         }
 

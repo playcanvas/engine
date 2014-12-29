@@ -68,7 +68,7 @@ pc.extend(pc, function () {
         * @param {Object} data The source data with which to create the compoent
         * @returns {pc.Component} Returns a Component of type defined by the component system
         * @example
-        *   var entity = new pc.Entity();
+        *   var entity = new pc.Entity(app);
         *   app.systems.model.addComponent(entity, { type: 'box' });
         *   // entity.model is now set to a pc.ModelComponent
         */

@@ -16,11 +16,11 @@ pc.extend(pc, function () {
      * <p>Every object created in the PlayCanvas Designer is an Entity.</p>
      *
      * @example
-     * var entity = new pc.Entity();
      * var app = ... // Get the pc.Application
+     * var entity = new pc.Entity(app);
      *
      * // Add a Component to the Entity
-     * app.systems.camera.addComponent(entity, {
+     * entity.addComponent("camera", {
      *   fov: 45,
      *   nearClip: 1,
      *   farClip: 10000
@@ -45,14 +45,36 @@ pc.extend(pc, function () {
      *
      * @extends pc.GraphNode
      */
-    var Entity = function(){
+    var Entity = function(app){
         this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
+        this._app = app; // store app
+        if (!app) {
+            console.warn("DEPRECATED: new pc.Entity() must be passed application as first argument.");
+            this._app = pc.Application.getApplication("application-canvas");
+            if (!this._app) {
+                console.error("Couldn't find backup application")
+            }
+        }
 
         pc.events.attach(this);
     };
     Entity = pc.inherits(Entity, pc.GraphNode);
+
+    Entity.prototype.addComponent = function (type, data) {
+        var system = this._app.systems[type];
+        if (system) {
+            if (!this.c[type]) {
+                return system.addComponent(this, data);
+            } else {
+                logERROR(pc.string.format("Entity already has {0} Component", type));
+            }
+        } else {
+            logERROR(pc.string.format("System: '{0}' doesn't exist", type));
+            return null;
+        }
+     };
 
     /**
      * @function
@@ -201,7 +223,7 @@ pc.extend(pc, function () {
     */
     Entity.prototype.clone = function () {
         var type;
-        var c = new pc.Entity();
+        var c = new pc.Entity(this._app);
         pc.Entity._super._cloneInternal.call(this, c);
 
         for (type in this.c) {
