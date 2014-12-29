@@ -11,7 +11,7 @@
 
     <script>
         function createMaterial(colors) {
-            var material = new pc.scene.PhongMaterial();
+            var material = new pc.PhongMaterial();
             for (var param in colors) {
                 material[param] = colors[param];
             }
@@ -22,15 +22,15 @@
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
-        var application = new pc.fw.Application(canvas);
+        var application = new pc.Application(canvas);
         application.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
-        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+        application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        application.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // Create an Entity with a camera component
-        var cameraEntity = new pc.fw.Entity();
+        var cameraEntity = new pc.Entity();
         application.context.systems.camera.addComponent(cameraEntity, {
             clearColor: new pc.Color(0,0,0.05)
         });
@@ -38,7 +38,7 @@
         cameraEntity.translateLocal(0, 0, 10);
 
         // Create a directional light
-        var lightDirEntity = new pc.fw.Entity();
+        var lightDirEntity = new pc.Entity();
         application.context.systems.light.addComponent(lightDirEntity, {
             type: "directional",
             color: new pc.Color(1, 1, 1),
@@ -96,7 +96,7 @@
         ]);
 
         // Create entity for particle system
-        var entity = new pc.fw.Entity();
+        var entity = new pc.Entity();
         entity.setLocalPosition(0, 0, 0);
 
         // load snowflake texture

@@ -221,7 +221,7 @@ pc.extend(pc, function () {
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowBias', 'normalOffsetBias'];
+            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowBias', 'normalOffsetBias'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -305,43 +305,40 @@ pc.extend(pc, function () {
 
     LightComponentImplementation.prototype = {
         initialize: function (component, data) {
-            var node = this._createLightNode(component, data);
-            this._createDebugShape(component, data, node);
-        },
+            var light = new pc.Light();
+            light.setType(this._getLightType());
+            light._node = component.entity;
 
-        _createLightNode: function (component, data) {
-            var node = new pc.LightNode();
-            node.setName(data.type + "light");
-            node.setType(this._getLightType());
-            return node;
+            var app = this.system.app;
+            app.scene.addLight(light);
+
+            this._createDebugShape(component, data, light);
         },
 
         _getLightType: function () {
             return undefined;
         },
 
-        _createDebugShape: function (component, data, node) {
+        _createDebugShape: function (component, data, light) {
             var app = this.system.app;
 
-            var model = new pc.Model();
-            model.graph = node;
-            model.lights = [ node ];
+            data = data || {};
+            data.light = light;
 
             if (app.designer) {
                 this.mesh = this._createDebugMesh();
-
                 if (!this.material) {
                     this.material = this._createDebugMaterial();
                 }
 
-                model.meshInstances = [ new pc.MeshInstance(node, this.mesh, this.material) ];
+                var model = new pc.Model();
+                model.graph = component.entity;
+                model.meshInstances = [ new pc.MeshInstance(component.entity, this.mesh, this.material) ];
+
+                app.scene.addModel(model);
+
+                data.model = model;
             }
-
-            app.scene.addModel(model);
-            component.entity.addChild(node);
-
-            data = data || {};
-            data.model = model;
         },
 
         _createDebugMesh: function () {
@@ -354,9 +351,16 @@ pc.extend(pc, function () {
 
         remove: function(entity, data) {
             var app = this.system.app;
-            entity.removeChild(data.model.graph);
+
             app.scene.removeModel(data.model);
             delete data.model;
+
+            app.scene.removeLight(data.light);
+
+            if (app.designer) {
+                app.scene.removeModel(data.model);
+                delete data.model;
+            }
         },
 
         toolsUpdate: function (data) {

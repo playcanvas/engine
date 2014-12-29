@@ -11,7 +11,7 @@
 
     <script>
         function createMaterial(colors) {
-            var material = new pc.scene.PhongMaterial();
+            var material = new pc.PhongMaterial();
             for (var param in colors) {
                 material[param] = colors[param];
             }
@@ -25,17 +25,17 @@
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
-        var app = new pc.fw.Application(canvas);
+        var app = new pc.Application(canvas);
         app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FillMode.FILL_WINDOW);
-        app.setCanvasResolution(pc.ResolutionMode.AUTO);
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         var entity;
 
         // Create an Entity with a camera component
-        var cameraEntity = new pc.fw.Entity(app);
+        var cameraEntity = new pc.Entity(app);
         cameraEntity.addComponent("camera", {
             clearColor: new pc.Color(0,0,0)
         });
@@ -43,7 +43,7 @@
         cameraEntity.translateLocal(0, 0.6, 1.8);
 
         // Create a directional light
-        var lightDirEntity = new pc.fw.Entity(app);
+        var lightDirEntity = new pc.Entity(app);
         lightDirEntity.addComponent("light", {
             type: "directional",
             color: new pc.Color(1, .4, 0),
@@ -52,7 +52,7 @@
         lightDirEntity.setLocalEulerAngles(-80, 70, 0);
 
         // Create a spot light
-        var lightEntity = new pc.fw.Entity(app);
+        var lightEntity = new pc.Entity(app);
         lightEntity.addComponent("light", {
             type: "spot",
             color: new pc.Color(.6, .85, 1),
@@ -84,7 +84,7 @@
             return app.assets.loadFromUrl("../assets/Playbot/Playbot_idle.json", "animation");
         }).then(function (resource) {
             idleAnim = resource.asset;
-            entity = new pc.fw.Entity(app);
+            entity = new pc.Entity(app);
             // add model component to entity
             entity.addComponent("model", {
                 type: "asset",

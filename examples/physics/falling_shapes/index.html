@@ -16,12 +16,12 @@
     var canvas = document.getElementById("application-canvas");
 
     // Create the application and start the update loop
-    var application = new pc.fw.Application(canvas);
+    var application = new pc.Application(canvas);
     application.start();
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-    application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
-    application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+    application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    application.setCanvasResolution(pc.RESOLUTION_AUTO);
 
     application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -29,7 +29,7 @@
     application.context.systems.rigidbody.setGravity(0, -9.8, 0);
 
     function createMaterial (color) {
-        var material = new pc.scene.PhongMaterial();
+        var material = new pc.PhongMaterial();
         material.diffuse = color;
         // we need to call material.update when we change its properties
         material.update()
@@ -45,7 +45,7 @@
 
     // ***********    Create our floor   *******************
 
-    var floor = new pc.fw.Entity();
+    var floor = new pc.Entity();
 
     // add a 'box' model
     application.context.systems.model.addComponent(floor, {
@@ -76,11 +76,13 @@
     // ***********    Create lights   *******************
 
     // make our scene prettier by adding a directional light
-    var light = new pc.fw.Entity();
+    var light = new pc.Entity();
     application.context.systems.light.addComponent(light, {
         type: "directional",
         color: new pc.Color(1, 1, 1),
         castShadows: true,
+        shadowBias: 0.05,
+        normalOffsetBias: 0.05,
         shadowResolution: 2048
     });
 
@@ -93,7 +95,7 @@
     // ***********    Create camera    *******************
 
     // Create an Entity with a camera component
-    var camera = new pc.fw.Entity();
+    var camera = new pc.Entity();
     application.context.systems.camera.addComponent(camera, {
         clearColor: new pc.Color(0.5, 0.5, 0.8),
         farClip: 50
@@ -110,7 +112,7 @@
 
     // Create a template for a falling box
     // It will have a model component of type 'box'...
-    var boxTemplate = new pc.fw.Entity();
+    var boxTemplate = new pc.Entity();
     application.context.systems.model.addComponent(boxTemplate, {
         type: "box",
         castShadows: true
@@ -136,7 +138,7 @@
     // Create other shapes too for variety...
 
     // A sphere...
-    var sphereTemplate = new pc.fw.Entity();
+    var sphereTemplate = new pc.Entity();
     application.context.systems.model.addComponent(sphereTemplate, {
         type: "sphere",
         castShadows: true
@@ -158,7 +160,7 @@
     sphereTemplate.model.material = green;
 
     // A capsule...
-    var capsuleTemplate = new pc.fw.Entity();
+    var capsuleTemplate = new pc.Entity();
     application.context.systems.model.addComponent(capsuleTemplate, {
         type: "capsule",
         castShadows: true
@@ -181,7 +183,7 @@
     capsuleTemplate.model.material = blue;
 
     // A cylinder...
-    var cylinderTemplate = new pc.fw.Entity();
+    var cylinderTemplate = new pc.Entity();
     application.context.systems.model.addComponent(cylinderTemplate, {
         type: "cylinder",
         castShadows: true

@@ -158,7 +158,8 @@ pc.extend(pc, function () {
                 data.enabled = data.activate;
             }
 
-            data.camera = new pc.CameraNode();
+            data.camera = new pc.Camera();
+            data._node = component.entity;
 
             data.postEffects = new pc.PostEffectQueue(this.app, component);
 
@@ -189,7 +190,7 @@ pc.extend(pc, function () {
                 mesh.primitive[0].indexed = true;
 
                 var model = new pc.Model();
-                model.graph = data.camera;
+                model.graph = component.entity;
                 model.meshInstances = [ new pc.MeshInstance(model.graph, mesh, material) ];
 
                 this.app.scene.addModel(model);
@@ -227,7 +228,6 @@ pc.extend(pc, function () {
                 }
             }
 
-            entity.removeChild(data.camera);
             data.camera = null;
         },
 

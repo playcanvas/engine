@@ -94,95 +94,84 @@ pc.extend(pc, function () {
         },
 
         onSetCastShadows: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setCastShadows(newValue);
+            this.light.setCastShadows(newValue);
         },
 
         onSetColor: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setColor(newValue);
+            this.light.setColor(newValue);
         },
 
         onSetIntensity: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setIntensity(newValue);
+            this.light.setIntensity(newValue);
         },
 
         onSetShadowDistance: function (name, oldValue, newValue) {
             if (this.data.type === 'directional') {
-                var light = this.data.model.lights[0];
-                light.setShadowDistance(newValue);
+                this.light.setShadowDistance(newValue);
             }
         },
 
         onSetShadowResolution: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setShadowResolution(newValue);
+            this.light.setShadowResolution(newValue);
         },
 
         onSetShadowBias: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
             // remap the value to the range needed by the shaders
-            light.setShadowBias(-0.01 * newValue);
+            this.light.setShadowBias(-0.01 * newValue);
         },
 
         onSetNormalOffsetBias: function (name, oldValue, newValue) {
-            var light = this.data.model.lights[0];
-            light.setNormalOffsetBias(newValue);
+            this.light.setNormalOffsetBias(newValue);
         },
 
         onSetRange: function (name, oldValue, newValue) {
             if (this.data.type === 'point' || this.data.type === 'spot') {
-                var light = this.data.model.lights[0];
-                light.setAttenuationEnd(newValue);
+                this.light.setAttenuationEnd(newValue);
             }
         },
 
         onSetInnerConeAngle: function (name, oldValue, newValue) {
             if (this.data.type === 'spot') {
-                var light = this.data.model.lights[0];
-                light.setInnerConeAngle(newValue);
+                this.light.setInnerConeAngle(newValue);
             }
         },
 
         onSetOuterConeAngle: function (name, oldValue, newValue) {
             if (this.data.type === 'spot') {
-                var light = this.data.model.lights[0];
-                light.setOuterConeAngle(newValue);
+                this.light.setOuterConeAngle(newValue);
             }
         },
 
         onSetFalloffMode: function (name, oldValue, newValue) {
             if (this.data.type === 'point' || this.data.type === 'spot') {
-                var light = this.data.model.lights[0];
-                light.setFalloffMode(newValue);
+                this.light.setFalloffMode(newValue);
             }
         },
 
         onEnable: function () {
             LightComponent._super.onEnable.call(this);
 
+            this.light.setEnabled(true);
+
             var model = this.data.model;
-
-            var light = model.lights[0];
-            light.setEnabled(true);
-
-            var scene = this.system.app.scene;
-
-            if (!scene.containsModel(model)) {
-                scene.addModel(model);
+            if (model) {
+                var scene = this.system.app.scene;
+                if (!scene.containsModel(model)) {
+                    scene.addModel(model);
+                }
             }
         },
 
         onDisable: function () {
             LightComponent._super.onDisable.call(this);
 
+            this.light.setEnabled(false);
+
             var model = this.data.model;
-
-            var light = model.lights[0];
-            light.setEnabled(false);
-
-            this.system.app.scene.removeModel(model);
+            if (model) {
+                var scene = this.system.app.scene;
+                scene.removeModel(model);
+            }
         }
     });
 

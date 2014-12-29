@@ -12,8 +12,8 @@ pc.script.create('first_person_camera', function (context) {
         // Disabling the context menu stops the browser displaying a menu when
         // you right-click the page
         context.mouse.disableContextMenu();
-        context.mouse.on(pc.input.EVENT_MOUSEMOVE, this.onMouseMove, this);
-        context.mouse.on(pc.input.EVENT_MOUSEDOWN, this.onMouseDown, this);
+        context.mouse.on(pc.EVENT_MOUSEMOVE, this.onMouseMove, this);
+        context.mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
 
     };
 
@@ -23,15 +23,15 @@ pc.script.create('first_person_camera', function (context) {
             this.entity.setLocalEulerAngles(this.ex, this.ey, 0);
 
             // Update the camera's position
-            if (context.keyboard.isPressed(pc.input.KEY_UP)) {
+            if (context.keyboard.isPressed(pc.KEY_UP)) {
                 this.entity.translateLocal(0, 0, -SPEED*dt);
-            } else if (context.keyboard.isPressed(pc.input.KEY_DOWN)) {
+            } else if (context.keyboard.isPressed(pc.KEY_DOWN)) {
                 this.entity.translateLocal(0, 0, SPEED*dt);
             }
 
-            if (context.keyboard.isPressed(pc.input.KEY_LEFT)) {
+            if (context.keyboard.isPressed(pc.KEY_LEFT)) {
                 this.entity.translateLocal(-SPEED*dt, 0, 0);
-            } else if (context.keyboard.isPressed(pc.input.KEY_RIGHT)) {
+            } else if (context.keyboard.isPressed(pc.KEY_RIGHT)) {
                 this.entity.translateLocal(SPEED*dt, 0, 0);
             }
         },
@@ -45,7 +45,7 @@ pc.script.create('first_person_camera', function (context) {
 
         onMouseDown: function (event) {
             // When the mouse button is clicked try and capture the pointer
-            if (!pc.input.Mouse.isPointerLocked()) {
+            if (!pc.Mouse.isPointerLocked()) {
                 context.mouse.enablePointerLock();
             }
         },

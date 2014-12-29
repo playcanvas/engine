@@ -1,5 +1,5 @@
 //--------------- POST EFFECT DEFINITION------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
     var SAMPLE_COUNT = 15;
 
     function computeGaussian(n, theta) {
@@ -52,19 +52,19 @@ pc.extend(pc.posteffect, function () {
     }
 
     /**
-     * @name pc.posteffect.Bloom
-     * @class Implements the Bloom post processing effect
+     * @name pc.BloomEffect
+     * @class Implements the BloomEffect post processing effect
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} bloomThreshold Only pixels brighter then this threshold will be processed. Ranges from 0 to 1
      * @property {Number} blurAmount Controls the amount of blurring.
      * @property {Number} bloomIntensity The intensity of the effect.
      */
-    var Bloom = function (graphicsDevice) {
+    var BloomEffect = function (graphicsDevice) {
         // Shaders
         var attributes = {
-            aPosition: pc.gfx.SEMANTIC_POSITION
+            aPosition: pc.SEMANTIC_POSITION
         };
 
         var passThroughVert = [
@@ -134,14 +134,14 @@ pc.extend(pc.posteffect, function () {
             "",
             "varying vec2 vUv0;",
             "",
-            "uniform float uBloomIntensity;",
+            "uniform float uBloomEffectIntensity;",
             "uniform sampler2D uBaseTexture;",
             "uniform sampler2D uBloomTexture;",
             "",
             "void main(void)",
             "{",
                  // Look up the bloom and original base image colors.
-            "    vec4 bloom = texture2D(uBloomTexture, vUv0) * uBloomIntensity;",
+            "    vec4 bloom = texture2D(uBloomTexture, vUv0) * uBloomEffectIntensity;",
             "    vec4 base = texture2D(uBaseTexture, vUv0);",
             "",
                  // Darken down the base image in areas where there is a lot of bloom,
@@ -153,17 +153,17 @@ pc.extend(pc.posteffect, function () {
             "}"
         ].join("\n");
 
-        this.extractShader = new pc.gfx.Shader(graphicsDevice, {
+        this.extractShader = new pc.Shader(graphicsDevice, {
             attributes: attributes,
             vshader: passThroughVert,
             fshader: bloomExtractFrag
         });
-        this.blurShader = new pc.gfx.Shader(graphicsDevice, {
+        this.blurShader = new pc.Shader(graphicsDevice, {
             attributes: attributes,
             vshader: passThroughVert,
             fshader: gaussianBlurFrag
         });
-        this.combineShader = new pc.gfx.Shader(graphicsDevice, {
+        this.combineShader = new pc.Shader(graphicsDevice, {
             attributes: attributes,
             vshader: passThroughVert,
             fshader: bloomCombineFrag
@@ -174,16 +174,16 @@ pc.extend(pc.posteffect, function () {
         var height = graphicsDevice.height;
         this.targets = [];
         for (var i = 0; i < 2; i++) {
-            var colorBuffer = new pc.gfx.Texture(graphicsDevice, {
-                format: pc.gfx.PIXELFORMAT_R8_G8_B8,
+            var colorBuffer = new pc.Texture(graphicsDevice, {
+                format: pc.PIXELFORMAT_R8_G8_B8,
                 width: width >> 1,
                 height: height >> 1
             });
-            colorBuffer.minFilter = pc.gfx.FILTER_LINEAR;
-            colorBuffer.magFilter = pc.gfx.FILTER_LINEAR;
-            colorBuffer.addressU = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-            colorBuffer.addressV = pc.gfx.ADDRESS_CLAMP_TO_EDGE;
-            var target = new pc.gfx.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
+            colorBuffer.minFilter = pc.FILTER_LINEAR;
+            colorBuffer.magFilter = pc.FILTER_LINEAR;
+            colorBuffer.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            colorBuffer.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            var target = new pc.RenderTarget(graphicsDevice, colorBuffer, { depth: false });
 
             this.targets.push(target);
         }
@@ -198,9 +198,9 @@ pc.extend(pc.posteffect, function () {
         this.sampleOffsets = new Float32Array(SAMPLE_COUNT * 2);
     }
 
-    Bloom = pc.inherits(Bloom, pc.posteffect.PostEffect);
+    BloomEffect = pc.inherits(BloomEffect, pc.PostEffect);
 
-    Bloom.prototype = pc.extend(Bloom.prototype, {
+    BloomEffect.prototype = pc.extend(BloomEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -209,7 +209,7 @@ pc.extend(pc.posteffect, function () {
             // shader that extracts only the brightest parts of the image.
             scope.resolve("uBloomThreshold").setValue(this.bloomThreshold);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.extractShader);
+            pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.extractShader);
 
             // Pass 2: draw from rendertarget 1 into rendertarget 2,
             // using a shader to apply a horizontal gaussian blur filter.
@@ -217,7 +217,7 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, this.targets[1], this.vertexBuffer, this.blurShader);
+            pc.drawFullscreenQuad(device, this.targets[1], this.vertexBuffer, this.blurShader);
 
             // Pass 3: draw from rendertarget 2 back into rendertarget 1,
             // using a shader to apply a vertical gaussian blur filter.
@@ -225,20 +225,20 @@ pc.extend(pc.posteffect, function () {
             scope.resolve("uBlurWeights[0]").setValue(this.sampleWeights);
             scope.resolve("uBlurOffsets[0]").setValue(this.sampleOffsets);
             scope.resolve("uBloomTexture").setValue(this.targets[1].colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.blurShader);
+            pc.drawFullscreenQuad(device, this.targets[0], this.vertexBuffer, this.blurShader);
 
             // Pass 4: draw both rendertarget 1 and the original scene
             // image back into the main backbuffer, using a shader that
             // combines them to produce the final bloomed result.
-            scope.resolve("uBloomIntensity").setValue(this.bloomIntensity);
+            scope.resolve("uBloomEffectIntensity").setValue(this.bloomIntensity);
             scope.resolve("uBloomTexture").setValue(this.targets[0].colorBuffer);
             scope.resolve("uBaseTexture").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.combineShader, rect);
         }
     });
 
     return {
-        Bloom: Bloom
+        BloomEffect: BloomEffect
     };
 }());
 
@@ -247,14 +247,14 @@ pc.extend(pc.posteffect, function () {
 pc.script.attribute('bloomIntensity', 'number', 1, {
     min: 0,
     step: 0.5,
-    displayName: 'Bloom Intensity'
+    displayName: 'BloomEffect Intensity'
 });
 
 pc.script.attribute('bloomThreshold', 'number', 0.25, {
     min: 0,
     step: 0.01,
     max: 1,
-    displayName: 'Bloom Threshold'
+    displayName: 'BloomEffect Threshold'
 });
 
 pc.script.attribute('blurAmount', 'number', 4, {
@@ -264,13 +264,13 @@ pc.script.attribute('blurAmount', 'number', 4, {
 
 //--------------- SCRIPT DEFINITION------------------------//
 
-pc.script.create('bloom', function (context) {
-    var Bloom = function (entity) {
+pc.script.create('bloomEffect', function (context) {
+    var BloomEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.Bloom(context.graphicsDevice);
+        this.effect = new pc.BloomEffect(context.graphicsDevice);
     };
 
-    Bloom.prototype = {
+    BloomEffect.prototype = {
         initialize:  function () {
             this.on('set', this.onAttributeChanged, this);
 
@@ -292,5 +292,5 @@ pc.script.create('bloom', function (context) {
         }
     };
 
-    return Bloom;
+    return BloomEffect;
 });

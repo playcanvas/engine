@@ -1,17 +1,17 @@
 //--------------- POST EFFECT DEFINITION ------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
     /**
-     * @name pc.posteffect.Sepia
-     * @class Implements the Sepia color filter.
+     * @name pc.SepiaEffect
+     * @class Implements the SepiaEffect color filter.
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      * @property {Number} amount Controls the intensity of the effect. Ranges from 0 to 1.
      */
-    var Sepia = function (graphicsDevice) {
-        this.shader = new pc.gfx.Shader(graphicsDevice, {
+    var SepiaEffect = function (graphicsDevice) {
+        this.shader = new pc.Shader(graphicsDevice, {
             attributes: {
-                aPosition: pc.gfx.SEMANTIC_POSITION
+                aPosition: pc.SEMANTIC_POSITION
             },
             vshader: [
                 "attribute vec2 aPosition;",
@@ -49,21 +49,21 @@ pc.extend(pc.posteffect, function () {
         this.amount = 1;
     }
 
-    Sepia = pc.inherits(Sepia, pc.posteffect.PostEffect);
+    SepiaEffect = pc.inherits(SepiaEffect, pc.PostEffect);
 
-    Sepia.prototype = pc.extend(Sepia.prototype, {
+    SepiaEffect.prototype = pc.extend(SepiaEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
 
             scope.resolve("uAmount").setValue(this.amount);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.shader, rect);
         }
     });
 
     return {
-        Sepia: Sepia
+        SepiaEffect: SepiaEffect
     };
 }());
 
@@ -77,13 +77,13 @@ pc.script.attribute('amount', 'number', 1, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('sepia', function (context) {
-    var Sepia = function (entity) {
+pc.script.create('sepiaEffect', function (context) {
+    var SepiaEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.Sepia(context.graphicsDevice);
+        this.effect = new pc.SepiaEffect(context.graphicsDevice);
     };
 
-    Sepia.prototype = {
+    SepiaEffect.prototype = {
         initialize: function () {
             this.on('set', this.onAttributeChanged, this);
             this.effect.amount = this.amount;
@@ -102,5 +102,5 @@ pc.script.create('sepia', function (context) {
         }
     };
 
-    return Sepia;
+    return SepiaEffect;
 });

@@ -1,12 +1,10 @@
 pc.extend(pc, function () {
-    /**
-     * @name pc.log
-     * @namespace Logging to console
-     * @description Provides logging services for PlayCanvas apps.
-     */
     var log = {
         /**
-         * Write text to the console
+         * @private
+         * @function
+         * @name pc.log.write
+         * @descripttion Write text to the console
          * @param {String} text
          */
         write: function (text) {
@@ -14,7 +12,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * Starting logging to the console
+         * @private
+         * @function
+         * @name pc.log.open
+         * @descripttion Starting logging to the console
          * @param {String} text
          */
         open: function (text) {
@@ -22,7 +23,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * Write text to the log preceded by 'INFO:'
+         * @private
+         * @function
+         * @name pc.log.info
+         * @descripttion Write text to the log preceded by 'INFO:'
          * @param {String} text
          */
         info: function (text) {
@@ -30,7 +34,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * Write text to the log preceded by 'DEBUG:'
+         * @private
+         * @function
+         * @name pc.log.debug
+         * @descripttion Write text to the log preceded by 'DEBUG:'
          * @param {String} text
          */
         debug: function (text) {
@@ -38,7 +45,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * Write text to the log preceded by 'ERROR:'
+         * @private
+         * @function
+         * @name pc.log.error
+         * @descripttion Write text to the log preceded by 'ERROR:'
          * @param {String} text
          */
         error: function (text) {
@@ -46,7 +56,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * Write text to the log preceded by 'WARNING:'
+         * @private
+         * @function
+         * @name pc.log.warning
+         * @descripttion Write text to the log preceded by 'WARNING:'
          * @param {String} text
          */
         warning: function (text) {
@@ -54,7 +67,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * Write text to the log preceded by 'ALERT:' and pop up an alert dialog box with the text
+         * @private
+         * @function
+         * @name pc.log.alert
+         * @descripttion Write text to the log preceded by 'ALERT:' and pop up an alert dialog box with the text
          * @param {String} text
          */
         alert: function (text) {
@@ -63,7 +79,10 @@ pc.extend(pc, function () {
         },
 
         /**
-         * If condition is false, then write text to the log preceded by 'ASSERT:' and pop up a dialog box.
+         * @private
+         * @function
+         * @name pc.log.assert
+         * @descripttion If condition is false, then write text to the log preceded by 'ASSERT:' and pop up a dialog box.
          * @param {Boolean} condition
          * @param {String} text
          */

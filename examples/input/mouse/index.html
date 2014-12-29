@@ -14,26 +14,26 @@
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
-        var application = new pc.fw.Application(canvas);
+        var application = new pc.Application(canvas);
         application.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
-        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+        application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        application.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         application.context.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         var entity, light, camera;
 
         // Create an Entity with a camera component
-        var camera = new pc.fw.Entity();
+        var camera = new pc.Entity();
         application.context.systems.camera.addComponent(camera, {
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
         camera.translate(0, 7, 25);
 
         // Create an Entity with a point light component and a sphere model component.
-        var light = new pc.fw.Entity();
+        var light = new pc.Entity();
         application.context.systems.light.addComponent(light, {
             type: "point",
             color: new pc.Color(1, 1, 1),
@@ -49,7 +49,7 @@
             var model = results.resource;
             var asset = results.asset;
 
-            entity = new pc.fw.Entity();
+            entity = new pc.Entity();
 
             application.context.systems.model.addComponent(entity, {
                 type: "asset",
@@ -60,13 +60,13 @@
         });
 
 
-        var mouse = new pc.input.Mouse(document.body);
+        var mouse = new pc.Mouse(document.body);
 
         var x = 0;
         var y = 0;
 
         mouse.on('mousemove', function (event) {
-            if (event.buttons[pc.input.MOUSEBUTTON_LEFT]) {
+            if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
                 x += event.dx;
 
                 entity.setLocalEulerAngles(0, 0.2*x, 0);

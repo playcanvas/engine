@@ -15,7 +15,7 @@
 
     <script>
         function createMaterial(colors) {
-            var material = new pc.scene.PhongMaterial();
+            var material = new pc.PhongMaterial();
             for (var param in colors) {
                 material[param] = colors[param];
             }
@@ -30,12 +30,12 @@
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
-        var application = new pc.fw.Application(canvas);
+        var application = new pc.Application(canvas);
         application.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        application.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
-        application.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+        application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        application.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         application.context.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
@@ -47,7 +47,7 @@
             var model = results.resource;
             var asset = results.asset;
 
-            entity = new pc.fw.Entity();
+            entity = new pc.Entity();
             application.context.systems.model.addComponent(entity, {
                 type: "asset",
                 asset: asset,
@@ -57,7 +57,7 @@
         });
 
         // Create an Entity with a camera component
-        var camera = new pc.fw.Entity();
+        var camera = new pc.Entity();
         application.context.systems.camera.addComponent(camera, {
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
@@ -65,7 +65,7 @@
         camera.rotate(0, 0, 0)
 
         // Create an Entity for the ground
-        var ground = new pc.fw.Entity();
+        var ground = new pc.Entity();
         application.context.systems.model.addComponent(ground, {
             type: "box"
         });
@@ -79,7 +79,7 @@
         ground.model.model.meshInstances[0].material = material;
 
         // Create an spot light
-        var light = new pc.fw.Entity();
+        var light = new pc.Entity();
         application.context.systems.light.addComponent(light, {
             type: "spot",
             color: new pc.Color(1, 1, 1),
@@ -88,11 +88,11 @@
             range: 100,
             intensity: 1,
             castShadows: true,
+            shadowBias: 0.005,
             shadowResolution: 2048
         });
-        light.light.model.lights[0].setShadowBias(-0.00005); // nasty bit to ensure the shadows line up with the ground properly
 
-        var cone = new pc.fw.Entity();
+        var cone = new pc.Entity();
         application.context.systems.model.addComponent(cone, {
             type: "cone"
         });
@@ -100,12 +100,15 @@
         light.addChild(cone);
 
         // Create a point light
-        var pointlight = new pc.fw.Entity();
+        var pointlight = new pc.Entity();
         application.context.systems.light.addComponent(pointlight, {
             type: "point",
             color: new pc.Color(0, 0, 1),
             range: 100,
-            intensity: 1
+            intensity: 1,
+            castShadows: true,
+            shadowBias: 0.005,
+            shadowResolution: 512
         });
         application.context.systems.model.addComponent(pointlight, {
             type: "sphere"
@@ -113,15 +116,15 @@
         pointlight.model.model.meshInstances[0].material = createMaterial({diffuse: new pc.Color(0,0,0), emissive: new pc.Color(0,0,1)});
 
         // create some post effects
-        var bloom = new pc.posteffect.Bloom(application.context.graphicsDevice);
+        var bloom = new pc.BloomEffect(application.context.graphicsDevice);
         bloom.bloomThreshold = 0.1;
         camera.camera.postEffects.addEffect(bloom);
 
-        var sepia = new pc.posteffect.Sepia(application.context.graphicsDevice);
+        var sepia = new pc.SepiaEffect(application.context.graphicsDevice);
         sepia.amount = 0.7;
         camera.camera.postEffects.addEffect(sepia);
 
-        var vignette = new pc.posteffect.Vignette(application.context.graphicsDevice);
+        var vignette = new pc.VignetteEffect(application.context.graphicsDevice);
         vignette.darkness = 2;
         camera.camera.postEffects.addEffect(vignette);
 

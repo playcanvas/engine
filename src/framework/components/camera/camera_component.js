@@ -103,9 +103,9 @@ pc.extend(pc, function () {
         onSetCamera: function (name, oldValue, newValue) {
             // remove old camera node from hierarchy and add new one
             if (oldValue) {
-                this.entity.removeChild(oldValue);
+                oldValue._node = null;
             }
-            this.entity.addChild(newValue);
+            newValue._node = this.entity;
         },
 
         onSetClearColor: function (name, oldValue, newValue) {

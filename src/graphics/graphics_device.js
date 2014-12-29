@@ -63,6 +63,14 @@ pc.extend(pc, function () {
         return image;
     };
 
+    function _isIE() {
+        var ua = window.navigator.userAgent;
+        var msie = ua.indexOf("MSIE ");
+        var trident = navigator.userAgent.match(/Trident.*rv\:11\./);
+
+        return (msie > 0 || !!trident);
+    };
+
     /**
      * @name pc.GraphicsDevice
      * @class The graphics device manages the underlying graphics context. It is responsible
@@ -279,7 +287,18 @@ pc.extend(pc, function () {
                 this.extTextureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
             }
 
-            this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
+            this.extCompressedTextureS3TC = gl.getExtension('WEBGL_compressed_texture_s3tc');
+            if (!this.extCompressedTextureS3TC) {
+                this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
+            }
+
+            if (this.extCompressedTextureS3TC) {
+                if (_isIE()) {
+                    // IE 11 can't use mip maps with S3TC
+                    this.extCompressedTextureS3TC = false;
+                }
+            }
+
             if (this.extCompressedTextureS3TC) {
                 var formats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
                 for (var i = 0; i < formats.length; i++) {
@@ -632,7 +651,7 @@ pc.extend(pc, function () {
             while(texture._levels[mipLevel] || mipLevel==0) { // Upload all existing mip levels. Initialize 0 mip anyway.
                 mipObject = texture._levels[mipLevel];
 
-                if (mipLevel==1) {
+                if (mipLevel==1 && !texture._compressed) {
                     // We have more than one mip levels we want to assign, but we need all mips to make
                     // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                     gl.generateMipmap(texture._glTarget);
@@ -663,16 +682,30 @@ pc.extend(pc, function () {
                         }
                     } else {
                         // Upload the byte array
+                        var resMult = 1 / Math.pow(2, mipLevel);
                         for (face = 0; face < 6; face++) {
-                            gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                          mipLevel,
-                                          texture._glInternalFormat,
-                                          texture._width,
-                                          texture._height,
-                                          0,
-                                          texture._glFormat,
-                                          texture._glPixelType,
-                                          mipObject[face]);
+
+                            if (texture._compressed) {
+                                if (this.extCompressedTextureS3TC) {
+                                    gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                                            mipLevel,
+                                                            texture._glInternalFormat,
+                                                            Math.max(texture._width * resMult, 1),
+                                                            Math.max(texture._height * resMult, 1),
+                                                            0,
+                                                            mipObject[face]);
+                                }
+                            } else {
+                                gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                              mipLevel,
+                                              texture._glInternalFormat,
+                                              Math.max(texture._width * resMult, 1),
+                                              Math.max(texture._height * resMult, 1),
+                                              0,
+                                              texture._glFormat,
+                                              texture._glPixelType,
+                                              mipObject[face]);
+                            }
                         }
                     }
                 } else {
@@ -696,20 +729,23 @@ pc.extend(pc, function () {
                     } else {
                         // Upload the byte array
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+                        var resMult = 1 / Math.pow(2, mipLevel);
                         if (texture._compressed) {
-                            gl.compressedTexImage2D(gl.TEXTURE_2D,
-                                                    mipLevel,
-                                                    texture._glInternalFormat,
-                                                    texture._width,
-                                                    texture._height,
-                                                    0,
-                                                    mipObject);
+                            if (this.extCompressedTextureS3TC) {
+                                gl.compressedTexImage2D(gl.TEXTURE_2D,
+                                                        mipLevel,
+                                                        texture._glInternalFormat,
+                                                        Math.max(texture._width * resMult, 1),
+                                                        Math.max(texture._height * resMult, 1),
+                                                        0,
+                                                        mipObject);
+                            }
                         } else {
                             gl.texImage2D(gl.TEXTURE_2D,
                                           mipLevel,
                                           texture._glInternalFormat,
-                                          texture._width,
-                                          texture._height,
+                                          Math.max(texture._width * resMult, 1),
+                                          Math.max(texture._height * resMult, 1),
                                           0,
                                           texture._glFormat,
                                           texture._glPixelType,
@@ -721,7 +757,7 @@ pc.extend(pc, function () {
             }
 
 
-            if (texture.autoMipmap && pc.math.powerOfTwo(texture._width) && pc.math.powerOfTwo(texture._height) && texture._levels.length === 1) {
+            if (texture.autoMipmap && pc.math.powerOfTwo(texture._width) && pc.math.powerOfTwo(texture._height) && texture._levels.length === 1 && !texture._compressed) {
                 gl.generateMipmap(texture._glTarget);
             }
         },

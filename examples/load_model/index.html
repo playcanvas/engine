@@ -18,8 +18,8 @@
         app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FillMode.FILL_WINDOW);
-        app.setCanvasResolution(pc.ResolutionMode.AUTO);
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
@@ -31,6 +31,7 @@
             entity = new pc.Entity(app);
             entity.addComponent("model");
             entity.model.model = results.resource;
+
             entity.rotate(0, 0, 0);
             app.root.addChild(entity);
         });

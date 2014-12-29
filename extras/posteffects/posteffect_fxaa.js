@@ -1,17 +1,17 @@
 //--------------- POST EFFECT DEFINITION------------------------//
-pc.extend(pc.posteffect, function () {
+pc.extend(pc, function () {
 
     /**
-     * @name pc.posteffect.Fxaa
+     * @name pc.FxaaEffect
      * @class Implements the FXAA post effect by NVIDIA
      * @constructor Creates new instance of the post effect.
-     * @extends pc.posteffect.PostEffect
-     * @param {pc.gfx.Device} graphicsDevice The graphics device of the application
+     * @extends pc.PostEffect
+     * @param {pc.GraphicsDevice} graphicsDevice The graphics device of the application
      */
-    var Fxaa = function (graphicsDevice) {
+    var FxaaEffect = function (graphicsDevice) {
         // Shaders
         var attributes = {
-            aPosition: pc.gfx.SEMANTIC_POSITION
+            aPosition: pc.SEMANTIC_POSITION
         };
 
         var passThroughVert = [
@@ -83,7 +83,7 @@ pc.extend(pc.posteffect, function () {
             "}"
         ].join("\n");
 
-        this.fxaaShader = new pc.gfx.Shader(graphicsDevice, {
+        this.fxaaShader = new pc.Shader(graphicsDevice, {
             attributes: attributes,
             vshader: passThroughVert,
             fshader: fxaaFrag
@@ -93,9 +93,9 @@ pc.extend(pc.posteffect, function () {
         this.resolution = new Float32Array(2);
     }
 
-    Fxaa = pc.inherits(Fxaa, pc.posteffect.PostEffect);
+    FxaaEffect = pc.inherits(FxaaEffect, pc.PostEffect);
 
-    Fxaa.prototype = pc.extend(Fxaa.prototype, {
+    FxaaEffect.prototype = pc.extend(FxaaEffect.prototype, {
         render: function (inputTarget, outputTarget, rect) {
             var device = this.device;
             var scope = device.scope;
@@ -104,23 +104,23 @@ pc.extend(pc.posteffect, function () {
             this.resolution[1] = 1 / inputTarget.height;
             scope.resolve("uResolution").setValue(this.resolution);
             scope.resolve("uColorBuffer").setValue(inputTarget.colorBuffer);
-            pc.posteffect.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.fxaaShader, rect);
+            pc.drawFullscreenQuad(device, outputTarget, this.vertexBuffer, this.fxaaShader, rect);
         }
     });
 
     return {
-        Fxaa: Fxaa
+        FxaaEffect: FxaaEffect
     };
 }());
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('fxaa', function (context) {
-    var Fxaa = function (entity) {
+pc.script.create('fxaaEffect', function (context) {
+    var FxaaEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.posteffect.Fxaa(context.graphicsDevice);
+        this.effect = new pc.FxaaEffect(context.graphicsDevice);
     };
 
-    Fxaa.prototype = {
+    FxaaEffect.prototype = {
         onEnable: function () {
             this.entity.camera.postEffects.addEffect(this.effect);
         },
@@ -130,5 +130,5 @@ pc.script.create('fxaa', function (context) {
         }
     };
 
-    return Fxaa;
+    return FxaaEffect;
 });
