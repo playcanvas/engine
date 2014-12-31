@@ -83,17 +83,32 @@ pc.extend(pc, function () {
          * @function
          * @name pc.CameraComponent#screenToWorld
          * @description Convert a point from 2D screen space to 3D world space.
-         * @param {Number} x x coordinate on PlayCanvas' canvas element.
-         * @param {Number} y y coordinate on PlayCanvas' canvas element.
-         * @param {Number} z The distance from the camera in world space to create the new point.
+         * @param {Number} screenx x coordinate on PlayCanvas' canvas element.
+         * @param {Number} screeny y coordinate on PlayCanvas' canvas element.
+         * @param {Number} cameraz The distance from the camera in world space to create the new point.
          * @param {pc.Vec3} [worldCoord] 3D vector to recieve world coordinate result.
          * @returns {pc.Vec3} The world space coordinate.
          */
-        screenToWorld: function (x, y, z, worldCoord) {
+        screenToWorld: function (screenx, screeny, cameraz, worldCoord) {
             var device = this.system.context.graphicsDevice;
             var width = parseInt(device.canvas.clientWidth);
             var height = parseInt(device.canvas.clientHeight);
             return this.data.camera.screenToWorld(x, y, z, width, height, worldCoord);
+        },
+
+        /**
+         * @function
+         * @name pc.CameraComponent#worldToScreen
+         * @description Convert a point from 3D world space to 2D screen space.
+         * @param {pc.Vec3} worldCoord The world space coordinate.
+         * @param {pc.Vec3} [screenCoord] 3D vector to recieve screen coordinate result.
+         * @returns {pc.Vec3} The screen space coordinate.
+         */
+        worldToScreen: function (worldCoord, screenCoord) {
+            var device = this.system.context.graphicsDevice;
+            var width = parseInt(device.canvas.clientWidth);
+            var height = parseInt(device.canvas.clientHeight);
+            return this.data.camera.worldToScreen(worldCoord, width, height, screenCoord);
         },
 
         onSetAspectRatio: function (name, oldValue, newValue) {

@@ -60,31 +60,30 @@ pc.extend(pc, function () {
         },
 
         /**
-         * Convert a point in 3D world space to a point in 2D screen space.
-         * (0,0) is top-left
-         * @param {Vec3} point
+         * @private
+         * @function
+         * @name pc.Camera#worldToScreen
+         * @description Convert a point from 3D world space to 2D canvas pixel space.
+         * @param {pc.Vec3} worldCoord The world space coordinate to transform.
+         * @param {Number} cw The width of PlayCanvas' canvas element.
+         * @param {Number} ch The height of PlayCanvas' canvas element.
+         * @param {pc.Vec3} [screenCoord] 3D vector to recieve screen coordinate result.
+         * @returns {pc.Vec3} The screen space coordinate.
          */
-        worldToScreen: function (point) {
-            var projMat,
-                wtm = this.getWorldTransform(),
-                viewMat = wtm.clone().invert();
-                pvm = new pc.Mat4();
-                width = this._renderTarget.getWidth(),
-                height = this._renderTarget.getHeight(),
-                point2d = new pc.Vec3();
+        worldToScreen: function (worldCoord, cw, ch, screenCoord) {
+            if (screenCoord === undefined) {
+                screenCoord = new pc.Vec3();
+            }
 
-            projMat = new pc.Mat4().setPerspective(this._fov, width / height, this._nearClip, this._farClip);
-            // Create projection view matrix
-            pvm.mul2(projMat, viewMat);
+            var projMat = this.getProjectionMatrix();
+            var wtm = this._node.getWorldTransform();
+            this._viewMat.copy(wtm).invert();
+            this._viewProjMat.mul2(projMat, this._viewMat);
+            this._viewProjMat.transformPoint(worldCoord, screenCoord);
+            screenCoord.x = (screenCoord.x / screenCoord.z + 1) * 0.5 * cw;
+            screenCoord.y = (1 - screenCoord.y / screenCoord.z) * 0.5 * ch;
 
-            // transform point
-            pvm.transformPoint(point, point2d);
-
-            point2d.x = (width / 2) + (width / 2) * point2d.x;
-            point2d.y = height - ((height / 2) + (height / 2) * point2d.y);
-            point2d.z = point2d.z;
-
-            return point2d;
+            return screenCoord;
         },
 
         /**
@@ -106,9 +105,8 @@ pc.extend(pc, function () {
             }
 
             var projMat = this.getProjectionMatrix();
-            var wtm = this.getWorldTransform();
-            this._viewMat.copy(wtm);
-            this._viewMat.invert();
+            var wtm = this._node.getWorldTransform();
+            this._viewMat.copy(wtm).invert();
             this._viewProjMat.mul2(projMat, this._viewMat);
             var invViewProjMat = this._viewProjMat.clone().invert();
 
