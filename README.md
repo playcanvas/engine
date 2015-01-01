@@ -86,7 +86,7 @@ Here's a super-simple Hello World example - a spinning cube!
 </script>
 ```
 
-Want to play with the code yourself? Edit it on [CodePen](http://codepen.io/daredevildave/pen/mkazy).
+Want to play with the code yourself? Edit it on [CodePen](http://codepen.io/playcanvas/pen/NPbxMj).
 
 ## Examples
 
