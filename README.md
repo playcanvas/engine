@@ -47,27 +47,27 @@ Here's a super-simple Hello World example - a spinning cube!
 <script>
     // Create a PlayCanvas application
     var canvas = document.getElementById("application-canvas");
-    var app = new pc.fw.Application(canvas, {});
+    var app = new pc.Application(canvas, {});
     app.start();
 
     // Fill the available space at full resolution
-    app.setCanvasFillMode(pc.fw.FillMode.FILL_WINDOW);
-    app.setCanvasResolution(pc.fw.ResolutionMode.AUTO);
+    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
     // Create box entity
-    var cube = new pc.fw.Entity();
+    var cube = new pc.Entity();
     app.context.systems.model.addComponent(cube, {
         type: "box"
     });
 
     // Create camera entity
-    var camera = new pc.fw.Entity();
+    var camera = new pc.Entity();
     app.context.systems.camera.addComponent(camera, {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
 
     // Create directional light entity
-    var light = new pc.fw.Entity();
+    var light = new pc.Entity();
     app.context.systems.light.addComponent(light);
 
     // Add to hierarchy
