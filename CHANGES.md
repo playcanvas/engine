@@ -1,5 +1,13 @@
 # PlayCanvas Engine Changes
 
+### v0.163.0
+* Moved (almost) all API objects into the pc.* namespace
+* Added CameraComponent#worldToScreen
+* Initial support for loading DDS textures
+* Patch Math to add Math.log2
+* Removed pc.ForwardRenderer from the docs (internal not API)
+* Hide lots of low-level/non-API classes from the documentation
+
 ### v0.162.8
 * Removed requestAnimationFrame polyfill since browser support is now at 100%.
 * Added documentation for particlesystem component.
