@@ -93,7 +93,7 @@ pc.extend(pc, function () {
             var device = this.system.context.graphicsDevice;
             var width = parseInt(device.canvas.clientWidth);
             var height = parseInt(device.canvas.clientHeight);
-            return this.data.camera.screenToWorld(x, y, z, width, height, worldCoord);
+            return this.data.camera.screenToWorld(screenx, screeny, cameraz, width, height, worldCoord);
         },
 
         /**

@@ -125,7 +125,7 @@ pc.extend(pc, function () {
                 farW.scale(1 / w);
 
                 var alpha = z / this._farClip;
-                worldCoord.lerp(this.getPosition(), farW, alpha);
+                worldCoord.lerp(this._node.getPosition(), farW, alpha);
             } else {
                 // Calculate the screen click as a point on the far plane of the
                 // normalized device coordinate 'box' (z=1)
