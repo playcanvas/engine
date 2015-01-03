@@ -2,13 +2,12 @@ pc.extend(pc, function () {
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
-     * @param {String} name Non-unique, human readable name.
      * @property {pc.Vec3} right Vector representing the X direction of the node in world space (read only).
      * @property {pc.Vec3} up Vector representing the Y direction of the node in world space (read only).
      * @property {pc.Vec3} forward Vector representing the negative Z direction of the node in world space (read only).
      */
-    var GraphNode = function GraphNode(name) {
-        this.name = name || "Untitled"; // Non-unique human readable name
+    var GraphNode = function GraphNode() {
+        this.name = "Untitled"; // Non-unique human readable name
         this._labels = {};
 
         // Local-space properties of transform (only first 3 are settable by the user)

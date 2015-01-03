@@ -51,10 +51,9 @@ pc.extend(pc, function () {
         this.c = {}; // Component storage
         this._app = app; // store app
         if (!app) {
-            console.warn("DEPRECATED: new pc.Entity() must be passed application as first argument.");
-            this._app = pc.Application.getApplication("application-canvas");
+            this._app = pc.Application._currentApplication;
             if (!this._app) {
-                console.error("Couldn't find backup application")
+                console.error("Couldn't find current application")
             }
         }
 

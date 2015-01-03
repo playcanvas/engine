@@ -141,8 +141,10 @@ pc.extend(pc, function () {
 
         // Store application instance
         Application._applications[this.canvas.id] = this;
+        Application._currentApplication = this;
     };
 
+    Application._currentApplication = null;
     Application._applications = {};
     Application.getApplication = function (id) {
         return Application._applications[id];
@@ -313,6 +315,8 @@ pc.extend(pc, function () {
          * the next tick. Override this if you have a custom Application.
          */
         tick: function () {
+            Application._currentApplication = this;
+
             // Submit a request to queue up a new animation frame immediately
             window.requestAnimationFrame(this.tick.bind(this));
 
