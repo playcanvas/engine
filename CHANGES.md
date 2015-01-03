@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.163.1
+* [FIX] screenToWorld works again
+
 ### v0.163.0
 * Moved (almost) all API objects into the pc.* namespace
 * Added CameraComponent#worldToScreen
