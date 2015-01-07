@@ -43,7 +43,7 @@ pc.extend(pc, function () {
 
     function _getFrustumCentroid(scene, camera, farClip, centroid) {
         centroid.set(0, 0, -(farClip + camera._nearClip) * 0.5);
-        camera.getWorldTransform().transformPoint(centroid, centroid);
+        camera._node.getWorldTransform().transformPoint(centroid, centroid);
     }
 
     function _getFrustumPoints(scene, camera, farClip, points) {
@@ -139,12 +139,13 @@ pc.extend(pc, function () {
         var flags = pc.CLEARFLAG_DEPTH;
         if (!device.extDepthTexture) flags |= pc.CLEARFLAG_COLOR;
 
-        var shadowCam = new pc.CameraNode();
+        var shadowCam = new pc.Camera();
         shadowCam.setClearOptions({
             color: [1.0, 1.0, 1.0, 1.0],
             depth: 1.0,
             flags: flags
         });
+        shadowCam._node = new pc.GraphNode();
 
         return shadowCam;
     };
@@ -179,6 +180,7 @@ pc.extend(pc, function () {
     }
 
     /**
+     * @private
      * @name pc.ForwardRenderer
      * @class The forward renderer render scene objects.
      * @constructor Creates a new forward renderer object.
@@ -281,13 +283,12 @@ pc.extend(pc, function () {
             this.projId.setValue(projMat.data);
 
             // ViewInverse Matrix
-            var wtm = camera.getWorldTransform();
+            var wtm = camera._node.getWorldTransform();
             this.viewInvId.setValue(wtm.data);
 
             // View Matrix
             viewMat.copy(wtm).invert();
             this.viewId.setValue(viewMat.data);
-
 
             viewMat3.data[0] = viewMat.data[0];
             viewMat3.data[1] = viewMat.data[1];
@@ -303,13 +304,12 @@ pc.extend(pc, function () {
 
             this.viewId3.setValue(viewMat3.data);
 
-
             // ViewProjection Matrix
             viewProjMat.mul2(projMat, viewMat);
             this.viewProjId.setValue(viewProjMat.data);
 
             // View Position (world space)
-            this.viewPosId.setValue(camera.getPosition().data);
+            this.viewPosId.setValue(camera._node.getPosition().data);
 
             // Near and far clip values
             this.nearClipId.setValue(camera.getNearClip());
@@ -355,7 +355,7 @@ pc.extend(pc, function () {
 
             for (i = 0; i < numDirs; i++) {
                 var directional = dirs[i];
-                var wtm = directional.getWorldTransform();
+                var wtm = directional._node.getWorldTransform();
                 var light = "light" + i;
 
                 scope.resolve(light + "_color").setValue(scene.gammaCorrection? directional._linearFinalColor.data : directional._finalColor.data);
@@ -392,7 +392,7 @@ pc.extend(pc, function () {
 
             for (i = 0; i < numPnts; i++) {
                 point = pnts[i];
-                wtm = point.getWorldTransform();
+                wtm = point._node.getWorldTransform();
                 light = "light" + (numDirs + i);
 
                 scope.resolve(light + "_radius").setValue(point._attenuationEnd);
@@ -412,7 +412,7 @@ pc.extend(pc, function () {
 
             for (i = 0; i < numSpts; i++) {
                 spot = spts[i];
-                wtm = spot.getWorldTransform();
+                wtm = spot._node.getWorldTransform();
                 light = "light" + (numDirs + numPnts + i);
 
                 scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
@@ -437,11 +437,12 @@ pc.extend(pc, function () {
         },
 
         /**
+         * @private
          * @function
          * @name pc.ForwardRenderer#render
          * @description Renders the scene using the specified camera.
          * @param {pc.Scene} scene The scene to render.
-         * @param {pc.CameraNode} camera The camera with which to render the scene.
+         * @param {pc.Camera} camera The camera with which to render the scene.
          */
         render: function (scene, camera) {
             var device = this.device;
@@ -487,7 +488,7 @@ pc.extend(pc, function () {
             }
 
             // Calculate the distance of transparent meshes from the camera
-            var camPos = camera.getPosition();
+            var camPos = camera._node.getPosition();
             for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                 drawCall = drawCalls[i];
                 if (!drawCall.command) {
@@ -572,17 +573,17 @@ pc.extend(pc, function () {
                         // direction of the light by a certain amount. This will be our temporary
                         // working position.
                         _getFrustumCentroid(scene, camera, shadowDistance, this.centroid);
-                        shadowCam.setPosition(this.centroid);
-                        shadowCam.setRotation(light.getRotation());
+                        shadowCam._node.setPosition(this.centroid);
+                        shadowCam._node.setRotation(light._node.getRotation());
                         // Camera's look down negative Z, and directional lights point down negative Y
-                        shadowCam.rotateLocal(-90, 0, 0);
+                        shadowCam._node.rotateLocal(-90, 0, 0);
 
                         // 2. Transform the 8 corners of the camera frustum into the shadow camera's
                         // view space
                         _getFrustumPoints(scene, camera, shadowDistance, frustumPoints);
-                        shadowCamWtm.copy(shadowCam.getWorldTransform());
+                        shadowCamWtm.copy(shadowCam._node.getWorldTransform());
                         var worldToShadowCam = shadowCamWtm.invert();
-                        var camToWorld = camera.worldTransform;
+                        var camToWorld = camera._node.worldTransform;
                         c2sc.mul2(worldToShadowCam, camToWorld);
                         for (j = 0; j < 8; j++) {
                             c2sc.transformPoint(frustumPoints[j], frustumPoints[j]);
@@ -604,8 +605,8 @@ pc.extend(pc, function () {
                         }
 
                         // 4. Use your min and max values to create an off-center orthographic projection.
-                        shadowCam.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
-                        shadowCamWtm.copy(shadowCam.getWorldTransform());
+                        shadowCam._node.translateLocal(-(maxx + minx) * 0.5, (maxy + miny) * 0.5, maxz + (maxz - minz) * 0.25);
+                        shadowCamWtm.copy(shadowCam._node.getWorldTransform());
 
                         shadowCam.setProjection(pc.PROJECTION_ORTHOGRAPHIC);
                         shadowCam.setNearClip(0);
@@ -619,7 +620,7 @@ pc.extend(pc, function () {
                         shadowCam.setAspectRatio(1);
                         shadowCam.setFov(light.getOuterConeAngle() * 2);
 
-                        var lightWtm = light.worldTransform;
+                        var lightWtm = light._node.worldTransform;
                         shadowCamWtm.mul2(lightWtm, camToLight);
                     } else if (type === pc.LIGHTTYPE_POINT) {
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
@@ -629,7 +630,7 @@ pc.extend(pc, function () {
                         shadowCam.setFov(90);
 
                         passes = 6;
-                        this.viewPosId.setValue(shadowCam.getPosition().data);
+                        this.viewPosId.setValue(shadowCam._node.getPosition().data);
                         this.lightRadiusId.setValue(light.getAttenuationEnd());
                     }
 
@@ -639,26 +640,26 @@ pc.extend(pc, function () {
                         light._shadowMatrix.mul2(scaleShift, shadowCamViewProj);
 
                         // Point the camera along direction of light
-                        shadowCam.worldTransform.copy(shadowCamWtm);
+                        shadowCam._node.worldTransform.copy(shadowCamWtm);
                     }
 
                     for(pass=0; pass<passes; pass++){
 
                         if (type === pc.LIGHTTYPE_POINT) {
                             if (pass===0) {
-                                shadowCam.setEulerAngles(0, 90, 180);
+                                shadowCam._node.setEulerAngles(0, 90, 180);
                             } else if (pass===1) {
-                                shadowCam.setEulerAngles(0, -90, 180);
+                                shadowCam._node.setEulerAngles(0, -90, 180);
                             } else if (pass===2) {
-                                shadowCam.setEulerAngles(90, 0, 0);
+                                shadowCam._node.setEulerAngles(90, 0, 0);
                             } else if (pass===3) {
-                                shadowCam.setEulerAngles(-90, 0, 0);
+                                shadowCam._node.setEulerAngles(-90, 0, 0);
                             } else if (pass===4) {
-                                shadowCam.setEulerAngles(0, 180, 180);
+                                shadowCam._node.setEulerAngles(0, 180, 180);
                             } else if (pass===5) {
-                                shadowCam.setEulerAngles(0, 0, 180);
+                                shadowCam._node.setEulerAngles(0, 0, 180);
                             }
-                            shadowCam.setPosition(light.getPosition());
+                            shadowCam._node.setPosition(light._node.getPosition());
                             shadowCam.setRenderTarget(light._shadowCubeMap[pass]);
                         }
 

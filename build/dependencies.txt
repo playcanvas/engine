@@ -64,8 +64,8 @@
 ../src/scene/scene_scene.js
 ../src/scene/scene_forwardrenderer.js
 ../src/scene/scene_graphnode.js
-../src/scene/scene_cameranode.js
-../src/scene/scene_lightnode.js
+../src/scene/scene_camera.js
+../src/scene/scene_light.js
 ../src/scene/scene_material.js
 ../src/scene/scene_basicmaterial.js
 ../src/scene/scene_depthmaterial.js
