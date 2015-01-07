@@ -913,7 +913,7 @@ pc.extend(pc, function() {
 
                 // Particle updater emulation
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
-                var posCam = this.camera ? this.camera._node.position : pc.Vec3.ZERO;
+                var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
                 var vertSize = 14;
                 for (i = 0; i < this.numParticles; i++) {
