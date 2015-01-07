@@ -34,6 +34,7 @@ pc.extend(pc, function () {
      * @property {pc.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
      * color in preference to the 'emissive' property.
+     * @property {Number} emissiveIntensity Emissive color multiplier.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
@@ -55,11 +56,10 @@ pc.extend(pc, function () {
      * pixels are lower and lighter pixels are higher.
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map.
-     * @property {Number} heightMapFactor Height map multiplier.
-     * @property {Number} emissiveIntensity Emissive color multiplier.
-     * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
-     * the bump map and 1 results in a full contribution.
+     * @property {Number} bumpiness The bumpiness of the material. This value scales the assigned normal map
+     * and can be between 0 and 1, where 0 shows no contribution from the normal map and 1 results in a full contribution.
+     * @property {Number} heightMapFactor Height map multiplier. Height maps are used to create a parallax mapping effect
+     * and modifying this value will alter the strength of the parallax effect.
      * @property {pc.Texture} sphereMap The spherical environment map of the material.
      * @property {pc.Texture} cubeMap The cubic environment map of the material.
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and
