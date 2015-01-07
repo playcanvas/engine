@@ -134,20 +134,28 @@ pc.extend(pc.resources, function () {
 
             var width = header[4];
             var height = header[3];
-            var mips = header[7];
+            var mips = Math.max(header[7], 1);
             var isFourCc = header[20] === 4;
             var fcc = header[21];
             var bpp = header[22];
 
             var fccDxt1 = 827611204; // DXT1
             var fccDxt5 = 894720068; // DXT5
+            var fccFp32 = 116; // RGBA32f
 
             var format = null;
+            var compressed = false;
+            var floating = false;
             if (isFourCc) {
                 if (fcc===fccDxt1) {
                     format = pc.PIXELFORMAT_DXT1;
+                    compressed = true;
                 } else if (fcc===fccDxt5) {
                     format = pc.PIXELFORMAT_DXT5;
+                    compressed = true;
+                } else if (fcc===fccFp32) {
+                    format = pc.PIXELFORMAT_RGBA32F;
+                    floating = true;
                 }
             } else {
                 if (bpp===32) {
@@ -156,7 +164,7 @@ pc.extend(pc.resources, function () {
             }
 
             var requiredMips = Math.round(Math.log2(Math.max(width, height)) + 1);
-            var cantLoad = !format || (mips !== requiredMips && isFourCc);
+            var cantLoad = !format || (mips !== requiredMips && compressed);
             if (cantLoad) {
                 var errEnd = ". Empty texture will be created instead.";
                 if (!format) {
@@ -179,7 +187,7 @@ pc.extend(pc.resources, function () {
             };
             texture = new pc.Texture(this._device, texOptions);
 
-            var offset = 128;
+            var offset = floating? 128/4 : 128;
             var mipWidth = width;
             var mipHeight = height;
             var mipSize;
@@ -188,7 +196,7 @@ pc.extend(pc.resources, function () {
             var kBlockSize = fcc===fccDxt1? 8 : 16;
             var numBlocksAcross, numBlocksDown;
             for(var i=0; i<mips; i++) {
-                if (isFourCc) {
+                if (compressed) {
                     numBlocksAcross = Math.floor((mipWidth + kBlockWidth - 1) / kBlockWidth);
                     numBlocksDown = Math.floor((mipHeight + kBlockHeight - 1) / kBlockHeight);
                     numBlocks = numBlocksAcross * numBlocksDown;
@@ -197,7 +205,7 @@ pc.extend(pc.resources, function () {
                     mipSize = mipWidth * mipHeight * 4;
                 }
 
-                texture._levels[i] = new Uint8Array(data, offset, mipSize);
+                texture._levels[i] = floating? new Float32Array(data, offset, mipSize) : new Uint8Array(data, offset, mipSize);
                 offset += mipSize;
                 mipWidth = Math.max(mipWidth * 0.5, 1);
                 mipHeight = Math.max(mipHeight * 0.5, 1);
