@@ -63,7 +63,7 @@ pc.programlib.phong = {
         var varyings = ""; // additional varyings for map transforms
 
         var chunks = pc.shaderChunks;
-        code += chunks.baseVS;
+        code += chunks.baseVS.replace(/\$sharedUniform/g, "uniform " + device.precision);
 
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
