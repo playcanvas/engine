@@ -41,8 +41,6 @@ pc.programlib.depthrgba = {
         }
 
         if (options.point) {
-            code += 'uniform vec3 view_position;\n\n';
-            code += 'uniform float light_radius;\n\n';
             code += 'varying vec3 worldPos;\n\n';
         }
 
