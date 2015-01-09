@@ -764,9 +764,11 @@ pc.extend(pc, function () {
                 this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
             }
 
-            // backwards compatibility
-            for(i=0; i<mips.length; i++) {
-                if (mips[i].hdr) mips[i].rgbm = mips[i].fixCubemapSeams = true;
+            if (prefilteredCubeMap) {
+                // backwards compatibility
+                for(i=0; i<mips.length; i++) {
+                    if (mips[i].hdr) mips[i].rgbm = mips[i].fixCubemapSeams = true;
+                }
             }
 
             var options = {
