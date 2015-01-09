@@ -22,10 +22,14 @@ pc.extend(pc, (function () {
         var targ;
         var i, face, pass;
 
+        var unblurredGloss = method===0? 1 : 2048;
+        var startPass = method===0? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
+        cmapsList[startPass] = [];
+
         // Initialize textures
         for(i=0; i<mips; i++) {
-            for(pass=0; pass<cmapsList.length; pass++) {
-                if (cmapsList[pass]!=null) {
+            for(pass=startPass; pass<cmapsList.length; pass++) {
+                if (cmapsList[pass]!=null || pass<0) {
                     cmapsList[pass][i] = new pc.gfx.Texture(device, {
                         cubemap: true,
                         rgbm: pass<2? rgbmSource : true,
@@ -44,11 +48,12 @@ pc.extend(pc, (function () {
         }
 
         // Filter
+        // [Prepass]: just downsample
         // Pass 0: just filter
         // Pass 1: filter + edge fixup
         // Pass 2: filter + encode to RGBM
         // Pass 3: filter + edge fixup + encode to RGBM
-        for(pass=0; pass<cmapsList.length; pass++) {
+        for(pass=startPass; pass<cmapsList.length; pass++) {
             if (cmapsList[pass]!=null) {
                 if (pass>1 && rgbmSource) {
                     // already RGBM
@@ -62,10 +67,11 @@ pc.extend(pc, (function () {
                             depth: false
                         });
                         params.x = face;
-                        params.y = gloss[i];
+                        params.y = pass<0? unblurredGloss : gloss[i];
                         params.z = mipSize[i];
                         params.w = pass;
-                        constantTexSource.setValue(i===0? sourceCubemap : cmapsList[0][i - 1]);
+                        constantTexSource.setValue(i===0? sourceCubemap :
+                            method===0? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
                         constantParams.setValue(params.data);
 
                         if (chromeFix) {
