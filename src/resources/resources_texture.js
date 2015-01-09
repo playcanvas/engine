@@ -187,7 +187,7 @@ pc.extend(pc.resources, function () {
             };
             texture = new pc.Texture(this._device, texOptions);
 
-            var offset = floating? 128/4 : 128;
+            var offset = 128;
             var mipWidth = width;
             var mipHeight = height;
             var mipSize;
@@ -206,7 +206,7 @@ pc.extend(pc.resources, function () {
                 }
 
                 texture._levels[i] = floating? new Float32Array(data, offset, mipSize) : new Uint8Array(data, offset, mipSize);
-                offset += mipSize;
+                offset += floating? mipSize * 4 : mipSize;
                 mipWidth = Math.max(mipWidth * 0.5, 1);
                 mipHeight = Math.max(mipHeight * 0.5, 1);
             }

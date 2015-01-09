@@ -28,7 +28,8 @@ pc.extend(pc, function () {
         var format = pc.PIXELFORMAT_R8_G8_B8_A8;
         var cubemap = false;
         var autoMipmap = true;
-        var hdr = false;
+        var rgbm = false;
+        var fixCubemapSeams = false;
 
         if (options !== undefined) {
             width = (options.width !== undefined) ? options.width : width;
@@ -36,13 +37,15 @@ pc.extend(pc, function () {
             format = (options.format !== undefined) ? options.format : format;
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
             autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : autoMipmap;
-            hdr = (options.hdr !== undefined)? options.hdr : hdr;
+            rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
+            fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
         }
 
         // PUBLIC
         this.name = null;
         this.autoMipmap = autoMipmap;
-        this.hdr = hdr;
+        this.rgbm = rgbm;
+        this.fixCubemapSeams = fixCubemapSeams;
 
         // PRIVATE
         this._cubemap = cubemap;

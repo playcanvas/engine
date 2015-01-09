@@ -39,7 +39,8 @@ pc.programlib.phong = {
     createShaderDefinition: function (device, options) {
         var i;
         var lighting = options.lights.length > 0;
-        var reflections = options.cubeMap || options.sphereMap || options.prefilteredCubemap;
+        var cubemapReflection = options.cubeMap || options.prefilteredCubemap;
+        var reflections = options.sphereMap || cubemapReflection;
         var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
         if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
@@ -63,7 +64,7 @@ pc.programlib.phong = {
         var varyings = ""; // additional varyings for map transforms
 
         var chunks = pc.shaderChunks;
-        code += chunks.baseVS.replace(/\$sharedUniform/g, "uniform " + device.precision);
+        code += chunks.baseVS;
 
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
@@ -222,7 +223,8 @@ pc.programlib.phong = {
             code += chunks.fogNonePS;
         }
 
-        if (options.hdrReflection) code += chunks.rgbmPS;
+        if (options.rgbmReflection) code += chunks.rgbmPS;
+        if (cubemapReflection) code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
 
         if (options.diffuseMap) {
             var uv = this._uvSource(options.diffuseMapTransform) + uvOffset
@@ -308,13 +310,14 @@ pc.programlib.phong = {
                     code += chunks.reflectionPrefilteredCubePS;
                 }
             } else {
-                code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g, options.hdrReflection? "textureCubeRGBM" : "textureCubeSRGB");
+                code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
+                    options.rgbmReflection? "textureCubeRGBM" : (options.hdrReflection? "textureCube" : "textureCubeSRGB"));
             }
         }
 
         if (options.sphereMap) {
             var scode = device.fragmentUniformsCount>16? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            scode = scode.replace(/\$texture2DSAMPLE/g, options.hdrReflection? "texture2DRGBM" : "texture2DSRGB");
+            scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
             code += scode;
         }
 

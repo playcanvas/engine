@@ -1,6 +1,6 @@
 pc.programlib.skybox = {
     generateKey: function (device, options) {
-        var key = "skybox" + options.hdr + options.prefiltered + "" + options.toneMapping + "" + options.gamma;
+        var key = "skybox" + options.rgbm + " " + options.hdr + " " + options.fixSeams + "" + options.toneMapping + "" + options.gamma;
         return key;
     },
 
@@ -35,8 +35,10 @@ pc.programlib.skybox = {
                 '}'
             ].join('\n'),
             fshader: getSnippet(device, 'fs_precision') +
+                (options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) +
                 (options.hdr? chunks.defaultGamma + chunks.defaultTonemapping + chunks.rgbmPS +
-                (options.prefiltered? chunks.skyboxPrefilteredCubePS : chunks.skyboxHDRPS) : chunks.skyboxPS)
+                 chunks.skyboxHDRPS.replace(/\$textureCubeSAMPLE/g,
+                    options.rgbm? "textureCubeRGBM" : (options.hdr? "textureCube" : "textureCubeSRGB")) : chunks.skyboxPS)
         }
     }
 };

@@ -660,9 +660,11 @@ pc.extend(pc, function () {
 
             if (this.cubeMap) {
                 this.setParameter('texture_cubeMap', this.cubeMap);
+                this.setParameter('material_cubemapSize', this.cubeMap.width);
             }
             if (this.prefilteredCubeMap128) {
                 this.setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
+                this.setParameter('material_cubemapSize', this.prefilteredCubeMap128.width);
             }
             if (this.prefilteredCubeMap64) {
                 this.setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
@@ -796,7 +798,13 @@ pc.extend(pc, function () {
                 aoUvSet:                    this.aoUvSet,
                 useSpecular:                (!!this.specularMap) || !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0)
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
-                hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
+                rgbmReflection:             prefilteredCubeMap? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false)),
+
+                hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
+                                          : (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F
+                                          : (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.pc.PIXELFORMAT_RGBA32F : false)),
+
+                fixSeams:                   prefilteredCubeMap? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         prefilteredCubeMap,
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
