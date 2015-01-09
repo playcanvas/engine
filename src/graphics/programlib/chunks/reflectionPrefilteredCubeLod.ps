@@ -8,7 +8,7 @@ void addCubemapReflection(inout psInternalData data) {
     float bias = saturate(1.0 - data.glossiness) * 5.0; // multiply by max mip level
     vec3 fixedReflDir = fixSeams(data.reflDirW, bias);
 
-    vec3 refl = decodeRGBM( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) );
+    vec3 refl = $DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb;
 
     data.reflection += vec4(refl, material_reflectionFactor);
 }

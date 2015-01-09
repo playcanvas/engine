@@ -741,12 +741,12 @@ pc.extend(pc, function () {
             var prefilteredCubeMap = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
                                    && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
 
+            var mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
             if (prefilteredCubeMap && device.extTextureLod && device.samplerCount < 16) {
                 // Set up hires texture to contain the whole mip chain
                 if (!prefilteredCubeMap128._prefilteredMips) {
                     prefilteredCubeMap128.autoMipmap = false;
                     var mip, face;
-                    var mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
                     for(mip=1; mip<6; mip++) {
                         prefilteredCubeMap128._levels[mip] = mips[mip]._levels[0];
                     }
@@ -762,6 +762,11 @@ pc.extend(pc, function () {
                 this.setParameter('texture_prefilteredCubeMap16', scene._prefilteredCubeMap16);
                 this.setParameter('texture_prefilteredCubeMap8', scene._prefilteredCubeMap8);
                 this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
+            }
+
+            // backwards compatibility
+            for(i=0; i<mips.length; i++) {
+                if (mips[i].hdr) mips[i].rgbm = mips[i].fixCubemapSeams = true;
             }
 
             var options = {

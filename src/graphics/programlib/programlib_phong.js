@@ -302,12 +302,15 @@ pc.programlib.phong = {
             code += chunks.parallaxPS.replace(/\$UV/g, this._uvSource(options.heightMapTransform));
         }
 
+        var reflectionDecode = options.rgbmReflection? "decodeRGBM" : (options.hdrReflection? "" : "gammaCorrectInput");
+
         if (options.cubeMap) {
             if (options.prefilteredCubemap) {
                 if (useTexCubeLod) {
-                    code += chunks.reflectionPrefilteredCubeLodPS;
+                    code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
+
                 } else {
-                    code += chunks.reflectionPrefilteredCubePS;
+                    code += chunks.reflectionPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
                 }
             } else {
                 code += chunks.reflectionCubePS.replace(/\$textureCubeSAMPLE/g,
@@ -332,9 +335,9 @@ pc.programlib.phong = {
 
         if (options.prefilteredCubemap) {
             if (useTexCubeLod) {
-                code += chunks.ambientPrefilteredCubeLodPS;
+                code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
             } else {
-                code += chunks.ambientPrefilteredCubePS;
+                code += chunks.ambientPrefilteredCubePS.replace(/\$DECODE/g, reflectionDecode);
             }
         } else {
             code += chunks.ambientConstantPS;
