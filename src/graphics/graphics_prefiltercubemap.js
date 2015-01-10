@@ -29,7 +29,7 @@ pc.extend(pc, (function () {
         // Initialize textures
         for(i=0; i<mips; i++) {
             for(pass=startPass; pass<cmapsList.length; pass++) {
-                if (cmapsList[pass]!=null || pass<0) {
+                if (cmapsList[pass]!=null) {
                     cmapsList[pass][i] = new pc.gfx.Texture(device, {
                         cubemap: true,
                         rgbm: pass<2? rgbmSource : true,
