@@ -28,7 +28,9 @@ pc.extend(pc, function () {
         var format = pc.PIXELFORMAT_R8_G8_B8_A8;
         var cubemap = false;
         var autoMipmap = true;
-        var hdr = false;
+        var rgbm = false;
+        var fixCubemapSeams = false;
+        var hdr = false; // deprecated property, only for backwards compatibility
 
         if (options !== undefined) {
             width = (options.width !== undefined) ? options.width : width;
@@ -36,12 +38,16 @@ pc.extend(pc, function () {
             format = (options.format !== undefined) ? options.format : format;
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
             autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : autoMipmap;
+            rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
             hdr = (options.hdr !== undefined)? options.hdr : hdr;
+            fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
         }
 
         // PUBLIC
         this.name = null;
         this.autoMipmap = autoMipmap;
+        this.rgbm = rgbm;
+        this.fixCubemapSeams = fixCubemapSeams;
         this.hdr = hdr;
 
         // PRIVATE

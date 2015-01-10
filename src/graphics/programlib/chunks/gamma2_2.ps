@@ -6,6 +6,10 @@ float gammaCorrectInput(float color) {
     return pow(color, 2.2);
 }
 
+vec4 gammaCorrectInput(vec4 color) {
+    return vec4(pow(color.rgb, vec3(2.2)), color.a);
+}
+
 vec4 texture2DSRGB(sampler2D tex, vec2 uv) {
     vec4 rgba = texture2D(tex, uv);
     rgba.rgb = gammaCorrectInput(rgba.rgb);

@@ -265,12 +265,15 @@ pc.extend(pc, function () {
             var scene = this;
             material.updateShader = function() {
                 var library = device.getProgramLibrary();
-                var shader = library.getProgram('skybox', {hdr:scene._skyboxCubeMap.hdr, prefiltered:scene._skyboxCubeMap.hdr, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
+                var shader = library.getProgram('skybox', {rgbm:scene._skyboxCubeMap.rgbm,
+                    hdr:(scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
+                    fixSeams:scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
                 this.setShader(shader);
             };
 
             material.updateShader();
             material.setParameter("texture_cubeMap", this._skyboxCubeMap);
+            material.setParameter('material_cubemapSize', this._skyboxCubeMap.width);
             material.cull = pc.CULLFACE_NONE;
 
             var node = new pc.GraphNode();
