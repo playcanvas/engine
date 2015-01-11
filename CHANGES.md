@@ -1,5 +1,11 @@
 # PlayCanvas Engine Changes
 
+### v0.163.2
+* GPU cubemap prefiltering.
+* Support for loading RGBA32F DDS textures.
+* [FIX] CPU particles work with new engine changes.
+* [FIX] GLSL for mediump devices.
+
 ### v0.163.1
 * [FIX] screenToWorld works again
 
