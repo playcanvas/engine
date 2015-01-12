@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.163.3
+* [FIX] Hotfix - Cannot read property 'PIXELFORMAT_RGBA32F' of undefined
+
 ### v0.163.2
 * GPU cubemap prefiltering.
 * Support for loading RGBA32F DDS textures.
