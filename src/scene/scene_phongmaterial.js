@@ -809,7 +809,7 @@ pc.extend(pc, function () {
 
                 hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
                                           : (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F
-                                          : (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.pc.PIXELFORMAT_RGBA32F : false)),
+                                          : (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false)),
 
                 fixSeams:                   prefilteredCubeMap? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         prefilteredCubeMap,
