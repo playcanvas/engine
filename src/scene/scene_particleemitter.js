@@ -91,8 +91,6 @@ pc.extend(pc, function() {
     var rotMat = new pc.Mat4();
     var spawnMatrix3 = new pc.Mat3();
     var emitterMatrix3 = new pc.Mat3();
-    var viewMat = new pc.Mat4();
-    var viewProjMat = new pc.Mat4();
     var uniformScale = 1;
     var nonUniformScale;
     var spawnMatrix = new pc.Mat4();
@@ -915,14 +913,7 @@ pc.extend(pc, function() {
 
                 // Particle updater emulation
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO : this.meshInstance.node.getPosition();
-                var posCam = this.camera ? this.camera.position : pc.Vec3.ZERO;
-                if (this.camera) {
-                    var projMat = this.camera.getProjectionMatrix();
-                    var wtm = this.camera.getWorldTransform();
-                    viewMat.copy(wtm);
-                    viewMat.invert();
-                    viewProjMat.mul2(projMat, viewMat);
-                }
+                var posCam = this.camera ? this.camera._node.getPosition() : pc.Vec3.ZERO;
 
                 var vertSize = 14;
                 for (i = 0; i < this.numParticles; i++) {

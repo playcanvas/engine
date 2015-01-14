@@ -34,6 +34,7 @@ pc.extend(pc, function () {
      * @property {pc.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
      * than a cube map. If this property is set to a valid texture, the texture is used as the source for emissive
      * color in preference to the 'emissive' property.
+     * @property {Number} emissiveIntensity Emissive color multiplier.
      * @property {pc.Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
      * @property {pc.Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is between 0 and 1.
      * @property {Number} opacity The opacity of the material. This value can be between 0 and 1, where 0 is fully
@@ -55,11 +56,10 @@ pc.extend(pc, function () {
      * pixels are lower and lighter pixels are higher.
      * @property {pc.Vec2} heightMapTiling Controls the 2D tiling of the height map.
      * @property {pc.Vec2} heightMapOffset Controls the 2D offset of the height map. Each component is between 0 and 1.
-     * @property {Number} bumpiness The bumpiness of the material. This value scales the assinged bump map.
-     * @property {Number} heightMapFactor Height map multiplier.
-     * @property {Number} emissiveIntensity Emissive color multiplier.
-     * (be that a normal map or a height map) and can be between 0 and 1, where 0 shows no contribution from
-     * the bump map and 1 results in a full contribution.
+     * @property {Number} bumpiness The bumpiness of the material. This value scales the assigned normal map
+     * and can be between 0 and 1, where 0 shows no contribution from the normal map and 1 results in a full contribution.
+     * @property {Number} heightMapFactor Height map multiplier. Height maps are used to create a parallax mapping effect
+     * and modifying this value will alter the strength of the parallax effect.
      * @property {pc.Texture} sphereMap The spherical environment map of the material.
      * @property {pc.Texture} cubeMap The cubic environment map of the material.
      * @property {Number} reflectivity The reflectivity of the material. This value scales the reflection map and
@@ -660,9 +660,11 @@ pc.extend(pc, function () {
 
             if (this.cubeMap) {
                 this.setParameter('texture_cubeMap', this.cubeMap);
+                this.setParameter('material_cubemapSize', this.cubeMap.width);
             }
             if (this.prefilteredCubeMap128) {
                 this.setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
+                this.setParameter('material_cubemapSize', this.prefilteredCubeMap128.width);
             }
             if (this.prefilteredCubeMap64) {
                 this.setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
@@ -739,12 +741,12 @@ pc.extend(pc, function () {
             var prefilteredCubeMap = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
                                    && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
 
+            var mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
             if (prefilteredCubeMap && device.extTextureLod && device.samplerCount < 16) {
                 // Set up hires texture to contain the whole mip chain
                 if (!prefilteredCubeMap128._prefilteredMips) {
                     prefilteredCubeMap128.autoMipmap = false;
                     var mip, face;
-                    var mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
                     for(mip=1; mip<6; mip++) {
                         prefilteredCubeMap128._levels[mip] = mips[mip]._levels[0];
                     }
@@ -760,6 +762,13 @@ pc.extend(pc, function () {
                 this.setParameter('texture_prefilteredCubeMap16', scene._prefilteredCubeMap16);
                 this.setParameter('texture_prefilteredCubeMap8', scene._prefilteredCubeMap8);
                 this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
+            }
+
+            if (prefilteredCubeMap) {
+                // backwards compatibility
+                for(i=0; i<mips.length; i++) {
+                    if (mips[i].hdr) mips[i].rgbm = mips[i].fixCubemapSeams = true;
+                }
             }
 
             var options = {
@@ -796,7 +805,13 @@ pc.extend(pc, function () {
                 aoUvSet:                    this.aoUvSet,
                 useSpecular:                (!!this.specularMap) || !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0)
                                             || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
-                hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.hdr : (this.cubeMap? this.cubeMap.hdr : (this.sphereMap? this.sphereMap.hdr : false)),
+                rgbmReflection:             prefilteredCubeMap? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false)),
+
+                hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
+                                          : (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F
+                                          : (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false)),
+
+                fixSeams:                   prefilteredCubeMap? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         prefilteredCubeMap,
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,

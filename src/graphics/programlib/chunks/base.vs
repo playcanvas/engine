@@ -10,7 +10,6 @@ attribute vec4 vertex_color;
 uniform mat4 matrix_viewProjection;
 uniform mat4 matrix_model;
 uniform mat3 matrix_normal;
-uniform vec3 view_position;
 
 varying vec3 vPositionW;
 varying vec3 vNormalW;
