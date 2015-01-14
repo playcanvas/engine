@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.163.4
+* [FIX] Add light property to light component schema.
+
 ### v0.163.3
 * [FIX] Hotfix - Cannot read property 'PIXELFORMAT_RGBA32F' of undefined
 
