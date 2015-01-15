@@ -140,21 +140,21 @@ pc.extend(pc.resources, function () {
             var bpp = header[22];
             var isCubemap = header[28] === 65024; // TODO: check by bitflag
 
-            var fccDxt1 = 827611204; // DXT1
-            var fccDxt5 = 894720068; // DXT5
-            var fccFp32 = 116; // RGBA32f
+            var FCC_DXT1 = 827611204; // DXT1
+            var FCC_DXT5 = 894720068; // DXT5
+            var FCC_FP32 = 116; // RGBA32f
 
             var format = null;
             var compressed = false;
             var floating = false;
             if (isFourCc) {
-                if (fcc===fccDxt1) {
+                if (fcc===FCC_DXT1) {
                     format = pc.PIXELFORMAT_DXT1;
                     compressed = true;
-                } else if (fcc===fccDxt5) {
+                } else if (fcc===FCC_DXT5) {
                     format = pc.PIXELFORMAT_DXT5;
                     compressed = true;
-                } else if (fcc===fccFp32) {
+                } else if (fcc===FCC_FP32) {
                     format = pc.PIXELFORMAT_RGBA32F;
                     floating = true;
                 }
@@ -192,19 +192,19 @@ pc.extend(pc.resources, function () {
             var offset = 128;
             var faces = isCubemap? 6 : 1;
             var mipSize;
-            var kBlockWidth = 4;
-            var kBlockHeight = 4;
-            var kBlockSize = fcc===fccDxt1? 8 : 16;
+            var DXT_BLOCK_WIDTH = 4;
+            var DXT_BLOCK_HEIGHT = 4;
+            var blockSize = fcc===FCC_DXT1? 8 : 16;
             var numBlocksAcross, numBlocksDown;
             for(var face=0; face<faces; face++) {
                 var mipWidth = width;
                 var mipHeight = height;
                 for(var i=0; i<mips; i++) {
                     if (compressed) {
-                        numBlocksAcross = Math.floor((mipWidth + kBlockWidth - 1) / kBlockWidth);
-                        numBlocksDown = Math.floor((mipHeight + kBlockHeight - 1) / kBlockHeight);
+                        numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
+                        numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
                         numBlocks = numBlocksAcross * numBlocksDown;
-                        mipSize = numBlocks * kBlockSize;
+                        mipSize = numBlocks * blockSize;
                     } else {
                         mipSize = mipWidth * mipHeight * 4;
                     }

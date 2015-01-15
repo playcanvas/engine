@@ -394,25 +394,45 @@ pc.extend(pc, function () {
             var buff = new ArrayBuffer(fsize);
             var header = new Uint32Array(buff, 0, 128 / 4);
 
-            header[0] = 542327876;
-            header[1] = 124;
-            header[2] = this._levels.length===1? 528391 : 659463;
+            var DDS_MAGIC = 542327876; // "DDS"
+            var DDS_HEADER_SIZE = 124;
+            var DDS_FLAGS_REQUIRED = 0x01 | 0x02 | 0x04 | 0x1000 | 0x80000; // caps | height | width | pixelformat | linearsize
+            var DDS_FLAGS_MIPMAP = 0x20000;
+            var DDS_PIXELFORMAT_SIZE = 32;
+            var DDS_PIXELFLAGS_RGBA8 = 0x01 | 0x40; // alpha | rgb
+            var DDS_CAPS_REQUIRED = 0x1000;
+            var DDS_CAPS_MIPMAP = 0x400000;
+            var DDS_CAPS_COMPLEX = 0x8;
+            var DDS_CAPS2_CUBEMAP = 0x200 | 0x400 | 0x800 | 0x1000 | 0x2000 | 0x4000 | 0x8000; // cubemap | all faces
+
+            var flags = DDS_FLAGS_REQUIRED;
+            if (this._levels.length > 1) flags |= DDS_FLAGS_MIPMAP;
+
+            var caps = DDS_CAPS_REQUIRED;
+            if (this._levels.length > 1) caps |= DDS_CAPS_MIPMAP;
+            if (this._levels.length > 1 || this.cubemap) caps |= DDS_CAPS_COMPLEX;
+
+            var caps2 = this.cubemap? DDS_CAPS2_CUBEMAP : 0;
+
+            header[0] = DDS_MAGIC;
+            header[1] = DDS_HEADER_SIZE;
+            header[2] = flags;
             header[3] = this.height;
             header[4] = this.width;
             header[5] = this.width * this.height * 4;
-            header[6] = 0;
+            header[6] = 0; // depth
             header[7] = this._levels.length;
             for(i=0; i<11; i++) header[8 + i] = 0;
-            header[19] = 32;
-            header[20] = 65;
-            header[21] = 0;
-            header[22] = 32;
-            header[23] = 16711680;
-            header[24] = 65280;
-            header[25] = 255;
-            header[26] = 4278190080;
-            header[27] = this._levels.length===1? 4096 : 4198408;
-            header[28] = this.cubemap? 65024 : 0;
+            header[19] = DDS_PIXELFORMAT_SIZE;
+            header[20] = DDS_PIXELFLAGS_RGBA8;
+            header[21] = 0; // fourcc
+            header[22] = 32; // bpp
+            header[23] = 0x00FF0000; // R mask
+            header[24] = 0x0000FF00; // G mask
+            header[25] = 0x000000FF; // B mask
+            header[26] = 0xFF000000; // A mask
+            header[27] = caps;
+            header[28] = caps2;
             header[29] = 0;
             header[30] = 0;
             header[31] = 0;
