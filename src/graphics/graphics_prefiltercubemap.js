@@ -1,13 +1,40 @@
 pc.extend(pc, (function () {
     'use strict';
 
-    function prefilterCubemap(device, sourceCubemap, method, samples, options, chromeFix) {
+    function fixChrome() {
+        // https://code.google.com/p/chromium/issues/detail?id=447419
+        // Workaround: wait a little
+        var endTime = Date.now() + 10;
+        while(Date.now() < endTime);
+    }
+
+    function syncToCpu(device, targ, face) {
+        var tex = targ._colorBuffer;
+        if (tex.format!=pc.PIXELFORMAT_R8_G8_B8_A8) return;
+        var pixels = new Uint8Array(tex.width * tex.height * 4);
+        var gl = device.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, targ._glFrameBuffer);
+        gl.readPixels(0, 0, tex.width, tex.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        if (!tex._levels) tex._levels = [];
+        if (!tex._levels[0]) tex._levels[0] = [];
+        tex._levels[0][face] = pixels;
+    }
+
+    function prefilterCubemap(options) {
+        var device = options.device;
+        var sourceCubemap = options.sourceCubemap;
+        var method = options.method;
+        var samples = options.samples;
+        var cpuSync = options.cpuSync;
+        var chromeFix = options.chromeFix;
+
         var chunks = pc.shaderChunks;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
             chunks.prefilterCubemapPS.
                 replace(/\$METHOD/g, method===0? "cos" : "phong").
                 replace(/\$NUMSAMPLES/g, samples),
             "prefilter" + method + "" + samples);
+        var shader2 = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.outputCubemapPS);
         var constantTexSource = device.scope.resolve("source");
         var constantParams = device.scope.resolve("params");
         var params = new pc.Vec4();
@@ -21,6 +48,82 @@ pc.extend(pc, (function () {
         var mips = 5;
         var targ;
         var i, face, pass;
+
+        var rgbFormat = format===pc.PIXELFORMAT_R8_G8_B8;
+        if (rgbFormat && cpuSync) {
+            // WebGL can't read non-RGBA pixels
+            format = pc.PIXELFORMAT_R8_G8_B8_A8;
+            var nextCubemap = new pc.gfx.Texture(device, {
+                cubemap: true,
+                rgbm: rgbmSource,
+                format: format,
+                width: size,
+                height: size,
+                autoMipmap: false
+            });
+            nextCubemap.minFilter = pc.FILTER_LINEAR;
+            nextCubemap.magFilter = pc.FILTER_LINEAR;
+            nextCubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            nextCubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            for(face=0; face<6; face++) {
+                targ = new pc.RenderTarget(device, nextCubemap, {
+                    face: face,
+                    depth: false
+                });
+                params.x = face;
+                constantTexSource.setValue(sourceCubemap);
+                constantParams.setValue(params.data);
+
+                if (chromeFix) fixChrome();
+                pc.drawQuadWithShader(device, targ, shader2);
+                syncToCpu(device, targ, face);
+            }
+            sourceCubemap = nextCubemap;
+        }
+
+        if (size > 128) {
+            // Downsample to 128 first
+            var log128 = Math.round(Math.log2(128));
+            var logSize = Math.round(Math.log2(size));
+            var steps = logSize - log128;
+            var nextCubemap;
+            for(i=0; i<steps; i++) {
+                size = sourceCubemap.width * 0.5;
+                var sampleGloss = method===0? 1 : Math.pow(2, Math.round(Math.log2(gloss[0]) + (steps - i) * 2));
+                nextCubemap = new pc.gfx.Texture(device, {
+                    cubemap: true,
+                    rgbm: rgbmSource,
+                    format: format,
+                    width: size,
+                    height: size,
+                    autoMipmap: false
+                });
+                nextCubemap.minFilter = pc.FILTER_LINEAR;
+                nextCubemap.magFilter = pc.FILTER_LINEAR;
+                nextCubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                nextCubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+                for(face=0; face<6; face++) {
+                    targ = new pc.RenderTarget(device, nextCubemap, {
+                        face: face,
+                        depth: false
+                    });
+                    params.x = face;
+                    params.y = sampleGloss;
+                    params.z = size;
+                    params.w = 0;
+                    constantTexSource.setValue(sourceCubemap);
+                    constantParams.setValue(params.data);
+
+                    if (chromeFix) fixChrome();
+                    pc.drawQuadWithShader(device, targ, shader2);
+                    if (i===steps-1 && cpuSync) {
+                        syncToCpu(device, targ, face);
+                    }
+                }
+                sourceCubemap = nextCubemap;
+            }
+        }
+        options.sourceCubemap = sourceCubemap;
 
         var unblurredGloss = method===0? 1 : 2048;
         var startPass = method===0? 0 : -1; // do prepass for unblurred downsampled textures when using importance sampling
@@ -74,13 +177,9 @@ pc.extend(pc, (function () {
                             method===0? cmapsList[0][i - 1] : cmapsList[-1][i - 1]);
                         constantParams.setValue(params.data);
 
-                        if (chromeFix) {
-                            // https://code.google.com/p/chromium/issues/detail?id=447419
-                            // Workaround: wait a little
-                            var endTime = Date.now() + 10;
-                            while(Date.now() < endTime);
-                        }
+                        if (chromeFix) fixChrome();
                         pc.drawQuadWithShader(device, targ, shader);
+                        if (cpuSync) syncToCpu(device, targ, face);
                     }
                 }
             }

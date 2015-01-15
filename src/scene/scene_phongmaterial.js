@@ -741,8 +741,10 @@ pc.extend(pc, function () {
             var prefilteredCubeMap = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
                                    && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
 
+            var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
+
             var mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
-            if (prefilteredCubeMap && device.extTextureLod && device.samplerCount < 16) {
+            if (prefilteredCubeMap && useTexCubeLod) {
                 // Set up hires texture to contain the whole mip chain
                 if (!prefilteredCubeMap128._prefilteredMips) {
                     prefilteredCubeMap128.autoMipmap = false;
@@ -751,17 +753,22 @@ pc.extend(pc, function () {
                         prefilteredCubeMap128._levels[mip] = mips[mip]._levels[0];
                     }
                     prefilteredCubeMap128.upload();
+                    prefilteredCubeMap128.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
+                    prefilteredCubeMap128.magFilter = pc.FILTER_LINEAR;
                     prefilteredCubeMap128._prefilteredMips = true;
                 }
             }
 
-            if (prefilteredCubeMap128 === scene._prefilteredCubeMap128) {
-                this.setParameter('texture_prefilteredCubeMap128', scene._prefilteredCubeMap128);
-                this.setParameter('texture_prefilteredCubeMap64', scene._prefilteredCubeMap64);
-                this.setParameter('texture_prefilteredCubeMap32', scene._prefilteredCubeMap32);
-                this.setParameter('texture_prefilteredCubeMap16', scene._prefilteredCubeMap16);
-                this.setParameter('texture_prefilteredCubeMap8', scene._prefilteredCubeMap8);
-                this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
+            if (prefilteredCubeMap128) {
+                if (prefilteredCubeMap128 === scene._prefilteredCubeMap128) {
+                    this.setParameter('texture_prefilteredCubeMap128', scene._prefilteredCubeMap128);
+                    this.setParameter('texture_prefilteredCubeMap64', scene._prefilteredCubeMap64);
+                    this.setParameter('texture_prefilteredCubeMap32', scene._prefilteredCubeMap32);
+                    this.setParameter('texture_prefilteredCubeMap16', scene._prefilteredCubeMap16);
+                    this.setParameter('texture_prefilteredCubeMap8', scene._prefilteredCubeMap8);
+                    this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
+                    this.setParameter('material_cubemapSize', scene._prefilteredCubeMap128.width);
+                }
             }
 
             if (prefilteredCubeMap) {
@@ -818,7 +825,8 @@ pc.extend(pc, function () {
                 occludeSpecular:            this.occludeSpecular,
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
-                packedNormal:               this.normalMap? this.normalMap._compressed : false
+                packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                useTexCubeLod:              useTexCubeLod
             };
 
             this._mapXForms = null;

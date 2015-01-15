@@ -42,7 +42,7 @@ pc.programlib.phong = {
         var cubemapReflection = options.cubeMap || options.prefilteredCubemap;
         var reflections = options.sphereMap || cubemapReflection;
         var useTangents = pc.precalculatedTangents;
-        var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
+        var useTexCubeLod = options.useTexCubeLod;
         if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
 
         if (options.shadingModel===pc.SPECULAR_PHONG) {
