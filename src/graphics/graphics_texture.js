@@ -358,6 +358,85 @@ pc.extend(pc, function () {
          */
         upload: function () {
             this._needsUpload = true;
+        },
+
+        getDDS: function () {
+            if (this.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
+                console.error("This format is not implemented yet");
+            }
+            var fsize = 128;
+            var i = 0;
+            var j;
+            var face;
+            while(this._levels[i]) {
+                if (!this.cubemap) {
+                    var mipSize = this._levels[i].length;
+                    if (!mipSize) {
+                        console.error("No byte array for mip " + i);
+                        return;
+                    }
+                    fsize += mipSize;
+                } else {
+                    for(face=0; face<6; face++) {
+                        var mipSize = this._levels[i][face].length;
+                        if (!mipSize) {
+                            console.error("No byte array for mip " + i + ", face " + face);
+                            return;
+                        }
+                        fsize += mipSize;
+                    }
+                }
+                var mipSize
+                fsize += this._levels[i].length;
+                i++;
+            }
+
+            var buff = new ArrayBuffer(fsize);
+            var header = new Uint32Array(buff, 0, 128 / 4);
+
+            header[0] = 542327876;
+            header[1] = 124;
+            header[2] = this._levels.length===1? 528391 : 659463;
+            header[3] = this.height;
+            header[4] = this.width;
+            header[5] = this.width * this.height * 4;
+            header[6] = 0;
+            header[7] = this._levels.length;
+            for(i=0; i<11; i++) header[8 + i] = 0;
+            header[19] = 32;
+            header[20] = 65;
+            header[21] = 0;
+            header[22] = 32;
+            header[23] = 16711680;
+            header[24] = 65280;
+            header[25] = 255;
+            header[26] = 4278190080;
+            header[27] = this._levels.length===1? 4096 : 4198408;
+            header[28] = this.cubemap? 65024 : 0;
+            header[29] = 0;
+            header[30] = 0;
+            header[31] = 0;
+
+            var offset = 128;
+            if (!this.cubemap) {
+                for(i=0; i<this._levels.length; i++) {
+                    var level = this._levels[i];
+                    var mip = new Uint8Array(buff, offset, level.length)
+                    for(j=0; j<level.length; j++) mip[j] = level[j];
+                    offset += level.length;
+                }
+            } else {
+                for(face=0; face<6; face++) {
+                    for(i=0; i<this._levels.length; i++) {
+                        var level = this._levels[i][face];
+                        var mip = new Uint8Array(buff, offset, level.length)
+                        for(j=0; j<level.length; j++) mip[j] = level[j];
+                        offset += level.length;
+                    }
+                }
+            }
+
+            return buff;
         }
     });
 
