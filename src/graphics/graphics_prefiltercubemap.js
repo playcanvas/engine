@@ -187,6 +187,31 @@ pc.extend(pc, (function () {
 
         options.filtered = cmapsList[0];
 
+        if (cpuSync && options.singleFilteredFixed) {
+            var mips = [sourceCubemap,
+                        options.filteredFixed[0],
+                        options.filteredFixed[1],
+                        options.filteredFixed[2],
+                        options.filteredFixed[3],
+                        options.filteredFixed[4]];
+            var cubemap = new pc.gfx.Texture(device, {
+                cubemap: true,
+                rgbm: rgbmSource,
+                fixCubemapSeams: true,
+                format: format,
+                width: 128,
+                height: 128,
+                autoMipmap: false
+            });
+            for(i=0; i<6; i++) {
+                cubemap._levels[i] = mips[i]._levels[0];
+            }
+            cubemap.upload();
+            cubemap.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
+            cubemap.magFilter = pc.FILTER_LINEAR;
+            cubemap._prefilteredMips = true;
+            options.singleFilteredFixed = cubemap;
+        }
     }
 
     return {

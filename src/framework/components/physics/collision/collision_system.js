@@ -361,6 +361,7 @@ pc.extend(pc, function () {
             if (typeof Ammo !== 'undefined') {
                 data.shape = this.createPhysicalShape(component.entity, data);
                 if (entity.rigidbody) {
+                    entity.rigidbody.disableSimulation();
                     entity.rigidbody.createBody();
                 } else {
                     if (!entity.trigger) {
