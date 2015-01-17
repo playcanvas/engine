@@ -214,6 +214,8 @@ pc.extend(pc, function() {
         setProperty("rate2", this.rate);
         setProperty("lifetime", 50);                             // Particle lifetime
         setProperty("spawnBounds", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("spawnShape", pc.PARTICLESHAPE_AABB);
+        setProperty("initialVelocity", 1);
         setProperty("wrap", false);
         setProperty("wrapBounds", null);
         setProperty("colorMap", defaultParamTex);
@@ -264,6 +266,7 @@ pc.extend(pc, function() {
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
         this.constantEmitterScale = gd.scope.resolve("emitterScale");
         this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
+        this.constantInitialVelocity = gd.scope.resolve("initialVelocity");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
         this.constantRate = gd.scope.resolve("rate");
@@ -431,12 +434,18 @@ pc.extend(pc, function() {
                 this.particleNoize[i] = Math.random();
             }
 
+            this.frameRandom.x = Math.random();
+            this.frameRandom.y = Math.random();
+            this.frameRandom.z = Math.random();
+
             this.particleTex = new Float32Array(this.numParticlesPot * 4 * 2);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
-            if (this.node === null){
-                spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
-            } else {
-                spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.getLocalScale()));
+            if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
+                if (this.node === null){
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
+                } else {
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.getLocalScale()));
+                }
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
@@ -460,9 +469,12 @@ pc.extend(pc, function() {
             }
 
             var chunks = pc.shaderChunks;
-            var shaderCodeRespawn = chunks.particleUpdaterStartPS + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
-            var shaderCodeNoRespawn = chunks.particleUpdaterStartPS + chunks.particleUpdaterEndPS;
-            var shaderCodeOnStop = chunks.particleUpdaterStartPS + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
+            var shaderCodeStart = chunks.particleUpdaterInitPS +
+            (this.spawnShape===pc.PARTICLESHAPE_AABB? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
+            chunks.particleUpdaterStartPS;
+            var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
+            var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterEndPS;
+            var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
             this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0");
             this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1");
@@ -511,7 +523,14 @@ pc.extend(pc, function() {
             randomPos.data[0] = this.particleNoize[i] - 0.5;
             randomPos.data[1] = ((this.particleNoize[i] * 10) % 1) - 0.5;
             randomPos.data[2] = ((this.particleNoize[i] * 100) % 1) - 0.5;
-            randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+
+            if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
+                randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+            } else {
+                randomPos.normalize();
+                var rnd4 = (this.particleNoize[i] * 1000) % 1;
+                randomPosTformed.copy(emitterPos).add( randomPos.scale(rnd4 * this.spawnBounds.x) );
+            }
 
             this.particleTex[i * 4] =     randomPosTformed.data[0];
             this.particleTex[i * 4 + 1] = randomPosTformed.data[1];
@@ -842,19 +861,21 @@ pc.extend(pc, function() {
                 }
             }
 
-            if (this.meshInstance.node === null){
-                spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
-            } else {
-                spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.meshInstance.node.getLocalScale()));
+            if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
+                if (this.meshInstance.node === null){
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
+                } else {
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.meshInstance.node.getLocalScale()));
+                }
             }
 
             var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.getLocalScale().data;
             this.material.setParameter("emitterScale", emitterScale);
 
             if (!this.useCpu) {
-                this.frameRandom.x = Math.random();
-                this.frameRandom.y = Math.random();
-                this.frameRandom.z = Math.random();
+                //this.frameRandom.x = Math.random();
+                //this.frameRandom.y = Math.random();
+                //this.frameRandom.z = Math.random();
 
                 this.constantGraphSampleSize.setValue(1.0 / this.precision);
                 this.constantGraphNumSamples.setValue(this.precision);
@@ -866,10 +887,16 @@ pc.extend(pc, function() {
 
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
-                mat4ToMat3(spawnMatrix, spawnMatrix3);
+                if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
+                    mat4ToMat3(spawnMatrix, spawnMatrix3);
+                    this.constantSpawnBounds.setValue(spawnMatrix3.data);
+                } else {
+                    this.constantSpawnBounds.setValue(this.spawnBounds.x);
+                }
+                this.constantInitialVelocity.setValue(this.initialVelocity);
+
                 mat4ToMat3(emitterMatrix, emitterMatrix3);
                 this.constantEmitterPos.setValue(emitterPos);
-                this.constantSpawnBounds.setValue(spawnMatrix3.data);
                 this.constantFrameRandom.setValue(this.frameRandom.data);
                 this.constantDelta.setValue(delta);
                 this.constantRate.setValue(this.rate);
@@ -953,6 +980,15 @@ pc.extend(pc, function() {
                         localVelocityVec.x = pc.math.lerp(localVelocityVec.x, localVelocityVec2.x, rndFactor3Vec.x);
                         localVelocityVec.y = pc.math.lerp(localVelocityVec.y, localVelocityVec2.y, rndFactor3Vec.y);
                         localVelocityVec.z = pc.math.lerp(localVelocityVec.z, localVelocityVec2.z, rndFactor3Vec.z);
+
+                        if (this.initialVelocity > 0) {
+                            if (this.spawnShape === pc.PARTICLESHAPE_SPHERE) {
+                                randomPos.copy(rndFactor3Vec).scale(2).sub(pc.Vec3.ONE).normalize();
+                                localVelocityVec.add(randomPos.scale(this.initialVelocity));
+                            } else {
+                                localVelocityVec.add(pc.Vec3.FORWARD.scale(this.initialVelocity));
+                            }
+                        }
 
                         velocityVec.x = pc.math.lerp(velocityVec.x, velocityVec2.x, rndFactor3Vec.x);
                         velocityVec.y = pc.math.lerp(velocityVec.y, velocityVec2.y, rndFactor3Vec.y);

@@ -8,6 +8,8 @@ pc.extend(pc, function() {
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
         this.spawnBounds = new pc.Vec3();       // Spawn point divergence
+        this.spawnShape = pc.PARTICLESHAPE_AABB;
+        this.initialVelocity = 0;
         this.wrapBounds = new pc.Vec3();
         this.colorMap = null;
         this.colorMapAsset = null;

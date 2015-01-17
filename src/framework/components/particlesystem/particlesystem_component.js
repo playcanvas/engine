@@ -5,7 +5,8 @@ pc.extend(pc, function() {
         'spawnBounds',
         'colorMap',
         'normalMap',
-        'loop'
+        'loop',
+        'initialVelocity'
     ];
 
     // properties that need rebuilding the particle system
@@ -26,7 +27,8 @@ pc.extend(pc, function() {
         'sort',
         'stretch',
         'alignToMotion',
-        'preWarm'
+        'preWarm',
+        'spawnShape'
     ];
 
     var GRAPH_PROPERTIES = [
@@ -256,6 +258,8 @@ pc.extend(pc, function() {
                 this.emitter = new pc.ParticleEmitter(this.system.context.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     spawnBounds: this.data.spawnBounds,
+                    spawnShape: this.data.spawnShape,
+                    initialVelocity: this.data.initialVelocity,
                     wrap: this.data.wrap,
                     wrapBounds: this.data.wrapBounds,
                     lifetime: this.data.lifetime,

@@ -197,9 +197,34 @@ pc.extend(pc, function() {
             }, {
                 name: "spawnBounds",
                 displayName: "Spawn Bounds",
-                description: "Defines an AABB in which particles are allowed to spawn",
+                description: "Defines an AABB/radius in which particles are allowed to spawn",
                 type: "vector",
                 defaultValue: [0, 0, 0]
+            }, {
+                name: "spawnShape",
+                displayName: "Spawn Shape",
+                description: "Defines a shape in which particles are allowed to spawn",
+                type: "enumeration",
+                options: {
+                    enumerations: [{
+                        name: 'AABB',
+                        value: pc.PARTICLESHAPE_AABB
+                    }, {
+                        name: 'Sphere',
+                        value: pc.PARTICLESHAPE_SPHERE
+                    }]
+                },
+                defaultValue: pc.PARTICLESHAPE_AABB,
+            }, {
+                name: "initialVelocity",
+                displayName: "Initial velocity",
+                description: "Adds initial local velocity with defined length and direction based on spawn shape",
+                type: "number",
+                defaultValue: 0,
+                options: {
+                    min: 0,
+                    step: 0.1
+                }
             }, {
                 name: "wrap",
                 displayName: "Wrap",

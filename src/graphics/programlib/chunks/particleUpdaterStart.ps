@@ -1,19 +1,3 @@
-varying vec2 vUv0;
-
-uniform sampler2D particleTexIN;
-uniform vec3 emitterPos, frameRandom, localVelocityDivMult, velocityDivMult;
-uniform mat3 spawnBounds;
-uniform mat3 emitterMatrix;
-uniform float delta, rate, rateDiv, lifetime, numParticles, rotSpeedDivMult, seed;
-uniform float startAngle, startAngle2;
-
-uniform float graphSampleSize;
-uniform float graphNumSamples;
-uniform sampler2D internalTex0;
-uniform sampler2D internalTex1;
-uniform sampler2D internalTex2;
-uniform vec3 emitterScale;
-
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
@@ -51,6 +35,8 @@ void main(void)
     float life = tex2.w + delta;
     float particleRate = rate + rateDiv * rndFactor;
 
+    vec3 inBounds = fract(vec3(rndFactor, rndFactor*10.0, rndFactor*100.0) + frameRandom);
+
     if (life > 0.0) {
         float nlife = clamp(life / particleLifetime, 0.0, 1.0);
         vec3 localVelocityDiv;
@@ -61,6 +47,8 @@ void main(void)
 
         localVelocity +=        (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor3;
         velocity +=             (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor3.zxy;
+
+        addInitialVelocity(localVelocity, inBounds);
 
         if (gl_FragCoord.y < 1.0) {
             // Current particle state
@@ -81,8 +69,7 @@ void main(void)
 
     if (gl_FragCoord.y < 1.0) {
         if (life <= 0.0 || life > particleLifetime) {
-            vec3 inBounds = fract( vec3(rndFactor, rndFactor*10.0, rndFactor*100.0) + frameRandom );
-            tex.xyz = emitterPos + spawnBounds * (inBounds - vec3(0.5));
+            tex.xyz = calcSpawnPosition(inBounds, rndFactor);
             tex.w = mix(startAngle, startAngle2, rndFactor);
         }
     } else {
