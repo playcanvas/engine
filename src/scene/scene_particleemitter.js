@@ -305,7 +305,6 @@ pc.extend(pc, function() {
         this.vbToSort = null;
         this.vbOld = null;
         this.particleDistance = null;
-        this.particleNoize = null;
 
         this.camera = null;
 
@@ -410,7 +409,8 @@ pc.extend(pc, function() {
             this.useCpu = this.mode === pc.PARTICLEMODE_CPU;
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
-            gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
+            gd.fragmentUniformsCount < 100 || // force CPU if can't use many uniforms; TODO: change to more realistic value
+            gd.dx9Angle; // force CPU if using DX9 ANGLE because GPU version is broken there
             this.vertexBuffer = undefined; // force regen VB
 
             this.useMesh = false;
@@ -429,16 +429,12 @@ pc.extend(pc, function() {
             // Dynamic simulation data
             this.vbToSort = new Array(this.numParticles);
             this.particleDistance = new Float32Array(this.numParticles);
-            this.particleNoize = new Float32Array(this.numParticles);
-            for (i = 0; i < this.numParticles; i++) {
-                this.particleNoize[i] = Math.random();
-            }
 
             this.frameRandom.x = Math.random();
             this.frameRandom.y = Math.random();
             this.frameRandom.z = Math.random();
 
-            this.particleTex = new Float32Array(this.numParticlesPot * 4 * 2);
+            this.particleTex = new Float32Array(this.numParticlesPot * 4 * 4);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
             if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
                 if (this.node === null){
@@ -451,13 +447,13 @@ pc.extend(pc, function() {
                 this.calcSpawnPosition(emitterPos, i);
             }
 
-            this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 2);
+            this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 4);
             for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
 
             if (!this.useCpu) {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, 2, this.particleTexStart);
+                this.particleTexIN = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
+                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
+                this.particleTexStart = _createTexture(gd, this.numParticlesPot, 4, this.particleTexStart);
 
                 this.rtParticleTexIN = new pc.RenderTarget(gd, this.particleTexIN, {
                     depth: false
@@ -520,24 +516,32 @@ pc.extend(pc, function() {
         },
 
         calcSpawnPosition: function(emitterPos, i) {
-            randomPos.data[0] = this.particleNoize[i] - 0.5;
-            randomPos.data[1] = ((this.particleNoize[i] * 10) % 1) - 0.5;
-            randomPos.data[2] = ((this.particleNoize[i] * 100) % 1) - 0.5;
+            this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4] = Math.random();
+            this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4] = Math.random();
+            this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4] = Math.random();
+            this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = Math.random();
+            var rX = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
+            var rY = this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4];
+            var rZ = this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4];
+            var rW = this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4];
+
+            randomPos.data[0] = rX - 0.5;
+            randomPos.data[1] = rY - 0.5;
+            randomPos.data[2] = rZ - 0.5;
 
             if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
                 randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
-                var rnd4 = (this.particleNoize[i] * 1000) % 1;
-                randomPosTformed.copy(emitterPos).add( randomPos.scale(rnd4 * this.spawnBounds.x) );
+                randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds.x) );
             }
 
             this.particleTex[i * 4] =     randomPosTformed.data[0];
             this.particleTex[i * 4 + 1] = randomPosTformed.data[1];
             this.particleTex[i * 4 + 2] = randomPosTformed.data[2];
-            this.particleTex[i * 4 + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, this.particleNoize[i]);
+            this.particleTex[i * 4 + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
 
-            var particleRate = pc.math.lerp(this.rate, this.rate2, this.particleNoize[i]);
+            var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
             var startSpawnTime = -particleRate * i;
             this.particleTex[i * 4 + 3 + this.numParticlesPot * 4] = startSpawnTime;
         },
@@ -734,7 +738,7 @@ pc.extend(pc, function() {
                 var rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
-                    if (i % this.numParticleVerts === 0) rnd = this.particleNoize[id];//Math.random();
+                    if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
 
                     if (!this.useMesh) {
                         var vertID = i % 4;
@@ -748,7 +752,7 @@ pc.extend(pc, function() {
                         data[i * 4 + 2] = meshData[vert * stride + 2];
                     }
 
-                    data[i * 4 + 3] = id + rnd;
+                    data[i * 4 + 3] = id;
                 }
 
                 if (this.useCpu) {
@@ -873,9 +877,9 @@ pc.extend(pc, function() {
             this.material.setParameter("emitterScale", emitterScale);
 
             if (!this.useCpu) {
-                //this.frameRandom.x = Math.random();
-                //this.frameRandom.y = Math.random();
-                //this.frameRandom.z = Math.random();
+                this.frameRandom.x = Math.random();
+                this.frameRandom.y = Math.random();
+                this.frameRandom.z = Math.random();
 
                 this.constantGraphSampleSize.setValue(1.0 / this.precision);
                 this.constantGraphNumSamples.setValue(this.precision);
@@ -946,10 +950,10 @@ pc.extend(pc, function() {
                 for (i = 0; i < this.numParticles; i++) {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
 
-                    var rndFactor = (this.particleNoize[id] + this.seed) % 1.0;
+                    var rndFactor = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
                     rndFactor3Vec.x = rndFactor;
-                    rndFactor3Vec.y = (rndFactor * 10.0) % 1.0;
-                    rndFactor3Vec.z = (rndFactor * 100.0) % 1.0;
+                    rndFactor3Vec.y = this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4];
+                    rndFactor3Vec.z = this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4];
 
                     var particleRate = pc.math.lerp(this.rate, this.rate2, rndFactor);
                     var particleLifetime = this.lifetime;
