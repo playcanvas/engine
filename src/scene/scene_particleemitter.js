@@ -213,8 +213,9 @@ pc.extend(pc, function() {
         setProperty("rate", 1);                                  // Emission rate
         setProperty("rate2", this.rate);
         setProperty("lifetime", 50);                             // Particle lifetime
-        setProperty("spawnBounds", new pc.Vec3(0, 0, 0));        // Spawn point divergence
-        setProperty("spawnShape", pc.PARTICLESHAPE_AABB);
+        setProperty("emitterExtents", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("emitterRadius", 0);
+        setProperty("emitterShape", pc.EMITTERSHAPE_AABB);
         setProperty("initialVelocity", 1);
         setProperty("wrap", false);
         setProperty("wrapBounds", null);
@@ -406,11 +407,12 @@ pc.extend(pc, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
+            this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_AABB? this.emitterExtents : this.emitterRadius;
+
             this.useCpu = this.mode === pc.PARTICLEMODE_CPU;
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
-            gd.fragmentUniformsCount < 100 || // force CPU if can't use many uniforms; TODO: change to more realistic value
-            gd.dx9Angle; // force CPU if using DX9 ANGLE because GPU version is broken there
+            gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
             this.vertexBuffer = undefined; // force regen VB
 
             this.useMesh = false;
@@ -436,7 +438,7 @@ pc.extend(pc, function() {
 
             this.particleTex = new Float32Array(this.numParticlesPot * 4 * 4);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
-            if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
+            if (this.emitterShape === pc.EMITTERSHAPE_AABB) {
                 if (this.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
                 } else {
@@ -466,7 +468,7 @@ pc.extend(pc, function() {
 
             var chunks = pc.shaderChunks;
             var shaderCodeStart = chunks.particleUpdaterInitPS +
-            (this.spawnShape===pc.PARTICLESHAPE_AABB? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
+            (this.emitterShape===pc.EMITTERSHAPE_AABB? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterEndPS;
@@ -529,11 +531,11 @@ pc.extend(pc, function() {
             randomPos.data[1] = rY - 0.5;
             randomPos.data[2] = rZ - 0.5;
 
-            if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
+            if (this.emitterShape === pc.EMITTERSHAPE_AABB) {
                 randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
-                randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds.x) );
+                randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds) );
             }
 
             this.particleTex[i * 4] =     randomPosTformed.data[0];
@@ -865,7 +867,7 @@ pc.extend(pc, function() {
                 }
             }
 
-            if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
+            if (this.emitterShape === pc.EMITTERSHAPE_AABB) {
                 if (this.meshInstance.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
                 } else {
@@ -891,11 +893,11 @@ pc.extend(pc, function() {
 
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
-                if (this.spawnShape === pc.PARTICLESHAPE_AABB) {
+                if (this.emitterShape === pc.EMITTERSHAPE_AABB) {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
                     this.constantSpawnBounds.setValue(spawnMatrix3.data);
                 } else {
-                    this.constantSpawnBounds.setValue(this.spawnBounds.x);
+                    this.constantSpawnBounds.setValue(this.spawnBounds);
                 }
                 this.constantInitialVelocity.setValue(this.initialVelocity);
 
@@ -986,7 +988,7 @@ pc.extend(pc, function() {
                         localVelocityVec.z = pc.math.lerp(localVelocityVec.z, localVelocityVec2.z, rndFactor3Vec.z);
 
                         if (this.initialVelocity > 0) {
-                            if (this.spawnShape === pc.PARTICLESHAPE_SPHERE) {
+                            if (this.emitterShape === pc.EMITTERSHAPE_SPHERE) {
                                 randomPos.copy(rndFactor3Vec).scale(2).sub(pc.Vec3.ONE).normalize();
                                 localVelocityVec.add(randomPos.scale(this.initialVelocity));
                             } else {

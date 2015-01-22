@@ -74,7 +74,7 @@ vec3 billboard(vec3 InstanceCoords, vec2 quadXY, out mat3 localMat) {
 }
 
 void main(void) {
-    vec2 quadXY = particle_vertexData.xy;
+    vec3 meshLocalPos = particle_vertexData.xyz;
     float id = floor(particle_vertexData.w);
 
     float rndFactor = fract(sin(id + 1.0 + seed));
@@ -91,11 +91,12 @@ void main(void) {
 
     float particleLifetime = lifetime;
 
-    if (life <= 0.0 || life > particleLifetime) quadXY = vec2(0,0);
+    if (life <= 0.0 || life > particleLifetime) meshLocalPos = vec3(0.0);
+    vec2 quadXY = meshLocalPos.xy;
     float nlife = clamp(life / particleLifetime, 0.0, 1.0);
 
     vec3 paramDiv;
-    vec4 params =                 tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
+    vec4 params = tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
     float scale = params.y;
     float scaleDiv = paramDiv.x;
     float alphaDiv = paramDiv.z;
@@ -106,7 +107,6 @@ void main(void) {
 
     vec3 particlePos = pos;
     vec3 particlePosMoved = vec3(0.0);
-    vec3 meshLocalPos = particle_vertexData.xyz;
 
     mat2 rotMatrix;
     mat3 localMat;

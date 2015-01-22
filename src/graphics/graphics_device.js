@@ -112,7 +112,7 @@ pc.extend(pc, function () {
         }
 
         // Retrieve the WebGL context
-        this.gl = _createContext(canvas, {alpha: false});
+        this.gl = _createContext(canvas);
         var gl = this.gl;
 
         if (!this.gl) {
@@ -270,20 +270,6 @@ pc.extend(pc, function () {
                 if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE) {
                     this.extTextureFloatRenderable = false;
                 }
-            }
-
-            // Checking for ANGLE
-            // Heuristic: ANGLE is only on Windows, not in IE, and does not implement line width greater than one.
-            var _lineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
-            var _angle = navigator.platform === 'Win32' &&
-                gl.getParameter(gl.RENDERER) !== 'Internet Explorer' &&
-                _lineWidthRange[0] === 1 && _lineWidthRange[1] === 1;
-            if (_angle) {
-                // Heuristic: D3D11 backend does not appear to reserve uniforms like the D3D9 backend, e.g.,
-                // D3D11 may have 1024 uniforms per stage, but D3D9 has 254 and 221.
-                var _dx11Uniforms = pc.math.powerOfTwo(gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS)) &&
-                                     pc.math.powerOfTwo(gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
-                this.dx9Angle = !_dx11Uniforms;
             }
 
             this.extTextureLod = gl.getExtension('EXT_shader_texture_lod');

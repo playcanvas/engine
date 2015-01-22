@@ -195,26 +195,38 @@ pc.extend(pc, function() {
                 type: 'boolean',
                 defaultValue: false
             }, {
-                name: "spawnBounds",
-                displayName: "Spawn Bounds",
-                description: "Defines an AABB/radius in which particles are allowed to spawn",
-                type: "vector",
-                defaultValue: [0, 0, 0]
-            }, {
-                name: "spawnShape",
-                displayName: "Spawn Shape",
+                name: "emitterShape",
+                displayName: "Emitter Shape",
                 description: "Defines a shape in which particles are allowed to spawn",
                 type: "enumeration",
                 options: {
                     enumerations: [{
-                        name: 'AABB',
-                        value: pc.PARTICLESHAPE_AABB
+                        name: 'Box',
+                        value: pc.EMITTERSHAPE_AABB
                     }, {
                         name: 'Sphere',
-                        value: pc.PARTICLESHAPE_SPHERE
+                        value: pc.EMITTERSHAPE_SPHERE
                     }]
                 },
-                defaultValue: pc.PARTICLESHAPE_AABB,
+                defaultValue: pc.EMITTERSHAPE_AABB,
+            }, {
+                name: "emitterExtents",
+                displayName: "Emitter Extents",
+                description: "Defines a local box in which particles are allowed to spawn",
+                type: "vector",
+                filter: {
+                    emitterShape: pc.EMITTERSHAPE_AABB
+                },
+                defaultValue: [0, 0, 0]
+            }, {
+                name: "emitterRadius",
+                displayName: "Emitter Radius",
+                description: "Defines radius in which particles are allowed to spawn",
+                type: "number",
+                filter: {
+                    emitterShape: pc.EMITTERSHAPE_SPHERE
+                },
+                defaultValue: 0
             }, {
                 name: "initialVelocity",
                 displayName: "Initial velocity",
@@ -646,7 +658,7 @@ pc.extend(pc, function() {
         },
 
         _updateDebugShape: function (component) {
-            var he = component.data.spawnBounds;
+            var he = component.data.emitterExtents;
             var x = he.x;
             var y = he.y;
             var z = he.z;
