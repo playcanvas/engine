@@ -215,7 +215,7 @@ pc.extend(pc, function() {
         setProperty("lifetime", 50);                             // Particle lifetime
         setProperty("emitterExtents", new pc.Vec3(0, 0, 0));        // Spawn point divergence
         setProperty("emitterRadius", 0);
-        setProperty("emitterShape", pc.EMITTERSHAPE_AABB);
+        setProperty("emitterShape", pc.EMITTERSHAPE_BOX);
         setProperty("initialVelocity", 1);
         setProperty("wrap", false);
         setProperty("wrapBounds", null);
@@ -407,7 +407,7 @@ pc.extend(pc, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
-            this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_AABB? this.emitterExtents : this.emitterRadius;
+            this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
             this.useCpu = this.mode === pc.PARTICLEMODE_CPU;
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
@@ -438,7 +438,7 @@ pc.extend(pc, function() {
 
             this.particleTex = new Float32Array(this.numParticlesPot * 4 * 4);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
-            if (this.emitterShape === pc.EMITTERSHAPE_AABB) {
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 if (this.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
                 } else {
@@ -468,7 +468,7 @@ pc.extend(pc, function() {
 
             var chunks = pc.shaderChunks;
             var shaderCodeStart = chunks.particleUpdaterInitPS +
-            (this.emitterShape===pc.EMITTERSHAPE_AABB? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
+            (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterEndPS;
@@ -531,7 +531,7 @@ pc.extend(pc, function() {
             randomPos.data[1] = rY - 0.5;
             randomPos.data[2] = rZ - 0.5;
 
-            if (this.emitterShape === pc.EMITTERSHAPE_AABB) {
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
             } else {
                 randomPos.normalize();
@@ -867,7 +867,7 @@ pc.extend(pc, function() {
                 }
             }
 
-            if (this.emitterShape === pc.EMITTERSHAPE_AABB) {
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 if (this.meshInstance.node === null){
                     spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
                 } else {
@@ -893,7 +893,7 @@ pc.extend(pc, function() {
 
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
-                if (this.emitterShape === pc.EMITTERSHAPE_AABB) {
+                if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
                     this.constantSpawnBounds.setValue(spawnMatrix3.data);
                 } else {

@@ -202,20 +202,20 @@ pc.extend(pc, function() {
                 options: {
                     enumerations: [{
                         name: 'Box',
-                        value: pc.EMITTERSHAPE_AABB
+                        value: pc.EMITTERSHAPE_BOX
                     }, {
                         name: 'Sphere',
                         value: pc.EMITTERSHAPE_SPHERE
                     }]
                 },
-                defaultValue: pc.EMITTERSHAPE_AABB,
+                defaultValue: pc.EMITTERSHAPE_BOX,
             }, {
                 name: "emitterExtents",
                 displayName: "Emitter Extents",
                 description: "Defines a local box in which particles are allowed to spawn",
                 type: "vector",
                 filter: {
-                    emitterShape: pc.EMITTERSHAPE_AABB
+                    emitterShape: pc.EMITTERSHAPE_BOX
                 },
                 defaultValue: [0, 0, 0]
             }, {
