@@ -213,7 +213,10 @@ pc.extend(pc, function() {
         setProperty("rate", 1);                                  // Emission rate
         setProperty("rate2", this.rate);
         setProperty("lifetime", 50);                             // Particle lifetime
-        setProperty("spawnBounds", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("emitterExtents", new pc.Vec3(0, 0, 0));        // Spawn point divergence
+        setProperty("emitterRadius", 0);
+        setProperty("emitterShape", pc.EMITTERSHAPE_BOX);
+        setProperty("initialVelocity", 1);
         setProperty("wrap", false);
         setProperty("wrapBounds", null);
         setProperty("colorMap", defaultParamTex);
@@ -264,6 +267,7 @@ pc.extend(pc, function() {
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
         this.constantEmitterScale = gd.scope.resolve("emitterScale");
         this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
+        this.constantInitialVelocity = gd.scope.resolve("initialVelocity");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
         this.constantRate = gd.scope.resolve("rate");
@@ -302,7 +306,6 @@ pc.extend(pc, function() {
         this.vbToSort = null;
         this.vbOld = null;
         this.particleDistance = null;
-        this.particleNoize = null;
 
         this.camera = null;
 
@@ -404,6 +407,8 @@ pc.extend(pc, function() {
             var precision = this.precision;
             var gd = this.graphicsDevice;
 
+            this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
+
             this.useCpu = this.mode === pc.PARTICLEMODE_CPU;
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
@@ -426,29 +431,31 @@ pc.extend(pc, function() {
             // Dynamic simulation data
             this.vbToSort = new Array(this.numParticles);
             this.particleDistance = new Float32Array(this.numParticles);
-            this.particleNoize = new Float32Array(this.numParticles);
-            for (i = 0; i < this.numParticles; i++) {
-                this.particleNoize[i] = Math.random();
-            }
 
-            this.particleTex = new Float32Array(this.numParticlesPot * 4 * 2);
+            this.frameRandom.x = Math.random();
+            this.frameRandom.y = Math.random();
+            this.frameRandom.z = Math.random();
+
+            this.particleTex = new Float32Array(this.numParticlesPot * 4 * 4);
             var emitterPos = this.node === null ? pc.Vec3.ZERO : this.node.getPosition();
-            if (this.node === null){
-                spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
-            } else {
-                spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.getLocalScale()));
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                if (this.node === null){
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
+                } else {
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.node.getLocalScale()));
+                }
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
             }
 
-            this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 2);
+            this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 4);
             for (i = 0; i < this.particleTexStart.length; i++) this.particleTexStart[i] = this.particleTex[i];
 
             if (!this.useCpu) {
-                this.particleTexIN = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
-                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 2, this.particleTex);
-                this.particleTexStart = _createTexture(gd, this.numParticlesPot, 2, this.particleTexStart);
+                this.particleTexIN = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
+                this.particleTexOUT = _createTexture(gd, this.numParticlesPot, 4, this.particleTex);
+                this.particleTexStart = _createTexture(gd, this.numParticlesPot, 4, this.particleTexStart);
 
                 this.rtParticleTexIN = new pc.RenderTarget(gd, this.particleTexIN, {
                     depth: false
@@ -460,9 +467,12 @@ pc.extend(pc, function() {
             }
 
             var chunks = pc.shaderChunks;
-            var shaderCodeRespawn = chunks.particleUpdaterStartPS + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
-            var shaderCodeNoRespawn = chunks.particleUpdaterStartPS + chunks.particleUpdaterEndPS;
-            var shaderCodeOnStop = chunks.particleUpdaterStartPS + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
+            var shaderCodeStart = chunks.particleUpdaterInitPS +
+            (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
+            chunks.particleUpdaterStartPS;
+            var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
+            var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterEndPS;
+            var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
             this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0");
             this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1");
@@ -508,17 +518,32 @@ pc.extend(pc, function() {
         },
 
         calcSpawnPosition: function(emitterPos, i) {
-            randomPos.data[0] = this.particleNoize[i] - 0.5;
-            randomPos.data[1] = ((this.particleNoize[i] * 10) % 1) - 0.5;
-            randomPos.data[2] = ((this.particleNoize[i] * 100) % 1) - 0.5;
-            randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+            this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4] = Math.random();
+            this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4] = Math.random();
+            this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4] = Math.random();
+            this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = Math.random();
+            var rX = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
+            var rY = this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4];
+            var rZ = this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4];
+            var rW = this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4];
+
+            randomPos.data[0] = rX - 0.5;
+            randomPos.data[1] = rY - 0.5;
+            randomPos.data[2] = rZ - 0.5;
+
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                randomPosTformed.copy(emitterPos).add( spawnMatrix.transformPoint(randomPos) );
+            } else {
+                randomPos.normalize();
+                randomPosTformed.copy(emitterPos).add( randomPos.scale(rW * this.spawnBounds) );
+            }
 
             this.particleTex[i * 4] =     randomPosTformed.data[0];
             this.particleTex[i * 4 + 1] = randomPosTformed.data[1];
             this.particleTex[i * 4 + 2] = randomPosTformed.data[2];
-            this.particleTex[i * 4 + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, this.particleNoize[i]);
+            this.particleTex[i * 4 + 3] = pc.math.lerp(this.startAngle * pc.math.DEG_TO_RAD, this.startAngle2 * pc.math.DEG_TO_RAD, rX);//this.particleNoize[i]);
 
-            var particleRate = pc.math.lerp(this.rate, this.rate2, this.particleNoize[i]);
+            var particleRate = pc.math.lerp(this.rate, this.rate2, rX);
             var startSpawnTime = -particleRate * i;
             this.particleTex[i * 4 + 3 + this.numParticlesPot * 4] = startSpawnTime;
         },
@@ -715,7 +740,7 @@ pc.extend(pc, function() {
                 var rnd;
                 for (i = 0; i < psysVertCount; i++) {
                     id = Math.floor(i / this.numParticleVerts);
-                    if (i % this.numParticleVerts === 0) rnd = this.particleNoize[id];//Math.random();
+                    if (i % this.numParticleVerts === 0) rnd = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
 
                     if (!this.useMesh) {
                         var vertID = i % 4;
@@ -729,7 +754,7 @@ pc.extend(pc, function() {
                         data[i * 4 + 2] = meshData[vert * stride + 2];
                     }
 
-                    data[i * 4 + 3] = id + rnd;
+                    data[i * 4 + 3] = id;
                 }
 
                 if (this.useCpu) {
@@ -842,10 +867,12 @@ pc.extend(pc, function() {
                 }
             }
 
-            if (this.meshInstance.node === null){
-                spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
-            } else {
-                spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.meshInstance.node.getLocalScale()));
+            if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                if (this.meshInstance.node === null){
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
+                } else {
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.meshInstance.node.getLocalScale()));
+                }
             }
 
             var emitterScale = this.meshInstance.node === null ? pc.Vec3.ONE.data : this.meshInstance.node.getLocalScale().data;
@@ -866,10 +893,16 @@ pc.extend(pc, function() {
 
                 var emitterPos = this.meshInstance.node === null ? pc.Vec3.ZERO.data : this.meshInstance.node.getPosition().data;
                 var emitterMatrix = this.meshInstance.node === null ? pc.Mat4.IDENTITY : this.meshInstance.node.getWorldTransform();
-                mat4ToMat3(spawnMatrix, spawnMatrix3);
+                if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
+                    mat4ToMat3(spawnMatrix, spawnMatrix3);
+                    this.constantSpawnBounds.setValue(spawnMatrix3.data);
+                } else {
+                    this.constantSpawnBounds.setValue(this.spawnBounds);
+                }
+                this.constantInitialVelocity.setValue(this.initialVelocity);
+
                 mat4ToMat3(emitterMatrix, emitterMatrix3);
                 this.constantEmitterPos.setValue(emitterPos);
-                this.constantSpawnBounds.setValue(spawnMatrix3.data);
                 this.constantFrameRandom.setValue(this.frameRandom.data);
                 this.constantDelta.setValue(delta);
                 this.constantRate.setValue(this.rate);
@@ -919,10 +952,10 @@ pc.extend(pc, function() {
                 for (i = 0; i < this.numParticles; i++) {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
 
-                    var rndFactor = (this.particleNoize[id] + this.seed) % 1.0;
+                    var rndFactor = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
                     rndFactor3Vec.x = rndFactor;
-                    rndFactor3Vec.y = (rndFactor * 10.0) % 1.0;
-                    rndFactor3Vec.z = (rndFactor * 100.0) % 1.0;
+                    rndFactor3Vec.y = this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4];
+                    rndFactor3Vec.z = this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4];
 
                     var particleRate = pc.math.lerp(this.rate, this.rate2, rndFactor);
                     var particleLifetime = this.lifetime;
@@ -953,6 +986,15 @@ pc.extend(pc, function() {
                         localVelocityVec.x = pc.math.lerp(localVelocityVec.x, localVelocityVec2.x, rndFactor3Vec.x);
                         localVelocityVec.y = pc.math.lerp(localVelocityVec.y, localVelocityVec2.y, rndFactor3Vec.y);
                         localVelocityVec.z = pc.math.lerp(localVelocityVec.z, localVelocityVec2.z, rndFactor3Vec.z);
+
+                        if (this.initialVelocity > 0) {
+                            if (this.emitterShape === pc.EMITTERSHAPE_SPHERE) {
+                                randomPos.copy(rndFactor3Vec).scale(2).sub(pc.Vec3.ONE).normalize();
+                                localVelocityVec.add(randomPos.scale(this.initialVelocity));
+                            } else {
+                                localVelocityVec.add(pc.Vec3.FORWARD.scale(this.initialVelocity));
+                            }
+                        }
 
                         velocityVec.x = pc.math.lerp(velocityVec.x, velocityVec2.x, rndFactor3Vec.x);
                         velocityVec.y = pc.math.lerp(velocityVec.y, velocityVec2.y, rndFactor3Vec.y);

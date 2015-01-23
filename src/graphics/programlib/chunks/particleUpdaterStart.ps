@@ -1,19 +1,3 @@
-varying vec2 vUv0;
-
-uniform sampler2D particleTexIN;
-uniform vec3 emitterPos, frameRandom, localVelocityDivMult, velocityDivMult;
-uniform mat3 spawnBounds;
-uniform mat3 emitterMatrix;
-uniform float delta, rate, rateDiv, lifetime, numParticles, rotSpeedDivMult, seed;
-uniform float startAngle, startAngle2;
-
-uniform float graphSampleSize;
-uniform float graphNumSamples;
-uniform sampler2D internalTex0;
-uniform sampler2D internalTex1;
-uniform sampler2D internalTex2;
-uniform vec3 emitterScale;
-
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
 }
@@ -25,7 +9,7 @@ vec3 unpack3NFloats(float src) {
     return vec3(r, g, b);
 }
 
-vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
+vec3 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
     vec4 a = texture2D(tex, tc);
     vec4 b = texture2D(tex, tc + graphSampleSize);
     float c = fract(tc.x * graphNumSamples);
@@ -34,58 +18,47 @@ vec4 tex1Dlod_lerp(sampler2D tex, vec2 tc, out vec3 w) {
     vec3 unpackedB = unpack3NFloats(b.w);
     w = mix(unpackedA, unpackedB, c);
 
-    return mix(a, b, c);
+    return mix(a.xyz, b.xyz, c);
 }
 
 void main(void)
 {
     if (gl_FragCoord.x > numParticles) discard;
+    float outMask0 = gl_FragCoord.y < 1.0? 1.0 : 0.0;
+    float outMask1 = (gl_FragCoord.y < 2.0 && gl_FragCoord.y >= 1.0)? 1.0 : 0.0;
+    float outMask2 = (gl_FragCoord.y < 3.0 && gl_FragCoord.y >= 2.0)? 1.0 : 0.0;
 
-    vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.25));
-    vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.75));
+    vec4 tex = texture2D(particleTexIN, vec2(vUv0.x, 0.125));
+    vec4 tex2 = texture2D(particleTexIN, vec2(vUv0.x, 0.375));
+    vec4 texR = texture2D(particleTexIN, vec2(vUv0.x, 0.625));
 
-    float rndFactor = fract(sin(gl_FragCoord.x + 0.5 + seed));
-    vec3 rndFactor3 = vec3(rndFactor, fract(rndFactor*10.0), fract(rndFactor*100.0));
-
+    vec4 rndFactor = texR;
     float particleLifetime = lifetime;
     float life = tex2.w + delta;
-    float particleRate = rate + rateDiv * rndFactor;
+    float particleRate = rate + rateDiv * rndFactor.x;
 
-    if (life > 0.0) {
         float nlife = clamp(life / particleLifetime, 0.0, 1.0);
         vec3 localVelocityDiv;
         vec3 velocityDiv;
         vec3 paramDiv;
-        vec3 localVelocity =    tex1Dlod_lerp(internalTex0, vec2(nlife, 0), localVelocityDiv).xyz;
-        vec3 velocity =         tex1Dlod_lerp(internalTex1, vec2(nlife, 0), velocityDiv).xyz;
+        vec3 localVelocity = tex1Dlod_lerp(internalTex0, vec2(nlife, 0), localVelocityDiv);
+        vec3 velocity =      tex1Dlod_lerp(internalTex1, vec2(nlife, 0), velocityDiv);
+        vec3 params =        tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
+        float rotSpeed = params.x;
+        float rotSpeedDiv = paramDiv.y;
 
-        localVelocity +=        (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor3;
-        velocity +=             (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor3.zxy;
+        localVelocity +=    (localVelocityDiv * vec3(2.0) - vec3(1.0)) * localVelocityDivMult * rndFactor.xyz;
+        velocity +=         (velocityDiv * vec3(2.0) - vec3(1.0)) * velocityDivMult * rndFactor.zxy;
+        rotSpeed +=         (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor.y;
 
-        if (gl_FragCoord.y < 1.0) {
-            // Current particle state
-            vec4 params =           tex1Dlod_lerp(internalTex2, vec2(nlife, 0), paramDiv);
+        addInitialVelocity(localVelocity, rndFactor.xyz);
 
-            float rotSpeed = params.x;
-            float rotSpeedDiv = paramDiv.y;
+        vec3 outVelocity = emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale;
+        vec3 outPosition = tex.xyz + outVelocity * delta;
+        float outRotation = tex.w + rotSpeed * delta;
 
-            rotSpeed +=             (rotSpeedDiv * 2.0 - 1.0) * rotSpeedDivMult * rndFactor3.y;
-
-            tex.xyz += (emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale) * delta;
-            tex.w += rotSpeed * delta;
-        } else {
-            // Velocity
-            tex.xyz = (emitterMatrix * localVelocity.xyz + velocity.xyz * emitterScale);
-        }
-    }
-
-    if (gl_FragCoord.y < 1.0) {
-        if (life <= 0.0 || life > particleLifetime) {
-            vec3 inBounds = fract( vec3(rndFactor, rndFactor*10.0, rndFactor*100.0) + frameRandom );
-            tex.xyz = emitterPos + spawnBounds * (inBounds - vec3(0.5));
-            tex.w = mix(startAngle, startAngle2, rndFactor);
-        }
-    } else {
-        tex.w = life;
-    }
+        bool respawn = life <= 0.0 || life > particleLifetime;
+        outPosition = respawn? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPosition;
+        outRotation = respawn? mix(startAngle, startAngle2, rndFactor.x) : outRotation;
+        outVelocity = respawn? vec3(0.0) : outVelocity;
 

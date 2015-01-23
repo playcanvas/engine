@@ -112,7 +112,7 @@ pc.extend(pc, function () {
         }
 
         // Retrieve the WebGL context
-        this.gl = _createContext(canvas, {alpha: false});
+        this.gl = _createContext(canvas);
         var gl = this.gl;
 
         if (!this.gl) {
