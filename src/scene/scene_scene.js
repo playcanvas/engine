@@ -108,7 +108,7 @@
         PARTICLEMODE_GPU: 0,
         PARTICLEMODE_CPU: 1,
         EMITTERSHAPE_BOX: 0,
-        EMITTERHAPE_SPHERE: 1,
+        EMITTERSHAPE_SPHERE: 1,
 
         /**
          * @enum pc.PROJECTION
