@@ -24,16 +24,16 @@ pc.programlib.phong = {
     _setMapTransform: function (codes, name, id, uv) {
         codes[0] += "uniform vec4 texture_"+name+"MapTransform;\n"
 
-        if (!codes[3][id]) {
-            codes[1] += "varying vec2 vUvx_"+id+";\n"
-            codes[2] += "   vUvx_"+id+" = uv"+uv+" * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
+        if (!codes[3][id + uv * 100]) {
+            codes[1] += "varying vec2 vUv"+uv+"_"+id+";\n"
+            codes[2] += "   vUv"+uv+"_"+id+" = uv"+uv+" * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
             codes[3][id] = true;
         }
         return codes;
     },
 
     _uvSource: function(id, uv) {
-        return id==0? "vUv" + uv : ("vUvx_" + id);
+        return id==0? "vUv" + uv : ("vUv"+uv+"_" + id);
     },
 
     _addMap: function(p, options, chunks, uvOffset, subCode) {
