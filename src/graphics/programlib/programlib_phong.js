@@ -24,10 +24,11 @@ pc.programlib.phong = {
     _setMapTransform: function (codes, name, id, uv) {
         codes[0] += "uniform vec4 texture_"+name+"MapTransform;\n"
 
-        if (!codes[3][id + uv * 100]) {
+        var checkId = id + uv * 100;
+        if (!codes[3][checkId]) {
             codes[1] += "varying vec2 vUv"+uv+"_"+id+";\n"
             codes[2] += "   vUv"+uv+"_"+id+" = uv"+uv+" * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
-            codes[3][id] = true;
+            codes[3][checkId] = true;
         }
         return codes;
     },
