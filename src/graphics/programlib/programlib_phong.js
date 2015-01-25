@@ -21,19 +21,40 @@ pc.programlib.phong = {
         return key;
     },
 
-    _setMapTransform: function (codes, name, id) {
+    _setMapTransform: function (codes, name, id, uv) {
         codes[0] += "uniform vec4 texture_"+name+"MapTransform;\n"
 
-        if (!codes[3][id]) {
-            codes[1] += "varying vec2 vUv0_"+id+";\n"
-            codes[2] += "   vUv0_"+id+"   = uv0 * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
-            codes[3][id] = true;
+        var checkId = id + uv * 100;
+        if (!codes[3][checkId]) {
+            codes[1] += "varying vec2 vUv"+uv+"_"+id+";\n"
+            codes[2] += "   vUv"+uv+"_"+id+" = uv"+uv+" * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
+            codes[3][checkId] = true;
         }
         return codes;
     },
 
-    _uvSource: function(id) {
-        return id==0? "vUv0" : ("vUv0_" + id);
+    _uvSource: function(id, uv) {
+        return id==0? "vUv" + uv : ("vUv"+uv+"_" + id);
+    },
+
+    _addMap: function(p, options, chunks, uvOffset, subCode) {
+        var mname = p + "Map";
+        if (options[mname]) {
+            var tname = mname + "Transform";
+            var cname = mname + "Channel";
+            var uname = mname + "Uv";
+            var uv = this._uvSource(options[tname], options[uname]) + uvOffset;
+            if (!subCode) {
+                if (options[p + "Tint"]) {
+                    subCode = chunks[p + "TexConstPS"];
+                } else {
+                    subCode = chunks[p + "TexPS"];
+                }
+            }
+            return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
+        } else {
+            return chunks[p + "ConstPS"];
+        }
     },
 
     createShaderDefinition: function (device, options) {
@@ -44,6 +65,7 @@ pc.programlib.phong = {
         var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
         if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
+        if (!options.useSpecular) options.specularMap = options.glossMap = null;
 
         if (options.shadingModel===pc.SPECULAR_PHONG) {
             options.fresnelModel = 0;
@@ -88,42 +110,61 @@ pc.programlib.phong = {
             }
         }
 
-        if (options.diffuseMap || options.specularMap || options.glossMap ||
-            options.emissiveMap || options.normalMap || options.heightMap || options.opacityMap) {
-            attributes.vertex_texCoord0 = pc.SEMANTIC_TEXCOORD0;
-            code += chunks.uv0VS;
-            codeBody += "   vec2 uv0        = getUv0(data);\n";
+        var useUv = [];
+        var useUnmodifiedUv = [];
+        var maxUvSets = 2;
 
-            var codes = [code, varyings, codeBody, []];
-            if (options.diffuseMapTransform)    this._setMapTransform(codes, "diffuse", options.diffuseMapTransform);
-            if (options.normalMapTransform)     this._setMapTransform(codes, "normal", options.normalMapTransform);
-            if (options.heightMapTransform)     this._setMapTransform(codes, "height", options.heightMapTransform);
-            if (options.opacityMapTransform)    this._setMapTransform(codes, "opacity", options.opacityMapTransform);
-            if (options.useSpecular) {
-                if (options.specularMapTransform)   this._setMapTransform(codes, "specular", options.specularMapTransform);
-                if (options.glossMapTransform)      this._setMapTransform(codes, "gloss", options.glossMapTransform);
-            }
-            if (options.emissiveMapTransform)   this._setMapTransform(codes, "emissive", options.emissiveMapTransform);
-            code = codes[0] + codes[1];
-            varyings = codes[1];
-            codeBody = codes[2];
-
-            if ((options.diffuseMap && !options.diffuseMapTransform) ||
-                (options.normalMap && !options.normalMapTransform) ||
-                (options.heightMap && !options.heightMapTransform) ||
-                (options.opacityMap && !options.opacityMapTransform) ||
-                (options.specularMap && !options.specularMapTransform) ||
-                (options.emissiveMap && !options.emissiveMapTransform) ||
-                (options.glossMap && !options.glossMapTransform)) {
-                codeBody += "   vUv0        = uv0;\n";
+        for(var p in pc._matTex2D) {
+            var mname = p + "Map";
+            if (options[mname]) {
+                var tname = mname + "Transform";
+                var uname = mname + "Uv";
+                var cname = mname + "Channel";
+                options[uname] = Math.min(options[uname], maxUvSets - 1)
+                if (pc._matTex2D[p] > 0) {
+                    if (pc._matTex2D[p] < options[cname].length) {
+                        options[cname] = options[cname].substring(0, pc._matTex2D[p]);
+                    } else if (pc._matTex2D[p] > options[cname].length) {
+                        var str = options[cname];
+                        var chr = str.charAt(str.length - 1)
+                        var addLen = pc._matTex2D[p] - str.length;
+                        for(i=0; i<addLen; i++) str += chr;
+                        options[cname] = str;
+                    }
+                }
+                var uvSet = options[uname];
+                useUv[uvSet] = true;
+                useUnmodifiedUv[uvSet] = useUnmodifiedUv[uvSet] || (options[mname] && !options[tname]);
             }
         }
 
-        if (options.lightMap || (options.aoMap && options.aoUvSet===1)) {
-            attributes.vertex_texCoord1 = pc.SEMANTIC_TEXCOORD1;
-            code += chunks.uv1VS;
-            codeBody += "   vUv1        = getUv1(data);\n";
+        for(i=0; i<maxUvSets; i++) {
+            if (useUv[i]) {
+                attributes["vertex_texCoord" + i] = pc["SEMANTIC_TEXCOORD" + i];
+                code += chunks["uv" + i + "VS"];
+                codeBody += "   vec2 uv" + i + " = getUv" + i + "(data);\n";
+            }
+            if (useUnmodifiedUv[i]) {
+                codeBody += "   vUv" + i + " = uv" + i + ";\n";
+            }
         }
+
+        var codes = [code, varyings, codeBody, []];
+
+        for(var p in pc._matTex2D) {
+            var mname = p + "Map";
+            if (options[mname]) {
+                var tname = mname + "Transform";
+                if (options[tname]) {
+                    var uname = mname + "Uv";
+                    this._setMapTransform(codes, p, options[tname], options[uname]);
+                }
+            }
+        }
+
+        code = codes[0] + codes[1];
+        varyings = codes[1];
+        codeBody = codes[2];
 
         if (options.vertexColors) {
             attributes.vertex_color = pc.SEMANTIC_COLOR;
@@ -199,7 +240,7 @@ pc.programlib.phong = {
         if (options.normalMap && useTangents) {
             code += options.packedNormal? chunks.normalXYPS : chunks.normalXYZPS;
 
-            var uv = this._uvSource(options.normalMapTransform) + uvOffset;
+            var uv = this._uvSource(options.normalMapTransform, options.normalMapUv) + uvOffset;
             //if (options.needsNormalFloat) {
                 code += chunks.normalMapFloatPS.replace(/\$UV/g, uv);
             //} else {
@@ -226,16 +267,9 @@ pc.programlib.phong = {
         if (options.rgbmReflection) code += chunks.rgbmPS;
         if (cubemapReflection) code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
 
-        if (options.diffuseMap) {
-            var uv = this._uvSource(options.diffuseMapTransform) + uvOffset
-            if (options.blendMapsWithColors && options.needsDiffuseColor) {
-                code += chunks.albedoTexColorPS.replace(/\$UV/g, uv);
-            } else {
-                code += chunks.albedoTexPS.replace(/\$UV/g, uv);
-            }
-        } else {
-            code += chunks.albedoColorPS;
-        }
+        code += this._addMap("diffuse", options, chunks, uvOffset);
+        code += this._addMap("opacity", options, chunks, uvOffset);
+        code += this._addMap("emissive", options, chunks, uvOffset);
 
         if (options.useSpecular) {
             if (options.specularAA && options.normalMap) {
@@ -243,16 +277,8 @@ pc.programlib.phong = {
             } else {
                 code += chunks.specularAaNonePS;
             }
-            if (options.specularMap) {
-                var uv = this._uvSource(options.specularMapTransform) + uvOffset;
-                if (options.blendMapsWithColors && options.needsSpecularColor) {
-                    code += chunks.specularityTexColorPS.replace(/\$UV/g, uv);
-                } else {
-                    code += chunks.specularityTexPS.replace(/\$UV/g, uv);
-                }
-            } else {
-                code += chunks.specularityColorPS;
-            }
+            code += this._addMap("specular", options, chunks, uvOffset);
+            code += this._addMap("gloss", options, chunks, uvOffset);
             if (options.fresnelModel > 0) {
                 if (options.fresnelModel === pc.FRESNEL_SIMPLE) {
                     code += chunks.fresnelSimplePS;
@@ -264,42 +290,17 @@ pc.programlib.phong = {
             }
         }
 
-        if (options.glossMap) {
-            var uv = this._uvSource(options.glossMapTransform) + uvOffset;
-            if (options.blendMapsWithColors && options.needsGlossFloat) {
-                code += chunks.glossinessTexFloatPS.replace(/\$UV/g, uv);
-            } else {
-                code += chunks.glossinessTexPS.replace(/\$UV/g, uv);
-            }
-        } else {
-            code += chunks.glossinessFloatPS;
-        }
-
-        if (options.opacityMap) {
-            var uv = this._uvSource(options.opacityMapTransform) + uvOffset;
-            if (options.blendMapsWithColors && options.needsOpacityFloat) {
-                code += chunks.opacityTexFloatPS.replace(/\$UV/g, uv);
-            } else {
-                code += chunks.opacityTexPS.replace(/\$UV/g, uv);
-            }
-        } else {
-            code += chunks.opacityFloatPS;
-        }
-
-        if (options.emissiveMap) {
-            var uv = this._uvSource(options.emissiveMapTransform) + uvOffset;
-            if (options.blendMapsWithColors && options.needsEmissiveColor) {
-                code += chunks.emissionTexColorPS.replace(/\$UV/g, uv);
-            } else {
-                code += chunks.emissionTexPS.replace(/\$UV/g, uv);
-            }
-        } else {
-            code += chunks.emissionColorPS;
-        }
-
         if (options.heightMap) {
             if (!options.normalMap) code += chunks.TBNPS;
-            code += chunks.parallaxPS.replace(/\$UV/g, this._uvSource(options.heightMapTransform));
+            code += this._addMap("height", options, chunks, uvOffset, chunks.parallaxPS);
+        }
+
+        if (options.lightMap) {
+            code += this._addMap("light", options, chunks, uvOffset, chunks.lightmapSinglePS);
+        }
+
+        if (options.aoMap) {
+            code += this._addMap("ao", options, chunks, uvOffset, chunks.aoBakedPS);
         }
 
         var reflectionDecode = options.rgbmReflection? "decodeRGBM" : (options.hdrReflection? "" : "gammaCorrectInput");
@@ -322,15 +323,6 @@ pc.programlib.phong = {
             var scode = device.fragmentUniformsCount>16? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
             scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
             code += scode;
-        }
-
-
-        if (options.lightMap) {
-            code += chunks.lightmapSinglePS;
-        }
-
-        if (options.aoMap) {
-            code += chunks.aoBakedPS.replace(/\$UV/g, options.aoUvSet===0? "vUv0" : "vUv1");
         }
 
         if (options.prefilteredCubemap) {
