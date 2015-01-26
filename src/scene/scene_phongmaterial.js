@@ -271,7 +271,7 @@ pc.extend(pc, function () {
                     this[param.name] = _createTexture(param);
                 } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
                     this.bumpiness = param.data;
-                } else
+                } else {
                     this[param.name] = param.data;
                 }
             }
