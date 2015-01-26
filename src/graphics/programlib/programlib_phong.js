@@ -295,10 +295,6 @@ pc.programlib.phong = {
             code += this._addMap("height", options, chunks, uvOffset, chunks.parallaxPS);
         }
 
-        if (options.lightMap) {
-            code += this._addMap("light", options, chunks, uvOffset, chunks.lightmapSinglePS);
-        }
-
         if (options.aoMap) {
             code += this._addMap("ao", options, chunks, uvOffset, chunks.aoBakedPS);
         }
@@ -325,7 +321,10 @@ pc.programlib.phong = {
             code += scode;
         }
 
-        if (options.prefilteredCubemap) {
+        if (options.lightMap) {
+            code += this._addMap("light", options, chunks, uvOffset, chunks.lightmapSinglePS);
+        }
+        else if (options.prefilteredCubemap) {
             if (useTexCubeLod) {
                 code += chunks.ambientPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
             } else {
@@ -393,10 +392,6 @@ pc.programlib.phong = {
         code += "   getOpacity(data);\n";
         if (options.alphaTest) {
             code += "   if (data.alpha < alpha_ref) discard;"
-        }
-
-        if (options.lightMap) {
-                code += "    addLightmap(data);\n";
         }
 
         code += "   addAmbient(data);\n";
