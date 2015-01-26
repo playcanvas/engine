@@ -269,7 +269,9 @@ pc.extend(pc, function () {
                     this[param.name] = _createVec2(param);
                 } else if (param.type === "texture") {
                     this[param.name] = _createTexture(param);
-                } else {
+                } else if (param.name === "bumpMapFactor") { // Unfortunately, names don't match for bumpiness
+                    this.bumpiness = param.data;
+                } else
                     this[param.name] = param.data;
                 }
             }
