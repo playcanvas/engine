@@ -1,5 +1,18 @@
 # PlayCanvas Engine Changes
 
+### v0.163.5
+* [FIX] Cubemap and cubemap filtering related fixes.
+* [FIX] Changing collision component properties now works without disable/re-enabling component.
+* [FIX] Mesh particles.
+* [FIX] Firefox bugs by removing alpha:false from the context creation.
+* Added saving and loading of single-file DDS cubemaps.
+* Replaced pc.BODYGROUP_DEFAULT with pc.BODYGROUP_DYNAMIC.
+* Added sphere spawn shape and initial velocity to particles.
+* Material system refactoring.
+* Configurable UV set for all maps.
+* Configurable RGBA channel(s) for all maps (except normal).
+* Tiling/Offset now work for all maps.
+
 ### v0.163.4
 * [FIX] Add light property to light component schema.
 
