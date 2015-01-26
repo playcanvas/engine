@@ -409,7 +409,8 @@ pc.extend(pc, function() {
 
             this.spawnBounds = this.emitterShape === pc.EMITTERSHAPE_BOX? this.emitterExtents : this.emitterRadius;
 
-            this.useCpu = this.mode === pc.PARTICLEMODE_CPU;
+            // HACK: Force all particles systems to render on CPU until a fix for Intel GPUs is found
+            this.useCpu = true; // this.mode === pc.PARTICLEMODE_CPU;
             this.useCpu = this.useCpu || this.sort > pc.PARTICLESORT_NONE ||  // force CPU if desirable by user or sorting is enabled
             (!(gd.extTextureFloat && gd.maxVertexTextures >= 1 && gd.extTextureFloatRenderable)) || // force CPU if either no float textures or can't use enough vertex textures
             gd.fragmentUniformsCount < 100; // force CPU if can't use many uniforms; TODO: change to more realistic value
