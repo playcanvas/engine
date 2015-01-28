@@ -86,7 +86,7 @@ pc.extend(pc, function () {
             var vpm = this._viewProjMat.data;
             var w = wp[0] * vpm[3] +
                     wp[1] * vpm[7] +
-                    wp[3] * vpm[11] +
+                    wp[2] * vpm[11] +
                         1 * vpm[15];
 
             screenCoord.x = (screenCoord.x / w + 1) * 0.5 * cw;
