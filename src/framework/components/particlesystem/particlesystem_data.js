@@ -7,7 +7,10 @@ pc.extend(pc, function() {
         this.startAngle = 0;
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
-        this.spawnBounds = new pc.Vec3();       // Spawn point divergence
+        this.emitterExtents = new pc.Vec3();       // Spawn point divergence
+        this.emitterRadius = 0;
+        this.emitterShape = pc.EMITTERSHAPE_BOX;
+        this.initialVelocity = 0;
         this.wrapBounds = new pc.Vec3();
         this.colorMap = null;
         this.colorMapAsset = null;

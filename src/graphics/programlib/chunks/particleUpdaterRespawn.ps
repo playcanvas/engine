@@ -1,4 +1,2 @@
-    if (life > particleLifetime && gl_FragCoord.y >= 1.0) {
-        tex.w = -particleRate * gl_FragCoord.x;
-    }
+    life = life > particleLifetime? -particleRate * gl_FragCoord.x : life;
 

@@ -1,6 +1,5 @@
 uniform sampler2D texture_glossMap;
 void getGlossiness(inout psInternalData data) {
-    vec4 tex = texture2D(texture_glossMap, $UV);
-    data.glossiness = tex.r;
+    data.glossiness = texture2D(texture_glossMap, $UV).$CH;
 }
 

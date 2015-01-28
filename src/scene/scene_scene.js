@@ -107,6 +107,8 @@
         PARTICLESORT_OLDER_FIRST: 3,
         PARTICLEMODE_GPU: 0,
         PARTICLEMODE_CPU: 1,
+        EMITTERSHAPE_BOX: 0,
+        EMITTERSHAPE_SPHERE: 1,
 
         /**
          * @enum pc.PROJECTION
