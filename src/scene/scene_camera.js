@@ -80,8 +80,17 @@ pc.extend(pc, function () {
             this._viewMat.copy(wtm).invert();
             this._viewProjMat.mul2(projMat, this._viewMat);
             this._viewProjMat.transformPoint(worldCoord, screenCoord);
-            screenCoord.x = (screenCoord.x / screenCoord.z + 1) * 0.5 * cw;
-            screenCoord.y = (1 - screenCoord.y / screenCoord.z) * 0.5 * ch;
+
+            // calculate w co-coord
+            var wp = worldCoord.data;
+            var vpm = this._viewProjMat.data;
+            var w = wp[0] * vpm[3] +
+                    wp[1] * vpm[7] +
+                    wp[3] * vpm[11] +
+                        1 * vpm[15];
+
+            screenCoord.x = (screenCoord.x / w + 1) * 0.5 * cw;
+            screenCoord.y = -(1 - screenCoord.y / w) * 0.5 * ch;
 
             return screenCoord;
         },
