@@ -235,7 +235,7 @@ pc.programlib.phong = {
         code += "\n"; // End of uniform declarations
 
 
-        var uvOffset = options.heightMap? " + data.uvOffset" : "";
+        var uvOffset = options.heightMap ? " + data.uvOffset" : "";
 
         if (options.normalMap && useTangents) {
             code += options.packedNormal? chunks.normalXYPS : chunks.normalXYZPS;
@@ -292,7 +292,7 @@ pc.programlib.phong = {
 
         if (options.heightMap) {
             if (!options.normalMap) code += chunks.TBNPS;
-            code += this._addMap("height", options, chunks, uvOffset, chunks.parallaxPS);
+            code += this._addMap("height", options, chunks, "", chunks.parallaxPS);
         }
 
         if (options.aoMap) {
