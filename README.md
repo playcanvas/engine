@@ -94,7 +94,10 @@ See all the [examples](http://playcanvas.github.io) here or browse them locally 
 
 ## How to build
 
-The PlayCanvas Engine uses the Python 2.7 and the Closure Compiler to build which requires Java.
+* Ensure you have Python installed (supported version is 2.7)
+* Ensure you have [Java](https://java.com/en/download/) installed.
+
+Then, to execute a build of the engine to the build/output folder, do:
 
     cd build
     python build.py
