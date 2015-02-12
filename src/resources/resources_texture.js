@@ -105,12 +105,25 @@ pc.extend(pc.resources, function () {
 
                 var asset = self._assets.getAssetByUrl(request.canonical);
                 if (asset && asset.data) {
-                    // check if data exists - it might not exist for engine-only users
-                    if (asset.data.name !== undefined) texture.name = asset.data.name;
-                    if (asset.data.addressu !== undefined) texture.addressU = jsonToAddressMode[asset.data.addressu];
-                    if (asset.data.addressV !== undefined) texture.addressV = jsonToAddressMode[asset.data.addressV];
-                    if (asset.data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[asset.data.magfilter];
-                    if (asset.data.minfilter !== undefined) texture.minfilter = jsonToFilterMode[asset.data.minfilter];
+
+                    var updateTexture = function (data) {
+                        // check if data exists - it might not exist for engine-only users
+                        if (data.name !== undefined) texture.name = data.name;
+                        if (data.addressu !== undefined) texture.addressU = jsonToAddressMode[data.addressu];
+                        if (data.addressV !== undefined) texture.addressV = jsonToAddressMode[data.addressV];
+                        if (data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[data.magfilter];
+                        if (data.minfilter !== undefined) texture.minfilter = jsonToFilterMode[data.minfilter];
+                        if (data.anisotropy !== undefined) texture.anisotropy = data.anisotropy;
+                    };
+
+                    updateTexture(asset.data);
+
+                    // subscribe to asset changes
+                    asset.on('change', function (asset, attribute, value) {
+                        if (attribute === 'data') {
+                            updateTexture(value);
+                        }
+                    }, this);
                 }
             }
             texture.setSource(img);
@@ -224,6 +237,7 @@ pc.extend(pc.resources, function () {
 
             texture.upload();
         }
+
         return texture;
     };
 
