@@ -189,6 +189,9 @@ pc.extend(pc, function () {
                 type: 'spot'
             }
         }, {
+            name: 'light',
+            exposed: false
+        }, {
             name: 'model',
             exposed: false
         }];

@@ -112,7 +112,7 @@ pc.extend(pc, function () {
         }
 
         // Retrieve the WebGL context
-        this.gl = _createContext(canvas, {alpha: false});
+        this.gl = _createContext(canvas);
         var gl = this.gl;
 
         if (!this.gl) {
@@ -240,6 +240,7 @@ pc.extend(pc, function () {
 
             // Initialize extensions
             this.extTextureFloat = gl.getExtension("OES_texture_float");
+            this.extTextureFloatLinear = gl.getExtension("OES_texture_float_linear");
             this.extTextureHalfFloat = gl.getExtension("OES_texture_half_float");
 
             this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);

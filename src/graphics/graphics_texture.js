@@ -28,7 +28,9 @@ pc.extend(pc, function () {
         var format = pc.PIXELFORMAT_R8_G8_B8_A8;
         var cubemap = false;
         var autoMipmap = true;
-        var hdr = false;
+        var rgbm = false;
+        var fixCubemapSeams = false;
+        var hdr = false; // deprecated property, only for backwards compatibility
 
         if (options !== undefined) {
             width = (options.width !== undefined) ? options.width : width;
@@ -36,12 +38,16 @@ pc.extend(pc, function () {
             format = (options.format !== undefined) ? options.format : format;
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
             autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : autoMipmap;
+            rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
             hdr = (options.hdr !== undefined)? options.hdr : hdr;
+            fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
         }
 
         // PUBLIC
         this.name = null;
         this.autoMipmap = autoMipmap;
+        this.rgbm = rgbm;
+        this.fixCubemapSeams = fixCubemapSeams;
         this.hdr = hdr;
 
         // PRIVATE
@@ -352,6 +358,105 @@ pc.extend(pc, function () {
          */
         upload: function () {
             this._needsUpload = true;
+        },
+
+        getDDS: function () {
+            if (this.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
+                console.error("This format is not implemented yet");
+            }
+            var fsize = 128;
+            var i = 0;
+            var j;
+            var face;
+            while(this._levels[i]) {
+                if (!this.cubemap) {
+                    var mipSize = this._levels[i].length;
+                    if (!mipSize) {
+                        console.error("No byte array for mip " + i);
+                        return;
+                    }
+                    fsize += mipSize;
+                } else {
+                    for(face=0; face<6; face++) {
+                        var mipSize = this._levels[i][face].length;
+                        if (!mipSize) {
+                            console.error("No byte array for mip " + i + ", face " + face);
+                            return;
+                        }
+                        fsize += mipSize;
+                    }
+                }
+                var mipSize
+                fsize += this._levels[i].length;
+                i++;
+            }
+
+            var buff = new ArrayBuffer(fsize);
+            var header = new Uint32Array(buff, 0, 128 / 4);
+
+            var DDS_MAGIC = 542327876; // "DDS"
+            var DDS_HEADER_SIZE = 124;
+            var DDS_FLAGS_REQUIRED = 0x01 | 0x02 | 0x04 | 0x1000 | 0x80000; // caps | height | width | pixelformat | linearsize
+            var DDS_FLAGS_MIPMAP = 0x20000;
+            var DDS_PIXELFORMAT_SIZE = 32;
+            var DDS_PIXELFLAGS_RGBA8 = 0x01 | 0x40; // alpha | rgb
+            var DDS_CAPS_REQUIRED = 0x1000;
+            var DDS_CAPS_MIPMAP = 0x400000;
+            var DDS_CAPS_COMPLEX = 0x8;
+            var DDS_CAPS2_CUBEMAP = 0x200 | 0x400 | 0x800 | 0x1000 | 0x2000 | 0x4000 | 0x8000; // cubemap | all faces
+
+            var flags = DDS_FLAGS_REQUIRED;
+            if (this._levels.length > 1) flags |= DDS_FLAGS_MIPMAP;
+
+            var caps = DDS_CAPS_REQUIRED;
+            if (this._levels.length > 1) caps |= DDS_CAPS_MIPMAP;
+            if (this._levels.length > 1 || this.cubemap) caps |= DDS_CAPS_COMPLEX;
+
+            var caps2 = this.cubemap? DDS_CAPS2_CUBEMAP : 0;
+
+            header[0] = DDS_MAGIC;
+            header[1] = DDS_HEADER_SIZE;
+            header[2] = flags;
+            header[3] = this.height;
+            header[4] = this.width;
+            header[5] = this.width * this.height * 4;
+            header[6] = 0; // depth
+            header[7] = this._levels.length;
+            for(i=0; i<11; i++) header[8 + i] = 0;
+            header[19] = DDS_PIXELFORMAT_SIZE;
+            header[20] = DDS_PIXELFLAGS_RGBA8;
+            header[21] = 0; // fourcc
+            header[22] = 32; // bpp
+            header[23] = 0x00FF0000; // R mask
+            header[24] = 0x0000FF00; // G mask
+            header[25] = 0x000000FF; // B mask
+            header[26] = 0xFF000000; // A mask
+            header[27] = caps;
+            header[28] = caps2;
+            header[29] = 0;
+            header[30] = 0;
+            header[31] = 0;
+
+            var offset = 128;
+            if (!this.cubemap) {
+                for(i=0; i<this._levels.length; i++) {
+                    var level = this._levels[i];
+                    var mip = new Uint8Array(buff, offset, level.length)
+                    for(j=0; j<level.length; j++) mip[j] = level[j];
+                    offset += level.length;
+                }
+            } else {
+                for(face=0; face<6; face++) {
+                    for(i=0; i<this._levels.length; i++) {
+                        var level = this._levels[i][face];
+                        var mip = new Uint8Array(buff, offset, level.length)
+                        for(j=0; j<level.length; j++) mip[j] = level[j];
+                        offset += level.length;
+                    }
+                }
+            }
+
+            return buff;
         }
     });
 

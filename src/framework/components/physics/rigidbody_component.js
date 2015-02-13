@@ -726,7 +726,7 @@ pc.extend(pc, function () {
 
                 // set group and mask to defaults for type
                 if (newValue === pc.BODYTYPE_DYNAMIC) {
-                    this.data.group = pc.BODYGROUP_DEFAULT;
+                    this.data.group = pc.BODYGROUP_DYNAMIC;
                     this.data.mask = pc.BODYMASK_ALL;
                 } else if (newValue === pc.BODYTYPE_KINEMATIC) {
                     this.data.group = pc.BODYGROUP_KINEMATIC;

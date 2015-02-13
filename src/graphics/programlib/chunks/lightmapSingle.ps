@@ -1,5 +1,5 @@
 uniform sampler2D texture_lightMap;
-void addLightmap(inout psInternalData data) {
-    data.diffuseLight += texture2D(texture_lightMap, vUv1).rgb;
+void addAmbient(inout psInternalData data) {
+    data.diffuseLight = texture2D(texture_lightMap, $UV).$CH;
 }
 

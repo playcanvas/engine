@@ -1,5 +1,41 @@
 # PlayCanvas Engine Changes
 
+### v0.163.5
+* [FIX] Cubemap and cubemap filtering related fixes.
+* [FIX] Changing collision component properties now works without disable/re-enabling component.
+* [FIX] Mesh particles.
+* [FIX] Firefox bugs by removing alpha:false from the context creation.
+* Added saving and loading of single-file DDS cubemaps.
+* Replaced pc.BODYGROUP_DEFAULT with pc.BODYGROUP_DYNAMIC.
+* Added sphere spawn shape and initial velocity to particles.
+* Material system refactoring.
+* Configurable UV set for all maps.
+* Configurable RGBA channel(s) for all maps (except normal).
+* Tiling/Offset now work for all maps.
+
+### v0.163.4
+* [FIX] Add light property to light component schema.
+
+### v0.163.3
+* [FIX] Hotfix - Cannot read property 'PIXELFORMAT_RGBA32F' of undefined
+
+### v0.163.2
+* GPU cubemap prefiltering.
+* Support for loading RGBA32F DDS textures.
+* [FIX] CPU particles work with new engine changes.
+* [FIX] GLSL for mediump devices.
+
+### v0.163.1
+* [FIX] screenToWorld works again
+
+### v0.163.0
+* Moved (almost) all API objects into the pc.* namespace
+* Added CameraComponent#worldToScreen
+* Initial support for loading DDS textures
+* Patch Math to add Math.log2
+* Removed pc.ForwardRenderer from the docs (internal not API)
+* Hide lots of low-level/non-API classes from the documentation
+
 ### v0.162.8
 * Removed requestAnimationFrame polyfill since browser support is now at 100%.
 * Added documentation for particlesystem component.

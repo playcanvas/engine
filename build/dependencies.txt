@@ -49,6 +49,7 @@
 ../src/graphics/graphics_device.js
 ../src/graphics/graphics_chunks.js
 ../src/graphics/graphics_simpleposteffect.js
+../src/graphics/graphics_prefiltercubemap.js
 ../src/graphics/programlib/chunks/generated_shaderchunks.js
 ../src/graphics/graphics_defaultShaderChunks.js
 ../src/graphics/programlib/programlib_programlib.js

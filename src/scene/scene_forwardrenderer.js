@@ -19,6 +19,7 @@ pc.extend(pc, function () {
     var shadowCamView = new pc.Mat4();
     var shadowCamViewProj = new pc.Mat4();
 
+    var viewInvMat = new pc.Mat4();
     var viewMat = new pc.Mat4();
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
@@ -283,11 +284,13 @@ pc.extend(pc, function () {
             this.projId.setValue(projMat.data);
 
             // ViewInverse Matrix
-            var wtm = camera._node.getWorldTransform();
-            this.viewInvId.setValue(wtm.data);
+            var pos = camera._node.getPosition();
+            var rot = camera._node.getRotation();
+            viewInvMat.setTRS(pos, rot, pc.Vec3.ONE);
+            this.viewInvId.setValue(viewInvMat.data);
 
             // View Matrix
-            viewMat.copy(wtm).invert();
+            viewMat.copy(viewInvMat).invert();
             this.viewId.setValue(viewMat.data);
 
             viewMat3.data[0] = viewMat.data[0];

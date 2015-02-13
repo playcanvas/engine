@@ -1,6 +1,5 @@
 uniform sampler2D texture_opacityMap;
 void getOpacity(inout psInternalData data) {
-    vec4 tex = texture2D(texture_opacityMap, $UV);
-    data.alpha = tex.r;
+    data.alpha = texture2D(texture_opacityMap, $UV).$CH;
 }
 

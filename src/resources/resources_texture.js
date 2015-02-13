@@ -105,12 +105,25 @@ pc.extend(pc.resources, function () {
 
                 var asset = self._assets.getAssetByUrl(request.canonical);
                 if (asset && asset.data) {
-                    // check if data exists - it might not exist for engine-only users
-                    if (asset.data.name !== undefined) texture.name = asset.data.name;
-                    if (asset.data.addressu !== undefined) texture.addressU = jsonToAddressMode[asset.data.addressu];
-                    if (asset.data.addressV !== undefined) texture.addressV = jsonToAddressMode[asset.data.addressV];
-                    if (asset.data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[asset.data.magfilter];
-                    if (asset.data.minfilter !== undefined) texture.minfilter = jsonToFilterMode[asset.data.minfilter];
+
+                    var updateTexture = function (data) {
+                        // check if data exists - it might not exist for engine-only users
+                        if (data.name !== undefined) texture.name = data.name;
+                        if (data.addressu !== undefined) texture.addressU = jsonToAddressMode[data.addressu];
+                        if (data.addressV !== undefined) texture.addressV = jsonToAddressMode[data.addressV];
+                        if (data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[data.magfilter];
+                        if (data.minfilter !== undefined) texture.minfilter = jsonToFilterMode[data.minfilter];
+                        if (data.anisotropy !== undefined) texture.anisotropy = data.anisotropy;
+                    };
+
+                    updateTexture(asset.data);
+
+                    // subscribe to asset changes
+                    asset.on('change', function (asset, attribute, value) {
+                        if (attribute === 'data') {
+                            updateTexture(value);
+                        }
+                    }, this);
                 }
             }
             texture.setSource(img);
@@ -134,20 +147,29 @@ pc.extend(pc.resources, function () {
 
             var width = header[4];
             var height = header[3];
-            var mips = header[7];
+            var mips = Math.max(header[7], 1);
             var isFourCc = header[20] === 4;
             var fcc = header[21];
             var bpp = header[22];
+            var isCubemap = header[28] === 65024; // TODO: check by bitflag
 
-            var fccDxt1 = 827611204; // DXT1
-            var fccDxt5 = 894720068; // DXT5
+            var FCC_DXT1 = 827611204; // DXT1
+            var FCC_DXT5 = 894720068; // DXT5
+            var FCC_FP32 = 116; // RGBA32f
 
             var format = null;
+            var compressed = false;
+            var floating = false;
             if (isFourCc) {
-                if (fcc===fccDxt1) {
+                if (fcc===FCC_DXT1) {
                     format = pc.PIXELFORMAT_DXT1;
-                } else if (fcc===fccDxt5) {
+                    compressed = true;
+                } else if (fcc===FCC_DXT5) {
                     format = pc.PIXELFORMAT_DXT5;
+                    compressed = true;
+                } else if (fcc===FCC_FP32) {
+                    format = pc.PIXELFORMAT_RGBA32F;
+                    floating = true;
                 }
             } else {
                 if (bpp===32) {
@@ -156,7 +178,7 @@ pc.extend(pc.resources, function () {
             }
 
             var requiredMips = Math.round(Math.log2(Math.max(width, height)) + 1);
-            var cantLoad = !format || (mips !== requiredMips && isFourCc);
+            var cantLoad = !format || (mips !== requiredMips && compressed);
             if (cantLoad) {
                 var errEnd = ". Empty texture will be created instead.";
                 if (!format) {
@@ -175,36 +197,47 @@ pc.extend(pc.resources, function () {
             var texOptions = {
                 width: width,
                 height: height,
-                format: format
+                format: format,
+                cubemap: isCubemap
             };
             texture = new pc.Texture(this._device, texOptions);
 
             var offset = 128;
-            var mipWidth = width;
-            var mipHeight = height;
+            var faces = isCubemap? 6 : 1;
             var mipSize;
-            var kBlockWidth = 4;
-            var kBlockHeight = 4;
-            var kBlockSize = fcc===fccDxt1? 8 : 16;
+            var DXT_BLOCK_WIDTH = 4;
+            var DXT_BLOCK_HEIGHT = 4;
+            var blockSize = fcc===FCC_DXT1? 8 : 16;
             var numBlocksAcross, numBlocksDown;
-            for(var i=0; i<mips; i++) {
-                if (isFourCc) {
-                    numBlocksAcross = Math.floor((mipWidth + kBlockWidth - 1) / kBlockWidth);
-                    numBlocksDown = Math.floor((mipHeight + kBlockHeight - 1) / kBlockHeight);
-                    numBlocks = numBlocksAcross * numBlocksDown;
-                    mipSize = numBlocks * kBlockSize;
-                } else {
-                    mipSize = mipWidth * mipHeight * 4;
-                }
+            for(var face=0; face<faces; face++) {
+                var mipWidth = width;
+                var mipHeight = height;
+                for(var i=0; i<mips; i++) {
+                    if (compressed) {
+                        numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
+                        numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
+                        numBlocks = numBlocksAcross * numBlocksDown;
+                        mipSize = numBlocks * blockSize;
+                    } else {
+                        mipSize = mipWidth * mipHeight * 4;
+                    }
 
-                texture._levels[i] = new Uint8Array(data, offset, mipSize);
-                offset += mipSize;
-                mipWidth = Math.max(mipWidth * 0.5, 1);
-                mipHeight = Math.max(mipHeight * 0.5, 1);
+                    var mipBuff = floating? new Float32Array(data, offset, mipSize) : new Uint8Array(data, offset, mipSize);
+                    if (!isCubemap) {
+                        texture._levels[i] = mipBuff;
+                    } else {
+                        if (!texture._levels[i]) texture._levels[i] = [];
+                        texture._levels[i][face] = mipBuff;
+                    }
+                    offset += floating? mipSize * 4 : mipSize;
+                    mipWidth = Math.max(mipWidth * 0.5, 1);
+                    mipHeight = Math.max(mipHeight * 0.5, 1);
+                }
             }
 
             texture.upload();
         }
+
         return texture;
     };
 
