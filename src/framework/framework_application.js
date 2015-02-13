@@ -147,7 +147,12 @@ pc.extend(pc, function () {
     Application._currentApplication = null;
     Application._applications = {};
     Application.getApplication = function (id) {
-        return Application._applications[id];
+        if (id) {
+            return Application._applications[id];
+        } else {
+            return Application._currentApplication;
+        }
+
     };
 
     Application.prototype = {

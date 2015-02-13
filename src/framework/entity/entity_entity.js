@@ -51,7 +51,7 @@ pc.extend(pc, function () {
         this.c = {}; // Component storage
         this._app = app; // store app
         if (!app) {
-            this._app = pc.Application._currentApplication;
+            this._app = pc.Application.getApplication(); // get the current application
             if (!this._app) {
                 console.error("Couldn't find current application")
             }
