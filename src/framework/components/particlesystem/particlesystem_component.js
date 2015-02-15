@@ -368,9 +368,11 @@ pc.extend(pc, function() {
         */
         reset: function() {
             this.stop();
-            this.emitter.addTime(1000);
-            this.emitter.loop = this.data.loop;
-            this.emitter.reset();
+            if (this.emitter) {
+                this.emitter.addTime(1000);
+                this.emitter.loop = this.data.loop;
+                this.emitter.reset();
+            }
         },
 
         /**
@@ -379,9 +381,11 @@ pc.extend(pc, function() {
         * @description Disables the emission of new particles, lets existing to finish their simulation.
         */
         stop: function() {
-            this.emitter.loop = false;
-            this.emitter.resetTime();
-            this.emitter.addTime(0, true); // remap life < 0 to life > lifetime to prevent spawning after stop
+            if (this.emitter) {
+                this.emitter.loop = false;
+                this.emitter.resetTime();
+                this.emitter.addTime(0, true); // remap life < 0 to life > lifetime to prevent spawning after stop
+            }
         },
 
         /**
@@ -409,8 +413,10 @@ pc.extend(pc, function() {
         */
         play: function() {
             this.data.paused = false;
-            this.emitter.loop = this.data.loop;
-            this.emitter.resetTime();
+            if (this.emitter) {
+                this.emitter.loop = this.data.loop;
+                this.emitter.resetTime();
+            }
         },
 
         /**
@@ -422,7 +428,7 @@ pc.extend(pc, function() {
             if (this.data.paused) {
                 return false;
             } else {
-                if (this.emitter.loop) {
+                if (this.emitter && this.emitter.loop) {
                     return true;
                 } else {
                     // possible bug here what happens if the non looping emitter
@@ -441,9 +447,11 @@ pc.extend(pc, function() {
         rebuild: function() {
             var enabled = this.enabled;
             this.enabled = false;
-            this.emitter.rebuild(); // worst case: required to rebuild buffers/shaders
-            this.emitter.meshInstance.node = this.entity;
-            this.data.model.meshInstances = [this.emitter.meshInstance];
+            if (this.emitter) {
+                this.emitter.rebuild(); // worst case: required to rebuild buffers/shaders
+                this.emitter.meshInstance.node = this.entity;
+                this.data.model.meshInstances = [this.emitter.meshInstance];
+            }
             this.enabled = enabled;
         },
     });
