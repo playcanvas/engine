@@ -75,6 +75,19 @@ pc.extend(pc, function () {
         }
      };
 
+     Entity.prototype.removeComponent = function (type) {
+        var system = this._app.systems[type];
+        if (system) {
+            if (this.c[type]) {
+                system.removeComponent(this);
+            } else {
+                logERROR(pc.string.format("Entity doesn't have {0} Component", type));
+            }
+        } else {
+            logERROR(pc.string.format("System: '{0}' doesn't exist", type));
+        }
+     }
+
     /**
      * @function
      * @name pc.Entity#getGuid

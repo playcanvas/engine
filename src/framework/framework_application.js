@@ -34,6 +34,9 @@ pc.extend(pc, function () {
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
         this._resolutionMode = pc.RESOLUTION_FIXED;
 
+        // for compatibility
+        this.context = this;
+
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
         this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.AudioManager();
@@ -493,7 +496,7 @@ pc.extend(pc, function () {
                 this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
             } else {
                 if (this._fillMode === pc.FILLMODE_KEEP_ASPECT) {
-                    var r = this.graphicsDevice.canvas.width/this.canvas.height;
+                    var r = this.graphicsDevice.canvas.width/this.graphicsDevice.canvas.height;
                     var winR = windowWidth / windowHeight;
 
                     if (r > winR) {
