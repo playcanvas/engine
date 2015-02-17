@@ -56,24 +56,24 @@ Here's a super-simple Hello World example - a spinning cube!
 
     // Create box entity
     var cube = new pc.Entity();
-    app.context.systems.model.addComponent(cube, {
+    cube.addComponent("model", {
         type: "box"
     });
 
     // Create camera entity
     var camera = new pc.Entity();
-    app.context.systems.camera.addComponent(camera, {
+    camera.addComponent("camera", {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
 
     // Create directional light entity
     var light = new pc.Entity();
-    app.context.systems.light.addComponent(light);
+    light.addComponent("light");
 
     // Add to hierarchy
-    app.context.root.addChild(cube);
-    app.context.root.addChild(camera);
-    app.context.root.addChild(light);
+    app.root.addChild(cube);
+    app.root.addChild(camera);
+    app.root.addChild(light);
 
     // Set up initial positions and orientations
     camera.setPosition(0, 0, 3);
