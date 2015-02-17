@@ -30,8 +30,6 @@ pc.extend(pc, function () {
         // Add event support
         pc.events.attach(this);
 
-        var prefix = "blahblah"; // asset prefix
-
         this.librariesLoaded = false;
         this.canvas = canvas;
         this.fillMode = pc.FILLMODE_KEEP_ASPECT;
@@ -43,7 +41,7 @@ pc.extend(pc, function () {
 
         this.scene = new pc.Scene();
         this.root = new pc.fw.Entity(this);
-        this.assets = new pc.asset.AssetRegistry(this.loader, prefix);
+        this.assets = new pc.asset.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
 
         this.keyboard = options.keyboard || null;
@@ -88,7 +86,7 @@ pc.extend(pc, function () {
         this.loader.registerHandler(pc.resources.CubemapRequest, new pc.resources.CubemapResourceHandler(this.graphicsDevice, this.assets));
         this.loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.assets));
         this.loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
-        this.loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(this.app, options.depot));
+        this.loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(this, options.depot));
         this.loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
         this.loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this, options.scriptPrefix));
 

@@ -5,15 +5,13 @@ pc.extend(pc.asset, function () {
     * @constructor Create an instance of an AssetRegistry.
     * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
     * @param {pc.resources.ResourceLoader} loader The ResourceLoader used to to load the asset files.
-    * @param {String} prefix The prefix added to file urls before the loader tries to fetch them
     */
-    var AssetRegistry = function (loader, prefix) {
+    var AssetRegistry = function (loader) {
         if (!loader) {
             throw new Error("Must provide a ResourceLoader instance for AssetRegistry");
         }
 
         this.loader = loader;
-        this._prefix = prefix || "";
 
         this._cache = {}; // main asset cache, keyed by id
         this._names = {}; // index for looking up assets by name
@@ -58,7 +56,7 @@ pc.extend(pc.asset, function () {
         * @private
         */
         createAndAddAsset: function (id, assetData) {
-            var asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
+            var asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data);
             asset.id = id;
 
             this.addAsset(asset);
@@ -151,7 +149,7 @@ pc.extend(pc.asset, function () {
             if (attribute === 'file') {
                 if (oldValue) {
                     // get old asset url
-                    url = asset.prefix ? pc.path.join(asset.prefix, oldValue.url) : oldValue.url;
+                    url = oldValue.url;
 
                     // remove old url connections
                     delete this._urls[url];

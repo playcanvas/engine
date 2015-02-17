@@ -37,14 +37,13 @@ pc.extend(pc.asset, function () {
     *   url: "/example/filename.txt",
     * }
     * @param {Object} [data] JSON object with additional data about the asset (e.g. for texture and model assets) or contains the asset data itself (e.g. in the case of materials)
-    * @param {String} [prefix] URL prefix to prepend to the file URL when return getFileUrl()
     * @example
     * var asset = new pc.Asset("a texture", pc.asset.ASSET_TEXTURE, {
     *     url: "http://example.com/my/assets/here/texture.png"
     * });
     */
-    var Asset = function (name, type, file, data, prefix) {
-        var file, data, prefix; // optional arguments
+    var Asset = function (name, type, file, data) {
+        var file, data// optional arguments
 
         this._id = ++assetIdCounter;
 
@@ -58,7 +57,6 @@ pc.extend(pc.asset, function () {
         } : null;
 
         this._data = arguments[3] || {};
-        this.prefix = arguments[4] || "";
 
         // This is where the loaded resource will be
         this.resource = null;
@@ -82,13 +80,7 @@ pc.extend(pc.asset, function () {
                 return null;
             }
 
-            var url = this.file.url;
-            var prefix = "";
-            // Non-exported files use the API to load, so they need an added prefix
-            if (this.prefix) {
-                prefix = this.prefix;
-            }
-            return pc.path.join(prefix, url);
+            return this.file.url;
         }
     };
 
