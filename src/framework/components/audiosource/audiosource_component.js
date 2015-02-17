@@ -110,7 +110,7 @@ pc.extend(pc, function () {
                 for (var i = 0; i < oldValue.length; i++) {
                     // unsubscribe from change event for old assets
                     if (oldValue[i]) {
-                        var asset = this.system.context.assets.getAssetById(oldValue[i]);
+                        var asset = this.system.app.assets.getAssetById(oldValue[i]);
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
                         }
@@ -221,7 +221,7 @@ pc.extend(pc, function () {
             };
 
             var assets = ids.map(function (id) {
-                return this.system.context.assets.getAssetById(id);
+                return this.system.app.assets.getAssetById(id);
             }, this);
 
             var requests = [];
@@ -251,7 +251,7 @@ pc.extend(pc, function () {
             }.bind(this));
 
             if (requests.length) {
-                this.system.context.loader.request(requests, options).then(function (audioResources) {
+                this.system.app.loader.request(requests, options).then(function (audioResources) {
                     for (var i = 0; i < requests.length; i++) {
                         sources[names[i]] = audioResources[i];
                     }

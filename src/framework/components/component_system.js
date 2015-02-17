@@ -2,10 +2,10 @@ pc.extend(pc, function () {
     /**
     * @name pc.ComponentSystem
     * @class Component Systems contain the logic and functionality to update all Components of a particular type
-    * @param {pc.ApplicationContext} context The ApplicationContext for the running application
+    * @param {pc.Application} app The running Application
     */
-    var ComponentSystem = function (context) {
-        this.context = context;
+    var ComponentSystem = function (app) {
+        this.app = app;
         this.dataStore = {};
         this.schema = [];
 
@@ -25,7 +25,7 @@ pc.extend(pc, function () {
         /**
         * Update all ComponentSystems
         */
-        update: function (dt, context, inTools) {
+        update: function (dt, inTools) {
             if (inTools) {
                 ComponentSystem.fire('toolsUpdate', dt);
             } else {
@@ -36,14 +36,14 @@ pc.extend(pc, function () {
         /**
         * Update all ComponentSystems
         */
-        fixedUpdate: function (dt) {
+        fixedUpdate: function (dt, inTools) {
             ComponentSystem.fire('fixedUpdate', dt);
         },
 
         /**
         * Update all ComponentSystems
         */
-        postUpdate: function (dt) {
+        postUpdate: function (dt, inTools) {
             ComponentSystem.fire('postUpdate', dt);
         }
     });
@@ -68,8 +68,8 @@ pc.extend(pc, function () {
         * @param {Object} data The source data with which to create the compoent
         * @returns {pc.Component} Returns a Component of type defined by the component system
         * @example
-        *   var entity = new pc.Entity();
-        *   context.systems.model.addComponent(entity, { type: 'box' });
+        *   var entity = new pc.Entity(app);
+        *   app.systems.model.addComponent(entity, { type: 'box' });
         *   // entity.model is now set to a pc.ModelComponent
         */
         addComponent: function (entity, data) {
@@ -99,7 +99,7 @@ pc.extend(pc, function () {
         * @description Remove the {@link pc.Component} from the entity and delete the associated {@link pc.ComponentData}
         * @param {pc.Entity} entity The entity to remove the component from
         * @example
-        * context.systems.model.removeComponent(entity);
+        * app.systems.model.removeComponent(entity);
         * // entity.model === undefined
         */
         removeComponent: function (entity) {

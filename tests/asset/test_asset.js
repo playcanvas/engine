@@ -21,7 +21,6 @@ test("new pc.asset.Asset, shortform", function () {
     equal(asset.file.filename, "filename.txt");
     equal(asset.file.url, "example/path/filename.txt");
     deepEqual(asset.data, {});
-    equal(asset.prefix, "");
     equal(asset.getFileUrl(), "example/path/filename.txt");
 });
 
@@ -35,7 +34,6 @@ test("new pc.asset.Asset, name, file", function () {
     equal(asset.file.filename, "filename.txt");
     equal(asset.file.url, "example/path/filename.txt");
     deepEqual(asset.data, {});
-    equal(asset.prefix, "");
     equal(asset.getFileUrl(), "example/path/filename.txt");
 
 });
@@ -53,27 +51,24 @@ test("new pc.asset.Asset, name, data", function () {
 
     equal(asset.file, null);
     equal(asset.getFileUrl(), null);
-    equal(asset.prefix, "");
 });
 
 
 test("asset.data", function () {
-    var prefix = "/dir";
     var data = {}
 
-    var asset = new pc.fw.Asset("abc", data, prefix);
+    var asset = new pc.fw.Asset("abc", data);
     equal(asset.key, data['key']);
     equal(asset.key2, data['key2']);
 });
 
 test("asset.getFileUrl", function () {
-    var prefix = "/dir";
     var data = {
         "file": {
             "url": "path/to/file.txt"
         }
     };
 
-    var asset = new pc.fw.Asset("abc", data, prefix);
-    equal(asset.getFileUrl(), "/dir/path/to/file.txt");
+    var asset = new pc.fw.Asset("abc", data);
+    equal(asset.getFileUrl(), "path/to/file.txt");
 });

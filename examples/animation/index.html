@@ -25,26 +25,26 @@
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
-        var application = new pc.Application(canvas);
-        application.start();
+        var app = new pc.Application(canvas);
+        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        application.setCanvasResolution(pc.RESOLUTION_AUTO);
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         var entity;
 
         // Create an Entity with a camera component
-        var cameraEntity = new pc.Entity();
-        application.context.systems.camera.addComponent(cameraEntity, {
+        var cameraEntity = new pc.Entity(app);
+        cameraEntity.addComponent("camera", {
             clearColor: new pc.Color(0,0,0)
         });
         cameraEntity.rotateLocal(0, 0, 0);
         cameraEntity.translateLocal(0, 0.6, 1.8);
 
         // Create a directional light
-        var lightDirEntity = new pc.Entity();
-        application.context.systems.light.addComponent(lightDirEntity, {
+        var lightDirEntity = new pc.Entity(app);
+        lightDirEntity.addComponent("light", {
             type: "directional",
             color: new pc.Color(1, .4, 0),
             intensity: 1
@@ -52,8 +52,8 @@
         lightDirEntity.setLocalEulerAngles(-80, 70, 0);
 
         // Create a spot light
-        var lightEntity = new pc.Entity();
-        application.context.systems.light.addComponent(lightEntity, {
+        var lightEntity = new pc.Entity(app);
+        lightEntity.addComponent("light", {
             type: "spot",
             color: new pc.Color(.6, .85, 1),
             outerConeAngle: 45,
@@ -67,36 +67,36 @@
         lightEntity.translateLocal(0,10,0);
 
         // Add Entities into the scene hierarchy
-        application.context.root.addChild(cameraEntity);
-        application.context.root.addChild(lightDirEntity);
-        application.context.root.addChild(lightEntity);
+        app.root.addChild(cameraEntity);
+        app.root.addChild(lightDirEntity);
+        app.root.addChild(lightEntity);
 
         // Load model and animation assets
         var model = null;
         var runAnim = null;
         var idleAnim = null;
 
-        application.context.assets.loadFromUrl("../assets/Playbot/Playbot.json", "model").then(function (resource) {
+        app.assets.loadFromUrl("../assets/Playbot/Playbot.json", "model").then(function (resource) {
             model = resource.asset;
-            return application.context.assets.loadFromUrl("../assets/Playbot/Playbot_run.json", "animation");
+            return app.assets.loadFromUrl("../assets/Playbot/Playbot_run.json", "animation");
         }).then(function (resource) {
             runAnim = resource.asset;
-            return application.context.assets.loadFromUrl("../assets/Playbot/Playbot_idle.json", "animation");
+            return app.assets.loadFromUrl("../assets/Playbot/Playbot_idle.json", "animation");
         }).then(function (resource) {
             idleAnim = resource.asset;
-            entity = new pc.Entity();
+            entity = new pc.Entity(app);
             // add model component to entity
-            application.context.systems.model.addComponent(entity, {
+            entity.addComponent("model", {
                 type: "asset",
                 asset: model,
                 castShadows: true
             });
             // add animation component to entity
-            application.context.systems.animation.addComponent(entity, {
+            entity.addComponent("animation", {
                 assets: [idleAnim.id, runAnim.id],
                 speed: 1
             });
-            application.context.root.addChild(entity);
+            app.root.addChild(entity);
 
             /// Alternate between running and idling every 1000ms
 

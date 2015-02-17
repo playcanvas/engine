@@ -122,13 +122,13 @@ pc.extend(pc, function () {
      * @constructor Create a new RigidBodyComponentSystem
      * @class The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also controls global values for the world such as gravity.
      * Note: The RigidBodyComponentSystem is only valid if 3D Physics is enabled in your application. You can enable this in the application settings for your Depot.
-     * @param {pc.ApplicationContext} context The ApplicationContext
+     * @param {pc.Application} app The Application
      * @extends pc.ComponentSystem
      */
-    var RigidBodyComponentSystem = function RigidBodyComponentSystem (context) {
+    var RigidBodyComponentSystem = function RigidBodyComponentSystem (app) {
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.RigidBodyComponent;
         this.DataType = pc.RigidBodyComponentData;

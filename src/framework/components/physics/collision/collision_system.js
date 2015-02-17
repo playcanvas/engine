@@ -4,13 +4,13 @@ pc.extend(pc, function () {
      * @name pc.CollisionComponentSystem
      * @constructor Creates a new CollisionComponentSystem.
      * @class Manages creation of {@link pc.CollisionComponent}s.
-     * @param {pc.ApplicationContext} context The ApplicationContext for the running application.
+     * @param {pc.ApplicationContext} app The ApplicationContext for the running application.
      * @extends pc.ComponentSystem
      */
-     var CollisionComponentSystem = function CollisionComponentSystem (context) {
+     var CollisionComponentSystem = function CollisionComponentSystem (app) {
         this.id = "collision";
         this.description = "Specifies a collision volume.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.CollisionComponent;
         this.DataType = pc.CollisionComponentData;
@@ -241,20 +241,20 @@ pc.extend(pc, function () {
         },
 
         updateDebugShape: function (entity, data, impl) {
-            var context = this.context;
+            var app = this.app;
 
             if (impl !== undefined) {
                 if (impl.hasDebugShape) {
                     if (data.model) {
-                        if (!context.scene.containsModel(data.model)) {
+                        if (!app.scene.containsModel(data.model)) {
                             if (entity.enabled && data.enabled) {
-                                context.scene.addModel(data.model);
-                                context.root.addChild(data.model.graph);
+                                app.scene.addModel(data.model);
+                                app.root.addChild(data.model.graph);
                             }
                         } else {
                             if (!data.enabled || !entity.enabled) {
-                                context.root.removeChild(data.model.graph);
-                                context.scene.removeModel(data.model);
+                                app.root.removeChild(data.model.graph);
+                                app.scene.removeModel(data.model);
                             }
                         }
                     }
@@ -365,7 +365,7 @@ pc.extend(pc, function () {
                     entity.rigidbody.createBody();
                 } else {
                     if (!entity.trigger) {
-                        entity.trigger = new pc.Trigger(this.system.context, component, data);
+                        entity.trigger = new pc.Trigger(this.system.app, component, data);
                     } else {
                         entity.trigger.initialize(data);
                     }
@@ -409,9 +409,9 @@ pc.extend(pc, function () {
         * Called when the collision is removed
         */
         remove: function (entity, data) {
-            var context = this.system.context;
+            var app = this.system.app;
             if (entity.rigidbody && entity.rigidbody.body) {
-                context.systems.rigidbody.removeBody(entity.rigidbody.body);
+                app.systems.rigidbody.removeBody(entity.rigidbody.body);
             }
 
             if (entity.trigger) {
@@ -419,9 +419,9 @@ pc.extend(pc, function () {
                 delete entity.trigger;
             }
 
-            if (context.scene.containsModel(data.model)) {
-                context.root.removeChild(data.model.graph);
-                context.scene.removeModel(data.model);
+            if (app.scene.containsModel(data.model)) {
+                app.root.removeChild(data.model.graph);
+                app.scene.removeModel(data.model);
             }
         },
 
@@ -458,7 +458,7 @@ pc.extend(pc, function () {
 
         createDebugMesh: function (data) {
             if (!this.mesh) {
-                var gd = this.system.context.graphicsDevice;
+                var gd = this.system.app.graphicsDevice;
 
                 var format = new pc.VertexFormat(gd, [
                     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
@@ -535,8 +535,8 @@ pc.extend(pc, function () {
     CollisionSphereSystemImpl.prototype = pc.extend(CollisionSphereSystemImpl.prototype, {
         createDebugMesh: function (data) {
             if (!this.mesh) {
-                var context = this.system.context;
-                var gd = context.graphicsDevice;
+                var app = this.system.app;
+                var gd = app.graphicsDevice;
 
                 // Create the graphical resources required to render a camera frustum
                 var format = new pc.VertexFormat(gd, [
@@ -632,7 +632,7 @@ pc.extend(pc, function () {
             if (data.model && data.model.meshInstances && data.model.meshInstances.length) {
                 return data.model.meshInstances[0];
             } else {
-                var gd = this.system.context.graphicsDevice;
+                var gd = this.system.app.graphicsDevice;
 
                 // Create the graphical resources required to render a capsule shape
                 var format = new pc.VertexFormat(gd, [
@@ -802,7 +802,7 @@ pc.extend(pc, function () {
             if (data.model && data.model.meshInstances && data.model.meshInstances.length) {
                 return data.model.meshInstances[0];
             } else {
-                var gd = this.system.context.graphicsDevice;
+                var gd = this.system.app.graphicsDevice;
 
                 var format = new pc.VertexFormat(gd, [
                     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
@@ -1039,7 +1039,7 @@ pc.extend(pc, function () {
                 parent: entity.getRequest()
             };
 
-            var asset = this.system.context.assets.getAssetById(id);
+            var asset = this.system.app.assets.getAssetById(id);
             if (!asset) {
                 logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', id));
                 return;
@@ -1051,7 +1051,7 @@ pc.extend(pc, function () {
                 this.doRecreatePhysicalShape(component);
             } else {
                 // load asset asynchronously
-                this.system.context.assets.load(asset, [], options).then(function (resources) {
+                this.system.app.assets.load(asset, [], options).then(function (resources) {
                     var model = resources[0];
                     data.model = model;
                     this.doRecreatePhysicalShape(component);
@@ -1074,7 +1074,7 @@ pc.extend(pc, function () {
                     entity.rigidbody.createBody();
                 } else {
                     if (!entity.trigger) {
-                        entity.trigger = new pc.Trigger(this.system.context, component, data);
+                        entity.trigger = new pc.Trigger(this.system.app, component, data);
                     } else {
                         entity.trigger.initialize(data);
                     }

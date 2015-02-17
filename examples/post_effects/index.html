@@ -30,35 +30,35 @@
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
-        var application = new pc.Application(canvas);
-        application.start();
+        var app = new pc.Application(canvas);
+        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        application.setCanvasResolution(pc.RESOLUTION_AUTO);
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        application.context.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
+        app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
 
         var entity, light, camera;
 
         // Load a model file and create a Entity with a model component
         var url = "../assets/statue/Statue_1.json";
-        application.context.assets.loadFromUrl(url, "model").then(function (results) {
+        app.assets.loadFromUrl(url, "model").then(function (results) {
             var model = results.resource;
             var asset = results.asset;
 
             entity = new pc.Entity();
-            application.context.systems.model.addComponent(entity, {
+            entity.addComponent("model", {
                 type: "asset",
                 asset: asset,
                 castShadows: true
             });
-            application.context.root.addChild(entity);
+            app.root.addChild(entity);
         });
 
         // Create an Entity with a camera component
         var camera = new pc.Entity();
-        application.context.systems.camera.addComponent(camera, {
+        camera.addComponent("camera", {
             clearColor: new pc.Color(0.4, 0.45, 0.5)
         });
         camera.translate(0, 7, 24);
@@ -66,7 +66,7 @@
 
         // Create an Entity for the ground
         var ground = new pc.Entity();
-        application.context.systems.model.addComponent(ground, {
+        ground.addComponent("model", {
             type: "box"
         });
         ground.setLocalScale(50, 1, 50);
@@ -80,7 +80,7 @@
 
         // Create an spot light
         var light = new pc.Entity();
-        application.context.systems.light.addComponent(light, {
+        light.addComponent("light", {
             type: "spot",
             color: new pc.Color(1, 1, 1),
             outerConeAngle: 60,
@@ -93,7 +93,7 @@
         });
 
         var cone = new pc.Entity();
-        application.context.systems.model.addComponent(cone, {
+        cone.addComponent("model", {
             type: "cone"
         });
         cone.model.model.meshInstances[0].material = createMaterial({emissive: new pc.Color(1,1,1)})
@@ -101,7 +101,7 @@
 
         // Create a point light
         var pointlight = new pc.Entity();
-        application.context.systems.light.addComponent(pointlight, {
+        pointlight.addComponent("light", {
             type: "point",
             color: new pc.Color(0, 0, 1),
             range: 100,
@@ -110,29 +110,29 @@
             shadowBias: 0.005,
             shadowResolution: 512
         });
-        application.context.systems.model.addComponent(pointlight, {
+        pointlight.addComponent("model", {
             type: "sphere"
         });
         pointlight.model.model.meshInstances[0].material = createMaterial({diffuse: new pc.Color(0,0,0), emissive: new pc.Color(0,0,1)});
 
         // create some post effects
-        var bloom = new pc.BloomEffect(application.context.graphicsDevice);
+        var bloom = new pc.BloomEffect(app.graphicsDevice);
         bloom.bloomThreshold = 0.1;
         camera.camera.postEffects.addEffect(bloom);
 
-        var sepia = new pc.SepiaEffect(application.context.graphicsDevice);
+        var sepia = new pc.SepiaEffect(app.graphicsDevice);
         sepia.amount = 0.7;
         camera.camera.postEffects.addEffect(sepia);
 
-        var vignette = new pc.VignetteEffect(application.context.graphicsDevice);
+        var vignette = new pc.VignetteEffect(app.graphicsDevice);
         vignette.darkness = 2;
         camera.camera.postEffects.addEffect(vignette);
 
         // Add Entities into the scene hierarchy
-        application.context.root.addChild(camera);
-        application.context.root.addChild(light);
-        application.context.root.addChild(pointlight);
-        application.context.root.addChild(ground);
+        app.root.addChild(camera);
+        app.root.addChild(light);
+        app.root.addChild(pointlight);
+        app.root.addChild(ground);
 
         // Simple update loop to rotate the light
         var radius = 20;
@@ -141,7 +141,7 @@
 
         var pointRadius = 5;
         var pointHeight = 10;
-        application.on("update", function (dt) {
+        app.on("update", function (dt) {
             angle += 20*dt;
             if (angle > 360) {
                 angle -= 360;

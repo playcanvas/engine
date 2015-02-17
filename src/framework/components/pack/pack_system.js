@@ -4,12 +4,12 @@ pc.extend(pc, function () {
      * @name pc.PackComponentSystem
      * @constructor Create a new PackComponentSystem
      * @class A Pack Component indicates the root of an Entity hierarchy that can be edited in the PlayCanvas Designer
-     * @param {Object} context
+     * @param {Object} app
      * @extends pc.ComponentSystem
      */
-    var PackComponentSystem = function PackComponentSystem(context) {
+    var PackComponentSystem = function PackComponentSystem(app) {
         this.id = "pack";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.PackComponent;
         this.DataType = pc.PackComponentData;
@@ -21,6 +21,6 @@ pc.extend(pc, function () {
     return {
         PackComponentSystem: PackComponentSystem
     };
-    
+
 }());
 

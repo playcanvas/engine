@@ -3,8 +3,8 @@ pc.extend(pc.resources, function () {
      * @name pc.resources.PackResourceHandler
      * @class Handle requests for Pack resources
      */
-    var PackResourceHandler = function (registry, depot) {
-        this._registry = registry;
+    var PackResourceHandler = function (app, depot) {
+        this._app = app;
         this._depot = depot;
 
     };
@@ -57,7 +57,7 @@ pc.extend(pc.resources, function () {
     };
 
     PackResourceHandler.prototype.openEntityHierarchy = function (data, request) {
-        var entity = new pc.Entity();
+        var entity = new pc.Entity(this._app);
 
         var p = data.position;
         var r = data.rotation;
@@ -100,12 +100,12 @@ pc.extend(pc.resources, function () {
         entity.setRequest(request);
 
         // Create Components in order
-        var systems = this._registry.list();
+        var systems = this._app.systems.list();
         var i, len = systems.length;
         for (i = 0; i < len; i++) {
             var componentData = data.components[systems[i].id];
             if (componentData) {
-                this._registry[systems[i].id].addComponent(entity, componentData);
+                this._app.systems[systems[i].id].addComponent(entity, componentData);
             }
         }
 
@@ -128,7 +128,7 @@ pc.extend(pc.resources, function () {
     * @example
     * var guid = ...; // get pack GUID from somewhere
     * var r = new pc.resources.PackRequest(guid);
-    * context.loader.request(r).then(function (resources) {
+    * app.loader.request(r).then(function (resources) {
     *     var pack = resources[0];
     * });
     */

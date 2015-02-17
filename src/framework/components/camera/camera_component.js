@@ -193,7 +193,7 @@ pc.extend(pc, function () {
         _resetAspectRatio: function () {
             var camera = this.camera;
             if (camera) {
-                var device = this.system.context.graphicsDevice;
+                var device = this.system.app.graphicsDevice;
                 var rect = this.rect;
                 var aspect = (device.width * rect.z) / (device.height * rect.w);
                 if (aspect !== camera.getAspectRatio()) {

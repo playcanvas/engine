@@ -7,13 +7,13 @@ pc.extend(pc, function () {
      * @class Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
      * array of all active cameras.
      * @constructor Create a new CameraComponentSystem
-     * @param {Object} context
+     * @param {Object} app
      * @extends pc.ComponentSystem
      */
-    var CameraComponentSystem = function (context) {
+    var CameraComponentSystem = function (app) {
         this.id = 'camera';
         this.description = "Renders the scene from the location of the Entity.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.CameraComponent;
         this.DataType = pc.CameraComponentData;
@@ -161,25 +161,25 @@ pc.extend(pc, function () {
             data.camera = new pc.Camera();
             data._node = component.entity;
 
-            data.postEffects = new pc.PostEffectQueue(this.context, component);
+            data.postEffects = new pc.PostEffectQueue(this.app, component);
 
-            if (this.context.designer && this.displayInTools(component.entity)) {
+            if (this.app.designer && this.displayInTools(component.entity)) {
                 var material = new pc.BasicMaterial();
                 material.color = new pc.Color(1, 1, 0, 1);
                 material.update();
 
-                var indexBuffer = new pc.IndexBuffer(this.context.graphicsDevice, pc.INDEXFORMAT_UINT8, 24);
+                var indexBuffer = new pc.IndexBuffer(this.app.graphicsDevice, pc.INDEXFORMAT_UINT8, 24);
                 var indices = new Uint8Array(indexBuffer.lock());
                 indices.set([0,1,1,2,2,3,3,0, // Near plane
                              4,5,5,6,6,7,7,4, // Far plane
                              0,4,1,5,2,6,3,7]); // Near to far edges
                 indexBuffer.unlock();
 
-                var format = new pc.VertexFormat(this.context.graphicsDevice, [
+                var format = new pc.VertexFormat(this.app.graphicsDevice, [
                     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
                 ]);
 
-                var vertexBuffer = new pc.VertexBuffer(this.context.graphicsDevice, format, 8, pc.BUFFER_DYNAMIC);
+                var vertexBuffer = new pc.VertexBuffer(this.app.graphicsDevice, format, 8, pc.BUFFER_DYNAMIC);
 
                 var mesh = new pc.Mesh();
                 mesh.vertexBuffer = vertexBuffer;
@@ -193,7 +193,7 @@ pc.extend(pc, function () {
                 model.graph = component.entity;
                 model.meshInstances = [ new pc.MeshInstance(model.graph, mesh, material) ];
 
-                this.context.scene.addModel(model);
+                this.app.scene.addModel(model);
 
                 data.model = model;
             }
@@ -222,9 +222,9 @@ pc.extend(pc, function () {
 
 
         onRemove: function (entity, data) {
-            if (this.context.designer && this.displayInTools(entity)) {
-                if (this.context.scene.containsModel(data.model)) {
-                    this.context.scene.removeModel(data.model);
+            if (this.app.designer && this.displayInTools(entity)) {
+                if (this.app.scene.containsModel(data.model)) {
+                    this.app.scene.removeModel(data.model);
                 }
             }
 
@@ -303,11 +303,11 @@ pc.extend(pc, function () {
             this.sortCamerasByPriority();
 
             // add debug shape to designer
-            if (this.context.designer) {
+            if (this.app.designer) {
                 var model = camera.data.model;
 
                 if (model) {
-                    var scene = this.context.scene;
+                    var scene = this.app.scene;
                     if (!scene.containsModel(model)) {
                         scene.addModel(model)
                     }
@@ -322,10 +322,10 @@ pc.extend(pc, function () {
                 this.sortCamerasByPriority();
 
                 // remove debug shape from designer
-                if (this.context.designer) {
+                if (this.app.designer) {
                     var model = camera.data.model;
                     if (model) {
-                        this.context.scene.removeModel(model);
+                        this.app.scene.removeModel(model);
                     }
                 }
             }

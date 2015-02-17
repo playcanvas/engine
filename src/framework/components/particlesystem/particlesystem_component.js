@@ -162,7 +162,7 @@ pc.extend(pc, function() {
         },
 
         _loadAsset: function (assetId, callback) {
-            var asset = (assetId instanceof pc.asset.Asset ? assetId : this.system.context.assets.getAssetById(assetId));
+            var asset = (assetId instanceof pc.asset.Asset ? assetId : this.system.app.assets.getAssetById(assetId));
             if (!asset) {
                 logERROR(pc.string.format('Trying to load particle system before asset {0} is loaded.', assetId));
                 return;
@@ -179,7 +179,7 @@ pc.extend(pc, function() {
                     parent: this.entity.getRequest()
                 };
 
-                this.system.context.assets.load(asset, [], options).then(function (resources) {
+                this.system.app.assets.load(asset, [], options).then(function (resources) {
                     callback(resources[0]);
                 });
             }
@@ -263,7 +263,7 @@ pc.extend(pc, function() {
         onEnable: function() {
             if (!this.emitter && !this.system._inTools) {
 
-                this.emitter = new pc.ParticleEmitter(this.system.context.graphicsDevice, {
+                this.emitter = new pc.ParticleEmitter(this.system.app.graphicsDevice, {
                     numParticles: this.data.numParticles,
                     emitterExtents: this.data.emitterExtents,
                     emitterRadius: this.data.emitterRadius,
@@ -307,7 +307,7 @@ pc.extend(pc, function() {
                     halfLambert: this.data.halfLambert,
                     intensity: this.data.intensity,
                     depthSoftening: this.data.depthSoftening,
-                    scene: this.system.context.scene,
+                    scene: this.system.app.scene,
                     mesh: this.data.mesh,
                     depthWrite: this.data.depthWrite,
                     node: this.entity,
@@ -329,17 +329,17 @@ pc.extend(pc, function() {
             }
 
             if (this.data.model) {
-                if (!this.system.context.scene.containsModel(this.data.model)) {
+                if (!this.system.app.scene.containsModel(this.data.model)) {
                     if (this.emitter.colorMap) {
-                        this.system.context.scene.addModel(this.data.model);
+                        this.system.app.scene.addModel(this.data.model);
                     }
                 }
             }
 
             if (this.data.debugShape) {
-                if (!this.system.context.scene.containsModel(this.data.debugShape)) {
-                    this.system.context.scene.addModel(this.data.debugShape);
-                    this.system.context.root.addChild(this.data.debugShape.graph);
+                if (!this.system.app.scene.containsModel(this.data.debugShape)) {
+                    this.system.app.scene.addModel(this.data.debugShape);
+                    this.system.app.root.addChild(this.data.debugShape.graph);
                 }
             }
 
@@ -350,14 +350,14 @@ pc.extend(pc, function() {
         onDisable: function() {
             ParticleSystemComponent._super.onDisable.call(this);
             if (this.data.model) {
-                if (this.system.context.scene.containsModel(this.data.model)) {
-                    this.system.context.scene.removeModel(this.data.model);
+                if (this.system.app.scene.containsModel(this.data.model)) {
+                    this.system.app.scene.removeModel(this.data.model);
                 }
             }
 
             if (this.data.debugShape) {
-                this.system.context.root.removeChild(this.data.debugShape.graph);
-                this.system.context.scene.removeModel(this.data.debugShape);
+                this.system.app.root.removeChild(this.data.debugShape.graph);
+                this.system.app.scene.removeModel(this.data.debugShape);
             }
         },
 

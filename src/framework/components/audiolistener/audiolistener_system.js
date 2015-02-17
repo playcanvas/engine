@@ -5,10 +5,10 @@ pc.extend(pc, function () {
     * @constructor Create a new AudioListenerComponentSystem
     * @extends pc.ComponentSystem
     */
-    var AudioListenerComponentSystem = function (context, manager) {
+    var AudioListenerComponentSystem = function (app, manager) {
         this.id = "audiolistener";
         this.description = "Specifies the location of the listener for 3D audio playback.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.AudioListenerComponent;
         this.DataType = pc.AudioListenerComponentData;
