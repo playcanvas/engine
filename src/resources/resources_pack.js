@@ -100,12 +100,12 @@ pc.extend(pc.resources, function () {
         entity.setRequest(request);
 
         // Create Components in order
-        var systems = this.app.systems.list();
+        var systems = this._app.systems.list();
         var i, len = systems.length;
         for (i = 0; i < len; i++) {
             var componentData = data.components[systems[i].id];
             if (componentData) {
-                this.app.systems[systems[i].id].addComponent(entity, componentData);
+                this._app.systems[systems[i].id].addComponent(entity, componentData);
             }
         }
 
