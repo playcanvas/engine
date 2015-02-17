@@ -30,13 +30,13 @@ pc.extend(pc, function () {
         // Add event support
         pc.events.attach(this);
 
-        this.librariesLoaded = false;
-        this.canvas = canvas;
-        this.fillMode = pc.FILLMODE_KEEP_ASPECT;
-        this.resolutionMode = pc.RESOLUTION_FIXED;
+        this._librariesLoaded = false;
+        this._fillMode = pc.FILLMODE_KEEP_ASPECT;
+        this._resolutionMode = pc.RESOLUTION_FIXED;
+
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
         this.systems = new pc.ComponentSystemRegistry();
-        this.audioManager = new pc.AudioManager();
+        this._audioManager = new pc.AudioManager();
         this.loader = new pc.resources.ResourceLoader();
 
         this.scene = new pc.Scene();
@@ -87,7 +87,7 @@ pc.extend(pc, function () {
         this.loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.assets));
         this.loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
         this.loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(this, options.depot));
-        this.loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this.audioManager));
+        this.loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this._audioManager));
         this.loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this, options.scriptPrefix));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
@@ -101,8 +101,8 @@ pc.extend(pc, function () {
         var skyboxsys = new pc.SkyboxComponentSystem(this);
         var scriptsys = new pc.ScriptComponentSystem(this);
         var picksys = new pc.PickComponentSystem(this);
-        var audiosourcesys = new pc.AudioSourceComponentSystem(this, this.audioManager);
-        var audiolistenersys = new pc.AudioListenerComponentSystem(this, this.audioManager);
+        var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
+        var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
         var designersys = new pc.DesignerComponentSystem(this);
 
@@ -114,11 +114,11 @@ pc.extend(pc, function () {
             });
             this.loader.request(requests).then( function (resources) {
                 this.fire('librariesloaded', this);
-                this.librariesLoaded = true;
+                this._librariesLoaded = true;
             }.bind(this));
         } else {
             this.fire('librariesloaded', this);
-            this.librariesLoaded = true;
+            this._librariesLoaded = true;
         }
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
@@ -138,7 +138,7 @@ pc.extend(pc, function () {
         }
 
         // Store application instance
-        Application._applications[this.canvas.id] = this;
+        Application._applications[this.graphicsDevice.canvas.id] = this;
         Application._currentApplication = this;
     };
 
@@ -236,7 +236,7 @@ pc.extend(pc, function () {
                 }
             }.bind(this);
 
-            if (!this.librariesLoaded) {
+            if (!this._librariesLoaded) {
                 this.on('librariesloaded', function () {
                     load();
                 });
@@ -252,7 +252,7 @@ pc.extend(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
-            if (!this.librariesLoaded) {
+            if (!this._librariesLoaded) {
                 this.on('librariesloaded', function () {
                     this.tick();
                 }, this);
@@ -346,7 +346,7 @@ pc.extend(pc, function () {
         * @param {Number} [height] The height of the canvase, only used in NONE mode
         */
         setCanvasFillMode: function (mode, width, height) {
-            this.fillMode = mode;
+            this._fillMode = mode;
             this.resizeCanvas(width, height);
         },
 
@@ -361,12 +361,12 @@ pc.extend(pc, function () {
         * @param {Number} [height] The vertical resolution, optional in AUTO mode, if not provided canvas clientHeight is used
         */
         setCanvasResolution: function (mode, width, height) {
-            this.resolutionMode = mode;
+            this._resolutionMode = mode;
 
             // In AUTO mode the resolution is the same as the canvas size, unless specified
             if (mode === pc.RESOLUTION_AUTO && (width === undefined)) {
-                width = this.canvas.clientWidth;
-                height = this.canvas.clientHeight;
+                width = this.graphicsDevice.canvas.clientWidth;
+                height = this.graphicsDevice.canvas.clientHeight;
             }
 
             this.graphicsDevice.resizeCanvas(width, height);
@@ -403,7 +403,7 @@ pc.extend(pc, function () {
         * }, false);
         */
         enableFullscreen: function (element, success, error) {
-            element = element || this.canvas;
+            element = element || this.graphicsDevice.canvas;
 
             // success callback
             var s = function () {
@@ -464,9 +464,9 @@ pc.extend(pc, function () {
         */
         onVisibilityChange: function (e) {
             if (this.isHidden()) {
-                this.audioManager.suspend();
+                this._audioManager.suspend();
             } else {
-                this.audioManager.resume();
+                this._audioManager.resume();
             }
         },
 
@@ -492,8 +492,8 @@ pc.extend(pc, function () {
                 var ratio = window.devicePixelRatio;
                 this.graphicsDevice.resizeCanvas(width * ratio, height * ratio);
             } else {
-                if (this.fillMode === pc.FILLMODE_KEEP_ASPECT) {
-                    var r = this.canvas.width/this.canvas.height;
+                if (this._fillMode === pc.FILLMODE_KEEP_ASPECT) {
+                    var r = this.graphicsDevice.canvas.width/this.canvas.height;
                     var winR = windowWidth / windowHeight;
 
                     if (r > winR) {
@@ -503,18 +503,18 @@ pc.extend(pc, function () {
                         height = windowHeight;
                         width = height * r;
                     }
-                } else if (this.fillMode === pc.FILLMODE_FILL_WINDOW) {
+                } else if (this._fillMode === pc.FILLMODE_FILL_WINDOW) {
                     width = windowWidth;
                     height = windowHeight;
                 } else {
                     // FILLMODE_NONE use width and height that are provided
                 }
 
-                this.canvas.style.width = width + 'px';
-                this.canvas.style.height = height + 'px';
+                this.graphicsDevice.canvas.style.width = width + 'px';
+                this.graphicsDevice.canvas.style.height = height + 'px';
 
                 // In AUTO mode the resolution is changed to match the canvas size
-                if (this.resolutionMode === pc.RESOLUTION_AUTO) {
+                if (this._resolutionMode === pc.RESOLUTION_AUTO) {
                     this.setCanvasResolution(pc.RESOLUTION_AUTO);
                 }
             }
