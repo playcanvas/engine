@@ -1,5 +1,14 @@
 # PlayCanvas Engine Changes
 
+### v0.164.0
+* Added Entity#addComponent and Entity#removeComponent
+* Deprecated ComponentSystem#addComponent and ComponentSystem#removeComponent
+* Removed pc.ApplicationContext, replaced with pc.Application everywhere
+* Added relevant properties from pc.ApplicationContext to pc.Application, `root`, `systems`, `loader`, `assets`, etc.
+* [FIX] worldToScreen
+* [FIX] Camera's no longer effected by entity's scale
+* [FIX] Fixed height map on Intel GPU
+
 ### v0.163.5
 * [FIX] Cubemap and cubemap filtering related fixes.
 * [FIX] Changing collision component properties now works without disable/re-enabling component.
