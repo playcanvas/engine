@@ -9,6 +9,7 @@ pc.script.create('flyCamera', function (app) {
         var eulers = this.entity.getLocalEulerAngles()
         this.ex = eulers.x;
         this.ey = eulers.y;
+        this._moved = false;
 
         // Disabling the context menu stops the browser displaying a menu when
         // you right-click the page
@@ -44,6 +45,11 @@ pc.script.create('flyCamera', function (app) {
 
         onMouseMove: function (event) {
             // Update the current Euler angles, clamp the pitch.
+            if (!this._moved) {
+                // first move event can be very large
+                this._moved = true;
+                return;
+            }
             this.ex -= event.dy / 5;
             this.ex = pc.math.clamp(this.ex, -90, 90);
             this.ey -= event.dx / 5;
