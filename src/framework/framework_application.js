@@ -1,7 +1,5 @@
 pc.extend(pc, function () {
 
-    var time;
-
     /**
      * @name pc.Application
      * @class Default application which performs general setup code and initiates the main game loop
@@ -29,6 +27,8 @@ pc.extend(pc, function () {
         pc.log.open();
         // Add event support
         pc.events.attach(this);
+
+        this._time = 0;
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
@@ -327,9 +327,9 @@ pc.extend(pc, function () {
             window.requestAnimationFrame(this.tick.bind(this));
 
             var now = (window.performance && window.performance.now) ? performance.now() : Date.now();
-            var dt = (now - (time || now)) / 1000.0;
+            var dt = (now - (this._time || now)) / 1000.0;
 
-            time = now;
+            this._time = now;
 
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
 
