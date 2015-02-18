@@ -95,10 +95,10 @@ pc.script.attribute('contrast', 'number', 0, {
 
 //--------------------------------- SCRIPT DEFINITION -----------------------------------//
 
-pc.script.create('brightnessContrastEffect', function (context) {
+pc.script.create('brightnessContrastEffect', function (app) {
     var BrightnessContrastEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.BrightnessContrastEffect(context.graphicsDevice);
+        this.effect = new pc.BrightnessContrastEffect(app.graphicsDevice);
     };
 
     BrightnessContrastEffect.prototype = {

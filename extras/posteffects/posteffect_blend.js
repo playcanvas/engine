@@ -83,11 +83,11 @@ pc.script.attribute('blendMap', 'asset', [], {
 });
 
 //--------------- SCRIPT DEFINITION ------------------------//
-pc.script.create('blendEffect', function (context) {
+pc.script.create('blendEffect', function (app) {
     // Creates a new BlendEffect instance
     var BlendEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.BlendEffect(context.graphicsDevice);
+        this.effect = new pc.BlendEffect(app.graphicsDevice);
     };
 
     BlendEffect.prototype = {
@@ -100,8 +100,8 @@ pc.script.create('blendEffect', function (context) {
 
         loadBlendMap: function () {
             if (this.blendMap) {
-                var asset = context.assets.getAssetById(this.blendMap);
-                context.assets.load([asset]).then(function (resources) {
+                var asset = app.assets.getAssetById(this.blendMap);
+                app.assets.load([asset]).then(function (resources) {
                     this.effect.blendMap = resources[0];
                 }.bind(this));
             }

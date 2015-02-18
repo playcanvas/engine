@@ -91,11 +91,11 @@ pc.script.attribute('focus', 'number', 0.35, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('horizontalTiltShiftEffect', function (context) {
+pc.script.create('horizontalTiltShiftEffect', function (app) {
     // Creates a new HorizontalTiltShiftEffect instance
     var HorizontalTiltShiftEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.HorizontalTiltShiftEffect(context.graphicsDevice);
+        this.effect = new pc.HorizontalTiltShiftEffect(app.graphicsDevice);
     };
 
     HorizontalTiltShiftEffect.prototype = {

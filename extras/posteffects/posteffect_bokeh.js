@@ -171,11 +171,11 @@ pc.script.attribute('aspect', 'number', 1, {
 
 //------------------------------ SCRIPT DEFINITION----------------------------//
 
-pc.script.create('bokehEffect', function (context) {
+pc.script.create('bokehEffect', function (app) {
     // Creates a new BokehEffect instance
     var BokehEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.BokehEffect(context.graphicsDevice);
+        this.effect = new pc.BokehEffect(app.graphicsDevice);
     };
 
     BokehEffect.prototype = {

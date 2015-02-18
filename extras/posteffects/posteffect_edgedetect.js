@@ -109,10 +109,10 @@ pc.script.attribute('color', 'rgba', [0.5, 0.5, 0.5, 1], {
 });
 
 //----------------------------- SCRIPT DEFINITION -----------------------------//
-pc.script.create('edgeDetectEffect', function (context) {
+pc.script.create('edgeDetectEffect', function (app) {
     var EdgeDetectEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.EdgeDetectEffect(context.graphicsDevice);
+        this.effect = new pc.EdgeDetectEffect(app.graphicsDevice);
     };
 
     EdgeDetectEffect.prototype = {

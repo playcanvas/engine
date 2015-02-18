@@ -6,7 +6,6 @@ pc.extend(pc, function () {
      * @constructor Create a new SkyboxComponent
      * @class A skybox is cube rendered around the camera. The texture on the inside of the cube is used to display the distant environment in a simple and efficient way.
      * Set a texture Asset to be used for each face of the cube.
-     * @param {pc.ApplicationContext} app
      * @extends pc.Component
      * @property {Boolean} enabled Enables or disables rendering of the skybox
      * @property {Number} negx Asset id of texture that is used for negative x face

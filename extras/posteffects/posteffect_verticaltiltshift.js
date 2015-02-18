@@ -91,10 +91,10 @@ pc.script.attribute('focus', 'number', 0.35, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('verticalTiltShiftEffect', function (context) {
+pc.script.create('verticalTiltShiftEffect', function (app) {
     var VerticalTiltShiftEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.VerticalTiltShiftEffect(context.graphicsDevice);
+        this.effect = new pc.VerticalTiltShiftEffect(app.graphicsDevice);
     };
 
     VerticalTiltShiftEffect.prototype = {

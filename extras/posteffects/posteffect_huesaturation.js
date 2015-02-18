@@ -104,10 +104,10 @@ pc.script.attribute('saturation', 'number', 0, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('hueSaturationEffect', function (context) {
+pc.script.create('hueSaturationEffect', function (app) {
     var HueSaturationEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.HueSaturationEffect(context.graphicsDevice);
+        this.effect = new pc.HueSaturationEffect(app.graphicsDevice);
     };
 
     HueSaturationEffect.prototype = {

@@ -10,7 +10,7 @@ pc.extend(pc, function () {
      * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
      * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to
      * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
-     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.ApplicationContext}.
+     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>
      *
      * <p>Every object created in the PlayCanvas Designer is an Entity.</p>

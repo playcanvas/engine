@@ -5,7 +5,7 @@ pc.extend(pc, function () {
      * @name pc.SkyboxComponentSystem
      * @constructor Create a new SkyboxComponentSystem
      * @class Renders a cube skybox
-     * @param {pc.ApplicationContext} app
+     * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */
     var SkyboxComponentSystem = function SkyboxComponentSystem (app) {

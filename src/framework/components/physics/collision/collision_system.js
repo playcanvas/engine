@@ -4,7 +4,7 @@ pc.extend(pc, function () {
      * @name pc.CollisionComponentSystem
      * @constructor Creates a new CollisionComponentSystem.
      * @class Manages creation of {@link pc.CollisionComponent}s.
-     * @param {pc.ApplicationContext} app The ApplicationContext for the running application.
+     * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */
      var CollisionComponentSystem = function CollisionComponentSystem (app) {
