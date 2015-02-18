@@ -61,6 +61,22 @@ pc.extend(pc, function () {
     };
     Entity = pc.inherits(Entity, pc.GraphNode);
 
+    /**
+     * @function
+     * @name pc.Entity#addComponent
+     * @description Create a new {pc.Component} and add attach it to the Entity.
+     * Use this to add functionality to the Entity like rendering a model, adding light, etc.
+     * @param {String} type The name of the component type. e.g. "model", "light"
+     * @param {Object} data The initialization data for the specific component type
+     * @returns {pc.Component} The new Component that was attached to the entity
+     * @example
+     * var entity = new pc.Entity();
+     * entity.addComponent("light"); // Add a light component with default properties
+     * entity.addComponent("camera", { // Add a camera component with some specified properties
+     *   fov: 45,
+     *   clearColor: new pc.Color(1,0,0),
+     * });
+     */
     Entity.prototype.addComponent = function (type, data) {
         var system = this._app.systems[type];
         if (system) {
@@ -75,6 +91,17 @@ pc.extend(pc, function () {
         }
      };
 
+     /**
+      * @function
+      * @name pc.Entity#removeComponent
+      * @description Remove a component from the Entity.
+      * @param {String} type The name of the Component type
+      * @example
+      * var entity = new pc.Entity();
+      * entity.addComponent("light"); // add new light component
+      * //...
+      * entity.removeComponent("light"); // remove light component
+      */
      Entity.prototype.removeComponent = function (type) {
         var system = this._app.systems[type];
         if (system) {

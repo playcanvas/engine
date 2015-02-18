@@ -61,6 +61,7 @@ pc.extend(pc, function () {
         },
 
         /**
+        * @private
         * @function
         * @name pc.ComponentSystem#addComponent
         * @description Create new {@link pc.Component} and {@link pc.ComponentData} instances and attach them to the entity
@@ -95,6 +96,7 @@ pc.extend(pc, function () {
 
         /**
         * @function
+        * @private
         * @name pc.ComponentSystem#removeComponent
         * @description Remove the {@link pc.Component} from the entity and delete the associated {@link pc.ComponentData}
         * @param {pc.Entity} entity The entity to remove the component from
