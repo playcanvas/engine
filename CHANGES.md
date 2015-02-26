@@ -1,5 +1,10 @@
 # PlayCanvas Engine Changes
 
+### v0.164.1
+* [FIX] Make sure there is a collision component when checking for collision events.
+* [FIX] Remove camera from system's camera list when the camera component is removed.
+* [FIX] Removed global time variable that prevents multiple applications running on the same page.
+
 ### v0.164.0
 * Added Entity#addComponent and Entity#removeComponent
 * Deprecated ComponentSystem#addComponent and ComponentSystem#removeComponent
