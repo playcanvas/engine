@@ -228,7 +228,7 @@ pc.extend(pc, function () {
                 data = components[id].data;
 
                 if (data.enabled && entity.enabled) {
-                    if (!entity.rigidbody) {
+                    if (!entity.rigidbody && entity.trigger) {
                         entity.trigger.syncEntityToBody();
                     }
                 }
