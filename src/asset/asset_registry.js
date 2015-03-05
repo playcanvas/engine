@@ -57,7 +57,7 @@ pc.extend(pc.asset, function () {
         */
         createAndAddAsset: function (id, assetData) {
             var asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data);
-            asset.id = id;
+            asset.id = parseInt(id);
 
             this.addAsset(asset);
 
