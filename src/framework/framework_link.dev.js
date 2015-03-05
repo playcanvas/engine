@@ -1,4 +1,4 @@
-pc.extend(editor, function () {
+pc.extend(designer, function () {
     var LinkInterface = function () {
         this.exposed = {}; // dictionary of exposed variables by system type
         this.added = {}; // dictionary of added variables, deprecated...

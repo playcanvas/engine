@@ -667,8 +667,8 @@ pc.extend(pc, function () {
             if (entity) {
                 if(componentName) {
                     if(entity[componentName]) {
-                        attribute = editor.link.exposed[componentName][attributeName];
-                        if (editor && attribute) {
+                        attribute = designer.link.exposed[componentName][attributeName];
+                        if (designer && attribute) {
                             // Override Type provided
                             if (attribute.RuntimeType) {
                                     if (attribute.RuntimeType === pc.Vec3) {

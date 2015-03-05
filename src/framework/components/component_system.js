@@ -160,11 +160,11 @@ pc.extend(pc, function () {
         * @description Expose properties into the Tools, set 'exposed: false' in to prevent properties appearing in the tools
         */
         exposeProperties: function () {
-            editor.link.addComponentType(this);
+            designer.link.addComponentType(this);
 
             this.schema.forEach(function (prop) {
                 if (prop.exposed !== false) {
-                    editor.link.expose(this.id, prop);
+                    designer.link.expose(this.id, prop);
                 }
             }.bind(this));
         }
