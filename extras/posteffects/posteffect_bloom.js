@@ -264,10 +264,10 @@ pc.script.attribute('blurAmount', 'number', 4, {
 
 //--------------- SCRIPT DEFINITION------------------------//
 
-pc.script.create('bloomEffect', function (context) {
+pc.script.create('bloomEffect', function (app) {
     var BloomEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.BloomEffect(context.graphicsDevice);
+        this.effect = new pc.BloomEffect(app.graphicsDevice);
     };
 
     BloomEffect.prototype = {

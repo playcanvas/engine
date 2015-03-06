@@ -233,8 +233,8 @@ pc.extend(pc.resources, function () {
             cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         }
 
-        if (cubemap.maxAnisotropy !== data.anisotropy) {
-            cubemap.maxAnisotropy = data.anisotropy;
+        if (cubemap.anisotropy !== data.anisotropy) {
+            cubemap.anisotropy = data.anisotropy;
         }
 
         if (this._areValidImages(images)) {

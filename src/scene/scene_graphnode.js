@@ -2,13 +2,12 @@ pc.extend(pc, function () {
     /**
      * @name pc.GraphNode
      * @class A hierarchical scene node.
-     * @param {String} name Non-unique, human readable name.
      * @property {pc.Vec3} right Vector representing the X direction of the node in world space (read only).
      * @property {pc.Vec3} up Vector representing the Y direction of the node in world space (read only).
      * @property {pc.Vec3} forward Vector representing the negative Z direction of the node in world space (read only).
      */
-    var GraphNode = function GraphNode(name) {
-        this.name = name || "Untitled"; // Non-unique human readable name
+    var GraphNode = function GraphNode() {
+        this.name = "Untitled"; // Non-unique human readable name
         this._labels = {};
 
         // Local-space properties of transform (only first 3 are settable by the user)
@@ -820,7 +819,7 @@ pc.extend(pc, function () {
          * @description Add a new child to the child list and update the parent value of the child node
          * @param {pc.GraphNode} node The new child to add
          * @example
-         * var e = new pc.Entity();
+         * var e = new pc.Entity(app);
          * this.entity.addChild(e);
          */
         addChild: function (node) {
@@ -861,7 +860,7 @@ pc.extend(pc, function () {
          * @param {pc.GraphNode} node The new child to insert
          * @param {Number} index The index in the child list of the parent where the new node will be inserted
          * @example
-         * var e = new pc.Entity();
+         * var e = new pc.Entity(app);
          * this.entity.insertChild(e, 1);
          */
         insertChild: function (node, index) {

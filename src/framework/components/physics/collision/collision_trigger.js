@@ -7,14 +7,14 @@ pc.extend(pc, function () {
     * @name pc.Trigger
     * @description Creates a trigger object used to create internal physics objects that interact with
     * rigid bodies and trigger collision events with no collision response
-    * @param {pc.ApplicationContext} context The ApplicationContext for the running application
+    * @param {pc.Application} app The running {pc.Application}
     * @param {pc.Component} component The component for which the trigger will be created
     * @param {pc.ComponentData} data The data for the component
     */
-    var Trigger = function Trigger (context, component, data) {
+    var Trigger = function Trigger (app, component, data) {
         this.entity = component.entity;
         this.component = component;
-        this.context = context;
+        this.app = app;
 
         if (typeof Ammo !== 'undefined') {
             ammoVec1 = new Ammo.btVector3();
@@ -72,7 +72,7 @@ pc.extend(pc, function () {
 
         destroy: function () {
             if (this.body) {
-                this.context.systems.rigidbody.removeBody(this.body);
+                this.app.systems.rigidbody.removeBody(this.body);
             }
         },
 
@@ -93,7 +93,7 @@ pc.extend(pc, function () {
 
         enable: function () {
             var body = this.body;
-            this.context.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
+            this.app.systems.rigidbody.addBody(body, pc.BODYGROUP_TRIGGER, pc.BODYMASK_NOT_STATIC ^ pc.BODYGROUP_TRIGGER);
 
             // set the body's activation state to active so that it is
             // simulated properly again
@@ -104,7 +104,7 @@ pc.extend(pc, function () {
 
         disable: function () {
             var body = this.body;
-            this.context.systems.rigidbody.removeBody(body);
+            this.app.systems.rigidbody.removeBody(body);
 
             // set the body's activation state to disable simulation so
             // that it properly deactivates after we remove it from the physics world

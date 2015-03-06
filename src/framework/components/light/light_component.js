@@ -155,7 +155,7 @@ pc.extend(pc, function () {
 
             var model = this.data.model;
             if (model) {
-                var scene = this.system.context.scene;
+                var scene = this.system.app.scene;
                 if (!scene.containsModel(model)) {
                     scene.addModel(model);
                 }
@@ -169,7 +169,7 @@ pc.extend(pc, function () {
 
             var model = this.data.model;
             if (model) {
-                var scene = this.system.context.scene;
+                var scene = this.system.app.scene;
                 scene.removeModel(model);
             }
         }

@@ -4,11 +4,11 @@ pc.extend(pc.resources, function () {
      * @class ResourceHandler for loading javascript files dynamically
      * Two types of javascript file can be loaded, PlayCanvas ScriptType files which must contain a call to pc.script.create() to be called when the script executes,
      * or regular javascript files, such as third-party libraries.
-     * @param {pc.ApplicationContext} context The context is passed into the ScriptType callbacks for use in user-scripts
+     * @param {pc.Application} app The running {pc.Application}
      * @param {String} prefix Prefix for script urls, so that script resources can be located in a variety of places including localhost
      */
-    var ScriptResourceHandler = function (context, prefix) {
-        this._context = context;
+    var ScriptResourceHandler = function (app, prefix) {
+        this._app = app;
 
         this._prefix = prefix || ""; // prefix for script urls, allows running from script resources on localhost
         this._queue = []; // queue of urls waiting to load
@@ -138,7 +138,7 @@ pc.extend(pc.resources, function () {
                 done = true; // prevent double event firing
                 var script = self._pending.shift();
                 if (script) {
-                    var ScriptType = script.callback(self._context);
+                    var ScriptType = script.callback(self._app);
                     if (ScriptType._pcScriptName) {
                         throw Error("Attribute _pcScriptName is reserved on ScriptTypes for ResourceLoader use");
                     }

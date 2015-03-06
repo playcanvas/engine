@@ -25,18 +25,18 @@
         var canvas = document.getElementById("application-canvas");
 
         // Create the application and start the update loop
-        var application = new pc.Application(canvas);
-        application.start();
+        var app = new pc.Application(canvas);
+        app.start();
 
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        application.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        application.setCanvasResolution(pc.RESOLUTION_AUTO);
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         var entity, light, camera;
 
         // Create an Entity with a camera component
         var camera = new pc.Entity();
-        application.context.systems.camera.addComponent(camera, {
+        camera.addComponent("camera", {
             clearColor: new pc.Color(0,0,0)
         });
 
@@ -45,7 +45,7 @@
 
         // Create an Entity for the ground
         var ground = new pc.Entity();
-        application.context.systems.model.addComponent(ground, {
+        ground.addComponent("model", {
             type: "box"
         });
         ground.setLocalScale(50, 1, 50);
@@ -53,7 +53,7 @@
 
         // Create an Entity with a point light component and a sphere model component.
         var lightDir = new pc.Entity();
-        application.context.systems.light.addComponent(lightDir, {
+        lightDir.addComponent("light", {
             type: "directional",
             color: new pc.Color(1, .4, 0),
             intensity: 1
@@ -61,7 +61,7 @@
         lightDir.setLocalEulerAngles(-80, 70, 0);
 
         var light = new pc.Entity();
-        application.context.systems.light.addComponent(light, {
+        light.addComponent("light", {
             type: "spot",
             color: new pc.Color(.6, .85, 1),
             outerConeAngle: 45,
@@ -73,12 +73,12 @@
             shadowResolution: 2048
         });
         light.setLocalPosition(0, 5, 0);
-        application.context.systems.audiolistener.addComponent(light, {});
+        light.addComponent("audiolistener");
 
         var requests = [
-            application.context.assets.loadFromUrl("../../assets/footsteps_gravel_01.mp3", "audio"),
-            application.context.assets.loadFromUrl("../../assets/Playbot/Playbot.json", "model"),
-            application.context.assets.loadFromUrl("../../assets/Playbot/Playbot_run.json", "animation")
+            app.assets.loadFromUrl("../../assets/footsteps_gravel_01.mp3", "audio"),
+            app.assets.loadFromUrl("../../assets/Playbot/Playbot.json", "model"),
+            app.assets.loadFromUrl("../../assets/Playbot/Playbot_run.json", "animation")
         ];
 
         pc.promise.all(requests).then(function (results) {
@@ -88,23 +88,23 @@
 
             // Create walking dude
             entity = new pc.Entity();
-            application.context.systems.audiosource.addComponent(entity, {
+            entity.addComponent("audiosource", {
                 assets: [
                     gravel.id
                 ],
                 loop: true,
                 pitch: 1.7
             });
-            application.context.systems.model.addComponent(entity, {
+            entity.addComponent("model", {
                 type: "asset",
                 asset: model,
                 castShadows: true
             });
-            application.context.systems.animation.addComponent(entity, {
+            entity.addComponent("animation", {
                 assets: [anim.id],
                 speed: 0.8
             });
-            application.context.root.addChild(entity);
+            app.root.addChild(entity);
 
             // start the audio
             entity.audiosource.play("footsteps_gravel_01.mp3");
@@ -113,7 +113,7 @@
             var angle = 135;
             var radius = 3;
             var height = 0;//1.1;
-            application.on("update", function (dt) {
+            app.on("update", function (dt) {
                 angle += 30*dt;
                 if (angle > 360) {
                     angle -= 360;
@@ -125,9 +125,9 @@
         });
 
         // Add Entities into the scene hierarchy
-        application.context.root.addChild(camera);
-        application.context.root.addChild(light);
-        application.context.root.addChild(ground);
+        app.root.addChild(camera);
+        app.root.addChild(light);
+        app.root.addChild(ground);
     </script>
 </body>
 </html>

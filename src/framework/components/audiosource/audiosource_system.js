@@ -2,14 +2,14 @@ pc.extend(pc, function () {
     /**
      * @name pc.AudioSourceComponentSystem
      * @constructor AudioSourceComponentSystem controls playback of an audio sample
-     * @param {pc.ApplicationContext} context The ApplicationContext
+     * @param {pc.Application} app The Application
      * @param {pc.AudioContext} audioContext AudioContext object used to create sources and filters
      * @extends pc.ComponentSystem
      */
-    var AudioSourceComponentSystem = function (context, manager) {
+    var AudioSourceComponentSystem = function (app, manager) {
         this.id = "audiosource";
         this.description = "Specifies audio assets that can be played at the position of the Entity.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.AudioSourceComponent;
         this.DataType = pc.AudioSourceComponentData;

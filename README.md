@@ -8,7 +8,8 @@ PlayCanvas is an open-source game engine. It uses HTML5 and WebGL to run games a
 
 Many games have been published using the PlayCanvas engine. Here is a small selection.
 
-[![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/333626/BGQN9H-image-25.jpg)](http://apps.playcanvas.com/max/star-lord/Star-Lord) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://swooop.playcanvas.com) [![Dungeon Fury](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4450/DVBWHU-image-25.jpg)](http://dungeonfury.playcanvas.com) [![Accelerally](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/3489/JN3X88-image-25.jpg)](http://apps.playcanvas.com/will/acceleronly/accelerally) [![Going Around](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/7/3491/HMYM08-image-25.jpg)](http://apps.playcanvas.com/dave/goingaround/goingaround)
+[![Star-Lord](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/333626/BGQN9H-image-25.jpg)](http://playcanv.as/p/SA7hVBLt) [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](http://playcanv.as/p/JtL2iqIH) [![TANX](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/4373/45093/M1TVDX-image-25.jpg)](http://playcanv.as/p/aP0oxhUr)  
+[![Dungeon Fury](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4450/DVBWHU-image-25.jpg)](http://playcanv.as/p/MW862amA) [![Accelerally](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/3489/JN3X88-image-25.jpg)](http://playcanv.as/p/dq0cXdTJ) [![Going Around](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/7/3491/HMYM08-image-25.jpg)](http://playcanv.as/p/WDDAV5tg)
 
 You can see more games on the [PlayCanvas website](https://playcanvas.com/play).
 
@@ -56,24 +57,24 @@ Here's a super-simple Hello World example - a spinning cube!
 
     // Create box entity
     var cube = new pc.Entity();
-    app.context.systems.model.addComponent(cube, {
+    cube.addComponent("model", {
         type: "box"
     });
 
     // Create camera entity
     var camera = new pc.Entity();
-    app.context.systems.camera.addComponent(camera, {
+    camera.addComponent("camera", {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
 
     // Create directional light entity
     var light = new pc.Entity();
-    app.context.systems.light.addComponent(light);
+    light.addComponent("light");
 
     // Add to hierarchy
-    app.context.root.addChild(cube);
-    app.context.root.addChild(camera);
-    app.context.root.addChild(light);
+    app.root.addChild(cube);
+    app.root.addChild(camera);
+    app.root.addChild(light);
 
     // Set up initial positions and orientations
     camera.setPosition(0, 0, 3);
@@ -94,7 +95,10 @@ See all the [examples](http://playcanvas.github.io) here or browse them locally 
 
 ## How to build
 
-The PlayCanvas Engine uses the Python 2.7 and the Closure Compiler to build which requires Java.
+* Ensure you have Python installed (supported version is 2.7)
+* Ensure you have [Java](https://java.com/en/download/) installed.
+
+Then, to execute a build of the engine to the build/output folder, do:
 
     cd build
     python build.py

@@ -122,13 +122,13 @@ pc.extend(pc, function () {
      * @constructor Create a new RigidBodyComponentSystem
      * @class The RigidBodyComponentSystem maintains the dynamics world for simulating rigid bodies, it also controls global values for the world such as gravity.
      * Note: The RigidBodyComponentSystem is only valid if 3D Physics is enabled in your application. You can enable this in the application settings for your Depot.
-     * @param {pc.ApplicationContext} context The ApplicationContext
+     * @param {pc.Application} app The Application
      * @extends pc.ComponentSystem
      */
-    var RigidBodyComponentSystem = function RigidBodyComponentSystem (context) {
+    var RigidBodyComponentSystem = function RigidBodyComponentSystem (app) {
         this.id = 'rigidbody';
         this.description = "Adds the entity to the scene's physical simulation.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.RigidBodyComponent;
         this.DataType = pc.RigidBodyComponentData;
@@ -632,8 +632,8 @@ pc.extend(pc, function () {
                     if ((flags0 & pc.BODYFLAG_NORESPONSE_OBJECT) ||
                         (flags1 & pc.BODYFLAG_NORESPONSE_OBJECT)) {
 
-                        var e0Events = e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave");
-                        var e1Events = e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave");
+                        var e0Events = e0.collision ? e0.collision.hasEvent("triggerenter") || e0.collision.hasEvent("triggerleave") : false;
+                        var e1Events = e1.collision ? e1.collision.hasEvent("triggerenter") || e1.collision.hasEvent("triggerleave") : false;
 
                         if (e0Events) {
                             // fire triggerenter events
@@ -654,8 +654,8 @@ pc.extend(pc, function () {
                             }
                         }
                     } else {
-                        var e0Events = e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend")|| e0.collision.hasEvent("contact");
-                        var e1Events = e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact");
+                        var e0Events = e0.collision ? e0.collision.hasEvent("collisionstart")  || e0.collision.hasEvent("collisionend")|| e0.collision.hasEvent("contact") : false;
+                        var e1Events = e1.collision ? e1.collision.hasEvent("collisionstart") || e1.collision.hasEvent("collisionend") || e1.collision.hasEvent("contact") : false;
                         var globalEvents = this.hasEvent("contact");
 
                         if (globalEvents || e0Events || e1Events) {

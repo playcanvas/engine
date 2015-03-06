@@ -1,7 +1,7 @@
 pc.script.attribute('speed', 'number', 10);
 pc.script.attribute('fastSpeed', 'number', 20);
 
-pc.script.create('flyCamera', function (context) {
+pc.script.create('flyCamera', function (app) {
     var FlyCamera = function (entity) {
         this.entity = entity;
 
@@ -9,12 +9,13 @@ pc.script.create('flyCamera', function (context) {
         var eulers = this.entity.getLocalEulerAngles()
         this.ex = eulers.x;
         this.ey = eulers.y;
+        this._moved = false;
 
         // Disabling the context menu stops the browser displaying a menu when
         // you right-click the page
-        context.mouse.disableContextMenu();
-        context.mouse.on(pc.EVENT_MOUSEMOVE, this.onMouseMove, this);
-        context.mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
+        app.mouse.disableContextMenu();
+        app.mouse.on(pc.EVENT_MOUSEMOVE, this.onMouseMove, this);
+        app.mouse.on(pc.EVENT_MOUSEDOWN, this.onMouseDown, this);
 
     };
 
@@ -24,26 +25,31 @@ pc.script.create('flyCamera', function (context) {
             this.entity.setLocalEulerAngles(this.ex, this.ey, 0);
 
             var speed = this.speed;
-            if (context.keyboard.isPressed(pc.KEY_SHIFT)) {
+            if (app.keyboard.isPressed(pc.KEY_SHIFT)) {
                 speed = this.fastSpeed;
             }
 
             // Update the camera's position
-            if (context.keyboard.isPressed(pc.KEY_UP) || context.keyboard.isPressed(pc.KEY_W)) {
+            if (app.keyboard.isPressed(pc.KEY_UP) || app.keyboard.isPressed(pc.KEY_W)) {
                 this.entity.translateLocal(0, 0, -speed*dt);
-            } else if (context.keyboard.isPressed(pc.KEY_DOWN) || context.keyboard.isPressed(pc.KEY_S)) {
+            } else if (app.keyboard.isPressed(pc.KEY_DOWN) || app.keyboard.isPressed(pc.KEY_S)) {
                 this.entity.translateLocal(0, 0, speed*dt);
             }
 
-            if (context.keyboard.isPressed(pc.KEY_LEFT) || context.keyboard.isPressed(pc.KEY_A)) {
+            if (app.keyboard.isPressed(pc.KEY_LEFT) || app.keyboard.isPressed(pc.KEY_A)) {
                 this.entity.translateLocal(-speed*dt, 0, 0);
-            } else if (context.keyboard.isPressed(pc.KEY_RIGHT) || context.keyboard.isPressed(pc.KEY_D)) {
+            } else if (app.keyboard.isPressed(pc.KEY_RIGHT) || app.keyboard.isPressed(pc.KEY_D)) {
                 this.entity.translateLocal(speed*dt, 0, 0);
             }
         },
 
         onMouseMove: function (event) {
             // Update the current Euler angles, clamp the pitch.
+            if (!this._moved) {
+                // first move event can be very large
+                this._moved = true;
+                return;
+            }
             this.ex -= event.dy / 5;
             this.ex = pc.math.clamp(this.ex, -90, 90);
             this.ey -= event.dx / 5;
@@ -52,7 +58,7 @@ pc.script.create('flyCamera', function (context) {
         onMouseDown: function (event) {
             // When the mouse button is clicked try and capture the pointer
             if (!pc.Mouse.isPointerLocked()) {
-                context.mouse.enablePointerLock();
+                app.mouse.enablePointerLock();
             }
         },
     };

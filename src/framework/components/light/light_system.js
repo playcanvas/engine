@@ -3,13 +3,13 @@ pc.extend(pc, function () {
      * @name pc.LightComponentSystem
      * @constructor Create a new LightComponentSystem.
      * @class A Light Component is used to dynamically light the scene.
-     * @param {pc.ApplicationContext} context The application context.
+     * @param {pc.Application} app The application.
      * @extends pc.ComponentSystem
      */
-    var LightComponentSystem = function (context) {
+    var LightComponentSystem = function (app) {
         this.id = 'light';
         this.description = "Enables the Entity to emit light."
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.LightComponent;
         this.DataType = pc.LightComponentData;
@@ -312,8 +312,8 @@ pc.extend(pc, function () {
             light.setType(this._getLightType());
             light._node = component.entity;
 
-            var context = this.system.context;
-            context.scene.addLight(light);
+            var app = this.system.app;
+            app.scene.addLight(light);
 
             this._createDebugShape(component, data, light);
         },
@@ -323,12 +323,12 @@ pc.extend(pc, function () {
         },
 
         _createDebugShape: function (component, data, light) {
-            var context = this.system.context;
+            var app = this.system.app;
 
             data = data || {};
             data.light = light;
 
-            if (context.designer) {
+            if (app.designer) {
                 this.mesh = this._createDebugMesh();
                 if (!this.material) {
                     this.material = this._createDebugMaterial();
@@ -338,7 +338,7 @@ pc.extend(pc, function () {
                 model.graph = component.entity;
                 model.meshInstances = [ new pc.MeshInstance(component.entity, this.mesh, this.material) ];
 
-                context.scene.addModel(model);
+                app.scene.addModel(model);
 
                 data.model = model;
             }
@@ -353,12 +353,15 @@ pc.extend(pc, function () {
         },
 
         remove: function(entity, data) {
-            var context = this.system.context;
+            var app = this.system.app;
 
-            context.scene.removeLight(data.light);
+            app.scene.removeModel(data.model);
+            delete data.model;
 
-            if (context.designer) {
-                context.scene.removeModel(data.model);
+            app.scene.removeLight(data.light);
+
+            if (app.designer) {
+                app.scene.removeModel(data.model);
                 delete data.model;
             }
         },
@@ -384,8 +387,8 @@ pc.extend(pc, function () {
                 return this.mesh;
             }
 
-            var context = this.system.context;
-            var format = new pc.VertexFormat(context.graphicsDevice, [
+            var app = this.system.app;
+            var format = new pc.VertexFormat(app.graphicsDevice, [
                 { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
             ]);
 
@@ -417,7 +420,7 @@ pc.extend(pc, function () {
                 vertexData[(i+24)*3+2] = posRot[2];
             }
             // Copy vertex data into the vertex buffer
-            var vertexBuffer = new pc.VertexBuffer(context.graphicsDevice, format, 32);
+            var vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, format, 32);
             var positions = new Float32Array(vertexBuffer.lock());
             for (i = 0; i < vertexData.length; i++) {
                 positions[i] = vertexData[i];
@@ -458,8 +461,8 @@ pc.extend(pc, function () {
                 return this.mesh;
             }
 
-            var context = this.system.context;
-            return pc.createSphere(context.graphicsDevice, {
+            var app = this.system.app;
+            return pc.createSphere(app.graphicsDevice, {
                 radius: 0.1
             });
         },
@@ -486,10 +489,10 @@ pc.extend(pc, function () {
         },
 
         _createDebugMesh: function () {
-            var context = this.system.context;
+            var app = this.system.app;
             var indexBuffer = this.indexBuffer;
             if (!indexBuffer) {
-                var indexBuffer = new pc.IndexBuffer(context.graphicsDevice, pc.INDEXFORMAT_UINT8, 88);
+                var indexBuffer = new pc.IndexBuffer(app.graphicsDevice, pc.INDEXFORMAT_UINT8, 88);
                 var inds = new Uint8Array(indexBuffer.lock());
                 // Spot cone side lines
                 inds[0] = 0;
@@ -509,11 +512,11 @@ pc.extend(pc, function () {
                 this.indexBuffer = indexBuffer;
             }
 
-            var vertexFormat = new pc.VertexFormat(context.graphicsDevice, [
+            var vertexFormat = new pc.VertexFormat(app.graphicsDevice, [
                 { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
             ]);
 
-            var vertexBuffer = new pc.VertexBuffer(context.graphicsDevice, vertexFormat, 42, pc.BUFFER_DYNAMIC);
+            var vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, vertexFormat, 42, pc.BUFFER_DYNAMIC);
 
             var mesh = new pc.Mesh();
             mesh.vertexBuffer = vertexBuffer;

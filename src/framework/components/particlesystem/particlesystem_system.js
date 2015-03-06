@@ -1,9 +1,9 @@
 pc.extend(pc, function() {
 
-    var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(context) {
+    var ParticleSystemComponentSystem = function ParticleSystemComponentSystem(app) {
         this.id = 'particlesystem';
         this.description = "Updates and renders particle system in the scene.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ParticleSystemComponent;
         this.DataType = pc.ParticleSystemComponentData;
@@ -488,7 +488,7 @@ pc.extend(pc, function() {
         pc.ComponentSystem.on('update', this.onUpdate, this);
         pc.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
 
-        var gd = context.graphicsDevice;
+        var gd = app.graphicsDevice;
         this.debugMesh = this._createDebugMesh();
 
         this.debugMaterial = new pc.BasicMaterial();
@@ -599,14 +599,14 @@ pc.extend(pc, function() {
 
         onRemove: function(entity, data) {
             if (data.model) {
-                this.context.scene.removeModel(data.model);
+                this.app.scene.removeModel(data.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;
             }
         },
 
         _createDebugMesh: function () {
-            var gd = this.context.graphicsDevice;
+            var gd = this.app.graphicsDevice;
 
             var format = new pc.VertexFormat(gd, [
                 { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.ELEMENTTYPE_FLOAT32 }
@@ -650,8 +650,8 @@ pc.extend(pc, function() {
             component.data.debugShape = model;
 
             if (component.data.enabled && component.entity.enabled) {
-                this.context.root.addChild(node);
-                this.context.scene.addModel(model);
+                this.app.root.addChild(node);
+                this.app.scene.addModel(model);
             }
 
             return model;

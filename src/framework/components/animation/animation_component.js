@@ -107,7 +107,7 @@ pc.extend(pc, function () {
             };
 
             var assets = ids.map(function (id) {
-                return this.system.context.assets.getAssetById(id);
+                return this.system.app.assets.getAssetById(id);
             }, this);
 
             var animations = {};
@@ -137,7 +137,7 @@ pc.extend(pc, function () {
             }
 
             if (requests.length) {
-                this.system.context.loader.request(requests, options).then(function (animResources) {
+                this.system.app.loader.request(requests, options).then(function (animResources) {
                     for (var i = 0; i < requests.length; i++) {
                         animations[names[i]] = animResources[i];
                     }
@@ -191,7 +191,7 @@ pc.extend(pc, function () {
                 for (var i = 0; i < oldValue.length; i++) {
                     // unsubscribe from change event for old assets
                     if (oldValue[i]) {
-                        var asset = this.system.context.assets.getAssetById(oldValue[i]);
+                        var asset = this.system.app.assets.getAssetById(oldValue[i]);
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
                         }

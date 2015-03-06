@@ -6,7 +6,6 @@ pc.extend(pc, function () {
      * @constructor Create a new SkyboxComponent
      * @class A skybox is cube rendered around the camera. The texture on the inside of the cube is used to display the distant environment in a simple and efficient way.
      * Set a texture Asset to be used for each face of the cube.
-     * @param {pc.ApplicationContext} context
      * @extends pc.Component
      * @property {Boolean} enabled Enables or disables rendering of the skybox
      * @property {Number} negx Asset id of texture that is used for negative x face
@@ -25,10 +24,10 @@ pc.extend(pc, function () {
         onSet: function (name, oldValue, newValue) {
 
             if ((name=='cubemap') && (newValue)) {
-                this.data.model = _createSkyboxFromCubemap(this.entity, this.system.context, newValue);
+                this.data.model = _createSkyboxFromCubemap(this.entity, this.system.app, newValue);
 
                 if (this.enabled && this.entity.enabled) {
-                    this.system.context.scene.addModel(this.data.model);
+                    this.system.app.scene.addModel(this.data.model);
                     this.entity.addChild(this.data.model.graph);
                 }
                 return;
@@ -45,7 +44,7 @@ pc.extend(pc, function () {
                 // clear existing skybox
                 this.data.model = null;
 
-                assets[index] = this.system.context.assets.getAssetById(id);
+                assets[index] = this.system.app.assets.getAssetById(id);
                 if (!assets[index]) {
                     logERROR(pc.string.format("Trying to load skybox component before asset {0} has loaded", id));
                     return;
@@ -54,10 +53,10 @@ pc.extend(pc, function () {
 
                 // Once all assets are loaded create the skybox
                 if (assets[0] && assets[1] && assets[2] && assets[3] && assets[4] && assets[5]) {
-                    this.data.model = _createSkybox(this.entity, this.system.context, assets);
+                    this.data.model = _createSkybox(this.entity, this.system.app, assets);
 
                     if (this.enabled && this.entity.enabled) {
-                        this.system.context.scene.addModel(this.data.model);
+                        this.system.app.scene.addModel(this.data.model);
                         this.entity.addChild(this.data.model.graph);
                     }
                 }
@@ -92,8 +91,8 @@ pc.extend(pc, function () {
         onEnable: function () {
            SkyboxComponent._super.onEnable.call(this);
             if (this.data.model) {
-                if (!this.system.context.scene.containsModel(this.data.model)) {
-                    this.system.context.scene.addModel(this.data.model);
+                if (!this.system.app.scene.containsModel(this.data.model)) {
+                    this.system.app.scene.addModel(this.data.model);
                     this.entity.addChild(this.data.model.graph);
                 }
             }
@@ -102,17 +101,17 @@ pc.extend(pc, function () {
         onDisable: function () {
             SkyboxComponent._super.onDisable.call(this);
             if (this.data.model) {
-                if (this.system.context.scene.containsModel(this.data.model)) {
+                if (this.system.app.scene.containsModel(this.data.model)) {
                     this.entity.removeChild(this.data.model.graph);
-                    this.system.context.scene.removeModel(this.data.model);
+                    this.system.app.scene.removeModel(this.data.model);
                 }
             }
         },
     });
 
     // Private
-    var _createSkybox = function (entity, context, assets) {
-        var gd = context.graphicsDevice;
+    var _createSkybox = function (entity, app, assets) {
+        var gd = app.graphicsDevice;
 
         var sources = [];
         var requests = [];
@@ -156,7 +155,7 @@ pc.extend(pc, function () {
                 parent: entity.getRequest()
             };
 
-            context.loader.request(requests, options).then(function (resources) {
+            app.loader.request(requests, options).then(function (resources) {
                 for (var i=0; i<resources.length; i++) {
                     sources[indexes[i]] = resources[i].getSource();
                 }
@@ -170,7 +169,7 @@ pc.extend(pc, function () {
         var material = new pc.Material();
         material.updateShader = function() {
             var library = gd.getProgramLibrary();
-            var shader = library.getProgram('skybox', {hdr:false, gamma:context.scene.gammaCorrection, toneMapping:context.scene.toneMapping});
+            var shader = library.getProgram('skybox', {hdr:false, gamma:app.scene.gammaCorrection, toneMapping:app.scene.toneMapping});
             this.setShader(shader);
         };
 
@@ -189,13 +188,13 @@ pc.extend(pc, function () {
         return model;
     };
 
-    var _createSkyboxFromCubemap = function (entity, context, cubemap) {
-        var gd = context.graphicsDevice;
+    var _createSkyboxFromCubemap = function (entity, app, cubemap) {
+        var gd = app.graphicsDevice;
 
         var material = new pc.Material();
         material.updateShader = function() {
             var library = gd.getProgramLibrary();
-            var shader = library.getProgram('skybox', {hdr:cubemap.hdr, prefiltered:true, gamma:context.scene.gammaCorrection, toneMapping:context.scene.toneMapping});
+            var shader = library.getProgram('skybox', {hdr:cubemap.hdr, prefiltered:true, gamma:app.scene.gammaCorrection, toneMapping:app.scene.toneMapping});
             this.setShader(shader);
         };
 

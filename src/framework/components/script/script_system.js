@@ -13,13 +13,13 @@ pc.extend(pc, function () {
      * @name pc.ScriptComponentSystem
      * @constructor Create a new ScriptComponentSystem
      * @class Allows scripts to be attached to an Entity and executed
-     * @param {Object} context
+     * @param {Object} app
      * @extends pc.ComponentSystem
      */
-    var ScriptComponentSystem = function ScriptComponentSystem(context) {
+    var ScriptComponentSystem = function ScriptComponentSystem(app) {
         this.id = 'script';
         this.description = "Allows the Entity to run JavaScript fragments to implement custom behavior.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ScriptComponent;
         this.DataType = pc.ScriptComponentData;
@@ -67,6 +67,20 @@ pc.extend(pc, function () {
     pc.extend(ScriptComponentSystem.prototype, {
         initializeComponentData: function (component, data, properties) {
             properties = ['runInTools', 'enabled', 'scripts'];
+
+            // convert attributes array to dictionary
+            if (data.scripts && data.scripts.length) {
+                data.scripts.forEach(function (script) {
+                    if (script.attributes && pc.type(script.attributes) === 'array') {
+                        var dict = {};
+                        for (var i = 0; i < script.attributes.length; i++) {
+                            dict[script.attributes[i].name] = script.attributes[i];
+                        }
+
+                        script.attributes = dict;
+                    }
+                });
+            }
 
             ScriptComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
@@ -144,7 +158,7 @@ pc.extend(pc, function () {
                     if (children[i] instanceof pc.Entity) {
                         this.onPostInitialize(children[i]);
                     }
-                };
+                }
             }
         },
 
@@ -411,11 +425,13 @@ pc.extend(pc, function () {
                 if (script.url === url) {
                     var attributes = script.attributes;
                     if (script.name && attributes) {
-                        attributes.forEach(function (attribute, index) {
-                            self._createAccessor(attribute, instance);
-                        });
+                        for (var key in attributes) {
+                            if (attributes.hasOwnProperty(key)) {
+                                self._createAccessor(attributes[key], instance);
+                            }
+                        }
 
-                        entity.script.data.attributes[script.name] = pc.extend([], attributes);
+                        entity.script.data.attributes[script.name] = pc.extend({}, attributes);
                     }
                     break;
                 }
@@ -443,13 +459,13 @@ pc.extend(pc, function () {
 
         _updateAccessors: function (entity, instance) {
             var self = this;
-            var i, k, h;
+            var i;
             var len = entity.script.scripts.length;
+            var key;
             var url = instance.url;
             var scriptComponent, script, name, attributes;
-            var removedAttributes;
             var previousAttributes;
-            var oldAttribute, newAttribute;
+            var oldAttribute;
 
             for (i=0; i<len; i++) {
                 scriptComponent = entity.script;
@@ -460,35 +476,25 @@ pc.extend(pc, function () {
                     if (name) {
                         if (attributes) {
                             // create / update attribute accessors
-                            attributes.forEach(function (attribute, index) {
-                                self._createAccessor(attribute, instance);
-                            });
+                            for (key in attributes) {
+                                if (attributes.hasOwnProperty(key)) {
+                                    self._createAccessor(attributes[key], instance);
+                                }
+                            }
                         }
 
                         // delete accessors for attributes that no longer exist
                         // and fire onAttributeChange when an attribute value changed
                         previousAttributes = scriptComponent.data.attributes[name];
                         if (previousAttributes) {
-                            k = previousAttributes.length;
-                            while(k--) {
-                                oldAttribute = previousAttributes[k];
-                                newAttribute = null;
-
-                                h = attributes.length;
-
-                                while (h--) {
-                                    if (oldAttribute.name === attributes[h].name) {
-                                        newAttribute = attributes[h];
-                                        break;
-                                    }
-                                }
-
-                                if (!newAttribute) {
+                            for (key in previousAttributes) {
+                                oldAttribute = previousAttributes[key];
+                                if (!(key in attributes)) {
                                     delete instance.instance[oldAttribute.name];
                                 } else {
-                                    if (oldAttribute.value !== newAttribute.value) {
+                                    if (attributes[key].value !== oldAttribute.value) {
                                         if (instance.instance.onAttributeChanged) {
-                                            instance.instance.onAttributeChanged(oldAttribute.name, oldAttribute.value, newAttribute.value);
+                                            instance.instance.onAttributeChanged(oldAttribute.name, oldAttribute.value, attributes[key].value);
                                         }
                                     }
                                 }

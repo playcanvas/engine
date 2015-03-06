@@ -77,10 +77,10 @@ pc.script.attribute('amount', 'number', 1, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('sepiaEffect', function (context) {
+pc.script.create('sepiaEffect', function (app) {
     var SepiaEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.SepiaEffect(context.graphicsDevice);
+        this.effect = new pc.SepiaEffect(app.graphicsDevice);
     };
 
     SepiaEffect.prototype = {

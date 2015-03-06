@@ -4,12 +4,12 @@ pc.extend(pc, function () {
      * @name pc.BallSocketJointComponentSystem
      * @constructor Create a new BallSocketJointComponentSystem
      * @class Manages creation of BallSocketJointComponents
-     * @param {pc.ApplicationContext} context The ApplicationContext for the running application
+     * @param {pc.Application} app The running {pc.Application}
      * @extends pc.ComponentSystem
      */
-    var BallSocketJointComponentSystem = function BallSocketJointComponentSystem(context) {
+    var BallSocketJointComponentSystem = function BallSocketJointComponentSystem(app) {
         this.id = "ballsocketjoint";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.BallSocketJointComponent;
         this.DataType = pc.BallSocketJointComponentData;
@@ -43,7 +43,7 @@ pc.extend(pc, function () {
             options: {
                 min: 0,
                 max: 1
-            }            
+            }
         }, {
             name: "damping",
             displayName: "Damping",
@@ -53,7 +53,7 @@ pc.extend(pc, function () {
             options: {
                 min: 0,
                 max: 1
-            }            
+            }
         }, {
             name: "impulseClamp",
             displayName: "Impulse Clamp",
@@ -63,7 +63,7 @@ pc.extend(pc, function () {
             options: {
                 min: 0,
                 max: 100
-            }            
+            }
         }, {
             name: "constraint",
             exposed: false
@@ -80,7 +80,7 @@ pc.extend(pc, function () {
         pc.ComponentSystem.on('toolsUpdate', this.onToolsUpdate, this);
     };
     BallSocketJointComponentSystem = pc.inherits(BallSocketJointComponentSystem, pc.ComponentSystem);
-    
+
     BallSocketJointComponentSystem.prototype = pc.extend(BallSocketJointComponentSystem.prototype, {
         onLibraryLoaded: function () {
             if (typeof Ammo !== 'undefined') {
@@ -108,8 +108,8 @@ pc.extend(pc, function () {
                     var pivotB = data.constraint.getPivotInB();
                     data.position = [ pivotB.x(), pivotB.y(), pivotB.z() ];
 
-                    var context = this.context;
-                    context.systems.rigidbody.addConstraint(data.constraint);
+                    var app = this.app;
+                    app.systems.rigidbody.addConstraint(data.constraint);
                 }
             }
 
@@ -129,10 +129,10 @@ pc.extend(pc, function () {
             };
             return this.addComponent(clone, data);
         },
-        
+
         onRemove: function (entity, data) {
             if (data.constraint) {
-                this.context.systems.rigidbody.removeConstraint(data.constraint);
+                this.app.systems.rigidbody.removeConstraint(data.constraint);
             }
         },
 

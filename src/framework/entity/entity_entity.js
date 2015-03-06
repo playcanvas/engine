@@ -10,24 +10,24 @@ pc.extend(pc, function () {
      * which it inherits from {@link pc.GraphNode} so can be added into the scene graph.
      * The Component and ComponentSystem provide the logic to give an Entity a specific type of behaviour. e.g. the ability to
      * render a model or play a sound. Components are specific to a instance of an Entity and are attached (e.g. `this.entity.model`)
-     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.ApplicationContext}.
+     * ComponentSystems allow access to all Entities and Components and are attached to the {@link pc.Application}.
      * </p>
      *
      * <p>Every object created in the PlayCanvas Designer is an Entity.</p>
      *
      * @example
-     * var entity = new pc.Entity();
-     * var context = ... // Get the pc.ApplicationContext
+     * var app = ... // Get the pc.Application
+     * var entity = new pc.Entity(app);
      *
      * // Add a Component to the Entity
-     * context.systems.camera.addComponent(entity, {
+     * entity.addComponent("camera", {
      *   fov: 45,
      *   nearClip: 1,
      *   farClip: 10000
      * });
      *
      * // Add the Entity into the scene graph
-     * context.root.addChild(entity);
+     * app.root.addChild(entity);
      *
      * // Move the entity
      * entity.translate(10, 0, 0);
@@ -45,14 +45,75 @@ pc.extend(pc, function () {
      *
      * @extends pc.GraphNode
      */
-    var Entity = function(){
+    var Entity = function(app){
         this._guid = pc.guid.create(); // Globally Unique Identifier
         this._batchHandle = null; // The handle for a RequestBatch, set this if you want to Component's to load their resources using a pre-existing RequestBatch.
         this.c = {}; // Component storage
+        this._app = app; // store app
+        if (!app) {
+            this._app = pc.Application.getApplication(); // get the current application
+            if (!this._app) {
+                console.error("Couldn't find current application")
+            }
+        }
 
         pc.events.attach(this);
     };
     Entity = pc.inherits(Entity, pc.GraphNode);
+
+    /**
+     * @function
+     * @name pc.Entity#addComponent
+     * @description Create a new {pc.Component} and add attach it to the Entity.
+     * Use this to add functionality to the Entity like rendering a model, adding light, etc.
+     * @param {String} type The name of the component type. e.g. "model", "light"
+     * @param {Object} data The initialization data for the specific component type
+     * @returns {pc.Component} The new Component that was attached to the entity
+     * @example
+     * var entity = new pc.Entity();
+     * entity.addComponent("light"); // Add a light component with default properties
+     * entity.addComponent("camera", { // Add a camera component with some specified properties
+     *   fov: 45,
+     *   clearColor: new pc.Color(1,0,0),
+     * });
+     */
+    Entity.prototype.addComponent = function (type, data) {
+        var system = this._app.systems[type];
+        if (system) {
+            if (!this.c[type]) {
+                return system.addComponent(this, data);
+            } else {
+                logERROR(pc.string.format("Entity already has {0} Component", type));
+            }
+        } else {
+            logERROR(pc.string.format("System: '{0}' doesn't exist", type));
+            return null;
+        }
+     };
+
+     /**
+      * @function
+      * @name pc.Entity#removeComponent
+      * @description Remove a component from the Entity.
+      * @param {String} type The name of the Component type
+      * @example
+      * var entity = new pc.Entity();
+      * entity.addComponent("light"); // add new light component
+      * //...
+      * entity.removeComponent("light"); // remove light component
+      */
+     Entity.prototype.removeComponent = function (type) {
+        var system = this._app.systems[type];
+        if (system) {
+            if (this.c[type]) {
+                system.removeComponent(this);
+            } else {
+                logERROR(pc.string.format("Entity doesn't have {0} Component", type));
+            }
+        } else {
+            logERROR(pc.string.format("System: '{0}' doesn't exist", type));
+        }
+     }
 
     /**
      * @function
@@ -201,7 +262,7 @@ pc.extend(pc, function () {
     */
     Entity.prototype.clone = function () {
         var type;
-        var c = new pc.Entity();
+        var c = new pc.Entity(this._app);
         pc.Entity._super._cloneInternal.call(this, c);
 
         for (type in this.c) {

@@ -3,17 +3,15 @@ pc.extend(pc.asset, function () {
     * @name pc.asset.AssetRegistry
     * @class Container for all assets that are available to this application
     * @constructor Create an instance of an AssetRegistry.
-    * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'context.assets'.
+    * Note: PlayCanvas scripts are provided with an AssetRegistry instance as 'app.assets'.
     * @param {pc.resources.ResourceLoader} loader The ResourceLoader used to to load the asset files.
-    * @param {String} prefix The prefix added to file urls before the loader tries to fetch them
     */
-    var AssetRegistry = function (loader, prefix) {
+    var AssetRegistry = function (loader) {
         if (!loader) {
             throw new Error("Must provide a ResourceLoader instance for AssetRegistry");
         }
 
         this.loader = loader;
-        this._prefix = prefix || "";
 
         this._cache = {}; // main asset cache, keyed by id
         this._names = {}; // index for looking up assets by name
@@ -58,8 +56,8 @@ pc.extend(pc.asset, function () {
         * @private
         */
         createAndAddAsset: function (id, assetData) {
-            var asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data, this._prefix);
-            asset.id = id;
+            var asset = new pc.asset.Asset(assetData.name, assetData.type, assetData.file, assetData.data);
+            asset.id = parseInt(id);
 
             this.addAsset(asset);
 
@@ -151,7 +149,7 @@ pc.extend(pc.asset, function () {
             if (attribute === 'file') {
                 if (oldValue) {
                     // get old asset url
-                    url = asset.prefix ? pc.path.join(asset.prefix, oldValue.url) : oldValue.url;
+                    url = oldValue.url;
 
                     // remove old url connections
                     delete this._urls[url];
@@ -184,7 +182,7 @@ pc.extend(pc.asset, function () {
         * @param {String} [type] The type of the Assets to find
         * @returns {[pc.asset.Asset]} A list of all Assets found
         * @example
-        * var assets = context.assets.findAll("myTextureAsset", pc.asset.ASSET_TEXTURE);
+        * var assets = app.assets.findAll("myTextureAsset", pc.asset.ASSET_TEXTURE);
         * console.log("Found " + assets.length + " assets called " + name);
         */
         findAll: function (name, type) {
@@ -216,7 +214,7 @@ pc.extend(pc.asset, function () {
         * @param {String} [type] The type of the Asset to find
         * @returns {pc.asset.Asset} A single Asset or null if no Asset is found
         * @example
-        * var asset = context.assets.find("myTextureAsset", pc.asset.ASSET_TEXTURE);
+        * var asset = app.assets.find("myTextureAsset", pc.asset.ASSET_TEXTURE);
         */
         find: function (name, type) {
             var asset = this.findAll(name, type);
@@ -337,16 +335,16 @@ pc.extend(pc.asset, function () {
         * @return {Promise} A Promise to the resources
         * @example
         * var url = "../assets/statue/Statue_1.json";
-        *    application.context.assets.loadFromUrl(url, "model").then(function (results) {
+        *    application.assets.loadFromUrl(url, "model").then(function (results) {
         *    var model = results.resource;
         *    var asset = results.asset;
         *
         *    entity = new pc.Entity();
-        *     application.context.systems.model.addComponent(entity, {
+        *     application.systems.model.addComponent(entity, {
         *        type: "asset",
         *        asset: asset
         *    });
-        *    application.context.root.addChild(entity);
+        *    application.root.addChild(entity);
         * });
         */
         loadFromUrl: function (url, type) {

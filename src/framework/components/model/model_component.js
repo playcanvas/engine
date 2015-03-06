@@ -51,7 +51,7 @@ pc.extend(pc, function () {
                 parent: this.entity.getRequest()
             };
 
-            var asset = this.system.context.assets.getAssetById(id);
+            var asset = this.system.app.assets.getAssetById(id);
             if (!asset) {
                 logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', id));
                 return;
@@ -64,14 +64,14 @@ pc.extend(pc, function () {
                 var model = asset.resource.clone();
                 this._onModelLoaded(model);
             } else {
-                this.system.context.assets.load(asset, [], options).then(function (resources) {
+                this.system.app.assets.load(asset, [], options).then(function (resources) {
                     this._onModelLoaded(resources[0]);
                 }.bind(this));
             }
         },
 
         _onModelLoaded: function (model) {
-            if (this.system.context.designer) {
+            if (this.system.app.designer) {
                 model.generateWireframe();
             }
 
@@ -129,7 +129,7 @@ pc.extend(pc, function () {
 
                     model.meshInstances = [ new pc.MeshInstance(node, mesh, data.material) ];
 
-                    if (this.system.context.designer) {
+                    if (this.system.app.designer) {
                         model.generateWireframe();
                     }
 
@@ -142,7 +142,7 @@ pc.extend(pc, function () {
         onSetAsset: function (name, oldValue, newValue) {
             if (oldValue) {
                 // Remove old listener
-                var asset = this.system.context.assets.getAssetById(oldValue);
+                var asset = this.system.app.assets.getAssetById(oldValue);
                 if (asset) {
                     asset.off('change', this.onAssetChange, this);
                 }
@@ -165,7 +165,7 @@ pc.extend(pc, function () {
         onSetCastShadows: function (name, oldValue, newValue) {
             var model = this.data.model;
             if (model) {
-                var scene = this.system.context.scene;
+                var scene = this.system.app.scene;
                 var inScene = scene.containsModel(model);
                 if (inScene) {
                     scene.removeModel(model);
@@ -184,7 +184,7 @@ pc.extend(pc, function () {
 
         onSetModel: function (name, oldValue, newValue) {
             if (oldValue) {
-                this.system.context.scene.removeModel(oldValue);
+                this.system.app.scene.removeModel(oldValue);
                 this.entity.removeChild(oldValue.getGraph());
                 delete oldValue._entity;
             }
@@ -200,7 +200,7 @@ pc.extend(pc, function () {
                 this.entity.addChild(newValue.graph);
 
                 if (this.enabled && this.entity.enabled) {
-                    this.system.context.scene.addModel(newValue);
+                    this.system.app.scene.addModel(newValue);
                 }
 
                 // Store the entity that owns this model
@@ -221,7 +221,7 @@ pc.extend(pc, function () {
 
             // try to load the material asset
             if (id !== undefined && id !== null) {
-                var asset = this.system.context.assets.getAssetById(id);
+                var asset = this.system.app.assets.getAssetById(id);
                 if (asset) {
                     if (asset.resource) {
                         material = asset.resource;
@@ -229,7 +229,7 @@ pc.extend(pc, function () {
                     } else {
                         // setting material asset to an asset that hasn't been loaded yet.
                         // this should only be at tool-time
-                        this.system.context.assets.load(asset).then(function (materials) {
+                        this.system.app.assets.load(asset).then(function (materials) {
                             this.material = materials[0];
                         }.bind(this));
                     }
@@ -251,7 +251,7 @@ pc.extend(pc, function () {
         },
 
         getMaterialAsset: function () {
-            return this.system.context.assets.getAssetById(this.data.materialAsset);
+            return this.system.app.assets.getAssetById(this.data.materialAsset);
         },
 
         onSetMaterial: function (name, oldValue, newValue) {
@@ -283,9 +283,9 @@ pc.extend(pc, function () {
 
             var model = this.data.model;
             if (model) {
-                var inScene = this.system.context.scene.containsModel(model);
+                var inScene = this.system.app.scene.containsModel(model);
                 if (!inScene) {
-                    this.system.context.scene.addModel(model);
+                    this.system.app.scene.addModel(model);
                 }
             }
         },
@@ -295,9 +295,9 @@ pc.extend(pc, function () {
 
             var model = this.data.model;
             if (model) {
-                var inScene = this.system.context.scene.containsModel(model);
+                var inScene = this.system.app.scene.containsModel(model);
                 if (inScene) {
-                    this.system.context.scene.removeModel(model);
+                    this.system.app.scene.removeModel(model);
                 }
             }
         },
@@ -337,7 +337,7 @@ pc.extend(pc, function () {
                 if (isMappingDifferent) {
                     // clear the cache and reload the model
                     asset.resource = null;
-                    this.system.context.loader.removeFromCache(asset.getFileUrl());
+                    this.system.app.loader.removeFromCache(asset.getFileUrl());
                     this.loadModelAsset(asset.id);
                 }
 

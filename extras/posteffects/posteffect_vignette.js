@@ -87,11 +87,11 @@ pc.script.attribute('darkness', 'number', 1, {
 });
 
 //--------------- SCRIPT DEFINITION------------------------//
-pc.script.create('vignetteEffect', function (context) {
+pc.script.create('vignetteEffect', function (app) {
     // Creates a new VignetteEffect instance
     var VignetteEffect = function (entity) {
         this.entity = entity;
-        this.effect = new pc.VignetteEffect(context.graphicsDevice);
+        this.effect = new pc.VignetteEffect(app.graphicsDevice);
     };
 
     VignetteEffect.prototype = {

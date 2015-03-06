@@ -4,13 +4,13 @@ pc.extend(pc, function () {
      * @constructor Create a new ModelComponentSystem
      * @class Allows an Entity to render a model or a primitive shape like a box,
      * capsule, sphere, cylinder, cone etc.
-     * @param {Object} context
+     * @param {Object} app
      * @extends pc.ComponentSystem
      */
-    var ModelComponentSystem = function ModelComponentSystem (context) {
+    var ModelComponentSystem = function ModelComponentSystem (app) {
         this.id = 'model';
         this.description = "Renders a 3D model at the location of the Entity.";
-        context.systems.add(this.id, this);
+        app.systems.add(this.id, this);
 
         this.ComponentType = pc.ModelComponent;
         this.DataType = pc.ModelComponentData;
@@ -101,7 +101,7 @@ pc.extend(pc, function () {
 
         this.exposeProperties();
 
-        var gd = context.graphicsDevice;
+        var gd = app.graphicsDevice;
         this.box = pc.createBox(gd, {
             halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
         });
@@ -145,7 +145,7 @@ pc.extend(pc, function () {
             var data = entity.model.data;
             entity.model.asset = null;
             if (data.type !== 'asset' && data.model) {
-                this.context.scene.removeModel(data.model);
+                this.app.scene.removeModel(data.model);
                 entity.removeChild(data.model.getGraph());
                 data.model = null;
             }

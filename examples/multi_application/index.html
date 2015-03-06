@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+    <script src="../../build/output/playcanvas-latest.js"></script>
+    <link href="../style.css" rel="stylesheet" />
+
+    <style>
+        #canvas-1 {
+            position: absolute;
+            width: 45%;
+            left: 0px;
+            margin: 0 0;
+        }
+
+        #canvas-2 {
+            position: absolute;
+            width: 45%;
+            right: 0px;
+            margin: 0 0;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The canvas element -->
+    <canvas id="canvas-1"></canvas>
+    <canvas id="canvas-2"></canvas>
+
+    <!-- The script -->
+    <script>
+        var canvas = document.getElementById("canvas-1");
+
+        // Create the app and start the update loop
+        var app1 = new pc.Application(canvas);
+        app1.start();
+        app1.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        var entity, light, camera;
+
+        // Create an Entity with a box component
+        entity = new pc.Entity(app1);
+        entity.setName("Box 1");
+        entity.addComponent("model", {
+            type: "box"
+        });
+        app1.root.addChild(entity);
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity(app1);
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 0, 4);
+        app1.root.addChild(camera);
+
+        // Create an Entity with a point light component
+        var light = new pc.Entity(app1);
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100
+        });
+        light.translate(5, 0, 15);
+        app1.root.addChild(light);
+
+        app1.on("update", function (dt) {
+            var entity = app1.root.findByName("Box 1");
+            if (entity) {
+                entity.rotate(0,10*dt,0);
+            }
+        });
+    </script>
+
+     <script>
+        var canvas = document.getElementById("canvas-2");
+
+        // Create the app and start the update loop
+        var app2 = new pc.Application(canvas);
+        app2.start();
+
+        app2.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        var entity, light, camera;
+
+        // Create an Entity with a box component
+        entity = new pc.Entity(app2);
+        entity.setName("Box 2")
+        entity.addComponent("model", {
+            type: "box"
+        });
+        app2.root.addChild(entity);
+
+        // Create an Entity with a camera component
+        var camera = new pc.Entity(app2);
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.4, 0.45, 0.5)
+        });
+        camera.translate(0, 0, 4);
+        app2.root.addChild(camera);
+
+        // Create an Entity with a point light component
+        var light = new pc.Entity(app2);
+        light.addComponent("light", {
+            type: "point",
+            color: new pc.Color(1, 1, 1),
+            range: 100
+        });
+        light.translate(5, 0, 15);
+        app2.root.addChild(light);
+
+        app2.on("update", function (dt) {
+            // var entity = app2.root.findByName("Box 2");
+            if (entity) {
+                entity.rotate(0,10*dt,0);
+            }
+        });
+    </script>
+</body>
+</html>
