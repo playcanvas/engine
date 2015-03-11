@@ -321,6 +321,10 @@ pc.programlib.phong = {
             code += scode;
         }
 
+        if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+            code += chunks.refractionPS;
+        }
+
         if (options.lightMap) {
             code += this._addMap("light", options, chunks, uvOffset, chunks.lightmapSinglePS);
         }
@@ -403,10 +407,8 @@ pc.programlib.phong = {
         }
 
         if (lighting || reflections) {
-            if (options.cubeMap) {
-                code += "   addCubemapReflection(data);\n";
-            } else if (options.sphereMap) {
-                code += "   addSpheremapReflection(data);\n";
+            if (options.cubeMap || options.sphereMap) {
+                code += "   addReflection(data);\n";
             }
 
             for (i = 0; i < options.lights.length; i++) {
@@ -470,6 +472,10 @@ pc.programlib.phong = {
                     code += "   data.specularLight += data.atten * light"+i+"_color;\n";
                 }
                 code += "\n";
+            }
+
+            if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+                code += "   addRefraction(data);\n";
             }
         }
         code += "\n";
