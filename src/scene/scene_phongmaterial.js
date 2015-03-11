@@ -211,6 +211,16 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
 
+            this.chunks = [];
+            this.chunks.copy = function(from) {
+                for(var p in from) {
+                    if (from.hasOwnProperty(p) && p!=="copy") {
+                        this[p] = from[p];
+                    }
+                }
+            };
+            this.overridePs = null;
+
             _endProperties(this);
 
             // Array to pass uniforms to renderer
@@ -522,7 +532,9 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
-                useTexCubeLod:              useTexCubeLod
+                useTexCubeLod:              useTexCubeLod,
+                customChunks:               this.chunks,
+                customPS:                   this.overridePs
             };
 
             for(var p in pc._matTex2D) {
