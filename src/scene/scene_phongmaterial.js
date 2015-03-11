@@ -210,6 +210,7 @@ pc.extend(pc, function () {
             this.specularMapTint = false;
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
+            this.mask = 1;
 
             _endProperties(this);
 
@@ -290,8 +291,10 @@ pc.extend(pc, function () {
         _collectLights: function(lType, lights, lightsSorted) {
             for (var i = 0; i < lights.length; i++) {
                 if (lights[i].getEnabled()) {
-                    if (lights[i].getType()==lType) {
-                        lightsSorted.push(lights[i]);
+                    if (lights[i].mask & this.mask) {
+                        if (lights[i].getType()==lType) {
+                            lightsSorted.push(lights[i]);
+                        }
                     }
                 }
             }

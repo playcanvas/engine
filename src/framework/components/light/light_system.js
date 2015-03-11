@@ -163,6 +163,12 @@ pc.extend(pc, function () {
                 type: ['point', 'spot']
             }
         }, {
+            name: "mask",
+            displayName: "Mask",
+            description: "Bit mask",
+            type: "number",
+            defaultValue: 1,
+        }, {
             name: "innerConeAngle",
             displayName: "Inner Cone Angle",
             description: "Spotlight inner cone angle",

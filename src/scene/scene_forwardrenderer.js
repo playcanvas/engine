@@ -339,10 +339,7 @@ pc.extend(pc, function () {
         },
 
         dispatchGlobalLights: function (scene) {
-            var dirs = scene._globalLights;
-            var numDirs = dirs.length;
             var i;
-
             var scope = this.device.scope;
 
             this.ambientColor[0] = scene.ambientLight.r;
@@ -355,11 +352,23 @@ pc.extend(pc, function () {
             }
             scope.resolve("light_globalAmbient").setValue(this.ambientColor);
             scope.resolve("exposure").setValue(scene.exposure);
+        },
+
+        dispatchDirectLights: function (scene, mask) {
+            var dirs = scene._globalLights;
+            var numDirs = dirs.length;
+            var i;
+            var directional, wtm, light;
+            var cnt = 0;
+
+            var scope = this.device.scope;
 
             for (i = 0; i < numDirs; i++) {
-                var directional = dirs[i];
-                var wtm = directional._node.getWorldTransform();
-                var light = "light" + i;
+                if (!(dirs[i].mask & mask)) continue;
+
+                directional = dirs[i];
+                wtm = directional._node.getWorldTransform();
+                light = "light" + cnt;
 
                 scope.resolve(light + "_color").setValue(scene.gammaCorrection? directional._linearFinalColor.data : directional._finalColor.data);
 
@@ -375,28 +384,33 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMatrix").setValue(directional._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([directional._shadowResolution, directional._normalOffsetBias, directional._shadowBias]);
                 }
+                cnt++;
             }
+            return cnt;
         },
 
-        dispatchLocalLights: function (scene) {
+        dispatchLocalLights: function (scene, mask, usedDirLights) {
             var i, wtm;
             var point, spot;
             var light;
             var localLights = scene._localLights;
+            var cnt = 0;
 
             var pnts = localLights[pc.LIGHTTYPE_POINT-1];
             var spts = localLights[pc.LIGHTTYPE_SPOT-1];
 
-            var numDirs = scene._globalLights.length;
+            var numDirs = usedDirLights;
             var numPnts = pnts.length;
             var numSpts = spts.length;
 
             var scope = this.device.scope;
 
             for (i = 0; i < numPnts; i++) {
+                if (!(pnts[i].mask & mask)) continue;
+
                 point = pnts[i];
                 wtm = point._node.getWorldTransform();
-                light = "light" + (numDirs + i);
+                light = "light" + (numDirs + cnt);
 
                 scope.resolve(light + "_radius").setValue(point._attenuationEnd);
                 scope.resolve(light + "_color").setValue(scene.gammaCorrection? point._linearFinalColor.data : point._finalColor.data);
@@ -411,12 +425,15 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMatrix").setValue(point._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([point._shadowResolution, point._normalOffsetBias, point._shadowBias, point.getAttenuationEnd()]);
                 }
+                cnt++;
             }
 
             for (i = 0; i < numSpts; i++) {
+                if (!(spts[i].mask & mask)) continue;
+
                 spot = spts[i];
                 wtm = spot._node.getWorldTransform();
-                light = "light" + (numDirs + numPnts + i);
+                light = "light" + (numDirs + cnt);
 
                 scope.resolve(light + "_innerConeAngle").setValue(spot._innerConeAngleCos);
                 scope.resolve(light + "_outerConeAngle").setValue(spot._outerConeAngleCos);
@@ -436,6 +453,7 @@ pc.extend(pc, function () {
                     scope.resolve(light + "_shadowMatrix").setValue(spot._shadowMatrix.data);
                     scope.resolve(light + "_shadowParams").setValue([spot._shadowResolution, spot._normalOffsetBias, spot._shadowBias]);
                 }
+                cnt++;
             }
         },
 
@@ -724,9 +742,8 @@ pc.extend(pc, function () {
             // Set up the camera
             this.setCamera(camera);
 
-            // Set up the lights
+            // Set up ambient/exposure
             this.dispatchGlobalLights(scene);
-            this.dispatchLocalLights(scene);
 
             // Set up the fog
             if (scene.fog !== pc.FOG_NONE) {
@@ -792,6 +809,11 @@ pc.extend(pc, function () {
                                 parameter.scopeId = device.scope.resolve(paramName);
                             }
                             parameter.scopeId.setValue(parameter.data);
+                        }
+
+                        if (!prevMaterial || material.mask !== prevMaterial.mask) {
+                            usedDirLights = this.dispatchDirectLights(scene, material.mask);
+                            this.dispatchLocalLights(scene, material.mask, usedDirLights);
                         }
 
                         this.alphaTestId.setValue(material.alphaTest);
