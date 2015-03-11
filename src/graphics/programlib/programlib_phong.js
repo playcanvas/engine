@@ -277,7 +277,7 @@ pc.programlib.phong = {
             } else {
                 code += chunks.specularAaNonePS;
             }
-            code += this._addMap("specular", options, chunks, uvOffset);
+            code += this._addMap(options.metalnessWorkflow? "metalness" : "specular", options, chunks, uvOffset);
             code += this._addMap("gloss", options, chunks, uvOffset);
             if (options.fresnelModel > 0) {
                 if (options.fresnelModel === pc.FRESNEL_SIMPLE) {
