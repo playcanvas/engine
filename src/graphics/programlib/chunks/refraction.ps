@@ -17,7 +17,7 @@ void addRefraction(inout psInternalData data) {
 
     addReflection(data);
 
-    data.diffuseLight = mix(data.diffuseLight, data.reflection.rgb, material_refraction);
+    data.diffuseLight = mix(data.diffuseLight, data.reflection.rgb * data.albedo, material_refraction);
     data.reflDirW = tmp;
     data.reflection = tmp2;
 }
