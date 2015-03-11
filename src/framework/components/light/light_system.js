@@ -168,6 +168,7 @@ pc.extend(pc, function () {
             description: "Bit mask",
             type: "number",
             defaultValue: 1,
+            exposed: false
         }, {
             name: "innerConeAngle",
             displayName: "Inner Cone Angle",
