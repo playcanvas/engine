@@ -210,11 +210,10 @@ pc.extend(pc, function () {
             this.diffuseMapTint = false;
             this.specularMapTint = false;
             this.emissiveMapTint = false;
-            this.metalnessMapTint = false;
             this.emissiveIntensity = 1;
 
             this.useMetalness = false;
-            this.metalness = 0;
+            this.metalness = 1;
 
             _endProperties(this);
 
@@ -343,7 +342,7 @@ pc.extend(pc, function () {
                     this.setParameter('material_specular', this.specularUniform);
                 }
             } else {
-                if (!this.metalnessMap || this.metalnessMapTint) {
+                if (!this.metalnessMap || this.metalness<1) {
                     this.setParameter('material_metalness', this.metalness);
                 }
             }
@@ -512,8 +511,6 @@ pc.extend(pc, function () {
             if (useSpecular) {
                 if (this.specularMapTint && !this.useMetalness) {
                     specularTint = this.specular.r!==1 || this.specular.g!==1 || this.specular.b!==1;
-                } else if (this.metalnessMapTint && this.useMetalness) {
-                    specularTint = this.metalness!==1;
                 }
             }
 
@@ -526,6 +523,7 @@ pc.extend(pc, function () {
                 modulateAmbient:            this.ambientTint,
                 diffuseTint:          (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
                 specularTint:         specularTint,
+                metalnessTint:        this.useMetalness && this.metalness<1,
                 glossTint:            true,
                 emissiveTint:         (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
                 opacityTint:          this.opacity!=1,
@@ -548,7 +546,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
-                metalnessWorkflow:          this.useMetalness,
+                useMetalness:          this.useMetalness,
                 useTexCubeLod:              useTexCubeLod
             };
 
