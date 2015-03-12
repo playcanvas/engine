@@ -157,6 +157,9 @@ pc.extend(pc, function () {
     };
 
     Application.prototype = {
+
+        timeScale: 1,
+
         /**
         * Load a pack and asset set from a table of contents config
         * @param {String} name The name of the Table of Contents block to load
@@ -332,6 +335,7 @@ pc.extend(pc, function () {
             this._time = now;
 
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
+            dt *= this.timeScale;
 
             this.update(dt);
             this.render();
