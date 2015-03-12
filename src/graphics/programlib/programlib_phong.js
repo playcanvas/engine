@@ -21,10 +21,10 @@ pc.programlib.phong = {
                         + options.lights[i].getFalloffMode() + "_"
                         + !!options.lights[i].getNormalOffsetBias());
                 }
-            } else if (prop==="customChunks") {
+            } else if (prop==="chunks") {
                 for(var p in options[prop]) {
                     if (options[prop].hasOwnProperty(p)) {
-                        props.push(p + options.customChunks[p]);
+                        props.push(p + options.chunks[p]);
                     }
                 }
             } else {
@@ -103,14 +103,14 @@ pc.programlib.phong = {
 
         var chunks = pc.shaderChunks;
 
-        if (options.customChunks) {
+        if (options.chunks) {
             var customChunks = [];
             for(var p in chunks) {
                 if (chunks.hasOwnProperty(p)) {
-                    if (!options.customChunks[p]) {
+                    if (!options.chunks[p]) {
                         customChunks[p] = chunks[p];
                     } else {
-                        customChunks[p] = options.customChunks[p];
+                        customChunks[p] = options.chunks[p];
                         if (!lighting && !reflections) {
                             // user might use vertex normal/tangent in shader
                             // but those aren't used when lighting/reflections are off
@@ -232,8 +232,8 @@ pc.programlib.phong = {
         var fshader;
         code = getSnippet(device, 'fs_precision');
 
-        if (options.customPS) {
-            fshader = code + options.customPS;
+        if (options.customFragmentShader) {
+            fshader = code + options.customFragmentShader;
             return {
                 attributes: attributes,
                 vshader: vshader,

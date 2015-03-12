@@ -219,7 +219,7 @@ pc.extend(pc, function () {
                     }
                 }
             };
-            this.overridePs = null;
+            this.customFragmentShader = null;
 
             _endProperties(this);
 
@@ -534,7 +534,7 @@ pc.extend(pc, function () {
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
                 useTexCubeLod:              useTexCubeLod,
                 customChunks:               this.chunks,
-                customPS:                   this.overridePs
+                customFragmentShader:       this.customFragmentShader
             };
 
             for(var p in pc._matTex2D) {
