@@ -11,7 +11,7 @@ pc.extend(pc, function () {
      * @param {Number} numVertices The number of vertices that this vertex buffer will hold.
      * @param {Number} [usage] The usage type of the vertex buffer (see pc.BUFFER_*).
      */
-    var VertexBuffer = function (graphicsDevice, format, numVertices, usage) {
+    var VertexBuffer = function (graphicsDevice, format, numVertices, usage, initialData) {
         // Initialize optional parameters
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
         this.usage = usage || pc.BUFFER_STATIC;
@@ -32,7 +32,11 @@ pc.extend(pc, function () {
         this.bufferId = gl.createBuffer();
 
         // Allocate the storage
-        this.storage = new ArrayBuffer(this.numBytes);
+        if (initialData && this.setData(initialData)) {
+            return;
+        } else {
+            this.storage = new ArrayBuffer(this.numBytes);
+        }
     };
 
     VertexBuffer.prototype = {
@@ -113,10 +117,20 @@ pc.extend(pc, function () {
 
             gl.bindBuffer(gl.ARRAY_BUFFER, this.bufferId);
             gl.bufferData(gl.ARRAY_BUFFER, this.storage, glUsage);
+        },
+
+        setData: function (data) {
+            if (data.byteLength!==this.numBytes) {
+                console.error("VertexBuffer: wrong initial data size: expected " + this.numBytes + ", got " + data.byteLength);
+                return false;
+            }
+            this.storage = data;
+            this.unlock();
+            return true;
         }
     };
 
     return {
         VertexBuffer: VertexBuffer
-    }; 
+    };
 }());

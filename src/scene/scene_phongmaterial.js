@@ -211,6 +211,8 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
 
+            this.useInstancing = false;
+
             _endProperties(this);
 
             // Array to pass uniforms to renderer
@@ -522,6 +524,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                useInstancing:              this.useInstancing,
                 useTexCubeLod:              useTexCubeLod
             };
 

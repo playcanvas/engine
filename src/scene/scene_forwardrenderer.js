@@ -747,6 +747,25 @@ pc.extend(pc, function () {
                 }
             }
 
+            if (!pc._instanceVertexFormat) {
+                var formatDesc = [
+                    { semantic: pc.SEMANTIC_TEXCOORD2, components: 4, type: pc.ELEMENTTYPE_FLOAT32 },
+                    { semantic: pc.SEMANTIC_TEXCOORD3, components: 4, type: pc.ELEMENTTYPE_FLOAT32 },
+                    { semantic: pc.SEMANTIC_TEXCOORD4, components: 4, type: pc.ELEMENTTYPE_FLOAT32 },
+                    { semantic: pc.SEMANTIC_TEXCOORD5, components: 4, type: pc.ELEMENTTYPE_FLOAT32 },
+                ];
+                pc._instanceVertexFormat = new pc.VertexFormat(device, formatDesc);
+            }
+            if (device.enableAutoInstancing) {
+                if (!pc._autoInstanceBuffer) {
+                    pc._autoInstanceBuffer = new pc.VertexBuffer(device, pc._instanceVertexFormat, device.autoInstancingMaxObjects, pc.BUFFER_DYNAMIC);
+                    pc._autoInstanceBufferData = new Float32Array(pc._autoInstanceBuffer.lock());
+                }
+            }
+            var next;
+            var autoInstances;
+            var j;
+
             // Render the scene
             for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
                 drawCall = drawCalls[i];
@@ -759,14 +778,45 @@ pc.extend(pc, function () {
                     mesh = meshInstance.mesh;
                     material = meshInstance.material;
 
-                    var modelMatrix = meshInstance.node.worldTransform;
-                    var normalMatrix = meshInstance.normalMatrix;
+                    if (device.enableAutoInstancing && i!==numDrawCalls-1 && material.useInstancing) {
+                        next = i + 1;
+                        autoInstances = 0;
+                        if (drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
+                            for(j=0; j<16; j++) {
+                                pc._autoInstanceBufferData[j] = drawCall.node.worldTransform.data[j];
+                            }
+                            autoInstances = 1;
+                            while(next!==numDrawCalls && drawCalls[next].mesh===mesh && drawCalls[next].material===material) {
+                                for(j=0; j<16; j++) {
+                                    pc._autoInstanceBufferData[autoInstances * 16 + j] = drawCalls[next].node.worldTransform.data[j];
+                                }
+                                autoInstances++;
+                                next++;
+                            }
+                            meshInstance.instancingData = {};
+                            meshInstance.instancingData.count = autoInstances;
+                            meshInstance.instancingData._buffer = pc._autoInstanceBuffer;
+                            meshInstance.instancingData._buffer.unlock();
+                            i = next - 1;
+                        }
+                    }
 
-                    modelMatrix.invertTo3x3(normalMatrix);
-                    normalMatrix.transpose();
+                    if (meshInstance.instancingData && device.extInstancing) {
+                        if (!meshInstance.instancingData._buffer) {
+                            meshInstance.instancingData._buffer = new pc.VertexBuffer(device, pc._instanceVertexFormat,
+                                drawCall.instancingData.count, drawCall.instancingData.usage, meshInstance.instancingData.buffer);
+                        }
+                    } else {
+                        var modelMatrix = meshInstance.node.worldTransform;
+                        var normalMatrix = meshInstance.normalMatrix;
 
-                    this.modelMatrixId.setValue(modelMatrix.data);
-                    this.normalMatrixId.setValue(normalMatrix.data);
+                        modelMatrix.invertTo3x3(normalMatrix);
+                        normalMatrix.transpose();
+
+                        this.modelMatrixId.setValue(modelMatrix.data);
+                        this.normalMatrixId.setValue(normalMatrix.data);
+                    }
+
                     if (meshInstance.skinInstance) {
                         if (device.supportsBoneTextures) {
                             this.boneTextureId.setValue(meshInstance.skinInstance.boneTexture);
@@ -808,7 +858,17 @@ pc.extend(pc, function () {
                     device.setVertexBuffer(mesh.vertexBuffer, 0);
                     style = meshInstance.renderStyle;
                     device.setIndexBuffer(mesh.indexBuffer[style]);
-                    device.draw(mesh.primitive[style]);
+
+
+                    if (meshInstance.instancingData) {
+                        device.setVertexBuffer(meshInstance.instancingData._buffer, 1);
+                        device.draw(mesh.primitive[style], drawCall.instancingData.count);
+                        if (meshInstance.instancingData._buffer===pc._autoInstanceBuffer) {
+                            meshInstance.instancingData = null;
+                        }
+                    } else {
+                        device.draw(mesh.primitive[style]);
+                    }
 
                     prevMaterial = material;
                     prevMeshInstance = meshInstance;

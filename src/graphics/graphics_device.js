@@ -101,8 +101,11 @@ pc.extend(pc, function () {
         this.indexBuffer = null;
         this.vertexBuffers = [];
         this.precision = "highp";
+        this.enableAutoInstancing = true;
+        this.autoInstancingMaxObjects = 16384;
         this.attributesInvalidated = true;
-        this.boundBuffer = null;
+        this.boundBuffer = [];
+        this.instancedAttribs = {};
         this.enabledAttributes = {};
         this.textureUnits = [];
         this.commitFunction = {};
@@ -318,6 +321,9 @@ pc.extend(pc, function () {
                 }
             }
 
+            this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
+            if (this.enableAutoInstancing && !this.extInstancing) this.enableAutoInstancing = false;
+
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
             this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
             this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
@@ -389,7 +395,8 @@ pc.extend(pc, function () {
 
             pc.events.attach(this);
 
-            this.boundBuffer = null;
+            this.boundBuffer = [];
+            this.instancedAttribs = {};
 
             this.textureUnits = [];
 
@@ -472,7 +479,7 @@ pc.extend(pc, function () {
         updateBegin: function () {
             var gl = this.gl;
 
-            this.boundBuffer = null;
+            this.boundBuffer = [];
             this.indexBuffer = null;
 
             // Set the render target
@@ -814,13 +821,18 @@ pc.extend(pc, function () {
          *     indexed: false
          * )};
          */
-        draw: function (primitive) {
+        draw: function (primitive, numInstances) {
             var gl = this.gl;
 
             var i, j, len, sampler, samplerValue, texture, numTextures, uniform, scopeId, uniformVersion, programVersion;
             var shader = this.shader;
             var samplers = shader.samplers;
             var uniforms = shader.uniforms;
+
+            if (numInstances > 1) {
+                this.boundBuffer = [];
+                this.attributesInvalidated = true;
+            }
 
             // Commit the vertex buffer inputs
             if (this.attributesInvalidated) {
@@ -839,9 +851,9 @@ pc.extend(pc, function () {
                         vertexBuffer = this.vertexBuffers[element.stream];
 
                         // Set the active vertex buffer object
-                        if (this.boundBuffer !== vertexBuffer.bufferId) {
+                        if (this.boundBuffer[element.stream] !== vertexBuffer.bufferId) {
                             gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.bufferId);
-                            this.boundBuffer = vertexBuffer.bufferId;
+                            this.boundBuffer[element.stream] = vertexBuffer.bufferId;
                         }
 
                         // Hook the vertex buffer to the shader program
@@ -855,6 +867,16 @@ pc.extend(pc, function () {
                                                element.normalize,
                                                element.stride,
                                                element.offset);
+
+                        if (element.stream===1 && numInstances>1) {
+                            if (!this.instancedAttribs[attribute.locationId]) {
+                                this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 1);
+                                this.instancedAttribs = attribute.locationId;
+                            }
+                        } else if (this.instancedAttribs[attribute.locationId]) {
+                            this.extInstancing.vertexAttribDivisorANGLE(attribute.locationId, 0);
+                            this.instancedAttribs[attribute.locationId] = false;
+                        }
                     }
                 }
 
@@ -910,10 +932,20 @@ pc.extend(pc, function () {
             }
 
             if (primitive.indexed) {
-                gl.drawElements(this.glPrimitive[primitive.type],
-                                primitive.count,
-                                this.indexBuffer.glFormat,
-                                primitive.base * 2);
+                if (numInstances > 1) {
+                    this.extInstancing.drawElementsInstancedANGLE(this.glPrimitive[primitive.type],
+                                                                  primitive.count,
+                                                                  this.indexBuffer.glFormat,
+                                                                  primitive.base * 2,
+                                                                  numInstances);
+                    this.boundBuffer = [];
+                    this.attributesInvalidated = true;
+                } else {
+                    gl.drawElements(this.glPrimitive[primitive.type],
+                                    primitive.count,
+                                    this.indexBuffer.glFormat,
+                                    primitive.base * 2);
+                }
             } else {
                 gl.drawArrays(this.glPrimitive[primitive.type],
                               primitive.base,
