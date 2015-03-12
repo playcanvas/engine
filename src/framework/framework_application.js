@@ -29,7 +29,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
 
         this._time = 0;
-        this.timeScale = 1,
+        this.timeScale = 1;
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
