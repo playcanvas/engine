@@ -564,7 +564,8 @@ pc.extend(pc, function () {
                 var light = lights[i];
                 var type = light.getType();
 
-                if (light.getCastShadows() && light.getEnabled()) {
+                if (light.getCastShadows() && light.getEnabled() && light.shadowUpdateMode!==pc.SHADOW_UPDATE_NONE) {
+                    if (light.shadowUpdateMode===pc.SHADOW_UPDATE_THISFRAME) light.shadowUpdateMode = pc.SHADOW_UPDATE_NONE;
                     var shadowCam = getShadowCamera(device, light);
                     var passes = 1;
                     var pass;

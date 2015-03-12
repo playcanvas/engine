@@ -131,7 +131,11 @@
         SPECULAR_BLINN: 1,
 
         TONEMAP_LINEAR: 0,
-        TONEMAP_FILMIC: 1
+        TONEMAP_FILMIC: 1,
+
+        SHADOW_UPDATE_NONE: 0,
+        SHADOW_UPDATE_THISFRAME: 1,
+        SHADOW_UPDATE_REALTIME: 2
     };
 
     pc.extend(pc, enums);
