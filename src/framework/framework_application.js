@@ -29,6 +29,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
 
         this._time = 0;
+        this.timeScale = 1,
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
@@ -157,9 +158,6 @@ pc.extend(pc, function () {
     };
 
     Application.prototype = {
-
-        timeScale: 1,
-
         /**
         * Load a pack and asset set from a table of contents config
         * @param {String} name The name of the Table of Contents block to load
