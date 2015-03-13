@@ -19,10 +19,13 @@ varying vec2 vUv0;
 varying vec2 vUv1;
 varying vec4 vVertexColor;
 varying vec3 vNormalV;
+varying vec4 vMainShadowUv;
 
 struct vsInternalData {
     vec3 positionW;
     mat4 modelMatrix;
     mat3 normalMatrix;
+    vec3 lightPosW;
+    vec3 lightDirNormW;
 };
 

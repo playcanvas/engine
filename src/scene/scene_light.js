@@ -17,6 +17,7 @@ pc.extend(pc, function () {
         this._attenuationStart = 10;
         this._attenuationEnd = 10;
         this._falloffMode = 0;
+        this._shadowWrite = pc.SHADOWWRITE_DEPTH;
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -64,6 +65,7 @@ pc.extend(pc, function () {
             clone.setAttenuationStart(this.getAttenuationStart());
             clone.setAttenuationEnd(this.getAttenuationEnd());
             clone.setFalloffMode(this.getFalloffMode());
+            clone.setShadowWrite(this.getShadowWrite());
 
             // Spot properties
             clone.setInnerConeAngle(this.getInnerConeAngle());
@@ -103,6 +105,10 @@ pc.extend(pc, function () {
 
         getFalloffMode: function () {
             return this._falloffMode;
+        },
+
+        getShadowWrite: function () {
+            return this._shadowWrite;
         },
 
         /**
@@ -254,6 +260,13 @@ pc.extend(pc, function () {
 
         setFalloffMode: function (mode) {
             this._falloffMode = mode;
+            if (this._scene !== null) {
+                this._scene.updateShaders = true;
+            }
+        },
+
+        setShadowWrite: function (mode) {
+            this._shadowWrite = mode;
             if (this._scene !== null) {
                 this._scene.updateShaders = true;
             }

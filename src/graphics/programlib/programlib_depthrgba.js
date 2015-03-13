@@ -4,6 +4,7 @@ pc.programlib.depthrgba = {
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam";
         if (options.point) key += "_pnt";
+        key += "_" + options.shadowWrite;
         return key;
     },
 
@@ -90,17 +91,12 @@ pc.programlib.depthrgba = {
             code += 'uniform float light_radius;\n\n';
         }
 
-        // Packing a float in GLSL with multiplication and mod
-        // http://blog.gradientstudios.com/2012/08/23/shadow-map-improvement
-        code += 'vec4 packFloat(float depth)\n';
-        code += '{\n';
-        code += '    const vec4 bit_shift = vec4(256.0 * 256.0 * 256.0, 256.0 * 256.0, 256.0, 1.0);\n';
-        code += '    const vec4 bit_mask  = vec4(0.0, 1.0 / 256.0, 1.0 / 256.0, 1.0 / 256.0);\n';
-                     // combination of mod and multiplication and division works better
-        code += '    vec4 res = mod(depth * bit_shift * vec4(255), vec4(256) ) / vec4(255);\n';
-        code += '    res -= res.xxyz * bit_mask;\n';
-        code += '    return res;\n';
-        code += '}\n\n';
+        var chunks = pc.shaderChunks;
+        if (options.shadowWrite===pc.SHADOWWRITE_DEPTHMASK) {
+            code += chunks.packDepthMaskPS;
+        } else {
+            code += chunks.packDepthPS;
+        }
 
         // FRAGMENT SHADER BODY
         code += getSnippet(device, 'common_main_begin');

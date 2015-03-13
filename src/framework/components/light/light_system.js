@@ -163,6 +163,9 @@ pc.extend(pc, function () {
                 type: ['point', 'spot']
             }
         }, {
+            name: "shadowWrite",
+            exposed: false
+        }, {
             name: "innerConeAngle",
             displayName: "Inner Cone Angle",
             description: "Spotlight inner cone angle",

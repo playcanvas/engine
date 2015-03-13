@@ -11,6 +11,10 @@ pc.programlib.phong = {
                         + options.lights[i].getFalloffMode() + "_"
                         + !!options.lights[i].getNormalOffsetBias());
                 }
+            } else if (prop==="shadowReadMask") {
+                for(var i=0; i<options.shadowReadMask.length; i++) {
+                    props.push("#" + options.shadowReadMask[i]);
+                }
             } else {
                 if (options[prop]) props.push(prop);
             }
@@ -57,6 +61,22 @@ pc.programlib.phong = {
         }
     },
 
+    _nonPointShadowMapProjection: function(light, shadowCoordArgs) {
+        if (!light.getNormalOffsetBias()) {
+            if (light.getType()==pc.LIGHTTYPE_SPOT) {
+                return "   getShadowCoordPersp" + shadowCoordArgs;
+            } else {
+                return "   getShadowCoordOrtho" + shadowCoordArgs;
+            }
+        } else {
+            if (light.getType()==pc.LIGHTTYPE_SPOT) {
+                return "   getShadowCoordPerspNormalOffset" + shadowCoordArgs;
+            } else {
+                return "   getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
+            }
+        }
+    },
+
     createShaderDefinition: function (device, options) {
         var i;
         var lighting = options.lights.length > 0;
@@ -88,6 +108,24 @@ pc.programlib.phong = {
         var chunks = pc.shaderChunks;
         code += chunks.baseVS;
 
+        // Allow first shadow coords to be computed in VS
+        var mainShadowLight = -1;
+        for (i = 0; i < options.lights.length; i++) {
+            var lightType = options.lights[i].getType();
+            if (options.lights[i].getCastShadows()) {
+                if (lightType!==pc.LIGHTTYPE_POINT) {
+                    code += "uniform mat4 light" + i + "_shadowMatrixVS;\n";
+                    code += "uniform vec3 light" + i + "_shadowParamsVS;\n";
+                    code += "uniform vec3 light" + i + (lightType===pc.LIGHTTYPE_DIRECTIONAL? "_directionVS" : "_positionVS") + ";\n";
+                    mainShadowLight = i;
+                    break;
+                }
+            }
+        }
+        if (mainShadowLight >= 0) {
+            code += chunks.shadowCoordVS;
+        }
+
         var attributes = {
             vertex_position: pc.SEMANTIC_POSITION
         }
@@ -107,6 +145,16 @@ pc.programlib.phong = {
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent(data);\n";
                 codeBody += "   vBinormalW  = getBinormal(data);\n";
+            }
+
+            if (mainShadowLight >= 0) {
+                if (lightType==pc.LIGHTTYPE_DIRECTIONAL) {
+                    codeBody += "   data.lightDirNormW = light"+mainShadowLight+"_directionVS;\n";
+                } else {
+                    codeBody += "   getLightDirPoint(data, light"+mainShadowLight+"_positionVS);\n";
+                }
+                var shadowCoordArgs = "(data, light"+mainShadowLight+"_shadowMatrixVS, light"+mainShadowLight+"_shadowParamsVS);\n";
+                codeBody += this._nonPointShadowMapProjection(options.lights[mainShadowLight], shadowCoordArgs);
             }
         }
 
@@ -339,7 +387,7 @@ pc.programlib.phong = {
         }
 
         if (numShadowLights > 0) {
-            code += chunks.shadowPS;
+            code += chunks.shadowCoordPS + chunks.shadowPS;
         }
 
         code += chunks.lightDiffuseLambertPS;
@@ -415,7 +463,7 @@ pc.programlib.phong = {
                 // - different shadow coords (point shadows will use drastically different genShadowCoord)
                 // - different shadow filter modes
 
-                // getLightDiffuse and getLightSpecular is BRDF (currently lame Lambert+Phong) itself.
+                // getLightDiffuse and getLightSpecular is BRDF itself.
 
                 var lightType = options.lights[i].getType();
 
@@ -445,21 +493,26 @@ pc.programlib.phong = {
                             code += "   data.atten *= getShadowPointNormalOffset" + shadowCoordArgs;
                         }
                     } else {
-                        var shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
-                        if (!options.lights[i].getNormalOffsetBias()) {
-                            if (lightType==pc.LIGHTTYPE_SPOT) {
-                                code += "   getShadowCoordPersp" + shadowCoordArgs;
-                            } else {
-                                code += "   getShadowCoordOrtho" + shadowCoordArgs;
+                        var shadowReadMode = null;
+                        if ((options.lights[i].mask & options.shadowReadMask[pc.SHADOWREAD_HARD]) > 0) {
+                            shadowReadMode = "Hard";
+                        } else if ((options.lights[i].mask & options.shadowReadMask[pc.SHADOWREAD_PCF3X3]) > 0) {
+                            shadowReadMode = "PCF3x3";
+                            if (options.lights[i]._shadowWrite===pc.SHADOWWRITE_DEPTHMASK) {
+                                shadowReadMode += "_YZW";
                             }
-                        } else {
-                            if (lightType==pc.LIGHTTYPE_SPOT) {
-                                code += "   getShadowCoordPerspNormalOffset" + shadowCoordArgs;
-                            } else {
-                                code += "   getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
-                            }
+                        } else if ((options.lights[i].mask & options.shadowReadMask[pc.SHADOWREAD_MASK]) > 0) {
+                            shadowReadMode = "Mask";
                         }
-                        code += "   data.atten *= getShadowPCF3x3(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                        if (shadowReadMode!==null) {
+                            if (mainShadowLight===i) {
+                                shadowReadMode += "VS";
+                            } else {
+                                var shadowCoordArgs = "(data, light"+i+"_shadowMatrix, light"+i+"_shadowParams);\n";
+                                code += this._nonPointShadowMapProjection(options.lights[i], shadowCoordArgs);
+                            }
+                            code += "   data.atten *= getShadow" + shadowReadMode + "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                        }
                     }
                 }
 

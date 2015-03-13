@@ -211,6 +211,14 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
 
+            // use METHOD if (shadowRead[pc.SHADOWREAD_METHOD] & light.mask) > 0
+            this.shadowReadMask = [0, 0xFFFFFFFF, 0]; // use PCF3x3 on everything by default
+            this.shadowReadMask.copy = function(from) {
+                for(var i=0; i<from.length; i++) {
+                    this[i] = from[i];
+                }
+            };
+
             _endProperties(this);
 
             // Array to pass uniforms to renderer
@@ -522,6 +530,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                shadowReadMask:             this.shadowReadMask,
                 useTexCubeLod:              useTexCubeLod
             };
 
