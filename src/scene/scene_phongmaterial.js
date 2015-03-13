@@ -210,6 +210,7 @@ pc.extend(pc, function () {
             this.specularMapTint = false;
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
+            this.normalizeNormalMap = true;
 
             _endProperties(this);
 
@@ -502,7 +503,7 @@ pc.extend(pc, function () {
                 glossTint:            true,
                 emissiveTint:         (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
                 opacityTint:          this.opacity!=1,
-                needsNormalFloat:           true,
+                needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,

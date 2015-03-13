@@ -218,7 +218,11 @@ pc.extend(pc, function () {
         set: function (value) {
             if (value !== this._gammaCorrection) {
                 this._gammaCorrection = value;
-                pc.shaderChunks.defaultGamma = value ? pc.shaderChunks.gamma2_2PS : pc.shaderChunks.gamma1_0PS;
+
+                pc.shaderChunks.defaultGamma = value ?
+                (pc._shaderQuality < pc.SHADERQUALITY_HIGH? pc.shaderChunks.gamma2_2FastPS : pc.shaderChunks.gamma2_2PS)
+                : pc.shaderChunks.gamma1_0PS;
+
                 this.updateShaders = true;
             }
         }
