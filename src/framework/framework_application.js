@@ -19,6 +19,7 @@ pc.extend(pc, function () {
      * var app = new pc.Application(canvas, options);
      * // Start game loop
      * app.start()
+     * @property {Number} timeScale Scales the global time delta.
      */
     var Application = function (canvas, options) {
         options = options || {};
