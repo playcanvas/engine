@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.164.3
+* Add pc.Application#timeScale
+
 ### v0.164.2
 * [FIX] pc.Mat3 setIdentity was setting 16 values instead of 9
 * [FIX] Errors if rigid body component is removed
