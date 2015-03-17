@@ -533,7 +533,6 @@ pc.extend(pc, function () {
                     var cname = mname + "Channel";
                     var uname = mname + "Uv";
                     options[tname] = this._getMapTransformID(this[tname], this[uname]);
-                    if (this[uname]>0) console.log(options[tname]);
                     options[cname] = this[cname];
                     options[uname] = this[uname];
                 }

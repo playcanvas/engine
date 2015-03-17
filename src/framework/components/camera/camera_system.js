@@ -133,6 +133,7 @@ pc.extend(pc, function () {
         // holds all the active camera components
         this.cameras = [];
 
+        this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
         pc.ComponentSystem.on('toolsUpdate', this.toolsUpdate, this);
 
@@ -220,6 +221,9 @@ pc.extend(pc, function () {
             CameraComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
+        onBeforeRemove: function (entity, component) {
+            this.removeCamera(component);
+        },
 
         onRemove: function (entity, data) {
             if (this.app.designer && this.displayInTools(entity)) {
@@ -309,7 +313,7 @@ pc.extend(pc, function () {
                 if (model) {
                     var scene = this.app.scene;
                     if (!scene.containsModel(model)) {
-                        scene.addModel(model)
+                        scene.addModel(model);
                     }
                 }
             }

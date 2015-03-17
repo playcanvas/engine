@@ -19,6 +19,7 @@ pc.extend(pc, function () {
      * var app = new pc.Application(canvas, options);
      * // Start game loop
      * app.start()
+     * @property {Number} timeScale Scales the global time delta.
      */
     var Application = function (canvas, options) {
         options = options || {};
@@ -29,6 +30,7 @@ pc.extend(pc, function () {
         pc.events.attach(this);
 
         this._time = 0;
+        this.timeScale = 1;
 
         this._librariesLoaded = false;
         this._fillMode = pc.FILLMODE_KEEP_ASPECT;
@@ -332,6 +334,7 @@ pc.extend(pc, function () {
             this._time = now;
 
             dt = pc.math.clamp(dt, 0, 0.1); // Maximum delta is 0.1s or 10 fps.
+            dt *= this.timeScale;
 
             this.update(dt);
             this.render();
@@ -667,8 +670,8 @@ pc.extend(pc, function () {
             if (entity) {
                 if(componentName) {
                     if(entity[componentName]) {
-                        attribute = editor.link.exposed[componentName][attributeName];
-                        if (editor && attribute) {
+                        attribute = designer.link.exposed[componentName][attributeName];
+                        if (designer && attribute) {
                             // Override Type provided
                             if (attribute.RuntimeType) {
                                     if (attribute.RuntimeType === pc.Vec3) {
