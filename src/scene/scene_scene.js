@@ -133,9 +133,9 @@
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
 
-        SHADOW_UPDATE_NONE: 0,
-        SHADOW_UPDATE_THISFRAME: 1,
-        SHADOW_UPDATE_REALTIME: 2
+        SHADOWUPDATE_NONE: 0,
+        SHADOWUPDATE_THISFRAME: 1,
+        SHADOWUPDATE_REALTIME: 2
     };
 
     pc.extend(pc, enums);

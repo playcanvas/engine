@@ -37,7 +37,7 @@ pc.extend(pc, function () {
         this._shadowResolution = 1024;
         this._shadowBias = -0.0005;
         this._normalOffsetBias = 0.0;
-        this.shadowUpdateMode = pc.SHADOW_UPDATE_REALTIME;
+        this.shadowUpdateMode = pc.SHADOWUPDATE_REALTIME;
 
         this._scene = null;
         this._node = null;
@@ -448,8 +448,8 @@ pc.extend(pc, function () {
         },
 
         updateShadow: function() {
-            if (this.shadowUpdateMode!==pc.SHADOW_UPDATE_REALTIME) {
-                this.shadowUpdateMode = pc.SHADOW_UPDATE_THISFRAME;
+            if (this.shadowUpdateMode!==pc.SHADOWUPDATE_REALTIME) {
+                this.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
             }
         }
     };

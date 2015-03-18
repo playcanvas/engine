@@ -49,6 +49,7 @@ pc.extend(pc, function () {
         this.on("set_innerConeAngle", this.onSetInnerConeAngle, this);
         this.on("set_outerConeAngle", this.onSetOuterConeAngle, this);
         this.on("set_falloffMode", this.onSetFalloffMode, this);
+        this.on("set_shadowUpdateMode", this.onSetShadowUpdateMode, this);
     };
 
     LightComponent = pc.inherits(LightComponent, pc.Component);
@@ -87,6 +88,7 @@ pc.extend(pc, function () {
             this.onSetInnerConeAngle("innerConeAngle", this.innerConeAngle, this.innerConeAngle);
             this.onSetOuterConeAngle("outerConeAngle", this.outerConeAngle, this.outerConeAngle);
             this.onSetFalloffMode("falloffMode", this.falloffMode, this.falloffMode);
+            this.onSetShadowUpdateMode("shadowUpdateMode", this.shadowUpdateMode, this.shadowUpdateMode);
 
             if (this.enabled && this.entity.enabled) {
                 this.onEnable();
@@ -146,6 +148,10 @@ pc.extend(pc, function () {
             if (this.data.type === 'point' || this.data.type === 'spot') {
                 this.light.setFalloffMode(newValue);
             }
+        },
+
+        onSetShadowUpdateMode: function (name, oldValue, newValue) {
+            this.light.shadowUpdateMode = newValue;
         },
 
         onEnable: function () {
