@@ -212,7 +212,7 @@ pc.extend(pc, function () {
             this.emissiveIntensity = 1;
 
             this.refraction = 0;
-            this.refractionIor = 1.0 / 1.5; // approx. (air ior / glass ior)
+            this.refractionIndex = 1.0 / 1.5; // approx. (air ior / glass ior)
 
             _endProperties(this);
 
@@ -358,7 +358,7 @@ pc.extend(pc, function () {
 
             if (this.refraction>0) {
                 this.setParameter('material_refraction', this.refraction);
-                this.setParameter('material_refractionIor', this.refractionIor);
+                this.setParameter('material_refractionIor', this.refractionIndex);
             }
 
             this.setParameter('material_opacity', this.opacity);
