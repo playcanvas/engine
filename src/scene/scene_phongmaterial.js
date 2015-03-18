@@ -211,6 +211,8 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
 
+            this.occludeDirect = false;
+
             _endProperties(this);
 
             // Array to pass uniforms to renderer
@@ -516,9 +518,11 @@ pc.extend(pc, function () {
 
                 fixSeams:                   prefilteredCubeMap? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         prefilteredCubeMap,
+                emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
                 occludeSpecular:            this.occludeSpecular,
+                occludeDirect:              this.occludeDirect,
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
