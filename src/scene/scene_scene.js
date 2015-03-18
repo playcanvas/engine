@@ -176,6 +176,7 @@ pc.extend(pc, function () {
         this._gammaCorrection = false;
         this._toneMapping = 0;
         this.exposure = 1.0;
+        this.frustumCulling = false;
 
         this._prefilteredCubeMap128 = null;
         this._prefilteredCubeMap64 = null;

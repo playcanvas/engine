@@ -23,6 +23,7 @@ pc.extend(pc, function () {
     var viewMat = new pc.Mat4();
     var viewMat3 = new pc.Mat3();
     var viewProjMat = new pc.Mat4();
+    var tempSphere = {};
 
     var c2sc = new pc.Mat4();
 
@@ -461,18 +462,11 @@ pc.extend(pc, function () {
             var lights = scene._lights;
             var models = scene._models;
             var drawCalls = scene.drawCalls;
+            var drawCallsCount = drawCalls.length;
             var shadowCasters = scene.shadowCasters;
 
             var i, j, numInstances;
             var drawCall, meshInstance, prevMeshInstance = null, mesh, material, prevMaterial = null, style;
-
-            // Update all skin matrix palettes
-            for (i = 0, numDrawCalls = scene.drawCalls.length; i < numDrawCalls; i++) {
-                drawCall = scene.drawCalls[i];
-                if (drawCall.skinInstance) {
-                    drawCall.skinInstance.updateMatrixPalette();
-                }
-            }
 
             // Sort lights by type
             scene._globalLights.length = 0;
@@ -490,26 +484,57 @@ pc.extend(pc, function () {
                 }
             }
 
+            this.culled = [];
+            var meshPos;
+            var visible;
+
             // Calculate the distance of transparent meshes from the camera
+            // and cull too
             var camPos = camera._node.getPosition();
-            for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
+            for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
+                visible = true;
                 if (!drawCall.command) {
+                    if (drawCall._hidden) continue; // use _hidden property to quickly hide/show meshInstances
                     meshInstance = drawCall;
 
-                    // Only alpha sort mesh instances in the main world
+                    // Only alpha sort and cull mesh instances in the main world
                     if (meshInstance.layer === pc.LAYER_WORLD) {
-                        if ((meshInstance.material.blendType === pc.BLEND_NORMAL) || (meshInstance.material.blendType === pc.BLEND_PREMULTIPLIED)) {
-                            meshInstance.syncAabb();
-                            var meshPos = meshInstance.aabb.center;
-                            var tempx = meshPos.x - camPos.x;
-                            var tempy = meshPos.y - camPos.y;
-                            var tempz = meshPos.z - camPos.z;
-                            meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
-                        } else if (meshInstance.distSqr !== undefined) {
-                            delete meshInstance.distSqr;
+
+                        meshPos = meshInstance.aabb.center;
+                        if (scene.frustumCulling) {
+                            if (!meshInstance.aabb._radius) meshInstance.aabb._radius = meshInstance.aabb.halfExtents.length();
+                            tempSphere.center = meshPos;
+                            tempSphere.radius = meshInstance.aabb._radius;
+                            if (!camera._frustum.containsSphere(tempSphere)) {
+                                visible = false;
+                            }
+                        }
+
+                        if (visible) {
+                            if ((meshInstance.material.blendType === pc.BLEND_NORMAL) || (meshInstance.material.blendType === pc.BLEND_PREMULTIPLIED)) {
+                                // alpha sort
+                                meshInstance.syncAabb();
+                                var tempx = meshPos.x - camPos.x;
+                                var tempy = meshPos.y - camPos.y;
+                                var tempz = meshPos.z - camPos.z;
+                                meshInstance.distSqr = tempx * tempx + tempy * tempy + tempz * tempz;
+                            } else if (meshInstance.distSqr !== undefined) {
+                                delete meshInstance.distSqr;
+                            }
                         }
                     }
+                }
+                if (visible) this.culled.push(drawCall);
+            }
+            drawCalls = this.culled;
+            drawCallsCount = this.culled.length;
+
+            // Update all skin matrix palettes
+            for (i = 0; i < drawCallsCount; i++) {
+                drawCall = drawCalls[i];
+                if (drawCall.skinInstance) {
+                    drawCall.skinInstance.updateMatrixPalette();
                 }
             }
 
@@ -526,7 +551,7 @@ pc.extend(pc, function () {
                 var oldBlending = device.getBlending();
                 device.setBlending(false);
 
-                for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
+                for (i = 0; i < drawCallsCount; i++) {
                     drawCall = drawCalls[i];
                     if (!drawCall.command && drawCall.drawToDepth) {
                         meshInstance = drawCall;
@@ -748,7 +773,7 @@ pc.extend(pc, function () {
             }
 
             // Render the scene
-            for (i = 0, numDrawCalls = drawCalls.length; i < numDrawCalls; i++) {
+            for (i = 0; i < drawCallsCount; i++) {
                 drawCall = drawCalls[i];
                 if (drawCall.command) {
                     // We have a command
