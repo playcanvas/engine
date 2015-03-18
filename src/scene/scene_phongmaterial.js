@@ -211,6 +211,11 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
 
+            this.cubeMapProjection = 0;
+            this.cubeMapProjectionBoxMin = null;
+            this.cubeMapProjectionBoxMax = null;
+            this.cubeMapProjectionBoxCenter = null;
+
             _endProperties(this);
 
             // Array to pass uniforms to renderer
@@ -355,6 +360,11 @@ pc.extend(pc, function () {
 
             this.setParameter('material_opacity', this.opacity);
 
+            if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
+                this.setParameter('envBoxMin', this.cubeMapProjectionBoxMin.data);
+                this.setParameter('envBoxMax', this.cubeMapProjectionBoxMax.data);
+                this.setParameter('envBoxPos', this.cubeMapProjectionBoxCenter.data);
+            }
 
             var i = 0;
 
@@ -522,6 +532,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                cubeMapProjection:          this.cubeMapProjection,
                 useTexCubeLod:              useTexCubeLod
             };
 
