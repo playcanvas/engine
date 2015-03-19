@@ -502,7 +502,7 @@ pc.extend(pc, function () {
                     if (meshInstance.layer === pc.LAYER_WORLD) {
 
                         meshPos = meshInstance.aabb.center;
-                        if (scene.frustumCulling) {
+                        if (camera.frustumCulling) {
                             if (!meshInstance.aabb._radius) meshInstance.aabb._radius = meshInstance.aabb.halfExtents.length();
                             tempSphere.center = meshPos;
                             tempSphere.radius = meshInstance.aabb._radius;
