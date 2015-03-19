@@ -250,7 +250,7 @@ pc.math.bytesToInt = pc.math.bytesToInt32;
 // IE doesn't have native log2
 if (!Math.log2) {
     Math.log2 = function(x) {
-        return Math.log(x) * this.INV_LOG2;
+        return Math.log(x) * pc.math.INV_LOG2;
     }
 }
 
