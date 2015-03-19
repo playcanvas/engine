@@ -317,7 +317,10 @@ pc.programlib.phong = {
         }
 
         if (options.rgbmReflection) code += chunks.rgbmPS;
-        if (cubemapReflection) code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+        if (cubemapReflection) {
+            code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+            code += options.cubeMapProjection>0? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
+        }
 
         code += this._addMap("diffuse", options, chunks, uvOffset);
         code += this._addMap("opacity", options, chunks, uvOffset);

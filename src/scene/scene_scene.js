@@ -127,6 +127,9 @@
         RENDERSTYLE_WIREFRAME: 1,
         RENDERSTYLE_POINTS: 2,
 
+        CUBEPROJ_NONE: 0,
+        CUBEPROJ_BOX: 1,
+
         SPECULAR_PHONG: 0,
         SPECULAR_BLINN: 1,
 
