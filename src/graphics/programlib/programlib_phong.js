@@ -37,7 +37,7 @@ pc.programlib.phong = {
         return id==0? "vUv" + uv : ("vUv"+uv+"_" + id);
     },
 
-    _addMap: function(p, options, chunks, uvOffset, subCode) {
+    _addMap: function(p, options, chunks, uvOffset, subCode, format) {
         var mname = p + "Map";
         if (options[mname]) {
             var tname = mname + "Transform";
@@ -50,6 +50,10 @@ pc.programlib.phong = {
                 } else {
                     subCode = chunks[p + "TexPS"];
                 }
+            }
+            if (format!==undefined) {
+                var fmt = format===0? "texture2DSRGB" : (format===1? "texture2DRGBM" : "texture2D");
+                subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
             }
             return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
         } else {
@@ -280,7 +284,7 @@ pc.programlib.phong = {
 
         code += this._addMap("diffuse", options, chunks, uvOffset);
         code += this._addMap("opacity", options, chunks, uvOffset);
-        code += this._addMap("emissive", options, chunks, uvOffset);
+        code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
 
         if (options.useSpecular) {
             if (options.specularAA && options.normalMap) {
@@ -409,7 +413,7 @@ pc.programlib.phong = {
         if (options.modulateAmbient) {
             code += "   data.diffuseLight *= material_ambient;\n"
         }
-        if (options.aoMap) {
+        if (options.aoMap && !options.occludeDirect) {
                 code += "    applyAO(data);\n";
         }
 
@@ -485,8 +489,13 @@ pc.programlib.phong = {
         }
         code += "\n";
 
-        if (options.aoMap && options.occludeSpecular) {
+        if (options.aoMap) {
+            if (options.occludeDirect) {
+                    code += "    applyAO(data);\n";
+            }
+            if (options.occludeSpecular) {
                 code += "    occludeSpecular(data);\n";
+            }
         }
 
         code += chunks.endPS;

@@ -112,7 +112,7 @@ pc.extend(pc.resources, function () {
                         if (data.addressu !== undefined) texture.addressU = jsonToAddressMode[data.addressu];
                         if (data.addressV !== undefined) texture.addressV = jsonToAddressMode[data.addressV];
                         if (data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[data.magfilter];
-                        if (data.minfilter !== undefined) texture.minfilter = jsonToFilterMode[data.minfilter];
+                        if (data.minfilter !== undefined) texture.minFilter = jsonToFilterMode[data.minfilter];
                         if (data.anisotropy !== undefined) texture.anisotropy = data.anisotropy;
                     };
 
