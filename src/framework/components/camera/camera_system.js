@@ -49,7 +49,8 @@ pc.extend(pc, function () {
             name: "frustumCulling",
             displayName: "Frustum culling",
             type: "boolean",
-            defaultValue: false
+            defaultValue: false,
+            exposed: false
         }, {
             name: "projection",
             displayName: "Projection",
