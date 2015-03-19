@@ -212,6 +212,15 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
 
+            this.chunks = [];
+            this.chunks.copy = function(from) {
+                for(var p in from) {
+                    if (from.hasOwnProperty(p) && p!=="copy") {
+                        this[p] = from[p];
+                    }
+                }
+            };
+            this.customFragmentShader = null;
             this.refraction = 0;
             this.refractionIndex = 1.0 / 1.5; // approx. (air ior / glass ior)
             this.useMetalness = false;
@@ -558,6 +567,8 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                customChunks:               this.chunks,
+                customFragmentShader:       this.customFragmentShader,
                 refraction:                 this.refraction,
                 useMetalness:               this.useMetalness,
                 useTexCubeLod:              useTexCubeLod

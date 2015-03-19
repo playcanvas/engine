@@ -1,6 +1,16 @@
 pc.programlib.phong = {
-    generateKey: function (device, options) {
+    hashCode: function(str){
+        var hash = 0;
+        if (str.length == 0) return hash;
+        for (i = 0; i < str.length; i++) {
+            char = str.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash;
+        }
+        return hash;
+    },
 
+    generateKey: function (device, options) {
         var props = [];
         var key = "phong";
         for(prop in options) {
@@ -11,14 +21,20 @@ pc.programlib.phong = {
                         + options.lights[i].getFalloffMode() + "_"
                         + !!options.lights[i].getNormalOffsetBias());
                 }
+            } else if (prop==="chunks") {
+                for(var p in options[prop]) {
+                    if (options[prop].hasOwnProperty(p)) {
+                        props.push(p + options.chunks[p]);
+                    }
+                }
             } else {
                 if (options[prop]) props.push(prop);
             }
         }
         props.sort();
-        for(prop in props) key += "_" + props[prop] + ":" + options[props[prop]];
+        for(prop in props) key += props[prop] + options[props[prop]];
 
-        return key;
+        return this.hashCode(key);
     },
 
     _setMapTransform: function (codes, name, id, uv) {
@@ -90,6 +106,27 @@ pc.programlib.phong = {
         var varyings = ""; // additional varyings for map transforms
 
         var chunks = pc.shaderChunks;
+
+        if (options.chunks) {
+            var customChunks = [];
+            for(var p in chunks) {
+                if (chunks.hasOwnProperty(p)) {
+                    if (!options.chunks[p]) {
+                        customChunks[p] = chunks[p];
+                    } else {
+                        customChunks[p] = options.chunks[p];
+                        if (!lighting && !reflections) {
+                            // user might use vertex normal/tangent in shader
+                            // but those aren't used when lighting/reflections are off
+                            // so this is a workaround
+                            customChunks[p] = customChunks[p].replace(/vertex_normal/g, "vec3(0)").replace(/vertex_tangent/g, "vec4(0)");
+                        }
+                    }
+                }
+            }
+            chunks = customChunks;
+        }
+
         code += chunks.baseVS;
 
         var attributes = {
@@ -196,7 +233,18 @@ pc.programlib.phong = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
+        var fshader;
         code = getSnippet(device, 'fs_precision');
+
+        if (options.customFragmentShader) {
+            fshader = code + options.customFragmentShader;
+            return {
+                attributes: attributes,
+                vshader: vshader,
+                fshader: fshader
+            };
+        }
+
         code += chunks.basePS;
         code += varyings;
 
@@ -500,7 +548,7 @@ pc.programlib.phong = {
 
         code += getSnippet(device, 'common_main_end');
 
-        var fshader = code;
+        fshader = code;
 
         return {
             attributes: attributes,
