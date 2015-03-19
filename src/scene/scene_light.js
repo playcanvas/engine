@@ -17,6 +17,7 @@ pc.extend(pc, function () {
         this._attenuationStart = 10;
         this._attenuationEnd = 10;
         this._falloffMode = 0;
+        this.mask = 1;
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -64,6 +65,7 @@ pc.extend(pc, function () {
             clone.setAttenuationStart(this.getAttenuationStart());
             clone.setAttenuationEnd(this.getAttenuationEnd());
             clone.setFalloffMode(this.getFalloffMode());
+            clone.mask = this.mask;
 
             // Spot properties
             clone.setInnerConeAngle(this.getInnerConeAngle());

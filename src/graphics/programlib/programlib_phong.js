@@ -329,7 +329,7 @@ pc.programlib.phong = {
             } else {
                 code += chunks.specularAaNonePS;
             }
-            code += this._addMap("specular", options, chunks, uvOffset);
+            code += this._addMap(options.useMetalness? "metalness" : "specular", options, chunks, uvOffset);
             code += this._addMap("gloss", options, chunks, uvOffset);
             if (options.fresnelModel > 0) {
                 if (options.fresnelModel === pc.FRESNEL_SIMPLE) {
@@ -371,6 +371,10 @@ pc.programlib.phong = {
             var scode = device.fragmentUniformsCount>16? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
             scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
             code += scode;
+        }
+
+        if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+            code += chunks.refractionPS;
         }
 
         if (options.lightMap) {
@@ -455,10 +459,8 @@ pc.programlib.phong = {
         }
 
         if (lighting || reflections) {
-            if (options.cubeMap) {
-                code += "   addCubemapReflection(data);\n";
-            } else if (options.sphereMap) {
-                code += "   addSpheremapReflection(data);\n";
+            if (options.cubeMap || options.sphereMap) {
+                code += "   addReflection(data);\n";
             }
 
             for (i = 0; i < options.lights.length; i++) {
@@ -522,6 +524,10 @@ pc.programlib.phong = {
                     code += "   data.specularLight += data.atten * light"+i+"_color;\n";
                 }
                 code += "\n";
+            }
+
+            if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+                code += "   addRefraction(data);\n";
             }
         }
         code += "\n";

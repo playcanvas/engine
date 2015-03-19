@@ -14,6 +14,7 @@ pc.extend(pc, function () {
         this.innerConeAngle = 40;
         this.outerConeAngle = 45;
         this.falloffMode = pc.LIGHTFALLOFF_LINEAR;
+        this.mask = 1;
 
         // Non-serialized
         this.light = null;
