@@ -361,6 +361,8 @@
          */
         PIXELFORMAT_RGBA32F: 14,
 
+        PIXELFORMAT_ETC1: 15,
+
         /**
          * @enum pc.PRIMITIVE
          * @name pc.PRIMITIVE_POINTS
