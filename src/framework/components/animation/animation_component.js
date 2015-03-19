@@ -179,7 +179,7 @@ pc.extend(pc, function () {
 
             for (var animName in data.animations) {
                 // Set the first loaded animation as the current
-                if (data.activate && data.enabled && this.entity.enabled) {
+                if (data.activate && data.enabled && this.entity.enabled && !this.system._inTools) {
                     this.play(animName, 0);
                 }
                 break;
@@ -217,7 +217,8 @@ pc.extend(pc, function () {
         onEnable: function () {
             AnimationComponent._super.onEnable.call(this);
             if ( this.data.activate &&
-                 !this.data.currAnim) {
+                 !this.data.currAnim &&
+                 !this.system._inTools) {
 
                 for (var animName in this.data.animations) {
                     this.play(animName, 0);

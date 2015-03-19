@@ -73,7 +73,7 @@ pc.extend(pc.asset, function () {
         * @returns {String} The URL
         * @example
         * var assets = app.assets.find("My Image", pc.asset.ASSET_IMAGE);
-        * var img = "<img src='" + assets[0].getFileUrl() + "'></img>";
+        * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
         */
         getFileUrl: function () {
             if (!this.file) {
