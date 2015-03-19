@@ -655,8 +655,10 @@ pc.extend(pc, function () {
                         shadowCam.setAspectRatio(1);
                         shadowCam.setFov(light.getOuterConeAngle() * 2);
 
-                        var lightWtm = light._node.worldTransform;
-                        shadowCamWtm.mul2(lightWtm, camToLight);
+                        var spos = light._node.getPosition();
+                        var srot = light._node.getRotation();
+                        shadowCamWtm.setTRS(spos, srot, pc.Vec3.ONE);
+                        shadowCamWtm.mul2(shadowCamWtm, camToLight);
                     } else if (type === pc.LIGHTTYPE_POINT) {
                         shadowCam.setProjection(pc.PROJECTION_PERSPECTIVE);
                         shadowCam.setNearClip(light.getAttenuationEnd() / 1000);
