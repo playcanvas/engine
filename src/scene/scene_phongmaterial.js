@@ -210,7 +210,6 @@ pc.extend(pc, function () {
             this.specularMapTint = false;
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
-            this.mask = 1;
 
             _endProperties(this);
 
