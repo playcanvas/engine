@@ -112,7 +112,7 @@ pc.extend(pc.resources, function () {
                         if (data.addressu !== undefined) texture.addressU = jsonToAddressMode[data.addressu];
                         if (data.addressV !== undefined) texture.addressV = jsonToAddressMode[data.addressV];
                         if (data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[data.magfilter];
-                        if (data.minfilter !== undefined) texture.minfilter = jsonToFilterMode[data.minfilter];
+                        if (data.minfilter !== undefined) texture.minFilter = jsonToFilterMode[data.minfilter];
                         if (data.anisotropy !== undefined) texture.anisotropy = data.anisotropy;
                     };
 
@@ -156,10 +156,12 @@ pc.extend(pc.resources, function () {
             var FCC_DXT1 = 827611204; // DXT1
             var FCC_DXT5 = 894720068; // DXT5
             var FCC_FP32 = 116; // RGBA32f
+            var FCC_ETC1 = 826496069; // ETC1
 
             var format = null;
             var compressed = false;
             var floating = false;
+            var etc1 = false;
             if (isFourCc) {
                 if (fcc===FCC_DXT1) {
                     format = pc.PIXELFORMAT_DXT1;
@@ -170,6 +172,10 @@ pc.extend(pc.resources, function () {
                 } else if (fcc===FCC_FP32) {
                     format = pc.PIXELFORMAT_RGBA32F;
                     floating = true;
+                } else if (fcc===FCC_ETC1) {
+                    format = pc.PIXELFORMAT_ETC1;
+                    compressed = true;
+                    etc1 = true;
                 }
             } else {
                 if (bpp===32) {
@@ -214,10 +220,14 @@ pc.extend(pc.resources, function () {
                 var mipHeight = height;
                 for(var i=0; i<mips; i++) {
                     if (compressed) {
-                        numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
-                        numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
-                        numBlocks = numBlocksAcross * numBlocksDown;
-                        mipSize = numBlocks * blockSize;
+                        if (etc1) {
+                            mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
+                        } else {
+                            numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
+                            numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
+                            numBlocks = numBlocksAcross * numBlocksDown;
+                            mipSize = numBlocks * blockSize;
+                        }
                     } else {
                         mipSize = mipWidth * mipHeight * 4;
                     }
@@ -237,7 +247,6 @@ pc.extend(pc.resources, function () {
 
             texture.upload();
         }
-
         return texture;
     };
 

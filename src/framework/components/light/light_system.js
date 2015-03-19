@@ -166,6 +166,13 @@ pc.extend(pc, function () {
             name: "shadowUpdateMode",
             exposed: false
         }, {
+            name: "mask",
+            displayName: "Mask",
+            description: "Bit mask",
+            type: "number",
+            defaultValue: 1,
+            exposed: false
+        }, {
             name: "innerConeAngle",
             displayName: "Inner Cone Angle",
             description: "Spotlight inner cone angle",
