@@ -97,6 +97,10 @@ pc.extend(pc, function () {
             }
         },
 
+        updateShadow: function() {
+            this.light.updateShadow();
+        },
+
         onSetCastShadows: function (name, oldValue, newValue) {
             this.light.setCastShadows(newValue);
         },
