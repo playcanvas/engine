@@ -556,11 +556,8 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
-<<<<<<< HEAD
                 refraction:                 this.refraction,
-=======
-                useMetalness:          this.useMetalness,
->>>>>>> master
+                useMetalness:               this.useMetalness,
                 useTexCubeLod:              useTexCubeLod
             };
 
