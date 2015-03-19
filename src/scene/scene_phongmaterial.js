@@ -212,6 +212,8 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
 
+            this.refraction = 0;
+            this.refractionIndex = 1.0 / 1.5; // approx. (air ior / glass ior)
             this.useMetalness = false;
             this.metalness = 1;
             this.occludeDirect = false;
@@ -364,6 +366,11 @@ pc.extend(pc, function () {
                 this.emissiveUniform[1] = this.emissive.g * this.emissiveIntensity;
                 this.emissiveUniform[2] = this.emissive.b * this.emissiveIntensity;
                 this.setParameter('material_emissive', this.emissiveUniform);
+            }
+
+            if (this.refraction>0) {
+                this.setParameter('material_refraction', this.refraction);
+                this.setParameter('material_refractionIor', this.refractionIndex);
             }
 
             this.setParameter('material_opacity', this.opacity);
@@ -551,7 +558,8 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
-                useMetalness:          this.useMetalness,
+                refraction:                 this.refraction,
+                useMetalness:               this.useMetalness,
                 useTexCubeLod:              useTexCubeLod
             };
 
