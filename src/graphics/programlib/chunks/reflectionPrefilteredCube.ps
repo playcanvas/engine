@@ -1,4 +1,4 @@
-﻿uniform samplerCube texture_prefilteredCubeMap128;
+uniform samplerCube texture_prefilteredCubeMap128;
 uniform samplerCube texture_prefilteredCubeMap64;
 uniform samplerCube texture_prefilteredCubeMap32;
 uniform samplerCube texture_prefilteredCubeMap16;
@@ -6,7 +6,7 @@ uniform samplerCube texture_prefilteredCubeMap8;
 uniform samplerCube texture_prefilteredCubeMap4;
 uniform float material_reflectionFactor;
 
-void addCubemapReflection(inout psInternalData data) {
+void addReflection(inout psInternalData data) {
 
     // Unfortunately, WebGL doesn't allow us using textureCubeLod. Therefore bunch of nasty workarounds is required.
     // We fix mip0 to 128x128, so code is rather static.
