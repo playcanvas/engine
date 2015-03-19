@@ -18,6 +18,7 @@ pc.extend(pc, function () {
         this.priority = 0;
         this.rect = new pc.Vec4(0,0,1,1);
         this.enabled = true;
+        this.frustumCulling = false;
 
         // not serialized
         this.camera = null;
