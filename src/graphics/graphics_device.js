@@ -293,8 +293,6 @@ pc.extend(pc, function () {
                 this.extCompressedTextureS3TC = gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc');
             }
 
-            pc._shaderQuality = pc.SHADERQUALITY_HIGH;
-
             if (this.extCompressedTextureS3TC) {
                 if (_isIE()) {
                     // IE 11 can't use mip maps with S3TC

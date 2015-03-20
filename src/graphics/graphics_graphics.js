@@ -598,9 +598,6 @@
          */
         TEXTURELOCK_WRITE: 2,
 
-        SHADERQUALITY_MEDIUM: 0,
-        SHADERQUALITY_HIGH: 1,
-
         UNIFORMTYPE_BOOL: 0,
         UNIFORMTYPE_INT: 1,
         UNIFORMTYPE_FLOAT: 2,

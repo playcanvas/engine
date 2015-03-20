@@ -211,6 +211,7 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
             this.normalizeNormalMap = true;
+            this.fastTbn = false;
 
             _endProperties(this);
 
@@ -523,6 +524,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                fastTbn:                    this.fastTbn,
                 useTexCubeLod:              useTexCubeLod
             };
 

@@ -236,14 +236,14 @@ pc.programlib.phong = {
 
 
         var uvOffset = options.heightMap ? " + data.uvOffset" : "";
-        var tbn = pc._shaderQuality < pc.SHADERQUALITY_HIGH? chunks.TBNfastPS : chunks.TBNPS;
+        var tbn = options.fastTbn? chunks.TBNfastPS : chunks.TBNPS;
 
         if (options.normalMap && useTangents) {
             code += options.packedNormal? chunks.normalXYPS : chunks.normalXYZPS;
 
             var uv = this._uvSource(options.normalMapTransform, options.normalMapUv) + uvOffset;
             if (options.needsNormalFloat) {
-                code += (pc._shaderQuality < pc.SHADERQUALITY_HIGH? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, uv);
+                code += (options.fastTbn? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, uv);
             } else {
                 code += chunks.normalMapPS.replace(/\$UV/g, uv);
             }
