@@ -127,11 +127,18 @@
         RENDERSTYLE_WIREFRAME: 1,
         RENDERSTYLE_POINTS: 2,
 
+        CUBEPROJ_NONE: 0,
+        CUBEPROJ_BOX: 1,
+
         SPECULAR_PHONG: 0,
         SPECULAR_BLINN: 1,
 
         TONEMAP_LINEAR: 0,
-        TONEMAP_FILMIC: 1
+        TONEMAP_FILMIC: 1,
+
+        SHADOWUPDATE_NONE: 0,
+        SHADOWUPDATE_THISFRAME: 1,
+        SHADOWUPDATE_REALTIME: 2
     };
 
     pc.extend(pc, enums);

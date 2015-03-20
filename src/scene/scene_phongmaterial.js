@@ -212,6 +212,9 @@ pc.extend(pc, function () {
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
 
+            this.cubeMapProjection = 0;
+            this.cubeMapProjectionBox = null;
+
             this.chunks = [];
             this.chunks.copy = function(from) {
                 for(var p in from) {
@@ -225,6 +228,7 @@ pc.extend(pc, function () {
             this.refractionIndex = 1.0 / 1.5; // approx. (air ior / glass ior)
             this.useMetalness = false;
             this.metalness = 1;
+
             this.occludeDirect = false;
 
             _endProperties(this);
@@ -234,6 +238,8 @@ pc.extend(pc, function () {
             this.diffuseUniform = new Float32Array(3);
             this.specularUniform = new Float32Array(3);
             this.emissiveUniform = new Float32Array(3);
+            this.cubeMapMinUniform = new Float32Array(3);
+            this.cubeMapMaxUniform = new Float32Array(3);
         },
 
 
@@ -384,6 +390,18 @@ pc.extend(pc, function () {
 
             this.setParameter('material_opacity', this.opacity);
 
+            if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
+                this.cubeMapMinUniform[0] = this.cubeMapProjectionBox.center.x - this.cubeMapProjectionBox.halfExtents.x;
+                this.cubeMapMinUniform[1] = this.cubeMapProjectionBox.center.y - this.cubeMapProjectionBox.halfExtents.y;
+                this.cubeMapMinUniform[2] = this.cubeMapProjectionBox.center.z - this.cubeMapProjectionBox.halfExtents.z;
+
+                this.cubeMapMaxUniform[0] = this.cubeMapProjectionBox.center.x + this.cubeMapProjectionBox.halfExtents.x;
+                this.cubeMapMaxUniform[1] = this.cubeMapProjectionBox.center.y + this.cubeMapProjectionBox.halfExtents.y;
+                this.cubeMapMaxUniform[2] = this.cubeMapProjectionBox.center.z + this.cubeMapProjectionBox.halfExtents.z;
+
+                this.setParameter('envBoxMin', this.cubeMapMinUniform);
+                this.setParameter('envBoxMax', this.cubeMapMaxUniform);
+            }
 
             var i = 0;
 
@@ -567,6 +585,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                cubeMapProjection:          this.cubeMapProjection,
                 customChunks:               this.chunks,
                 customFragmentShader:       this.customFragmentShader,
                 refraction:                 this.refraction,
