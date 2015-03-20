@@ -211,6 +211,8 @@ pc.extend(pc, function () {
             this.specularMapTint = false;
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
+            this.normalizeNormalMap = true;
+            this.fastTbn = false;
 
             this.cubeMapProjection = 0;
             this.cubeMapProjectionBox = null;
@@ -564,7 +566,7 @@ pc.extend(pc, function () {
                 glossTint:            true,
                 emissiveTint:         (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
                 opacityTint:          this.opacity!=1,
-                needsNormalFloat:           true,
+                needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,
@@ -585,6 +587,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                fastTbn:                    this.fastTbn,
                 cubeMapProjection:          this.cubeMapProjection,
                 customChunks:               this.chunks,
                 customFragmentShader:       this.customFragmentShader,
