@@ -949,9 +949,18 @@ pc.extend(pc, function () {
                                     primitive.base * 2);
                 }
             } else {
-                gl.drawArrays(this.glPrimitive[primitive.type],
-                              primitive.base,
-                              primitive.count);
+                if (numInstances > 1) {
+                    this.extInstancing.drawArraysInstancedANGLE(this.glPrimitive[primitive.type],
+                                  primitive.base,
+                                  primitive.count,
+                                  numInstances);
+                    this.boundBuffer = [];
+                    this.attributesInvalidated = true;
+                } else {
+                    gl.drawArrays(this.glPrimitive[primitive.type],
+                                  primitive.base,
+                                  primitive.count);
+                }
             }
         },
 
