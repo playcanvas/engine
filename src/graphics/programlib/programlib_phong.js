@@ -1,6 +1,16 @@
 pc.programlib.phong = {
-    generateKey: function (device, options) {
+    hashCode: function(str){
+        var hash = 0;
+        if (str.length == 0) return hash;
+        for (i = 0; i < str.length; i++) {
+            char = str.charCodeAt(i);
+            hash = ((hash<<5)-hash)+char;
+            hash = hash & hash;
+        }
+        return hash;
+    },
 
+    generateKey: function (device, options) {
         var props = [];
         var key = "phong";
         for(prop in options) {
@@ -11,14 +21,20 @@ pc.programlib.phong = {
                         + options.lights[i].getFalloffMode() + "_"
                         + !!options.lights[i].getNormalOffsetBias());
                 }
+            } else if (prop==="chunks") {
+                for(var p in options[prop]) {
+                    if (options[prop].hasOwnProperty(p)) {
+                        props.push(p + options.chunks[p]);
+                    }
+                }
             } else {
                 if (options[prop]) props.push(prop);
             }
         }
         props.sort();
-        for(prop in props) key += "_" + props[prop] + ":" + options[props[prop]];
+        for(prop in props) key += props[prop] + options[props[prop]];
 
-        return key;
+        return this.hashCode(key);
     },
 
     _setMapTransform: function (codes, name, id, uv) {
@@ -37,7 +53,7 @@ pc.programlib.phong = {
         return id==0? "vUv" + uv : ("vUv"+uv+"_" + id);
     },
 
-    _addMap: function(p, options, chunks, uvOffset, subCode) {
+    _addMap: function(p, options, chunks, uvOffset, subCode, format) {
         var mname = p + "Map";
         if (options[mname]) {
             var tname = mname + "Transform";
@@ -50,6 +66,10 @@ pc.programlib.phong = {
                 } else {
                     subCode = chunks[p + "TexPS"];
                 }
+            }
+            if (format!==undefined) {
+                var fmt = format===0? "texture2DSRGB" : (format===1? "texture2DRGBM" : "texture2D");
+                subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
             }
             return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
         } else {
@@ -86,6 +106,27 @@ pc.programlib.phong = {
         var varyings = ""; // additional varyings for map transforms
 
         var chunks = pc.shaderChunks;
+
+        if (options.chunks) {
+            var customChunks = [];
+            for(var p in chunks) {
+                if (chunks.hasOwnProperty(p)) {
+                    if (!options.chunks[p]) {
+                        customChunks[p] = chunks[p];
+                    } else {
+                        customChunks[p] = options.chunks[p];
+                        if (!lighting && !reflections) {
+                            // user might use vertex normal/tangent in shader
+                            // but those aren't used when lighting/reflections are off
+                            // so this is a workaround
+                            customChunks[p] = customChunks[p].replace(/vertex_normal/g, "vec3(0)").replace(/vertex_tangent/g, "vec4(0)");
+                        }
+                    }
+                }
+            }
+            chunks = customChunks;
+        }
+
         code += chunks.baseVS;
 
         var attributes = {
@@ -192,7 +233,18 @@ pc.programlib.phong = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
+        var fshader;
         code = getSnippet(device, 'fs_precision');
+
+        if (options.customFragmentShader) {
+            fshader = code + options.customFragmentShader;
+            return {
+                attributes: attributes,
+                vshader: vshader,
+                fshader: fshader
+            };
+        }
+
         code += chunks.basePS;
         code += varyings;
 
@@ -266,11 +318,14 @@ pc.programlib.phong = {
         }
 
         if (options.rgbmReflection) code += chunks.rgbmPS;
-        if (cubemapReflection) code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+        if (cubemapReflection) {
+            code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
+            code += options.cubeMapProjection>0? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
+        }
 
         code += this._addMap("diffuse", options, chunks, uvOffset);
         code += this._addMap("opacity", options, chunks, uvOffset);
-        code += this._addMap("emissive", options, chunks, uvOffset);
+        code += this._addMap("emissive", options, chunks, uvOffset, null, options.emissiveFormat);
 
         if (options.useSpecular) {
             if (options.specularAA && options.normalMap) {
@@ -278,7 +333,7 @@ pc.programlib.phong = {
             } else {
                 code += chunks.specularAaNonePS;
             }
-            code += this._addMap("specular", options, chunks, uvOffset);
+            code += this._addMap(options.useMetalness? "metalness" : "specular", options, chunks, uvOffset);
             code += this._addMap("gloss", options, chunks, uvOffset);
             if (options.fresnelModel > 0) {
                 if (options.fresnelModel === pc.FRESNEL_SIMPLE) {
@@ -320,6 +375,10 @@ pc.programlib.phong = {
             var scode = device.fragmentUniformsCount>16? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
             scode = scode.replace(/\$texture2DSAMPLE/g, options.rgbmReflection? "texture2DRGBM" : (options.hdrReflection? "texture2D" : "texture2DSRGB"));
             code += scode;
+        }
+
+        if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+            code += chunks.refractionPS;
         }
 
         if (options.lightMap) {
@@ -399,15 +458,13 @@ pc.programlib.phong = {
         if (options.modulateAmbient) {
             code += "   data.diffuseLight *= material_ambient;\n"
         }
-        if (options.aoMap) {
+        if (options.aoMap && !options.occludeDirect) {
                 code += "    applyAO(data);\n";
         }
 
         if (lighting || reflections) {
-            if (options.cubeMap) {
-                code += "   addCubemapReflection(data);\n";
-            } else if (options.sphereMap) {
-                code += "   addSpheremapReflection(data);\n";
+            if (options.cubeMap || options.sphereMap) {
+                code += "   addReflection(data);\n";
             }
 
             for (i = 0; i < options.lights.length; i++) {
@@ -472,11 +529,20 @@ pc.programlib.phong = {
                 }
                 code += "\n";
             }
+
+            if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+                code += "   addRefraction(data);\n";
+            }
         }
         code += "\n";
 
-        if (options.aoMap && options.occludeSpecular) {
+        if (options.aoMap) {
+            if (options.occludeDirect) {
+                    code += "    applyAO(data);\n";
+            }
+            if (options.occludeSpecular) {
                 code += "    occludeSpecular(data);\n";
+            }
         }
 
         code += chunks.endPS;
@@ -486,7 +552,7 @@ pc.programlib.phong = {
 
         code += getSnippet(device, 'common_main_end');
 
-        var fshader = code;
+        fshader = code;
 
         return {
             attributes: attributes,
