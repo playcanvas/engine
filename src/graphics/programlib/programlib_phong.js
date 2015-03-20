@@ -134,6 +134,14 @@ pc.programlib.phong = {
         }
         codeBody += "   vPositionW    = getWorldPosition(data);\n";
 
+        if (options.useInstancing) {
+            attributes.instance_line1 = pc.SEMANTIC_TEXCOORD2;
+            attributes.instance_line2 = pc.SEMANTIC_TEXCOORD3;
+            attributes.instance_line3 = pc.SEMANTIC_TEXCOORD4;
+            attributes.instance_line4 = pc.SEMANTIC_TEXCOORD5;
+            code += chunks.instancingVS;
+        }
+
         if (lighting || reflections) {
             attributes.vertex_normal = pc.SEMANTIC_NORMAL;
             codeBody += "   vNormalW    = getNormal(data);\n";
@@ -217,6 +225,9 @@ pc.programlib.phong = {
             code += getSnippet(device, 'vs_skin_decl');
             code += chunks.transformSkinnedVS;
             if (lighting || reflections) code += chunks.normalSkinnedVS;
+        } else if (options.useInstancing) {
+            code += chunks.transformInstancedVS;
+            if (lighting || reflections) code += chunks.normalInstancedVS;
         } else {
             code += chunks.transformVS;
             if (lighting || reflections) code += chunks.normalVS;
