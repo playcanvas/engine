@@ -133,6 +133,10 @@
         SPECULAR_PHONG: 0,
         SPECULAR_BLINN: 1,
 
+        GAMMA_NONE: 0,
+        GAMMA_SRGB: 1,
+        GAMMA_SRGBFAST: 2,
+
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
 
@@ -180,7 +184,7 @@ pc.extend(pc, function () {
 
         this.ambientLight = new pc.Color(0, 0, 0);
 
-        this._gammaCorrection = false;
+        this._gammaCorrection = pc.GAMMA_NONE;
         this._toneMapping = 0;
         this.exposure = 1.0;
 
@@ -225,7 +229,10 @@ pc.extend(pc, function () {
         set: function (value) {
             if (value !== this._gammaCorrection) {
                 this._gammaCorrection = value;
-                pc.shaderChunks.defaultGamma = value ? pc.shaderChunks.gamma2_2PS : pc.shaderChunks.gamma1_0PS;
+
+                pc.shaderChunks.defaultGamma = value===pc.GAMMA_NONE? pc.shaderChunks.gamma1_0PS :
+                (value===pc.GAMMA_SRGBFAST? pc.shaderChunks.gamma2_2FastPS : pc.shaderChunks.gamma2_2PS);
+
                 this.updateShaders = true;
             }
         }
