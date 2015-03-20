@@ -11,6 +11,7 @@ pc.extend(pc, function () {
         this._fov = 45;
         this._orthoHeight = 10;
         this._aspect = 16 / 9;
+        this.frustumCulling = false;
 
         this._projMatDirty = true;
         this._projMat = new pc.Mat4();
@@ -56,6 +57,7 @@ pc.extend(pc, function () {
             clone.setAspectRatio(this.getAspectRatio());
             clone.setRenderTarget(this.getRenderTarget());
             clone.setClearOptions(this.getClearOptions());
+            clone.frustumCulling = this.frustumCulling;
             return clone;
         },
 

@@ -46,6 +46,12 @@ pc.extend(pc, function () {
             type: "boolean",
             defaultValue: true
         }, {
+            name: "frustumCulling",
+            displayName: "Frustum culling",
+            type: "boolean",
+            defaultValue: false,
+            exposed: false
+        }, {
             name: "projection",
             displayName: "Projection",
             description: "Projection type of camera",
@@ -215,6 +221,7 @@ pc.extend(pc, function () {
                 'priority',
                 'clearColorBuffer',
                 'clearDepthBuffer',
+                'frustumCulling',
                 'rect'
             ];
 

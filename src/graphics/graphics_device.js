@@ -324,6 +324,7 @@ pc.extend(pc, function () {
             this.extInstancing = gl.getExtension("ANGLE_instanced_arrays");
             if (this.enableAutoInstancing && !this.extInstancing) this.enableAutoInstancing = false;
 
+            this.extCompressedTextureETC1 = gl.getExtension('WEBGL_compressed_texture_etc1');
             this.extDrawBuffers = gl.getExtension('EXT_draw_buffers');
             this.maxDrawBuffers = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_DRAW_BUFFERS_EXT) : 1;
             this.maxColorAttachments = this.extDrawBuffers ? gl.getParameter(this.extDrawBuffers.MAX_COLOR_ATTACHMENTS_EXT) : 1;
@@ -625,6 +626,11 @@ pc.extend(pc, function () {
                     texture._glFormat = gl.RGBA;
                     texture._glInternalFormat = ext.COMPRESSED_RGBA_S3TC_DXT5_EXT;
                     break;
+                case pc.PIXELFORMAT_ETC1:
+                    ext = this.extCompressedTextureETC1;
+                    texture._glFormat = gl.RGB;
+                    texture._glInternalFormat = ext.COMPRESSED_RGB_ETC1_WEBGL;
+                    break;
                 case pc.PIXELFORMAT_RGB16F:
                     ext = this.extTextureHalfFloat;
                     texture._glFormat = gl.RGB;
@@ -694,15 +700,13 @@ pc.extend(pc, function () {
                         for (face = 0; face < 6; face++) {
 
                             if (texture._compressed) {
-                                if (this.extCompressedTextureS3TC) {
-                                    gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                                            mipLevel,
-                                                            texture._glInternalFormat,
-                                                            Math.max(texture._width * resMult, 1),
-                                                            Math.max(texture._height * resMult, 1),
-                                                            0,
-                                                            mipObject[face]);
-                                }
+                                gl.compressedTexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                                        mipLevel,
+                                                        texture._glInternalFormat,
+                                                        Math.max(texture._width * resMult, 1),
+                                                        Math.max(texture._height * resMult, 1),
+                                                        0,
+                                                        mipObject[face]);
                             } else {
                                 gl.texImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                               mipLevel,
@@ -739,15 +743,13 @@ pc.extend(pc, function () {
                         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
                         var resMult = 1 / Math.pow(2, mipLevel);
                         if (texture._compressed) {
-                            if (this.extCompressedTextureS3TC) {
-                                gl.compressedTexImage2D(gl.TEXTURE_2D,
-                                                        mipLevel,
-                                                        texture._glInternalFormat,
-                                                        Math.max(texture._width * resMult, 1),
-                                                        Math.max(texture._height * resMult, 1),
-                                                        0,
-                                                        mipObject);
-                            }
+                            gl.compressedTexImage2D(gl.TEXTURE_2D,
+                                                    mipLevel,
+                                                    texture._glInternalFormat,
+                                                    Math.max(texture._width * resMult, 1),
+                                                    Math.max(texture._height * resMult, 1),
+                                                    0,
+                                                    mipObject);
                         } else {
                             gl.texImage2D(gl.TEXTURE_2D,
                                           mipLevel,

@@ -45,6 +45,7 @@ pc.extend(pc, function () {
         this.on("set_clearDepthBuffer", this.updateClearFlags, this);
         this.on("set_renderTarget", this.onSetRenderTarget, this);
         this.on("set_rect", this.onSetRect, this);
+        this.on("set_frustumCulling", this.onSetFrustumCulling, this);
     };
     CameraComponent = pc.inherits(CameraComponent, pc.Component);
 
@@ -145,6 +146,10 @@ pc.extend(pc, function () {
 
         onSetFarClip: function (name, oldValue, newValue) {
             this.data.camera.setFarClip(newValue);
+        },
+
+        onSetFrustumCulling: function (name, oldValue, newValue) {
+            this.data.camera.frustumCulling = newValue;
         },
 
         onSetProjection: function (name, oldValue, newValue) {
