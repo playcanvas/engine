@@ -42,11 +42,11 @@ pc.extend(pc, function () {
         this.graphicsDevice = new pc.GraphicsDevice(canvas);
         this.systems = new pc.ComponentSystemRegistry();
         this._audioManager = new pc.AudioManager();
-        this.loader = new pc.resources.ResourceLoader();
+        this.loader = new pc.ResourceLoader();
 
         this.scene = new pc.Scene();
         this.root = new pc.fw.Entity(this);
-        this.assets = new pc.asset.AssetRegistry(this.loader);
+        this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
 
         this.keyboard = options.keyboard || null;
@@ -80,20 +80,22 @@ pc.extend(pc, function () {
             }.bind(this));
         }
 
-        // Enable new texture bank feature to cache textures
-        var textureCache = new pc.resources.TextureCache(this.loader);
+        this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
+        this.loader.addHandler("material", new pc.MaterialHandler());
+        this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice));
 
-        this.loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
-        this.loader.registerHandler(pc.resources.TextRequest, new pc.resources.TextResourceHandler());
-        this.loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
-        this.loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.CubemapRequest, new pc.resources.CubemapResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.assets));
-        this.loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
-        this.loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(this, options.depot));
-        this.loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this._audioManager));
-        this.loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this, options.scriptPrefix));
+        // var textureCache = new pc.resources.TextureCache(this.loader);
+        // this.loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
+        // this.loader.registerHandler(pc.resources.TextRequest, new pc.resources.TextResourceHandler());
+        // this.loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
+        // this.loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(this.graphicsDevice, this.assets));
+        // this.loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice, this.assets));
+        // this.loader.registerHandler(pc.resources.CubemapRequest, new pc.resources.CubemapResourceHandler(this.graphicsDevice, this.assets));
+        // this.loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.assets));
+        // this.loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
+        // this.loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(this, options.depot));
+        // this.loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this._audioManager));
+        // this.loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this, options.scriptPrefix));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);

@@ -40,33 +40,34 @@ pc.extend(pc, function () {
     ModelComponent = pc.inherits(ModelComponent, pc.Component);
 
     pc.extend(ModelComponent.prototype, {
-
         setVisible: function (visible) {
             console.warn("WARNING: setVisible: Function is deprecated. Set enabled property instead.");
             this.enabled = visible;
         },
 
-        loadModelAsset: function (id) {
-            var options = {
-                parent: this.entity.getRequest()
-            };
+        _setModelAsset: function (id) {
+            var self = this;
+            var assets = this.system.app.assets;
+            var asset = assets.get(id);
 
-            var asset = this.system.app.assets.getAssetById(id);
-            if (!asset) {
-                logERROR(pc.string.format('Trying to load model before asset {0} is loaded.', id));
-                return;
-            }
+            if (asset) {
+                asset.ready(function (asset) {
+                    asset.off('change', this.onAssetChange, this); // do not subscribe multiple times
+                    asset.on('change', this.onAssetChange, this);
 
-            asset.off('change', this.onAssetChange, this); // do not subscribe multiple times
-            asset.on('change', this.onAssetChange, this);
-
-            if (asset.resource) {
-                var model = asset.resource.clone();
-                this._onModelLoaded(model);
-            } else {
-                this.system.app.assets.load(asset, [], options).then(function (resources) {
-                    this._onModelLoaded(resources[0]);
+                    var model = asset.resource.clone();
+                    this._onModelLoaded(model);
                 }.bind(this));
+            } else {
+                assets.on("add:" + id, function (asset) {
+                    asset.ready(function (asset) {
+                        asset.off('change', this.onAssetChange, this); // do not subscribe multiple times
+                        asset.on('change', this.onAssetChange, this);
+
+                        var model = asset.resource.clone();
+                        this._onModelLoaded(model);
+                    }.bind(this));
+                }, this);
             }
         },
 
@@ -94,7 +95,7 @@ pc.extend(pc, function () {
 
                 if (newValue === 'asset') {
                     if (this.data.asset !== null) {
-                        this.loadModelAsset(this.data.asset);
+                        this._setModelAsset(this.data.asset);
                     } else {
                         this.model = null;
                     }
@@ -150,11 +151,11 @@ pc.extend(pc, function () {
 
             if (this.data.type === 'asset') {
                 if (newValue) {
-                    if (newValue instanceof pc.asset.Asset) {
+                    if (newValue instanceof pc.Asset) {
                         this.data.asset = newValue.id;
-                        this.loadModelAsset(newValue.id);
+                        this._setModelAsset(newValue.id);
                     } else {
-                        this.loadModelAsset(newValue);
+                        this._setModelAsset(newValue);
                     }
                 } else {
                     this.model = null;
@@ -217,33 +218,30 @@ pc.extend(pc, function () {
             // if the type of the value is not a number assume it is an pc.Asset
             var id = typeof newValue === 'number' || !newValue ? newValue : newValue.id;
 
-            var material;
+            // var material;
 
             // try to load the material asset
             if (id !== undefined && id !== null) {
-                var asset = this.system.app.assets.getAssetById(id);
+                var asset = this.system.app.assets.get(id);
                 if (asset) {
-                    if (asset.resource) {
-                        material = asset.resource;
-                        this.material = material;
-                    } else {
-                        // setting material asset to an asset that hasn't been loaded yet.
-                        // this should only be at tool-time
-                        this.system.app.assets.load(asset).then(function (materials) {
-                            this.material = materials[0];
-                        }.bind(this));
-                    }
+                    asset.ready(function (asset) {
+                        this.material = asset.resource;
+                    }.bind(this));
                 } else {
-                    console.error(pc.string.format("Entity '{0}' is trying to load Material Asset {1} which no longer exists. Maybe this model was once a primitive shape?", this.entity.getPath(), id));
+                    this.system.app.assets.on("add:"+id, function (asset) {
+                        asset.ready(function (asset) {
+                            this.material = asset.resource;
+                        }.bind(this));
+                    });
                 }
             }
 
             // if no material asset was loaded then use the default material
-            if (!material) {
-                material = this.system.defaultMaterial;
-            }
+            // if (!material) {
+            //     material = this.system.defaultMaterial;
+            // }
 
-            this.material = material;
+            // this.material = material;
 
             var oldValue = this.data.materialAsset;
             this.data.materialAsset = id;
@@ -251,7 +249,7 @@ pc.extend(pc, function () {
         },
 
         getMaterialAsset: function () {
-            return this.system.app.assets.getAssetById(this.data.materialAsset);
+            return this.system.app.assets.get(this.data.materialAsset);
         },
 
         onSetMaterial: function (name, oldValue, newValue) {
@@ -338,7 +336,7 @@ pc.extend(pc, function () {
                     // clear the cache and reload the model
                     asset.resource = null;
                     this.system.app.loader.removeFromCache(asset.getFileUrl());
-                    this.loadModelAsset(asset.id);
+                    this._setModelAsset(asset.id);
                 }
 
             }
