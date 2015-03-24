@@ -132,6 +132,7 @@ pc.extend(pc.asset, function () {
         removeAsset: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
+            asset.fire('remove', asset);
             if (asset.file) {
                 asset.off('change', this._onAssetChanged, this);
                 delete this._urls[asset.file.url];
