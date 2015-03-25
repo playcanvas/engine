@@ -78,9 +78,11 @@ pc.extend(pc, function () {
                 this._loader.load(asset.file.url, asset.type, function (err, resource) {
                     if (err) {
                         self.fire("error", err);
+                        self.fire("error:" + asset.id, err);
                         return;
                     }
                     asset.resource = resource;
+                    asset.loaded = true;
 
                     self._loader.patch(asset, self);
 
@@ -91,6 +93,8 @@ pc.extend(pc, function () {
             } else {
                 var resource = self._loader.open(asset.type, asset.data);
                 asset.resource = resource;
+                asset.loaded = true;
+
                 self._loader.patch(asset, self);
 
                 self.fire("load", asset);

@@ -59,6 +59,8 @@ pc.extend(pc, function () {
 
         // This is where the loaded resource will be
         this.resource = null;
+        // is resource loaded
+        this.loaded = false;
 
         pc.events.attach(this);
     };
@@ -90,6 +92,11 @@ pc.extend(pc, function () {
                     callback(asset);
                 });
             }
+        },
+
+        unload: function () {
+            this.resource = null;
+            this.loaded = false;
         }
     };
 
