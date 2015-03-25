@@ -21,10 +21,6 @@ pc.programlib.phong = {
                         + options.lights[i].getFalloffMode() + "_"
                         + !!options.lights[i].getNormalOffsetBias());
                 }
-            } else if (prop==="shadowReadMask") {
-                for(var i=0; i<options.shadowReadMask.length; i++) {
-                    props.push("#" + options.shadowReadMask[i]);
-                }
             } else if (prop==="chunks") {
                 for(var p in options[prop]) {
                     if (options[prop].hasOwnProperty(p)) {
@@ -536,6 +532,7 @@ pc.programlib.phong = {
                 code += "   addReflection(data);\n";
             }
 
+            var light;
             for (i = 0; i < options.lights.length; i++) {
                 // The following code is not decoupled to separate shader files, because most of it can be actually changed to achieve different behaviours like:
                 // - different falloffs
@@ -544,7 +541,8 @@ pc.programlib.phong = {
 
                 // getLightDiffuse and getLightSpecular is BRDF itself.
 
-                var lightType = options.lights[i].getType();
+                light = options.lights[i];
+                var lightType = light.getType();
 
                 if (lightType==pc.LIGHTTYPE_DIRECTIONAL) {
                     // directional
@@ -552,7 +550,7 @@ pc.programlib.phong = {
                     code += "   data.atten = 1.0;\n";
                 } else {
                     code += "   getLightDirPoint(data, light"+i+"_position);\n";
-                    if (options.lights[i].getFalloffMode()==pc.LIGHTFALLOFF_LINEAR) {
+                    if (light.getFalloffMode()==pc.LIGHTFALLOFF_LINEAR) {
                         code += "   data.atten = getFalloffLinear(data, light"+i+"_radius);\n";
                     } else {
                         code += "   data.atten = getFalloffInvSquared(data, light"+i+"_radius);\n";
@@ -563,26 +561,28 @@ pc.programlib.phong = {
                 }
 
                 code += "   data.atten *= getLightDiffuse(data);\n";
-                if (options.lights[i].getCastShadows()) {
+                if (light.getCastShadows()) {
                     if (lightType==pc.LIGHTTYPE_POINT) {
                         var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
-                        if (!options.lights[i].getNormalOffsetBias()) {
+                        if (!light.getNormalOffsetBias()) {
                             code += "   data.atten *= getShadowPoint" + shadowCoordArgs;
                         } else {
                             code += "   data.atten *= getShadowPointNormalOffset" + shadowCoordArgs;
                         }
                     } else {
                         var shadowReadMode = null;
-                        if ((options.lights[i].mask & options.shadowReadMask[pc.SHADOWREAD_HARD]) > 0) {
-                            shadowReadMode = "Hard";
-                        } else if ((options.lights[i].mask & options.shadowReadMask[pc.SHADOWREAD_PCF3X3]) > 0) {
-                            shadowReadMode = "PCF3x3";
-                            if (options.lights[i]._shadowWrite===pc.SHADOWWRITE_DEPTHMASK) {
-                                shadowReadMode += "_YZW";
+                        if (light._shadowType<=pc.SHADOW_DEPTHMASK) {
+                            if (options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_HARD) {
+                                shadowReadMode = "Hard";
+                            } else if (light._shadowType===pc.SHADOW_DEPTH && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_PCF3X3) {
+                                shadowReadMode = "PCF3x3";
+                            } else if (light._shadowType===pc.SHADOW_DEPTHMASK && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_PCF3X3) {
+                                shadowReadMode = "PCF3x3_YZW";
+                            } else if (light._shadowType===pc.SHADOW_DEPTHMASK && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_MASK) {
+                                shadowReadMode = "Mask";
                             }
-                        } else if ((options.lights[i].mask & options.shadowReadMask[pc.SHADOWREAD_MASK]) > 0) {
-                            shadowReadMode = "Mask";
                         }
+
                         if (shadowReadMode!==null) {
                             if (mainShadowLight===i) {
                                 shadowReadMode += "VS";

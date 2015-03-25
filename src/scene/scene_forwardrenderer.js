@@ -201,26 +201,26 @@ pc.extend(pc, function () {
         this._depthShaderStatic = [];
         this._depthShaderSkin = [];
 
-        for(var i=0; i<pc.SHADOWWRITE_DEPTHMASK + 1; i++) {
+        for(var i=0; i<pc.SHADOW_DEPTHMASK + 1; i++) {
             this._depthProgStatic[i] = library.getProgram('depthrgba', {
                 skin: false,
                 opacityMap: false,
-                shadowWrite: i
+                shadowType: i
             });
             this._depthProgSkin[i] = library.getProgram('depthrgba', {
                 skin: true,
                 opacityMap: false,
-                shadowWrite: i
+                shadowType: i
             });
             this._depthProgStaticOp[i] = library.getProgram('depthrgba', {
                 skin: false,
                 opacityMap: true,
-                shadowWrite: i
+                shadowType: i
             });
             this._depthProgSkinOp[i] = library.getProgram('depthrgba', {
                 skin: true,
                 opacityMap: true,
-                shadowWrite: i
+                shadowType: i
             });
 
             this._depthShaderStatic[i] = library.getProgram('depth', {
@@ -228,7 +228,7 @@ pc.extend(pc, function () {
             });
             this._depthShaderSkin[i] = library.getProgram('depth', {
                 skin: true,
-                shadowWrite: i
+                shadowType: i
             });
         }
 
@@ -618,9 +618,9 @@ pc.extend(pc, function () {
                             } else {
                                 this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             }
-                            device.setShader(this._depthShaderSkin[pc.SHADOWWRITE_DEPTH]);
+                            device.setShader(this._depthShaderSkin[pc.SHADOW_DEPTH]);
                         } else {
-                            device.setShader(this._depthShaderStatic[pc.SHADOWWRITE_DEPTH]);
+                            device.setShader(this._depthShaderStatic[pc.SHADOW_DEPTH]);
                         }
 
                         style = meshInstance.renderStyle;
@@ -779,13 +779,13 @@ pc.extend(pc, function () {
                                 if (type === pc.LIGHTTYPE_POINT) {
                                     device.setShader(material.opacityMap ? this._depthProgSkinOpPoint : this._depthProgSkinPoint);
                                 } else {
-                                    device.setShader(material.opacityMap ? this._depthProgSkinOp[light._shadowWrite] : this._depthProgSkin[light._shadowWrite]);
+                                    device.setShader(material.opacityMap ? this._depthProgSkinOp[light._shadowType] : this._depthProgSkin[light._shadowType]);
                                 }
                             } else {
                                 if (type === pc.LIGHTTYPE_POINT) {
                                     device.setShader(material.opacityMap ? this._depthProgStaticOpPoint : this._depthProgStaticPoint);
                                 } else {
-                                    device.setShader(material.opacityMap ? this._depthProgStaticOp[light._shadowWrite] : this._depthProgStatic[light._shadowWrite]);
+                                    device.setShader(material.opacityMap ? this._depthProgStaticOp[light._shadowType] : this._depthProgStatic[light._shadowType]);
                                 }
                             }
 
@@ -910,20 +910,6 @@ pc.extend(pc, function () {
 
                     if (material !== prevMaterial) {
 
-                        if (material.shadowReadMask) {
-                            for(k=0; k<this._activeShadowLights.length; k++) {
-                                if (this._activeShadowLights[k]._shadowWrite===pc.SHADOWWRITE_DEPTHMASK) {
-                                    if ((this._activeShadowLights[k].mask & material.shadowReadMask[pc.SHADOWREAD_MASK]) > 0) {
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_LINEAR;
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_LINEAR;
-                                    } else {
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_NEAREST;
-                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_NEAREST;
-                                    }
-                                }
-                            }
-                        }
-
                         if (!material.shader) {
                             material.updateShader(device, scene);
                         }
@@ -939,8 +925,23 @@ pc.extend(pc, function () {
                         }
 
                         if (!prevMaterial || material.mask !== prevMaterial.mask) {
+                            this._activeShadowLights = [];
                             usedDirLights = this.dispatchDirectLights(scene, material.mask);
                             this.dispatchLocalLights(scene, material.mask, usedDirLights);
+                        }
+
+                        if (material.shadowDepthSampleMethod!==undefined) {
+                            for(k=0; k<this._activeShadowLights.length; k++) {
+                                if (this._activeShadowLights[k]._shadowType===pc.SHADOW_DEPTHMASK) {
+                                    if (material.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_MASK) {
+                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_LINEAR;
+                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_LINEAR;
+                                    } else {
+                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_NEAREST;
+                                        this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_NEAREST;
+                                    }
+                                }
+                            }
                         }
 
                         this.alphaTestId.setValue(material.alphaTest);

@@ -232,13 +232,7 @@ pc.extend(pc, function () {
             this.useMetalness = false;
             this.metalness = 1;
 
-            // use METHOD if (shadowRead[pc.SHADOWREAD_METHOD] & light.mask) > 0
-            this.shadowReadMask = [0, 0xFFFFFFFF, 0]; // use PCF3x3 on everything by default
-            this.shadowReadMask.copy = function(from) {
-                for(var i=0; i<from.length; i++) {
-                    this[i] = from[i];
-                }
-            };
+            this.shadowDepthSampleMethod = pc.SHADOWDEPTHSAMPLE_PCF3X3;
 
             this.forceFragmentPrecision = null;
             this.occludeDirect = false;
@@ -597,7 +591,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
-                shadowReadMask:             this.shadowReadMask,
+                shadowDepthSampleMethod:    this.shadowDepthSampleMethod,
                 forceFragmentPrecision:     this.forceFragmentPrecision,
                 useInstancing:              this.useInstancing,
                 fastTbn:                    this.fastTbn,

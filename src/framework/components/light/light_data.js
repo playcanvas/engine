@@ -14,7 +14,7 @@ pc.extend(pc, function () {
         this.innerConeAngle = 40;
         this.outerConeAngle = 45;
         this.falloffMode = pc.LIGHTFALLOFF_LINEAR;
-        this.shadowWrite = pc.SHADOWWRITE_DEPTH;
+        this.shadowType = pc.SHADOW_DEPTH;
         this.shadowUpdateMode = pc.SHADOWUPDATE_REALTIME;
         this.mask = 1;
 

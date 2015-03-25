@@ -4,7 +4,7 @@ pc.programlib.depthrgba = {
         if (options.skin) key += "_skin";
         if (options.opacityMap) key += "_opam";
         if (options.point) key += "_pnt";
-        key += "_" + options.shadowWrite;
+        key += "_" + options.shadowType;
         return key;
     },
 
@@ -92,7 +92,7 @@ pc.programlib.depthrgba = {
         }
 
         var chunks = pc.shaderChunks;
-        if (options.shadowWrite===pc.SHADOWWRITE_DEPTHMASK) {
+        if (options.shadowType===pc.SHADOW_DEPTHMASK) {
             code += chunks.packDepthMaskPS;
         } else {
             code += chunks.packDepthPS;
