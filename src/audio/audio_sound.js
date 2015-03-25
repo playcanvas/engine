@@ -7,10 +7,11 @@ pc.extend(pc, function () {
         Sound = function (manager, url, success, error) {
             this.buffer = null;
             this.isLoaded = false;
-            
+
             if (!pc.AudioManager.isSupported(url, this.audio)) {
                 setTimeout(function () {
-                    error(pc.string.format('Audio format for {0} not supported', url));
+                    console.warn(pc.string.format('Audio format for {0} not supported', url));
+                    success(this);
                 }, 0);
             } else {
                 if (manager.context) {
@@ -31,14 +32,23 @@ pc.extend(pc, function () {
             this.isLoaded = false;
             this.audio = new Audio();
 
-            this.audio.oncanplaythrough = function () {
-                if (!this.isLoaded) {
-                    this.isLoaded = true;
+            if (!pc.AudioManager.isSupported(url, this.audio)) {
+                console.warn(pc.string.format('Audio format for {0} not supported', url))
+                success(this);
+            } else {
+                this.audio.oncanplaythrough = function () {
+                    if (!this.isLoaded) {
+                        this.isLoaded = true;
+                        success(this);
+                    }
+                }.bind(this);
+
+                this.audio.onerror = function () {
+                    // continue loading through error
                     success(this);
                 }
-            }.bind(this);
-
-            this.audio.src = url;
+                this.audio.src = url;
+            }
         };
     }
 

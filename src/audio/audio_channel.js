@@ -2,12 +2,12 @@ pc.extend(pc, function () {
     'use strict';
 
     var Channel;
-    
+
     if (pc.AudioManager.hasAudioContext()) {
         /**
         * @private
         * @name pc.Channel
-        * @class A channel is created when the pc.AudioManager begins playback of a pc.Sound. Usually created internally by 
+        * @class A channel is created when the pc.AudioManager begins playback of a pc.Sound. Usually created internally by
         * pc.AudioManager#playSound or pc.AudioManager#playSound3d. Developers usually won't have to create Channels manually.
         * @param {pc.AudioManager} manager The AudioManager instance
         * @param {pc.Sound} sound The sound to playback
@@ -22,7 +22,7 @@ pc.extend(pc, function () {
             this.pitch = (options.pitch === undefined ? 1 : options.pitch);
 
             this.sound = sound;
-                
+
             this.paused = false;
             this.suspended = false;
 
@@ -35,7 +35,7 @@ pc.extend(pc, function () {
             var context = manager.context;
             this.gain = context.createGain();
         };
-        
+
         Channel.prototype = {
             /**
              * @private
@@ -49,6 +49,9 @@ pc.extend(pc, function () {
                 }
 
                 this._createSource();
+                if (!this.source) {
+                    return;
+                }
 
                 // Initialize volume and loop
                 this.setVolume(this.volume);
@@ -91,6 +94,9 @@ pc.extend(pc, function () {
                 }
 
                 this._createSource();
+                if (!this.source) {
+                    return;
+                }
 
                 // Initialize volume and loop
                 this.setVolume(this.volume);
@@ -105,7 +111,7 @@ pc.extend(pc, function () {
 
             /**
              * @private
-             * @function 
+             * @function
              * @name pc.Channel#stop
              * @description Stop playback of sound. Calling play() again will restart playback from the beginning of the sound.
              */
@@ -119,7 +125,7 @@ pc.extend(pc, function () {
                 this.manager.off('suspend', this.onManagerSuspend, this);
                 this.manager.off('resume', this.onManagerResume, this);
             },
-            
+
             /**
              * @private
              * @function
@@ -135,7 +141,7 @@ pc.extend(pc, function () {
 
             /**
              * @private
-             * @function 
+             * @function
              * @name pc.Channel#setVolume
              * @description Set the volume of playback between 0 and 1.
              */
@@ -169,12 +175,14 @@ pc.extend(pc, function () {
             _createSource: function () {
                 var context = this.manager.context;
 
-                this.source = context.createBufferSource();
-                this.source.buffer = this.sound.buffer;
+                if (this.sound.buffer) {
+                    this.source = context.createBufferSource();
+                    this.source.buffer = this.sound.buffer;
 
-                // Connect up the nodes
-                this.source.connect(this.gain);
-                this.gain.connect(context.destination);
+                    // Connect up the nodes
+                    this.source.connect(this.gain);
+                    this.gain.connect(context.destination);
+                }
             }
 
         };
@@ -189,11 +197,14 @@ pc.extend(pc, function () {
             this.suspended = false;
 
             this.manager = manager;
-            
-            this.source = sound.audio.cloneNode(false);
-            this.source.pause(); // not initially playing
+
+            // handle the case where sound was
+            if (sound.audio) {
+                this.source = sound.audio.cloneNode(false);
+                this.source.pause(); // not initially playing
+            }
         };
-        
+
         Channel.prototype = {
             play: function () {
                 if (this.source) {
@@ -220,12 +231,12 @@ pc.extend(pc, function () {
             unpause: function () {
                 if (this.source) {
                     this.paused = false;
-                    this.source.play();                    
+                    this.source.play();
                 }
             },
-            
+
             stop: function () {
-                if (this.source) {                
+                if (this.source) {
                     this.source.pause();
                 }
 
@@ -233,14 +244,14 @@ pc.extend(pc, function () {
                 this.manager.off('suspend', this.onManagerSuspend, this);
                 this.manager.off('resume', this.onManagerResume, this);
             },
-            
+
             setVolume: function (volume) {
                 this.volume = volume;
                 if (this.source) {
                     this.source.volume = volume * this.manager.getVolume();
                 }
             },
-             
+
             setLoop: function (loop) {
                 this.loop = loop;
                 if (this.source) {
