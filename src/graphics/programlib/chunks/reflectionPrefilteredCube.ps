@@ -6,7 +6,7 @@ uniform samplerCube texture_prefilteredCubeMap8;
 uniform samplerCube texture_prefilteredCubeMap4;
 uniform float material_reflectionFactor;
 
-void addCubemapReflection(inout psInternalData data) {
+void addReflection(inout psInternalData data) {
 
     // Unfortunately, WebGL doesn't allow us using textureCubeLod. Therefore bunch of nasty workarounds is required.
     // We fix mip0 to 128x128, so code is rather static.
@@ -16,7 +16,7 @@ void addCubemapReflection(inout psInternalData data) {
     int index1 = int(bias);
     int index2 = int(min(bias + 1.0, 7.0));
 
-    vec3 fixedReflDir = fixSeams(data.reflDirW, bias);
+    vec3 fixedReflDir = fixSeams(cubeMapProject(data.reflDirW), bias);
 
     vec4 cubes[6];
     cubes[0] = textureCube(texture_prefilteredCubeMap128, fixedReflDir);

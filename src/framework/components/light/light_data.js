@@ -15,6 +15,8 @@ pc.extend(pc, function () {
         this.outerConeAngle = 45;
         this.falloffMode = pc.LIGHTFALLOFF_LINEAR;
         this.shadowWrite = pc.SHADOWWRITE_DEPTH;
+        this.shadowUpdateMode = pc.SHADOWUPDATE_REALTIME;
+        this.mask = 1;
 
         // Non-serialized
         this.light = null;

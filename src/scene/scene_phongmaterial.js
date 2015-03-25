@@ -178,6 +178,7 @@ pc.extend(pc, function () {
             _defineTex2D(this, "specular", 0, 3);
             _defineTex2D(this, "emissive", 0, 3);
             _defineTex2D(this, "normal", 0, -1);
+            _defineTex2D(this, "metalness", 0, 1);
             _defineTex2D(this, "gloss", 0, 1);
             _defineTex2D(this, "opacity", 0, 1);
             _defineTex2D(this, "height", 0, 1);
@@ -210,6 +211,26 @@ pc.extend(pc, function () {
             this.specularMapTint = false;
             this.emissiveMapTint = false;
             this.emissiveIntensity = 1;
+            this.normalizeNormalMap = true;
+            this.fastTbn = false;
+
+            this.useInstancing = false;
+            this.cubeMapProjection = 0;
+            this.cubeMapProjectionBox = null;
+
+            this.chunks = [];
+            this.chunks.copy = function(from) {
+                for(var p in from) {
+                    if (from.hasOwnProperty(p) && p!=="copy") {
+                        this[p] = from[p];
+                    }
+                }
+            };
+            this.customFragmentShader = null;
+            this.refraction = 0;
+            this.refractionIndex = 1.0 / 1.5; // approx. (air ior / glass ior)
+            this.useMetalness = false;
+            this.metalness = 1;
 
             // use METHOD if (shadowRead[pc.SHADOWREAD_METHOD] & light.mask) > 0
             this.shadowReadMask = [0, 0xFFFFFFFF, 0]; // use PCF3x3 on everything by default
@@ -218,6 +239,8 @@ pc.extend(pc, function () {
                     this[i] = from[i];
                 }
             };
+
+            this.forceFragmentPrecision = null;
             this.occludeDirect = false;
 
             _endProperties(this);
@@ -227,6 +250,8 @@ pc.extend(pc, function () {
             this.diffuseUniform = new Float32Array(3);
             this.specularUniform = new Float32Array(3);
             this.emissiveUniform = new Float32Array(3);
+            this.cubeMapMinUniform = new Float32Array(3);
+            this.cubeMapMaxUniform = new Float32Array(3);
         },
 
 
@@ -299,8 +324,10 @@ pc.extend(pc, function () {
         _collectLights: function(lType, lights, lightsSorted) {
             for (var i = 0; i < lights.length; i++) {
                 if (lights[i].getEnabled()) {
-                    if (lights[i].getType()==lType) {
-                        lightsSorted.push(lights[i]);
+                    if (lights[i].mask & this.mask) {
+                        if (lights[i].getType()==lType) {
+                            lightsSorted.push(lights[i]);
+                        }
                     }
                 }
             }
@@ -339,11 +366,17 @@ pc.extend(pc, function () {
                 this.setParameter('material_diffuse', this.diffuseUniform);
             }
 
-            if (!this.specularMap || this.specularMapTint) {
-                this.specularUniform[0] = this.specular.r;
-                this.specularUniform[1] = this.specular.g;
-                this.specularUniform[2] = this.specular.b;
-                this.setParameter('material_specular', this.specularUniform);
+            if (!this.useMetalness) {
+                if (!this.specularMap || this.specularMapTint) {
+                    this.specularUniform[0] = this.specular.r;
+                    this.specularUniform[1] = this.specular.g;
+                    this.specularUniform[2] = this.specular.b;
+                    this.setParameter('material_specular', this.specularUniform);
+                }
+            } else {
+                if (!this.metalnessMap || this.metalness<1) {
+                    this.setParameter('material_metalness', this.metalness);
+                }
             }
 
             // Shininess is 0-100 value
@@ -362,8 +395,25 @@ pc.extend(pc, function () {
                 this.setParameter('material_emissive', this.emissiveUniform);
             }
 
+            if (this.refraction>0) {
+                this.setParameter('material_refraction', this.refraction);
+                this.setParameter('material_refractionIor', this.refractionIndex);
+            }
+
             this.setParameter('material_opacity', this.opacity);
 
+            if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
+                this.cubeMapMinUniform[0] = this.cubeMapProjectionBox.center.x - this.cubeMapProjectionBox.halfExtents.x;
+                this.cubeMapMinUniform[1] = this.cubeMapProjectionBox.center.y - this.cubeMapProjectionBox.halfExtents.y;
+                this.cubeMapMinUniform[2] = this.cubeMapProjectionBox.center.z - this.cubeMapProjectionBox.halfExtents.z;
+
+                this.cubeMapMaxUniform[0] = this.cubeMapProjectionBox.center.x + this.cubeMapProjectionBox.halfExtents.x;
+                this.cubeMapMaxUniform[1] = this.cubeMapProjectionBox.center.y + this.cubeMapProjectionBox.halfExtents.y;
+                this.cubeMapMaxUniform[2] = this.cubeMapProjectionBox.center.z + this.cubeMapProjectionBox.halfExtents.z;
+
+                this.setParameter('envBoxMin', this.cubeMapMinUniform);
+                this.setParameter('envBoxMax', this.cubeMapMaxUniform);
+            }
 
             var i = 0;
 
@@ -373,6 +423,7 @@ pc.extend(pc, function () {
             this._updateMap("emissive");
             this._updateMap("opacity");
             this._updateMap("normal");
+            this._updateMap("metalness");
             this._updateMap("height");
             this._updateMap("light");
             this._updateMap("ao");
@@ -499,6 +550,19 @@ pc.extend(pc, function () {
                 }
             }
 
+            var specularTint = false;
+            var useSpecular = (this.useMetalness? !!this.metalnessMap : !!this.specularMap)
+            || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap;
+            useSpecular = useSpecular || (
+                this.useMetalness? this.metalness!==0 : !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0)
+                );
+
+            if (useSpecular) {
+                if (this.specularMapTint && !this.useMetalness) {
+                    specularTint = this.specular.r!==1 || this.specular.g!==1 || this.specular.b!==1;
+                }
+            }
+
             var options = {
                 fog:                        scene.fog,
                 gamma:                      scene.gammaCorrection,
@@ -507,16 +571,16 @@ pc.extend(pc, function () {
                 skin:                       !!this.meshInstances[0].skinInstance,
                 modulateAmbient:            this.ambientTint,
                 diffuseTint:          (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
-                specularTint:         (this.specular.r!=1 || this.specular.g!=1 || this.specular.b!=1) && this.specularMapTint,
+                specularTint:         specularTint,
+                metalnessTint:        this.useMetalness && this.metalness<1,
                 glossTint:            true,
                 emissiveTint:         (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
                 opacityTint:          this.opacity!=1,
-                needsNormalFloat:           true,
+                needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,
-                useSpecular:                (!!this.specularMap) || !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0)
-                                            || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap,
+                useSpecular:                useSpecular,
                 rgbmReflection:             prefilteredCubeMap? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false)),
 
                 hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
@@ -534,6 +598,14 @@ pc.extend(pc, function () {
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
                 shadowReadMask:             this.shadowReadMask,
+                forceFragmentPrecision:     this.forceFragmentPrecision,
+                useInstancing:              this.useInstancing,
+                fastTbn:                    this.fastTbn,
+                cubeMapProjection:          this.cubeMapProjection,
+                customChunks:               this.chunks,
+                customFragmentShader:       this.customFragmentShader,
+                refraction:                 this.refraction,
+                useMetalness:               this.useMetalness,
                 useTexCubeLod:              useTexCubeLod
             };
 
