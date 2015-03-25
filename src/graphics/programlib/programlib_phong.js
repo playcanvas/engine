@@ -244,8 +244,18 @@ pc.programlib.phong = {
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
+        if (options.forceFragmentPrecision && options.forceFragmentPrecision!="highp"
+            && options.forceFragmentPrecision!="mediump"
+            && options.forceFragmentPrecision!="lowp")
+            options.forceFragmentPrecision = null;
+
+        if (options.forceFragmentPrecision) {
+            if (options.forceFragmentPrecision==="highp" && device.maxPrecision!=="highp") options.forceFragmentPrecision = "mediump";
+            if (options.forceFragmentPrecision==="mediump" && device.maxPrecision==="lowp") options.forceFragmentPrecision = "lowp";
+        }
+
         var fshader;
-        code = getSnippet(device, 'fs_precision');
+        code = options.forceFragmentPrecision? "precision " + options.forceFragmentPrecision + " float;\n\n" : getSnippet(device, 'fs_precision');
 
         if (options.customFragmentShader) {
             fshader = code + options.customFragmentShader;

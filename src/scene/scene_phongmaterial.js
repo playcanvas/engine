@@ -232,6 +232,7 @@ pc.extend(pc, function () {
             this.useMetalness = false;
             this.metalness = 1;
 
+            this.forceFragmentPrecision = null;
             this.occludeDirect = false;
 
             _endProperties(this);
@@ -588,6 +589,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                forceFragmentPrecision:     this.forceFragmentPrecision,
                 useInstancing:              this.useInstancing,
                 fastTbn:                    this.fastTbn,
                 cubeMapProjection:          this.cubeMapProjection,
