@@ -170,9 +170,9 @@ float getShadowPCF3x3_YZWVS(inout psInternalData data, sampler2D shadowMap, vec3
 
 // ----- Point Sampling -----
 
-/*float getShadowPoint(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams) {
-    return float(unpackFloat(textureCube(shadowMap, data.lightDirNormW)) > (length(data.lightDirW)/shadowParams.w + shadowParams.z));
-}*/
+float getShadowPointHard(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams) {
+    return float(unpackFloat(textureCube(shadowMap, data.lightDirNormW)) > (length(data.lightDirW) * shadowParams.w + shadowParams.z));
+}
 
 float _getShadowPoint(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams, vec3 dir) {
 
@@ -214,7 +214,7 @@ float _getShadowPoint(inout psInternalData data, samplerCube shadowMap, vec4 sha
     depthKernel[2][1] = unpackFloat(textureCube(shadowMap, tc + dx1));
     depthKernel[2][2] = unpackFloat(textureCube(shadowMap, tc + dx1 + dy1));
 
-    vec3 shadowZ = vec3(length(dir) / shadowParams.w + shadowParams.z);
+    vec3 shadowZ = vec3(length(dir) * shadowParams.w + shadowParams.z);
 
     shadowKernel[0] = vec3(lessThan2(depthKernel[0], shadowZ));
     shadowKernel[1] = vec3(lessThan2(depthKernel[1], shadowZ));
@@ -236,15 +236,14 @@ float _getShadowPoint(inout psInternalData data, samplerCube shadowMap, vec4 sha
     return 1.0 - dot( shadowValues, vec4( 1.0 ) ) * 0.25;
 }
 
-float getShadowPoint(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams) {
+float getShadowPointPCF3x3(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams) {
     return _getShadowPoint(data, shadowMap, shadowParams, data.lightDirW);
 }
 
-float getShadowPointNormalOffset(inout psInternalData data, samplerCube shadowMap, vec4 shadowParams) {
+void normalOffsetPointShadow(inout psInternalData data, vec4 shadowParams) {
     float distScale = length(data.lightDirW);
     vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -data.lightDirNormW), 0.0, 1.0) * distScale; //0.02
     vec3 dir = wPos - data.lightPosW;
-
-    return _getShadowPoint(data, shadowMap, shadowParams, dir);
+    data.lightDirW = dir;
 }
 

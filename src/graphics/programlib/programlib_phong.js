@@ -562,28 +562,28 @@ pc.programlib.phong = {
 
                 code += "   data.atten *= getLightDiffuse(data);\n";
                 if (light.getCastShadows()) {
-                    if (lightType==pc.LIGHTTYPE_POINT) {
-                        var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
-                        if (!light.getNormalOffsetBias()) {
-                            code += "   data.atten *= getShadowPoint" + shadowCoordArgs;
-                        } else {
-                            code += "   data.atten *= getShadowPointNormalOffset" + shadowCoordArgs;
-                        }
-                    } else {
-                        var shadowReadMode = null;
-                        if (light._shadowType<=pc.SHADOW_DEPTHMASK) {
-                            if (options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_HARD) {
-                                shadowReadMode = "Hard";
-                            } else if (light._shadowType===pc.SHADOW_DEPTH && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_PCF3X3) {
-                                shadowReadMode = "PCF3x3";
-                            } else if (light._shadowType===pc.SHADOW_DEPTHMASK && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_PCF3X3) {
-                                shadowReadMode = "PCF3x3_YZW";
-                            } else if (light._shadowType===pc.SHADOW_DEPTHMASK && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_MASK) {
-                                shadowReadMode = "Mask";
-                            }
-                        }
 
-                        if (shadowReadMode!==null) {
+                    var shadowReadMode = null;
+                    if (light._shadowType<=pc.SHADOW_DEPTHMASK) {
+                        if (options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_HARD) {
+                            shadowReadMode = "Hard";
+                        } else if (light._shadowType===pc.SHADOW_DEPTH && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_PCF3X3) {
+                            shadowReadMode = "PCF3x3";
+                        } else if (light._shadowType===pc.SHADOW_DEPTHMASK && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_PCF3X3) {
+                            shadowReadMode = "PCF3x3_YZW";
+                        } else if (light._shadowType===pc.SHADOW_DEPTHMASK && options.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_MASK) {
+                            shadowReadMode = "Mask";
+                        }
+                    }
+
+                    if (shadowReadMode!==null) {
+                        if (lightType==pc.LIGHTTYPE_POINT) {
+                            var shadowCoordArgs = "(data, light"+i+"_shadowMap, light"+i+"_shadowParams);\n";
+                            if (light.getNormalOffsetBias()) {
+                                code += "   normalOffsetPointShadow(data, light"+i+"_shadowParams);\n";
+                            }
+                            code += "   data.atten *= getShadowPoint" + shadowReadMode + shadowCoordArgs;
+                        } else {
                             if (mainShadowLight===i) {
                                 shadowReadMode += "VS";
                             } else {
