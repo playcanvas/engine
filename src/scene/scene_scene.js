@@ -127,11 +127,22 @@
         RENDERSTYLE_WIREFRAME: 1,
         RENDERSTYLE_POINTS: 2,
 
+        CUBEPROJ_NONE: 0,
+        CUBEPROJ_BOX: 1,
+
         SPECULAR_PHONG: 0,
         SPECULAR_BLINN: 1,
 
+        GAMMA_NONE: 0,
+        GAMMA_SRGB: 1,
+        GAMMA_SRGBFAST: 2,
+
         TONEMAP_LINEAR: 0,
-        TONEMAP_FILMIC: 1
+        TONEMAP_FILMIC: 1,
+
+        SHADOWUPDATE_NONE: 0,
+        SHADOWUPDATE_THISFRAME: 1,
+        SHADOWUPDATE_REALTIME: 2
     };
 
     pc.extend(pc, enums);
@@ -157,7 +168,7 @@ pc.extend(pc, function () {
      * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
      * only valid if the fog property is set to pc.FOG_LINEAR.
      * @property {Boolean} gammaCorrection If true then all materials will apply gamma correction.
-     * @property {pc.TONEMAP} tomeMapping The tonemapping transform to apply when writing fragments to the 
+     * @property {pc.TONEMAP} tomeMapping The tonemapping transform to apply when writing fragments to the
      * frame buffer. Default is pc.TONEMAP_LINEAR.
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox.
      */
@@ -173,7 +184,7 @@ pc.extend(pc, function () {
 
         this.ambientLight = new pc.Color(0, 0, 0);
 
-        this._gammaCorrection = false;
+        this._gammaCorrection = pc.GAMMA_NONE;
         this._toneMapping = 0;
         this.exposure = 1.0;
 
@@ -218,7 +229,10 @@ pc.extend(pc, function () {
         set: function (value) {
             if (value !== this._gammaCorrection) {
                 this._gammaCorrection = value;
-                pc.shaderChunks.defaultGamma = value ? pc.shaderChunks.gamma2_2PS : pc.shaderChunks.gamma1_0PS;
+
+                pc.shaderChunks.defaultGamma = value===pc.GAMMA_NONE? pc.shaderChunks.gamma1_0PS :
+                (value===pc.GAMMA_SRGBFAST? pc.shaderChunks.gamma2_2FastPS : pc.shaderChunks.gamma2_2PS);
+
                 this.updateShaders = true;
             }
         }

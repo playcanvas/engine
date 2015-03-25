@@ -163,6 +163,16 @@ pc.extend(pc, function () {
                 type: ['point', 'spot']
             }
         }, {
+            name: "shadowUpdateMode",
+            exposed: false
+        }, {
+            name: "mask",
+            displayName: "Mask",
+            description: "Bit mask",
+            type: "number",
+            defaultValue: 1,
+            exposed: false
+        }, {
             name: "innerConeAngle",
             displayName: "Inner Cone Angle",
             description: "Spotlight inner cone angle",
@@ -224,7 +234,7 @@ pc.extend(pc, function () {
             var implementation = this._createImplementation(data.type);
             implementation.initialize(component, data);
 
-            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowBias', 'normalOffsetBias'];
+            properties = ['type', 'light', 'model', 'enabled', 'color', 'intensity', 'range', 'falloffMode', 'innerConeAngle', 'outerConeAngle', 'castShadows', 'shadowDistance', 'shadowResolution', 'shadowUpdateMode', 'shadowBias', 'normalOffsetBias'];
             LightComponentSystem._super.initializeComponentData.call(this, component, data, properties);
         },
 
@@ -271,6 +281,7 @@ pc.extend(pc, function () {
                 shadowDistance: light.shadowDistance,
                 shadowResolution: light.shadowResolution,
                 falloffMode: light.falloffMode,
+                shadowUpdateMode: light.shadowUpdateMode,
                 shadowBias: light.shadowBias,
                 normalOffsetBias: light.normalOffsetBias
             };

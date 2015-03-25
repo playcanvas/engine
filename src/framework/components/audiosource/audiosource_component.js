@@ -113,6 +113,7 @@ pc.extend(pc, function () {
                         var asset = this.system.app.assets.getAssetById(oldValue[i]);
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
+                            asset.off('remove', this.onAssetRemoved, this);
                         }
                     }
                 }
@@ -147,6 +148,17 @@ pc.extend(pc, function () {
                             }
                         }
                     }
+                }
+            }
+        },
+
+        onAssetRemoved: function (asset) {
+            asset.off('remove', this.onAssetRemoved, this);
+            if (this.data.sources[asset.name]) {
+                delete this.data.sources[asset.name];
+                if (this.data.currentSource === asset.name) {
+                    this.stop();
+                    this.data.currentSource = null;
                 }
             }
         },
@@ -240,6 +252,9 @@ pc.extend(pc, function () {
                     // subscribe to change events to reload sounds if necessary
                     asset.off('change', this.onAssetChanged, this);
                     asset.on('change', this.onAssetChanged, this);
+
+                    asset.off('remove', this.onAssetRemoved, this);
+                    asset.on('remove', this.onAssetRemoved, this);
 
                     if (asset.resource) {
                         sources[asset.name] = asset.resource;

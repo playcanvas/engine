@@ -31,6 +31,22 @@ pc.extend(pc, function () {
         this.aabb = new pc.shape.Aabb();
     };
 
+    var InstancingData = function (numObjects, dynamic, instanceSize) {
+        instanceSize = instanceSize || 16;
+        this.buffer = new Float32Array(numObjects * instanceSize);
+        this.count = numObjects;
+        this.usage = dynamic? pc.BUFFER_DYNAMIC : pc.BUFFER_STATIC;
+        this._buffer = null;
+    };
+
+    InstancingData.prototype = {
+        update: function () {
+            if (this._buffer) {
+                this._buffer.setData(this.buffer);
+            }
+        }
+    };
+
     /**
      * @name pc.MeshInstance
      * @class A instance of a pc.Mesh. A single mesh can be referenced by many instances
@@ -124,6 +140,7 @@ pc.extend(pc, function () {
     return {
         Command: Command,
         Mesh: Mesh,
-        MeshInstance: MeshInstance
+        MeshInstance: MeshInstance,
+        InstancingData: InstancingData
     };
 }());

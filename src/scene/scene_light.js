@@ -17,6 +17,7 @@ pc.extend(pc, function () {
         this._attenuationStart = 10;
         this._attenuationEnd = 10;
         this._falloffMode = 0;
+        this.mask = 1;
 
         // Spot properties
         this._innerConeAngle = 40;
@@ -37,6 +38,7 @@ pc.extend(pc, function () {
         this._shadowResolution = 1024;
         this._shadowBias = -0.0005;
         this._normalOffsetBias = 0.0;
+        this.shadowUpdateMode = pc.SHADOWUPDATE_REALTIME;
 
         this._scene = null;
         this._node = null;
@@ -64,6 +66,8 @@ pc.extend(pc, function () {
             clone.setAttenuationStart(this.getAttenuationStart());
             clone.setAttenuationEnd(this.getAttenuationEnd());
             clone.setFalloffMode(this.getFalloffMode());
+            clone.shadowUpdateMode = this.shadowUpdateMode;
+            clone.mask = this.mask;
 
             // Spot properties
             clone.setInnerConeAngle(this.getInnerConeAngle());
@@ -443,6 +447,12 @@ pc.extend(pc, function () {
          */
         setType: function (type) {
             this._type = type;
+        },
+
+        updateShadow: function() {
+            if (this.shadowUpdateMode!==pc.SHADOWUPDATE_REALTIME) {
+                this.shadowUpdateMode = pc.SHADOWUPDATE_THISFRAME;
+            }
         }
     };
 
