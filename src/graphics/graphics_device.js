@@ -169,6 +169,8 @@ pc.extend(pc, function () {
                 }
             }
 
+            this.maxPrecision = this.precision;
+
             this.defaultClearOptions = {
                 color: [0, 0, 0, 1],
                 depth: 1,
