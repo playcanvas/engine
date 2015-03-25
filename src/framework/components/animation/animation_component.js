@@ -125,6 +125,9 @@ pc.extend(pc, function () {
                     asset.off('change', this.onAssetChanged, this);
                     asset.on('change', this.onAssetChanged, this);
 
+                    asset.off('remove', this.onAssetRemoved, this);
+                    asset.on('remove', this.onAssetRemoved, this);
+
                     // if the asset is in the cache try to load it synchronously
                     if (asset.resource) {
                         animations[asset.name] = asset.resource;
@@ -165,6 +168,23 @@ pc.extend(pc, function () {
             }
         },
 
+        onAssetRemoved: function (asset) {
+            asset.off('remove', this.onAssetRemoved, this);
+
+            if (this.animations && this.animations[asset.name]) {
+                delete this.animations[asset.name];
+                if (this.data.currAnim === asset.name) {
+                    this.data.currAnim = null;
+                    this.speed = 0;
+                    this.data.playing = false;
+                    if (this.data.skeleton) {
+                        this.data.skeleton.setCurrentTime(0);
+                        this.data.skeleton.setAnimation(null);
+                    }
+                }
+            }
+        },
+
         onSetAnimations: function (name, oldValue, newValue) {
             var data = this.data;
 
@@ -194,6 +214,7 @@ pc.extend(pc, function () {
                         var asset = this.system.app.assets.getAssetById(oldValue[i]);
                         if (asset) {
                             asset.off('change', this.onAssetChanged, this);
+                            asset.off('remove', this.onAssetRemoved, this);
                         }
                     }
                 }

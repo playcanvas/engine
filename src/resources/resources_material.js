@@ -1,5 +1,27 @@
 pc.extend(pc.resources, function () {
 
+    function onTextureAssetRemoved (asset) {
+        var material = this;
+        asset.off('remove', onTextureAssetRemoved, material);
+
+        if (!asset.resource)
+            return;
+
+        var dirty = false;
+        for (var key in material) {
+            if (material.hasOwnProperty(key)) {
+                if (material[key] === asset.resource) {
+                    material[key] = null;
+                    dirty = true;
+                }
+            }
+        }
+
+        if (dirty) {
+            material.update();
+        }
+    }
+
     function onTextureAssetChanged (asset, attribute, newValue, oldValue) {
         if (attribute !== 'resource') {
             return;
@@ -23,6 +45,7 @@ pc.extend(pc.resources, function () {
             material.update();
         } else {
             asset.off('change', onTextureAssetChanged, material);
+            asset.off('remove', onTextureAssetRemoved, material);
         }
     }
 
@@ -148,6 +171,9 @@ pc.extend(pc.resources, function () {
         for (var id in textures) {
             textures[id].off('change', onTextureAssetChanged, material);
             textures[id].on('change', onTextureAssetChanged, material);
+
+            textures[id].off('remove', onTextureAssetRemoved, material);
+            textures[id].on('remove', onTextureAssetRemoved, material);
         }
 
         if (requests.length) {

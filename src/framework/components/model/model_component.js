@@ -60,6 +60,9 @@ pc.extend(pc, function () {
             asset.off('change', this.onAssetChange, this); // do not subscribe multiple times
             asset.on('change', this.onAssetChange, this);
 
+            asset.off('remove', this.onAssetRemoved, this);
+            asset.on('remove', this.onAssetRemoved, this);
+
             if (asset.resource) {
                 var model = asset.resource.clone();
                 this._onModelLoaded(model);
@@ -145,6 +148,7 @@ pc.extend(pc, function () {
                 var asset = this.system.app.assets.getAssetById(oldValue);
                 if (asset) {
                     asset.off('change', this.onAssetChange, this);
+                    asset.off('remove', this.onAssetRemoved, this);
                 }
             }
 
@@ -159,6 +163,8 @@ pc.extend(pc, function () {
                 } else {
                     this.model = null;
                 }
+            } else if (!newValue) {
+                this.data.asset = null;
             }
         },
 
@@ -341,6 +347,13 @@ pc.extend(pc, function () {
                     this.loadModelAsset(asset.id);
                 }
 
+            }
+        },
+
+        onAssetRemoved: function (asset) {
+            asset.off('remove', this.onAssetRemoved, this);
+            if (this.asset === asset.id) {
+                this.asset = null;
             }
         }
     });

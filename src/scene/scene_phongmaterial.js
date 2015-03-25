@@ -214,6 +214,7 @@ pc.extend(pc, function () {
             this.normalizeNormalMap = true;
             this.fastTbn = false;
 
+            this.useInstancing = false;
             this.cubeMapProjection = 0;
             this.cubeMapProjectionBox = null;
 
@@ -587,6 +588,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                useInstancing:              this.useInstancing,
                 fastTbn:                    this.fastTbn,
                 cubeMapProjection:          this.cubeMapProjection,
                 customChunks:               this.chunks,
