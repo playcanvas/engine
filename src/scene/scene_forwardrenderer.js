@@ -930,10 +930,10 @@ pc.extend(pc, function () {
                             this.dispatchLocalLights(scene, material.mask, usedDirLights);
                         }
 
-                        if (material.shadowDepthSampleMethod!==undefined) {
+                        if (material.shadowSampleType!==undefined) {
                             for(k=0; k<this._activeShadowLights.length; k++) {
                                 if (this._activeShadowLights[k]._shadowType===pc.SHADOW_DEPTHMASK) {
-                                    if (material.shadowDepthSampleMethod===pc.SHADOWDEPTHSAMPLE_MASK) {
+                                    if (material.shadowSampleType===pc.SHADOWSAMPLE_MASK) {
                                         this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.minFilter = pc.FILTER_LINEAR;
                                         this._activeShadowLights[k]._shadowCamera._renderTarget.colorBuffer.magFilter = pc.FILTER_LINEAR;
                                     } else {

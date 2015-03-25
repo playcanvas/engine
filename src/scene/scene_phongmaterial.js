@@ -232,7 +232,7 @@ pc.extend(pc, function () {
             this.useMetalness = false;
             this.metalness = 1;
 
-            this.shadowDepthSampleMethod = pc.SHADOWDEPTHSAMPLE_PCF3X3;
+            this.shadowSampleType = pc.SHADOWSAMPLE_PCF3X3;
 
             this.forceFragmentPrecision = null;
             this.occludeDirect = false;
@@ -591,7 +591,7 @@ pc.extend(pc, function () {
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
-                shadowDepthSampleMethod:    this.shadowDepthSampleMethod,
+                shadowSampleType:           this.shadowSampleType,
                 forceFragmentPrecision:     this.forceFragmentPrecision,
                 useInstancing:              this.useInstancing,
                 fastTbn:                    this.fastTbn,
