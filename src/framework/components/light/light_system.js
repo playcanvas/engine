@@ -163,6 +163,9 @@ pc.extend(pc, function () {
                 type: ['point', 'spot']
             }
         }, {
+            name: "shadowType",
+            exposed: false
+        }, {
             name: "shadowUpdateMode",
             exposed: false
         }, {
