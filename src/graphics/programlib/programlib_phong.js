@@ -468,6 +468,7 @@ pc.programlib.phong = {
         }
 
         code += chunks.lightDiffuseLambertPS;
+        var useOldAmbient = false;
         if (options.useSpecular) {
             code += options.shadingModel===pc.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || options.cubeMap || (options.fresnelModel > 0)) {
@@ -485,6 +486,7 @@ pc.programlib.phong = {
                     code += chunks.combineDiffuseSpecularNoReflPS;
                 } else {
                     code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
+                    useOldAmbient = true;
                 }
             }
         } else {
@@ -520,7 +522,7 @@ pc.programlib.phong = {
         }
 
         code += "   addAmbient(data);\n";
-        if (options.modulateAmbient) {
+        if (options.modulateAmbient && !useOldAmbient) {
             code += "   data.diffuseLight *= material_ambient;\n"
         }
         if (options.aoMap && !options.occludeDirect) {
