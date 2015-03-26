@@ -116,8 +116,8 @@ float _getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shad
 float getShadowPCF3x3VS(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
     if (shadowContainedVS(data)) {
         data.shadowCoord = vMainShadowUv.xyz;
-        data.shadowCoord.xyz /= vMainShadowUv.w;
         data.shadowCoord.z += shadowParams.z;
+        data.shadowCoord.xyz /= vMainShadowUv.w;
         return _getShadowPCF3x3(data, shadowMap, shadowParams);
     }
     return 1.0;
