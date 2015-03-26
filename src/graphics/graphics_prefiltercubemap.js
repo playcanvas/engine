@@ -28,7 +28,6 @@ pc.extend(pc, (function () {
         var cpuSync = options.cpuSync;
         var chromeFix = options.chromeFix;
 
-        console.log("Filter 1")
         var chunks = pc.shaderChunks;
         var shader = chunks.createShaderFromCode(device, chunks.fullscreenQuadVS, chunks.rgbmPS +
             chunks.prefilterCubemapPS.
@@ -52,7 +51,6 @@ pc.extend(pc, (function () {
 
         var rgbFormat = format===pc.PIXELFORMAT_R8_G8_B8;
         if (rgbFormat && cpuSync) {
-            console.log("Filter 2")
             // WebGL can't read non-RGBA pixels
             format = pc.PIXELFORMAT_R8_G8_B8_A8;
             var nextCubemap = new pc.gfx.Texture(device, {
@@ -85,12 +83,10 @@ pc.extend(pc, (function () {
         }
 
         if (size > 128) {
-            console.log("Filter 3")
             // Downsample to 128 first
             var log128 = Math.round(Math.log2(128));
             var logSize = Math.round(Math.log2(size));
             var steps = logSize - log128;
-            console.log("Filter 3.1 " + logSize+" "+log128+" "+steps);
             var nextCubemap;
             for(i=0; i<steps; i++) {
                 size = sourceCubemap.width * 0.5;
@@ -121,9 +117,7 @@ pc.extend(pc, (function () {
 
                     if (chromeFix) fixChrome();
                     pc.drawQuadWithShader(device, targ, shader2);
-                    console.log("Filter 3.25 "+i)
                     if (i===steps-1 && cpuSync) {
-                        console.log("Filter 3.5")
                         syncToCpu(device, targ, face);
                     }
                 }
@@ -134,7 +128,6 @@ pc.extend(pc, (function () {
 
         var sourceCubemapRGBM = null;
         if (!rgbmSource && options.filteredFixedRGBM) {
-            console.log("Filter x")
             var nextCubemap = new pc.gfx.Texture(device, {
                 cubemap: true,
                 rgbm: true,
@@ -170,7 +163,6 @@ pc.extend(pc, (function () {
 
         // Initialize textures
         for(i=0; i<mips; i++) {
-            console.log("Filter 4")
             for(pass=startPass; pass<cmapsList.length; pass++) {
                 if (cmapsList[pass]!=null) {
                     cmapsList[pass][i] = new pc.gfx.Texture(device, {
@@ -197,7 +189,6 @@ pc.extend(pc, (function () {
         // Pass 2: filter + encode to RGBM
         // Pass 3: filter + edge fixup + encode to RGBM
         for(pass=startPass; pass<cmapsList.length; pass++) {
-            console.log("Filter 5")
             if (cmapsList[pass]!=null) {
                 if (pass>1 && rgbmSource) {
                     // already RGBM
@@ -229,7 +220,6 @@ pc.extend(pc, (function () {
         options.filtered = cmapsList[0];
 
         if (cpuSync && options.singleFilteredFixed) {
-            console.log("Filter 6")
             var mips = [sourceCubemap,
                         options.filteredFixed[0],
                         options.filteredFixed[1],
@@ -257,7 +247,6 @@ pc.extend(pc, (function () {
         }
 
         if (cpuSync && options.singleFilteredFixedRGBM && options.filteredFixedRGBM) {
-            console.log("Filter 7.0")
             var mips = [
                         sourceCubemapRGBM,
                         options.filteredFixedRGBM[0],
@@ -267,7 +256,6 @@ pc.extend(pc, (function () {
                         options.filteredFixedRGBM[4],
                         options.filteredFixedRGBM[5]
                         ];
-                        console.log("Filter 7.1")
             var cubemap = new pc.gfx.Texture(device, {
                 cubemap: true,
                 rgbm: true,
@@ -277,19 +265,15 @@ pc.extend(pc, (function () {
                 height: 128,
                 autoMipmap: false
             });
-            console.log("Filter 7.2")
             for(i=0; i<6; i++) {
                 cubemap._levels[i] = mips[i]._levels[0];
             }
-            console.log("Filter 7.3")
             cubemap.upload();
             cubemap.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
             cubemap.magFilter = pc.FILTER_LINEAR;
             cubemap._prefilteredMips = true;
             options.singleFilteredFixedRGBM = cubemap;
         }
-
-        console.log("Filter 7")
     }
 
     return {
