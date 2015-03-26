@@ -459,10 +459,6 @@ pc.programlib.phong = {
             code += chunks.ambientConstantPS;
         }
 
-        if (options.modulateAmbient) {
-            code += "uniform vec3 material_ambient;\n"
-        }
-
         if (numShadowLights > 0) {
             code += chunks.shadowCoordPS + chunks.shadowPS;
         }
@@ -491,6 +487,10 @@ pc.programlib.phong = {
             }
         } else {
             code += chunks.combineDiffusePS;
+        }
+
+        if (options.modulateAmbient && !useOldAmbient) {
+            code += "uniform vec3 material_ambient;\n"
         }
 
         // FRAGMENT SHADER BODY
