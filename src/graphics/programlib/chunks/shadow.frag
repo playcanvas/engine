@@ -24,8 +24,9 @@ bool shadowContained(psInternalData data) {
 }
 
 bool shadowContainedVS(psInternalData data) {
-    bvec4 containedVec = bvec4(vMainShadowUv.x >= -1.0, vMainShadowUv.x <= 1.0, vMainShadowUv.y >= -1.0, vMainShadowUv.y <= 1.0);
-    return all(bvec2(all(containedVec), data.shadowCoord.z <= 1.0));
+    vec3 mainShadowUv = vMainShadowUv.xyz / vMainShadowUv.w;
+    bvec4 containedVec = bvec4(mainShadowUv.x >= -1.0, mainShadowUv.x <= 1.0, mainShadowUv.y >= -1.0, mainShadowUv.y <= 1.0);
+    return all(bvec2(all(containedVec), mainShadowUv.z <= 1.0));
 }
 
 vec3 lessThan2(vec3 a, vec3 b) {
@@ -115,8 +116,8 @@ float _getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shad
 float getShadowPCF3x3VS(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
     if (shadowContainedVS(data)) {
         data.shadowCoord = vMainShadowUv.xyz;
-        data.shadowCoord.xyz /= vMainShadowUv.w;
         data.shadowCoord.z += shadowParams.z;
+        data.shadowCoord.xyz /= vMainShadowUv.w;
         return _getShadowPCF3x3(data, shadowMap, shadowParams);
     }
     return 1.0;
@@ -160,8 +161,8 @@ float getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 s
 float getShadowPCF3x3_YZWVS(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
     if (shadowContainedVS(data)) {
         data.shadowCoord = vMainShadowUv.xyz;
-        data.shadowCoord.xyz /= vMainShadowUv.w;
         data.shadowCoord.z += shadowParams.z;
+        data.shadowCoord.xyz /= vMainShadowUv.w;
         return _getShadowPCF3x3_YZW(data, shadowMap, shadowParams);
     }
     return 1.0;

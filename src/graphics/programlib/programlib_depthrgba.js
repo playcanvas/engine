@@ -106,7 +106,7 @@ pc.programlib.depthrgba = {
         }
 
         if (options.point) {
-            code += "   gl_FragData[0] = packFloat(distance(view_position, worldPos) / light_radius);\n"
+            code += "   gl_FragData[0] = packFloat(min(distance(view_position, worldPos) / light_radius, 0.99999));\n"
         } else {
             code += '    gl_FragData[0] = packFloat(gl_FragCoord.z);\n';
         }
