@@ -361,7 +361,7 @@ pc.extend(pc, function () {
             this._needsUpload = true;
         },
 
-        getDDS: function () {
+        getDds: function () {
             if (this.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
                 console.error("This format is not implemented yet");
             }

@@ -42,7 +42,7 @@ pc.extend(pc, (function () {
         var rgbmSource = sourceCubemap.rgbm;
         var format = sourceCubemap.format;
 
-        var cmapsList = [[], options.filteredFixed, options.filteredRGBM, options.filteredFixedRGBM];
+        var cmapsList = [[], options.filteredFixed, options.filteredRgbm, options.filteredFixedRgbm];
         var gloss = method===0? [0.9, 0.85, 0.7, 0.4, 0.25] : [512, 128, 32, 8, 2]; // TODO: calc more correct values depending on mip
         var mipSize = [64, 32, 16, 8, 4]; // TODO: make non-static?
         var mips = 5;
@@ -126,8 +126,8 @@ pc.extend(pc, (function () {
         }
         options.sourceCubemap = sourceCubemap;
 
-        var sourceCubemapRGBM = null;
-        if (!rgbmSource && options.filteredFixedRGBM) {
+        var sourceCubemapRgbm = null;
+        if (!rgbmSource && options.filteredFixedRgbm) {
             var nextCubemap = new pc.gfx.Texture(device, {
                 cubemap: true,
                 rgbm: true,
@@ -154,7 +154,7 @@ pc.extend(pc, (function () {
                 pc.drawQuadWithShader(device, targ, shader2);
                 syncToCpu(device, targ, face);
             }
-            sourceCubemapRGBM = nextCubemap;
+            sourceCubemapRgbm = nextCubemap;
         }
 
         var unblurredGloss = method===0? 1 : 2048;
@@ -246,15 +246,15 @@ pc.extend(pc, (function () {
             options.singleFilteredFixed = cubemap;
         }
 
-        if (cpuSync && options.singleFilteredFixedRGBM && options.filteredFixedRGBM) {
+        if (cpuSync && options.singlefilteredFixedRgbm && options.filteredFixedRgbm) {
             var mips = [
-                        sourceCubemapRGBM,
-                        options.filteredFixedRGBM[0],
-                        options.filteredFixedRGBM[1],
-                        options.filteredFixedRGBM[2],
-                        options.filteredFixedRGBM[3],
-                        options.filteredFixedRGBM[4],
-                        options.filteredFixedRGBM[5]
+                        sourceCubemapRgbm,
+                        options.filteredFixedRgbm[0],
+                        options.filteredFixedRgbm[1],
+                        options.filteredFixedRgbm[2],
+                        options.filteredFixedRgbm[3],
+                        options.filteredFixedRgbm[4],
+                        options.filteredFixedRgbm[5]
                         ];
             var cubemap = new pc.gfx.Texture(device, {
                 cubemap: true,
@@ -272,7 +272,7 @@ pc.extend(pc, (function () {
             cubemap.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
             cubemap.magFilter = pc.FILTER_LINEAR;
             cubemap._prefilteredMips = true;
-            options.singleFilteredFixedRGBM = cubemap;
+            options.singlefilteredFixedRgbm = cubemap;
         }
     }
 
