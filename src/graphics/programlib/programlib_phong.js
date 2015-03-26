@@ -442,7 +442,7 @@ pc.programlib.phong = {
             code += scode;
         }
 
-        if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+        if ((options.cubeMap || options.sphereMap) && options.refraction) {
             code += chunks.refractionPS;
         }
 
@@ -604,7 +604,7 @@ pc.programlib.phong = {
                 code += "\n";
             }
 
-            if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+            if ((options.cubeMap || options.sphereMap) && options.refraction) {
                 code += "   addRefraction(data);\n";
             }
         }
