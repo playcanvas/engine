@@ -628,12 +628,17 @@ pc.extend(pc, function () {
             options.lights = lightsSorted;
 
             // Gamma correct colors
-            if (scene.gammaCorrection) {
-                for(i=0; i<3; i++) {
+            for(i=0; i<3; i++) {
+                if (scene.gammaCorrection) {
                     this.ambientUniform[i] = Math.pow(this.ambient.data[i], 2.2);
                     this.diffuseUniform[i] = Math.pow(this.diffuse.data[i], 2.2);
                     this.specularUniform[i] = Math.pow(this.specular.data[i], 2.2);
                     this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2) * this.emissiveIntensity;
+                } else {
+                    this.ambientUniform[i] = this.ambient.data[i];
+                    this.diffuseUniform[i] = this.diffuse.data[i];
+                    this.specularUniform[i] = this.specular.data[i];
+                    this.emissiveUniform[i] = this.emissive.data[i] * this.emissiveIntensity;
                 }
             }
 
