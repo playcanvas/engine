@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.165.1
+* [FIX] Changing gamma correction now works properly.
+
 ### v0.165.0
 * Added Box-Projected cubemaps.
 * Added support for custom shader chunks.
