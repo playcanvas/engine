@@ -442,7 +442,7 @@ pc.programlib.phong = {
             code += scode;
         }
 
-        if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+        if ((options.cubeMap || options.sphereMap) && options.refraction) {
             code += chunks.refractionPS;
         }
 
@@ -459,15 +459,12 @@ pc.programlib.phong = {
             code += chunks.ambientConstantPS;
         }
 
-        if (options.modulateAmbient) {
-            code += "uniform vec3 material_ambient;\n"
-        }
-
         if (numShadowLights > 0) {
             code += chunks.shadowCoordPS + chunks.shadowPS;
         }
 
         code += chunks.lightDiffuseLambertPS;
+        var useOldAmbient = false;
         if (options.useSpecular) {
             code += options.shadingModel===pc.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
             if (options.sphereMap || options.cubeMap || (options.fresnelModel > 0)) {
@@ -485,10 +482,15 @@ pc.programlib.phong = {
                     code += chunks.combineDiffuseSpecularNoReflPS;
                 } else {
                     code += chunks.combineDiffuseSpecularNoReflSeparateAmbientPS;
+                    useOldAmbient = true;
                 }
             }
         } else {
             code += chunks.combineDiffusePS;
+        }
+
+        if (options.modulateAmbient && !useOldAmbient) {
+            code += "uniform vec3 material_ambient;\n"
         }
 
         // FRAGMENT SHADER BODY
@@ -520,7 +522,7 @@ pc.programlib.phong = {
         }
 
         code += "   addAmbient(data);\n";
-        if (options.modulateAmbient) {
+        if (options.modulateAmbient && !useOldAmbient) {
             code += "   data.diffuseLight *= material_ambient;\n"
         }
         if (options.aoMap && !options.occludeDirect) {
@@ -604,7 +606,7 @@ pc.programlib.phong = {
                 code += "\n";
             }
 
-            if ((options.cubeMap || options.sphereMap) && options.refraction>0) {
+            if ((options.cubeMap || options.sphereMap) && options.refraction) {
                 code += "   addRefraction(data);\n";
             }
         }

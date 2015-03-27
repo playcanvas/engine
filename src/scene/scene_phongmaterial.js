@@ -598,7 +598,7 @@ pc.extend(pc, function () {
                 cubeMapProjection:          this.cubeMapProjection,
                 customChunks:               this.chunks,
                 customFragmentShader:       this.customFragmentShader,
-                refraction:                 this.refraction,
+                refraction:                 !!this.refraction,
                 useMetalness:               this.useMetalness,
                 useTexCubeLod:              useTexCubeLod
             };
