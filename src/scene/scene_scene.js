@@ -174,7 +174,7 @@ pc.extend(pc, function () {
      * property is only valid if the fog property is set to pc.FOG_LINEAR.
      * @property {Number} fogStart The distance from the viewpoint where linear fog begins. This property is
      * only valid if the fog property is set to pc.FOG_LINEAR.
-     * @property {Boolean} gammaCorrection If true then all materials will apply gamma correction.
+     * @property {pc.GAMMA} gammaCorrection Possible values are pc.GAMMA_NONE (no gamma correction), pc.GAMMA_SRGB and pc.GAMMA_SRGBFAST
      * @property {pc.TONEMAP} tomeMapping The tonemapping transform to apply when writing fragments to the
      * frame buffer. Default is pc.TONEMAP_LINEAR.
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox.
