@@ -2,7 +2,7 @@ pc.programlib.depthrgba = {
     generateKey: function (device, options) {
         var key = "depthrgba";
         if (options.skin) key += "_skin";
-        if (options.opacityMap) key += "_opam";
+        if (options.opacityMap) key += "_opam" + options.opacityChannel;
         if (options.point) key += "_pnt";
         key += "_" + options.shadowType;
         return key;
@@ -102,7 +102,7 @@ pc.programlib.depthrgba = {
         code += getSnippet(device, 'common_main_begin');
 
         if (options.opacityMap) {
-            code += '    if (texture2D(texture_opacityMap, vUv0).r < 0.25) discard;\n\n';
+            code += '    if (texture2D(texture_opacityMap, vUv0).' + options.opacityChannel + ' < 0.25) discard;\n\n';
         }
 
         if (options.point) {
