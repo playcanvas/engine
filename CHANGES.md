@@ -1,5 +1,28 @@
 # PlayCanvas Engine Changes
 
+### v0.165.0
+* Added Box-Projected cubemaps.
+* Added support for custom shader chunks.
+* Added support for Metalness workflow.
+* Added support for Refraction.
+* Added light bitmasks to select which lights affect specific surfaces.
+* Added support for ETC1 texture compresssion.
+* Added camera frustum culling.
+* Added support for controlling shadow map update rate.
+* Added support for geometry instancing.
+* Gamma correction is now an enum instead of a boolean.
+* Added support for changing fragment shader precision.
+* First direct / spot shadow map is now projected in the vertex shader.
+* Can now change shadow map sampling per light / material.
+* Now firing 'remove' event when an asset is removed. If an asset is removed from the asset registry components will remove the reference to that asset.
+* Now setting texture references to null for materials whose texture assets are removed.
+* Changed .vs / .ps files to .vert / .frag instead.
+* Added improvements to cubemap prefiltering.
+* Added lots of graphics fixes and optimizations.
+* [FIX] Point light shadows circular artifact.
+* [FIX] Wrong bias for spot light shadows.
+* [FIX] Shader error when using phong + ambientTint.
+
 ### v0.164.3
 * Add pc.Application#timeScale
 
