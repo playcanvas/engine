@@ -194,14 +194,28 @@ pc.extend(pc, function () {
         // Shaders
         var library = this.device.getProgramLibrary();
 
+        this._depthShaderStatic = library.getProgram('depth', {
+            skin: false
+        });
+        this._depthShaderSkin = library.getProgram('depth', {
+            skin: true
+        });
+
         this._depthProgStatic = [];
         this._depthProgSkin = [];
         this._depthProgStaticOp = [];
         this._depthProgSkinOp = [];
-        this._depthShaderStatic = [];
-        this._depthShaderSkin = [];
 
-        for(var i=0; i<pc.SHADOW_DEPTHMASK + 1; i++) {
+        this._depthProgStaticPoint = [];
+        this._depthProgSkinPoint = [];
+        this._depthProgStaticOpPoint = [];
+        this._depthProgSkinOpPoint = [];
+
+        var chan = ['r', 'g', 'b', 'a'];
+
+        //for(var i=0; i<pc.SHADOW_DEPTHMASK + 1; i++) { // disable depthMask for now (it's not exposed anyway)
+        for(var i=0; i<pc.SHADOW_DEPTH + 1; i++) {
+
             this._depthProgStatic[i] = library.getProgram('depthrgba', {
                 skin: false,
                 opacityMap: false,
@@ -212,47 +226,49 @@ pc.extend(pc, function () {
                 opacityMap: false,
                 shadowType: i
             });
-            this._depthProgStaticOp[i] = library.getProgram('depthrgba', {
+            this._depthProgStaticPoint[i] = library.getProgram('depthrgba', {
                 skin: false,
-                opacityMap: true,
-                shadowType: i
+                opacityMap: false,
+                point: true
             });
-            this._depthProgSkinOp[i] = library.getProgram('depthrgba', {
+            this._depthProgSkinPoint[i] = library.getProgram('depthrgba', {
                 skin: true,
-                opacityMap: true,
-                shadowType: i
+                opacityMap: false,
+                point: true
             });
 
-            this._depthShaderStatic[i] = library.getProgram('depth', {
-                skin: false
-            });
-            this._depthShaderSkin[i] = library.getProgram('depth', {
-                skin: true,
-                shadowType: i
-            });
+            this._depthProgStaticOp[i] = {};
+            this._depthProgSkinOp[i] = {};
+            this._depthProgStaticOpPoint[i] = {};
+            this._depthProgSkinOpPoint[i] = {};
+
+            for(var c=0; c<4; c++) {
+                this._depthProgStaticOp[i][chan[c]] = library.getProgram('depthrgba', {
+                    skin: false,
+                    opacityMap: true,
+                    shadowType: i,
+                    opacityChannel: chan[c]
+                });
+                this._depthProgSkinOp[i][chan[c]] = library.getProgram('depthrgba', {
+                    skin: true,
+                    opacityMap: true,
+                    shadowType: i,
+                    opacityChannel: chan[c]
+                });
+                this._depthProgStaticOpPoint[i][chan[c]] = library.getProgram('depthrgba', {
+                    skin: false,
+                    opacityMap: true,
+                    point: true,
+                    opacityChannel: chan[c]
+                });
+                this._depthProgSkinOpPoint[i][chan[c]] = library.getProgram('depthrgba', {
+                    skin: true,
+                    opacityMap: true,
+                    point: true,
+                    opacityChannel: chan[c]
+                });
+            }
         }
-
-
-        this._depthProgStaticPoint = library.getProgram('depthrgba', {
-            skin: false,
-            opacityMap: false,
-            point: true
-        });
-        this._depthProgSkinPoint = library.getProgram('depthrgba', {
-            skin: true,
-            opacityMap: false,
-            point: true
-        });
-        this._depthProgStaticOpPoint = library.getProgram('depthrgba', {
-            skin: false,
-            opacityMap: true,
-            point: true
-        });
-        this._depthProgSkinOpPoint = library.getProgram('depthrgba', {
-            skin: true,
-            opacityMap: true,
-            point: true
-        });
 
 
         // Uniforms
@@ -618,9 +634,9 @@ pc.extend(pc, function () {
                             } else {
                                 this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                             }
-                            device.setShader(this._depthShaderSkin[pc.SHADOW_DEPTH]);
+                            device.setShader(this._depthShaderSkin);
                         } else {
-                            device.setShader(this._depthShaderStatic[pc.SHADOW_DEPTH]);
+                            device.setShader(this._depthShaderStatic);
                         }
 
                         style = meshInstance.renderStyle;
@@ -725,6 +741,7 @@ pc.extend(pc, function () {
                         shadowCam._node.worldTransform.copy(shadowCamWtm);
                     }
 
+                    var opChan = 'r';
                     for(pass=0; pass<passes; pass++){
 
                         if (type === pc.LIGHTTYPE_POINT) {
@@ -766,6 +783,7 @@ pc.extend(pc, function () {
                             this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
                             if (material.opacityMap) {
                                 scope.resolve('texture_opacityMap').setValue(material.opacityMap);
+                                if (material.opacityMapChannel) opChan = material.opacityMapChannel;
                             }
                             if (meshInstance.skinInstance) {
                                 if (device.supportsBoneTextures) {
@@ -777,15 +795,15 @@ pc.extend(pc, function () {
                                     this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                                 }
                                 if (type === pc.LIGHTTYPE_POINT) {
-                                    device.setShader(material.opacityMap ? this._depthProgSkinOpPoint : this._depthProgSkinPoint);
+                                    device.setShader(material.opacityMap ? this._depthProgSkinOpPoint[light._shadowType][opChan] : this._depthProgSkinPoint[light._shadowType]);
                                 } else {
-                                    device.setShader(material.opacityMap ? this._depthProgSkinOp[light._shadowType] : this._depthProgSkin[light._shadowType]);
+                                    device.setShader(material.opacityMap ? this._depthProgSkinOp[light._shadowType][opChan] : this._depthProgSkin[light._shadowType]);
                                 }
                             } else {
                                 if (type === pc.LIGHTTYPE_POINT) {
-                                    device.setShader(material.opacityMap ? this._depthProgStaticOpPoint : this._depthProgStaticPoint);
+                                    device.setShader(material.opacityMap ? this._depthProgStaticOpPoint[light._shadowType][opChan] : this._depthProgStaticPoint[light._shadowType]);
                                 } else {
-                                    device.setShader(material.opacityMap ? this._depthProgStaticOp[light._shadowType] : this._depthProgStatic[light._shadowType]);
+                                    device.setShader(material.opacityMap ? this._depthProgStaticOp[light._shadowType][opChan] : this._depthProgStatic[light._shadowType]);
                                 }
                             }
 
