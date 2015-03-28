@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.165.2
+* [FIX] Shadowmap shader now accounts for selected opacity channel.
+
 ### v0.165.1
 * [FIX] Changing gamma correction now works properly.
 
