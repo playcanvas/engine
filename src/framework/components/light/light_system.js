@@ -352,8 +352,6 @@ pc.extend(pc, function () {
                 model.graph = component.entity;
                 model.meshInstances = [ new pc.MeshInstance(component.entity, this.mesh, this.material) ];
 
-                app.scene.addModel(model);
-
                 data.model = model;
             }
         },
