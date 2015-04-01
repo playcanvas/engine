@@ -25,7 +25,7 @@ bool shadowContained(psInternalData data) {
 
 bool shadowContainedVS(psInternalData data) {
     vec3 mainShadowUv = vMainShadowUv.xyz / vMainShadowUv.w;
-    bvec4 containedVec = bvec4(mainShadowUv.x >= -1.0, mainShadowUv.x <= 1.0, mainShadowUv.y >= -1.0, mainShadowUv.y <= 1.0);
+    bvec4 containedVec = bvec4(mainShadowUv.x >= 0.0, mainShadowUv.x <= 1.0, mainShadowUv.y >= 0.0, mainShadowUv.y <= 1.0);
     return all(bvec2(all(containedVec), mainShadowUv.z <= 1.0));
 }
 
