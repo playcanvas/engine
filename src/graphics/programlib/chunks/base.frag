@@ -10,7 +10,7 @@ varying vec3 vTangentW;
 varying vec3 vBinormalW;
 varying vec2 vUv0;
 varying vec2 vUv1;
-varying vec4 vVertexColor;
+//varying vec4 vVertexColor;
 varying vec3 vNormalV;
 varying vec4 vMainShadowUv;
 
