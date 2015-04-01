@@ -372,18 +372,20 @@ pc.programlib.phong = {
         var uvOffset = options.heightMap ? " + data.uvOffset" : "";
         var tbn = options.fastTbn? chunks.TBNfastPS : chunks.TBNPS;
 
-        if (options.normalMap && useTangents) {
-            code += options.packedNormal? chunks.normalXYPS : chunks.normalXYZPS;
+        if (lighting || reflections) {
+            if (options.normalMap && useTangents) {
+                code += options.packedNormal? chunks.normalXYPS : chunks.normalXYZPS;
 
-            var uv = this._uvSource(options.normalMapTransform, options.normalMapUv) + uvOffset;
-            if (options.needsNormalFloat) {
-                code += (options.fastTbn? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, uv);
+                var uv = this._uvSource(options.normalMapTransform, options.normalMapUv) + uvOffset;
+                if (options.needsNormalFloat) {
+                    code += (options.fastTbn? chunks.normalMapFloatTBNfastPS : chunks.normalMapFloatPS).replace(/\$UV/g, uv);
+                } else {
+                    code += chunks.normalMapPS.replace(/\$UV/g, uv);
+                }
+                code += tbn;
             } else {
-                code += chunks.normalMapPS.replace(/\$UV/g, uv);
+                code += chunks.normalVertexPS;
             }
-            code += tbn;
-        } else {
-            code += chunks.normalVertexPS;
         }
 
         code += chunks.defaultGamma;
