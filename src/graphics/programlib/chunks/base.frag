@@ -1,18 +1,7 @@
 
-// Compiler should remove unneeded stuff
 uniform vec3 view_position;
 
 uniform vec3 light_globalAmbient;
-
-varying vec3 vPositionW;
-varying vec3 vNormalW;
-varying vec3 vTangentW;
-varying vec3 vBinormalW;
-varying vec2 vUv0;
-varying vec2 vUv1;
-//varying vec4 vVertexColor;
-varying vec3 vNormalV;
-varying vec4 vMainShadowUv;
 
 struct psInternalData {
     vec3 albedo;

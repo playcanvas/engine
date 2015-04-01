@@ -42,15 +42,15 @@ pc.programlib.phong = {
 
         var checkId = id + uv * 100;
         if (!codes[3][checkId]) {
-            codes[1] += "varying vec2 vUv"+uv+"_"+id+";\n"
-            codes[2] += "   vUv"+uv+"_"+id+" = uv"+uv+" * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
+            codes[1] += "varying vec2 vUV"+uv+"_"+id+";\n"
+            codes[2] += "   vUV"+uv+"_"+id+" = uv"+uv+" * texture_"+name+"MapTransform.xy + texture_"+name+"MapTransform.zw;\n";
             codes[3][checkId] = true;
         }
         return codes;
     },
 
     _uvSource: function(id, uv) {
-        return id==0? "vUv" + uv : ("vUv"+uv+"_" + id);
+        return id==0? "vUv" + uv : ("vUV"+uv+"_" + id);
     },
 
     _addMap: function(p, options, chunks, uvOffset, subCode, format) {
@@ -91,6 +91,10 @@ pc.programlib.phong = {
                 return "   getShadowCoordOrthoNormalOffset" + shadowCoordArgs;
             }
         }
+    },
+
+    _addVaryingIfNeeded: function(code, type, name) {
+        return code.indexOf(name)>=0? ("varying " + type + " " + name + ";\n") : "";
     },
 
     createShaderDefinition: function (device, options) {
@@ -185,7 +189,7 @@ pc.programlib.phong = {
                 codeBody += "   vNormalV    = getViewNormal(data);\n";
             }
 
-            if (options.normalMap && useTangents) {
+            if ((options.heightMap || options.normalMap) && useTangents) {
                 attributes.vertex_tangent = pc.SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent(data);\n";
@@ -255,7 +259,7 @@ pc.programlib.phong = {
             }
         }
 
-        code = codes[0] + codes[1];
+        code = codes[0];
         varyings = codes[1];
         codeBody = codes[2];
 
@@ -285,6 +289,19 @@ pc.programlib.phong = {
 
         var vshader = code;
 
+        var oldVars = varyings;
+        varyings = "";
+        varyings += this._addVaryingIfNeeded(code, "vec4", "vMainShadowUv");
+        varyings += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
+        varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalV");
+        varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalW");
+        varyings += this._addVaryingIfNeeded(code, "vec3", "vTangentW");
+        varyings += this._addVaryingIfNeeded(code, "vec3", "vBinormalW");
+        varyings += this._addVaryingIfNeeded(code, "vec2", "vUv0");
+        varyings += this._addVaryingIfNeeded(code, "vec2", "vUv1");
+        varyings += oldVars;
+        vshader = varyings + vshader;
+
         //////////////////////////////
         // GENERATE FRAGMENT SHADER //
         //////////////////////////////
@@ -310,8 +327,8 @@ pc.programlib.phong = {
             };
         }
 
-        code += chunks.basePS;
         code += varyings;
+        code += chunks.basePS;
 
         // FRAGMENT SHADER INPUTS: UNIFORMS
         var numShadowLights = 0;
