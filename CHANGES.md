@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.165.3
+* [FIX] Remove vVertexColor varying from default material shader.
+
 ### v0.165.2
 * [FIX] Shadowmap shader now accounts for selected opacity channel.
 
