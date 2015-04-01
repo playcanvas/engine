@@ -310,7 +310,7 @@ pc.extend(pc, function () {
     }
 
     pc.extend(ForwardRenderer.prototype, {
-        setCamera: function (camera) {
+        setCamera: function (camera, cullBorder) {
             // Projection Matrix
             var projMat = camera.getProjectionMatrix();
             this.projId.setValue(projMat.data);
@@ -368,6 +368,8 @@ pc.extend(pc, function () {
             device.setScissor(x, y, w, h);
 
             device.clear(camera.getClearOptions());
+
+            if (cullBorder) device.setScissor(1, 1, pixelWidth-2, pixelHeight-2);
         },
 
         dispatchGlobalLights: function (scene) {
@@ -762,7 +764,7 @@ pc.extend(pc, function () {
                             shadowCam.setRenderTarget(light._shadowCubeMap[pass]);
                         }
 
-                        this.setCamera(shadowCam);
+                        this.setCamera(shadowCam, type !== pc.LIGHTTYPE_POINT);
 
                         device.setBlending(false);
                         device.setColorWrite(true, true, true, true);

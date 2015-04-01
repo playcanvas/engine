@@ -18,17 +18,6 @@ float unpackFloatYZW(vec4 enc) {
 
 // ----- Aux -----
 
-bool shadowContained(psInternalData data) {
-    bvec4 containedVec = bvec4(data.shadowCoord.x >= 0.0, data.shadowCoord.x <= 1.0, data.shadowCoord.y >= 0.0, data.shadowCoord.y <= 1.0);
-    return all(bvec2(all(containedVec), data.shadowCoord.z <= 1.0));
-}
-
-bool shadowContainedVS(psInternalData data) {
-    vec3 mainShadowUv = vMainShadowUv.xyz / vMainShadowUv.w;
-    bvec4 containedVec = bvec4(mainShadowUv.x >= -1.0, mainShadowUv.x <= 1.0, mainShadowUv.y >= -1.0, mainShadowUv.y <= 1.0);
-    return all(bvec2(all(containedVec), mainShadowUv.z <= 1.0));
-}
-
 vec3 lessThan2(vec3 a, vec3 b) {
     return clamp((b - a)*1000.0, 0.0, 1.0); // softer version
 }
@@ -41,33 +30,21 @@ vec3 greaterThan2(vec3 a, vec3 b) {
 // ----- Direct/Spot Sampling -----
 
 float getShadowHardVS(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    if (shadowContainedVS(data)) {
-        float depth = unpackFloat(texture2DProj(shadowMap, vMainShadowUv));
-        return (depth < (vMainShadowUv.z + shadowParams.z)) ? 0.0 : 1.0;
-    }
-    return 1.0;
+    float depth = unpackFloat(texture2DProj(shadowMap, vMainShadowUv));
+    return (depth < (vMainShadowUv.z + shadowParams.z)) ? 0.0 : 1.0;
 }
 
 float getShadowHard(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    if (shadowContained(data)) {
-        float depth = unpackFloat(texture2D(shadowMap, data.shadowCoord.xy));
-        return (depth < data.shadowCoord.z) ? 0.0 : 1.0;
-    }
-    return 1.0;
+    float depth = unpackFloat(texture2D(shadowMap, data.shadowCoord.xy));
+    return (depth < data.shadowCoord.z) ? 0.0 : 1.0;
 }
 
 float getShadowMaskVS(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    if (shadowContainedVS(data)) {
-        return unpackMask(texture2DProj(shadowMap, vMainShadowUv));
-    }
-    return 1.0;
+    return unpackMask(texture2DProj(shadowMap, vMainShadowUv));
 }
 
 float getShadowMask(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    if (shadowContained(data)) {
-        return unpackMask(texture2D(shadowMap, data.shadowCoord.xy));
-    }
-    return 1.0;
+    return unpackMask(texture2D(shadowMap, data.shadowCoord.xy));
 }
 
 float _xgetShadowPCF3x3(mat3 depthKernel, inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
@@ -114,20 +91,14 @@ float _getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shad
 }
 
 float getShadowPCF3x3VS(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    if (shadowContainedVS(data)) {
-        data.shadowCoord = vMainShadowUv.xyz;
-        data.shadowCoord.z += shadowParams.z;
-        data.shadowCoord.xyz /= vMainShadowUv.w;
-        return _getShadowPCF3x3(data, shadowMap, shadowParams);
-    }
-    return 1.0;
+    data.shadowCoord = vMainShadowUv.xyz;
+    data.shadowCoord.z += shadowParams.z;
+    data.shadowCoord.xyz /= vMainShadowUv.w;
+    return _getShadowPCF3x3(data, shadowMap, shadowParams);
 }
 
 float getShadowPCF3x3(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    if (shadowContained(data)) {
-        return _getShadowPCF3x3(data, shadowMap, shadowParams);
-    }
-    return 1.0;
+    return _getShadowPCF3x3(data, shadowMap, shadowParams);
 }
 
 float _getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
@@ -152,20 +123,14 @@ float _getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 
 }
 
 float getShadowPCF3x3_YZW(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    if (shadowContained(data)) {
-        return _getShadowPCF3x3_YZW(data, shadowMap, shadowParams);
-    }
-    return 1.0;
+    return _getShadowPCF3x3_YZW(data, shadowMap, shadowParams);
 }
 
 float getShadowPCF3x3_YZWVS(inout psInternalData data, sampler2D shadowMap, vec3 shadowParams) {
-    if (shadowContainedVS(data)) {
-        data.shadowCoord = vMainShadowUv.xyz;
-        data.shadowCoord.z += shadowParams.z;
-        data.shadowCoord.xyz /= vMainShadowUv.w;
-        return _getShadowPCF3x3_YZW(data, shadowMap, shadowParams);
-    }
-    return 1.0;
+    data.shadowCoord = vMainShadowUv.xyz;
+    data.shadowCoord.z += shadowParams.z;
+    data.shadowCoord.xyz /= vMainShadowUv.w;
+    return _getShadowPCF3x3_YZW(data, shadowMap, shadowParams);
 }
 
 
