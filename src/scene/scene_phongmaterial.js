@@ -498,6 +498,12 @@ pc.extend(pc, function () {
 
             this._mapXForms = [];
             var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
+
+            if (this.cubeMap && !this.prefilteredCubeMap128 && this.cubeMap._levels.length>=6) {
+                // We can use the cubeMap as prefilteredCubeMap
+                this.prefilteredCubeMap128 = this.cubeMap;
+            }
+
             var prefilteredCubeMap128 = this.prefilteredCubeMap128? this.prefilteredCubeMap128 : scene._prefilteredCubeMap128;
             var prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4;
             var mips;
