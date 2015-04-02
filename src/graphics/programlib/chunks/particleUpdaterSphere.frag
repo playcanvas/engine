@@ -4,7 +4,7 @@ vec3 calcSpawnPosition(vec3 inBounds, float rndFactor) {
     return emitterPos + normalize(inBounds.xyz - vec3(0.5)) * rnd4 * spawnBounds;
 }
 
-void addInitialVelocity(out vec3 localVelocity, vec3 inBounds) {
+void addInitialVelocity(inout vec3 localVelocity, vec3 inBounds) {
     localVelocity += normalize(inBounds - vec3(0.5)) * initialVelocity;
 }
 
