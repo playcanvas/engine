@@ -499,7 +499,7 @@ pc.extend(pc, function () {
             this._mapXForms = [];
             var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
 
-            if (!this.cubeMap && this._prefilteredCubeMapSrc) {
+            if (this.cubeMap !== this._prefilteredCubeMapSrc) {
                 // prefilteredCubeMap was synced to cubeMap, but the cubeMap is now gone: clear prefilteredCubeMap too
                 this._prefilteredCubemapSrc = null;
                 this.prefilteredCubeMap128 = null;
@@ -508,7 +508,9 @@ pc.extend(pc, function () {
                 this.prefilteredCubeMap16 = null;
                 this.prefilteredCubeMap8 = null;
                 this.prefilteredCubeMap4 = null;
-            } else if (this.cubeMap && this.cubeMap._levels.length>=6 && this._prefilteredCubeMapSrc!==this.cubeMap) {
+            }
+
+            if (this.cubeMap && this.cubeMap._levels.length>=6) {
                 // We can use the cubeMap as prefilteredCubeMap
                 this.prefilteredCubeMap128 = this.cubeMap;
                 this._prefilteredCubeMapSrc = this.cubeMap;
