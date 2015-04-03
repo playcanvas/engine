@@ -231,7 +231,7 @@ pc.extend(pc, function () {
             this.forceFragmentPrecision = null;
             this.occludeDirect = false;
 
-            this.prefilteredCubemapSrc = null;
+            this._prefilteredCubemapSrc = null;
             this.prefilteredCubeMap128 = null;
             this.prefilteredCubeMap64 = null;
             this.prefilteredCubeMap32 = null;
@@ -499,19 +499,19 @@ pc.extend(pc, function () {
             this._mapXForms = [];
             var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
 
-            if (!this.cubeMap && this.prefilteredCubeMapSrc) {
+            if (!this.cubeMap && this._prefilteredCubeMapSrc) {
                 // prefilteredCubeMap was synced to cubeMap, but the cubeMap is now gone: clear prefilteredCubeMap too
-                this.prefilteredCubemapSrc = null;
+                this._prefilteredCubemapSrc = null;
                 this.prefilteredCubeMap128 = null;
                 this.prefilteredCubeMap64 = null;
                 this.prefilteredCubeMap32 = null;
                 this.prefilteredCubeMap16 = null;
                 this.prefilteredCubeMap8 = null;
                 this.prefilteredCubeMap4 = null;
-            } else if (this.cubeMap && this.cubeMap._levels.length>=6 && this.prefilteredCubeMapSrc!==this.cubeMap) {
+            } else if (this.cubeMap && this.cubeMap._levels.length>=6 && this._prefilteredCubeMapSrc!==this.cubeMap) {
                 // We can use the cubeMap as prefilteredCubeMap
                 this.prefilteredCubeMap128 = this.cubeMap;
-                this.prefilteredCubeMapSrc = this.cubeMap;
+                this._prefilteredCubeMapSrc = this.cubeMap;
             }
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128? this.prefilteredCubeMap128 : scene._prefilteredCubeMap128;
@@ -520,11 +520,11 @@ pc.extend(pc, function () {
             var allMips;
 
             if (prefilteredCubeMap128) {
-                prefilteredCubeMap64 = this.prefilteredCubeMap64? this.prefilteredCubeMap64 : scene._prefilteredCubeMap64;
-                prefilteredCubeMap32 = this.prefilteredCubeMap32? this.prefilteredCubeMap32 : scene._prefilteredCubeMap32;
-                prefilteredCubeMap16 = this.prefilteredCubeMap16? this.prefilteredCubeMap16 : scene._prefilteredCubeMap16;
-                prefilteredCubeMap8 = this.prefilteredCubeMap8? this.prefilteredCubeMap8 : scene._prefilteredCubeMap8;
-                prefilteredCubeMap4 = this.prefilteredCubeMap4? this.prefilteredCubeMap4 : scene._prefilteredCubeMap4;
+                prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene._prefilteredCubeMap64;
+                prefilteredCubeMap32 = this.prefilteredCubeMap32 || scene._prefilteredCubeMap32;
+                prefilteredCubeMap16 = this.prefilteredCubeMap16 || scene._prefilteredCubeMap16;
+                prefilteredCubeMap8 = this.prefilteredCubeMap8 || scene._prefilteredCubeMap8;
+                prefilteredCubeMap4 = this.prefilteredCubeMap4 || scene._prefilteredCubeMap4;
                 allMips = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
                                        && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
                 mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
