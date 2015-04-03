@@ -186,12 +186,6 @@ pc.extend(pc, function () {
             _defineTex2D(this, "light", 1, 3);
 
             this.cubeMap = null;
-            this.prefilteredCubeMap128 = null;
-            this.prefilteredCubeMap64 = null;
-            this.prefilteredCubeMap32 = null;
-            this.prefilteredCubeMap16 = null;
-            this.prefilteredCubeMap8 = null;
-            this.prefilteredCubeMap4 = null;
             this.sphereMap = null;
             this.reflectivity = 1;
 
@@ -236,6 +230,14 @@ pc.extend(pc, function () {
 
             this.forceFragmentPrecision = null;
             this.occludeDirect = false;
+
+            this.prefilteredCubemapSrc = null;
+            this.prefilteredCubeMap128 = null;
+            this.prefilteredCubeMap64 = null;
+            this.prefilteredCubeMap32 = null;
+            this.prefilteredCubeMap16 = null;
+            this.prefilteredCubeMap8 = null;
+            this.prefilteredCubeMap4 = null;
 
             _endProperties(this);
 
@@ -432,11 +434,9 @@ pc.extend(pc, function () {
 
             if (this.cubeMap) {
                 this.setParameter('texture_cubeMap', this.cubeMap);
-                this.setParameter('material_cubemapSize', this.cubeMap.width);
             }
             if (this.prefilteredCubeMap128) {
                 this.setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
-                this.setParameter('material_cubemapSize', this.prefilteredCubeMap128.width);
             }
             if (this.prefilteredCubeMap64) {
                 this.setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
@@ -499,9 +499,19 @@ pc.extend(pc, function () {
             this._mapXForms = [];
             var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
 
-            if (this.cubeMap && !this.prefilteredCubeMap128 && this.cubeMap._levels.length>=6) {
+            if (!this.cubeMap && this.prefilteredCubeMapSrc) {
+                // prefilteredCubeMap was synced to cubeMap, but the cubeMap is now gone: clear prefilteredCubeMap too
+                this.prefilteredCubemapSrc = null;
+                this.prefilteredCubeMap128 = null;
+                this.prefilteredCubeMap64 = null;
+                this.prefilteredCubeMap32 = null;
+                this.prefilteredCubeMap16 = null;
+                this.prefilteredCubeMap8 = null;
+                this.prefilteredCubeMap4 = null;
+            } else if (this.cubeMap && this.cubeMap._levels.length>=6 && this.prefilteredCubeMapSrc!==this.cubeMap) {
                 // We can use the cubeMap as prefilteredCubeMap
                 this.prefilteredCubeMap128 = this.cubeMap;
+                this.prefilteredCubeMapSrc = this.cubeMap;
             }
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128? this.prefilteredCubeMap128 : scene._prefilteredCubeMap128;
@@ -519,7 +529,7 @@ pc.extend(pc, function () {
                                        && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
                 mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
 
-                if (allMips && useTexCubeLod && !prefilteredCubeMap128._prefilteredMips) {
+                if (allMips && useTexCubeLod && !prefilteredCubeMap128._levels.length<6) {
                     // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
                     prefilteredCubeMap128.autoMipmap = false;
                     var mip, face;
@@ -529,13 +539,10 @@ pc.extend(pc, function () {
                     prefilteredCubeMap128.upload();
                     prefilteredCubeMap128.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
                     prefilteredCubeMap128.magFilter = pc.FILTER_LINEAR;
-                    prefilteredCubeMap128._prefilteredMips = true;
+                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
                 } else if (!allMips && !useTexCubeLod && prefilteredCubeMap128._levels.length>=6) {
                     // Single -> multiple (provided single cubemap, but no texCubeLod)
-                    mips = null;
-                    if (pc.cubeMapMipsCache) {
-                        mips = pc.cubeMapMipsCache[prefilteredCubeMap128];
-                    }
+                    mips = prefilteredCubeMap128._mips;
                     if (!mips) {
                         mips = [];
                         var mipSize = 128;
@@ -554,8 +561,7 @@ pc.extend(pc, function () {
                             mips[i]._levels[0] = prefilteredCubeMap128._levels[i];
                             mips[i].upload();
                         }
-                        if (!pc.cubeMapMipsCache) pc.cubeMapMipsCache = {};
-                        pc.cubeMapMipsCache[prefilteredCubeMap128] = mips;
+                        prefilteredCubeMap128._mips = mips;
                     }
                     prefilteredCubeMap128 = this.prefilteredCubeMap128 = mips[0];
                     prefilteredCubeMap64 = this.prefilteredCubeMap64 = mips[1];
@@ -572,22 +578,17 @@ pc.extend(pc, function () {
                     allMips = true;
                 } else if (useTexCubeLod && prefilteredCubeMap128._levels.length>=6) {
                     // Single (able to use single cubemap with texCubeLod)
+                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                } else if (allMips && !useTexCubeLod) {
+                    // Multiple (no texCubeLod, but able to use cubemap per mip)
+                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                    this.setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
+                    this.setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
+                    this.setParameter('texture_prefilteredCubeMap16', prefilteredCubeMap16);
+                    this.setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
+                    this.setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
                 } else {
                     console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
-                }
-            }
-
-            if (prefilteredCubeMap128) {
-                if (prefilteredCubeMap128 === scene._prefilteredCubeMap128) {
-                    this.setParameter('texture_prefilteredCubeMap128', scene._prefilteredCubeMap128);
-                    if (allMips) {
-                        this.setParameter('texture_prefilteredCubeMap64', scene._prefilteredCubeMap64);
-                        this.setParameter('texture_prefilteredCubeMap32', scene._prefilteredCubeMap32);
-                        this.setParameter('texture_prefilteredCubeMap16', scene._prefilteredCubeMap16);
-                        this.setParameter('texture_prefilteredCubeMap8', scene._prefilteredCubeMap8);
-                        this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
-                    }
-                    this.setParameter('material_cubemapSize', scene._prefilteredCubeMap128.width);
                 }
             }
 

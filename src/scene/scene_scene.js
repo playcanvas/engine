@@ -296,7 +296,6 @@ pc.extend(pc, function () {
 
             material.updateShader();
             material.setParameter("texture_cubeMap", this._skyboxCubeMap);
-            material.setParameter('material_cubemapSize', this._skyboxCubeMap.width);
             material.cull = pc.CULLFACE_NONE;
 
             var node = new pc.GraphNode();

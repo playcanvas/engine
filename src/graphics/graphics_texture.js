@@ -78,6 +78,9 @@ pc.extend(pc, function () {
         this._lockedLevel = -1;
 
         this._needsUpload = true;
+
+        // occasionally used properties declared here for interal browser optimizations
+        this._mips = null; // each mip as separate texture when can't use texLod
     };
 
     // Public properties
