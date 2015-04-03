@@ -529,7 +529,7 @@ pc.extend(pc, function () {
                                        && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
                 mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
 
-                if (allMips && useTexCubeLod && !prefilteredCubeMap128._levels.length<6) {
+                if (allMips && useTexCubeLod && prefilteredCubeMap128._levels.length<6) {
                     // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
                     prefilteredCubeMap128.autoMipmap = false;
                     var mip, face;
