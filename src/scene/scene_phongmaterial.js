@@ -231,7 +231,7 @@ pc.extend(pc, function () {
             this.forceFragmentPrecision = null;
             this.occludeDirect = false;
 
-            this._prefilteredCubemapSrc = null;
+            this._prefilteredCubeMapSrc = null;
             this.prefilteredCubeMap128 = null;
             this.prefilteredCubeMap64 = null;
             this.prefilteredCubeMap32 = null;
@@ -501,7 +501,7 @@ pc.extend(pc, function () {
 
             if (this.cubeMap !== this._prefilteredCubeMapSrc) {
                 // prefilteredCubeMap was synced to cubeMap, but the cubeMap is now gone: clear prefilteredCubeMap too
-                this._prefilteredCubemapSrc = null;
+                this._prefilteredCubeMapSrc = null;
                 this.prefilteredCubeMap128 = null;
                 this.prefilteredCubeMap64 = null;
                 this.prefilteredCubeMap32 = null;
