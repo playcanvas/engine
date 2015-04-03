@@ -499,7 +499,10 @@ pc.extend(pc, function () {
             this._mapXForms = [];
             var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
 
-            if (this.cubeMap !== this._prefilteredCubeMapSrc) {
+            var possibleCubeMap = this.cubeMap && this.cubeMap._levels.length>=6? this.cubeMap : null;
+            possibleCubeMap = possibleCubeMap || (scene._skyboxCubeMap && scene._skyboxCubeMap._levels.length>=6? scene._skyboxCubeMap : null);
+
+            if (possibleCubeMap !== this._prefilteredCubeMapSrc) {
                 // prefilteredCubeMap was synced to cubeMap, but the cubeMap is now gone: clear prefilteredCubeMap too
                 this._prefilteredCubeMapSrc = null;
                 this.prefilteredCubeMap128 = null;
@@ -510,10 +513,10 @@ pc.extend(pc, function () {
                 this.prefilteredCubeMap4 = null;
             }
 
-            if (this.cubeMap && this.cubeMap._levels.length>=6) {
+            if (possibleCubeMap && possibleCubeMap!==this._prefilteredCubeMapSrc && possibleCubeMap._levels.length>=6) {
                 // We can use the cubeMap as prefilteredCubeMap
-                this.prefilteredCubeMap128 = this.cubeMap;
-                this._prefilteredCubeMapSrc = this.cubeMap;
+                this.prefilteredCubeMap128 = possibleCubeMap;
+                this._prefilteredCubeMapSrc = possibleCubeMap;
             }
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128? this.prefilteredCubeMap128 : scene._prefilteredCubeMap128;
