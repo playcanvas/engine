@@ -1,6 +1,5 @@
-uniform float material_cubemapSize;
 vec3 fixSeams(vec3 vec, float mipmapIndex) {
-    float scale = 1.0 - exp2(mipmapIndex) / material_cubemapSize;
+    float scale = 1.0 - exp2(mipmapIndex) / 128.0;
     float M = max(max(abs(vec.x), abs(vec.y)), abs(vec.z));
     if (abs(vec.x) != M) vec.x *= scale;
     if (abs(vec.y) != M) vec.y *= scale;
@@ -9,7 +8,7 @@ vec3 fixSeams(vec3 vec, float mipmapIndex) {
 }
 
 vec3 fixSeams(vec3 vec) {
-    float scale = 1.0 - 1.0 / material_cubemapSize;
+    float scale = 1.0 - 1.0 / 128.0;
     float M = max(max(abs(vec.x), abs(vec.y)), abs(vec.z));
     if (abs(vec.x) != M) vec.x *= scale;
     if (abs(vec.y) != M) vec.y *= scale;
