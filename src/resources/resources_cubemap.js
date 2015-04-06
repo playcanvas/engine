@@ -105,7 +105,9 @@ pc.extend(pc.resources, function () {
                     var textureRequest = new pc.resources.TextureRequest(request.canonical);
                     self._assets.loader.request(textureRequest).then(function (resources) {
                         var data = pc.extend({}, asset.data);
+                        // pass dds texture to data
                         data.prefiltered = resources[0];
+                        // set this to true to avoid cubemap seams
                         data.prefiltered.fixCubemapSeams = true;
                         resolve(data);
                     }, function (error) {
