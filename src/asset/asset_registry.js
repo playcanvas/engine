@@ -119,8 +119,9 @@ pc.extend(pc.asset, function () {
             this._names[asset.name].push(asset.id);
             if (asset.file) {
                 this._urls[asset.getFileUrl()] = asset.id;
-                asset.on('change', this._onAssetChanged, this);
             }
+
+            asset.on('change', this._onAssetChanged, this);
         },
 
         /**
@@ -134,9 +135,10 @@ pc.extend(pc.asset, function () {
             delete this._names[asset.name];
             asset.fire('remove', asset);
             if (asset.file) {
-                asset.off('change', this._onAssetChanged, this);
                 delete this._urls[asset.file.url];
             }
+
+            asset.off('change', this._onAssetChanged, this);
         },
 
         /**
@@ -461,12 +463,8 @@ pc.extend(pc.asset, function () {
         },
 
         _createCubemapRequest: function (asset, texture) {
-            var url = asset.getFileUrl();
-            if (url) {
-                return new pc.resources.CubemapRequest(url, null, texture);
-            } else {
-                return new pc.resources.CubemapRequest("asset://" + asset.id, null, texture);
-            }
+            var url = asset.getFileUrl() || ("asset://" + asset.id);
+            return new pc.resources.CubemapRequest(url, null, texture);
         },
 
         _createMaterialRequest: function (asset) {
