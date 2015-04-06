@@ -104,7 +104,6 @@ pc.extend(pc.resources, function () {
                     // load .dds file
                     var textureRequest = new pc.resources.TextureRequest(request.canonical);
                     self._assets.loader.request(textureRequest).then(function (resources) {
-                        var asset = self._getAssetFromRequest(request);
                         var data = pc.extend({}, asset.data);
                         data.prefiltered = resources[0];
                         data.prefiltered.fixCubemapSeams = true;
