@@ -210,6 +210,7 @@ pc.extend(pc, function () {
                         if (skybox) {
                             this.scene.skybox = skybox.resource;
                             skybox.on('change', this._onSkyBoxChanged, this);
+                            skybox.on('remove', this._onSkyBoxRemoved, this);
                         } else {
                             this.scene.skybox = null;
                         }
@@ -813,6 +814,9 @@ pc.extend(pc, function () {
 
                             skybox.off('change', self._onSkyBoxChanged, self);
                             skybox.on('change', self._onSkyBoxChanged, self);
+
+                            skybox.off('remove', self._onSkyBoxRemoved, self);
+                            skybox.on('remove', self._onSkyBoxRemoved, self);
                         }, function (error) {
                             pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
                         });
@@ -821,6 +825,9 @@ pc.extend(pc, function () {
 
                         skybox.off('change', self._onSkyBoxChanged, self);
                         skybox.on('change', self._onSkyBoxChanged, self);
+
+                        skybox.off('remove', self._onSkyBoxRemoved, self);
+                        skybox.on('remove', self._onSkyBoxRemoved, self);
                     }
                 }
             } else {
@@ -835,6 +842,13 @@ pc.extend(pc, function () {
                 this.scene.skybox = newValue;
             } else {
                 skybox.off('change', this._onSkyBoxChanged, this);
+            }
+        },
+
+        _onSkyBoxRemoved: function (asset) {
+            asset.off('change', this._onSkyBoxRemoved, this);
+            if (this.scene.skybox === asset.resource) {
+                this.scene.skybox = null;
             }
         }
     };
