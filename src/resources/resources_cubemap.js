@@ -41,11 +41,11 @@ pc.extend(pc.resources, function () {
     CubemapResourceHandler.prototype.load = function (request, options) {
         var self = this;
         var promise = null;
+        var asset = self._getAssetFromRequest(request);
 
         if (pc.string.startsWith(request.canonical, "asset://")) {
             // Loading from asset (platform)
             promise = new pc.promise.Promise(function (resolve, reject) {
-                var asset = self._getAssetFromRequest(request);
                 if (!asset) {
                     reject(pc.string.format("Can't load cubemap, asset {0} not found", request.canonical));
                 }
@@ -65,7 +65,7 @@ pc.extend(pc.resources, function () {
             // Loading from URL (engine-only)
             // Load cubemap data from a file (as opposed to from an asset)
             promise = new pc.promise.Promise(function (resolve, reject) {
-                if (pc.string.endsWith(request.canonical.toLowerCase(), '.json')) {
+                if (!self._isPrefilteredCubemapAsset(asset)) {
                     // load .json file
                     pc.net.http.get(request.canonical, function(response) {
                         var data = pc.extend({}, response);
@@ -82,11 +82,12 @@ pc.extend(pc.resources, function () {
                             });
 
                             self._assets.load(assets).then(function (responses) {
-                                 // Only when referenced assets are loaded do we resolve the cubemap load
-                                data.images = responses.map(function (texture) {
-                                    return texture.getSource();
-                                });
+                                // convert texture urls to asset ids
+                                 data.textures = assets.map(function (asset) {
+                                    return asset.id;
+                                 });
 
+                                 // Only when referenced assets are loaded do we resolve the cubemap load
                                 resolve(data);
                              }, function (error) {
                                 reject(error);
@@ -147,6 +148,15 @@ pc.extend(pc.resources, function () {
         return cubemap;
     };
 
+    CubemapResourceHandler.prototype._isPrefilteredCubemapAsset = function (asset) {
+        var url = asset.getFileUrl();
+        if (url && pc.string.endsWith(url.toLowerCase(), '.dds')) {
+            return true;
+        }
+
+        return false;
+    };
+
     CubemapResourceHandler.prototype._onCubemapAssetChanged = function (asset, attribute, value, oldValue) {
         var self = this;
         var cubemap = asset.resource;
@@ -159,7 +169,7 @@ pc.extend(pc.resources, function () {
         // this cubemap can update
         if (attribute === 'data') {
             var texturesChanged = false;
-            if (!asset.file) {
+            if (!self._isPrefilteredCubemapAsset(asset)) {
                 if (value.textures.length !== oldValue.textures.length) {
                     texturesChanged = true;
                 } else {
@@ -293,7 +303,7 @@ pc.extend(pc.resources, function () {
             cubemap.name = data.name;
         }
 
-        if (!cubemapAsset.file) {
+        if (!this._isPrefilteredCubemapAsset(cubemapAsset)) {
             if (cubemap.minFilter !== data.minFilter) {
                 cubemap.minFilter = data.minFilter;
             }
