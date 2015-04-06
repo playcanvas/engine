@@ -207,7 +207,12 @@ pc.extend(pc, function () {
 
                     if (pack.settings.render.skybox) {
                         var skybox = this.assets.getAssetById(pack.settings.render.skybox);
-                        this.scene.skybox = skybox ? skybox.resource : null;
+                        if (skybox) {
+                            this.scene.skybox = skybox.resource;
+                            skybox.on('change', this._onSkyBoxChanged, this);
+                        } else {
+                            this.scene.skybox = null;
+                        }
                     }
 
                     success(pack);
@@ -775,43 +780,61 @@ pc.extend(pc, function () {
         },
 
         _linkUpdatePackSettings: function (settings) {
-            var ambient = settings.render.global_ambient;
-            this.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
+            var self = this;
 
-            if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
+            var ambient = settings.render.global_ambient;
+            self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
+
+            if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
                 var gravity = settings.physics.gravity;
-                this.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
+                self.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
             }
 
-            this.scene.fog = settings.render.fog;
-            this.scene.fogStart = settings.render.fog_start;
-            this.scene.fogEnd = settings.render.fog_end;
+            self.scene.fog = settings.render.fog;
+            self.scene.fogStart = settings.render.fog_start;
+            self.scene.fogEnd = settings.render.fog_end;
 
             var fog = settings.render.fog_color;
-            this.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
-            this.scene.fogDensity = settings.render.fog_density;
+            self.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
+            self.scene.fogDensity = settings.render.fog_density;
 
-            this.scene.gammaCorrection = settings.render.gamma_correction;
-            this.scene.toneMapping = settings.render.tonemapping;
-            this.scene.exposure = settings.render.exposure;
+            self.scene.gammaCorrection = settings.render.gamma_correction;
+            self.scene.toneMapping = settings.render.tonemapping;
+            self.scene.exposure = settings.render.exposure;
 
             if (settings.render.skybox) {
-                var skybox = this.assets.getAssetById(settings.render.skybox);
+                var skybox = self.assets.getAssetById(settings.render.skybox);
                 if (!skybox) {
                     pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
                 } else {
                     if (!skybox.resource) {
-                        this.assets.load([skybox]).then(function (resources){
-                            this.scene.skybox = resources[0];
-                        }.bind(this), function (error) {
+                        self.assets.load([skybox]).then(function (resources){
+                            self.scene.skybox = resources[0];
+
+                            skybox.off('change', self._onSkyBoxChanged, self);
+                            skybox.on('change', self._onSkyBoxChanged, self);
+                        }, function (error) {
                             pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
                         });
                     } else {
-                        this.scene.skybox = skybox.resource;
+                        self.scene.skybox = skybox.resource;
+
+                        skybox.off('change', self._onSkyBoxChanged, self);
+                        skybox.on('change', self._onSkyBoxChanged, self);
                     }
                 }
             } else {
-                this.scene.skybox = null;
+                self.scene.skybox = null;
+            }
+        },
+
+        _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
+            if (attribute !== 'resource') return;
+
+            if (this.scene.skybox === oldValue) {
+                this.scene.skybox = newValue;
+            } else {
+                skybox.off('change', this._onSkyBoxChanged, this);
             }
         }
     };
