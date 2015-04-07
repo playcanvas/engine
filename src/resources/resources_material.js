@@ -9,7 +9,7 @@ pc.extend(pc.resources, function () {
 
         var dirty = false;
         for (var key in material) {
-            if (material.hasOwnProperty(key)) {
+            if (material.hasOwnProperty(key) && !pc.string.startsWith(key, '_')) {
                 if (material[key] === asset.resource) {
                     material[key] = null;
                     dirty = true;
@@ -32,7 +32,7 @@ pc.extend(pc.resources, function () {
 
         if (oldValue) {
             for (var key in material) {
-                if (material.hasOwnProperty(key)) {
+                if (material.hasOwnProperty(key) && !pc.string.startsWith(key, '_')) {
                     if (material[key] === oldValue) {
                         material[key] = newValue;
                         dirty = true;
@@ -161,6 +161,10 @@ pc.extend(pc.resources, function () {
                 }
             } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
                 var cubemapAsset = this._getTextureAssetFromRegistry(param.data, request);
+                if (cubemapAsset) {
+                    textures[cubemapAsset.id] = cubemapAsset;
+                }
+
                 this._loadCubemapParamFromCache(param, cubemapAsset);
                 if (!(param.data instanceof pc.Texture) && cubemapAsset) {
                     requests.push(this._loadCubemapParamPromise(param, cubemapAsset));

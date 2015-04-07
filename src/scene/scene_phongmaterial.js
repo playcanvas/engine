@@ -186,12 +186,6 @@ pc.extend(pc, function () {
             _defineTex2D(this, "light", 1, 3);
 
             this.cubeMap = null;
-            this.prefilteredCubeMap128 = null;
-            this.prefilteredCubeMap64 = null;
-            this.prefilteredCubeMap32 = null;
-            this.prefilteredCubeMap16 = null;
-            this.prefilteredCubeMap8 = null;
-            this.prefilteredCubeMap4 = null;
             this.sphereMap = null;
             this.reflectivity = 1;
 
@@ -236,6 +230,14 @@ pc.extend(pc, function () {
 
             this.forceFragmentPrecision = null;
             this.occludeDirect = false;
+
+            this._prefilteredCubeMapSrc = null;
+            this.prefilteredCubeMap128 = null;
+            this.prefilteredCubeMap64 = null;
+            this.prefilteredCubeMap32 = null;
+            this.prefilteredCubeMap16 = null;
+            this.prefilteredCubeMap8 = null;
+            this.prefilteredCubeMap4 = null;
 
             _endProperties(this);
 
@@ -432,11 +434,9 @@ pc.extend(pc, function () {
 
             if (this.cubeMap) {
                 this.setParameter('texture_cubeMap', this.cubeMap);
-                this.setParameter('material_cubemapSize', this.cubeMap.width);
             }
             if (this.prefilteredCubeMap128) {
                 this.setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
-                this.setParameter('material_cubemapSize', this.prefilteredCubeMap128.width);
             }
             if (this.prefilteredCubeMap64) {
                 this.setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
@@ -497,22 +497,45 @@ pc.extend(pc, function () {
             var lights = scene._lights;
 
             this._mapXForms = [];
-            var prefilteredCubeMap128 = this.prefilteredCubeMap128? this.prefilteredCubeMap128 : scene._prefilteredCubeMap128;
-            var prefilteredCubeMap64 = this.prefilteredCubeMap64? this.prefilteredCubeMap64 : scene._prefilteredCubeMap64;
-            var prefilteredCubeMap32 = this.prefilteredCubeMap32? this.prefilteredCubeMap32 : scene._prefilteredCubeMap32;
-            var prefilteredCubeMap16 = this.prefilteredCubeMap16? this.prefilteredCubeMap16 : scene._prefilteredCubeMap16;
-            var prefilteredCubeMap8 = this.prefilteredCubeMap8? this.prefilteredCubeMap8 : scene._prefilteredCubeMap8;
-            var prefilteredCubeMap4 = this.prefilteredCubeMap4? this.prefilteredCubeMap4 : scene._prefilteredCubeMap4;
-
-            var prefilteredCubeMap = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
-                                   && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
-
             var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
 
-            var mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
-            if (prefilteredCubeMap && useTexCubeLod) {
-                // Set up hires texture to contain the whole mip chain
-                if (!prefilteredCubeMap128._prefilteredMips) {
+            var possibleCubeMap = this.cubeMap && this.cubeMap._levels.length>=6? this.cubeMap : null;
+            possibleCubeMap = possibleCubeMap || (scene._skyboxCubeMap && scene._skyboxCubeMap._levels.length>=6? scene._skyboxCubeMap : null);
+
+            if (possibleCubeMap !== this._prefilteredCubeMapSrc) {
+                // prefilteredCubeMap was synced to cubeMap, but the cubeMap is now gone: clear prefilteredCubeMap too
+                this._prefilteredCubeMapSrc = null;
+                this.prefilteredCubeMap128 = null;
+                this.prefilteredCubeMap64 = null;
+                this.prefilteredCubeMap32 = null;
+                this.prefilteredCubeMap16 = null;
+                this.prefilteredCubeMap8 = null;
+                this.prefilteredCubeMap4 = null;
+            }
+
+            if (possibleCubeMap && possibleCubeMap!==this._prefilteredCubeMapSrc && possibleCubeMap._levels.length>=6) {
+                // We can use the cubeMap as prefilteredCubeMap
+                this.prefilteredCubeMap128 = possibleCubeMap;
+                this._prefilteredCubeMapSrc = possibleCubeMap;
+            }
+
+            var prefilteredCubeMap128 = this.prefilteredCubeMap128? this.prefilteredCubeMap128 : scene._prefilteredCubeMap128;
+            var prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4;
+            var mips;
+            var allMips;
+
+            if (prefilteredCubeMap128) {
+                prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene._prefilteredCubeMap64;
+                prefilteredCubeMap32 = this.prefilteredCubeMap32 || scene._prefilteredCubeMap32;
+                prefilteredCubeMap16 = this.prefilteredCubeMap16 || scene._prefilteredCubeMap16;
+                prefilteredCubeMap8 = this.prefilteredCubeMap8 || scene._prefilteredCubeMap8;
+                prefilteredCubeMap4 = this.prefilteredCubeMap4 || scene._prefilteredCubeMap4;
+                allMips = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
+                                       && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
+                mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
+
+                if (allMips && useTexCubeLod && prefilteredCubeMap128._levels.length<6) {
+                    // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
                     prefilteredCubeMap128.autoMipmap = false;
                     var mip, face;
                     for(mip=1; mip<6; mip++) {
@@ -521,32 +544,71 @@ pc.extend(pc, function () {
                     prefilteredCubeMap128.upload();
                     prefilteredCubeMap128.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
                     prefilteredCubeMap128.magFilter = pc.FILTER_LINEAR;
-                    prefilteredCubeMap128._prefilteredMips = true;
+                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                } else if (!allMips && !useTexCubeLod && prefilteredCubeMap128._levels.length>=6) {
+                    // Single -> multiple (provided single cubemap, but no texCubeLod)
+                    mips = prefilteredCubeMap128._mips;
+                    if (!mips) {
+                        mips = [];
+                        var mipSize = 128;
+                        for(i=0; i<6; i++) {
+                            mips[i] = new pc.gfx.Texture(device, {
+                                                       cubemap: true,
+                                                       fixCubemapSeams: prefilteredCubeMap128.fixCubemapSeams,
+                                                       autoMipmap: true,
+                                                       format: prefilteredCubeMap128.format,
+                                                       rgbm: prefilteredCubeMap128.rgbm,
+                                                       hdr: prefilteredCubeMap128.hdr,
+                                                       width: mipSize,
+                                                       height: mipSize,
+                                                   });
+                            mipSize *= 0.5;
+                            mips[i]._levels[0] = prefilteredCubeMap128._levels[i];
+                            mips[i].upload();
+                        }
+                        prefilteredCubeMap128._mips = mips;
+                    }
+                    prefilteredCubeMap128 = this.prefilteredCubeMap128 = mips[0];
+                    prefilteredCubeMap64 = this.prefilteredCubeMap64 = mips[1];
+                    prefilteredCubeMap32 = this.prefilteredCubeMap32 = mips[2];
+                    prefilteredCubeMap16 = this.prefilteredCubeMap16 = mips[3];
+                    prefilteredCubeMap8 = this.prefilteredCubeMap8 = mips[4];
+                    prefilteredCubeMap4 = this.prefilteredCubeMap4 = mips[5];
+                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                    this.setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
+                    this.setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
+                    this.setParameter('texture_prefilteredCubeMap16', prefilteredCubeMap16);
+                    this.setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
+                    this.setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
+                    allMips = true;
+                } else if (useTexCubeLod && prefilteredCubeMap128._levels.length>=6) {
+                    // Single (able to use single cubemap with texCubeLod)
+                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                } else if (allMips && !useTexCubeLod) {
+                    // Multiple (no texCubeLod, but able to use cubemap per mip)
+                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                    this.setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
+                    this.setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
+                    this.setParameter('texture_prefilteredCubeMap16', prefilteredCubeMap16);
+                    this.setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
+                    this.setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
+                } else {
+                    console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
                 }
             }
 
             if (prefilteredCubeMap128) {
-                if (prefilteredCubeMap128 === scene._prefilteredCubeMap128) {
-                    this.setParameter('texture_prefilteredCubeMap128', scene._prefilteredCubeMap128);
-                    this.setParameter('texture_prefilteredCubeMap64', scene._prefilteredCubeMap64);
-                    this.setParameter('texture_prefilteredCubeMap32', scene._prefilteredCubeMap32);
-                    this.setParameter('texture_prefilteredCubeMap16', scene._prefilteredCubeMap16);
-                    this.setParameter('texture_prefilteredCubeMap8', scene._prefilteredCubeMap8);
-                    this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
-                    this.setParameter('material_cubemapSize', scene._prefilteredCubeMap128.width);
-                }
-            }
-
-            if (prefilteredCubeMap) {
                 // backwards compatibility
                 for(i=0; i<mips.length; i++) {
-                    if (mips[i].hdr) mips[i].rgbm = mips[i].fixCubemapSeams = true;
+                    if (mips[i]) {
+                        if (mips[i].hdr) mips[i].rgbm = mips[i].fixCubemapSeams = true;
+                    }
                 }
             }
 
             var specularTint = false;
             var useSpecular = (this.useMetalness? !!this.metalnessMap : !!this.specularMap)
-            || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap;
+            || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap128;
             useSpecular = useSpecular || (
                 this.useMetalness? this.metalness!==0 : !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0)
                 );
@@ -573,16 +635,16 @@ pc.extend(pc, function () {
                 needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,
-                cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,
+                cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap128,
                 useSpecular:                useSpecular,
-                rgbmReflection:             prefilteredCubeMap? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false)),
+                rgbmReflection:             prefilteredCubeMap128? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false)),
 
-                hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
+                hdrReflection:              prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
                                           : (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F
                                           : (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false)),
 
-                fixSeams:                   prefilteredCubeMap? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
-                prefilteredCubemap:         prefilteredCubeMap,
+                fixSeams:                   prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
+                prefilteredCubemap:         !!prefilteredCubeMap128,
                 emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
