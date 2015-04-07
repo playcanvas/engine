@@ -166,6 +166,7 @@
 ../src/resources/2/resource_model.js
 ../src/resources/2/resource_texture.js
 ../src/resources/2/resource_material.js
+../src/resources/2/resource_script.js
 ../src/asset/2/asset_asset.js
 ../src/asset/2/asset_registry.js
 ../contrib/rsvp-3.0.6.min.js

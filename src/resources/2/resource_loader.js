@@ -2,6 +2,7 @@ pc.extend(pc, function () {
     var ResourceLoader = function () {
         this._handlers = {};
         this._requests = {};
+        this._cache = {};
     };
 
     ResourceLoader.prototype = {
@@ -17,8 +18,11 @@ pc.extend(pc, function () {
                 return;
             }
 
-            var key = url+type;
-            if (this._requests[key]) {
+            var key = url + type;
+
+            if (this._cache[key]) {
+                return this._cache[key];
+            } else if (this._requests[key]) {
                 // existing request
                 this._requests[key].push(callback);
             } else {
@@ -28,6 +32,7 @@ pc.extend(pc, function () {
                     var i, len = this._requests[key].length;
                     if (!err) {
                         var resource = handler.open(url, data);
+                        this._cache[key] = resource;
                         for(var i = 0; i < len; i++) {
                             this._requests[key][i](null, resource);
                         }
@@ -49,6 +54,20 @@ pc.extend(pc, function () {
         patch: function (asset, assets) {
             var handler = this._handlers[asset.type];
             handler.patch(asset, assets);
+        },
+
+        addToCache: function (key, resource) {
+
+        },
+
+        removeFromCache: function (key) {
+
+        },
+
+        getFromCache: function (url, type) {
+            if (this._cache[url + type]) {
+                return this._cache[url + type];
+            }
         }
     };
 

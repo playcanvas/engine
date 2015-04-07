@@ -7,25 +7,28 @@ pc.script = (function () {
     var _loader = null;
 
     var script = {
+        // set during script load to be used for initializing script
+        app: null,
+
         /**
          * Register the main game script resource, this is executed by called pc.script.start()
          * @function
          * @name pc.script.main
          */
-        main: function (callback) {
-            if(_main) {
-                throw new Error("'main' Object already registered");
-            }
-            _main = callback;
-        },
+        // main: function (callback) {
+        //     if(_main) {
+        //         throw new Error("'main' Object already registered");
+        //     }
+        //     _main = callback;
+        // },
 
-        setLoader: function(loader) {
-            if(loader && _loader) {
-                throw new Error("pc.script already has loader object.");
-            }
+        // setLoader: function(loader) {
+        //     if(loader && _loader) {
+        //         throw new Error("pc.script already has loader object.");
+        //     }
 
-            _loader = loader;
-        },
+        //     _loader = loader;
+        // },
 
         /**
          * @function
@@ -53,7 +56,16 @@ pc.script = (function () {
             if (callback === undefined) {
                 callback = attributes;
             }
-            //_loader.add(name, callback);
+
+            // get the ScriptType from the callback
+            var ScriptType = callback(pc.script.app);
+
+            // store the script name
+            ScriptType._pcScriptName = name;
+
+            // Push this onto loading stack
+            pc.ScriptHandler._push(ScriptType);
+
             this.fire("created", name, callback);
         },
 
@@ -106,9 +118,9 @@ pc.script = (function () {
          * @function
          * @name pc.script.start
          */
-        start: function () {
-            _main();
-        }
+        // start: function () {
+        //     _main();
+        // }
     };
 
     pc.events.attach(script);

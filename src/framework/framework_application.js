@@ -83,6 +83,7 @@ pc.extend(pc, function () {
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
         this.loader.addHandler("material", new pc.MaterialHandler());
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice));
+        this.loader.addHandler("script", new pc.ScriptHandler());
 
         // var textureCache = new pc.resources.TextureCache(this.loader);
         // this.loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
