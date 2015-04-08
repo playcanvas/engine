@@ -195,12 +195,12 @@ pc.extend(pc, function () {
         this._toneMapping = 0;
         this.exposure = 1.0;
 
-        this._prefilteredCubeMap128 = null;
-        this._prefilteredCubeMap64 = null;
-        this._prefilteredCubeMap32 = null;
-        this._prefilteredCubeMap16 = null;
-        this._prefilteredCubeMap8 = null;
-        this._prefilteredCubeMap4 = null;
+        this._skyboxPrefiltered128 = null;
+        this._skyboxPrefiltered64 = null;
+        this._skyboxPrefiltered32 = null;
+        this._skyboxPrefiltered16 = null;
+        this._skyboxPrefiltered8 = null;
+        this._skyboxPrefiltered4 = null;
 
         this._skyboxCubeMap = null;
         this._skyboxModel = null;
@@ -263,16 +263,74 @@ pc.extend(pc, function () {
             return this._skyboxCubeMap;
         },
         set: function (value) {
-            if (value !== this._skyboxCubeMap) {
-                this._skyboxCubeMap = value;
-                if (this._skyboxModel) {
-                    if (this.containsModel(this._skyboxModel)) {
-                        this.removeModel(this._skyboxModel);
-                    }
+            this._skyboxCubeMap = value;
+            if (this._skyboxModel) {
+                if (this.containsModel(this._skyboxModel)) {
+                    this.removeModel(this._skyboxModel);
                 }
-                this._skyboxModel = null;
-                this.updateShaders = true;
             }
+            this._skyboxModel = null;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered128', {
+        get: function () {
+            return this._skyboxPrefiltered128;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered128 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered64', {
+        get: function () {
+            return this._skyboxPrefiltered64;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered64 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered32', {
+        get: function () {
+            return this._skyboxPrefiltered32;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered32 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered16', {
+        get: function () {
+            return this._skyboxPrefiltered16;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered16 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered8', {
+        get: function () {
+            return this._skyboxPrefiltered8;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered8 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxPrefiltered4', {
+        get: function () {
+            return this._skyboxPrefiltered4;
+        },
+        set: function (value) {
+            this._skyboxPrefiltered4 = value;
+            this.updateShaders = true;
         }
     });
 
