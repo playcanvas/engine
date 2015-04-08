@@ -658,7 +658,7 @@ pc.extend(pc, function () {
                 useInstancing:              this.useInstancing,
                 fastTbn:                    this.fastTbn,
                 cubeMapProjection:          this.cubeMapProjection,
-                customChunks:               this.chunks,
+                chunks:                     this.chunks,
                 customFragmentShader:       this.customFragmentShader,
                 refraction:                 !!this.refraction,
                 useMetalness:               this.useMetalness,

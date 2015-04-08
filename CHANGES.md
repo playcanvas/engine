@@ -1,5 +1,16 @@
 # PlayCanvas Engine Changes
 
+### v0.165.4
+* [FIX] Incorrect shadow clamping.
+* [FIX] Bug in GPU particles on Intel HD devices.
+* [FIX] Getting viewMatrix from camera.
+* [FIX] Reload skybox if it changes.
+* [FIX] Typo for material chunks.
+* Added support for prefiltered cubemaps as dds textures.
+* Simplified using prefiltered cubemaps.
+* Simplified and optimized shadowmap clamping.
+* Removed unused varyings in shaders.
+
 ### v0.165.3
 * [FIX] Remove vVertexColor varying from default material shader.
 
