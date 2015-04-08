@@ -1,5 +1,11 @@
 # PlayCanvas Engine Changes
 
+### v0.165.5
+* [FIX] Shadow clamping issue.
+* Added asset.resources property and made asset.resource another property
+* Assets can now load multiple resources
+* Cubemap resource loader now returns multiple textures if cubemap is prefiltered
+
 ### v0.165.4
 * [FIX] Incorrect shadow clamping.
 * [FIX] Bug in GPU particles on Intel HD devices.
