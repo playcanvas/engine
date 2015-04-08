@@ -238,7 +238,7 @@ pc.extend(pc.resources, function () {
 
         } else if (attribute === 'file') {
 
-            // Clean up asset registry. Not very nice to this this here
+            // Clean up asset registry. Not very nice to do this here
             if (oldValue) {
                 url = oldValue.url;
                 delete self._assets._urls[url];
