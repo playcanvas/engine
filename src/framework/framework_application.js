@@ -208,7 +208,8 @@ pc.extend(pc, function () {
                     if (pack.settings.render.skybox) {
                         var skybox = this.assets.getAssetById(pack.settings.render.skybox);
                         if (skybox) {
-                            this.scene.skybox = skybox.resource;
+                            this._setSkybox(skybox.resources);
+
                             skybox.on('change', this._onSkyBoxChanged, this);
                             skybox.on('remove', this._onSkyBoxRemoved, this);
                         } else {
