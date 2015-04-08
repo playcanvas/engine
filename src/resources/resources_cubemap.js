@@ -99,6 +99,11 @@ pc.extend(pc.resources, function () {
                              }));
                         });
 
+                        // convert textures to asset ids
+                        data.textures = assets.map(function (asset) {
+                            return asset.id;
+                        });
+
                         var promises = [];
 
                         promises.push(self._assets.load(assets));
