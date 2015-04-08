@@ -121,7 +121,8 @@ pc.extend(pc.asset, function () {
                 this._urls[asset.getFileUrl()] = asset.id;
             }
 
-            asset.on('change', this._onAssetChanged, this);
+            if (asset.type !== 'cubemap')
+                asset.on('change', this._onAssetChanged, this);
         },
 
         /**
@@ -138,7 +139,8 @@ pc.extend(pc.asset, function () {
                 delete this._urls[asset.file.url];
             }
 
-            asset.off('change', this._onAssetChanged, this);
+            if (asset.type !== 'cubemap')
+                asset.off('change', this._onAssetChanged, this);
         },
 
         /**
@@ -314,7 +316,7 @@ pc.extend(pc.asset, function () {
                     var index = 0;
                     requests.forEach(function (r, i) {
                         if (r) {
-                            assets[i].resource = resources[index++];
+                            assets[i].resources = resources[index++];
                         }
                     });
                     resolve(resources);
@@ -463,7 +465,11 @@ pc.extend(pc.asset, function () {
         },
 
         _createCubemapRequest: function (asset, texture) {
-            var url = asset.getFileUrl() || ("asset://" + asset.id);
+            var url = asset.getFileUrl();
+            if (!url || !pc.string.endsWith(url.toLowerCase(), '.json')) {
+                url = "asset://" + asset.id;
+            }
+
             return new pc.resources.CubemapRequest(url, null, texture);
         },
 
