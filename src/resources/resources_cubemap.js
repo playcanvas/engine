@@ -86,7 +86,8 @@ pc.extend(pc.resources, function () {
                 // load .json file
                 pc.net.http.get(request.canonical, function(response) {
                     var data = pc.extend({}, response);
-                    var textures = response.textures;
+
+                    var textures = data.textures;
                     if (textures.length) {
                         // Create and load all referenced textures
                         var assets = [];
@@ -98,17 +99,23 @@ pc.extend(pc.resources, function () {
                              }));
                         });
 
-                        self._assets.load(assets).then(function (responses) {
-                            // convert texture urls to asset ids
-                             data.textures = assets.map(function (asset) {
-                                return asset.id;
-                             });
+                        var promises = [];
 
-                             // Only when referenced assets are loaded do we resolve the cubemap load
+                        promises.push(self._assets.load(assets));
+
+                        if (data.prefiltered) {
+                            var url = pc.path.join(pc.path.split(request.canonical)[0], data.prefiltered);
+                            promises.push(self._assets.loader.request(new pc.resources.TextureRequest(url)));
+                        }
+
+                        pc.promise.all(promises).then(function (resources) {
+                            data.loadedTextures = resources[0];
+                            data.loadedTextures.push(resources[1][0]);
                             resolve(data);
-                         }, function (error) {
+                        }, function (error) {
                             reject(error);
-                         });
+                        });
+
                     } else {
                         resolve(data);
                     }
