@@ -1,6 +1,7 @@
 void _getShadowCoordOrtho(inout psInternalData data, mat4 shadowMatrix, vec3 shadowParams, vec3 wPos) {
     vec4 projPos = shadowMatrix * vec4(wPos, 1.0);
     projPos.z += shadowParams.z;
+    projPos.z = min(projPos.z, 1.0);
     data.shadowCoord = projPos.xyz;
 }
 
