@@ -100,19 +100,21 @@ pc.programlib.phong = {
     createShaderDefinition: function (device, options) {
         var i;
         var lighting = options.lights.length > 0;
+
+        if (options.shadingModel===pc.SPECULAR_PHONG) {
+            options.fresnelModel = 0;
+            options.specularAA = false;
+            options.prefilteredCubemap = false;
+        } else {
+            options.fresnelModel = (options.fresnelModel===0)? pc.FRESNEL_SCHLICK : options.fresnelModel;
+        }
+
         var cubemapReflection = options.cubeMap || options.prefilteredCubemap;
         var reflections = options.sphereMap || cubemapReflection;
         var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
         if ((options.cubeMap) || (options.prefilteredCubemap)) options.sphereMap = null; // cubeMaps have higher priority
         if (!options.useSpecular) options.specularMap = options.glossMap = null;
-
-        if (options.shadingModel===pc.SPECULAR_PHONG) {
-            options.fresnelModel = 0;
-            options.specularAA = false;
-        } else {
-            options.fresnelModel = (options.fresnelModel===0)? pc.FRESNEL_SCHLICK : options.fresnelModel;
-        }
 
         this.options = options;
 
@@ -441,7 +443,7 @@ pc.programlib.phong = {
 
         var reflectionDecode = options.rgbmReflection? "decodeRGBM" : (options.hdrReflection? "" : "gammaCorrectInput");
 
-        if (options.cubeMap) {
+        if (cubemapReflection) {
             if (options.prefilteredCubemap) {
                 if (useTexCubeLod) {
                     code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);
@@ -461,7 +463,7 @@ pc.programlib.phong = {
             code += scode;
         }
 
-        if ((options.cubeMap || options.sphereMap) && options.refraction) {
+        if ((cubemapReflection || options.sphereMap) && options.refraction) {
             code += chunks.refractionPS;
         }
 
@@ -487,7 +489,7 @@ pc.programlib.phong = {
         var useOldAmbient = false;
         if (options.useSpecular) {
             code += options.shadingModel===pc.SPECULAR_PHONG? chunks.lightSpecularPhongPS : chunks.lightSpecularBlinnPS;
-            if (options.sphereMap || options.cubeMap || (options.fresnelModel > 0)) {
+            if (options.sphereMap || cubemapReflection || (options.fresnelModel > 0)) {
                 if (options.fresnelModel > 0) {
                     if (options.conserveEnergy) {
                         code += chunks.combineDiffuseSpecularPS; // this one is correct, others are old stuff
@@ -550,7 +552,7 @@ pc.programlib.phong = {
         }
 
         if (lighting || reflections) {
-            if (options.cubeMap || options.sphereMap) {
+            if (cubemapReflection || options.sphereMap) {
                 code += "   addReflection(data);\n";
             }
 
@@ -626,7 +628,7 @@ pc.programlib.phong = {
                 code += "\n";
             }
 
-            if ((options.cubeMap || options.sphereMap) && options.refraction) {
+            if ((cubemapReflection || options.sphereMap) && options.refraction) {
                 code += "   addRefraction(data);\n";
             }
         }
