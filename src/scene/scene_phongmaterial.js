@@ -635,7 +635,7 @@ pc.extend(pc, function () {
                 needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,
-                cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap128,
+                cubeMap:                    !!this.cubeMap,
                 useSpecular:                useSpecular,
                 rgbmReflection:             prefilteredCubeMap128? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false)),
 
