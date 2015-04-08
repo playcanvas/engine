@@ -58,8 +58,8 @@ pc.extend(pc.asset, function () {
 
         this._data = arguments[3] || {};
 
-        // This is where the loaded resource will be
-        this.resource = null;
+        // This is where loaded resources will be stored
+        this._resources = [];
 
         pc.events.attach(this);
     };
@@ -131,6 +131,33 @@ pc.extend(pc.asset, function () {
             if (value !== old) {
                 this.fire('change', this, 'data', value, old);
             }
+        }
+    });
+
+    Object.defineProperty(Asset.prototype, 'resource', {
+        get: function() {
+            return this._resources[0];
+        },
+
+        set: function (value) {
+            this._resources[0] = value;
+        }
+    });
+
+    Object.defineProperty(Asset.prototype, 'resources', {
+        get: function() {
+            return this._resources;
+        },
+
+        set: function (value) {
+            // set _resources
+            if (value === null || value === undefined) {
+                value = [];
+            } else if (pc.type(value) !== 'array') {
+                value = [value];
+            }
+
+            this._resources = value;
         }
     });
 

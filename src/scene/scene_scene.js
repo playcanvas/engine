@@ -263,16 +263,74 @@ pc.extend(pc, function () {
             return this._skyboxCubeMap;
         },
         set: function (value) {
-            if (value !== this._skyboxCubeMap) {
-                this._skyboxCubeMap = value;
-                if (this._skyboxModel) {
-                    if (this.containsModel(this._skyboxModel)) {
-                        this.removeModel(this._skyboxModel);
-                    }
+            this._skyboxCubeMap = value;
+            if (this._skyboxModel) {
+                if (this.containsModel(this._skyboxModel)) {
+                    this.removeModel(this._skyboxModel);
                 }
-                this._skyboxModel = null;
-                this.updateShaders = true;
             }
+            this._skyboxModel = null;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'prefilteredCubeMap128', {
+        get: function () {
+            return this._prefilteredCubeMap128;
+        },
+        set: function (value) {
+            this._prefilteredCubeMap128 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'prefilteredCubeMap64', {
+        get: function () {
+            return this._prefilteredCubeMap64;
+        },
+        set: function (value) {
+            this._prefilteredCubeMap64 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'prefilteredCubeMap32', {
+        get: function () {
+            return this._prefilteredCubeMap32;
+        },
+        set: function (value) {
+            this._prefilteredCubeMap32 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'prefilteredCubeMap16', {
+        get: function () {
+            return this._prefilteredCubeMap16;
+        },
+        set: function (value) {
+            this._prefilteredCubeMap16 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'prefilteredCubeMap8', {
+        get: function () {
+            return this._prefilteredCubeMap8;
+        },
+        set: function (value) {
+            this._prefilteredCubeMap8 = value;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'prefilteredCubeMap4', {
+        get: function () {
+            return this._prefilteredCubeMap4;
+        },
+        set: function (value) {
+            this._prefilteredCubeMap4 = value;
+            this.updateShaders = true;
         }
     });
 

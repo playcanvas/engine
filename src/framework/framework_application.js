@@ -810,7 +810,7 @@ pc.extend(pc, function () {
                 } else {
                     if (!skybox.resource) {
                         self.assets.load([skybox]).then(function (resources){
-                            self.scene.skybox = resources[0];
+                            self._setSkybox(resources[0]);
 
                             skybox.off('change', self._onSkyBoxChanged, self);
                             skybox.on('change', self._onSkyBoxChanged, self);
@@ -821,7 +821,7 @@ pc.extend(pc, function () {
                             pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
                         });
                     } else {
-                        self.scene.skybox = skybox.resource;
+                        self._setSkybox(skybox.resources);
 
                         skybox.off('change', self._onSkyBoxChanged, self);
                         skybox.on('change', self._onSkyBoxChanged, self);
@@ -835,11 +835,22 @@ pc.extend(pc, function () {
             }
         },
 
-        _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
-            if (attribute !== 'resource') return;
+        _setSkybox: function (cubemaps) {
+            var scene = this.scene;
+            scene.skybox = cubemaps[0];
+            scene.prefilteredCubeMap128 = cubemaps[1];
+            scene.prefilteredCubeMap64 = cubemaps[2];
+            scene.prefilteredCubeMap32 = cubemaps[3];
+            scene.prefilteredCubeMap16 = cubemaps[4];
+            scene.prefilteredCubeMap8 = cubemaps[5];
+            scene.prefilteredCubeMap4 = cubemaps[6];
+        },
 
-            if (this.scene.skybox === oldValue) {
-                this.scene.skybox = newValue;
+        _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
+            if (attribute !== 'resources') return;
+
+            if (this.scene.skybox === oldValue[0]) {
+                this._setSkybox(newValue);
             } else {
                 skybox.off('change', this._onSkyBoxChanged, this);
             }
@@ -847,8 +858,16 @@ pc.extend(pc, function () {
 
         _onSkyBoxRemoved: function (asset) {
             asset.off('change', this._onSkyBoxRemoved, this);
-            if (this.scene.skybox === asset.resource) {
+            if (this.scene.skybox === asset.resources[0]) {
                 this.scene.skybox = null;
+            }
+            var mipSize = 128;
+            for (var i = 0; i < 6; i++) {
+                var prop = 'prefilteredCubeMap' + mipSize;
+                if (this.scene[prop] === asset.resources[i+1]) {
+                    this.scene[prop] = null;
+                }
+                mipSize *= 0.5;
             }
         }
     };
