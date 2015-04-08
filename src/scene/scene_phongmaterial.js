@@ -499,12 +499,12 @@ pc.extend(pc, function () {
 
             var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
 
-            var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.prefilteredCubeMap128;
-            var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.prefilteredCubeMap64;
-            var prefilteredCubeMap32 = this.prefilteredCubeMap32 || scene.prefilteredCubeMap32;
-            var prefilteredCubeMap16 = this.prefilteredCubeMap16 || scene.prefilteredCubeMap16;
-            var prefilteredCubeMap8 = this.prefilteredCubeMap8 || scene.prefilteredCubeMap8;
-            var prefilteredCubeMap4 = this.prefilteredCubeMap4 || scene.prefilteredCubeMap4;
+            var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.skyboxPrefiltered128;
+            var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.skyboxPrefiltered64;
+            var prefilteredCubeMap32 = this.prefilteredCubeMap32 || scene.skyboxPrefiltered32;
+            var prefilteredCubeMap16 = this.prefilteredCubeMap16 || scene.skyboxPrefiltered16;
+            var prefilteredCubeMap8 = this.prefilteredCubeMap8 || scene.skyboxPrefiltered8;
+            var prefilteredCubeMap4 = this.prefilteredCubeMap4 || scene.skyboxPrefiltered4;
 
             if (prefilteredCubeMap128) {
                 var allMips = prefilteredCubeMap128 &&

@@ -839,12 +839,12 @@ pc.extend(pc, function () {
         _setSkybox: function (cubemaps) {
             var scene = this.scene;
             scene.skybox = cubemaps[0];
-            scene.prefilteredCubeMap128 = cubemaps[1];
-            scene.prefilteredCubeMap64 = cubemaps[2];
-            scene.prefilteredCubeMap32 = cubemaps[3];
-            scene.prefilteredCubeMap16 = cubemaps[4];
-            scene.prefilteredCubeMap8 = cubemaps[5];
-            scene.prefilteredCubeMap4 = cubemaps[6];
+            scene.skyboxPrefiltered128 = cubemaps[1];
+            scene.skyboxPrefiltered64 = cubemaps[2];
+            scene.skyboxPrefiltered32 = cubemaps[3];
+            scene.skyboxPrefiltered16 = cubemaps[4];
+            scene.skyboxPrefiltered8 = cubemaps[5];
+            scene.skyboxPrefiltered4 = cubemaps[6];
         },
 
         _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
@@ -864,7 +864,7 @@ pc.extend(pc, function () {
             }
             var mipSize = 128;
             for (var i = 0; i < 6; i++) {
-                var prop = 'prefilteredCubeMap' + mipSize;
+                var prop = 'skyboxPrefiltered' + mipSize;
                 if (this.scene[prop] === asset.resources[i+1]) {
                     this.scene[prop] = null;
                 }
