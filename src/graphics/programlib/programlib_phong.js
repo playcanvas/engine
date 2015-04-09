@@ -184,7 +184,7 @@ pc.programlib.phong = {
 
         if (lighting || reflections) {
             attributes.vertex_normal = pc.SEMANTIC_NORMAL;
-            codeBody += "   vNormalW    = getNormal(data);\n";
+            codeBody += "   vNormalW    = data.normalW = getNormal(data);\n";
 
             if ((options.sphereMap) && (device.fragmentUniformsCount <= 16)) {
                 code += chunks.viewNormalVS;

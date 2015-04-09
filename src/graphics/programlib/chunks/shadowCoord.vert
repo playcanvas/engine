@@ -24,13 +24,13 @@ void getShadowCoordPersp(inout vsInternalData data, mat4 shadowMatrix, vec3 shad
 
 void getShadowCoordPerspNormalOffset(inout vsInternalData data, mat4 shadowMatrix, vec3 shadowParams) {
     float distScale = abs(dot(vPositionW - data.lightPosW, data.lightDirNormW)); // fov?
-    vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -data.lightDirNormW), 0.0, 1.0) * distScale;
+    vec3 wPos = vPositionW + data.normalW * shadowParams.y * clamp(1.0 - dot(data.normalW, -data.lightDirNormW), 0.0, 1.0) * distScale;
 
     _getShadowCoordPersp(data, shadowMatrix, shadowParams, wPos);
 }
 
 void getShadowCoordOrthoNormalOffset(inout vsInternalData data, mat4 shadowMatrix, vec3 shadowParams) {
-    vec3 wPos = vPositionW + vNormalW * shadowParams.y * clamp(1.0 - dot(vNormalW, -data.lightDirNormW), 0.0, 1.0); //0.08
+    vec3 wPos = vPositionW + data.normalW * shadowParams.y * clamp(1.0 - dot(data.normalW, -data.lightDirNormW), 0.0, 1.0); //0.08
 
     _getShadowCoordOrtho(data, shadowMatrix, shadowParams, wPos);
 }

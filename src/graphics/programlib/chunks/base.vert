@@ -16,5 +16,6 @@ struct vsInternalData {
     mat3 normalMatrix;
     vec3 lightPosW;
     vec3 lightDirNormW;
+    vec3 normalW;
 };
 
