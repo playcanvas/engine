@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.165.7
+* [FIX] Shader bug on Nexus 5 fixed by removing vNormalW varying.
+
 ### v0.165.6
 * [FIX] Pre-filtered cubemaps don't effect phong materials
 * [FIX] Removed deprecated hdr property from pc.Texture
