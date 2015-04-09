@@ -1,5 +1,9 @@
 # PlayCanvas Engine Changes
 
+### v0.165.6
+* [FIX] Pre-filtered cubemaps don't effect phong materials
+* [FIX] Removed deprecated hdr property from pc.Texture
+
 ### v0.165.5
 * [FIX] Shadow clamping issue.
 * Added asset.resources property and made asset.resource another property
