@@ -415,7 +415,11 @@ pc.programlib.phong = {
 
         if (options.useSpecular) {
             if (options.specularAA && options.normalMap) {
-                code += chunks.specularAaToksvigPS;
+                if (options.needsNormalFloat) {
+                    code += chunks.specularAaToksvigFloatPS;
+                } else {
+                    code += chunks.specularAaToksvigPS;
+                }
             } else {
                 code += chunks.specularAaNonePS;
             }
