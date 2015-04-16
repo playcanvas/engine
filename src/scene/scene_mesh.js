@@ -29,6 +29,9 @@ pc.extend(pc, function () {
 
         // AABB for object space mesh vertices
         this.aabb = new pc.shape.Aabb();
+
+        // Array of object space AABBs of vertices affected by each bone
+        this.boneAabb = null;
     };
 
     var InstancingData = function (numObjects, dynamic, instanceSize) {
@@ -76,11 +79,70 @@ pc.extend(pc, function () {
         // World space AABB
         this.aabb = new pc.shape.Aabb();
         this.normalMatrix = new pc.Mat3();
+
+        this._boneAabb = null;
     };
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
         get: function () {
-            this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+            if (this.skinInstance) {
+                var numBones = this.mesh.skin.boneNames.length;
+                var i;
+                // Initialize local bone AABBs if needed
+                if (!this.mesh.boneAabb) {
+                    this.mesh.boneAabb = [];
+                    var elems = this.mesh.vertexBuffer.format.elements;
+                    var numVerts = this.mesh.vertexBuffer.numVertices;
+                    var vertSize = this.mesh.vertexBuffer.format.size;
+                    var data = new DataView(this.mesh.vertexBuffer.storage);
+                    var boneVerts;
+                    var index;
+                    var offsetP, offsetI;
+                    var j, k;
+                    for(i=0; i<elems.length; i++) {
+                        if (elems[i].name===pc.SEMANTIC_POSITION) {
+                            offsetP = elems[i].offset;
+                        } else if (elems[i].name===pc.SEMANTIC_BLENDINDICES) {
+                            offsetI = elems[i].offset;
+                        }
+                    }
+                    for(i=0; i<numBones; i++) {
+                        boneVerts = [];
+                        for(j=0; j<numVerts; j++) {
+                            for(k=0; k<4; k++) {
+                                index = data.getUint8(j * vertSize + offsetI + k, true);
+                                if (index===i) {
+                                    // Vertex j is affected by bone i
+                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP, true) );
+                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP + 4, true) );
+                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP + 8, true) );
+                                }
+                            }
+                        }
+                        this.mesh.boneAabb.push(new pc.shape.Aabb());
+                        this.mesh.boneAabb[i].compute(boneVerts);
+                    }
+                }
+                // Initialize per-instance AABBs if needed
+                if (!this._boneAabb) {
+                    this._boneAabb = [];
+                    for(i=0; i<this.mesh.boneAabb.length; i++) {
+                        this._boneAabb[i] = new pc.shape.Aabb();
+                    }
+                }
+                // Update per-instance bone AABBs
+                for(i=0; i<this.mesh.boneAabb.length; i++) {
+                    this._boneAabb[i].setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
+                }
+                // Update full instance AABB
+                this._aabb.center.copy(this._boneAabb[0].center);
+                this._aabb.halfExtents.copy(this._boneAabb[0].halfExtents);
+                for(i=0; i<this.mesh.boneAabb.length; i++) {
+                    this._aabb.add(this._boneAabb[i]);
+                }
+            } else {
+                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+            }
             return this._aabb;
         },
         set: function (aabb) {

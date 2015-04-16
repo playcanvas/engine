@@ -18,9 +18,9 @@ pc.extend(pc, function () {
 
     /**
      * @name pc.SkinInstance
-     * @class A skin instance is responsible for generating the matrix palette that is used to 
+     * @class A skin instance is responsible for generating the matrix palette that is used to
      * skin vertices from object space to world space.
-     * @param {pc.Skin} skin The skin that will provide the inverse bind pose matrices to 
+     * @param {pc.Skin} skin The skin that will provide the inverse bind pose matrices to
      * generate the final matrix palette.
      * @author Will Eastcott
      */
@@ -56,7 +56,7 @@ pc.extend(pc, function () {
 
             this.matrixPalette = new Float32Array(size * size * 4);
             this.boneTexture = new pc.Texture(device, {
-                width: size, 
+                width: size,
                 height: size,
                 format: pc.PIXELFORMAT_RGBA32F,
                 autoMipmap: false
@@ -66,6 +66,10 @@ pc.extend(pc, function () {
             this.matrixPalette = this.boneTexture.lock();
         } else {
             this.matrixPalette = new Float32Array(numBones * 16);
+        }
+        this.matrices = [];
+        for(var i=0; i<numBones; i++) {
+            this.matrices[i] = new pc.Mat4();
         }
     };
 
@@ -81,6 +85,7 @@ pc.extend(pc, function () {
                 for (var i = this.bones.length - 1; i >= 0; i--) {
                     // Calculate object to world to skin matrix
                     paletteEntry.mul2(this.bones[i].worldTransform, this.skin.inverseBindPose[i]);
+                    this.matrices[i].copy(paletteEntry);
 
                     // Copy the matrix into the palette, ready to be sent to the vertex shader
                     base = i * 16;
@@ -114,5 +119,5 @@ pc.extend(pc, function () {
     return {
         Skin: Skin,
         SkinInstance: SkinInstance
-    }; 
+    };
 }());
