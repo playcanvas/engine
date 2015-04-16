@@ -1,7 +1,7 @@
 pc.extend(pc.shape, function () {
     // Add to enumeration of shape types
     pc.shape.Type.AABB = "Aabb";
-
+    
     /**
      * @name pc.shape.Aabb
      * @constructor Create a new Axis-Aligned Bounding Box
@@ -53,7 +53,7 @@ pc.extend(pc.shape, function () {
         this.center.add2(max, min).scale(0.5);
         this.halfExtents.sub2(max, min).scale(0.5);
     };
-
+    
     /**
      * @function
      * @name pc.shape.Aabb#getMin
@@ -63,7 +63,7 @@ pc.extend(pc.shape, function () {
     Aabb.prototype.getMin = function () {
         return this.center.clone().sub(this.halfExtents);
     };
-
+    
     /**
      * @function
      * @name pc.shape.Aabb#getMax
@@ -73,7 +73,7 @@ pc.extend(pc.shape, function () {
     Aabb.prototype.getMax = function () {
         return this.center.clone().add(this.halfExtents);
     };
-
+    
     /**
      * @function
      * @name pc.shape.Aabb#containsPoint
@@ -83,13 +83,13 @@ pc.extend(pc.shape, function () {
      */
     Aabb.prototype.containsPoint = function (point) {
         var min = this.getMin(), max = this.getMax(), i;
-
+        
         for (i = 0; i < 3; ++i) {
             if (point.data[i] < min.data[i] || point.data[i] > max.data[i]) {
                 return false;
             }
         }
-
+        
         return true;
     };
 
