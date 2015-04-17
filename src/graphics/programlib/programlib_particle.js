@@ -51,9 +51,9 @@ pc.programlib.particle = {
         }
 
         if ((options.normal==0) && (options.fog=="none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
-        fshader += options.srgb ? chunk.gamma2_2PS : chunk.gamma1_0PS;
+        fshader += pc.programlib.gammaCode(options.gamma);
         fshader += "struct psInternalData {float dummy;};\n";
-        fshader += chunk.defaultTonemapping;
+        fshader += pc.programlib.tonemapCode(options.toneMap);
 
         if (options.fog === 'linear') {
             fshader += chunk.fogLinearPS;
