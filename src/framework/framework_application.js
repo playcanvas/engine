@@ -833,6 +833,12 @@ pc.extend(pc, function () {
                 }
             } else {
                 self.scene.skybox = null;
+
+                var mipSize = 128;
+                for (var i = 0; i < 6; i++) {
+                    self.scene['skyboxPrefiltered' + mipSize] = null;
+                    mipSize *= 0.5;
+                }
             }
         },
 
