@@ -212,7 +212,7 @@ pc.extend(pc, function () {
             this.cubeMapProjection = 0;
             this.cubeMapProjectionBox = null;
 
-            this.chunks = [];
+            this.chunks = {};
             this.chunks.copy = function(from) {
                 for(var p in from) {
                     if (from.hasOwnProperty(p) && p!=="copy") {
