@@ -51,7 +51,6 @@
 ../src/graphics/graphics_simpleposteffect.js
 ../src/graphics/graphics_prefiltercubemap.js
 ../src/graphics/programlib/chunks/generated_shaderchunks.js
-../src/graphics/graphics_defaultShaderChunks.js
 ../src/graphics/programlib/programlib_programlib.js
 ../src/graphics/programlib/programlib_basic.js
 ../src/graphics/programlib/programlib_depth.js

@@ -36,7 +36,7 @@ pc.programlib.skybox = {
             ].join('\n'),
             fshader: getSnippet(device, 'fs_precision') +
                 (options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS) +
-                (options.hdr? this.gammaCode(options.gamma) + this.tonemapCode(options.toneMapping) + chunks.rgbmPS +
+                (options.hdr? pc.programlib.gammaCode(options.gamma) + pc.programlib.tonemapCode(options.toneMapping) + chunks.rgbmPS +
                  chunks.skyboxHDRPS.replace(/\$textureCubeSAMPLE/g,
                     options.rgbm? "textureCubeRGBM" : (options.hdr? "textureCube" : "textureCubeSRGB")) : chunks.skyboxPS)
         }

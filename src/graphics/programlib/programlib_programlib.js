@@ -181,12 +181,12 @@ pc.programlib = {
         }
 
         return code;
-    }
+    },
 
     gammaCode: function (value) {
         return value===pc.GAMMA_NONE? pc.shaderChunks.gamma1_0PS :
               (value===pc.GAMMA_SRGBFAST? pc.shaderChunks.gamma2_2FastPS : pc.shaderChunks.gamma2_2PS);
-    }
+    },
 
     tonemapCode: function (value) {
         return value ? pc.shaderChunks.tonemappingFilmicPS : pc.shaderChunks.tonemappingLinearPS;
