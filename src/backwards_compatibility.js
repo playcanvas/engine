@@ -66,8 +66,6 @@ pc.fw = {
 };
 
 pc.extend(pc.gfx, {
-    defaultGamma: pc.defaultGamma,
-    defaultTonemapping: pc.defaultTonemapping,
     drawQuadWithShader: pc.drawQuadWithShader,
     precalculatedTangents: pc.precalculatedTangents,
     programlib: pc.programlib,
