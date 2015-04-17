@@ -627,7 +627,7 @@ pc.extend(pc, function() {
                     alignToMotion: this.emitter.alignToMotion,
                     soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
                     mesh: this.emitter.useMesh,
-                    srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
+                    gamma: this.emitter.scene ? this.emitter.scene.gammaCorrection : 0,
                     toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
                     fog: this.emitter.scene ? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,

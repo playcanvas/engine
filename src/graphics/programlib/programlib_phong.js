@@ -390,8 +390,8 @@ pc.programlib.phong = {
             }
         }
 
-        code += chunks.defaultGamma;
-        code += chunks.defaultTonemapping;
+        code += this.gammaCode(options.gamma);
+        code += this.tonemapCode(options.toneMap);
 
         if (options.fog === 'linear') {
             code += chunks.fogLinearPS;
