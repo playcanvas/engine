@@ -672,7 +672,7 @@ pc.extend(pc, function() {
             y = y || 0.0005;
             z = z || 0.0005;
 
-            root.setLocalScale(x * 2, y * 2, z * 2);
+            root.setLocalScale(x, y, z);
         }
     });
 
