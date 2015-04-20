@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.165.9
+* [FIX] Shader compilation error for Toksvig.
+
 ### v0.165.8
 * Lerp Toksvig
 * [FIX] AABB calculation for skinned meshes.
