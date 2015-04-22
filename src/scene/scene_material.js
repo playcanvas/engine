@@ -114,9 +114,9 @@ pc.extend(pc, function () {
         
         // and need copy parameters of that shader
         for(var parameterName in this.parameters) {
-			if (!!this.parameters[parameterName])
-				clone.parameters[parameterName] = { scopeId: null, data: this.parameters[parameterName].data };
-		}
+	    if (!!this.parameters[parameterName])
+	        clone.parameters[parameterName] = { scopeId: null, data: this.parameters[parameterName].data };
+	}
 
         // Render states
         clone.alphaTest = this.alphaTest;
