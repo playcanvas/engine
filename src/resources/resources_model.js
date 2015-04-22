@@ -64,7 +64,7 @@ pc.extend(pc.resources, function () {
             for (var i = 0; i < mapping.length; i++) {
                 if (mapping[i].material) {
                     asset = this._assets.getAssetById(mapping[i].material);
-                    if (asset && !asset.resource) {
+                    if (asset) {
                         materials.push(asset);
                     }
                 }
