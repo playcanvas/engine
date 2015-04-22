@@ -17,6 +17,7 @@ void addReflection(inout psInternalData data) {
     int index2 = int(min(bias + 1.0, 7.0));
 
     vec3 fixedReflDir = fixSeams(cubeMapProject(data.reflDirW), bias);
+    fixedReflDir.x *= -1.0;
 
     vec4 cubes[6];
     cubes[0] = textureCube(texture_prefilteredCubeMap128, fixedReflDir);
