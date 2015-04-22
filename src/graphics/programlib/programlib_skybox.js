@@ -32,6 +32,7 @@ pc.programlib.skybox = {
                 // http://www.opengl.org/discussion_boards/showthread.php/171867-skybox-problem
                 '    gl_Position.z = gl_Position.w - 0.00001;',
                 '    vViewDir = aPosition;',
+                '    vViewDir.x *= -1.0;',
                 '}'
             ].join('\n'),
             fshader: getSnippet(device, 'fs_precision') +

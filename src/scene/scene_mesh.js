@@ -158,6 +158,7 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (material) {
+            this._shader = null;
             // Remove the material's reference to this mesh instance
             if (this._material) {
                 var meshInstances = this._material.meshInstances;

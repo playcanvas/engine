@@ -63,6 +63,9 @@ pc.extend(pc.asset, function () {
 
             if (asset.file) {
                 this.loader.registerHash(asset.file.hash, asset.getFileUrl());
+            } else {
+                // TODO: cache assets without files too like materials. Remove this with the new resource loader.
+                this.loader.registerHash(asset.id, "asset://" + asset.id);
             }
 
             return asset;
