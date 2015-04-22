@@ -63,18 +63,21 @@ pc.extend(pc, function () {
         this.mesh = mesh;           // The mesh that this instance renders
         this.material = material;   // The material with which to render this instance
 
+        this._shader = null;
+        this._shaderDefs = 0;
+
         // Render options
         this.layer = pc.LAYER_WORLD;
         this.renderStyle = pc.RENDERSTYLE_SOLID;
         this.castShadow = false;
-        this.receiveShadow = true;
+        this._receiveShadow = true;
         this.drawToDepth = true;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.key = 0;
         this.updateKey();
 
-        this.skinInstance = null;
+        this._skinInstance = null;
 
         // World space AABB
         this.aabb = new pc.shape.Aabb();
@@ -180,6 +183,28 @@ pc.extend(pc, function () {
         set: function (layer) {
             this._layer = layer;
             this.updateKey();
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'receiveShadow', {
+        get: function () {
+            return this._receiveShadow;
+        },
+        set: function (val) {
+            this._receiveShadow = val;
+            this._shaderDefs = val? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
+            this._shader = null;
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'skinInstance', {
+        get: function () {
+            return this._skinInstance;
+        },
+        set: function (val) {
+            this._skinInstance = val;
+            this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
+            this._shader = null;
         }
     });
 

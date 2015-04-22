@@ -147,6 +147,9 @@
         TONEMAP_LINEAR: 0,
         TONEMAP_FILMIC: 1,
 
+        SHADERDEF_NOSHADOW: 1,
+        SHADERDEF_SKIN: 2,
+
         SHADOWUPDATE_NONE: 0,
         SHADOWUPDATE_THISFRAME: 1,
         SHADOWUPDATE_REALTIME: 2
@@ -374,7 +377,9 @@ pc.extend(pc, function () {
             }
         }
         for (i = 0; i < materials.length; i++) {
+            materials[i].clearVariants();
             materials[i].updateShader(device, this);
+            materials[i].variants[0] = materials[i].shader;
         }
     };
 

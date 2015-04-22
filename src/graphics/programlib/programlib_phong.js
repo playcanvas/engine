@@ -153,20 +153,22 @@ pc.programlib.phong = {
 
         // Allow first shadow coords to be computed in VS
         var mainShadowLight = -1;
-        for (i = 0; i < options.lights.length; i++) {
-            var lightType = options.lights[i].getType();
-            if (options.lights[i].getCastShadows()) {
-                if (lightType!==pc.LIGHTTYPE_POINT) {
-                    code += "uniform mat4 light" + i + "_shadowMatrixVS;\n";
-                    code += "uniform vec3 light" + i + "_shadowParamsVS;\n";
-                    code += "uniform vec3 light" + i + (lightType===pc.LIGHTTYPE_DIRECTIONAL? "_directionVS" : "_positionVS") + ";\n";
-                    mainShadowLight = i;
-                    break;
+        if (!options.noShadow) {
+            for (i = 0; i < options.lights.length; i++) {
+                var lightType = options.lights[i].getType();
+                if (options.lights[i].getCastShadows()) {
+                    if (lightType!==pc.LIGHTTYPE_POINT) {
+                        code += "uniform mat4 light" + i + "_shadowMatrixVS;\n";
+                        code += "uniform vec3 light" + i + "_shadowParamsVS;\n";
+                        code += "uniform vec3 light" + i + (lightType===pc.LIGHTTYPE_DIRECTIONAL? "_directionVS" : "_positionVS") + ";\n";
+                        mainShadowLight = i;
+                        break;
+                    }
                 }
             }
-        }
-        if (mainShadowLight >= 0) {
-            code += chunks.shadowCoordVS;
+            if (mainShadowLight >= 0) {
+                code += chunks.shadowCoordVS;
+            }
         }
 
         var attributes = {
@@ -348,7 +350,7 @@ pc.programlib.phong = {
                     code += "uniform float light" + i + "_outerConeAngle;\n";
                 }
             }
-            if (options.lights[i].getCastShadows()) {
+            if (options.lights[i].getCastShadows() && !options.noShadow) {
                 code += "uniform mat4 light" + i + "_shadowMatrix;\n";
                 if (lightType==pc.LIGHTTYPE_POINT) {
                     code += "uniform vec4 light" + i + "_shadowParams;\n"; // Width, height, bias, radius
@@ -589,7 +591,7 @@ pc.programlib.phong = {
                 }
 
                 code += "   data.atten *= getLightDiffuse(data);\n";
-                if (light.getCastShadows()) {
+                if (light.getCastShadows() && !options.noShadow) {
 
                     var shadowReadMode = null;
                     if (light._shadowType<=pc.SHADOW_DEPTHMASK) {
