@@ -216,10 +216,6 @@ pc.extend(pc, function () {
         updateKey: function () {
             var material = this.material;
             this.key = getKey(this.layer, material.blendType, false, material.id);
-        },
-
-        getDefines: function() {
-
         }
     });
 
