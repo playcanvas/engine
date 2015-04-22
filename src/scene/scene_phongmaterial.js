@@ -275,11 +275,11 @@ pc.extend(pc, function () {
             }
 
             /* in case user set shader to the phong  material it's no longer phong material
-			/* in this case we need to skip update method
-			*/
+	    /* in this case we need to skip update method
+	    */
 			
-			if (null === clone.shader)		
-				clone.update();	
+	    if (null === clone.shader)		
+	        clone.update();	
 				
             return clone;
         },
