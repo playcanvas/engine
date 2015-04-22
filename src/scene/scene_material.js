@@ -106,7 +106,7 @@ pc.extend(pc, function () {
     Material.prototype._cloneInternal = function (clone) {
         clone.name = this.name;
         clone.id = id++;
-        clone.shader = null; // ?
+        clone.shader = null;
         clone.variants = {}; // ?
 
         clone.parameters = {};
@@ -182,6 +182,13 @@ pc.extend(pc, function () {
 
     Material.prototype.getParameters = function () {
         return this.parameters;
+    };
+
+    Material.prototype.clearVariants = function () {
+        this.variants = {};
+        for (i=0; i<this.meshInstances.length; i++) {
+            this.meshInstances[i]._shader = null;
+        }
     };
 
     /**

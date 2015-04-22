@@ -464,14 +464,7 @@ pc.extend(pc, function () {
             }
 
             this.shader = null;
-            this._clearVariants();
-        },
-
-        _clearVariants: function() {
-            this.variants = {};
-            for (i=0; i<this.meshInstances.length; i++) {
-                this.meshInstances[i]._shader = null;
-            }
+            this.clearVariants();
         },
 
         _getMapTransformID: function(xform, uv) {
@@ -650,7 +643,7 @@ pc.extend(pc, function () {
             this.shader = library.getProgram('phong', options);
 
             if (!objDefs) {
-                this._clearVariants();
+                this.clearVariants();
                 this.variants[0] = this.shader;
             }
         }
