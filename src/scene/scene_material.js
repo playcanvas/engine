@@ -9,6 +9,7 @@ pc.extend(pc, function () {
         this.name = "Untitled";
         this.id = id++;
         this.shader = null;
+        this.variants = {};
 
         this.parameters = {};
 
@@ -105,7 +106,8 @@ pc.extend(pc, function () {
     Material.prototype._cloneInternal = function (clone) {
         clone.name = this.name;
         clone.id = id++;
-        clone.shader = null;
+        clone.shader = null; // ?
+        clone.variants = {}; // ?
 
         clone.parameters = {};
 
@@ -144,7 +146,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Material.prototype.updateShader = function (device, scene) {
+    Material.prototype.updateShader = function (device, scene, objDefs) {
         // For vanilla materials, the shader can only be set by the user
     }
 
