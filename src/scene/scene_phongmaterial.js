@@ -592,6 +592,7 @@ pc.extend(pc, function () {
                 customFragmentShader:       this.customFragmentShader,
                 refraction:                 !!this.refraction,
                 useMetalness:               this.useMetalness,
+                blendType:                  this.blendType,
                 useTexCubeLod:              useTexCubeLod
             };
 
