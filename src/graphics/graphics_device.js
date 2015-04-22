@@ -686,6 +686,10 @@ pc.extend(pc, function () {
                             if (src instanceof HTMLImageElement) {
                                 if (src.width > this.maxCubeMapSize || src.height > this.maxCubeMapSize) {
                                     src = _downsampleImage(src, this.maxCubeMapSize);
+                                    if (mipLevel===0) {
+                                        texture.width = src.width;
+                                        texture.height = src.height;
+                                    }
                                 }
                             }
 
@@ -728,6 +732,10 @@ pc.extend(pc, function () {
                         if (mipObject instanceof HTMLImageElement) {
                             if (mipObject.width > this.maxTextureSize || mipObject.height > this.maxTextureSize) {
                                 mipObject = _downsampleImage(mipObject, this.maxTextureSize);
+                                if (mipLevel===0) {
+                                    texture.width = mipObject.width;
+                                    texture.height = mipObject.height;
+                                }
                             }
                         }
 

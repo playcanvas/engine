@@ -1,5 +1,19 @@
 # PlayCanvas Engine Changes
 
+### v0.165.9
+* [FIX] Shader compilation error for Toksvig.
+
+### v0.165.8
+* Lerp Toksvig
+* [FIX] AABB calculation for skinned meshes.
+* [FIX] Exceptions when changing particle emitter shape at runtime.
+* [FIX] Clear scene prefiltered properties when skybox is removed.
+* [FIX] Issue with duplicate models disappearing when the material mapping on the model asset changes.
+* [FIX] Invalid declaration for chunks.
+* [FIX] Particle emitter debug shape was twice larger than it should be.
+* Gamma and tonemapping are no longer global.
+* Change cubemap resolution if it was resized.
+
 ### v0.165.7
 * [FIX] Shader bug on Nexus 5 fixed by removing vNormalW varying.
 
