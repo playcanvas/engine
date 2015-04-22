@@ -464,6 +464,7 @@ pc.extend(pc, function () {
             }
 
             this.shader = null;
+            this.clearVariants();
         },
 
         _getMapTransformID: function(xform, uv) {
@@ -491,7 +492,7 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene) {
+        updateShader: function (device, scene, objDefs) {
             var i;
             var lights = scene._lights;
 
@@ -554,7 +555,6 @@ pc.extend(pc, function () {
                 gamma:                      scene.gammaCorrection,
                 toneMap:                    scene.toneMapping,
                 blendMapsWithColors:        this.blendMapsWithColors,
-                skin:                       !!this.meshInstances[0].skinInstance,
                 modulateAmbient:            this.ambientTint,
                 diffuseTint:                (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
                 specularTint:               specularTint,
@@ -594,6 +594,11 @@ pc.extend(pc, function () {
                 useMetalness:               this.useMetalness,
                 useTexCubeLod:              useTexCubeLod
             };
+
+            if (objDefs) {
+                options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
+                options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
+            }
 
             for(var p in pc._matTex2D) {
                 var mname = p + "Map";
@@ -636,6 +641,11 @@ pc.extend(pc, function () {
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);
+
+            if (!objDefs) {
+                this.clearVariants();
+                this.variants[0] = this.shader;
+            }
         }
     });
 

@@ -9,6 +9,7 @@ pc.extend(pc, function () {
         this.name = "Untitled";
         this.id = id++;
         this.shader = null;
+        this.variants = {};
 
         this.parameters = {};
 
@@ -106,6 +107,7 @@ pc.extend(pc, function () {
         clone.name = this.name;
         clone.id = id++;
         clone.shader = null;
+        clone.variants = {}; // ?
 
         clone.parameters = {};
 
@@ -144,7 +146,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Material.prototype.updateShader = function (device, scene) {
+    Material.prototype.updateShader = function (device, scene, objDefs) {
         // For vanilla materials, the shader can only be set by the user
     }
 
@@ -180,6 +182,13 @@ pc.extend(pc, function () {
 
     Material.prototype.getParameters = function () {
         return this.parameters;
+    };
+
+    Material.prototype.clearVariants = function () {
+        this.variants = {};
+        for (i=0; i<this.meshInstances.length; i++) {
+            this.meshInstances[i]._shader = null;
+        }
     };
 
     /**

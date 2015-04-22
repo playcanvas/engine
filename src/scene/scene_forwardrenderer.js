@@ -295,7 +295,6 @@ pc.extend(pc, function () {
         this.boneTextureSizeId = scope.resolve('texture_poseMapSize');
 
         this.alphaTestId = scope.resolve('alpha_ref');
-        this.shadowEnableId = scope.resolve('shadow_enable');
 
         // Shadows
         this._shadowAabb = new pc.shape.Aabb();
@@ -864,6 +863,7 @@ pc.extend(pc, function () {
             var next;
             var autoInstances;
             var j;
+            var objDefs, prevObjDefs;
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
@@ -876,6 +876,7 @@ pc.extend(pc, function () {
                     meshInstance = drawCall;
                     mesh = meshInstance.mesh;
                     material = meshInstance.material;
+                    objDefs = meshInstance._shaderDefs;
 
                     if (device.enableAutoInstancing && i!==numDrawCalls-1 && material.useInstancing) {
                         next = i + 1;
@@ -926,14 +927,21 @@ pc.extend(pc, function () {
                             this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
                         }
                     }
-                    this.shadowEnableId.setValue(meshInstance.receiveShadow);
+
+                    if (material && material === prevMaterial && objDefs !== prevObjDefs) {
+                        prevMaterial = null; // force change shader if the object uses a different variant of the same material
+                    }
 
                     if (material !== prevMaterial) {
 
-                        if (!material.shader) {
-                            material.updateShader(device, scene);
+                        if (!meshInstance._shader) {
+                            meshInstance._shader = material.variants[objDefs];
+                            if (!meshInstance._shader) {
+                                material.updateShader(device, scene, objDefs);
+                                meshInstance._shader = material.variants[objDefs] = material.shader;
+                            }
                         }
-                        device.setShader(material.shader);
+                        device.setShader(meshInstance._shader);
 
                         var parameters = material.parameters;
                         for (var paramName in parameters) {
@@ -992,6 +1000,7 @@ pc.extend(pc, function () {
 
                     prevMaterial = material;
                     prevMeshInstance = meshInstance;
+                    prevObjDefs = objDefs;
                 }
             }
         }

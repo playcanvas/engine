@@ -276,8 +276,8 @@ pc.extend(pc.resources, function () {
                 cubemapAsset.off('remove', onCubemapRemoved, material);
                 cubemapAsset.on('remove', onCubemapRemoved, material);
             } else {
-                cubemapParam.data = null;
                 pc.log.error(pc.string.format('Could not load cubemap. Asset {0} not found', cubemapParam.data));
+                cubemapParam.data = null;
             }
         }
 
