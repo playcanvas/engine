@@ -1,5 +1,12 @@
 # PlayCanvas Engine Changes
 
+### v0.166.0
+* Added support for multiple shader variants.
+* [FIX] Receive shadows.
+* [FIX] Using same material on skinned and non skinned meshes is now allowed.
+* [FIX] Add assets that do not have a file field to the resource loader cache.
+* [FIX] Flipped X axis for cubemaps.
+
 ### v0.165.9
 * [FIX] Shader compilation error for Toksvig.
 
