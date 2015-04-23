@@ -44,6 +44,8 @@
          */
         BLEND_MULTIPLICATIVE: 5,
 
+        BLEND_ADDITIVEALPHA: 6,
+
         /**
          * @enum pc.FOG
          * @name pc.FOG_NONE
