@@ -378,10 +378,24 @@ pc.extend(pc, function () {
                 }
             }
         }
+
         for (i = 0; i < materials.length; i++) {
             materials[i].clearVariants();
-            materials[i].updateShader(device, this);
-            materials[i].variants[0] = materials[i].shader;
+        }
+
+        for (i = 0; i < drawCalls.length; i++) {
+            var drawCall = drawCalls[i];
+            var material = drawCall.material;
+            if (material !== undefined) {
+                if (!drawCall._shader) {
+                    var objDefs = drawCall._shaderDefs;
+                    drawCall._shader = material.variants[objDefs];
+                    if (!drawCall._shader) {
+                        material.updateShader(device, this, objDefs);
+                        drawCall._shader = material.variants[objDefs] = material.shader;
+                    }
+                }
+            }
         }
     };
 

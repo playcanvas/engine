@@ -6,6 +6,7 @@ pc.extend(pc, function () {
         this._device = device;
         this._cache = {};
         this._generators = {};
+        this._cacheVs = {};
     };
 
     ProgramLibrary.prototype.register = function (name, generator) {
@@ -36,12 +37,12 @@ pc.extend(pc, function () {
         if (!shader) {
             var gd = this._device;
             var shaderDefinition = generator.createShaderDefinition(gd, options);
-            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition);
+            shader = this._cache[key] = new pc.Shader(gd, shaderDefinition, this);
         }
         return shader;
     };
 
     return {
         ProgramLibrary: ProgramLibrary
-    }; 
+    };
 }());
