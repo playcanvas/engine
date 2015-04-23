@@ -37,6 +37,21 @@ pc.programlib.phong = {
         return this.hashCode(key);
     },
 
+    _correctChannel: function(p, chan) {
+        if (pc._matTex2D[p] > 0) {
+            if (pc._matTex2D[p] < chan.length) {
+                return chan.substring(0, pc._matTex2D[p]);
+            } else if (pc._matTex2D[p] > chan.length) {
+                var str = chan;
+                var chr = str.charAt(str.length - 1)
+                var addLen = pc._matTex2D[p] - str.length;
+                for(i=0; i<addLen; i++) str += chr;
+                return str;
+            }
+            return chan;
+        }
+    },
+
     _setMapTransform: function (codes, name, id, uv) {
         codes[0] += "uniform vec4 texture_"+name+"MapTransform;\n"
 
@@ -72,6 +87,16 @@ pc.programlib.phong = {
                 subCode = subCode.replace(/\$texture2DSAMPLE/g, fmt);
             }
             return subCode.replace(/\$UV/g, uv).replace(/\$CH/g, options[cname]);
+        } else if (options[mname + "VertexColor"]) {
+            var cname = mname + "Channel";
+            if (!subCode) {
+                if (options[p + "Tint"]) {
+                    subCode = chunks[p + "VertConstPS"];
+                } else {
+                    subCode = chunks[p + "VertPS"];
+                }
+            }
+            return subCode.replace(/\$CH/g, options[cname]);
         } else {
             return chunks[p + "ConstPS"];
         }
@@ -222,20 +247,13 @@ pc.programlib.phong = {
                 var uname = mname + "Uv";
                 var cname = mname + "Channel";
                 options[uname] = Math.min(options[uname], maxUvSets - 1)
-                if (pc._matTex2D[p] > 0) {
-                    if (pc._matTex2D[p] < options[cname].length) {
-                        options[cname] = options[cname].substring(0, pc._matTex2D[p]);
-                    } else if (pc._matTex2D[p] > options[cname].length) {
-                        var str = options[cname];
-                        var chr = str.charAt(str.length - 1)
-                        var addLen = pc._matTex2D[p] - str.length;
-                        for(i=0; i<addLen; i++) str += chr;
-                        options[cname] = str;
-                    }
-                }
+                options[cname] = this._correctChannel(p, options[cname]);
                 var uvSet = options[uname];
                 useUv[uvSet] = true;
                 useUnmodifiedUv[uvSet] = useUnmodifiedUv[uvSet] || (options[mname] && !options[tname]);
+            } else if (options[mname + "VertexColor"]) {
+                var cname = mname + "Channel";
+                options[cname] = this._correctChannel(p, options[cname]);
             }
         }
 
@@ -269,6 +287,7 @@ pc.programlib.phong = {
 
         if (options.vertexColors) {
             attributes.vertex_color = pc.SEMANTIC_COLOR;
+            codeBody += "   vVertexColor = vertex_color;\n";
         }
 
         if (options.skin) {
@@ -296,6 +315,7 @@ pc.programlib.phong = {
         var oldVars = varyings;
         varyings = "";
         varyings += this._addVaryingIfNeeded(code, "vec4", "vMainShadowUv");
+        varyings += this._addVaryingIfNeeded(code, "vec4", "vVertexColor");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vPositionW");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalV");
         varyings += this._addVaryingIfNeeded(code, "vec3", "vNormalW");
@@ -443,8 +463,10 @@ pc.programlib.phong = {
             code += this._addMap("height", options, chunks, "", chunks.parallaxPS);
         }
 
-        if (options.aoMap) {
-            code += this._addMap("ao", options, chunks, uvOffset, chunks.aoBakedPS);
+        var useAo = options.aoMap || options.aoMapVertexColor;
+        if (useAo) {
+            code += this._addMap("ao", options, chunks, uvOffset, options.aoMapVertexColor? chunks.aoVertPS : chunks.aoTexPS);
+            if (options.occludeSpecular) code += chunks.aoSpecOccPS;
         }
 
         var reflectionDecode = options.rgbmReflection? "decodeRGBM" : (options.hdrReflection? "" : "gammaCorrectInput");
@@ -473,8 +495,8 @@ pc.programlib.phong = {
             code += chunks.refractionPS;
         }
 
-        if (options.lightMap) {
-            code += this._addMap("light", options, chunks, uvOffset, chunks.lightmapSinglePS);
+        if (options.lightMap || options.lightMapVertexColor) {
+            code += this._addMap("light", options, chunks, uvOffset, options.lightMapVertexColor? chunks.lightmapSingleVertPS : chunks.lightmapSinglePS);
         }
         else if (options.prefilteredCubemap) {
             if (useTexCubeLod) {
@@ -553,7 +575,7 @@ pc.programlib.phong = {
         if (options.modulateAmbient && !useOldAmbient) {
             code += "   data.diffuseLight *= material_ambient;\n"
         }
-        if (options.aoMap && !options.occludeDirect) {
+        if (useAo && !options.occludeDirect) {
                 code += "    applyAO(data);\n";
         }
 
@@ -640,7 +662,7 @@ pc.programlib.phong = {
         }
         code += "\n";
 
-        if (options.aoMap) {
+        if (useAo) {
             if (options.occludeDirect) {
                     code += "    applyAO(data);\n";
             }
