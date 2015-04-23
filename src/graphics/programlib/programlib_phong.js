@@ -650,7 +650,7 @@ pc.programlib.phong = {
         }
 
         code += chunks.endPS;
-        if (options.blendType===pc.BLEND_NORMAL) {
+        if (options.blendType===pc.BLEND_NORMAL || options.blendType===pc.BLEND_ADDITIVEALPHA) {
             code += "gl_FragColor.a = data.alpha;\n";
         } else if (options.blendType===pc.BLEND_PREMULTIPLIED) {
             code += "gl_FragColor.rgb *= data.alpha;\n";
