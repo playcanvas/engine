@@ -1,4 +1,19 @@
+var AFFECTS_VS = [
+    'chunks',
+    'lights',
+    'sphereMap',
+    'cubeMap',
+    'prefilteredCubemap',
+    'noShadow',
+    'useInstancing',
+    'heightMap',
+    'normalMap',
+    'vertexColors',
+    'skin'
+];
+
 pc.programlib.phong = {
+
     hashCode: function(str){
         var hash = 0;
         if (str.length == 0) return hash;
@@ -35,6 +50,33 @@ pc.programlib.phong = {
         for(prop in props) key += props[prop] + options[props[prop]];
 
         return this.hashCode(key);
+    },
+
+    generateVsKey: function (device, options) {
+        var voptions = {};
+        var i;
+
+        for(prop in options) {
+            for(i=0; i<AFFECTS_VS.length; i++) {
+                if (prop===AFFECTS_VS[i]) {
+                    voptions[prop] = options[prop];
+                    break;
+                }
+            }
+        }
+
+        for(var p in pc._matTex2D) {
+            var map = p + "Map";
+            if (options[map]) {
+                var mapt = p + "MapTransform";
+                var mapuv = p + "MapUv";
+                voptions[map] = options[map];
+                voptions[mapt] = options[mapt];
+                voptions[mapuv] = options[mapuv];
+            }
+        }
+
+        return this.generateKey(device, voptions);
     },
 
     _setMapTransform: function (codes, name, id, uv) {
@@ -669,7 +711,8 @@ pc.programlib.phong = {
         return {
             attributes: attributes,
             vshader: vshader,
-            fshader: fshader
+            fshader: fshader,
+            vkey: this.generateVsKey(device, options)
         };
     }
 };

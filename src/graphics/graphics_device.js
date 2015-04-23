@@ -1323,6 +1323,13 @@ pc.extend(pc, function () {
             if (shader !== this.shader) {
                 this.shader = shader;
 
+                if (shader.requiresValidation) {
+                    if (shader.validate()) {
+                        shader.queryVariables();
+                    }
+                    shader.clearValidateData();
+                }
+
                 // Set the active shader
                 var gl = this.gl;
                 gl.useProgram(shader.program);
