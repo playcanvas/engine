@@ -650,6 +650,14 @@ pc.programlib.phong = {
         }
 
         code += chunks.endPS;
+        if (options.blendType===pc.BLEND_NORMAL || options.blendType===pc.BLEND_ADDITIVEALPHA) {
+            code += "gl_FragColor.a = data.alpha;\n";
+        } else if (options.blendType===pc.BLEND_PREMULTIPLIED) {
+            code += "gl_FragColor.rgb *= data.alpha;\n";
+            code += "gl_FragColor.a = data.alpha;\n";
+        } else {
+            code+= "gl_FragColor.a = 1.0;\n";
+        }
 
         // Make sure all components are between 0 and 1
         code += getSnippet(device, 'fs_clamp');
