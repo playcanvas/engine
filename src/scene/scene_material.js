@@ -53,6 +53,11 @@ pc.extend(pc, function () {
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.BLEND_ADDITIVE;
             } else if ((this.blend) &&
+                       (this.blendSrc === pc.BLENDMODE_SRC_ALPHA) &&
+                       (this.blendDst === pc.BLENDMODE_ONE) &&
+                       (this.blendEquation === pc.BLENDEQUATION_ADD)) {
+                return pc.BLEND_ADDITIVEALPHA;
+            } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
                        (this.blendDst === pc.BLENDMODE_ZERO) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
@@ -89,6 +94,12 @@ pc.extend(pc, function () {
                 case pc.BLEND_ADDITIVE:
                     this.blend = true;
                     this.blendSrc = pc.BLENDMODE_ONE;
+                    this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
+                    break;
+                case pc.BLEND_ADDITIVEALPHA:
+                    this.blend = true;
+                    this.blendSrc = pc.BLENDMODE_SRC_ALPHA;
                     this.blendDst = pc.BLENDMODE_ONE;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
