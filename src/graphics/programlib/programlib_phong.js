@@ -466,7 +466,6 @@ pc.programlib.phong = {
         var useAo = options.aoMap || options.aoMapVertexColor;
         if (useAo) {
             code += this._addMap("ao", options, chunks, uvOffset, options.aoMapVertexColor? chunks.aoVertPS : chunks.aoTexPS);
-            if (options.occludeSpecular) code += chunks.aoSpecOccPS;
         }
 
         var reflectionDecode = options.rgbmReflection? "decodeRGBM" : (options.hdrReflection? "" : "gammaCorrectInput");
