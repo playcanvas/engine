@@ -144,7 +144,7 @@ pc.extend(pc.resources, function () {
 
         // load plain cubemap
         var cubemap = new pc.Texture(self._device, {
-            format: pc.PIXELFORMAT_R8_G8_B8,
+            format: pc.PIXELFORMAT_R8_G8_B8_A8,
             cubemap: true,
             autoMipmap: true,
             fixCubemapSeams: true
@@ -156,6 +156,7 @@ pc.extend(pc.resources, function () {
         cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
         cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
         cubemap.anisotropy = data.anisotropy;
+        cubemap.rgbm = !!data.rgbm;
 
         if (data.loadedTextures) {
             cubemap.setSource(data.loadedTextures.slice(0, 6).map(function (texture) {
