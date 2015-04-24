@@ -64,7 +64,7 @@ pc.extend(pc, function () {
         this.material = material;   // The material with which to render this instance
 
         this._shader = null;
-        this._shaderDefs = 0;
+        this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
 
         // Render options
         this.layer = pc.LAYER_WORLD;
@@ -205,6 +205,17 @@ pc.extend(pc, function () {
         set: function (val) {
             this._skinInstance = val;
             this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
+            this._shader = null;
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'mask', {
+        get: function () {
+            return this._shaderDefs >> 8;
+        },
+        set: function (val) {
+            var toggles = this._shaderDefs & 0x000000FF;
+            this._shaderDefs = toggles | (val << 8);
             this._shader = null;
         }
     });
