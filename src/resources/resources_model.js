@@ -246,7 +246,7 @@ pc.extend(pc.resources, function () {
                     semantic: attributeMap[attributeName],
                     components: attribute.components,
                     type: jsonToVertexElementType[attribType],
-                    normalize: (attribType === "uint8"? true : false)
+                    normalize: (attribType === "uint8")
                 });
             }
             var vertexFormat = new pc.VertexFormat(this._device, formatDesc);
