@@ -196,6 +196,8 @@ pc.extend(pc, function () {
             this.specularAntialias = false;
             this.conserveEnergy = true;
             this.occludeSpecular = true;
+            this.occludeSpecularContrast = 1;
+            this.occludeSpecularIntensity = 1;
             this.shadingModel = pc.SPECULAR_PHONG;
             this.fresnelModel = pc.FRESNEL_NONE;
 
@@ -398,6 +400,13 @@ pc.extend(pc, function () {
 
             this.setParameter('material_opacity', this.opacity);
 
+            if (this.occludeSpecular) {
+                this.setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
+                if (this.occludeSpecularContrast > 0) {
+                    this.setParameter('material_occludeSpecularContrast', this.occludeSpecularContrast);
+                }
+            }
+
             if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
                 this.cubeMapMinUniform[0] = this.cubeMapProjectionBox.center.x - this.cubeMapProjectionBox.halfExtents.x;
                 this.cubeMapMinUniform[1] = this.cubeMapProjectionBox.center.y - this.cubeMapProjectionBox.halfExtents.y;
@@ -580,6 +589,7 @@ pc.extend(pc, function () {
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
                 occludeSpecular:            this.occludeSpecular,
+                occludeSpecularFloat:      (this.occludeSpecularContrast > 0),
                 occludeDirect:              this.occludeDirect,
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
