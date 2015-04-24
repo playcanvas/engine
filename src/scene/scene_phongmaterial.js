@@ -151,6 +151,7 @@ pc.extend(pc, function () {
 
         obj[name + "MapUv"] = uv;
         if (channels > 0) obj[name + "MapChannel"] = channels > 1? "rgb" : "g";
+        obj[name + "MapVertexColor"] = false;
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
@@ -611,6 +612,14 @@ pc.extend(pc, function () {
                     options[tname] = this._getMapTransformID(this[tname], this[uname]);
                     options[cname] = this[cname];
                     options[uname] = this[uname];
+                } else if (p!=="height") {
+                    var vname = mname + "VertexColor";
+                    if (this[vname]) {
+                        var cname = mname + "Channel";
+                        options[vname] = this[vname];
+                        options[cname] = this[cname];
+                        options.vertexColors = true;
+                    }
                 }
             }
 
