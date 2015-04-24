@@ -35,7 +35,7 @@ pc.extend(pc, function () {
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
      * @property {Number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
-     * @property {Number} refractionIndex Defines the index of refraction, i.e. the amout of distortion.
+     * @property {Number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
      * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
      * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
      * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
