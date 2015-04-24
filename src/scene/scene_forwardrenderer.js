@@ -863,7 +863,7 @@ pc.extend(pc, function () {
             var next;
             var autoInstances;
             var j;
-            var objDefs, prevObjDefs;
+            var objDefs, prevObjDefs, lightMask, prevLightMask;
 
             // Render the scene
             for (i = 0; i < drawCallsCount; i++) {
@@ -877,6 +877,7 @@ pc.extend(pc, function () {
                     mesh = meshInstance.mesh;
                     material = meshInstance.material;
                     objDefs = meshInstance._shaderDefs;
+                    lightMask = meshInstance.mask;
 
                     if (device.enableAutoInstancing && i!==numDrawCalls-1 && material.useInstancing) {
                         next = i + 1;
@@ -952,10 +953,10 @@ pc.extend(pc, function () {
                             parameter.scopeId.setValue(parameter.data);
                         }
 
-                        if (!prevMaterial || material.mask !== prevMaterial.mask) {
+                        if (!prevMaterial || lightMask !== prevLightMask) {
                             this._activeShadowLights = [];
-                            usedDirLights = this.dispatchDirectLights(scene, material.mask);
-                            this.dispatchLocalLights(scene, material.mask, usedDirLights);
+                            usedDirLights = this.dispatchDirectLights(scene, lightMask);
+                            this.dispatchLocalLights(scene, lightMask, usedDirLights);
                         }
 
                         if (material.shadowSampleType!==undefined) {
@@ -1001,6 +1002,7 @@ pc.extend(pc, function () {
                     prevMaterial = material;
                     prevMeshInstance = meshInstance;
                     prevObjDefs = objDefs;
+                    prevLightMask = lightMask;
                 }
             }
         }

@@ -30,7 +30,6 @@ pc.extend(pc, function () {
         this.greenWrite = true;
         this.blueWrite = true;
         this.alphaWrite = true;
-        this.mask = 1;
 
         this.meshInstances = []; // The mesh instances referencing this material
     };
@@ -139,7 +138,6 @@ pc.extend(pc, function () {
         clone.greenWrite = this.greenWrite;
         clone.blueWrite = this.blueWrite;
         clone.alphaWrite = this.alphaWrite;
-        clone.mask = this.mask;
 
         clone.meshInstances = [];
     },

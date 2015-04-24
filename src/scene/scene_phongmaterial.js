@@ -317,10 +317,10 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsSorted) {
+        _collectLights: function(lType, lights, lightsSorted, mask) {
             for (var i = 0; i < lights.length; i++) {
                 if (lights[i].getEnabled()) {
-                    if (lights[i].mask & this.mask) {
+                    if (lights[i].mask & mask) {
                         if (lights[i].getType()==lType) {
                             lightsSorted.push(lights[i]);
                         }
@@ -628,9 +628,10 @@ pc.extend(pc, function () {
             this._mapXForms = null;
 
             var lightsSorted = [];
-            this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted);
-            this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted);
-            this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted);
+            var mask = objDefs? (objDefs >> 8) : 1;
+            this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
+            this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
+            this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
 
             options.lights = lightsSorted;
 
