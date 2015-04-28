@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.166.2
+* [FIX] Work around for Chrome bug that prevents audio from looping
+
 ### v0.166.1
 * [FIX] Don't use opacity when blend mode is BLEND_NONE.
 * Added BLEND_ADDITIVEALPHA blend mode.
