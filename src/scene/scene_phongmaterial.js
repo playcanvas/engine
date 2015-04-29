@@ -571,6 +571,8 @@ pc.extend(pc, function () {
                 }
             }
 
+            var rgbmReflection = prefilteredCubeMap128? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false));
+
             var options = {
                 fog:                        scene.fog,
                 gamma:                      scene.gammaCorrection,
@@ -588,7 +590,7 @@ pc.extend(pc, function () {
                 sphereMap:                  !!this.sphereMap,
                 cubeMap:                    !!this.cubeMap,
                 useSpecular:                useSpecular,
-                rgbmReflection:             prefilteredCubeMap128? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false)),
+                rgbmReflection:             rgbmReflection,
 
                 hdrReflection:              prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
                                           : (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F
@@ -597,6 +599,7 @@ pc.extend(pc, function () {
                 fixSeams:                   prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
                 prefilteredCubemap:         !!prefilteredCubeMap128,
                 emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
+                useRgbm:                    rgbmReflection || (this.emissiveMap? this.emissiveMap.rgbm : 0),
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
                 occludeSpecular:            this.occludeSpecular,
