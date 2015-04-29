@@ -50,7 +50,12 @@ pc.extend(pc.resources, function () {
                     resolve(response);
                 }, {
                     cache: true,
-                    responseType: 'arraybuffer'
+                    responseType: 'arraybuffer',
+                    error: function (status) {
+                        var asset = self._assets.getAssetByUrl(request.canonical);
+                        var url = asset ? asset.id : identifier;
+                        reject('Could not load texture ' + url + '. Status: ' + status);
+                    }
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var image = new Image();
