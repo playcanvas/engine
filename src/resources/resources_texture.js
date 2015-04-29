@@ -88,6 +88,8 @@ pc.extend(pc.resources, function () {
         var self = this;
         var texture;
 
+        var asset = self._assets.getAssetByUrl(request.canonical);
+
         // Every browser seems to pass data as an Image type. For some reason, the XDK
         // passes an HTMLImageElement. TODO: figure out why!
         // DDS textures are ArrayBuffers
@@ -103,9 +105,7 @@ pc.extend(pc.resources, function () {
                     format: format
                 });
 
-                var asset = self._assets.getAssetByUrl(request.canonical);
                 if (asset && asset.data) {
-
                     var updateTexture = function (data) {
                         // check if data exists - it might not exist for engine-only users
                         if (data.name !== undefined) texture.name = data.name;
@@ -114,6 +114,7 @@ pc.extend(pc.resources, function () {
                         if (data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[data.magfilter];
                         if (data.minfilter !== undefined) texture.minFilter = jsonToFilterMode[data.minfilter];
                         if (data.anisotropy !== undefined) texture.anisotropy = data.anisotropy;
+                        if (data.rgbm !== undefined) texture.rgbm  = data.rgbm;
                     };
 
                     updateTexture(asset.data);
@@ -206,6 +207,11 @@ pc.extend(pc.resources, function () {
                 format: format,
                 cubemap: isCubemap
             };
+
+            if (asset && asset.data) {
+                texOptions.rgbm = !!asset.data.rgbm;
+            }
+
             texture = new pc.Texture(this._device, texOptions);
 
             var offset = 128;

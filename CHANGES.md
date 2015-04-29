@@ -1,5 +1,15 @@
 # PlayCanvas Engine Changes
 
+### v0.166.2
+* [FIX] Work around for Chrome bug that prevents audio from looping
+
+### v0.166.1
+* [FIX] Don't use opacity when blend mode is BLEND_NONE.
+* Added BLEND_ADDITIVEALPHA blend mode.
+* Added vertex color material inputs.
+* Added support for loading hdr cubemaps and textures.
+* Added contrast and intensity controls for specular occlusion.
+
 ### v0.166.0
 * Added support for multiple shader variants.
 * [FIX] Receive shadows.

@@ -246,7 +246,7 @@ pc.extend(pc, (function () {
             options.singleFilteredFixed = cubemap;
         }
 
-        if (cpuSync && options.singlefilteredFixedRgbm && options.filteredFixedRgbm) {
+        if (cpuSync && options.singleFilteredFixedRgbm && options.filteredFixedRgbm) {
             var mips = [
                         sourceCubemapRgbm,
                         options.filteredFixedRgbm[0],
@@ -272,7 +272,7 @@ pc.extend(pc, (function () {
             cubemap.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
             cubemap.magFilter = pc.FILTER_LINEAR;
             cubemap._prefilteredMips = true;
-            options.singlefilteredFixedRgbm = cubemap;
+            options.singleFilteredFixedRgbm = cubemap;
         }
     }
 
