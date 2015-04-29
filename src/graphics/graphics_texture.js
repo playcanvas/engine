@@ -130,7 +130,8 @@ pc.extend(pc, function () {
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
         set: function (anisotropy) {
-            this._anisotropy = anisotropy;
+            console.log("!");
+            this._anisotropy = pc.math.clamp(anisotropy, 1, this.device.maxAnisotropy);
         }
     });
 
