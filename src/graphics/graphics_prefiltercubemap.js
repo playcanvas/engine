@@ -239,6 +239,8 @@ pc.extend(pc, (function () {
             for(i=0; i<6; i++) {
                 cubemap._levels[i] = mips[i]._levels[0];
             }
+            cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
             cubemap.upload();
             cubemap.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
             cubemap.magFilter = pc.FILTER_LINEAR;
@@ -268,6 +270,8 @@ pc.extend(pc, (function () {
             for(i=0; i<6; i++) {
                 cubemap._levels[i] = mips[i]._levels[0];
             }
+            cubemap.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+            cubemap.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
             cubemap.upload();
             cubemap.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
             cubemap.magFilter = pc.FILTER_LINEAR;
