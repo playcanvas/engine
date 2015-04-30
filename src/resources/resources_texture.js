@@ -218,6 +218,10 @@ pc.extend(pc.resources, function () {
             }
 
             texture = new pc.Texture(this._device, texOptions);
+            if (isCubemap) {
+                texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            }
 
             var offset = 128;
             var faces = isCubemap? 6 : 1;
