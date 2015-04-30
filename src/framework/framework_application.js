@@ -203,6 +203,8 @@ pc.extend(pc, function () {
                     this.scene.gammaCorrection = pack.settings.render.gamma_correction;
                     this.scene.toneMapping = pack.settings.render.tonemapping;
                     this.scene.exposure = pack.settings.render.exposure;
+                    this.scene.skyboxIntensity = pack.settings.render.skyboxIntensity===undefined? 1 : pack.settings.render.skyboxIntensity;
+                    this.scene.skyboxMip = pack.settings.render.skyboxMip===undefined? 0 : pack.settings.render.skyboxMip;
 
                     if (pack.settings.render.skybox) {
                         var skybox = this.assets.getAssetById(pack.settings.render.skybox);
@@ -802,6 +804,8 @@ pc.extend(pc, function () {
             self.scene.gammaCorrection = settings.render.gamma_correction;
             self.scene.toneMapping = settings.render.tonemapping;
             self.scene.exposure = settings.render.exposure;
+            self.scene.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
+            self.scene.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
 
             if (settings.render.skybox) {
                 var skybox = self.assets.getAssetById(settings.render.skybox);

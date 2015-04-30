@@ -429,6 +429,7 @@ pc.programlib.phong = {
         if (cubemapReflection || options.prefilteredCubemap) {
             code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
             code += options.cubeMapProjection>0? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
+            code += options.skyboxIntensity? chunks.envMultiplyPS : chunks.envConstPS;
         }
 
         code += this._addMap("diffuse", options, chunks, uvOffset);

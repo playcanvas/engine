@@ -9,7 +9,7 @@ void addReflection(inout psInternalData data) {
     vec3 fixedReflDir = fixSeams(cubeMapProject(data.reflDirW), bias);
     fixedReflDir.x *= -1.0;
 
-    vec3 refl = $DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb;
+    vec3 refl = processEnvironment($DECODE( textureCubeLodEXT(texture_prefilteredCubeMap128, fixedReflDir, bias) ).rgb);
 
     data.reflection += vec4(refl, material_reflectionFactor);
 }
