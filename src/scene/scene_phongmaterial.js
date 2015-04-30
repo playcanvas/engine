@@ -562,7 +562,7 @@ pc.extend(pc, function () {
             }
 
             var specularTint = false;
-            var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap128;
+            var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap);
             useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0));
 
             if (useSpecular) {

@@ -134,7 +134,7 @@ pc.programlib.phong = {
             options.fresnelModel = (options.fresnelModel===0)? pc.FRESNEL_SCHLICK : options.fresnelModel;
         }
 
-        var cubemapReflection = options.cubeMap || options.prefilteredCubemap;
+        var cubemapReflection = options.cubeMap || (options.prefilteredCubemap && options.useSpecular);
         var reflections = options.sphereMap || cubemapReflection;
         var useTangents = pc.precalculatedTangents;
         var useTexCubeLod = options.useTexCubeLod;
@@ -426,7 +426,7 @@ pc.programlib.phong = {
         }
 
         if (options.useRgbm) code += chunks.rgbmPS;
-        if (cubemapReflection) {
+        if (cubemapReflection || options.prefilteredCubemap) {
             code += options.fixSeams? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS;
             code += options.cubeMapProjection>0? chunks.cubeMapProjectBoxPS : chunks.cubeMapProjectNonePS;
         }
@@ -473,7 +473,7 @@ pc.programlib.phong = {
 
         var reflectionDecode = options.rgbmReflection? "decodeRGBM" : (options.hdrReflection? "" : "gammaCorrectInput");
 
-        if (cubemapReflection) {
+        if (cubemapReflection || options.prefilteredCubemap) {
             if (options.prefilteredCubemap) {
                 if (useTexCubeLod) {
                     code += chunks.reflectionPrefilteredCubeLodPS.replace(/\$DECODE/g, reflectionDecode);

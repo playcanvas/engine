@@ -1,5 +1,14 @@
 # PlayCanvas Engine Changes
 
+### v0.166.3
+* Removed skybox component.
+* [FIX] Reject dds / crn texture requests if they fail to load the file URLs.
+* [FIX] Clamp anisotropy values to avoid WebGL errors.
+* [FIX] Shader generation when using RGBM texture for emission.
+* [FIX] Appearance when metalness is 0.
+* [FIX] Gamma correction artifacts.
+* [FIX] Cubemap seams on WebGL.
+
 ### v0.166.2
 * [FIX] Work around for Chrome bug that prevents audio from looping
 
