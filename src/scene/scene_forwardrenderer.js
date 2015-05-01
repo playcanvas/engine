@@ -388,6 +388,7 @@ pc.extend(pc, function () {
             }
             scope.resolve("light_globalAmbient").setValue(this.ambientColor);
             scope.resolve("exposure").setValue(scene.exposure);
+            if (scene._skyboxModel) scope.resolve("skyboxIntensity").setValue(scene.skyboxIntensity);
         },
 
         dispatchDirectLights: function (scene, mask) {
