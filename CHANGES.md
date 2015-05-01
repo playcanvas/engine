@@ -1,5 +1,11 @@
 # PlayCanvas Engine Changes
 
+### v0.166.4
+* [FIX] Seams at skybox borders
+* LDR skyboxs now work with exposure and tonemapping
+* Added pc.Scene#skyboxIntensity which works as an environment multiplier
+* Added pc.Scene#skyboxMip to select mip level to use for skybox
+
 ### v0.166.3
 * Removed skybox component.
 * [FIX] Reject dds / crn texture requests if they fail to load the file URLs.
