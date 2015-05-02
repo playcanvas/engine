@@ -29,6 +29,9 @@ pc.extend(pc, function () {
 
         // AABB for object space mesh vertices
         this.aabb = new pc.shape.Aabb();
+
+        // Array of object space AABBs of vertices affected by each bone
+        this.boneAabb = null;
     };
 
     var InstancingData = function (numObjects, dynamic, instanceSize) {
@@ -60,27 +63,89 @@ pc.extend(pc, function () {
         this.mesh = mesh;           // The mesh that this instance renders
         this.material = material;   // The material with which to render this instance
 
+        this._shader = null;
+        this._shaderDefs = 256; // 1 byte toggles, 3 bytes light mask; Default value is no toggles and mask = 1
+
         // Render options
         this.layer = pc.LAYER_WORLD;
         this.renderStyle = pc.RENDERSTYLE_SOLID;
         this.castShadow = false;
-        this.receiveShadow = true;
+        this._receiveShadow = true;
         this.drawToDepth = true;
 
         // 64-bit integer key that defines render order of this mesh instance
         this.key = 0;
         this.updateKey();
 
-        this.skinInstance = null;
+        this._skinInstance = null;
 
         // World space AABB
         this.aabb = new pc.shape.Aabb();
         this.normalMatrix = new pc.Mat3();
+
+        this._boneAabb = null;
     };
 
     Object.defineProperty(MeshInstance.prototype, 'aabb', {
         get: function () {
-            this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+            if (this.skinInstance) {
+                var numBones = this.mesh.skin.boneNames.length;
+                var i;
+                // Initialize local bone AABBs if needed
+                if (!this.mesh.boneAabb) {
+                    this.mesh.boneAabb = [];
+                    var elems = this.mesh.vertexBuffer.format.elements;
+                    var numVerts = this.mesh.vertexBuffer.numVertices;
+                    var vertSize = this.mesh.vertexBuffer.format.size;
+                    var data = new DataView(this.mesh.vertexBuffer.storage);
+                    var boneVerts;
+                    var index;
+                    var offsetP, offsetI;
+                    var j, k;
+                    for(i=0; i<elems.length; i++) {
+                        if (elems[i].name===pc.SEMANTIC_POSITION) {
+                            offsetP = elems[i].offset;
+                        } else if (elems[i].name===pc.SEMANTIC_BLENDINDICES) {
+                            offsetI = elems[i].offset;
+                        }
+                    }
+                    for(i=0; i<numBones; i++) {
+                        boneVerts = [];
+                        for(j=0; j<numVerts; j++) {
+                            for(k=0; k<4; k++) {
+                                index = data.getUint8(j * vertSize + offsetI + k, true);
+                                if (index===i) {
+                                    // Vertex j is affected by bone i
+                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP, true) );
+                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP + 4, true) );
+                                    boneVerts.push( data.getFloat32(j * vertSize + offsetP + 8, true) );
+                                }
+                            }
+                        }
+                        this.mesh.boneAabb.push(new pc.shape.Aabb());
+                        this.mesh.boneAabb[i].compute(boneVerts);
+                    }
+                }
+                // Initialize per-instance AABBs if needed
+                if (!this._boneAabb) {
+                    this._boneAabb = [];
+                    for(i=0; i<this.mesh.boneAabb.length; i++) {
+                        this._boneAabb[i] = new pc.shape.Aabb();
+                    }
+                }
+                // Update per-instance bone AABBs
+                for(i=0; i<this.mesh.boneAabb.length; i++) {
+                    this._boneAabb[i].setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
+                }
+                // Update full instance AABB
+                this._aabb.center.copy(this._boneAabb[0].center);
+                this._aabb.halfExtents.copy(this._boneAabb[0].halfExtents);
+                for(i=0; i<this.mesh.boneAabb.length; i++) {
+                    this._aabb.add(this._boneAabb[i]);
+                }
+            } else {
+                this._aabb.setFromTransformedAabb(this.mesh.aabb, this.node.worldTransform);
+            }
             return this._aabb;
         },
         set: function (aabb) {
@@ -93,6 +158,7 @@ pc.extend(pc, function () {
             return this._material;
         },
         set: function (material) {
+            this._shader = null;
             // Remove the material's reference to this mesh instance
             if (this._material) {
                 var meshInstances = this._material.meshInstances;
@@ -118,6 +184,39 @@ pc.extend(pc, function () {
         set: function (layer) {
             this._layer = layer;
             this.updateKey();
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'receiveShadow', {
+        get: function () {
+            return this._receiveShadow;
+        },
+        set: function (val) {
+            this._receiveShadow = val;
+            this._shaderDefs = val? (this._shaderDefs & ~pc.SHADERDEF_NOSHADOW) : (this._shaderDefs | pc.SHADERDEF_NOSHADOW);
+            this._shader = null;
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'skinInstance', {
+        get: function () {
+            return this._skinInstance;
+        },
+        set: function (val) {
+            this._skinInstance = val;
+            this._shaderDefs = val? (this._shaderDefs | pc.SHADERDEF_SKIN) : (this._shaderDefs & ~pc.SHADERDEF_SKIN);
+            this._shader = null;
+        }
+    });
+
+    Object.defineProperty(MeshInstance.prototype, 'mask', {
+        get: function () {
+            return this._shaderDefs >> 8;
+        },
+        set: function (val) {
+            var toggles = this._shaderDefs & 0x000000FF;
+            this._shaderDefs = toggles | (val << 8);
+            this._shader = null;
         }
     });
 

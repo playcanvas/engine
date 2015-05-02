@@ -63,6 +63,9 @@ pc.extend(pc.asset, function () {
 
             if (asset.file) {
                 this.loader.registerHash(asset.file.hash, asset.getFileUrl());
+            } else {
+                // TODO: cache assets without files too like materials. Remove this with the new resource loader.
+                this.loader.registerHash(asset.id, "asset://" + asset.id);
             }
 
             return asset;
@@ -119,8 +122,10 @@ pc.extend(pc.asset, function () {
             this._names[asset.name].push(asset.id);
             if (asset.file) {
                 this._urls[asset.getFileUrl()] = asset.id;
-                asset.on('change', this._onAssetChanged, this);
             }
+
+            if (asset.type !== 'cubemap')
+                asset.on('change', this._onAssetChanged, this);
         },
 
         /**
@@ -132,10 +137,13 @@ pc.extend(pc.asset, function () {
         removeAsset: function (asset) {
             delete this._cache[asset.id];
             delete this._names[asset.name];
+            asset.fire('remove', asset);
             if (asset.file) {
-                asset.off('change', this._onAssetChanged, this);
                 delete this._urls[asset.file.url];
             }
+
+            if (asset.type !== 'cubemap')
+                asset.off('change', this._onAssetChanged, this);
         },
 
         /**
@@ -311,7 +319,7 @@ pc.extend(pc.asset, function () {
                     var index = 0;
                     requests.forEach(function (r, i) {
                         if (r) {
-                            assets[i].resource = resources[index++];
+                            assets[i].resources = resources[index++];
                         }
                     });
                     resolve(resources);
@@ -461,11 +469,11 @@ pc.extend(pc.asset, function () {
 
         _createCubemapRequest: function (asset, texture) {
             var url = asset.getFileUrl();
-            if (url) {
-                return new pc.resources.CubemapRequest(url, null, texture);
-            } else {
-                return new pc.resources.CubemapRequest("asset://" + asset.id, null, texture);
+            if (!url || !pc.string.endsWith(url.toLowerCase(), '.json')) {
+                url = "asset://" + asset.id;
             }
+
+            return new pc.resources.CubemapRequest(url, null, texture);
         },
 
         _createMaterialRequest: function (asset) {

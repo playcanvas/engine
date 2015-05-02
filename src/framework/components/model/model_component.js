@@ -146,6 +146,7 @@ pc.extend(pc, function () {
                 var asset = this.system.app.assets.getAssetById(oldValue);
                 if (asset) {
                     asset.off('change', this.onAssetChange, this);
+                    asset.off('remove', this.onAssetRemoved, this);
                 }
             }
 
@@ -160,6 +161,8 @@ pc.extend(pc, function () {
                 } else {
                     this.model = null;
                 }
+            } else if (!newValue) {
+                this.data.asset = null;
             }
         },
 
@@ -306,39 +309,18 @@ pc.extend(pc, function () {
         * is used to reload the asset if it is changed.
         */
         onAssetChange: function (asset, attribute, newValue, oldValue) {
-            if (attribute === 'resource') {
+            if (attribute === 'resource' && newValue) {
                 // if the model resource has changed then set it
-                if (newValue) {
-                    this._onModelLoaded(newValue);
-                }
-            } else if (attribute === 'data') {
-                // if the data has changed then it means the mapping has changed
-                // so check if the mapping is different and if so reload the model
-                var isMappingDifferent = false;
-                var mapping = newValue.mapping;
-                var oldMapping = oldValue.mapping;
-                if (mapping && !oldMapping || oldMapping && !mapping) {
-                    isMappingDifferent = true;
-                } else if (mapping) {
-                    if (mapping && mapping.length !== oldMapping.length) {
-                        isMappingDifferent = true;
-                    } else {
-                        for (var i = 0; i < mapping.length; i++) {
-                            if (mapping[i].material !== oldMapping[i].material) {
-                                isMappingDifferent = true;
-                                break;
-                            }
-                        }
-                    }
-                }
+                // (this includes changes to the material mapping because when the material mapping
+                // changes the file hash will also change resulting in a model reload)
+                this._onModelLoaded(newValue.clone());
+            }
+        },
 
-                if (isMappingDifferent) {
-                    // clear the cache and reload the model
-                    asset.resource = null;
-                    this.system.app.loader.removeFromCache(asset.getFileUrl());
-                    this._setModelAsset(asset.id);
-                }
-
+        onAssetRemoved: function (asset) {
+            asset.off('remove', this.onAssetRemoved, this);
+            if (this.asset === asset.id) {
+                this.asset = null;
             }
         }
     });

@@ -1,5 +1,27 @@
 pc.extend(pc.resources, function () {
 
+    function onTextureAssetRemoved (asset) {
+        var material = this;
+        asset.off('remove', onTextureAssetRemoved, material);
+
+        if (!asset.resource)
+            return;
+
+        var dirty = false;
+        for (var key in material) {
+            if (material.hasOwnProperty(key) && !pc.string.startsWith(key, '_')) {
+                if (material[key] === asset.resource) {
+                    material[key] = null;
+                    dirty = true;
+                }
+            }
+        }
+
+        if (dirty) {
+            material.update();
+        }
+    }
+
     function onTextureAssetChanged (asset, attribute, newValue, oldValue) {
         if (attribute !== 'resource') {
             return;
@@ -10,7 +32,7 @@ pc.extend(pc.resources, function () {
 
         if (oldValue) {
             for (var key in material) {
-                if (material.hasOwnProperty(key)) {
+                if (material.hasOwnProperty(key) && !pc.string.startsWith(key, '_')) {
                     if (material[key] === oldValue) {
                         material[key] = newValue;
                         dirty = true;
@@ -23,6 +45,65 @@ pc.extend(pc.resources, function () {
             material.update();
         } else {
             asset.off('change', onTextureAssetChanged, material);
+            asset.off('remove', onTextureAssetRemoved, material);
+        }
+    }
+
+    function onCubemapRemoved (asset) {
+        var material = this;
+        asset.off('remove', onCubemapRemoved, material);
+
+        if (!asset.resource)
+            return;
+
+        var dirty = false;
+        if (material.cubeMap === asset.resources[0]) {
+            material.cubeMap = null;
+            dirty = true;
+        }
+
+        if (asset.resources.length > 1) {
+            var mipSize = 128;
+            for (var i = 1; i < asset.resources.length; i++) {
+                var prop = 'prefilteredCubeMap' + mipSize;
+                if (material[prop] === asset.resources[i]) {
+                    material[prop] = null;
+                    dirty = true;
+                }
+            }
+        }
+
+        if (dirty) {
+            material.update();
+        }
+    }
+
+    function onCubemapChanged (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resources') {
+            return;
+        }
+
+        var material = this;
+
+        var dirty = false;
+        if (material.cubeMap === oldValue[0]) {
+            material.cubeMap = newValue[0];
+            dirty = true;
+        }
+
+        var mipSize = 128;
+        for (var i = 0; i < 6; i++) {
+            var prop = 'prefilteredCubeMap' + mipSize;
+            if (material[prop] === oldValue[i]) {
+                material[prop] = newValue[i];
+                dirty = true;
+            }
+        }
+
+        if (dirty) {
+            material.update();
+        } else {
+            asset.off('change', onCubemapChanged, material);
         }
     }
 
@@ -120,7 +201,9 @@ pc.extend(pc.resources, function () {
             data: data.shader === 'blinn' ? pc.SPECULAR_BLINN : pc.SPECULAR_PHONG
         });
 
-        var textures = {};
+        var textures = [];
+
+        var cubemapParam = null;
 
         // Replace texture ids with actual textures
         // Should we copy 'data' here instead of updating in place?
@@ -129,26 +212,84 @@ pc.extend(pc.resources, function () {
             if (param.type === 'texture' && param.data && !(param.data instanceof pc.Texture)) {
                 var textureAsset = this._getTextureAssetFromRegistry(param.data, request);
                 if (textureAsset) {
-                    textures[textureAsset.id] = textureAsset;
+                    textures.push(textureAsset);
                 }
 
                 this._loadTextureParamFromCache(param, textureAsset);
                 if (!(param.data instanceof pc.Texture) && textureAsset) {
                     requests.push(this._loadTextureParamPromise(param, textureAsset));
                 }
-            } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
-                var cubemapAsset = this._getTextureAssetFromRegistry(param.data, request);
-                this._loadCubemapParamFromCache(param, cubemapAsset);
-                if (!(param.data instanceof pc.Texture) && cubemapAsset) {
-                    requests.push(this._loadCubemapParamPromise(param, cubemapAsset));
-                }
+            } else if (param.name === 'cubeMap' && param.data) {
+                cubemapParam = param;
             }
         }
 
-        for (var id in textures) {
-            textures[id].off('change', onTextureAssetChanged, material);
-            textures[id].on('change', onTextureAssetChanged, material);
+        // Cubemap parameter is more complicated so load it separately
+        if (cubemapParam) {
+            var cubemapAsset = this._getTextureAssetFromRegistry(cubemapParam.data, request);
+            if (cubemapAsset) {
+                if (cubemapAsset.resources.length) {
+                    // set plain cubemap to param.data
+                    cubemapParam.data = cubemapAsset.resources[0];
+
+                    // add new params for prefiltered cubemaps
+                    if (cubemapAsset.resources.length > 1) {
+                        var mipSize = 128;
+                        for (var i = 0; i < 6; i++) {
+                            data.parameters.push({
+                                name: 'prefilteredCubeMap' + mipSize,
+                                data: cubemapAsset.resources[i+1]
+                            });
+
+                            mipSize *= 0.5;
+                        }
+                    }
+                } else {
+                    // load
+                    requests.push(this._assets.load(cubemapAsset).then(function (resources) {
+                        var cubemaps = resources[0];
+
+                        // set plain cubemap to param.data
+                        cubemapParam.data = cubemaps[0];
+
+                        // add new params for prefiltered cubemaps
+                        if (cubemaps.length > 1) {
+                            var mipSize = 128;
+                            for (var i = 0; i < 6; i++) {
+                                data.parameters.push({
+                                    name: 'prefilteredCubeMap' + mipSize,
+                                    data: cubemaps[i+1]
+                                });
+
+                                mipSize *= 0.5;
+                            }
+                        }
+                    }, function (error) {
+                        cubemapParam.data = null;
+                    }));
+                }
+
+                // attach change / remove handlers to the cubemap asset
+                cubemapAsset.off('change', onCubemapChanged, material);
+                cubemapAsset.on('change', onCubemapChanged, material);
+
+                cubemapAsset.off('remove', onCubemapRemoved, material);
+                cubemapAsset.on('remove', onCubemapRemoved, material);
+            } else {
+                pc.log.error(pc.string.format('Could not load cubemap. Asset {0} not found', cubemapParam.data));
+                cubemapParam.data = null;
+            }
         }
+
+        // TODO: move this inside the loop
+        textures.forEach(function (textureAsset) {
+            textureAsset.off('change', onTextureAssetChanged, material);
+            textureAsset.on('change', onTextureAssetChanged, material);
+
+            textureAsset.off('remove', onTextureAssetRemoved, material);
+            textureAsset.on('remove', onTextureAssetRemoved, material);
+
+        });
 
         if (requests.length) {
             pc.promise.all(requests).then(function () {
@@ -185,27 +326,6 @@ pc.extend(pc.resources, function () {
 
     MaterialResourceHandler.prototype._loadTextureParamPromise = function(param, textureAsset) {
         return this._assets.load(textureAsset).then(function (resources) {
-            param.data = resources[0];
-        }, function (error) {
-            param.data = null;
-        });
-    };
-
-    // Try to load a cubemap from the cache and set param.data to it.
-    MaterialResourceHandler.prototype._loadCubemapParamFromCache = function(param, cubemapAsset) {
-        if (cubemapAsset) {
-            if (cubemapAsset.resource) {
-                param.data = cubemapAsset.resource;
-            }
-        } else {
-            pc.log.error(pc.string.format('Could not load cubemap. Asset {0} not found', param.data));
-            param.data = null;
-        }
-    };
-
-    // Return a promise which loads the cubemap asset and sets it to param.data if successful
-    MaterialResourceHandler.prototype._loadCubemapParamPromise = function(param, cubemapAsset) {
-        return this._assets.load(cubemapAsset).then(function (resources) {
             param.data = resources[0];
         }, function (error) {
             param.data = null;

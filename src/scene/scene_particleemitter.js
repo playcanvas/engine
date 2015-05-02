@@ -267,6 +267,7 @@ pc.extend(pc, function() {
         this.constantEmitterPos = gd.scope.resolve("emitterPos");
         this.constantEmitterScale = gd.scope.resolve("emitterScale");
         this.constantSpawnBounds = gd.scope.resolve("spawnBounds");
+        this.constantSpawnBoundsSphere = gd.scope.resolve("spawnBoundsSphere");
         this.constantInitialVelocity = gd.scope.resolve("initialVelocity");
         this.constantFrameRandom = gd.scope.resolve("frameRandom");
         this.constantDelta = gd.scope.resolve("delta");
@@ -626,7 +627,7 @@ pc.extend(pc, function() {
                     alignToMotion: this.emitter.alignToMotion,
                     soft: this.emitter.depthSoftening && this.emitter._hasDepthTarget(),
                     mesh: this.emitter.useMesh,
-                    srgb: this.emitter.scene ? this.emitter.scene.gammaCorrection : false,
+                    gamma: this.emitter.scene ? this.emitter.scene.gammaCorrection : 0,
                     toneMap: this.emitter.scene ? this.emitter.scene.toneMapping : 0,
                     fog: this.emitter.scene ? this.emitter.scene.fog : "none",
                     wrap: this.emitter.wrap && this.emitter.wrapBounds,
@@ -868,9 +869,9 @@ pc.extend(pc, function() {
 
             if (this.emitterShape === pc.EMITTERSHAPE_BOX) {
                 if (this.meshInstance.node === null){
-                    spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.spawnBounds);
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, pc.Quat.IDENTITY, this.emitterExtents);
                 } else {
-                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.spawnBounds).mul(this.meshInstance.node.getLocalScale()));
+                    spawnMatrix.setTRS(pc.Vec3.ZERO, this.meshInstance.node.getRotation(), tmpVec3.copy(this.emitterExtents).mul(this.meshInstance.node.getLocalScale()));
                 }
             }
 
@@ -896,7 +897,7 @@ pc.extend(pc, function() {
                     mat4ToMat3(spawnMatrix, spawnMatrix3);
                     this.constantSpawnBounds.setValue(spawnMatrix3.data);
                 } else {
-                    this.constantSpawnBounds.setValue(this.spawnBounds);
+                    this.constantSpawnBoundsSphere.setValue(this.emitterRadius);
                 }
                 this.constantInitialVelocity.setValue(this.initialVelocity);
 

@@ -51,7 +51,6 @@
 ../src/graphics/graphics_simpleposteffect.js
 ../src/graphics/graphics_prefiltercubemap.js
 ../src/graphics/programlib/chunks/generated_shaderchunks.js
-../src/graphics/graphics_defaultShaderChunks.js
 ../src/graphics/programlib/programlib_programlib.js
 ../src/graphics/programlib/programlib_basic.js
 ../src/graphics/programlib/programlib_depth.js
@@ -112,9 +111,6 @@
 ../src/framework/components/model/model_system.js
 ../src/framework/components/model/model_component.js
 ../src/framework/components/model/model_data.js
-../src/framework/components/skybox/skybox_system.js
-../src/framework/components/skybox/skybox_component.js
-../src/framework/components/skybox/skybox_data.js
 ../src/framework/components/camera/camera_system.js
 ../src/framework/components/camera/camera_component.js
 ../src/framework/components/camera/camera_data.js

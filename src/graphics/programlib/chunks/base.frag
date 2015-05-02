@@ -1,17 +1,7 @@
 
-// Compiler should remove unneeded stuff
 uniform vec3 view_position;
 
 uniform vec3 light_globalAmbient;
-
-varying vec3 vPositionW;
-varying vec3 vNormalW;
-varying vec3 vTangentW;
-varying vec3 vBinormalW;
-varying vec2 vUv0;
-varying vec2 vUv1;
-varying vec4 vVertexColor;
-varying vec3 vNormalV;
 
 struct psInternalData {
     vec3 albedo;
@@ -61,6 +51,10 @@ float square(float x) {
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
+}
+
+vec3 saturate(vec3 x) {
+    return clamp(x, vec3(0.0), vec3(1.0));
 }
 
 float getFalloffInvSquared(inout psInternalData data, float lightRadius) {

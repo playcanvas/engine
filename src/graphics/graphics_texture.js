@@ -30,7 +30,6 @@ pc.extend(pc, function () {
         var autoMipmap = true;
         var rgbm = false;
         var fixCubemapSeams = false;
-        var hdr = false; // deprecated property, only for backwards compatibility
 
         if (options !== undefined) {
             width = (options.width !== undefined) ? options.width : width;
@@ -39,7 +38,6 @@ pc.extend(pc, function () {
             cubemap = (options.cubemap !== undefined) ? options.cubemap : cubemap;
             autoMipmap = (options.autoMipmap !== undefined) ? options.autoMipmap : autoMipmap;
             rgbm = (options.rgbm !== undefined)? options.rgbm : rgbm;
-            hdr = (options.hdr !== undefined)? options.hdr : hdr;
             fixCubemapSeams = (options.fixCubemapSeams !== undefined)? options.fixCubemapSeams : fixCubemapSeams;
         }
 
@@ -48,7 +46,6 @@ pc.extend(pc, function () {
         this.autoMipmap = autoMipmap;
         this.rgbm = rgbm;
         this.fixCubemapSeams = fixCubemapSeams;
-        this.hdr = hdr;
 
         // PRIVATE
         this._cubemap = cubemap;
@@ -133,7 +130,7 @@ pc.extend(pc, function () {
     Object.defineProperty(Texture.prototype, 'anisotropy', {
         get: function () { return this._anisotropy; },
         set: function (anisotropy) {
-            this._anisotropy = anisotropy;
+            this._anisotropy = pc.math.clamp(anisotropy, 1, this.device.maxAnisotropy);
         }
     });
 
@@ -361,7 +358,7 @@ pc.extend(pc, function () {
             this._needsUpload = true;
         },
 
-        getDDS: function () {
+        getDds: function () {
             if (this.format!=pc.PIXELFORMAT_R8_G8_B8_A8) {
                 console.error("This format is not implemented yet");
             }

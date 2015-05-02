@@ -1,5 +1,107 @@
 # PlayCanvas Engine Changes
 
+### v0.166.4
+* [FIX] Seams at skybox borders
+* LDR skyboxs now work with exposure and tonemapping
+* Added pc.Scene#skyboxIntensity which works as an environment multiplier
+* Added pc.Scene#skyboxMip to select mip level to use for skybox
+
+### v0.166.3
+* Removed skybox component.
+* [FIX] Reject dds / crn texture requests if they fail to load the file URLs.
+* [FIX] Clamp anisotropy values to avoid WebGL errors.
+* [FIX] Shader generation when using RGBM texture for emission.
+* [FIX] Appearance when metalness is 0.
+* [FIX] Gamma correction artifacts.
+* [FIX] Cubemap seams on WebGL.
+
+### v0.166.2
+* [FIX] Work around for Chrome bug that prevents audio from looping
+
+### v0.166.1
+* [FIX] Don't use opacity when blend mode is BLEND_NONE.
+* Added BLEND_ADDITIVEALPHA blend mode.
+* Added vertex color material inputs.
+* Added support for loading hdr cubemaps and textures.
+* Added contrast and intensity controls for specular occlusion.
+
+### v0.166.0
+* Added support for multiple shader variants.
+* [FIX] Receive shadows.
+* [FIX] Using same material on skinned and non skinned meshes is now allowed.
+* [FIX] Add assets that do not have a file field to the resource loader cache.
+* [FIX] Flipped X axis for cubemaps.
+
+### v0.165.9
+* [FIX] Shader compilation error for Toksvig.
+
+### v0.165.8
+* Lerp Toksvig
+* [FIX] AABB calculation for skinned meshes.
+* [FIX] Exceptions when changing particle emitter shape at runtime.
+* [FIX] Clear scene prefiltered properties when skybox is removed.
+* [FIX] Issue with duplicate models disappearing when the material mapping on the model asset changes.
+* [FIX] Invalid declaration for chunks.
+* [FIX] Particle emitter debug shape was twice larger than it should be.
+* Gamma and tonemapping are no longer global.
+* Change cubemap resolution if it was resized.
+
+### v0.165.7
+* [FIX] Shader bug on Nexus 5 fixed by removing vNormalW varying.
+
+### v0.165.6
+* [FIX] Pre-filtered cubemaps don't effect phong materials
+* [FIX] Removed deprecated hdr property from pc.Texture
+
+### v0.165.5
+* [FIX] Shadow clamping issue.
+* Added asset.resources property and made asset.resource another property
+* Assets can now load multiple resources
+* Cubemap resource loader now returns multiple textures if cubemap is prefiltered
+
+### v0.165.4
+* [FIX] Incorrect shadow clamping.
+* [FIX] Bug in GPU particles on Intel HD devices.
+* [FIX] Getting viewMatrix from camera.
+* [FIX] Reload skybox if it changes.
+* [FIX] Typo for material chunks.
+* Added support for prefiltered cubemaps as dds textures.
+* Simplified using prefiltered cubemaps.
+* Simplified and optimized shadowmap clamping.
+* Removed unused varyings in shaders.
+
+### v0.165.3
+* [FIX] Remove vVertexColor varying from default material shader.
+
+### v0.165.2
+* [FIX] Shadowmap shader now accounts for selected opacity channel.
+
+### v0.165.1
+* [FIX] Changing gamma correction now works properly.
+
+### v0.165.0
+* Added Box-Projected cubemaps.
+* Added support for custom shader chunks.
+* Added support for Metalness workflow.
+* Added support for Refraction.
+* Added light bitmasks to select which lights affect specific surfaces.
+* Added support for ETC1 texture compresssion.
+* Added camera frustum culling.
+* Added support for controlling shadow map update rate.
+* Added support for geometry instancing.
+* Gamma correction is now an enum instead of a boolean.
+* Added support for changing fragment shader precision.
+* First direct / spot shadow map is now projected in the vertex shader.
+* Can now change shadow map sampling per light / material.
+* Now firing 'remove' event when an asset is removed. If an asset is removed from the asset registry components will remove the reference to that asset.
+* Now setting texture references to null for materials whose texture assets are removed.
+* Changed .vs / .ps files to .vert / .frag instead.
+* Added improvements to cubemap prefiltering.
+* Added lots of graphics fixes and optimizations.
+* [FIX] Point light shadows circular artifact.
+* [FIX] Wrong bias for spot light shadows.
+* [FIX] Shader error when using phong + ambientTint.
+
 ### v0.164.3
 * Add pc.Application#timeScale
 

@@ -142,23 +142,57 @@ pc.extend(pc, function() {
     pc.extend(ParticleSystemComponent.prototype, {
 
         onSetColorMapAsset: function (name, oldValue, newValue) {
+            var asset;
+            if (oldValue) {
+                asset = this.system.app.assets.getAssetById(oldValue);
+                if (asset) {
+                    asset.off('remove', this.onColorMapRemoved, this);
+                }
+            }
+
             if (newValue) {
-                this._loadAsset(newValue, function (resource) {
+                asset = this._loadAsset(newValue, function (resource) {
                     this.colorMap = resource;
                 }.bind(this));
+
+                if (asset) {
+                    asset.on('remove', this.onColorMapRemoved, this);
+                }
             } else {
                 this.colorMap = null;
             }
         },
 
+        onColorMapRemoved: function (asset) {
+            asset.off('remove', this.onColorMapRemoved, this);
+            this.colorMapAsset = null;
+        },
+
         onSetNormalMapAsset: function (name, oldValue, newValue) {
+            var asset;
+            if (oldValue) {
+                asset = this.system.app.assets.getAssetById(oldValue);
+                if (asset) {
+                    asset.off('remove', this.onNormalMapRemoved, this);
+                }
+            }
+
             if (newValue) {
-                this._loadAsset(newValue, function (resource) {
+                asset = this._loadAsset(newValue, function (resource) {
                     this.normalMap = resource;
                 }.bind(this));
+
+                if (asset) {
+                    asset.on('remove', this.onNormalMapRemoved, this);
+                }
             } else {
                 this.normalMap = null;
             }
+        },
+
+        onNormalMapRemoved: function (asset) {
+            asset.off('remove', this.onNormalMapRemoved, this);
+            this.normalMapAsset = null;
         },
 
         _loadAsset: function (assetId, callback) {
@@ -183,15 +217,29 @@ pc.extend(pc, function() {
                     callback(resources[0]);
                 });
             }
+
+            return asset;
         },
 
         onSetMesh: function (name, oldValue, newValue) {
+            var asset;
+            if (oldValue && pc.type(oldValue) === 'number') {
+                asset = this.system.app.assets.getAssetById(oldValue);
+                if (asset) {
+                    asset.off('remove', this.onMeshRemoved, this);
+                }
+            }
+
             if (newValue) {
                 if (newValue instanceof pc.Asset || pc.type(newValue) === 'number') {
                     // asset
-                    this._loadAsset(newValue, function (model) {
+                    asset = this._loadAsset(newValue, function (model) {
                         this._onMeshChanged(model);
                     }.bind(this));
+
+                    if (asset) {
+                        asset.on('remove', this.onMeshRemoved, this);
+                    }
                 } else {
                     // model resource
                     this._onMeshChanged(newValue);
@@ -218,6 +266,11 @@ pc.extend(pc, function() {
                 this.emitter.resetMaterial();
                 this.rebuild();
             }
+        },
+
+        onMeshRemoved: function (asset) {
+            asset.off('remove', this.onMeshRemoved, this);
+            this.mesh = null;
         },
 
         onSetLoop: function (name, oldValue, newValue) {

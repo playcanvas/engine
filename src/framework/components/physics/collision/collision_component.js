@@ -150,8 +150,38 @@ pc.extend(pc, function () {
         },
 
         onSetAsset: function (name, oldValue, newValue) {
+            var asset;
+
+            if (oldValue) {
+                // Remove old listeners
+                asset = this.system.app.assets.getAssetById(oldValue);
+                if (asset) {
+                    asset.off('remove', this.onAssetRemoved, this);
+                }
+            }
+
+            if (newValue) {
+                if (newValue instanceof pc.asset.Asset) {
+                    this.data.asset = newValue.id;
+                }
+
+                asset = this.system.app.assets.getAssetById(this.data.asset);
+                if (asset) {
+                    // make sure we don't subscribe twice
+                    asset.off('remove', this.onAssetRemoved, this);
+                    asset.on('remove', this.onAssetRemoved, this);
+                }
+            }
+
             if (this.data.initialized && this.data.type === 'mesh') {
                 this.system.recreatePhysicalShapes(this);
+            }
+        },
+
+        onAssetRemoved: function (asset) {
+            asset.off('remove', this.onAssetRemoved, this);
+            if (this.data.asset === asset.id) {
+                this.asset = null;
             }
         },
 

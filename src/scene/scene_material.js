@@ -9,6 +9,7 @@ pc.extend(pc, function () {
         this.name = "Untitled";
         this.id = id++;
         this.shader = null;
+        this.variants = {};
 
         this.parameters = {};
 
@@ -29,7 +30,6 @@ pc.extend(pc, function () {
         this.greenWrite = true;
         this.blueWrite = true;
         this.alphaWrite = true;
-        this.mask = 1;
 
         this.meshInstances = []; // The mesh instances referencing this material
     };
@@ -51,6 +51,11 @@ pc.extend(pc, function () {
                        (this.blendDst === pc.BLENDMODE_ONE) &&
                        (this.blendEquation === pc.BLENDEQUATION_ADD)) {
                 return pc.BLEND_ADDITIVE;
+            } else if ((this.blend) &&
+                       (this.blendSrc === pc.BLENDMODE_SRC_ALPHA) &&
+                       (this.blendDst === pc.BLENDMODE_ONE) &&
+                       (this.blendEquation === pc.BLENDEQUATION_ADD)) {
+                return pc.BLEND_ADDITIVEALPHA;
             } else if ((this.blend) &&
                        (this.blendSrc === pc.BLENDMODE_DST_COLOR) &&
                        (this.blendDst === pc.BLENDMODE_ZERO) &&
@@ -91,6 +96,12 @@ pc.extend(pc, function () {
                     this.blendDst = pc.BLENDMODE_ONE;
                     this.blendEquation = pc.BLENDEQUATION_ADD;
                     break;
+                case pc.BLEND_ADDITIVEALPHA:
+                    this.blend = true;
+                    this.blendSrc = pc.BLENDMODE_SRC_ALPHA;
+                    this.blendDst = pc.BLENDMODE_ONE;
+                    this.blendEquation = pc.BLENDEQUATION_ADD;
+                    break;
                 case pc.BLEND_MULTIPLICATIVE:
                     this.blend = true;
                     this.blendSrc = pc.BLENDMODE_DST_COLOR;
@@ -106,6 +117,7 @@ pc.extend(pc, function () {
         clone.name = this.name;
         clone.id = id++;
         clone.shader = null;
+        clone.variants = {}; // ?
 
         clone.parameters = {};
 
@@ -126,7 +138,6 @@ pc.extend(pc, function () {
         clone.greenWrite = this.greenWrite;
         clone.blueWrite = this.blueWrite;
         clone.alphaWrite = this.alphaWrite;
-        clone.mask = this.mask;
 
         clone.meshInstances = [];
     },
@@ -144,7 +155,7 @@ pc.extend(pc, function () {
         }
     };
 
-    Material.prototype.updateShader = function (device, scene) {
+    Material.prototype.updateShader = function (device, scene, objDefs) {
         // For vanilla materials, the shader can only be set by the user
     }
 
@@ -180,6 +191,13 @@ pc.extend(pc, function () {
 
     Material.prototype.getParameters = function () {
         return this.parameters;
+    };
+
+    Material.prototype.clearVariants = function () {
+        this.variants = {};
+        for (i=0; i<this.meshInstances.length; i++) {
+            this.meshInstances[i]._shader = null;
+        }
     };
 
     /**

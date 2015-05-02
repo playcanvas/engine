@@ -163,6 +163,9 @@ pc.extend(pc, function () {
                 type: ['point', 'spot']
             }
         }, {
+            name: "shadowType",
+            exposed: false
+        }, {
             name: "shadowUpdateMode",
             exposed: false
         }, {
@@ -348,8 +351,6 @@ pc.extend(pc, function () {
                 var model = new pc.Model();
                 model.graph = component.entity;
                 model.meshInstances = [ new pc.MeshInstance(component.entity, this.mesh, this.material) ];
-
-                app.scene.addModel(model);
 
                 data.model = model;
             }

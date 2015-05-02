@@ -50,7 +50,12 @@ pc.extend(pc.resources, function () {
                     resolve(response);
                 }, {
                     cache: true,
-                    responseType: 'arraybuffer'
+                    responseType: 'arraybuffer',
+                    error: function (status) {
+                        var asset = self._assets.getAssetByUrl(request.canonical);
+                        var url = asset ? asset.id : identifier;
+                        reject('Could not load texture ' + url + '. Status: ' + status);
+                    }
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var image = new Image();
@@ -88,6 +93,8 @@ pc.extend(pc.resources, function () {
         var self = this;
         var texture;
 
+        var asset = self._assets.getAssetByUrl(request.canonical);
+
         // Every browser seems to pass data as an Image type. For some reason, the XDK
         // passes an HTMLImageElement. TODO: figure out why!
         // DDS textures are ArrayBuffers
@@ -103,9 +110,7 @@ pc.extend(pc.resources, function () {
                     format: format
                 });
 
-                var asset = self._assets.getAssetByUrl(request.canonical);
                 if (asset && asset.data) {
-
                     var updateTexture = function (data) {
                         // check if data exists - it might not exist for engine-only users
                         if (data.name !== undefined) texture.name = data.name;
@@ -114,6 +119,7 @@ pc.extend(pc.resources, function () {
                         if (data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[data.magfilter];
                         if (data.minfilter !== undefined) texture.minFilter = jsonToFilterMode[data.minfilter];
                         if (data.anisotropy !== undefined) texture.anisotropy = data.anisotropy;
+                        if (data.rgbm !== undefined) texture.rgbm  = data.rgbm;
                     };
 
                     updateTexture(asset.data);
@@ -206,7 +212,16 @@ pc.extend(pc.resources, function () {
                 format: format,
                 cubemap: isCubemap
             };
+
+            if (asset && asset.data) {
+                texOptions.rgbm = !!asset.data.rgbm;
+            }
+
             texture = new pc.Texture(this._device, texOptions);
+            if (isCubemap) {
+                texture.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                texture.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+            }
 
             var offset = 128;
             var faces = isCubemap? 6 : 1;

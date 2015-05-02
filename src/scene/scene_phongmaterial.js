@@ -22,6 +22,11 @@ pc.extend(pc, function () {
      * specular color in preference to the 'specular' property.
      * @property {pc.Vec2} specularMapTiling Controls the 2D tiling of the specular map.
      * @property {pc.Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is between 0 and 1.
+     * @property {Number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
+     * This can be used as alternative to specular color to save space.
+     * Metallic surfaces have their reflection tinted with diffuse color.
+     * @property {pc.Texture} metalnessMap Monochrome metalness map.
+     * @property {Boolean} useMetalness Use metalness properties instead of specular.
      * @property {Number} shininess Defines glossiness of the material from 0 (rough) to 100 (mirror).
      * A higher shininess value results in a more focussed specular highlight.
      * @property {pc.Texture} glossMap The per-pixel gloss of the material. This must be a 2D texture
@@ -29,6 +34,10 @@ pc.extend(pc, function () {
      * shininess in preference to the 'shininess' property.
      * @property {pc.Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
      * @property {pc.Vec2} glossMapOffset Controls the 2D offset of the gloss map. Each component is between 0 and 1.
+     * @property {Number} refraction Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
+     * @property {Number} refractionIndex Defines the index of refraction, i.e. the amount of distortion.
+     * The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of it's own surface.
+     * In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
      * @property {pc.Vec3} emissive The emissive color of the material. This color value is 3-component (RGB),
      * where each component is between 0 and 1.
      * @property {pc.Texture} emissiveMap The emissive map of the material. This must be a 2D texture rather
@@ -71,7 +80,9 @@ pc.extend(pc, function () {
      * @property {Boolean} specularMapTint Enables specularMap multiplication by specular color.
      * @property {Boolean} emissiveMapTint Enables emissiveMap multiplication by emissive color.
      * @property {pc.Texture} aoMap Baked ambient occlusion map. Modulates ambient color.
-     * @property {Number} aoMapUvSet Defines UV set used for AO map. Can be 0 or 1.
+     * @property {Boolean} occludeSpecular Uses aoMap to occlude specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it's much better than nothing.
+     * @property {Number} occludeSpecularIntensity Controls visibility of specular occlusion.
+     * @property {Number} occludeSpecularContrast Controls contrast of specular occlusion.
      * @property {Boolean} specularAntialias Enables Toksvig AA for mipmapped normal maps with specular.
      * @property {Boolean} conserveEnergy Defines how diffuse and specular components are combined when Fresnel is on.
         It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
@@ -152,6 +163,7 @@ pc.extend(pc, function () {
 
         obj[name + "MapUv"] = uv;
         if (channels > 0) obj[name + "MapChannel"] = channels > 1? "rgb" : "g";
+        obj[name + "MapVertexColor"] = false;
 
         if (!pc._matTex2D) pc._matTex2D = [];
         pc._matTex2D[name] = channels;
@@ -187,12 +199,6 @@ pc.extend(pc, function () {
             _defineTex2D(this, "light", 1, 3);
 
             this.cubeMap = null;
-            this.prefilteredCubeMap128 = null;
-            this.prefilteredCubeMap64 = null;
-            this.prefilteredCubeMap32 = null;
-            this.prefilteredCubeMap16 = null;
-            this.prefilteredCubeMap8 = null;
-            this.prefilteredCubeMap4 = null;
             this.sphereMap = null;
             this.reflectivity = 1;
 
@@ -202,6 +208,8 @@ pc.extend(pc, function () {
             this.specularAntialias = false;
             this.conserveEnergy = true;
             this.occludeSpecular = true;
+            this.occludeSpecularContrast = 1;
+            this.occludeSpecularIntensity = 1;
             this.shadingModel = pc.SPECULAR_PHONG;
             this.fresnelModel = pc.FRESNEL_NONE;
 
@@ -219,7 +227,7 @@ pc.extend(pc, function () {
             this.cubeMapProjection = 0;
             this.cubeMapProjectionBox = null;
 
-            this.chunks = [];
+            this.chunks = {};
             this.chunks.copy = function(from) {
                 for(var p in from) {
                     if (from.hasOwnProperty(p) && p!=="copy") {
@@ -233,7 +241,17 @@ pc.extend(pc, function () {
             this.useMetalness = false;
             this.metalness = 1;
 
+            this.shadowSampleType = pc.SHADOWSAMPLE_PCF3X3;
+
+            this.forceFragmentPrecision = null;
             this.occludeDirect = false;
+
+            this.prefilteredCubeMap128 = null;
+            this.prefilteredCubeMap64 = null;
+            this.prefilteredCubeMap32 = null;
+            this.prefilteredCubeMap16 = null;
+            this.prefilteredCubeMap8 = null;
+            this.prefilteredCubeMap4 = null;
 
             _endProperties(this);
 
@@ -313,10 +331,10 @@ pc.extend(pc, function () {
             return transform;
         },
 
-        _collectLights: function(lType, lights, lightsSorted) {
+        _collectLights: function(lType, lights, lightsSorted, mask) {
             for (var i = 0; i < lights.length; i++) {
                 if (lights[i].getEnabled()) {
-                    if (lights[i].mask & this.mask) {
+                    if (lights[i].mask & mask) {
                         if (lights[i].getType()==lType) {
                             lightsSorted.push(lights[i]);
                         }
@@ -394,6 +412,13 @@ pc.extend(pc, function () {
 
             this.setParameter('material_opacity', this.opacity);
 
+            if (this.occludeSpecular) {
+                this.setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
+                if (this.occludeSpecularContrast > 0) {
+                    this.setParameter('material_occludeSpecularContrast', this.occludeSpecularContrast);
+                }
+            }
+
             if (this.cubeMapProjection===pc.CUBEPROJ_BOX) {
                 this.cubeMapMinUniform[0] = this.cubeMapProjectionBox.center.x - this.cubeMapProjectionBox.halfExtents.x;
                 this.cubeMapMinUniform[1] = this.cubeMapProjectionBox.center.y - this.cubeMapProjectionBox.halfExtents.y;
@@ -430,11 +455,9 @@ pc.extend(pc, function () {
 
             if (this.cubeMap) {
                 this.setParameter('texture_cubeMap', this.cubeMap);
-                this.setParameter('material_cubemapSize', this.cubeMap.width);
             }
             if (this.prefilteredCubeMap128) {
                 this.setParameter('texture_prefilteredCubeMap128', this.prefilteredCubeMap128);
-                this.setParameter('material_cubemapSize', this.prefilteredCubeMap128.width);
             }
             if (this.prefilteredCubeMap64) {
                 this.setParameter('texture_prefilteredCubeMap64', this.prefilteredCubeMap64);
@@ -463,6 +486,7 @@ pc.extend(pc, function () {
             }
 
             this.shader = null;
+            this.clearVariants();
         },
 
         _getMapTransformID: function(xform, uv) {
@@ -490,64 +514,57 @@ pc.extend(pc, function () {
             return newID + 1;
         },
 
-        updateShader: function (device, scene) {
+        updateShader: function (device, scene, objDefs) {
             var i;
             var lights = scene._lights;
 
             this._mapXForms = [];
-            var prefilteredCubeMap128 = this.prefilteredCubeMap128? this.prefilteredCubeMap128 : scene._prefilteredCubeMap128;
-            var prefilteredCubeMap64 = this.prefilteredCubeMap64? this.prefilteredCubeMap64 : scene._prefilteredCubeMap64;
-            var prefilteredCubeMap32 = this.prefilteredCubeMap32? this.prefilteredCubeMap32 : scene._prefilteredCubeMap32;
-            var prefilteredCubeMap16 = this.prefilteredCubeMap16? this.prefilteredCubeMap16 : scene._prefilteredCubeMap16;
-            var prefilteredCubeMap8 = this.prefilteredCubeMap8? this.prefilteredCubeMap8 : scene._prefilteredCubeMap8;
-            var prefilteredCubeMap4 = this.prefilteredCubeMap4? this.prefilteredCubeMap4 : scene._prefilteredCubeMap4;
-
-            var prefilteredCubeMap = prefilteredCubeMap128 && prefilteredCubeMap64 && prefilteredCubeMap32
-                                   && prefilteredCubeMap16 && prefilteredCubeMap8 && prefilteredCubeMap4;
 
             var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
 
-            var mips = [prefilteredCubeMap128, prefilteredCubeMap64, prefilteredCubeMap32, prefilteredCubeMap16, prefilteredCubeMap8, prefilteredCubeMap4];
-            if (prefilteredCubeMap && useTexCubeLod) {
-                // Set up hires texture to contain the whole mip chain
-                if (!prefilteredCubeMap128._prefilteredMips) {
-                    prefilteredCubeMap128.autoMipmap = false;
-                    var mip, face;
-                    for(mip=1; mip<6; mip++) {
-                        prefilteredCubeMap128._levels[mip] = mips[mip]._levels[0];
-                    }
-                    prefilteredCubeMap128.upload();
-                    prefilteredCubeMap128.minFilter = pc.FILTER_LINEAR_MIPMAP_LINEAR;
-                    prefilteredCubeMap128.magFilter = pc.FILTER_LINEAR;
-                    prefilteredCubeMap128._prefilteredMips = true;
-                }
-            }
+            var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.skyboxPrefiltered128;
+            var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.skyboxPrefiltered64;
+            var prefilteredCubeMap32 = this.prefilteredCubeMap32 || scene.skyboxPrefiltered32;
+            var prefilteredCubeMap16 = this.prefilteredCubeMap16 || scene.skyboxPrefiltered16;
+            var prefilteredCubeMap8 = this.prefilteredCubeMap8 || scene.skyboxPrefiltered8;
+            var prefilteredCubeMap4 = this.prefilteredCubeMap4 || scene.skyboxPrefiltered4;
 
             if (prefilteredCubeMap128) {
-                if (prefilteredCubeMap128 === scene._prefilteredCubeMap128) {
-                    this.setParameter('texture_prefilteredCubeMap128', scene._prefilteredCubeMap128);
-                    this.setParameter('texture_prefilteredCubeMap64', scene._prefilteredCubeMap64);
-                    this.setParameter('texture_prefilteredCubeMap32', scene._prefilteredCubeMap32);
-                    this.setParameter('texture_prefilteredCubeMap16', scene._prefilteredCubeMap16);
-                    this.setParameter('texture_prefilteredCubeMap8', scene._prefilteredCubeMap8);
-                    this.setParameter('texture_prefilteredCubeMap4', scene._prefilteredCubeMap4);
-                    this.setParameter('material_cubemapSize', scene._prefilteredCubeMap128.width);
-                }
-            }
+                var allMips = prefilteredCubeMap128 &&
+                              prefilteredCubeMap64 &&
+                              prefilteredCubeMap32 &&
+                              prefilteredCubeMap16 &&
+                              prefilteredCubeMap8 &&
+                              prefilteredCubeMap4;
 
-            if (prefilteredCubeMap) {
-                // backwards compatibility
-                for(i=0; i<mips.length; i++) {
-                    if (mips[i].hdr) mips[i].rgbm = mips[i].fixCubemapSeams = true;
+                if (useTexCubeLod) {
+                    if (prefilteredCubeMap128._levels.length<6) {
+                        if (allMips) {
+                            // Multiple -> single (provided cubemap per mip, but can use texCubeLod)
+                            this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                        } else {
+                            console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
+                        }
+                    } else {
+                        // Single (able to use single cubemap with texCubeLod)
+                        this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                    }
+                } else if (allMips) {
+                    // Multiple (no texCubeLod, but able to use cubemap per mip)
+                    this.setParameter('texture_prefilteredCubeMap128', prefilteredCubeMap128);
+                    this.setParameter('texture_prefilteredCubeMap64', prefilteredCubeMap64);
+                    this.setParameter('texture_prefilteredCubeMap32', prefilteredCubeMap32);
+                    this.setParameter('texture_prefilteredCubeMap16', prefilteredCubeMap16);
+                    this.setParameter('texture_prefilteredCubeMap8', prefilteredCubeMap8);
+                    this.setParameter('texture_prefilteredCubeMap4', prefilteredCubeMap4);
+                } else {
+                    console.log("Can't use prefiltered cubemap: " + allMips + ", " + useTexCubeLod + ", " + prefilteredCubeMap128._levels);
                 }
             }
 
             var specularTint = false;
-            var useSpecular = (this.useMetalness? !!this.metalnessMap : !!this.specularMap)
-            || (!!this.sphereMap) || (!!this.cubeMap) || prefilteredCubeMap;
-            useSpecular = useSpecular || (
-                this.useMetalness? this.metalness!==0 : !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0)
-                );
+            var useSpecular = (this.useMetalness? true : !!this.specularMap) || (!!this.sphereMap) || (!!this.cubeMap);
+            useSpecular = useSpecular || (this.useMetalness? true : !(this.specular.r===0 && this.specular.g===0 && this.specular.b===0));
 
             if (useSpecular) {
                 if (this.specularMapTint && !this.useMetalness) {
@@ -555,49 +572,61 @@ pc.extend(pc, function () {
                 }
             }
 
+            var rgbmReflection = prefilteredCubeMap128? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false));
+
             var options = {
                 fog:                        scene.fog,
                 gamma:                      scene.gammaCorrection,
                 toneMap:                    scene.toneMapping,
                 blendMapsWithColors:        this.blendMapsWithColors,
-                skin:                       !!this.meshInstances[0].skinInstance,
                 modulateAmbient:            this.ambientTint,
-                diffuseTint:          (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
-                specularTint:         specularTint,
-                metalnessTint:        this.useMetalness && this.metalness<1,
-                glossTint:            true,
-                emissiveTint:         (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
-                opacityTint:          this.opacity!=1,
+                diffuseTint:                (this.diffuse.r!=1 || this.diffuse.g!=1 || this.diffuse.b!=1) && this.diffuseMapTint,
+                specularTint:               specularTint,
+                metalnessTint:              this.useMetalness && this.metalness<1,
+                glossTint:                  true,
+                emissiveTint:               (this.emissive.r!=1 || this.emissive.g!=1 || this.emissive.b!=1 || this.emissiveIntensity!=1) && this.emissiveMapTint,
+                opacityTint:                this.opacity!=1,
                 needsNormalFloat:           this.normalizeNormalMap,
 
                 sphereMap:                  !!this.sphereMap,
-                cubeMap:                    (!!this.cubeMap) || prefilteredCubeMap,
+                cubeMap:                    !!this.cubeMap,
                 useSpecular:                useSpecular,
-                rgbmReflection:             prefilteredCubeMap? prefilteredCubeMap128.rgbm : (this.cubeMap? this.cubeMap.rgbm : (this.sphereMap? this.sphereMap.rgbm : false)),
+                rgbmReflection:             rgbmReflection,
 
-                hdrReflection:              prefilteredCubeMap? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
+                hdrReflection:              prefilteredCubeMap128? prefilteredCubeMap128.rgbm || prefilteredCubeMap128.format===pc.PIXELFORMAT_RGBA32F
                                           : (this.cubeMap? this.cubeMap.rgbm || this.cubeMap.format===pc.PIXELFORMAT_RGBA32F
                                           : (this.sphereMap? this.sphereMap.rgbm || this.sphereMap.format===pc.PIXELFORMAT_RGBA32F : false)),
 
-                fixSeams:                   prefilteredCubeMap? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
-                prefilteredCubemap:         prefilteredCubeMap,
+                fixSeams:                   prefilteredCubeMap128? prefilteredCubeMap128.fixCubemapSeams : (this.cubeMap? this.cubeMap.fixCubemapSeams : false),
+                prefilteredCubemap:         !!prefilteredCubeMap128,
                 emissiveFormat:             this.emissiveMap? (this.emissiveMap.rgbm? 1 : (this.emissiveMap.format===pc.PIXELFORMAT_RGBA32F? 2 : 0)) : null,
+                useRgbm:                    rgbmReflection || (this.emissiveMap? this.emissiveMap.rgbm : 0),
                 specularAA:                 this.specularAntialias,
                 conserveEnergy:             this.conserveEnergy,
                 occludeSpecular:            this.occludeSpecular,
+                occludeSpecularFloat:      (this.occludeSpecularContrast > 0),
                 occludeDirect:              this.occludeDirect,
                 shadingModel:               this.shadingModel,
                 fresnelModel:               this.fresnelModel,
                 packedNormal:               this.normalMap? this.normalMap._compressed : false,
+                shadowSampleType:           this.shadowSampleType,
+                forceFragmentPrecision:     this.forceFragmentPrecision,
                 useInstancing:              this.useInstancing,
                 fastTbn:                    this.fastTbn,
                 cubeMapProjection:          this.cubeMapProjection,
-                customChunks:               this.chunks,
+                chunks:                     this.chunks,
                 customFragmentShader:       this.customFragmentShader,
-                refraction:                 this.refraction,
+                refraction:                 !!this.refraction,
                 useMetalness:               this.useMetalness,
+                blendType:                  this.blendType,
+                skyboxIntensity:            (prefilteredCubeMap128===scene.skyboxPrefiltered128 && prefilteredCubeMap128) && (scene.skyboxIntensity!==1),
                 useTexCubeLod:              useTexCubeLod
             };
+
+            if (objDefs) {
+                options.noShadow = (objDefs & pc.SHADERDEF_NOSHADOW) !== 0;
+                options.skin = (objDefs & pc.SHADERDEF_SKIN) !== 0;
+            }
 
             for(var p in pc._matTex2D) {
                 var mname = p + "Map";
@@ -609,6 +638,14 @@ pc.extend(pc, function () {
                     options[tname] = this._getMapTransformID(this[tname], this[uname]);
                     options[cname] = this[cname];
                     options[uname] = this[uname];
+                } else if (p!=="height") {
+                    var vname = mname + "VertexColor";
+                    if (this[vname]) {
+                        var cname = mname + "Channel";
+                        options[vname] = this[vname];
+                        options[cname] = this[cname];
+                        options.vertexColors = true;
+                    }
                 }
             }
 
@@ -617,24 +654,35 @@ pc.extend(pc, function () {
             this._mapXForms = null;
 
             var lightsSorted = [];
-            this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted);
-            this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted);
-            this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted);
+            var mask = objDefs? (objDefs >> 8) : 1;
+            this._collectLights(pc.LIGHTTYPE_DIRECTIONAL, lights, lightsSorted, mask);
+            this._collectLights(pc.LIGHTTYPE_POINT,       lights, lightsSorted, mask);
+            this._collectLights(pc.LIGHTTYPE_SPOT,        lights, lightsSorted, mask);
 
             options.lights = lightsSorted;
 
             // Gamma correct colors
-            if (scene.gammaCorrection) {
-                for(i=0; i<3; i++) {
+            for(i=0; i<3; i++) {
+                if (scene.gammaCorrection) {
                     this.ambientUniform[i] = Math.pow(this.ambient.data[i], 2.2);
                     this.diffuseUniform[i] = Math.pow(this.diffuse.data[i], 2.2);
                     this.specularUniform[i] = Math.pow(this.specular.data[i], 2.2);
                     this.emissiveUniform[i] = Math.pow(this.emissive.data[i], 2.2) * this.emissiveIntensity;
+                } else {
+                    this.ambientUniform[i] = this.ambient.data[i];
+                    this.diffuseUniform[i] = this.diffuse.data[i];
+                    this.specularUniform[i] = this.specular.data[i];
+                    this.emissiveUniform[i] = this.emissive.data[i] * this.emissiveIntensity;
                 }
             }
 
             var library = device.getProgramLibrary();
             this.shader = library.getProgram('phong', options);
+
+            if (!objDefs) {
+                this.clearVariants();
+                this.variants[0] = this.shader;
+            }
         }
     });
 

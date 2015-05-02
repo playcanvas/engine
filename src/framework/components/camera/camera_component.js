@@ -68,7 +68,7 @@ pc.extend(pc, function () {
 
     Object.defineProperty(CameraComponent.prototype, "viewMatrix", {
         get: function() {
-            var wtm = this.data.camera.getWorldTransform();
+            var wtm = this.data.camera._node.getWorldTransform();
             return wtm.clone().invert();
         }
     });
