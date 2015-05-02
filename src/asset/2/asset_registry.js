@@ -84,6 +84,13 @@ pc.extend(pc, function () {
                 // loading prefiltered cubemap data
                 this._loader.load(asset.file.url, "texture", function (err, texture) {
                     if (!err) {
+                        // Fudging an asset so that we can apply texture settings from the cubemap to the DDS texture
+                        self._loader.patch({
+                            resource: texture,
+                            type: "texture",
+                            data: asset.data
+                        }, self);
+
                         // store in asset data
                         asset.data.dds = texture;
                         _open();

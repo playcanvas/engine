@@ -161,8 +161,8 @@ pc.extend(pc, function () {
                 var assets = response['assets'];
 
                 self._parseApplicationProperties(props, function (err) {
+                    self._parseAssets(assets);
                     if (!err) {
-                        self._parseAssets(assets);
                         callback(null);
                     } else {
                         callback(err);

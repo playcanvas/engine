@@ -270,6 +270,9 @@ pc.extend(pc, function () {
             if (data.anisotropy !== undefined) {
                 texture.anisotropy = data.anisotropy;
             }
+            if (data.rgbm !== undefined) {
+                texture.rgbm = data.rgbm;
+            }
         }
     };
 
