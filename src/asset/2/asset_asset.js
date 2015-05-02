@@ -48,6 +48,8 @@ pc.extend(pc, function () {
 
         this.name = arguments[0];
         this.type = arguments[1];
+        this.preload = false;
+
         this._file = arguments[2] ? {
             filename: file.filename,
             size: file.size,
@@ -58,7 +60,9 @@ pc.extend(pc, function () {
         this._data = arguments[3] || {};
 
         // This is where the loaded resource will be
-        this.resource = null;
+        // this.resource = null;
+        this._resources = [];
+
         // is resource loaded
         this.loaded = false;
 
@@ -147,6 +151,26 @@ pc.extend(pc, function () {
             if (value !== old) {
                 this.fire('change', this, 'data', value, old);
             }
+        }
+    });
+
+    Object.defineProperty(Asset.prototype, 'resource', {
+        get: function () {
+            return this._resources[0];
+        },
+
+        set: function (value) {
+            this._resources[0] = value;
+        }
+    });
+
+    Object.defineProperty(Asset.prototype, 'resources', {
+        get: function () {
+            return this._resources;
+        },
+
+        set: function (value) {
+            this._resources = value;
         }
     });
 

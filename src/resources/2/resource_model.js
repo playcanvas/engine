@@ -1,4 +1,5 @@
 pc.extend(pc, function () {
+    'use strict';
 
     var JSON_PRIMITIVE_TYPE = {
         "points":        pc.PRIMITIVE_POINTS,

@@ -143,7 +143,7 @@ pc.extend(pc, function () {
         onSetAsset: function (name, oldValue, newValue) {
             if (oldValue) {
                 // Remove old listener
-                var asset = this.system.app.assets.getAssetById(oldValue);
+                var asset = this.system.app.assets.get(oldValue);
                 if (asset) {
                     asset.off('change', this.onAssetChange, this);
                     asset.off('remove', this.onAssetRemoved, this);

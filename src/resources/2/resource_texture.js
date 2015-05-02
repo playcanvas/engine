@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    'use strict';
+
     var JSON_ADDRESS_MODE = {
         "repeat": pc.ADDRESS_REPEAT,
         "clamp":  pc.ADDRESS_CLAMP_TO_EDGE,
@@ -42,7 +44,10 @@ pc.extend(pc, function () {
                     callback(null, response);
                 }, {
                     cache: true,
-                    responseType: 'arraybuffer'
+                    responseType: 'arraybuffer',
+                    error: function (status, xhr, e) {
+                        callback(status);
+                    }
                 });
             } else if ((ext === '.jpg') || (ext === '.jpeg') || (ext === '.gif') || (ext === '.png')) {
                 var image = new Image();

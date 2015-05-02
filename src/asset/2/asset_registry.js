@@ -74,14 +74,41 @@ pc.extend(pc, function () {
         load: function (asset) {
             var self = this;
 
-            if (asset.file) {
-                this._loader.load(asset.file.url, asset.type, function (err, resource) {
-                    if (err) {
-                        self.fire("error", err);
-                        self.fire("error:" + asset.id, err);
+            var load = !!(asset.file);
+            var open = !load;
+
+            // check for special case for cubemaps
+            if (asset.file && asset.type === "cubemap") {
+                load = false;
+                open = false;
+                // loading prefiltered cubemap data
+                this._loader.load(asset.file.url, "texture", function (err, texture) {
+                    if (!err) {
+                        // store in asset data
+                        asset.data.dds = texture;
+                        _open();
+                    } else {
+                        self.fire("error", err, asset);
+                        self.fire("error:" + asset.id, err, asset);
+                        asset.fire("error", err, asset);
                         return;
                     }
-                    asset.resource = resource;
+                });
+            }
+
+            var _load = function () {
+                self._loader.load(asset.file.url, asset.type, function (err, resource) {
+                    if (err) {
+                        self.fire("error", err, asset);
+                        self.fire("error:" + asset.id, err, asset);
+                        asset.fire("error", err, asset);
+                        return;
+                    }
+                    if (resource instanceof Array) {
+                        asset.resources = resource;
+                    } else {
+                        asset.resource = resource;
+                    }
                     asset.loaded = true;
 
                     self._loader.patch(asset, self);
@@ -90,9 +117,15 @@ pc.extend(pc, function () {
                     self.fire("load:" + asset.id, asset);
                     asset.fire("load", asset);
                 });
-            } else {
+            };
+
+            var _open = function () {
                 var resource = self._loader.open(asset.type, asset.data);
-                asset.resource = resource;
+                if (resource instanceof Array) {
+                    asset.resources = resource;
+                } else {
+                    asset.resource = resource;
+                }
                 asset.loaded = true;
 
                 self._loader.patch(asset, self);
@@ -100,6 +133,12 @@ pc.extend(pc, function () {
                 self.fire("load", asset);
                 self.fire("load:" + asset.id, asset);
                 asset.fire("load", asset);
+            };
+
+            if (!asset.file) {
+                _open();
+            } else if (load) {
+                _load();
             }
         },
 
@@ -119,11 +158,11 @@ pc.extend(pc, function () {
         */
         findAll: function (name, type) {
             var self = this;
-            var ids = this._names[name];
+            var idxs = this._names[name];
             var assets;
-            if (ids) {
-                assets = ids.map(function (id) {
-                    return self._cache[id];
+            if (idxs) {
+                assets = idxs.map(function (idx) {
+                    return self._assets[idx];
                 });
 
                 if (type) {

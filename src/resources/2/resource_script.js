@@ -1,5 +1,6 @@
-
 pc.extend(pc, function () {
+    'use strict';
+
     /**
      * @name pc.resources.ScriptResourceHandler
      * @class ResourceHandler for loading javascript files dynamically

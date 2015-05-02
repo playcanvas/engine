@@ -1,4 +1,6 @@
 pc.extend(pc, function () {
+    'use strict';
+
     var ResourceLoader = function () {
         this._handlers = {};
         this._requests = {};
@@ -53,7 +55,9 @@ pc.extend(pc, function () {
 
         patch: function (asset, assets) {
             var handler = this._handlers[asset.type];
-            handler.patch(asset, assets);
+            if (handler.patch) {
+                handler.patch(asset, assets);
+            }
         },
 
         addToCache: function (key, resource) {

@@ -44,7 +44,7 @@ pc.extend(pc, function () {
         this._audioManager = new pc.AudioManager();
         this.loader = new pc.ResourceLoader();
 
-        this.scene = new pc.Scene();
+        this.scene = null; //new pc.Scene();
         this.root = new pc.fw.Entity(this);
         this.assets = new pc.AssetRegistry(this.loader);
         this.renderer = new pc.ForwardRenderer(this.graphicsDevice);
@@ -57,46 +57,39 @@ pc.extend(pc, function () {
         this.content = null;
 
         this._inTools = false;
-        this._link = new pc.LiveLink("application");
-        this._link.addDestinationWindow(window);
-        this._link.listen(this._handleMessage.bind(this));
+        // this._link = new pc.LiveLink("application");
+        // this._link.addDestinationWindow(window);
+        // this._link.listen(this._handleMessage.bind(this));
 
 
-        if( options.cache === false ) {
-            this.loader.cache = false;
-        }
+        // if( options.cache === false ) {
+        //     this.loader.cache = false;
+        // }
 
         // Display shows debug loading information. Only really fit for debug display at the moment.
-        if (options.displayLoader) {
-            var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, this.loader);
-        }
+        // if (options.displayLoader) {
+        //     var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, this.loader);
+        // }
 
 
-        if (options.content) {
-            this.content = options.content;
-            // Add the assets from all TOCs to the
-            Object.keys(this.content.toc).forEach(function (key) {
-                this.assets.addGroup(key, this.content.toc[key]);
-            }.bind(this));
-        }
+        // if (options.content) {
+        //     this.content = options.content;
+        //     // Add the assets from all TOCs to the
+        //     Object.keys(this.content.toc).forEach(function (key) {
+        //         this.assets.addGroup(key, this.content.toc[key]);
+        //     }.bind(this));
+        // }
 
+        this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
         this.loader.addHandler("material", new pc.MaterialHandler());
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice));
-        this.loader.addHandler("script", new pc.ScriptHandler());
-
-        // var textureCache = new pc.resources.TextureCache(this.loader);
-        // this.loader.registerHandler(pc.resources.JsonRequest, new pc.resources.JsonResourceHandler());
-        // this.loader.registerHandler(pc.resources.TextRequest, new pc.resources.TextResourceHandler());
-        // this.loader.registerHandler(pc.resources.ImageRequest, new pc.resources.ImageResourceHandler());
-        // this.loader.registerHandler(pc.resources.MaterialRequest, new pc.resources.MaterialResourceHandler(this.graphicsDevice, this.assets));
-        // this.loader.registerHandler(pc.resources.TextureRequest, new pc.resources.TextureResourceHandler(this.graphicsDevice, this.assets));
-        // this.loader.registerHandler(pc.resources.CubemapRequest, new pc.resources.CubemapResourceHandler(this.graphicsDevice, this.assets));
-        // this.loader.registerHandler(pc.resources.ModelRequest, new pc.resources.ModelResourceHandler(this.graphicsDevice, this.assets));
-        // this.loader.registerHandler(pc.resources.AnimationRequest, new pc.resources.AnimationResourceHandler());
-        // this.loader.registerHandler(pc.resources.PackRequest, new pc.resources.PackResourceHandler(this, options.depot));
-        // this.loader.registerHandler(pc.resources.AudioRequest, new pc.resources.AudioResourceHandler(this._audioManager));
-        // this.loader.registerHandler(pc.resources.ScriptRequest, new pc.resources.ScriptResourceHandler(this, options.scriptPrefix));
+        this.loader.addHandler("text", new pc.TextHandler());
+        this.loader.addHandler("json", new pc.JsonHandler());
+        this.loader.addHandler("audio", new pc.AudioHandler(this._audioManager));
+        this.loader.addHandler("script", new pc.ScriptHandler(this));
+        this.loader.addHandler("scene", new pc.SceneHandler(this));
+        this.loader.addHandler("cubemap", new pc.CubemapHandler(this.graphicsDevice, this.assets, this.loader));
 
         var rigidbodysys = new pc.RigidBodyComponentSystem(this);
         var collisionsys = new pc.CollisionComponentSystem(this);
@@ -114,19 +107,19 @@ pc.extend(pc, function () {
         var designersys = new pc.DesignerComponentSystem(this);
 
         // Load libraries
-        this.on('librariesloaded', this.onLibrariesLoaded, this);
-        if (options.libraries && options.libraries.length) {
-            var requests = options.libraries.map(function (url) {
-                return new pc.resources.ScriptRequest(url);
-            });
-            this.loader.request(requests).then( function (resources) {
-                this.fire('librariesloaded', this);
-                this._librariesLoaded = true;
-            }.bind(this));
-        } else {
-            this.fire('librariesloaded', this);
-            this._librariesLoaded = true;
-        }
+        // this.on('librariesloaded', this.onLibrariesLoaded, this);
+        // if (options.libraries && options.libraries.length) {
+        //     var requests = options.libraries.map(function (url) {
+        //         return new pc.resources.ScriptRequest(url);
+        //     });
+        //     this.loader.request(requests).then( function (resources) {
+        //         this.fire('librariesloaded', this);
+        //         this._librariesLoaded = true;
+        //     }.bind(this));
+        // } else {
+        //     this.fire('librariesloaded', this);
+        //     this._librariesLoaded = true;
+        // }
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
@@ -161,6 +154,131 @@ pc.extend(pc, function () {
     };
 
     Application.prototype = {
+        loadData: function (url, callback) {
+            var self = this;
+            pc.net.http.get(url, function (response) {
+                var props = response['application_properties'];
+                var assets = response['assets'];
+
+                self._parseApplicationProperties(props, function (err) {
+                    if (!err) {
+                        self._parseAssets(assets);
+                        callback(null);
+                    } else {
+                        callback(err);
+                    }
+                });
+            }, {
+                error: function (status, xhr, e) {
+                    callback(status);
+                }
+            });
+        },
+
+        preload: function (callback) {
+            var assets = this.assets.list({
+                preload: true
+            });
+
+            var l = assets.length;
+            var count = l;
+            var i;
+            if (count) {
+                for(i = 0; i < l; i++) {
+                    assets[i].once('load', function (asset) {
+                        console.log("loaded: " + asset.name);
+                        count--;
+                        if (count === 0) {
+                            callback();
+                        }
+                    });
+
+                    assets[i].once('error', function (err, asset) {
+                        console.error(err);
+                        count--;
+                        if (count === 0) {
+                            callback();
+                        }
+                    });
+
+                    console.log("requesting: " + assets[i].name)
+                    this.assets.load(assets[i]);
+                }
+            } else {
+                callback();
+            }
+        },
+
+        loadScene: function (url, callback) {
+            this.loader.load(url, "scene", function (err, scene) {
+                this.loader.patch({
+                    resource: scene,
+                    type: "scene"
+                }, this.assets);
+
+                if (!err) {
+
+                    // Initialise pack settings
+                    if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
+                        this.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
+                    }
+
+                    callback(null, scene);
+                }
+            }.bind(this));
+        },
+
+        // set application properties from data file
+        _parseApplicationProperties: function (props, callback) {
+            var w = props['width'];
+            var h = props['height'];
+            this.setCanvasResolution(props['resolution_mode'], w, h)
+            this.setCanvasFillMode(props['fill_mode'], w, h)
+
+            var len = props['libraries'].length;
+            var count = len
+            if (len) {
+                // load libraries
+                for (var i = 0; i < len; ++i) {
+                    var url = props['libraries'][i];
+                    this.loader.load(url, "script", function (err, script) {
+                        count--;
+                        if (err) {
+                            callback(err);
+                        } else if (count === 0) {
+                            this.systems.rigidbody.onLibraryLoaded();
+                            callback(null);
+                        }
+                    }.bind(this));
+                }
+            } else {
+                callback(null);
+            }
+        },
+
+        // insert assets into registry
+        _parseAssets: function (assets) {
+            for (var id in assets) {
+                var data = assets[id];
+                var asset = new pc.Asset(data['name'], data['type'], data['file'], data['data']);
+                asset.id = parseInt(id);
+                asset.preload = data.preload ? data.preload : false;
+                this.assets.add(asset);
+            }
+        },
+
+        start2: function () {
+            if (this.scene) {
+                this.root.addChild(this.scene.root);
+
+                pc.ComponentSystem.initialize(this.scene.root);
+                pc.ComponentSystem.postInitialize(this.scene.root);
+
+                this.tick();
+            }
+
+        },
+
         /**
         * Load a pack and asset set from a table of contents config
         * @param {String} name The name of the Table of Contents block to load
@@ -555,298 +673,298 @@ pc.extend(pc, function () {
             this.systems.collision.onLibraryLoaded();
         },
 
-        /**
-         * @function
-         * @name pc.Application#_handleMessage
-         * @description Called when the LiveLink object receives a new message
-         * @param {pc.LiveLiveMessage} msg The received message
-         */
-        _handleMessage: function (msg) {
-            var entity;
+        // /**
+        //  * @function
+        //  * @name pc.Application#_handleMessage
+        //  * @description Called when the LiveLink object receives a new message
+        //  * @param {pc.LiveLiveMessage} msg The received message
+        //  */
+        // _handleMessage: function (msg) {
+        //     var entity;
 
-            switch(msg.type) {
-                case pc.LiveLinkMessageType.UPDATE_COMPONENT:
-                    this._linkUpdateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY:
-                    this._linkUpdateEntity(msg.content.id, msg.content.components);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
-                    this._linkUpdateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_NAME:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    entity.setName(msg.content.name);
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ENTITY_ENABLED:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    entity.enabled = msg.content.enabled;
-                    break;
-                case pc.LiveLinkMessageType.REPARENT_ENTITY:
-                    this._linkReparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
-                    break;
-                case pc.LiveLinkMessageType.CLOSE_ENTITY:
-                    entity = this.root.findOne("getGuid", msg.content.id);
-                    if(entity) {
-                        logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid()));
-                        entity.destroy();
-                    }
-                    break;
-                case pc.LiveLinkMessageType.OPEN_PACK:
-                    var pack = this.loader.open(pc.resources.PackRequest, msg.content.pack);
+        //     switch(msg.type) {
+        //         case pc.LiveLinkMessageType.UPDATE_COMPONENT:
+        //             this._linkUpdateComponent(msg.content.id, msg.content.component, msg.content.attribute, msg.content.value);
+        //             break;
+        //         case pc.LiveLinkMessageType.UPDATE_ENTITY:
+        //             this._linkUpdateEntity(msg.content.id, msg.content.components);
+        //             break;
+        //         case pc.LiveLinkMessageType.UPDATE_ENTITY_TRANSFORM:
+        //             this._linkUpdateEntityTransform(msg.content.id, msg.content.position, msg.content.rotation, msg.content.scale);
+        //             break;
+        //         case pc.LiveLinkMessageType.UPDATE_ENTITY_NAME:
+        //             entity = this.root.findOne("getGuid", msg.content.id);
+        //             entity.setName(msg.content.name);
+        //             break;
+        //         case pc.LiveLinkMessageType.UPDATE_ENTITY_ENABLED:
+        //             entity = this.root.findOne("getGuid", msg.content.id);
+        //             entity.enabled = msg.content.enabled;
+        //             break;
+        //         case pc.LiveLinkMessageType.REPARENT_ENTITY:
+        //             this._linkReparentEntity(msg.content.id, msg.content.newParentId, msg.content.index);
+        //             break;
+        //         case pc.LiveLinkMessageType.CLOSE_ENTITY:
+        //             entity = this.root.findOne("getGuid", msg.content.id);
+        //             if(entity) {
+        //                 logDEBUG(pc.string.format("RT: Removed '{0}' from parent {1}", msg.content.id, entity.getParent().getGuid()));
+        //                 entity.destroy();
+        //             }
+        //             break;
+        //         case pc.LiveLinkMessageType.OPEN_PACK:
+        //             var pack = this.loader.open(pc.resources.PackRequest, msg.content.pack);
 
-                    // Get the root entity back from the fake pack
-                    var entity = pack.hierarchy;
-                    if (entity.__parent) {
-                        parent = this.root.findByGuid(entity.__parent);
-                        parent.addChild(entity);
-                    } else {
-                        this.root.addChild(entity);
-                    }
-                    break;
-                case pc.LiveLinkMessageType.OPEN_ENTITY:
-                    var parent;
-                    var entities = {};
-                    var guid = null;
-                    if (msg.content.entity) {
-                        // Create a fake little pack to open the entity hierarchy
-                        var pack = {
-                            application_data: {},
-                            hierarchy: msg.content.entity
-                        };
-                        pack = this.loader.open(pc.resources.PackRequest, pack);
+        //             // Get the root entity back from the fake pack
+        //             var entity = pack.hierarchy;
+        //             if (entity.__parent) {
+        //                 parent = this.root.findByGuid(entity.__parent);
+        //                 parent.addChild(entity);
+        //             } else {
+        //                 this.root.addChild(entity);
+        //             }
+        //             break;
+        //         case pc.LiveLinkMessageType.OPEN_ENTITY:
+        //             var parent;
+        //             var entities = {};
+        //             var guid = null;
+        //             if (msg.content.entity) {
+        //                 // Create a fake little pack to open the entity hierarchy
+        //                 var pack = {
+        //                     application_data: {},
+        //                     hierarchy: msg.content.entity
+        //                 };
+        //                 pack = this.loader.open(pc.resources.PackRequest, pack);
 
-                        // Get the root entity back from the fake pack
-                        entity = pack.hierarchy;
-                        if (entity.__parent) {
-                            parent = this.root.findByGuid(entity.__parent);
-                            parent.addChild(entity);
-                        } else {
-                            this.root.addChild(entity);
-                        }
-                    }
-                    break;
-                case pc.LiveLinkMessageType.UPDATE_ASSET:
-                    this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
-                    break;
+        //                 // Get the root entity back from the fake pack
+        //                 entity = pack.hierarchy;
+        //                 if (entity.__parent) {
+        //                     parent = this.root.findByGuid(entity.__parent);
+        //                     parent.addChild(entity);
+        //                 } else {
+        //                     this.root.addChild(entity);
+        //                 }
+        //             }
+        //             break;
+        //         case pc.LiveLinkMessageType.UPDATE_ASSET:
+        //             this._linkUpdateAsset(msg.content.id, msg.content.attribute, msg.content.value);
+        //             break;
 
-                case pc.LiveLinkMessageType.UPDATE_ASSETCACHE:
-                    var id;
-                    var asset;
+        //         case pc.LiveLinkMessageType.UPDATE_ASSETCACHE:
+        //             var id;
+        //             var asset;
 
-                    // Add new and Update existing assets
-                    for (id in msg.content.assets) {
-                        asset = this.assets.getAssetById(id);
-                        if (!asset) {
-                            this.assets.createAndAddAsset(id, msg.content.assets[id]);
-                        } else {
-                            var data = msg.content.assets[id];
-                            for (var key in data) {
-                                if (data.hasOwnProperty(key)) {
-                                    asset[key] = data[key];
-                                }
-                            }
-                        }
-                    }
+        //             // Add new and Update existing assets
+        //             for (id in msg.content.assets) {
+        //                 asset = this.assets.getAssetById(id);
+        //                 if (!asset) {
+        //                     this.assets.createAndAddAsset(id, msg.content.assets[id]);
+        //                 } else {
+        //                     var data = msg.content.assets[id];
+        //                     for (var key in data) {
+        //                         if (data.hasOwnProperty(key)) {
+        //                             asset[key] = data[key];
+        //                         }
+        //                     }
+        //                 }
+        //             }
 
-                    // Delete removed assets
-                    for (id in msg.content.deleted) {
-                        asset = this.assets.getAssetById(id);
-                        if (asset) {
-                            this.assets.removeAsset(asset);
-                        }
-                    }
+        //             // Delete removed assets
+        //             for (id in msg.content.deleted) {
+        //                 asset = this.assets.getAssetById(id);
+        //                 if (asset) {
+        //                     this.assets.removeAsset(asset);
+        //                 }
+        //             }
 
-                    break;
+        //             break;
 
-                case pc.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
-                    this._linkUpdatePackSettings(msg.content.settings);
-                    break;
-            }
-        },
+        //         case pc.LiveLinkMessageType.UPDATE_PACK_SETTINGS:
+        //             this._linkUpdatePackSettings(msg.content.settings);
+        //             break;
+        //     }
+        // },
 
-        /**
-         * @function
-         * @name pc.Application#_linkUpdateComponent
-         * @description Update a value on a component,
-         * @param {String} guid GUID for the entity
-         * @param {String} componentName name of the component to update
-         * @param {String} attributeName name of the attribute on the component
-         * @param {Object} value - value to set attribute to
-         */
-        _linkUpdateComponent: function(guid, componentName, attributeName, value) {
-            var entity = this.root.findOne("getGuid", guid);
-            var attribute;
+        // /**
+        //  * @function
+        //  * @name pc.Application#_linkUpdateComponent
+        //  * @description Update a value on a component,
+        //  * @param {String} guid GUID for the entity
+        //  * @param {String} componentName name of the component to update
+        //  * @param {String} attributeName name of the attribute on the component
+        //  * @param {Object} value - value to set attribute to
+        //  */
+        // _linkUpdateComponent: function(guid, componentName, attributeName, value) {
+        //     var entity = this.root.findOne("getGuid", guid);
+        //     var attribute;
 
-            if (entity) {
-                if(componentName) {
-                    if(entity[componentName]) {
-                        attribute = designer.link.exposed[componentName][attributeName];
-                        if (designer && attribute) {
-                            // Override Type provided
-                            if (attribute.RuntimeType) {
-                                    if (attribute.RuntimeType === pc.Vec3) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
-                                    } else if (attribute.RuntimeType === pc.Vec4) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
-                                    } else if (attribute.RuntimeType === pc.Vec2) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1]);
-                                    } else if (attribute.RuntimeType === pc.Color) {
-                                        if (value.length === 3) {
-                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
-                                        } else {
-                                            entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
-                                        }
-                                    } else if (attribute.RuntimeType === pc.Curve || attribute.RuntimeType === pc.CurveSet) {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value.keys);
-                                        entity[componentName][attributeName].type = value.type;
-                                    } else {
-                                        entity[componentName][attributeName] = new attribute.RuntimeType(value);
-                                    }
-                            } else {
-                                entity[componentName][attributeName] = value;
-                            }
-                        } else {
-                            entity[componentName][attributeName] = value;
-                        }
+        //     if (entity) {
+        //         if(componentName) {
+        //             if(entity[componentName]) {
+        //                 attribute = designer.link.exposed[componentName][attributeName];
+        //                 if (designer && attribute) {
+        //                     // Override Type provided
+        //                     if (attribute.RuntimeType) {
+        //                             if (attribute.RuntimeType === pc.Vec3) {
+        //                                 entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
+        //                             } else if (attribute.RuntimeType === pc.Vec4) {
+        //                                 entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
+        //                             } else if (attribute.RuntimeType === pc.Vec2) {
+        //                                 entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1]);
+        //                             } else if (attribute.RuntimeType === pc.Color) {
+        //                                 if (value.length === 3) {
+        //                                     entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2]);
+        //                                 } else {
+        //                                     entity[componentName][attributeName] = new attribute.RuntimeType(value[0], value[1], value[2], value[3]);
+        //                                 }
+        //                             } else if (attribute.RuntimeType === pc.Curve || attribute.RuntimeType === pc.CurveSet) {
+        //                                 entity[componentName][attributeName] = new attribute.RuntimeType(value.keys);
+        //                                 entity[componentName][attributeName].type = value.type;
+        //                             } else {
+        //                                 entity[componentName][attributeName] = new attribute.RuntimeType(value);
+        //                             }
+        //                     } else {
+        //                         entity[componentName][attributeName] = value;
+        //                     }
+        //                 } else {
+        //                     entity[componentName][attributeName] = value;
+        //                 }
 
 
-                    } else {
-                        logWARNING(pc.string.format("No component system called '{0}' exists", componentName));
-                    }
-                } else {
-                    // set value on node
-                    entity[attributeName] = value;
-                }
-            }
-        },
+        //             } else {
+        //                 logWARNING(pc.string.format("No component system called '{0}' exists", componentName));
+        //             }
+        //         } else {
+        //             // set value on node
+        //             entity[attributeName] = value;
+        //         }
+        //     }
+        // },
 
-        _linkUpdateEntityTransform: function (guid, position, rotation, scale) {
-            var entity = this.root.findByGuid(guid);
-            if(entity) {
-                entity.setLocalPosition(position[0], position[1], position[2]);
-                entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
-                entity.setLocalScale(scale[0], scale[1], scale[2]);
+        // _linkUpdateEntityTransform: function (guid, position, rotation, scale) {
+        //     var entity = this.root.findByGuid(guid);
+        //     if(entity) {
+        //         entity.setLocalPosition(position[0], position[1], position[2]);
+        //         entity.setLocalEulerAngles(rotation[0], rotation[1], rotation[2]);
+        //         entity.setLocalScale(scale[0], scale[1], scale[2]);
 
-                // Fire event to notify listeners that the transform has been changed by an external tool
-                entity.fire('livelink:updatetransform', position, rotation, scale);
-            }
-        },
+        //         // Fire event to notify listeners that the transform has been changed by an external tool
+        //         entity.fire('livelink:updatetransform', position, rotation, scale);
+        //     }
+        // },
 
-        _linkReparentEntity: function (guid, parentId, index) {
-            var entity = this.root.findByGuid(guid);
-            var parent = this.root.findByGuid(parentId);
-            entity.reparent(parent, index);
-        },
+        // _linkReparentEntity: function (guid, parentId, index) {
+        //     var entity = this.root.findByGuid(guid);
+        //     var parent = this.root.findByGuid(parentId);
+        //     entity.reparent(parent, index);
+        // },
 
-        /**
-         * @function
-         * @name pc.Application#_updateEntity
-         * @description Update an Entity from a set of components, deletes components that are no longer there, adds components that are new.
-         * Note this does not update the data inside the components, just whether or not a component is present.
-         * @param {Object} guid GUID of the entity
-         * @param {Object} components Component object keyed by component name.
-         */
-        _linkUpdateEntity: function (guid, components) {
-            var type;
-            var entity = this.root.findOne("getGuid", guid);
+        // /**
+        //  * @function
+        //  * @name pc.Application#_updateEntity
+        //  * @description Update an Entity from a set of components, deletes components that are no longer there, adds components that are new.
+        //  * Note this does not update the data inside the components, just whether or not a component is present.
+        //  * @param {Object} guid GUID of the entity
+        //  * @param {Object} components Component object keyed by component name.
+        //  */
+        // _linkUpdateEntity: function (guid, components) {
+        //     var type;
+        //     var entity = this.root.findOne("getGuid", guid);
 
-            if(entity) {
-                var order = this.systems.getComponentSystemOrder();
+        //     if(entity) {
+        //         var order = this.systems.getComponentSystemOrder();
 
-                var i, len = order.length;
-                for(i = 0; i < len; i++) {
-                    type = order[i];
-                    if(components.hasOwnProperty(type) && this.systems.hasOwnProperty(type)) {
-                        if (!entity[type]) {
-                            this.systems[type].addComponent(entity, {});
-                        }
-                    }
-                }
+        //         var i, len = order.length;
+        //         for(i = 0; i < len; i++) {
+        //             type = order[i];
+        //             if(components.hasOwnProperty(type) && this.systems.hasOwnProperty(type)) {
+        //                 if (!entity[type]) {
+        //                     this.systems[type].addComponent(entity, {});
+        //                 }
+        //             }
+        //         }
 
-                for(type in this.systems) {
-                    if(type === "gizmo" || type === "pick") {
-                        continue;
-                    }
+        //         for(type in this.systems) {
+        //             if(type === "gizmo" || type === "pick") {
+        //                 continue;
+        //             }
 
-                    if(this.systems.hasOwnProperty(type)) {
-                        if(!components.hasOwnProperty(type) && entity[type]) {
-                            this.systems[type].removeComponent(entity);
-                        }
-                    }
-                }
-            }
-        },
+        //             if(this.systems.hasOwnProperty(type)) {
+        //                 if(!components.hasOwnProperty(type) && entity[type]) {
+        //                     this.systems[type].removeComponent(entity);
+        //                 }
+        //             }
+        //         }
+        //     }
+        // },
 
-        _linkUpdateAsset: function (id, attribute, value) {
-            var asset = this.assets.getAssetById(id);
-            if (asset) {
-                asset[attribute] = value;
-            }
-        },
+        // _linkUpdateAsset: function (id, attribute, value) {
+        //     var asset = this.assets.getAssetById(id);
+        //     if (asset) {
+        //         asset[attribute] = value;
+        //     }
+        // },
 
-        _linkUpdatePackSettings: function (settings) {
-            var self = this;
+        // _linkUpdatePackSettings: function (settings) {
+        //     var self = this;
 
-            var ambient = settings.render.global_ambient;
-            self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
+        //     var ambient = settings.render.global_ambient;
+        //     self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
 
-            if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
-                var gravity = settings.physics.gravity;
-                self.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
-            }
+        //     if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
+        //         var gravity = settings.physics.gravity;
+        //         self.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
+        //     }
 
-            self.scene.fog = settings.render.fog;
-            self.scene.fogStart = settings.render.fog_start;
-            self.scene.fogEnd = settings.render.fog_end;
+        //     self.scene.fog = settings.render.fog;
+        //     self.scene.fogStart = settings.render.fog_start;
+        //     self.scene.fogEnd = settings.render.fog_end;
 
-            var fog = settings.render.fog_color;
-            self.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
-            self.scene.fogDensity = settings.render.fog_density;
+        //     var fog = settings.render.fog_color;
+        //     self.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
+        //     self.scene.fogDensity = settings.render.fog_density;
 
-            self.scene.gammaCorrection = settings.render.gamma_correction;
-            self.scene.toneMapping = settings.render.tonemapping;
-            self.scene.exposure = settings.render.exposure;
-            self.scene.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
-            self.scene.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
+        //     self.scene.gammaCorrection = settings.render.gamma_correction;
+        //     self.scene.toneMapping = settings.render.tonemapping;
+        //     self.scene.exposure = settings.render.exposure;
+        //     self.scene.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
+        //     self.scene.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
 
-            if (settings.render.skybox) {
-                var skybox = self.assets.getAssetById(settings.render.skybox);
-                if (!skybox) {
-                    pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
-                } else {
-                    if (!skybox.resource) {
-                        self.assets.load([skybox]).then(function (resources){
-                            self._setSkybox(resources[0]);
+        //     if (settings.render.skybox) {
+        //         var skybox = self.assets.getAssetById(settings.render.skybox);
+        //         if (!skybox) {
+        //             pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
+        //         } else {
+        //             if (!skybox.resource) {
+        //                 self.assets.load([skybox]).then(function (resources){
+        //                     self._setSkybox(resources[0]);
 
-                            skybox.off('change', self._onSkyBoxChanged, self);
-                            skybox.on('change', self._onSkyBoxChanged, self);
+        //                     skybox.off('change', self._onSkyBoxChanged, self);
+        //                     skybox.on('change', self._onSkyBoxChanged, self);
 
-                            skybox.off('remove', self._onSkyBoxRemoved, self);
-                            skybox.on('remove', self._onSkyBoxRemoved, self);
-                        }, function (error) {
-                            pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
-                        });
-                    } else {
-                        self._setSkybox(skybox.resources);
+        //                     skybox.off('remove', self._onSkyBoxRemoved, self);
+        //                     skybox.on('remove', self._onSkyBoxRemoved, self);
+        //                 }, function (error) {
+        //                     pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
+        //                 });
+        //             } else {
+        //                 self._setSkybox(skybox.resources);
 
-                        skybox.off('change', self._onSkyBoxChanged, self);
-                        skybox.on('change', self._onSkyBoxChanged, self);
+        //                 skybox.off('change', self._onSkyBoxChanged, self);
+        //                 skybox.on('change', self._onSkyBoxChanged, self);
 
-                        skybox.off('remove', self._onSkyBoxRemoved, self);
-                        skybox.on('remove', self._onSkyBoxRemoved, self);
-                    }
-                }
-            } else {
-                self.scene.skybox = null;
+        //                 skybox.off('remove', self._onSkyBoxRemoved, self);
+        //                 skybox.on('remove', self._onSkyBoxRemoved, self);
+        //             }
+        //         }
+        //     } else {
+        //         self.scene.skybox = null;
 
-                var mipSize = 128;
-                for (var i = 0; i < 6; i++) {
-                    self.scene['skyboxPrefiltered' + mipSize] = null;
-                    mipSize *= 0.5;
-                }
-            }
-        },
+        //         var mipSize = 128;
+        //         for (var i = 0; i < 6; i++) {
+        //             self.scene['skyboxPrefiltered' + mipSize] = null;
+        //             mipSize *= 0.5;
+        //         }
+        //     }
+        // },
 
         _setSkybox: function (cubemaps) {
             var scene = this.scene;

@@ -185,6 +185,10 @@ pc.extend(pc, function () {
      * @property {pc.Texture} skybox A cube map texture used as the scene's skybox.
      */
     var Scene = function Scene() {
+        this.root = null; // hierarchy
+
+        this._gravity = new pc.Vec3(0, -9.8, 0);
+
         this.drawCalls = [];     // All mesh instances and commands
         this.shadowCasters = []; // All mesh instances that cast shadows
 
@@ -534,6 +538,50 @@ pc.extend(pc, function () {
             light._scene = null;
             this.updateShaders = true;
         }
+    };
+
+    Scene.prototype.attachSkyboxAsset = function (asset) {
+        var scene = this;
+
+        // var _onSkyBoxChanged = function (asset, attribute, newValue, oldValue) {
+        //     if (attribute !== 'resources') return;
+
+        //     if (scene.skybox === oldValue[0]) {
+        //         scene.setSkybox(newValue);
+        //     } else {
+        //         skybox.off('change', this._onSkyBoxChanged, this);
+        //     }
+        // };
+
+        // var _onSkyBoxRemoved = function (asset) {
+        //     asset.off('change', this._onSkyBoxRemoved, this);
+        //     if (this.scene.skybox === asset.resources[0]) {
+        //         this.scene.skybox = null;
+        //     }
+        //     var mipSize = 128;
+        //     for (var i = 0; i < 6; i++) {
+        //         var prop = 'skyboxPrefiltered' + mipSize;
+        //         if (this.scene[prop] === asset.resources[i+1]) {
+        //             this.scene[prop] = null;
+        //         }
+        //         mipSize *= 0.5;
+        //     }
+        // };
+
+        this.setSkybox(asset.resources);
+
+        // asset.on('change', _onSkyBoxChanged, this);
+        // asset.on('remove', _onSkyBoxRemoved, this);
+    };
+
+    Scene.prototype.setSkybox = function (cubemaps) {
+        this.skybox = cubemaps[0];
+        this.skyboxPrefiltered128 = cubemaps[1];
+        this.skyboxPrefiltered64 = cubemaps[2];
+        this.skyboxPrefiltered32 = cubemaps[3];
+        this.skyboxPrefiltered16 = cubemaps[4];
+        this.skyboxPrefiltered8 = cubemaps[5];
+        this.skyboxPrefiltered4 = cubemaps[6];
     };
 
     /**

@@ -1,4 +1,5 @@
 pc.extend(pc, function () {
+    'use strict';
 
     // function onTextureAssetChanged (asset, attribute, newValue, oldValue) {
     //     if (attribute !== 'resource') {

@@ -272,7 +272,7 @@ pc.extend(pc, function () {
 
         this.on('remove', this.onRemove, this);
 
-        pc.ComponentSystem.on('update', this.onUpdate, this);
+
     };
     RigidBodyComponentSystem = pc.inherits(RigidBodyComponentSystem, pc.ComponentSystem);
 
@@ -292,6 +292,7 @@ pc.extend(pc, function () {
                 // Lazily create temp vars
                 ammoRayStart = new Ammo.btVector3();
                 ammoRayEnd = new Ammo.btVector3();
+                pc.ComponentSystem.on('update', this.onUpdate, this);
             } else {
                 // Unbind the update function if we haven't loaded Ammo by now
                 pc.ComponentSystem.off('update', this.onUpdate, this);
