@@ -54,31 +54,7 @@ pc.extend(pc, function () {
         this.touch = options.touch || null;
         this.gamepads = options.gamepads || null;
 
-        this.content = null;
-
         this._inTools = false;
-        // this._link = new pc.LiveLink("application");
-        // this._link.addDestinationWindow(window);
-        // this._link.listen(this._handleMessage.bind(this));
-
-
-        // if( options.cache === false ) {
-        //     this.loader.cache = false;
-        // }
-
-        // Display shows debug loading information. Only really fit for debug display at the moment.
-        // if (options.displayLoader) {
-        //     var loaderdisplay = new pc.resources.ResourceLoaderDisplay(document.body, this.loader);
-        // }
-
-
-        // if (options.content) {
-        //     this.content = options.content;
-        //     // Add the assets from all TOCs to the
-        //     Object.keys(this.content.toc).forEach(function (key) {
-        //         this.assets.addGroup(key, this.content.toc[key]);
-        //     }.bind(this));
-        // }
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
@@ -104,22 +80,6 @@ pc.extend(pc, function () {
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var designersys = new pc.DesignerComponentSystem(this);
-
-        // Load libraries
-        // this.on('librariesloaded', this.onLibrariesLoaded, this);
-        // if (options.libraries && options.libraries.length) {
-        //     var requests = options.libraries.map(function (url) {
-        //         return new pc.resources.ScriptRequest(url);
-        //     });
-        //     this.loader.request(requests).then( function (resources) {
-        //         this.fire('librariesloaded', this);
-        //         this._librariesLoaded = true;
-        //     }.bind(this));
-        // } else {
-        //     this.fire('librariesloaded', this);
-        //     this._librariesLoaded = true;
-        // }
 
         // Depending on browser add the correct visibiltychange event and store the name of the hidden attribute
         // in this._hiddenAttr.
@@ -267,7 +227,12 @@ pc.extend(pc, function () {
             }
         },
 
-        start2: function () {
+        /**
+         * @function
+         * @name pc.Application#start
+         * @description Start the Application updating
+         */
+        start: function () {
             if (this.scene) {
                 this.root.addChild(this.scene.root);
 
@@ -276,7 +241,6 @@ pc.extend(pc, function () {
 
                 this.tick();
             }
-
         },
 
         /**
@@ -376,22 +340,6 @@ pc.extend(pc, function () {
                 });
             } else {
                 load();
-            }
-        },
-
-
-        /**
-         * @function
-         * @name pc.Application#start
-         * @description Start the Application updating
-         */
-        start: function () {
-            if (!this._librariesLoaded) {
-                this.on('librariesloaded', function () {
-                    this.tick();
-                }, this);
-            } else {
-                this.tick();
             }
         },
 
@@ -966,41 +914,41 @@ pc.extend(pc, function () {
         //     }
         // },
 
-        _setSkybox: function (cubemaps) {
-            var scene = this.scene;
-            scene.skybox = cubemaps[0];
-            scene.skyboxPrefiltered128 = cubemaps[1];
-            scene.skyboxPrefiltered64 = cubemaps[2];
-            scene.skyboxPrefiltered32 = cubemaps[3];
-            scene.skyboxPrefiltered16 = cubemaps[4];
-            scene.skyboxPrefiltered8 = cubemaps[5];
-            scene.skyboxPrefiltered4 = cubemaps[6];
-        },
+        // _setSkybox: function (cubemaps) {
+        //     var scene = this.scene;
+        //     scene.skybox = cubemaps[0];
+        //     scene.skyboxPrefiltered128 = cubemaps[1];
+        //     scene.skyboxPrefiltered64 = cubemaps[2];
+        //     scene.skyboxPrefiltered32 = cubemaps[3];
+        //     scene.skyboxPrefiltered16 = cubemaps[4];
+        //     scene.skyboxPrefiltered8 = cubemaps[5];
+        //     scene.skyboxPrefiltered4 = cubemaps[6];
+        // },
 
-        _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
-            if (attribute !== 'resources') return;
+        // _onSkyBoxChanged: function (asset, attribute, newValue, oldValue) {
+        //     if (attribute !== 'resources') return;
 
-            if (this.scene.skybox === oldValue[0]) {
-                this._setSkybox(newValue);
-            } else {
-                skybox.off('change', this._onSkyBoxChanged, this);
-            }
-        },
+        //     if (this.scene.skybox === oldValue[0]) {
+        //         this._setSkybox(newValue);
+        //     } else {
+        //         skybox.off('change', this._onSkyBoxChanged, this);
+        //     }
+        // },
 
-        _onSkyBoxRemoved: function (asset) {
-            asset.off('change', this._onSkyBoxRemoved, this);
-            if (this.scene.skybox === asset.resources[0]) {
-                this.scene.skybox = null;
-            }
-            var mipSize = 128;
-            for (var i = 0; i < 6; i++) {
-                var prop = 'skyboxPrefiltered' + mipSize;
-                if (this.scene[prop] === asset.resources[i+1]) {
-                    this.scene[prop] = null;
-                }
-                mipSize *= 0.5;
-            }
-        }
+        // _onSkyBoxRemoved: function (asset) {
+        //     asset.off('change', this._onSkyBoxRemoved, this);
+        //     if (this.scene.skybox === asset.resources[0]) {
+        //         this.scene.skybox = null;
+        //     }
+        //     var mipSize = 128;
+        //     for (var i = 0; i < 6; i++) {
+        //         var prop = 'skyboxPrefiltered' + mipSize;
+        //         if (this.scene[prop] === asset.resources[i+1]) {
+        //             this.scene[prop] = null;
+        //         }
+        //         mipSize *= 0.5;
+        //     }
+        // }
     };
 
     return {
