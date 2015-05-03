@@ -1,4 +1,6 @@
-pc.extend(pc.resources, function () {
+pc.extend(pc, function () {
+    'use strict';
+
     /**
      * @name pc.resources.ScriptResourceHandler
      * @class ResourceHandler for loading javascript files dynamically
@@ -7,177 +9,79 @@ pc.extend(pc.resources, function () {
      * @param {pc.Application} app The running {pc.Application}
      * @param {String} prefix Prefix for script urls, so that script resources can be located in a variety of places including localhost
      */
-    var ScriptResourceHandler = function (app, prefix) {
+    var ScriptHandler = function (app) {
         this._app = app;
-
-        this._prefix = prefix || ""; // prefix for script urls, allows running from script resources on localhost
-        this._queue = []; // queue of urls waiting to load
-        this._pending = []; // queue of scripts which have been executed but are waiting to be instanciated
-        this._loaded = {}; // Script objects that have loaded
-        this._loading = null; // script element that has been created but is waiting for script to load
-
-        pc.script.on("created", this._onScriptCreated, this);
-    };
-    ScriptResourceHandler = pc.inherits(ScriptResourceHandler, pc.resources.ResourceHandler);
-
-    /**
-     * @name pc.resources.ScriptResourceHandler#load
-     * @description Load a new javascript resource
-     * @param {ScriptResourceRequest} request The request for the script
-     * @param {Object} [options] Optional parameters
-     * @param {Number} [options.timeout] A timeout value in milliseconds before the error callback is fired if the script loading has failed, defaults to 10000
-     */
-    ScriptResourceHandler.prototype.load = function (request, options) {
-        options = options || {};
-        options.timeout = options.timeout || 60000; // default 10 second timeout
-        options.cache = true; // For cache-busting off, so that script debugging works
-
-        var promise = new pc.promise.Promise(function (resolve, reject) {
-            var url = request.canonical;
-
-            var processedUrl = url;
-            if( !options.cache ) {
-                processedUrl = this._appendTimestampToUrl(processedUrl);
-            }
-
-            var processedUrl = new pc.URI(processedUrl);
-            processedUrl.path = pc.path.join(this._prefix, processedUrl.path);
-            processedUrl = processedUrl.toString();
-
-            if(this._loaded[url]) {
-                if (this._loaded[url] !== true) {
-                    resolve(this._loaded[url]);
-                } else {
-                    // regular js script
-                    resolve(null);
-                }
-            } else {
-                if (this._loading) {
-                    this._queue.push({
-                        url: processedUrl,
-                        canonicalUrl: url,
-                        success: resolve,
-                        error: reject
-                    });
-                } else {
-                    this._addScriptTag(processedUrl, url, resolve, reject);
-                }
-            }
-
-            if(options.timeout) {
-                (function () {
-                    setTimeout(function () {
-                        if (!this._loaded[url]) {
-                            reject(pc.string.format("Loading script {0} timed out after {1}s", url, options.timeout / 1000));
-                        }
-                    }.bind(this), options.timeout);
-                }).call(this);
-            }
-        }.bind(this));
-
-        return promise;
+        this._scripts = {};
     };
 
-    ScriptResourceHandler.prototype.open = function (data, request, options) {
-        return data;
-    };
-
-    /**
-    * @private
-    * Adds a timestamp to the specified URL to prevent it from being cached.
-    * @url The url to append the timestamp to
-    * @returns The new url
-    */
-    ScriptResourceHandler.prototype._appendTimestampToUrl = function( url ) {
-        timestamp = Date.now();
-
-        uri = new pc.URI(url);
-        if (!uri.query) {
-            uri.query = "ts=" + timestamp;
+    ScriptHandler._types = [];
+    ScriptHandler._push = function (Type) {
+        if (ScriptHandler._types.length > 0) {
+            console.assert("Script Ordering Error. Contact support@playcanvas.com");
+        } else {
+            ScriptHandler._types.push(Type);
         }
-        else {
-            uri.query = uri.query + "&ts=" + timestamp;
-        }
-        url = uri.toString();
-        return url;
     }
 
-    /**
-     * @private
-     * @name pc.resources.ScriptResourceHandler#_onScriptCreated
-     * @description Event handler received when the pc.script.create() function is called when a ScriptType is downloaded.
-     * @param {String} name The name of the script created
-     * @param {Function} callback The callback that will return the ScriptType
-     */
-    ScriptResourceHandler.prototype._onScriptCreated = function (name, callback) {
-        this._pending.push({
-            name: name,
-            callback: callback
-        });
-    };
-
-    /**
-     * @private
-     * @name pc.resources.ScriptResourceHandler#_addScriptTag
-     * @description Add a new script tag to the document.head and set it's src to load a new script.
-     * Handle success and errors and load the next in the queue
-     */
-    ScriptResourceHandler.prototype._addScriptTag = function (url, canonicalUrl, success, error) {
-        var self = this;
-        var head = document.getElementsByTagName("head")[0];
-        var element = document.createElement("script");
-        this._loading = element;
-
-        element.addEventListener("error", function (e) {
-            error(pc.string.format("Error loading script from '{0}'", e.target.src));
-        });
-
-        var done = false;
-        element.onload = element.onreadystatechange = function () {
-            if(!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
-                done = true; // prevent double event firing
-                var script = self._pending.shift();
-                if (script) {
-                    var ScriptType = script.callback(self._app);
-                    if (ScriptType._pcScriptName) {
-                        throw Error("Attribute _pcScriptName is reserved on ScriptTypes for ResourceLoader use");
+    ScriptHandler.prototype = {
+        load: function (url, callback) {
+            pc.script.app = this._app;
+            this._loadScript(url, function (err, url) {
+                if (!err) {
+                    var Type = null;
+                    // pop the type from the loading stack
+                    if (ScriptHandler._types.length) {
+                        Type = ScriptHandler._types.pop();
                     }
-                    ScriptType._pcScriptName = script.name; // sotre name in script object
-                    self._loaded[canonicalUrl] = ScriptType; //{name: script.name, ScriptType: ScriptType};
-                    // add the script to the resource loader's cache
-                    self._loader.registerHash(canonicalUrl, canonicalUrl);
-                    self._loader.addToCache(canonicalUrl, ScriptType);
-                    success(ScriptType);
+
+                    if (Type) {
+                        // store indexed by URL
+                        this._scripts[url] = Type;
+                    } else {
+                        Type = true;
+                    }
+
+                    // return the resource
+                    callback(null, Type);
                 } else {
-                    // loaded a regular javascript script, so no ScriptType to instantiate.
-                    // However, we still need to register that we've loaded it in case there is a timeout
-                    self._loaded[canonicalUrl] = true;
-                    // add 'true' to the resource loader's cache
-                    self._loader.registerHash(canonicalUrl, canonicalUrl);
-                    self._loader.addToCache(canonicalUrl, true);
-                    success(null);
+                    callback(err);
                 }
-                self._loading = null;
-                // Load next one in the queue
-                if (self._queue.length) {
-                   var loadable = self._queue.shift();
-                   self._addScriptTag(loadable.url, loadable.canonicalUrl, loadable.success, loadable.error);
+            }.bind(this));
+        },
+
+        open: function (url, data) {
+            return data;
+        },
+
+        patch: function (asset, assets) {
+
+        },
+
+        _loadScript: function (url, callback) {
+            var self = this;
+            var head = document.getElementsByTagName("head")[0];
+            var element = document.createElement("script");
+
+            element.addEventListener("error", function (e) {
+                // error
+                callback(pc.string.format("Script: {0} failed to load", e.target.src));
+            });
+
+            var done = false;
+            element.onload = element.onreadystatechange = function () {
+                if(!done && (!this.readyState || (this.readyState == "loaded" || this.readyState == "complete"))) {
+                    done = true; // prevent double event firing
+                    callback(null, url);
                 }
-            }
-        };
-        // set the src attribute after the onload callback is set, to avoid an instant loading failing to fire the callback
-        element.src = url;
+            };
+            // set the src attribute after the onload callback is set, to avoid an instant loading failing to fire the callback
+            element.src = url;
 
-        head.appendChild(element);
+            head.appendChild(element);
+        }
     };
-
-    var ScriptRequest = function ScriptRequest() {
-    };
-    ScriptRequest = pc.inherits(ScriptRequest, pc.resources.ResourceRequest);
-    ScriptRequest.prototype.type = "script";
 
     return {
-        ScriptResourceHandler: ScriptResourceHandler,
-        ScriptRequest: ScriptRequest
+        ScriptHandler: ScriptHandler
     };
 }());

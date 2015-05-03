@@ -1,36 +1,30 @@
-pc.extend(pc.resources, function () {
-    var JsonResourceHandler = function () {
+pc.extend(pc, function () {
+    'use strict';
+
+    var JsonHandler = function () {
+
     };
-    JsonResourceHandler = pc.inherits(JsonResourceHandler, pc.resources.ResourceHandler);
 
-    JsonResourceHandler.prototype.load = function (request, options) {
-        var self = this;
-
-        var promise = new pc.promise.Promise(function (resolve, reject) {
-            pc.net.http.get(request.canonical, function(response) {
-                resolve(response);
+    JsonHandler.prototype = {
+        load: function (url, callback) {
+            pc.net.http.get(url, function (response) {
+                callback(null, response);
             }, {
-                error: function () {
-                    reject();
+                error: function (status, xhr, e) {
+                    callback(pc.string.format("Error loading JSON resource: {0} [{1}]", url, status));
                 }
             });
-        });
+        },
 
-        return promise;
-    };
+        open: function (url, data) {
+            return data;
+        },
 
-    JsonResourceHandler.prototype.open = function (data, request, options) {
-        return data;
+        patch: function (asset, assets) {
+        }
     };
-
-    var JsonRequest = function JsonRequest(identifier) {
-    };
-    JsonRequest = pc.inherits(JsonRequest, pc.resources.ResourceRequest);
-    JsonRequest.prototype.type = "json";
-    JsonRequest.prototype.Type = Object;
 
     return {
-        JsonResourceHandler: JsonResourceHandler,
-        JsonRequest: JsonRequest
-    };
+        JsonHandler: JsonHandler
+    }
 }());
