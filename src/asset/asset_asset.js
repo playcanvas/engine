@@ -2,8 +2,7 @@
 * @name pc.asset
 * @namespace Contains classes related to Assets.
 */
-pc.asset = {};
-pc.extend(pc.asset, function () {
+pc.extend(pc, function () {
 
     // auto incrementing number for asset ids
     var assetIdCounter = -1;
@@ -49,6 +48,8 @@ pc.extend(pc.asset, function () {
 
         this.name = arguments[0];
         this.type = arguments[1];
+        this.preload = false;
+
         this._file = arguments[2] ? {
             filename: file.filename,
             size: file.size,
@@ -58,8 +59,12 @@ pc.extend(pc.asset, function () {
 
         this._data = arguments[3] || {};
 
-        // This is where loaded resources will be stored
+        // This is where the loaded resource will be
+        // this.resource = null;
         this._resources = [];
+
+        // is resource loaded
+        this.loaded = false;
 
         pc.events.attach(this);
     };
@@ -81,6 +86,21 @@ pc.extend(pc.asset, function () {
             }
 
             return this.file.url;
+        },
+
+        ready: function (callback) {
+            if (this.resource) {
+                callback(this);
+            } else {
+                this.once("load", function (asset) {
+                    callback(asset);
+                });
+            }
+        },
+
+        unload: function () {
+            this.resource = null;
+            this.loaded = false;
         }
     };
 
@@ -135,7 +155,7 @@ pc.extend(pc.asset, function () {
     });
 
     Object.defineProperty(Asset.prototype, 'resource', {
-        get: function() {
+        get: function () {
             return this._resources[0];
         },
 
@@ -145,18 +165,11 @@ pc.extend(pc.asset, function () {
     });
 
     Object.defineProperty(Asset.prototype, 'resources', {
-        get: function() {
+        get: function () {
             return this._resources;
         },
 
         set: function (value) {
-            // set _resources
-            if (value === null || value === undefined) {
-                value = [];
-            } else if (pc.type(value) !== 'array') {
-                value = [value];
-            }
-
             this._resources = value;
         }
     });
