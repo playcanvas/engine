@@ -384,6 +384,9 @@ pc.extend(pc, function () {
                                 height: mipSize
                             });
 
+                            mip.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
+                            mip.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
+
                             mipSize *= 0.5;
                             mip._levels[0] = prefiltered._levels[i];
                             mip.upload();
