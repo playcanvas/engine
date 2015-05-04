@@ -312,23 +312,27 @@ pc.extend(pc, function () {
                 var count = l;
                 var sources = [];
                 newValue['textures'].forEach(function (id, index) {
-                    var asset = self._assets.get(id);
-                    asset.ready(function (asset) {
-                        sources[index] = asset.resource.getSource();
-                        count--;
-                        if (count === 0) {
-                            asset.resource.setSource(sources);
-                        }
-                    });
-                    this._assets.load(asset);
+                    var texture = self._assets.get(id);
+                    if (texture) {
+                        texture.ready(function (texture) {
+                            sources[index] = texture.resource.getSource();
+                            count--;
+                            if (count === 0) {
+                                asset.resource.setSource(sources);
+                            }
+                        });
+                        self._assets.load(texture);
+                    }
                 });
 
-                asset.resource.minFilter = value.minFilter;
-                asset.resource.magFilter = value.magFilter;
+                asset.resource.minFilter = newValue.minFilter;
+                asset.resource.magFilter = newValue.magFilter;
                 asset.resource.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
                 asset.resource.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-                asset.resource.anisotropy = value.anisotropy;
+                asset.resource.anisotropy = newValue.anisotropy;
+                asset.resource.rgbm = newValue.rgbm ? true : false;
                 asset.resource.upload();
+
             } else if (attribute === 'file') {
                 // prefiltered file has changed
                 if (asset.file && asset.file.url) {
@@ -354,206 +358,6 @@ pc.extend(pc, function () {
                 }
             }
         },
-
-        // _onCubemapAssetChanged: function (asset, attribute, value, oldValue) {
-        //     var self = this;
-
-        //     // make sure we update the cubemap if the asset changes
-        //     // if a cubemap changes we fire a 'change' event for
-        //     // the cubemapAsset.resource property so materials who reference
-        //     // this cubemap can update
-        //     if (attribute === 'data') {
-        //         var texturesChanged = false;
-        //         if (value.textures.length !== oldValue.textures.length) {
-        //             texturesChanged = true;
-        //         } else {
-        //             for (var i = 0; i < value.textures.length; i++) {
-        //                 if (value.textures[i] !== oldValue.textures[i]) {
-        //                     texturesChanged = true;
-        //                     break;
-        //                 }
-        //             }
-        //         }
-
-        //         if (texturesChanged) {
-        //             self._loadCubemapImages(asset).then(function (resources) {
-        //                 // copy array
-        //                 var old = asset.resources.slice(0);
-
-        //                 if (resources) {
-        //                     asset.resource.setSource(resources.map(function (texture) {
-        //                         return texture.getSource();
-        //                     }));
-        //                     asset.fire('change', asset, 'resources', asset.resources, old);
-        //                 }
-        //             });
-        //         }
-
-        //         asset.resource.minFilter = value.minFilter;
-        //         asset.resource.magFilter = value.magFilter;
-        //         asset.resource.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        //         asset.resource.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-        //         asset.resource.anisotropy = value.anisotropy;
-        //         asset.resource.upload();
-
-        //     } else if (attribute === 'file') {
-
-        //         // Clean up asset registry. Not very nice to do this here
-        //         if (oldValue) {
-        //             url = oldValue.url;
-        //             delete self._assets._urls[url];
-        //             self._assets.loader.removeFromCache(url);
-        //             self._assets.loader.unregisterHash(url);
-        //         }
-
-        //         if (value) {
-        //             // Get new asset url
-        //             url = asset.getFileUrl();
-
-        //             // Register new url. Clearly asset registry stuff
-        //             // but do it here for now.
-        //             self._assets._urls[url] = asset.id;
-        //             self._assets.loader.registerHash(value.hash, url);
-
-        //             // reload prefiltered cubemaps
-        //             self._assets.loader.request(new pc.resources.TextureRequest(url)).then(function (resources) {
-        //                 var prefiltered = resources[0];
-
-        //                 var mipSize = 128;
-
-        //                 var old = asset.resources.slice(0);
-
-        //                 asset.resources = [asset.resource];
-
-        //                 for (i = 0; i < 6; i++) {
-        //                     // create a cubemap for each mip in the prefiltered cubemap
-        //                     var mip = new pc.gfx.Texture(self._device, {
-        //                         cubemap: true,
-        //                         fixCubemapSeams: true,
-        //                         autoMipmap: true,
-        //                         format: prefiltered.format,
-        //                         rgbm: prefiltered.rgbm,
-        //                         width: mipSize,
-        //                         height: mipSize
-        //                     });
-
-        //                     mip.addressU = pc.ADDRESS_CLAMP_TO_EDGE;
-        //                     mip.addressV = pc.ADDRESS_CLAMP_TO_EDGE;
-
-        //                     mipSize *= 0.5;
-        //                     mip._levels[0] = prefiltered._levels[i];
-        //                     mip.upload();
-        //                     asset.resources.push(mip);
-        //                 }
-
-        //                 asset.fire('change', asset, 'resources', asset.resources, old);
-        //             }, function (error) {
-        //                 console.error('Could not load prefiltered cubemap: ' + error);
-        //             });
-        //         } else {
-        //             // clear old prefiltered cubemaps
-        //             var old = asset.resources.slice(0);
-        //             asset.resources = [asset.resource];
-        //             asset.fire('change', asset, 'resources', asset.resources, old);
-        //         }
-        //     }
-        // },
-
-        // Checks if there are 6 non-null images with the correct dimensions in the specified array
-        // _areValidImages: function (images) {
-        //     var result = images && images.length === 6;
-        //     var error;
-
-        //     if (result) {
-        //         var width = images[0] ? images[0].width : null;
-        //         var height = images[0] ? images[0].height : null;
-
-        //         for (var i = 0; i < 6; i++) {
-        //             if (!images[i]) {
-        //                 result = false;
-        //                 break;
-        //             }
-
-
-        //             if ((!images[i] instanceof HTMLCanvasElement) ||
-        //                 (!images[i] instanceof HTMLImageElement) ||
-        //                 (!images[i] instanceof HTMLVideoElement)) {
-        //                 error = 'Cubemap source is not an instance of HTMLCanvasElement, HTMLImageElement or HTMLVideoElement.';
-        //                 result = false;
-        //                 break;
-        //             }
-
-        //             if (images[i].width !== width  || images[i].height !== height) {
-        //                 error = 'Cubemap sources do not all share the same dimensions.';
-        //                 result = false;
-        //                 break;
-        //             }
-        //         }
-
-        //     }
-
-        //     if (error) {
-        //         alert(error);
-        //     }
-
-        //     return result;
-        // },
-
-        // // Loads the images of the cubemap - Returns a promise
-        // _loadCubemapImages: function (cubemapAsset) {
-        //     var data = cubemapAsset.data;
-
-        //     var self = this;
-
-        //     var promise = new pc.promise.Promise(function (resolve, reject) {
-        //         if (data.textures) {
-        //             var assets = [];
-
-        //             // check if we have 6 assets
-        //             for (var i = 0; i < 6; i++) {
-        //                 var id = parseInt(data.textures[i], 10);
-        //                 if (id >= 0) {
-        //                     var asset = self._assets.getAssetById(id);
-        //                     if (!asset) {
-        //                         reject(pc.string.format('Could not load cubemap - Texture {0} not found', data.textures[i]));
-        //                         return;
-        //                     }
-
-        //                     assets.push(asset);
-        //                 } else {
-        //                     // one texture is missing so just return
-        //                     resolve(null);
-        //                     return;
-        //                 }
-        //             }
-
-        //             self._assets.load(assets).then(function (resources) {
-        //                 resolve(resources);
-
-        //                 assets.forEach(function (asset) {
-        //                     asset.off('change', onTextureAssetChanged, cubemapAsset);
-        //                     asset.on('change', onTextureAssetChanged, cubemapAsset);
-        //                 });
-        //             }, function (error) {
-        //                 reject(error);
-        //             });
-        //         } else {
-        //             // no textures provided so just return
-        //             resolve(null);
-        //             return;
-        //         }
-        //     });
-
-        //     return promise;
-        // },
-
-        // _getAssetFromRequest: function (request) {
-        //     if (pc.string.startsWith(request.canonical, "asset://")) {
-        //         return this._assets.getAssetById(parseInt(request.canonical.slice(8)));
-        //     } else {
-        //         return this._assets.getAssetByUrl(request.canonical);
-        //     }
-        // }
     };
 
     return {

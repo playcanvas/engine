@@ -38,7 +38,7 @@ pc.extend(pc, function () {
             this._names[asset.name].push(index);
             if (asset.file) {
                 this._urls[asset.getFileUrl()] = index;
-                asset.on('change', this._onAssetChanged, this);
+                // asset.on('change', this._onAssetChanged, this);
             }
 
             this.fire("add", asset);
@@ -49,7 +49,7 @@ pc.extend(pc, function () {
             delete this._cache[asset.id];
             delete this._names[asset.name];
             if (asset.file) {
-                asset.off('change', this._onAssetChanged, this);
+                // asset.off('change', this._onAssetChanged, this);
                 delete this._urls[asset.file.url];
             }
 
@@ -206,9 +206,8 @@ pc.extend(pc, function () {
             return asset ? asset[0] : null;
         },
 
-        _onAssetChanged: function (asset, attribute, _new, _old) {
-
-        },
+        // _onAssetChanged: function (asset, attribute, _new, _old) {
+        // },
 
         // backwards compatibility
         getAssetById: function (id) {
