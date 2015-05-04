@@ -160,7 +160,9 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
+            var _old = this._resources[0];
             this._resources[0] = value;
+            this.fire('change', this, 'resource', value, _old);
         }
     });
 
@@ -170,7 +172,9 @@ pc.extend(pc, function () {
         },
 
         set: function (value) {
+            var _old = this._resources;
             this._resources = value;
+            this.fire('change', this, 'resources', value, _old);
         }
     });
 

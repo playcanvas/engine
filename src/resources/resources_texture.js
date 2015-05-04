@@ -95,30 +95,6 @@ pc.extend(pc, function () {
                     height: img.height,
                     format: format
                 });
-
-                // var asset = self._assets.getAssetByUrl(request.canonical);
-                // if (asset && asset.data) {
-
-                //     var updateTexture = function (data) {
-                //         // check if data exists - it might not exist for engine-only users
-                //         if (data.name !== undefined) texture.name = data.name;
-                //         if (data.addressu !== undefined) texture.addressU = jsonToAddressMode[data.addressu];
-                //         if (data.addressV !== undefined) texture.addressV = jsonToAddressMode[data.addressV];
-                //         if (data.magfilter !== undefined) texture.magFilter = jsonToFilterMode[data.magfilter];
-                //         if (data.minfilter !== undefined) texture.minFilter = jsonToFilterMode[data.minfilter];
-                //         if (data.anisotropy !== undefined) texture.anisotropy = data.anisotropy;
-                //     };
-
-                //     updateTexture(asset.data);
-
-                //     // subscribe to asset changes
-                //     asset.on('change', function (asset, attribute, value) {
-                //         if (attribute === 'data') {
-                //             updateTexture(value);
-                //         }
-                //     }, this);
-                // }
-
                 texture.setSource(img);
 
             } else if (data instanceof ArrayBuffer) { // DDS or CRN
@@ -251,7 +227,16 @@ pc.extend(pc, function () {
         patch: function (asset, assets) {
             this._updateTexture(asset.resource, asset.data);
 
-            // subscribe to asset changes?
+            if (asset.on) {
+                asset.off("change", this._onAssetChanged, this);
+                asset.on("change", this._onAssetChanged, this);
+            }
+        },
+
+        _onAssetChanged: function (asset, attribute, value) {
+            if (attribute === "data") {
+                this._updateTexture(asset.resource, value);
+            }
         },
 
         _updateTexture: function (texture, data) {

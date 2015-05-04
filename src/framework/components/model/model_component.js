@@ -58,6 +58,7 @@ pc.extend(pc, function () {
                     var model = asset.resource.clone();
                     this._onModelLoaded(model);
                 }.bind(this));
+                assets.load(asset);
             } else {
                 assets.on("add:" + id, function (asset) {
                     asset.ready(function (asset) {
@@ -67,6 +68,7 @@ pc.extend(pc, function () {
                         var model = asset.resource.clone();
                         this._onModelLoaded(model);
                     }.bind(this));
+                    assets.load(asset);
                 }, this);
             }
         },
@@ -222,19 +224,23 @@ pc.extend(pc, function () {
             var id = typeof newValue === 'number' || !newValue ? newValue : newValue.id;
 
             // var material;
+            var assets = this.system.app.assets;
+            var self = this;
 
             // try to load the material asset
             if (id !== undefined && id !== null) {
-                var asset = this.system.app.assets.get(id);
+                var asset = assets.get(id);
                 if (asset) {
                     asset.ready(function (asset) {
-                        this.material = asset.resource;
-                    }.bind(this));
+                        self.material = asset.resource;
+                    });
+                    assets.load(asset);
                 } else {
-                    this.system.app.assets.on("add:"+id, function (asset) {
+                    assets.on("add:"+id, function (asset) {
                         asset.ready(function (asset) {
-                            this.material = asset.resource;
-                        }.bind(this));
+                            self.material = asset.resource;
+                        });
+                        assets.load(asset);
                     });
                 }
             }

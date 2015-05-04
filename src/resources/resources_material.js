@@ -27,20 +27,14 @@ pc.extend(pc, function () {
     //     }
     // }
 
-    var MaterialHandler = function () {
+    var MaterialHandler = function (assets) {
+        this._assets = assets;
     };
 
     MaterialHandler.prototype = {
         load: function (url, callback) {
             if (pc.string.startsWith(url, "asset://")) {
-                // Loading from asset (platform)
-                // promise = new pc.promise.Promise(function (resolve, reject) {
-                //     var asset = this._getAssetFromRequest(request);
-                //     if (!asset) {
-                //         reject(pc.string("Can't load material, asset %s not found", request.canonical));
-                //     }
-                //     resolve(asset.data);
-                // }.bind(this));
+
             } else {
                 // Loading from URL (engine-only)
                 pc.net.http.get(url, function(response) {
@@ -60,13 +54,6 @@ pc.extend(pc, function () {
         open: function (url, data) {
             var material = new pc.PhongMaterial();
             material.init(data);
-
-            // asset.on('change', function (asset, attribute, value) {
-            //     if (attribute === 'data') {
-            //         this._updatePhongMaterial(material, value, request);
-            //     }
-            // }, this);
-
             return material;
         },
 
@@ -74,11 +61,14 @@ pc.extend(pc, function () {
             this._updatePhongMaterial(asset.resource, asset.data, assets);
 
             // handle changes to the material
-            // asset.on('change', function (asset, attribute, value) {
-            //     if (attribute === 'data') {
-            //         this._updatePhongMaterial(material, value, request);
-            //     }
-            // }, this);
+            asset.off('change', this._onAssetChange, this);
+            asset.on('change', this._onAssetChange, this);
+        },
+
+        _onAssetChange: function (asset, attribute, value) {
+            if (attribute === 'data') {
+                this._updatePhongMaterial(asset.resource, value, this._assets);
+            }
         },
 
         _updatePhongMaterial: function (material, data, assets) {
@@ -108,12 +98,14 @@ pc.extend(pc, function () {
                             data.parameters[i].data = asset.resource;
                             material.init(data); // Q: better just to update single field?
                         });
+                        assets.load(asset);
                     } else if (id) {
                         assets.once("add:" + id, function (asset) {
                             asset.ready(function (asset) {
                                 data.parameters[i].data = asset.resource;
                                 material.init(data);
                             });
+                            assets.load(asset);
                         });
                     }
                 } else if (param.type === 'cubemap' && param.data && !(param.data instanceof pc.Texture)) {
@@ -129,12 +121,14 @@ pc.extend(pc, function () {
                             param.data = asset.resource;
                             material.init(data);
                         });
+                        assets.load(asset);
                     } else if (id) {
                         assets.once("add:" + id, function (asset) {
                             asset.ready(function (asset) {
                                 param.data = asset.resource;
                                 material.init(data);
                             });
+                            assets.load(asset);
                         });
                     }
                 }

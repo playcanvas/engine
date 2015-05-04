@@ -23,7 +23,8 @@ pc.extend(pc, function () {
             var key = url + type;
 
             if (this._cache[key]) {
-                return this._cache[key];
+                // in cache
+                callback(null, this._cache[key]);
             } else if (this._requests[key]) {
                 // existing request
                 this._requests[key].push(callback);

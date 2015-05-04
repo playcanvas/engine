@@ -271,12 +271,13 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxCubeMap = value;
-            if (this._skyboxModel) {
-                if (this.containsModel(this._skyboxModel)) {
-                    this.removeModel(this._skyboxModel);
-                }
-            }
-            this._skyboxModel = null;
+            // if (this._skyboxModel) {
+            //     if (this.containsModel(this._skyboxModel)) {
+            //         this.removeModel(this._skyboxModel);
+            //     }
+            // }
+            // this._skyboxModel = null;
+            this._resetSkyboxModel();
             this.updateShaders = true;
         }
     });
@@ -287,7 +288,8 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxIntensity = value;
-            this._skyboxModel = null;
+            // this._skyboxModel = null;
+            this._resetSkyboxModel();
             this.updateShaders = true;
         }
     });
@@ -298,7 +300,8 @@ pc.extend(pc, function () {
         },
         set: function (value) {
             this._skyboxMip = value;
-            this._skyboxModel = null;
+            // this._skyboxModel = null;
+            this._resetSkyboxModel();
             this.updateShaders = true;
         }
     });
@@ -570,18 +573,55 @@ pc.extend(pc, function () {
 
         this.setSkybox(asset.resources);
 
-        // asset.on('change', _onSkyBoxChanged, this);
-        // asset.on('remove', _onSkyBoxRemoved, this);
+        asset.off('change', this._onSkyBoxChanged, this);
+        asset.on('change', this._onSkyBoxChanged, this);
+
+        asset.off('remove', this._onSkyBoxRemoved, this);
+        asset.on('remove', this._onSkyBoxRemoved, this);
+    };
+
+    Scene.prototype._resetSkyboxModel = function () {
+        if (this._skyboxModel) {
+            if (this.containsModel(this._skyboxModel)) {
+                this.removeModel(this._skyboxModel);
+            }
+        }
+        this._skyboxModel = null;
+    };
+
+    Scene.prototype._onSkyBoxChanged = function (asset, attribute, newValue, oldValue) {
+        if (attribute !== 'resources') {
+            return;
+        }
+
+        this.setSkybox(newValue);
+    };
+
+    Scene.prototype._onSkyBoxRemoved = function (asset) {
+        asset.off('change', this._onSkyBoxChanged, this);
+        if (this.skybox === asset.resources[0]) {
+            this.setSkybox(null);
+        }
     };
 
     Scene.prototype.setSkybox = function (cubemaps) {
-        this.skybox = cubemaps[0];
-        this.skyboxPrefiltered128 = cubemaps[1];
-        this.skyboxPrefiltered64 = cubemaps[2];
-        this.skyboxPrefiltered32 = cubemaps[3];
-        this.skyboxPrefiltered16 = cubemaps[4];
-        this.skyboxPrefiltered8 = cubemaps[5];
-        this.skyboxPrefiltered4 = cubemaps[6];
+        if (cubemaps !== null) {
+            this._skyboxPrefiltered128 = cubemaps[1];
+            this._skyboxPrefiltered64 = cubemaps[2];
+            this._skyboxPrefiltered32 = cubemaps[3];
+            this._skyboxPrefiltered16 = cubemaps[4];
+            this._skyboxPrefiltered8 = cubemaps[5];
+            this._skyboxPrefiltered4 = cubemaps[6];
+            this.skybox = cubemaps[0];
+        } else {
+            this._skyboxPrefiltered128 = null;
+            this._skyboxPrefiltered64 = null;
+            this._skyboxPrefiltered32 = null;
+            this._skyboxPrefiltered16 = null;
+            this._skyboxPrefiltered8 = null;
+            this._skyboxPrefiltered4 = null;
+            this.skybox = null;
+        }
     };
 
     /**

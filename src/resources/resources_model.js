@@ -79,17 +79,18 @@ pc.extend(pc, function () {
                         asset.ready(function (asset) {
                             meshInstance.material = asset.resource;
                         });
+                        assets.load(asset);
                     } else {
                         // wait for asset to be added to registry then try and load it
                         assets.on("add:" + data.mapping[i].material, function (asset) {
                             asset.ready(function (asset) {
                                 meshInstance.material = asset.resource;
                             });
+                            assets.load(asset);
                         });
                     }
                 } else {
                     // url mapping
-
                 }
             });
         },

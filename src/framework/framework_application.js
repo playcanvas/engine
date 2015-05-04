@@ -58,7 +58,7 @@ pc.extend(pc, function () {
 
         this.loader.addHandler("animation", new pc.AnimationHandler());
         this.loader.addHandler("model", new pc.ModelHandler(this.graphicsDevice));
-        this.loader.addHandler("material", new pc.MaterialHandler());
+        this.loader.addHandler("material", new pc.MaterialHandler(this.assets));
         this.loader.addHandler("texture", new pc.TextureHandler(this.graphicsDevice));
         this.loader.addHandler("text", new pc.TextHandler());
         this.loader.addHandler("json", new pc.JsonHandler());
@@ -114,6 +114,10 @@ pc.extend(pc, function () {
     };
 
     Application.prototype = {
+        /**
+        * @name pc.Application#loadData
+        * @description load data.json file which contains application properties and asset data
+        */
         loadData: function (url, callback) {
             var self = this;
             pc.net.http.get(url, function (response) {
@@ -177,12 +181,10 @@ pc.extend(pc, function () {
                 }, this.assets);
 
                 if (!err) {
-
                     // Initialise pack settings
                     if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
                         this.systems.rigidbody.setGravity(scene._gravity.x, scene._gravity.y, scene._gravity.z);
                     }
-
                     callback(null, scene);
                 }
             }.bind(this));
@@ -233,14 +235,14 @@ pc.extend(pc, function () {
          * @description Start the Application updating
          */
         start: function () {
-            if (this.scene) {
+            if (this.scene && this.scene.root) {
                 this.root.addChild(this.scene.root);
-
-                pc.ComponentSystem.initialize(this.scene.root);
-                pc.ComponentSystem.postInitialize(this.scene.root);
-
-                this.tick();
             }
+
+            pc.ComponentSystem.initialize(this.root);
+            pc.ComponentSystem.postInitialize(this.root);
+
+            this.tick();
         },
 
         /**
@@ -851,68 +853,83 @@ pc.extend(pc, function () {
         //     }
         // },
 
-        // _linkUpdatePackSettings: function (settings) {
-        //     var self = this;
+        _linkUpdatePackSettings: function (settings) {
+            var self = this;
 
-        //     var ambient = settings.render.global_ambient;
-        //     self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
+            var ambient = settings.render.global_ambient;
+            self.scene.ambientLight.set(ambient[0], ambient[1], ambient[2]);
 
-        //     if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
-        //         var gravity = settings.physics.gravity;
-        //         self.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
-        //     }
+            if (self.systems.rigidbody && typeof Ammo !== 'undefined') {
+                var gravity = settings.physics.gravity;
+                self.systems.rigidbody.setGravity(gravity[0], gravity[1], gravity[2]);
+            }
 
-        //     self.scene.fog = settings.render.fog;
-        //     self.scene.fogStart = settings.render.fog_start;
-        //     self.scene.fogEnd = settings.render.fog_end;
+            self.scene.fog = settings.render.fog;
+            self.scene.fogStart = settings.render.fog_start;
+            self.scene.fogEnd = settings.render.fog_end;
 
-        //     var fog = settings.render.fog_color;
-        //     self.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
-        //     self.scene.fogDensity = settings.render.fog_density;
+            var fog = settings.render.fog_color;
+            self.scene.fogColor = new pc.Color(fog[0], fog[1], fog[2]);
+            self.scene.fogDensity = settings.render.fog_density;
 
-        //     self.scene.gammaCorrection = settings.render.gamma_correction;
-        //     self.scene.toneMapping = settings.render.tonemapping;
-        //     self.scene.exposure = settings.render.exposure;
-        //     self.scene.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
-        //     self.scene.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
+            self.scene.gammaCorrection = settings.render.gamma_correction;
+            self.scene.toneMapping = settings.render.tonemapping;
+            self.scene.exposure = settings.render.exposure;
+            self.scene.skyboxIntensity = settings.render.skyboxIntensity===undefined? 1 : settings.render.skyboxIntensity;
+            self.scene.skyboxMip = settings.render.skyboxMip===undefined? 0 : settings.render.skyboxMip;
 
-        //     if (settings.render.skybox) {
-        //         var skybox = self.assets.getAssetById(settings.render.skybox);
-        //         if (!skybox) {
-        //             pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
-        //         } else {
-        //             if (!skybox.resource) {
-        //                 self.assets.load([skybox]).then(function (resources){
-        //                     self._setSkybox(resources[0]);
+            if (settings.render.skybox) {
+                var asset = self.assets.get(settings.render.skybox);
+                if (asset) {
+                    asset.ready(function (asset) {
+                        self.scene.attachSkyboxAsset(asset);
+                    });
+                    self.assets.load(asset);
+                } else {
+                    self.assets.once("add:" + settings.render.skybox, function (asset) {
+                        asset.ready(function (asset) {
+                            self.scene.attachSkyboxAsset(asset);
+                        });
+                        self.assets.load(asset);
+                    });
+                }
 
-        //                     skybox.off('change', self._onSkyBoxChanged, self);
-        //                     skybox.on('change', self._onSkyBoxChanged, self);
+                // if (!skybox) {
+                //     pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
+                // } else {
+                //     if (!skybox.resource) {
+                //         self.assets.load([skybox]).then(function (resources){
+                //             self._setSkybox(resources[0]);
 
-        //                     skybox.off('remove', self._onSkyBoxRemoved, self);
-        //                     skybox.on('remove', self._onSkyBoxRemoved, self);
-        //                 }, function (error) {
-        //                     pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
-        //                 });
-        //             } else {
-        //                 self._setSkybox(skybox.resources);
+                //             skybox.off('change', self._onSkyBoxChanged, self);
+                //             skybox.on('change', self._onSkyBoxChanged, self);
 
-        //                 skybox.off('change', self._onSkyBoxChanged, self);
-        //                 skybox.on('change', self._onSkyBoxChanged, self);
+                //             skybox.off('remove', self._onSkyBoxRemoved, self);
+                //             skybox.on('remove', self._onSkyBoxRemoved, self);
+                //         }, function (error) {
+                //             pc.log.error('Could not initialize scene skybox. Missing cubemap asset ' + settings.render.skybox);
+                //         });
+                //     } else {
+                //         self._setSkybox(skybox.resources);
 
-        //                 skybox.off('remove', self._onSkyBoxRemoved, self);
-        //                 skybox.on('remove', self._onSkyBoxRemoved, self);
-        //             }
-        //         }
-        //     } else {
-        //         self.scene.skybox = null;
+                //         skybox.off('change', self._onSkyBoxChanged, self);
+                //         skybox.on('change', self._onSkyBoxChanged, self);
 
-        //         var mipSize = 128;
-        //         for (var i = 0; i < 6; i++) {
-        //             self.scene['skyboxPrefiltered' + mipSize] = null;
-        //             mipSize *= 0.5;
-        //         }
-        //     }
-        // },
+                //         skybox.off('remove', self._onSkyBoxRemoved, self);
+                //         skybox.on('remove', self._onSkyBoxRemoved, self);
+                //     }
+                // }
+            } else {
+                self.scene.setSkybox(null);
+                // self.scene.skybox = null;
+
+                // var mipSize = 128;
+                // for (var i = 0; i < 6; i++) {
+                //     self.scene['skyboxPrefiltered' + mipSize] = null;
+                //     mipSize *= 0.5;
+                // }
+            }
+        },
 
         // _setSkybox: function (cubemaps) {
         //     var scene = this.scene;
