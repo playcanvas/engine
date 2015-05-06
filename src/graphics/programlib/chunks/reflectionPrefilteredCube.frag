@@ -54,7 +54,7 @@ void addReflection(inout psInternalData data) {
     }else if (index2==5){ cube[1]=cubes[5];}*/
 
     vec4 cubeFinal = mix(cube[0], cube[1], fract(bias));
-    vec3 refl = $DECODE(cubeFinal).rgb;
+    vec3 refl = processEnvironment($DECODE(cubeFinal).rgb);
 
     data.reflection += vec4(refl, material_reflectionFactor);
 }

@@ -210,6 +210,9 @@ pc.extend(pc, function () {
         this._skyboxCubeMap = null;
         this._skyboxModel = null;
 
+        this._skyboxIntensity = 1;
+        this._skyboxMip = 0;
+
 
         // Models
         this._models = [];
@@ -269,6 +272,28 @@ pc.extend(pc, function () {
                     this.removeModel(this._skyboxModel);
                 }
             }
+            this._skyboxModel = null;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxIntensity', {
+        get: function () {
+            return this._skyboxIntensity;
+        },
+        set: function (value) {
+            this._skyboxIntensity = value;
+            this._skyboxModel = null;
+            this.updateShaders = true;
+        }
+    });
+
+    Object.defineProperty(Scene.prototype, 'skyboxMip', {
+        get: function () {
+            return this._skyboxMip;
+        },
+        set: function (value) {
+            this._skyboxMip = value;
             this._skyboxModel = null;
             this.updateShaders = true;
         }
@@ -347,13 +372,23 @@ pc.extend(pc, function () {
             material.updateShader = function() {
                 var library = device.getProgramLibrary();
                 var shader = library.getProgram('skybox', {rgbm:scene._skyboxCubeMap.rgbm,
-                    hdr:(scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
-                    fixSeams:scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
+                    hdr: (scene._skyboxCubeMap.rgbm || scene._skyboxCubeMap.format===pc.PIXELFORMAT_RGBA32F),
+                    useIntensity: scene.skyboxIntensity!==1,
+                    mip: scene.skyboxMip,
+                    fixSeams: scene._skyboxCubeMap.fixCubemapSeams, gamma:scene.gammaCorrection, toneMapping:scene.toneMapping});
                 this.setShader(shader);
             };
 
             material.updateShader();
-            material.setParameter("texture_cubeMap", this._skyboxCubeMap);
+            if (!scene._skyboxMip) {
+                material.setParameter("texture_cubeMap", this._skyboxCubeMap);
+            } else {
+                var mip2tex = [null, "64", "16", "8", "4"];
+                var mipTex = this["skyboxPrefiltered" + mip2tex[scene._skyboxMip]];
+                if (mipTex) {
+                    material.setParameter("texture_cubeMap", mipTex);
+                }
+            }
             material.cull = pc.CULLFACE_NONE;
 
             var node = new pc.GraphNode();
