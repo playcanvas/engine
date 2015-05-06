@@ -326,6 +326,10 @@ pc.extend(pc, function() {
 
         this.seed = 0;
 
+        this.fixedTimeStep = 1.0 / 40;
+        this.maxSubSteps = 10;
+        this._simTime = 0;
+
         this.rebuild();
     };
 
