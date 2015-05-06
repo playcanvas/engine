@@ -1,2 +1,2 @@
-    life = life > particleLifetime? -particleRate * gl_FragCoord.x : life;
+    life = life >= particleLifetime? -(particleRate + life - particleLifetime) : life;
 

@@ -471,7 +471,7 @@ pc.extend(pc, function() {
             (this.emitterShape===pc.EMITTERSHAPE_BOX? chunks.particleUpdaterAABBPS : chunks.particleUpdaterSpherePS) +
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
-            var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterEndPS;
+            var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
             this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0");
@@ -1043,11 +1043,15 @@ pc.extend(pc, function() {
                         this.calcSpawnPosition(emitterPos, id);
                     }
 
-                    if (life > particleLifetime && this.loop) {
-                        life = -particleRate * id;
+                    if (life >= particleLifetime) {
+                        if (this.loop) {
+                            life = -(particleRate + life - particleLifetime);
+                        } else {
+                            life = particleLifetime + particleRate * id;
+                        }
                     }
                     if (life <= 0 && isOnStop) {
-                        life = particleLifetime + 1;
+                        life = particleLifetime + particleRate * id;
                     }
                     this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] = life;
 
