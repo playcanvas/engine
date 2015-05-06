@@ -579,6 +579,7 @@ pc.extend(pc, function() {
                         if (!data.paused) {
 
                             emitter._simTime += dt;
+                            numSteps = 0;
                             if (emitter._simTime > emitter.fixedTimeStep) {
                                 numSteps = Math.floor(emitter._simTime / emitter.fixedTimeStep);
                                 emitter._simTime -= numSteps * emitter.fixedTimeStep;
