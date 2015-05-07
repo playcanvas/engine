@@ -316,7 +316,6 @@ pc.extend(pc, function() {
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
-        this.shaderParticleUpdateOnStop = null;
 
         this.numParticleVerts = 0;
         this.numParticleIndices = 0;
@@ -326,7 +325,7 @@ pc.extend(pc, function() {
 
         this.seed = 0;
 
-        this.fixedTimeStep = 1.0 / 40;
+        this.fixedTimeStep = 1.0 / 30;
         this.maxSubSteps = 10;
         this._simTime = 0;
 
@@ -451,6 +450,7 @@ pc.extend(pc, function() {
             }
             for (i = 0; i < this.numParticles; i++) {
                 this.calcSpawnPosition(emitterPos, i);
+                this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
             }
 
             this.particleTexStart = new Float32Array(this.numParticlesPot * 4 * 4);
@@ -476,11 +476,9 @@ pc.extend(pc, function() {
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
-            var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
             this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0");
             this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1");
-            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2");
 
             this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
             this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
@@ -522,14 +520,14 @@ pc.extend(pc, function() {
         },
 
         calcSpawnPosition: function(emitterPos, i) {
-            this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4] = Math.random();
-            this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4] = Math.random();
-            this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4] = Math.random();
-            this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = Math.random();
-            var rX = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
-            var rY = this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4];
-            var rZ = this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4];
-            var rW = this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4];
+            var rX = Math.random();
+            var rY = Math.random();
+            var rZ = Math.random();
+            var rW = Math.random();
+            this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4] = rX;
+            this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4] = rY;
+            this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4] = rZ;
+            //this.particleTex[i * 4 + 3 + this.numParticlesPot * 2 * 4] = 1; // hide/show
 
             randomPos.data[0] = rX - 0.5;
             randomPos.data[1] = rY - 0.5;
@@ -926,11 +924,7 @@ pc.extend(pc, function() {
                 var texIN = this.swapTex ? this.particleTexOUT : this.particleTexIN;
                 var texOUT = this.swapTex ? this.particleTexIN : this.particleTexOUT;
                 this.constantParticleTexIN.setValue(texIN);
-                if (!isOnStop) {
-                    pc.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.loop ? this.shaderParticleUpdateRespawn : this.shaderParticleUpdateNoRespawn);
-                } else {
-                    pc.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.shaderParticleUpdateOnStop);
-                }
+                pc.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.loop ? this.shaderParticleUpdateRespawn : this.shaderParticleUpdateNoRespawn);
                 this.constantParticleTexOUT.setValue(texOUT);
 
                 this.material.setParameter("particleTexOUT", texOUT);
@@ -956,10 +950,10 @@ pc.extend(pc, function() {
                 for (i = 0; i < this.numParticles; i++) {
                     var id = Math.floor(this.vbCPU[i * this.numParticleVerts * 4 + 3]);
 
-                    var rndFactor = this.particleTex[i * 4 + 0 + this.numParticlesPot * 2 * 4];
+                    var rndFactor = this.particleTex[id * 4 + 0 + this.numParticlesPot * 2 * 4];
                     rndFactor3Vec.x = rndFactor;
-                    rndFactor3Vec.y = this.particleTex[i * 4 + 1 + this.numParticlesPot * 2 * 4];
-                    rndFactor3Vec.z = this.particleTex[i * 4 + 2 + this.numParticlesPot * 2 * 4];
+                    rndFactor3Vec.y = this.particleTex[id * 4 + 1 + this.numParticlesPot * 2 * 4];
+                    rndFactor3Vec.z = this.particleTex[id * 4 + 2 + this.numParticlesPot * 2 * 4];
 
                     var particleRate = pc.math.lerp(this.rate, this.rate2, rndFactor);
                     var particleLifetime = this.lifetime;
@@ -1048,15 +1042,17 @@ pc.extend(pc, function() {
                     }
 
                     if (life >= particleLifetime) {
-                        if (this.loop) {
-                            life = -(particleRate + life - particleLifetime);
-                        } else {
-                            life = particleLifetime + particleRate * id;
-                        }
+                        // respawn particle by moving it's life back to zero.
+                        // OR below zero, if there are still unspawned particles to be emitted before this one.
+                        // such thing happens when you have an enormous amount of particles with short lifetime.
+                        life -= Math.max(particleLifetime, (this.numParticles - 1) * particleRate);
+
+                        // dead particles in a single-shot system continue their paths, but marked as invisible.
+                        // it is necessary for keeping correct separation between particles, based on emission rate.
+                        // dying again in a looped system they will become visible on next respawn.
+                        this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = this.loop? 1 : -1;
                     }
-                    if (life <= 0 && isOnStop) {
-                        life = particleLifetime + particleRate * id;
-                    }
+                    if (this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] < 0) particleEnabled = false;
                     this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] = life;
 
                     for (var v = 0; v < this.numParticleVerts; v++) {
