@@ -59,7 +59,7 @@ void main(void)
         vec3 outPosition = tex.xyz + outVelocity * delta;
         float outRotation = angle + rotSpeed * delta;
 
-        bool respawn = life <= 0.0 || life > particleLifetime;
+        bool respawn = life <= 0.0 || life >= particleLifetime;
         outPosition = respawn? calcSpawnPosition(rndFactor.xyz, rndFactor.x) : outPosition;
         outRotation = respawn? mix(startAngle, startAngle2, rndFactor.x) : outRotation;
         outVelocity = respawn? vec3(0.0) : outVelocity;
