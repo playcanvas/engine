@@ -316,6 +316,7 @@ pc.extend(pc, function() {
 
         this.shaderParticleUpdateRespawn = null;
         this.shaderParticleUpdateNoRespawn = null;
+        this.shaderParticleUpdateOnStop = null;
 
         this.numParticleVerts = 0;
         this.numParticleIndices = 0;
@@ -476,9 +477,11 @@ pc.extend(pc, function() {
             chunks.particleUpdaterStartPS;
             var shaderCodeRespawn = shaderCodeStart + chunks.particleUpdaterRespawnPS + chunks.particleUpdaterEndPS;
             var shaderCodeNoRespawn = shaderCodeStart + chunks.particleUpdaterNoRespawnPS + chunks.particleUpdaterEndPS;
+            var shaderCodeOnStop = shaderCodeStart + chunks.particleUpdaterOnStopPS + chunks.particleUpdaterEndPS;
 
             this.shaderParticleUpdateRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeRespawn, "fsQuad0");
             this.shaderParticleUpdateNoRespawn = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeNoRespawn, "fsQuad1");
+            this.shaderParticleUpdateOnStop = chunks.createShaderFromCode(gd, chunks.fullscreenQuadVS, shaderCodeOnStop, "fsQuad2");
 
             this.numParticleVerts = this.useMesh ? this.mesh.vertexBuffer.numVertices : 4;
             this.numParticleIndices = this.useMesh ? this.mesh.indexBuffer[0].numIndices : 6;
@@ -924,7 +927,11 @@ pc.extend(pc, function() {
                 var texIN = this.swapTex ? this.particleTexOUT : this.particleTexIN;
                 var texOUT = this.swapTex ? this.particleTexIN : this.particleTexOUT;
                 this.constantParticleTexIN.setValue(texIN);
-                pc.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.loop ? this.shaderParticleUpdateRespawn : this.shaderParticleUpdateNoRespawn);
+                if (!isOnStop) {
+                    pc.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.loop ? this.shaderParticleUpdateRespawn : this.shaderParticleUpdateNoRespawn);
+                } else {
+                    pc.drawQuadWithShader(device, this.swapTex ? this.rtParticleTexIN : this.rtParticleTexOUT, this.shaderParticleUpdateOnStop);
+                }
                 this.constantParticleTexOUT.setValue(texOUT);
 
                 this.material.setParameter("particleTexOUT", texOUT);
@@ -1051,6 +1058,9 @@ pc.extend(pc, function() {
                         // it is necessary for keeping correct separation between particles, based on emission rate.
                         // dying again in a looped system they will become visible on next respawn.
                         this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = this.loop? 1 : -1;
+                    }
+                    if (isOnStop && life < 0) {
+                        this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = -1;
                     }
                     if (this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] < 0) particleEnabled = false;
                     this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] = life;
