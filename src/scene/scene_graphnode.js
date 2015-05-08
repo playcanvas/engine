@@ -450,7 +450,7 @@ pc.extend(pc, function () {
          * @function
          * @name pc.GraphNode#getName
          * @description Get the human-readable name for this graph node. Note the name
-         * is not guaranteed to be unique. For Entities, this is the name that is set in the PlayCanvas Designer.
+         * is not guaranteed to be unique. For Entities, this is the name that is set in the PlayCanvas Editor.
          * @returns {String} The name of the node.
          * @example
          * if (this.entity.getName() === "My Entity") {

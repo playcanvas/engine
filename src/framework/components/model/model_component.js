@@ -74,7 +74,7 @@ pc.extend(pc, function () {
         },
 
         _onModelLoaded: function (model) {
-            if (this.system.app.designer) {
+            if (this.system._inTools) {
                 model.generateWireframe();
             }
 
@@ -132,7 +132,7 @@ pc.extend(pc, function () {
 
                     model.meshInstances = [ new pc.MeshInstance(node, mesh, data.material) ];
 
-                    if (this.system.app.designer) {
+                    if (this.system._inTools) {
                         model.generateWireframe();
                     }
 

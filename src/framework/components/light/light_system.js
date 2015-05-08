@@ -154,6 +154,9 @@ pc.extend(pc, function () {
             var app = this.system.app;
             app.scene.addLight(light);
 
+            data = data || {};
+            data.light = light;
+
             if (this.system._inTools) {
                 this._createDebugShape(component, data, light);
             }
@@ -164,11 +167,6 @@ pc.extend(pc, function () {
         },
 
         _createDebugShape: function (component, data, light) {
-            var app = this.system.app;
-
-            data = data || {};
-            data.light = light;
-
             this.mesh = this._createDebugMesh();
             if (!this.material) {
                 this.material = this._createDebugMaterial();
@@ -176,7 +174,7 @@ pc.extend(pc, function () {
 
             var model = new pc.Model();
             model.graph = component.entity;
-            model.meshInstances = [new pc.MeshInstance(component.entity, this.mesh, this.material)];
+            model.meshInstances = [ new pc.MeshInstance(component.entity, this.mesh, this.material) ];
 
             data.model = model;
         },

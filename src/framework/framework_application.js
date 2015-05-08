@@ -104,7 +104,6 @@ pc.extend(pc, function () {
         var audiosourcesys = new pc.AudioSourceComponentSystem(this, this._audioManager);
         var audiolistenersys = new pc.AudioListenerComponentSystem(this, this._audioManager);
         var particlesystemsys = new pc.ParticleSystemComponentSystem(this);
-        var designersys = new pc.DesignerComponentSystem(this);
 
         // Load libraries
         this.on('librariesloaded', this.onLibrariesLoaded, this);

@@ -1,7 +1,4 @@
 pc.extend(pc, function () {
-    var REMOTE_CAMERA_NEAR_CLIP = 0.5;
-    var REMOTE_CAMERA_FAR_CLIP = 2;
-
     /**
      * @name pc.CameraComponentSystem
      * @class Used to add and remove {@link pc.CameraComponent}s from Entities. It also holds an
@@ -71,7 +68,7 @@ pc.extend(pc, function () {
 
             data.postEffects = new pc.PostEffectQueue(this.app, component);
 
-            if (this.app.designer && this.displayInTools(component.entity)) {
+            if (this._inTools) {
                 var material = new pc.BasicMaterial();
                 material.color = new pc.Color(1, 1, 0, 1);
                 material.update();
@@ -134,7 +131,7 @@ pc.extend(pc, function () {
         },
 
         onRemove: function (entity, data) {
-            if (this.app.designer && this.displayInTools(entity)) {
+            if (this._inTools) {
                 if (this.app.scene.containsModel(data.model)) {
                     this.app.scene.removeModel(data.model);
                 }
@@ -150,7 +147,7 @@ pc.extend(pc, function () {
                     var entity = components[id].entity;
                     var data = components[id].data;
 
-                    if (this.displayInTools(entity)) {
+                    if (this._inTools) {
                         this._updateGfx(entity.camera);
                     }
                 }
@@ -163,8 +160,8 @@ pc.extend(pc, function () {
 
                 // Retrieve the characteristics of the camera frustum
                 var aspectRatio = component.camera.getAspectRatio();
-                var nearClip    = this.isToolsCamera(component.entity) ? REMOTE_CAMERA_NEAR_CLIP : component.nearClip; // Remote User cameras don't display full extents
-                var farClip     = this.isToolsCamera(component.entity) ? REMOTE_CAMERA_FAR_CLIP : component.farClip; // Remote User cameras don't display full extents
+                var nearClip    = component.nearClip;
+                var farClip     = component.farClip;
                 var fov         = component.fov * Math.PI / 180.0;
                 var projection  = component.projection;
 
@@ -214,8 +211,8 @@ pc.extend(pc, function () {
             this.cameras.push(camera);
             this.sortCamerasByPriority();
 
-            // add debug shape to designer
-            if (this.app.designer) {
+            // add debug shape to tools
+            if (this._inTools) {
                 var model = camera.data.model;
 
                 if (model) {
@@ -233,8 +230,8 @@ pc.extend(pc, function () {
                 this.cameras.splice(index, 1);
                 this.sortCamerasByPriority();
 
-                // remove debug shape from designer
-                if (this.app.designer) {
+                // remove debug shape from tools
+                if (this._inTools) {
                     var model = camera.data.model;
                     if (model) {
                         this.app.scene.removeModel(model);
@@ -247,14 +244,6 @@ pc.extend(pc, function () {
             this.cameras.sort(function (a, b) {
                 return a.priority - b.priority;
             });
-        },
-
-        isToolsCamera: function (entity) {
-            return entity.hasLabel("pc:designer");
-        },
-
-        displayInTools: function (entity) {
-            return (!this.isToolsCamera(entity) || (entity.getName() === "Perspective"));
         }
     });
 

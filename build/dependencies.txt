@@ -130,8 +130,6 @@
 ../src/framework/components/audiolistener/audiolistener_system.js
 ../src/framework/components/audiolistener/audiolistener_component.js
 ../src/framework/components/audiolistener/audiolistener_data.js
-../src/framework/components/designer/designer_component.js
-../src/framework/components/designer/designer_data.js
 ../src/framework/components/physics/rigidbody_constants.js
 ../src/framework/components/physics/rigidbody_system.js
 ../src/framework/components/physics/rigidbody_component.js

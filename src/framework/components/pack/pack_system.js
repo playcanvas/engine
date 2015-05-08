@@ -3,7 +3,7 @@ pc.extend(pc, function () {
      * @private
      * @name pc.PackComponentSystem
      * @constructor Create a new PackComponentSystem
-     * @class A Pack Component indicates the root of an Entity hierarchy that can be edited in the PlayCanvas Designer
+     * @class A Pack Component indicates the root of an Entity hierarchy that can be edited in the PlayCanvas Editor
      * @param {Object} app
      * @extends pc.ComponentSystem
      */
