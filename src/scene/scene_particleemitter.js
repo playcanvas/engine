@@ -1048,19 +1048,25 @@ pc.extend(pc, function() {
                         this.calcSpawnPosition(emitterPos, id);
                     }
 
-                    if (life >= particleLifetime) {
-                        // respawn particle by moving it's life back to zero.
-                        // OR below zero, if there are still unspawned particles to be emitted before this one.
-                        // such thing happens when you have an enormous amount of particles with short lifetime.
-                        life -= Math.max(particleLifetime, (this.numParticles - 1) * particleRate);
+                    if (isOnStop) {
+                        if (life < 0) {
+                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = -1;
+                        }
+                    } else {
+                        if (life >= particleLifetime) {
+                            // respawn particle by moving it's life back to zero.
+                            // OR below zero, if there are still unspawned particles to be emitted before this one.
+                            // such thing happens when you have an enormous amount of particles with short lifetime.
+                            life -= Math.max(particleLifetime, (this.numParticles - 1) * particleRate);
 
-                        // dead particles in a single-shot system continue their paths, but marked as invisible.
-                        // it is necessary for keeping correct separation between particles, based on emission rate.
-                        // dying again in a looped system they will become visible on next respawn.
-                        this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = this.loop? 1 : -1;
-                    }
-                    if (isOnStop && life < 0) {
-                        this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = -1;
+                            // dead particles in a single-shot system continue their paths, but marked as invisible.
+                            // it is necessary for keeping correct separation between particles, based on emission rate.
+                            // dying again in a looped system they will become visible on next respawn.
+                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = this.loop? 1 : -1;
+                        }
+                        if (life < 0 && this.loop) {
+                            this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] = 1;
+                        }
                     }
                     if (this.particleTex[id * 4 + 3 + this.numParticlesPot * 2 * 4] < 0) particleEnabled = false;
                     this.particleTex[id * 4 + 3 + this.numParticlesPot * 4] = life;
