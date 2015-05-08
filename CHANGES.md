@@ -1,5 +1,8 @@
 # PlayCanvas Engine Changes
 
+### v0.167.1
+* [FIX] texCubeLOD code path fixes
+
 ### v0.167.0
 * [FIX] Multiple particle fixes: emission rate stability
 
