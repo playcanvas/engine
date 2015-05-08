@@ -330,6 +330,8 @@ pc.extend(pc, function() {
         this.maxSubSteps = 10;
         this._simTime = 0;
 
+        this.beenReset = false;
+
         this.rebuild();
     };
 
@@ -797,6 +799,7 @@ pc.extend(pc, function() {
         },
 
         reset: function() {
+            this.beenReset = true;
             this.seed = Math.random();
             this.material.setParameter('seed', this.seed);
             if (this.useCpu) {
@@ -925,6 +928,7 @@ pc.extend(pc, function() {
                 this.constantRotSpeedDivMult.setValue(this.rotSpeedUMax[0]);
 
                 var texIN = this.swapTex ? this.particleTexOUT : this.particleTexIN;
+                texIN = this.beenReset? this.particleTexStart : texIN;
                 var texOUT = this.swapTex ? this.particleTexIN : this.particleTexOUT;
                 this.constantParticleTexIN.setValue(texIN);
                 if (!isOnStop) {
@@ -936,6 +940,7 @@ pc.extend(pc, function() {
 
                 this.material.setParameter("particleTexOUT", texOUT);
                 this.material.setParameter("particleTexIN", texIN);
+                this.beenReset = false;
 
                 this.swapTex = !this.swapTex;
             } else {
