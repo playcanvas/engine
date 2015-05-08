@@ -519,7 +519,7 @@ pc.extend(pc, function () {
 
             this._mapXForms = [];
 
-            var useTexCubeLod = device.extTextureLod && device.samplerCount < 16;
+            var useTexCubeLod = device.useTexCubeLod;
 
             var prefilteredCubeMap128 = this.prefilteredCubeMap128 || scene.skyboxPrefiltered128;
             var prefilteredCubeMap64 = this.prefilteredCubeMap64 || scene.skyboxPrefiltered64;
