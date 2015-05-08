@@ -174,6 +174,7 @@ pc.extend(pc.resources, function () {
 
             for (i = 0; i < 6; i++) {
                 if (i===0 && useTexCubeLod) {
+                    prefiltered.fixCubemapSeams = true;
                     resources.push(prefiltered);
                 } else {
                     // create a cubemap for each mip in the prefiltered cubemap
@@ -277,6 +278,7 @@ pc.extend(pc.resources, function () {
 
                     for (i = 0; i < 6; i++) {
                         if (i===0 && useTexCubeLod) {
+                            prefiltered.fixCubemapSeams = true;
                             asset.resources.push(prefiltered);
                         } else {
                             // create a cubemap for each mip in the prefiltered cubemap

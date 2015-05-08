@@ -282,7 +282,7 @@ pc.extend(pc, function () {
             this.fragmentUniformsCount = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS);
             this.samplerCount = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 
-            this.useTexCubeLod = true;//this.extTextureLod && this.samplerCount < 16;
+            this.useTexCubeLod = this.extTextureLod && this.samplerCount < 16;
 
             this.extDepthTexture = null; //gl.getExtension("WEBKIT_WEBGL_depth_texture");
             this.extStandardDerivatives = gl.getExtension("OES_standard_derivatives");
