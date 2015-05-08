@@ -578,11 +578,11 @@ pc.extend(pc, function() {
 
                         if (!data.paused) {
 
-                            emitter._simTime += dt;
+                            emitter.simTime += dt;
                             numSteps = 0;
-                            if (emitter._simTime > emitter.fixedTimeStep) {
-                                numSteps = Math.floor(emitter._simTime / emitter.fixedTimeStep);
-                                emitter._simTime -= numSteps * emitter.fixedTimeStep;
+                            if (emitter.simTime > emitter.fixedTimeStep) {
+                                numSteps = Math.floor(emitter.simTime / emitter.fixedTimeStep);
+                                emitter.simTime -= numSteps * emitter.fixedTimeStep;
                             }
                             if (numSteps) {
                                 numSteps = Math.min(numSteps, emitter.maxSubSteps);

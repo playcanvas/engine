@@ -328,7 +328,7 @@ pc.extend(pc, function() {
 
         this.fixedTimeStep = 1.0 / 60;
         this.maxSubSteps = 10;
-        this._simTime = 0;
+        this.simTime = 0;
 
         this.beenReset = false;
 
